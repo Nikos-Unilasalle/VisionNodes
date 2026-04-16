@@ -141,7 +141,7 @@ export const AnalysisZoneMeanNode = memo(({ selected, data }: any) => (
 ));
 
 export const DrawOverlayNode = memo(({ selected }: any) => (
-  <BaseNode title="Overlay" icon={PenTool} selected={selected} color="accent" inputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'data'}]} outputs={[{id: 'main', color: 'image'}]} />
+  <BaseNode title="Overlay" icon={PenTool} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'any'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const DataInspectorNode = memo(({ selected, data }: any) => {

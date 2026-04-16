@@ -5,7 +5,7 @@ import time
 @vision_node(
     type_id='util_csv_export',
     label='CSV Export',
-    category='util',
+    category='out',
     icon='Database',
     inputs=[
         {'id': 'val_1', 'color': 'any'},

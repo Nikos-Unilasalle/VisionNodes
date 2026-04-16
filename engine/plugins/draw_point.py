@@ -4,7 +4,7 @@ import numpy as np
 @vision_node(
     type_id='draw_point',
     label='Draw Point',
-    category='util',
+    category='draw',
     icon='Target',
     inputs=[
         {'id': 'x', 'color': 'scalar'},

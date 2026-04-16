@@ -40,6 +40,9 @@ const nodeTypes = {
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_zone_mean: N.AnalysisZoneMeanNode,
   draw_overlay: N.DrawOverlayNode,
+  draw_point: N.GenericCustomNode,
+  draw_line: N.GenericCustomNode,
+  draw_rect: N.GenericCustomNode,
   util_coord_to_mask: N.UtilCoordToMaskNode,
   util_mask_blend: N.UtilMaskBlendNode,
   data_list_selector: N.DataListSelectorNode,
@@ -81,15 +84,22 @@ const CATEGORIES = [
     { type: 'analysis_face_mp', label: 'Face Tracker' },
     { type: 'analysis_hand_mp', label: 'Hand Tracker' }
   ]},
-  { id: 'util', label: 'Utilities', icon: PenTool, nodes: [
+  { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
     { type: 'draw_overlay', label: 'Visual Overlay' },
+    { type: 'draw_point', label: 'Draw Point' },
+    { type: 'draw_line', label: 'Draw Line' },
+    { type: 'draw_rect', label: 'Draw Rect' }
+  ]},
+  { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector' },
     { type: 'data_coord_splitter', label: 'Coord Splitter' },
     { type: 'data_coord_combine', label: 'Coord Combine' },
     { type: 'data_inspector', label: 'Inspect Unit' }
   ]},
   { id: 'noise', label: 'Noise', icon: Ghost, nodes: [] },
-  { id: 'out', label: 'Terminal', icon: Maximize, nodes: [{ type: 'output_display', label: 'Final Display' }] }
+  { id: 'out', label: 'Output', icon: Maximize, nodes: [
+    { type: 'output_display', label: 'Final Display' }
+  ] }
 ];
 
 function App() {
@@ -490,14 +500,7 @@ function App() {
                          <Slider label="Levels" val={selectedNode.data.params.levels || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {levels: v})} />
                       </>
                     )}
-                    {selectedNode.type === 'draw_overlay' && (
-                      <>
-                        <Slider label="Thickness" val={selectedNode.data.params.thickness || 2} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {thickness: v})} />
-                        <Slider label="Red" val={selectedNode.data.params.r ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
-                        <Slider label="Green" val={selectedNode.data.params.g ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
-                        <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
-                      </>
-                    )}
+
                     {selectedNode.type === 'data_list_selector' && (
                       <Slider label="List Index" val={selectedNode.data.params.index || 0} min={0} max={10} onChange={v => updateNodeParams(selectedNode.id, {index: v})} />
                     )}

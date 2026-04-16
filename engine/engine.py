@@ -308,11 +308,9 @@ class OverlayNode(NodeProcessor):
         res = img.copy()
         if len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
         h, w = res.shape[:2]
-        thick = int(params.get('thickness', 2))
-        r = int(params.get('r', 0))
-        g = int(params.get('g', 255))
-        b = int(params.get('b', 0))
-        col = (b, g, r)
+        # Default fallback values (used only when data doesn't contain its own style)
+        col = (0, 255, 0)
+        thick = 2
         
         if isinstance(data, dict):
             if data.get('_type') == 'graphics':
