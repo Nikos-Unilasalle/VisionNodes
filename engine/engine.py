@@ -302,7 +302,10 @@ class MorphologyNode(NodeProcessor):
 # --- UTILS & TERMINALS ---
 class OverlayNode(NodeProcessor):
     def process(self, inputs, params):
-        img = inputs.get('image') or inputs.get('main') or inputs.get('raw_frame')
+        img = inputs.get('image')
+        if img is None: img = inputs.get('main')
+        if img is None: img = inputs.get('raw_frame')
+        
         if img is None: return {"main": None}
         
         res = img.copy()
