@@ -1,0 +1,50 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+export function useVisionEngine() {
+  const [frame, setFrame] = useState<string | null>(null);
+  const [nodesData, setNodesData] = useState<Record<string, any>>({});
+  const [pluginSchemas, setPluginSchemas] = useState<any[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const ws = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    const connect = () => {
+      ws.current = new WebSocket('ws://localhost:8765');
+      
+      ws.current.onopen = () => setIsConnected(true);
+
+      ws.current.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'update') {
+            setFrame(`data:image/jpeg;base64,${msg.image}`);
+            if (msg.nodes_data) {
+                setNodesData(msg.nodes_data);
+            }
+          } else if (msg.type === 'schema') {
+            setPluginSchemas(msg.nodes);
+          }
+        } catch (e) {}
+      };
+
+      ws.current.onclose = () => {
+        setIsConnected(false);
+        setTimeout(connect, 2000);
+      };
+    };
+
+    connect();
+    return () => ws.current?.close();
+  }, []);
+
+  const updateGraph = useCallback((nodes: any[], edges: any[]) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
+        type: 'update_graph',
+        graph: { nodes: nodes.map(n => ({ id: n.id, type: n.type, data: n.data })), edges }
+      }));
+    }
+  }, []);
+
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph };
+}

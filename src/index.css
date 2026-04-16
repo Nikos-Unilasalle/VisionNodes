@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #181818;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+}
+
+/* React Flow custom styles for Blender approach */
+.react-flow__node {
+  border-radius: 8px;
+  padding: 0;
+  color: #fff;
+  font-size: 11px;
+  background: #242424;
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.react-flow__connection-path {
+  stroke: #555;
+  stroke-width: 2;
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #555;
+  border: 2px solid #242424;
+}
+
+.react-flow__background {
+  background-color: #181818;
+}
+
+.react-flow__controls {
+  background: #242424;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+}
+
+.react-flow__controls-button {
+  background: #242424;
+  border-bottom: 1px solid #3a3a3a;
+  color: #999;
+}
+
+.react-flow__controls-button:hover {
+  background: #3a3a3a;
+}

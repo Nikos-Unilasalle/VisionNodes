@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Models
+*.task
+*.tflite
+
+# Archive
+*.zip
+
+# OS
+.DS_Store
+
+# Tauri
+src-tauri/target/
