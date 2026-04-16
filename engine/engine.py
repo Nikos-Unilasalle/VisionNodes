@@ -332,23 +332,27 @@ class OverlayNode(NodeProcessor):
 
     def _draw_graphics(self, img, data, w, h, default_col, default_thick):
         shape = data.get('shape', 'point')
-        color = (data.get('b', default_col[0]), data.get('g', default_col[1]), data.get('r', default_col[2]))
-        thick = data.get('thickness', default_thick)
+        color = (
+            int(data.get('b', default_col[0])), 
+            int(data.get('g', default_col[1])), 
+            int(data.get('r', default_col[2]))
+        )
+        thick = int(data.get('thickness', default_thick))
         pts = data.get('pts', [])
         rel = data.get('relative', True)
         
         scaled_pts = [(int(p[0]*w), int(p[1]*h)) if rel else (int(p[0]), int(p[1])) for p in pts]
         
         if shape == 'point' and len(scaled_pts) > 0:
-            cv2.circle(img, scaled_pts[0], thick*2, color, -1)
+            cv2.circle(img, scaled_pts[0], max(1, thick), color, -1)
         elif shape == 'line' and len(scaled_pts) >= 2:
-            cv2.line(img, scaled_pts[0], scaled_pts[1], color, thick)
+            cv2.line(img, scaled_pts[0], scaled_pts[1], color, max(1, thick))
         elif shape == 'rect' and len(scaled_pts) >= 2:
-            cv2.rectangle(img, scaled_pts[0], scaled_pts[1], color, -1 if data.get('fill') else thick)
+            cv2.rectangle(img, scaled_pts[0], scaled_pts[1], color, -1 if data.get('fill') else max(1, thick))
         elif shape == 'polygon' and len(scaled_pts) > 2:
             pts_arr = np.array(scaled_pts, np.int32).reshape((-1, 1, 2))
             if data.get('fill'): cv2.fillPoly(img, [pts_arr], color)
-            cv2.polylines(img, [pts_arr], True, color, thick)
+            cv2.polylines(img, [pts_arr], True, color, max(1, thick))
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):

@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from ..engine_core import vision_node, NodeProcessor
 
 @vision_node(
     type_id='geom_track_point',
@@ -52,7 +52,7 @@ class TrackPointNode(NodeProcessor):
         out['draw'] = {
             '_type': 'graphics',
             'shape': 'point',
-            'pts': [(x, y)],
+            'pts': [(x * w_mult if abs_calc else x, y * h_mult if abs_calc else y)],
             'relative': not abs_calc,
             'thickness': int(params.get('thickness', 5)),
             'r': int(params.get('r', 0)),
