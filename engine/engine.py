@@ -179,37 +179,49 @@ class FaceDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         import os, urllib.request
-        model_path = "blaze_face_short_range.tflite"
+        model_path = "face_landmarker.task"
         if not os.path.exists(model_path):
-            try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite", model_path)
+            try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", model_path)
             except: pass
             
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
-        self.options = vision.FaceDetectorOptions(base_options=base_options)
-        self.detector = vision.FaceDetector.create_from_options(self.options)
+        self.options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=3)
+        self.detector = vision.FaceLandmarker.create_from_options(self.options)
 
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"main": None, "faces_list": []}
+        if image is None: return {"faces_list": [], "main": None}
         import mediapipe as mp
+        
+        max_faces = int(params.get('max_faces', 3))
+        if hasattr(self.options, 'num_faces') and self.options.num_faces != max_faces:
+            self.options.num_faces = max_faces
+            from mediapipe.tasks.python import vision
+            self.detector = vision.FaceLandmarker.create_from_options(self.options)
+            
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        detection_result = self.detector.detect(mp_image)
-        faces = []
-        h, w = image.shape[:2]
-        if getattr(detection_result, 'detections', None):
-            for detection in detection_result.detections:
-                bbox = detection.bounding_box
-                faces.append({
-                    "xmin": max(0, bbox.origin_x / w),
-                    "ymin": max(0, bbox.origin_y / h),
-                    "width": min(1.0, bbox.width / w),
-                    "height": min(1.0, bbox.height / h)
-                })
+        results = self.detector.detect(mp_image)
+        
+        faces_list = []
+        if getattr(results, 'face_landmarks', None):
+            for face_landmarks in results.face_landmarks:
+                x_min = min([lm.x for lm in face_landmarks])
+                y_min = min([lm.y for lm in face_landmarks])
+                x_max = max([lm.x for lm in face_landmarks])
+                y_max = max([lm.y for lm in face_landmarks])
                 
-        out = {"faces_list": faces, "main": image}
-        for i, face in enumerate(faces):
+                lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in face_landmarks]
+                
+                faces_list.append({
+                    "xmin": max(0, x_min), "ymin": max(0, y_min), 
+                    "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
+                    "landmarks": lms
+                })
+        
+        out = {"faces_list": faces_list, "main": image}
+        for i, face in enumerate(faces_list):
             out[f"face_{i}"] = face
         return out
 
@@ -249,7 +261,12 @@ class HandDetectionNode(NodeProcessor):
                 y_min = min([lm.y for lm in hand_landmarks])
                 x_max = max([lm.x for lm in hand_landmarks])
                 y_max = max([lm.y for lm in hand_landmarks])
-                hands_list.append({"xmin": max(0, x_min), "ymin": max(0, y_min), "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min)})
+                lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in hand_landmarks]
+                hands_list.append({
+                    "xmin": max(0, x_min), "ymin": max(0, y_min), 
+                    "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
+                    "landmarks": lms
+                })
         
         out = {"hands_list": hands_list, "main": image}
         for i, hand in enumerate(hands_list):
@@ -296,15 +313,42 @@ class OverlayNode(NodeProcessor):
         b = int(params.get('b', 0))
         col = (b, g, r)
         
-        if isinstance(data, dict) and 'xmin' in data:
-            cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
+        if isinstance(data, dict):
+            if data.get('_type') == 'graphics':
+                self._draw_graphics(res, data, w, h, col, thick)
+            elif 'xmin' in data:
+                cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
         elif isinstance(data, list):
             for item in data:
-                if isinstance(item, dict) and 'xmin' in item:
-                    cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
+                if isinstance(item, dict):
+                    if item.get('_type') == 'graphics':
+                        self._draw_graphics(res, item, w, h, col, thick)
+                    elif 'xmin' in item:
+                        cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
         elif isinstance(data, (float, int)):
             cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
         return {"main": res}
+
+    def _draw_graphics(self, img, data, w, h, default_col, default_thick):
+        shape = data.get('shape', 'point')
+        color = (data.get('b', default_col[0]), data.get('g', default_col[1]), data.get('r', default_col[2]))
+        thick = data.get('thickness', default_thick)
+        pts = data.get('pts', [])
+        rel = data.get('relative', True)
+        
+        scaled_pts = [(int(p[0]*w), int(p[1]*h)) if rel else (int(p[0]), int(p[1])) for p in pts]
+        
+        if shape == 'point' and len(scaled_pts) > 0:
+            cv2.circle(img, scaled_pts[0], thick*2, color, -1)
+        elif shape == 'line' and len(scaled_pts) >= 2:
+            cv2.line(img, scaled_pts[0], scaled_pts[1], color, thick)
+        elif shape == 'polygon' and len(scaled_pts) >= 3:
+            pts_arr = np.array([scaled_pts], np.int32)
+            if data.get('fill', False):
+                overlay = img.copy()
+                cv2.fillPoly(overlay, pts_arr, color)
+                cv2.addWeighted(overlay, 0.4, img, 0.6, 0, img)
+            cv2.polylines(img, pts_arr, True, color, thick)
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
