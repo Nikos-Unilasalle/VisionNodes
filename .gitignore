@@ -10,6 +10,7 @@ __pycache__/
 # Models
 *.task
 *.tflite
+*.pt
 
 # Archive
 *.zip

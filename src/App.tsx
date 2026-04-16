@@ -277,6 +277,50 @@ function App() {
     });
   };
 
+  const copyNodes = useCallback(() => {
+    const selectedNodes = nodes.filter(n => n.selected);
+    if (selectedNodes.length === 0) return;
+    const clipboardData = {
+      nodes: selectedNodes.map(n => ({...n, id: `node-copy-${Date.now()}-${Math.random()}`})),
+      edges: edges.filter(e => selectedNodes.some(n => n.id === e.source) && selectedNodes.some(n => n.id === e.target))
+    };
+    localStorage.setItem('vision-nodes-clipboard', JSON.stringify(clipboardData));
+  }, [nodes, edges]);
+
+  const pasteNodes = useCallback((mousePos?: {x: number, y: number}) => {
+    const raw = localStorage.getItem('vision-nodes-clipboard');
+    if (!raw) return;
+    const { nodes: copiedNodes, edges: copiedEdges } = JSON.parse(raw);
+    const idMap: Record<string, string> = {};
+    const newNodes = copiedNodes.map((n: any) => {
+      const newId = `node-${Date.now()}-${Math.random()}`;
+      idMap[n.id] = newId;
+      return { 
+        ...n, 
+        id: newId, 
+        selected: true,
+        position: mousePos ? { x: mousePos.x + (n.position.x - copiedNodes[0].position.x), y: mousePos.y + (n.position.y - copiedNodes[0].position.y) } : { x: n.position.x + 50, y: n.position.y + 50 }
+      };
+    });
+    const newEdges = copiedEdges.map((e: any) => ({
+      ...e,
+      id: `e-${Date.now()}-${Math.random()}`,
+      source: idMap[e.source],
+      target: idMap[e.target]
+    }));
+    setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
+    setEdges(eds => [...eds, ...newEdges]);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c') copyNodes();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') pasteNodes();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [copyNodes, pasteNodes]);
+
   const addNode = (type: string, label: string, schema?: any) => {
     const id = `node-${Date.now()}`;
     const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 350, y: 350 };
@@ -318,6 +362,13 @@ function App() {
   };
 
   useEffect(() => { if (isConnected) updateGraph(nodes, edges); }, [isConnected]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredNodes = useMemo(() => {
+    if (!searchQuery) return activeCategory.nodes;
+    const all = dynamicCategories.flatMap(c => c.nodes);
+    return all.filter(n => n.label.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [searchQuery, activeCategory, dynamicCategories]);
 
   useEffect(() => {
     const handleRemoveEdge = (e: any) => {
@@ -392,19 +443,40 @@ function App() {
                     </button>
                   ))}
                 </div>
-                <div className="flex-1 p-12 overflow-y-auto overflow-x-hidden">
-                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-10 border-b border-[#222] pb-2">Category :: {activeCategory.label}</h3>
+                <div className="flex-1 p-12 overflow-y-auto overflow-x-hidden flex flex-col">
+                  <div className="flex items-center justify-between mb-10 border-b border-[#222] pb-4">
+                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      {searchQuery ? 'Search Results' : `Category :: ${activeCategory.label}`}
+                    </h3>
+                    <div className="relative group">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-accent transition-colors" />
+                      <input 
+                        autoFocus
+                        type="text" 
+                        placeholder="Search modules..." 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="bg-black/40 border border-[#222] rounded-xl pl-10 pr-4 py-2 text-[11px] text-white outline-none focus:border-accent/50 w-64 transition-all"
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
-                    {activeCategory.nodes.map((node: any) => (
+                    {filteredNodes.map((node: any) => (
                       <button
-                        key={node.type} onClick={() => addNode(node.type, node.label, node.schema)}
-                        className="p-6 bg-[#222] hover:bg-accent/10 border border-[#333] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95"
+                        key={node.type} onClick={() => { addNode(node.type, node.label, node.schema); setSearchQuery(''); }}
+                        className="p-6 bg-[#222] hover:bg-accent/10 border border-[#333] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95 group"
                       >
-                        <div className="text-[11px] font-bold text-gray-200 uppercase tracking-tighter">{node.label}</div>
+                        <div className="text-[11px] font-bold text-gray-200 uppercase tracking-tighter group-hover:text-accent transition-colors">{node.label}</div>
                         <div className="text-[8px] text-gray-600 font-mono mt-1 italic">{node.schema ? 'cv::plugin' : 'cv::node'}</div>
                       </button>
                     ))}
                   </div>
+                  {filteredNodes.length === 0 && (
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-700 gap-4 opacity-50 italic py-20">
+                      <Search size={48} strokeWidth={1} />
+                      <div className="text-[11px] font-bold uppercase tracking-widest">No modules found matching "{searchQuery}"</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -508,9 +580,13 @@ function App() {
                       <Slider label="List Index" val={selectedNode.data.params.index || 0} min={0} max={10} onChange={v => updateNodeParams(selectedNode.id, {index: v})} />
                     )}
 
-                    {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => (
-                      <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />
-                    ))}
+                    {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => {
+                      const isString = p.type === 'string' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'string';
+                      if (isString) {
+                        return <TextInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                      }
+                      return <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                    })}
 
                     {selectedNode.data.node_data && (
                       <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3 shadow-inner">
@@ -542,6 +618,19 @@ const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
       <span className="text-accent font-black font-mono bg-accent/10 px-3 py-1 rounded-lg border border-accent/20">{val}</span>
     </div>
     <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#222] rounded-full appearance-none cursor-pointer accent-accent" />
+  </div>
+);
+
+const TextInput = ({ label, val, onChange }: any) => (
+  <div className="space-y-4 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <input 
+      type="text" 
+      value={val} 
+      onChange={(e) => onChange(e.target.value)} 
+      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
+      placeholder={`Enter ${label.toLowerCase()}...`}
+    />
   </div>
 );
 

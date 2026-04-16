@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "studio": "(lsof -ti :8765 | xargs kill -9 2>/dev/null || true) && sleep 1 && concurrently \"./.venv/bin/python3 engine/engine.py\" \"npm run tauri dev\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
   },
   "dependencies": {
+    "concurrently": "^8.2.2",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
     "react": "^18.2.0",

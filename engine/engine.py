@@ -103,7 +103,6 @@ class MovieInput(NodeProcessor):
         path = params.get('path', '')
         if not path: return {"main": None}
         
-        # Handle path change
         if path != self.last_path:
             if self.cap: self.cap.release()
             self.cap = cv2.VideoCapture(path)
@@ -116,15 +115,13 @@ class MovieInput(NodeProcessor):
         playing = params.get('playing', False)
         scrub_index = int(params.get('scrub_index', 0))
         
-        # Determine which frame to read
         if playing:
             ret, frame = self.cap.read()
-            if not ret: # Loop
+            if not ret: 
                 self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 ret, frame = self.cap.read()
             self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
         else:
-            # If paused, we follow scrub_index
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, scrub_index)
             ret, frame = self.cap.read()
             self.current_frame = scrub_index
@@ -137,12 +134,8 @@ class MovieInput(NodeProcessor):
 
 class SolidColorNode(NodeProcessor):
     def process(self, inputs, params):
-        r = int(params.get('r', 255))
-        g = int(params.get('g', 0))
-        b = int(params.get('b', 0))
-        w = int(params.get('width', 640))
-        h = int(params.get('height', 480))
-        # OpenCV utilise le format BGR
+        r, g, b = int(params.get('r', 255)), int(params.get('g', 0)), int(params.get('b', 0))
+        w, h = int(params.get('width', 640)), int(params.get('height', 480))
         img = np.full((h, w, 3), (b, g, r), dtype=np.uint8)
         return {"main": img}
 
@@ -177,7 +170,6 @@ class ThresholdFilter(NodeProcessor):
         _, res = cv2.threshold(gray, int(params.get('threshold', 127)), 255, cv2.THRESH_BINARY)
         return {"main": res, "mask": res}
 
-# --- GEOMETRIC UNITS ---
 class FlipNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
@@ -191,7 +183,7 @@ class ResizeNode(NodeProcessor):
         sc = float(params.get('scale', 1.0))
         return {"main": cv2.resize(img, None, fx=sc, fy=sc)}
 
-# --- ANALYSIS UNITS ---
+# --- ANALYSIS & FLOW ---
 class OpticalFlowNode(NodeProcessor):
     def __init__(self): self.prev = None
     def process(self, inputs, params):
@@ -233,112 +225,93 @@ class ZoneMeanNode(NodeProcessor):
 class FaceDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
+        self.detector = None
+        self.options = None
+        # Lazy initialization
+    def _lazy_init(self, max_faces=3):
         import os, urllib.request
         model_path = "face_landmarker.task"
         if not os.path.exists(model_path):
             try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", model_path)
             except: pass
-            
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
-        self.options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=3)
+        self.options = vision.FaceLandmarkerOptions(base_options=base_options, num_faces=max_faces)
         self.detector = vision.FaceLandmarker.create_from_options(self.options)
 
     def process(self, inputs, params):
         image = inputs.get('image')
         if image is None: return {"faces_list": [], "main": None}
-        import mediapipe as mp
-        
         max_faces = int(params.get('max_faces', 3))
-        if hasattr(self.options, 'num_faces') and self.options.num_faces != max_faces:
-            self.options.num_faces = max_faces
-            from mediapipe.tasks.python import vision
-            self.detector = vision.FaceLandmarker.create_from_options(self.options)
-            
+        if self.detector is None or (self.options and self.options.num_faces != max_faces):
+            self._lazy_init(max_faces)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         results = self.detector.detect(mp_image)
-        
         faces_list = []
         if getattr(results, 'face_landmarks', None):
             for face_landmarks in results.face_landmarks:
-                x_min = min([lm.x for lm in face_landmarks])
-                y_min = min([lm.y for lm in face_landmarks])
-                x_max = max([lm.x for lm in face_landmarks])
-                y_max = max([lm.y for lm in face_landmarks])
-                
+                x_min, y_min = min([lm.x for lm in face_landmarks]), min([lm.y for lm in face_landmarks])
+                x_max, y_max = max([lm.x for lm in face_landmarks]), max([lm.y for lm in face_landmarks])
                 lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in face_landmarks]
-                
-                faces_list.append({
-                    "xmin": max(0, x_min), "ymin": max(0, y_min), 
-                    "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
-                    "landmarks": lms
-                })
-        
+                face_data = {
+                    "xmin": max(0, x_min), "ymin": max(0, y_min), "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
+                    "landmarks": lms, "label": "face", "_type": "graphics", "shape": "rect", "pts": [[max(0, x_min), max(0, y_min)], [min(1, x_max), min(1, y_max)]], "color": "#00ff00"
+                }
+                faces_list.append(face_data)
         out = {"faces_list": faces_list, "main": image}
-        for i, face in enumerate(faces_list):
-            out[f"face_{i}"] = face
+        for i, face in enumerate(faces_list): out[f"face_{i}"] = face
         return out
 
 class HandDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
+        self.detector = None
+        self.options = None
+        # Lazy initialization
+    def _lazy_init(self, max_hands=2):
         import os, urllib.request
         model_path = "hand_landmarker.task"
         if not os.path.exists(model_path):
             try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", model_path)
             except: pass
-            
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
-        self.options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=2)
+        self.options = vision.HandLandmarkerOptions(base_options=base_options, num_hands=max_hands)
         self.detector = vision.HandLandmarker.create_from_options(self.options)
 
     def process(self, inputs, params):
         image = inputs.get('image')
         if image is None: return {"hands_list": [], "main": None}
-        import mediapipe as mp
-        
-        max_hands = params.get('max_hands', 2)
-        if hasattr(self.options, 'num_hands') and self.options.num_hands != max_hands:
-            self.options.num_hands = int(max_hands)
-            from mediapipe.tasks.python import vision
-            self.detector = vision.HandLandmarker.create_from_options(self.options)
-            
+        max_hands = int(params.get('max_hands', 2))
+        if self.detector is None or (self.options and self.options.num_hands != max_hands):
+            self._lazy_init(max_hands)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         results = self.detector.detect(mp_image)
-        
         hands_list = []
         if getattr(results, 'hand_landmarks', None):
             for hand_landmarks in results.hand_landmarks:
-                x_min = min([lm.x for lm in hand_landmarks])
-                y_min = min([lm.y for lm in hand_landmarks])
-                x_max = max([lm.x for lm in hand_landmarks])
-                y_max = max([lm.y for lm in hand_landmarks])
+                x_min, y_min = min([lm.x for lm in hand_landmarks]), min([lm.y for lm in hand_landmarks])
+                x_max, y_max = max([lm.x for lm in hand_landmarks]), max([lm.y for lm in hand_landmarks])
                 lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in hand_landmarks]
-                hands_list.append({
-                    "xmin": max(0, x_min), "ymin": max(0, y_min), 
-                    "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
-                    "landmarks": lms
-                })
-        
+                hand_data = {
+                    "xmin": max(0, x_min), "ymin": max(0, y_min), "width": min(1-x_min, x_max - x_min), "height": min(1-y_min, y_max - y_min),
+                    "landmarks": lms, "label": "hand", "_type": "graphics", "shape": "polygon", "pts": [[lm.x, lm.y] for lm in hand_landmarks], "color": "#ff00ff"
+                }
+                hands_list.append(hand_data)
         out = {"hands_list": hands_list, "main": image}
-        for i, hand in enumerate(hands_list):
-            out[f"hand_{i}"] = hand
+        for i, hand in enumerate(hands_list): out[f"hand_{i}"] = hand
         return out
 
 class ColorMaskNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
         if image is None: return {"mask": None}
-        
-        # S'assurer que l'image est bien en couleur 3 canaux avant la conversion HSV
-        if len(image.shape) == 2 or image.shape[2] == 1:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-            
-        h_min, s_min, v_min = params.get('h_min', 0), params.get('s_min', 0), params.get('v_min', 0)
-        h_max, s_max, v_max = params.get('h_max', 179), params.get('s_max', 255), params.get('v_max', 255)
+        if len(image.shape) == 2 or image.shape[2] == 1: image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        h_min, h_max = params.get('h_min', 0), params.get('h_max', 179)
+        s_min, s_max = params.get('s_min', 0), params.get('s_max', 255)
+        v_min, v_max = params.get('v_min', 0), params.get('v_max', 255)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
         return {"mask": mask}
@@ -347,83 +320,59 @@ class MorphologyNode(NodeProcessor):
     def process(self, inputs, params):
         mask = inputs.get('mask', inputs.get('image'))
         if mask is None: return {"mask": None}
-        op = params.get('operation', 0)
-        size = int(params.get('size', 5))
+        op, size = params.get('operation', 0), int(params.get('size', 5))
         kernel = np.ones((size, size), np.uint8)
-        if op == 0: res = cv2.dilate(mask, kernel, iterations=1)
-        else: res = cv2.erode(mask, kernel, iterations=1)
+        res = cv2.dilate(mask, kernel, iterations=1) if op == 0 else cv2.erode(mask, kernel, iterations=1)
         return {"mask": res}
 
-# --- UTILS & TERMINALS ---
 class OverlayNode(NodeProcessor):
     def process(self, inputs, params):
-        img = inputs.get('image')
-        if img is None: img = inputs.get('main')
-        if img is None: img = inputs.get('raw_frame')
-        
+        img = inputs.get('image', inputs.get('main', inputs.get('raw_frame')))
         if img is None: return {"main": None}
-        
         res = img.copy()
         if len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
         h, w = res.shape[:2]
-        
-        # Default fallback values (used only when data doesn't contain its own style)
-        col = (0, 255, 0)
-        thick = 2
-        
-        # Process multiple data inputs
+        col, thick = (0, 255, 0), 2
         for key in ['data', 'data_2', 'data_3', 'data_4']:
             data = inputs.get(key)
             if data is None: continue
-            
             if isinstance(data, dict):
-                if data.get('_type') == 'graphics':
-                    self._draw_graphics(res, data, w, h, col, thick)
-                elif 'xmin' in data:
-                    cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
+                if data.get('_type') == 'graphics': self._draw_graphics(res, data, w, h, col, thick)
+                elif 'xmin' in data: cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
             elif isinstance(data, list):
                 for item in data:
                     if isinstance(item, dict):
-                        if item.get('_type') == 'graphics':
-                            self._draw_graphics(res, item, w, h, col, thick)
-                        elif 'xmin' in item:
-                            cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
-            elif isinstance(data, (float, int)):
-                cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
-                
+                        if item.get('_type') == 'graphics': self._draw_graphics(res, item, w, h, col, thick)
+                        elif 'xmin' in item: cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
+            elif isinstance(data, (float, int)): cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
         return {"main": res}
-
     def _draw_graphics(self, img, data, w, h, default_col, default_thick):
-        shape = data.get('shape', 'point')
-        color = (
-            int(data.get('b', default_col[0])), 
-            int(data.get('g', default_col[1])), 
-            int(data.get('r', default_col[2]))
-        )
+        shape, pts, rel = data.get('shape', 'point'), data.get('pts', []), data.get('relative', True)
+        color = default_col
+        if 'color' in data and data['color'].startswith('#'):
+            hex_col = data['color'].lstrip('#')
+            if len(hex_col) == 6:
+                r, g, b = tuple(int(hex_col[i:i+2], 16) for i in (0, 2, 4))
+                color = (b, g, r)
         thick = int(data.get('thickness', default_thick))
-        pts = data.get('pts', [])
-        rel = data.get('relative', True)
-        
         scaled_pts = [(int(p[0]*w), int(p[1]*h)) if rel else (int(p[0]), int(p[1])) for p in pts]
-        
-        if shape == 'point' and len(scaled_pts) > 0:
-            cv2.circle(img, scaled_pts[0], max(1, thick), color, -1)
-        elif shape == 'line' and len(scaled_pts) >= 2:
-            cv2.line(img, scaled_pts[0], scaled_pts[1], color, max(1, thick))
+        if shape == 'point' and len(scaled_pts) > 0: cv2.circle(img, scaled_pts[0], max(1, thick), color, -1)
+        elif shape == 'line' and len(scaled_pts) >= 2: cv2.line(img, scaled_pts[0], scaled_pts[1], color, max(1, thick))
         elif shape == 'rect' and len(scaled_pts) >= 2:
             cv2.rectangle(img, scaled_pts[0], scaled_pts[1], color, -1 if data.get('fill') else max(1, thick))
+            if 'label' in data: cv2.putText(img, data['label'], (scaled_pts[0][0], scaled_pts[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
         elif shape == 'polygon' and len(scaled_pts) > 2:
             pts_arr = np.array(scaled_pts, np.int32).reshape((-1, 1, 2))
             if data.get('fill'): cv2.fillPoly(img, [pts_arr], color)
             cv2.polylines(img, [pts_arr], True, color, max(1, thick))
+            if 'label' in data: cv2.putText(img, data['label'], (scaled_pts[0][0], scaled_pts[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
         d_list = inputs.get('data')
         if not isinstance(d_list, list): return {"item_out": None}
         idx = int(params.get('index', 0))
-        if 0 <= idx < len(d_list): return {"item_out": d_list[idx]}
-        return {"item_out": None}
+        return {"item_out": d_list[idx] if 0 <= idx < len(d_list) else None}
 
 class CoordSplitterNode(NodeProcessor):
     def process(self, inputs, params):
@@ -433,60 +382,35 @@ class CoordSplitterNode(NodeProcessor):
 
 class CoordCombineNode(NodeProcessor):
     def process(self, inputs, params):
-        return {"dict_out": {
-            "xmin": float(inputs.get("x", 0.0) or 0.0),
-            "ymin": float(inputs.get("y", 0.0) or 0.0),
-            "width": float(inputs.get("w", 0.0) or 0.0),
-            "height": float(inputs.get("h", 0.0) or 0.0)
-        }}
+        return {"dict_out": {"xmin": float(inputs.get("x", 0.0) or 0.0), "ymin": float(inputs.get("y", 0.0) or 0.0), "width": float(inputs.get("w", 0.0) or 0.0), "height": float(inputs.get("h", 0.0) or 0.0)}}
 
 class CoordToMaskNode(NodeProcessor):
     def process(self, inputs, params):
         img_ref, data = inputs.get('image'), inputs.get('data')
-        if img_ref is None:
-            w, h = int(params.get('width', 640)), int(params.get('height', 480))
-        else:
-            h, w = img_ref.shape[:2]
-        
+        w, h = (img_ref.shape[1], img_ref.shape[0]) if img_ref is not None else (int(params.get('width', 640)), int(params.get('height', 480)))
         mask = np.zeros((h, w), dtype=np.uint8)
-        
-        if isinstance(data, dict) and 'xmin' in data:
-            cv2.rectangle(mask, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), 255, -1)
+        if isinstance(data, dict) and 'xmin' in data: cv2.rectangle(mask, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), 255, -1)
         elif isinstance(data, list):
             for item in data:
-                if isinstance(item, dict) and 'xmin' in item:
-                    cv2.rectangle(mask, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), 255, -1)
+                if isinstance(item, dict) and 'xmin' in item: cv2.rectangle(mask, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), 255, -1)
         return {"mask": mask}
 
 class MaskBlendNode(NodeProcessor):
     def process(self, inputs, params):
-        img_a = inputs.get('image_a', inputs.get('image'))
-        img_b = inputs.get('image_b')
-        mask = inputs.get('mask')
+        img_a, img_b, mask = inputs.get('image_a', inputs.get('image')), inputs.get('image_b'), inputs.get('mask')
         if img_a is None: return {"main": None}
         if img_b is None or mask is None: return {"main": img_a}
-        
         if len(mask.shape) == 3: mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = cv2.resize(mask, (img_a.shape[1], img_a.shape[0]))
-        
-        # S'assurer que le mask est 3D pour le broadcasting mathématique constant
-        mask_expanded = np.expand_dims(mask, axis=2)
-        mask_normalized = mask_expanded / 255.0
-        
-        # Homogénéiser les deux images en 3 canaux
-        if len(img_a.shape) == 2 or img_a.shape[2] == 1:
-            img_a = cv2.cvtColor(img_a, cv2.COLOR_GRAY2BGR)
-            
-        img_b_resized = cv2.resize(img_b, (img_a.shape[1], img_a.shape[0]))
-        if len(img_b_resized.shape) == 2 or img_b_resized.shape[2] == 1:
-            img_b_resized = cv2.cvtColor(img_b_resized, cv2.COLOR_GRAY2BGR)
-        
-        blended = (img_a * (1.0 - mask_normalized)) + (img_b_resized * mask_normalized)
+        mask_normalized = np.expand_dims(mask, axis=2) / 255.0
+        if len(img_a.shape) == 2 or img_a.shape[2] == 1: img_a = cv2.cvtColor(img_a, cv2.COLOR_GRAY2BGR)
+        img_b_res = cv2.resize(img_b, (img_a.shape[1], img_a.shape[0]))
+        if len(img_b_res.shape) == 2 or img_b_res.shape[2] == 1: img_b_res = cv2.cvtColor(img_b_res, cv2.COLOR_GRAY2BGR)
+        blended = (img_a * (1.0 - mask_normalized)) + (img_b_res * mask_normalized)
         return {"main": blended.astype(np.uint8)}
 
 class InspectorNode(NodeProcessor):
-    def process(self, inputs, params):
-        return {"main": inputs.get('image'), "data_out": inputs.get('data')}
+    def process(self, inputs, params): return {"main": inputs.get('image'), "data_out": inputs.get('data')}
 
 class DisplayOutput(NodeProcessor):
     def process(self, inputs, params): return {"main": inputs.get('image')}
@@ -500,30 +424,13 @@ class VisionEngine:
         self.sorted_nodes = []
         self.connected_clients = set()
         self.registry = {
-            'input_webcam': WebcamInput(self),
-            'input_image': ImageInput(),
-            'input_movie': MovieInput(),
-            'input_solid_color': SolidColorNode(),
-            'filter_canny': CannyFilter(),
-            'filter_blur': BlurFilter(),
-            'filter_gray': GrayFilter(),
-            'filter_threshold': ThresholdFilter(),
-            'geom_flip': FlipNode(),
-            'geom_resize': ResizeNode(),
-            'analysis_flow': OpticalFlowNode(),
-            'analysis_flow_viz': FlowVizNode(),
-            'analysis_zone_mean': ZoneMeanNode(),
-            'analysis_face_mp': FaceDetectionNode(),
-            'analysis_hand_mp': HandDetectionNode(),
-            'filter_color_mask': ColorMaskNode(),
-            'filter_morphology': MorphologyNode(),
-            'draw_overlay': OverlayNode(),
-            'util_coord_to_mask': CoordToMaskNode(),
-            'util_mask_blend': MaskBlendNode(),
-            'data_list_selector': ListSelectorNode(),
-            'data_coord_splitter': CoordSplitterNode(),
-            'data_coord_combine': CoordCombineNode(),
-            'data_inspector': InspectorNode(),
+            'input_webcam': WebcamInput(self), 'input_image': ImageInput(), 'input_movie': MovieInput(), 'input_solid_color': SolidColorNode(),
+            'filter_canny': CannyFilter(), 'filter_blur': BlurFilter(), 'filter_gray': GrayFilter(), 'filter_threshold': ThresholdFilter(),
+            'geom_flip': FlipNode(), 'geom_resize': ResizeNode(), 'analysis_flow': OpticalFlowNode(), 'analysis_flow_viz': FlowVizNode(),
+            'analysis_zone_mean': ZoneMeanNode(), 'analysis_face_mp': FaceDetectionNode(), 'analysis_hand_mp': HandDetectionNode(),
+            'filter_color_mask': ColorMaskNode(), 'filter_morphology': MorphologyNode(), 'draw_overlay': OverlayNode(),
+            'util_coord_to_mask': CoordToMaskNode(), 'util_mask_blend': MaskBlendNode(), 'data_list_selector': ListSelectorNode(),
+            'data_coord_splitter': CoordSplitterNode(), 'data_coord_combine': CoordCombineNode(), 'data_inspector': InspectorNode(),
             'output_display': DisplayOutput()
         }
         self.registry.update(NODE_CLASS_REGISTRY)
@@ -536,8 +443,7 @@ class VisionEngine:
         nodes = {n['id']: n for n in g.get('nodes', [])}
         adj = {nid: [] for nid in nodes}; degr = {nid: 0 for nid in nodes}
         for e in g.get('edges', []):
-            if e['source'] in adj and e['target'] in adj:
-                adj[e['source']].append(e['target']); degr[e['target']] += 1
+            if e['source'] in adj and e['target'] in adj: adj[e['source']].append(e['target']); degr[e['target']] += 1
         q = deque([nid for nid in nodes if degr[nid] == 0])
         s_ids = []
         while q:
@@ -550,25 +456,24 @@ class VisionEngine:
     async def run(self):
         while True:
             ret, frame = self.cap.read()
-            if not ret: await asyncio.sleep(0.1); continue
-            results = {}; node_datas = {}; final_img = frame
+            if not ret: 
+                await asyncio.sleep(0.1)
+                continue
+            results, node_datas, final_img = {}, {}, frame
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
                 inputs = {"raw_frame": frame}
                 for e in self.graph.get('edges', []):
                     if e['target'] == nid and e['source'] in results:
                         source_res = results[e['source']]
-                        sh = e.get('sourceHandle', 'main').split('__')[-1]
-                        th = e.get('targetHandle', '').split('__')[-1]
+                        sh, th = e.get('sourceHandle', 'main').split('__')[-1], e.get('targetHandle', '').split('__')[-1]
                         val = source_res.get(sh)
                         if val is not None:
                             if th:
                                 inputs[th] = val
-                                # Convenience mapping for main inputs
                                 if th in ['image', 'main']: inputs['image'] = val
                                 if th == 'data': inputs['data'] = val
                             else:
-                                # Fallback mapping if no handle is specified
                                 if isinstance(val, np.ndarray): inputs['image'] = val
                                 else: inputs['data'] = val
                 proc = self.registry.get(ntype)
@@ -577,28 +482,21 @@ class VisionEngine:
                         out = proc.process(inputs, node.get('data', {}).get('params', {}))
                         results[nid] = out
                         for k, v in out.items():
-                            if k != "main" and not isinstance(v, np.ndarray):
-                                node_datas[f"{nid}:{k}"] = v
+                            if k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
                         if ntype == 'output_display' and out.get('main') is not None: final_img = out['main']
                     except Exception as e: print(f"Error {nid}: {e}")
             if final_img is not None:
                 try:
-                    if len(final_img.shape) == 2: 
-                        final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
+                    if len(final_img.shape) == 2: final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
                     elif len(final_img.shape) == 3 and final_img.shape[2] == 2:
-                        # Rendu de tolérance (Magie visuelle auto) au cas où un Tenseur brut est branché à l'écran !
-                        hsv = np.zeros((final_img.shape[0], final_img.shape[1], 3), dtype=np.uint8)
-                        hsv[..., 1] = 255
+                        hsv = np.zeros((final_img.shape[0], final_img.shape[1], 3), dtype=np.uint8); hsv[..., 1] = 255
                         mag, ang = cv2.cartToPolar(final_img[..., 0], final_img[..., 1])
-                        hsv[..., 0] = ang * 180 / np.pi / 2
-                        hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+                        hsv[..., 0], hsv[..., 2] = ang * 180 / np.pi / 2, cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
                         final_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-                        
                     _, buf = cv2.imencode('.jpg', final_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
                     msg = json.dumps({"type": "update", "image": base64.b64encode(buf).decode('utf-8'), "nodes_data": node_datas})
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
-                except Exception as e:
-                    print(f"Engine Encoding Error: {e}")
+                except Exception as e: print(f"Encoding Error: {e}")
             await asyncio.sleep(1/30)
 
     async def hdl(self, ws):
@@ -614,8 +512,15 @@ class VisionEngine:
         finally: self.connected_clients.remove(ws)
 
 load_plugins()
-
 engine = VisionEngine()
+
 async def main():
-    async with websockets.serve(engine.hdl, "localhost", 8765): await engine.run()
-if __name__ == "__main__": asyncio.run(main())
+    try:
+        async with websockets.serve(engine.hdl, "localhost", 8765):
+            await engine.run()
+    except Exception as e:
+        print(f"Server Error: {e}")
+
+if __name__ == "__main__":
+    try: asyncio.run(main())
+    except KeyboardInterrupt: print("\n[Engine] Stopped.")
