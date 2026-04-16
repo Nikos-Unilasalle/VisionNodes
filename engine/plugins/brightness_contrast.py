@@ -19,16 +19,16 @@ class BrightnessContrastNode(NodeProcessor):
         img = inputs.get('image')
         if img is None: return {'main': None}
         
-        brightness = int(params.get('brightness', 0))
-        contrast = int(params.get('contrast', 0))
-
-        if brightness != 0 or contrast != 0:
-            if contrast != 0:
-                f = 131 * (contrast + 127) / (127 * (131 - contrast))
-                alpha_c = f
-                gamma_c = 127 * (1 - f)
-                img = cv2.addWeighted(img, alpha_c, img, 0, gamma_c)
-            if brightness != 0:
-                img = cv2.add(img, np.array([brightness]))
+        # Le contraste standard est centré sur 1.0 (on convertit le slider -100/100 en approx 0.5/3.0)
+        # alpha = (contrast + 100) / 100
+        # beta = brightness
+        contrast = float(params.get('contrast', 0))
+        brightness = float(params.get('brightness', 0))
         
-        return {'main': img}
+        alpha = (contrast + 100) / 100.0
+        if alpha < 0: alpha = 0
+        
+        # convertScaleAbs applique : output = saturation_cast(alpha*input + beta)
+        res = cv2.convertScaleAbs(img, alpha=alpha, beta=brightness)
+        
+        return {'main': res}

@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_blend_images',
     label='Simple Image Blend',
-    category='cv',
+    category='blend',
     icon='Layers',
     inputs=[
         {'id': 'image_a', 'color': 'image'},

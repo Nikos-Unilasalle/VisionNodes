@@ -7,7 +7,7 @@ import 'reactflow/dist/style.css';
 import { 
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -63,7 +63,9 @@ const CATEGORIES = [
   { id: 'mask', label: 'Masks', icon: Layers, nodes: [
     { type: 'filter_color_mask', label: 'Color Mask' },
     { type: 'filter_morphology', label: 'Morphology' },
-    { type: 'util_coord_to_mask', label: 'Coord To Mask' },
+    { type: 'util_coord_to_mask', label: 'Coord To Mask' }
+  ]},
+  { id: 'blend', label: 'Blending', icon: Box, nodes: [
     { type: 'util_mask_blend', label: 'Mask Blend' }
   ]},
   { id: 'geom', label: 'Geometric', icon: Move, nodes: [
@@ -364,7 +366,7 @@ function App() {
           {isAddMenuOpen && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-20" onClick={() => { setIsAddMenuOpen(false); setPendingConnection(null); }}>
               <div 
-                className="bg-[#181818] border border-[#333] w-full max-w-[700px] h-[550px] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
+                className="bg-[#181818] border border-[#333] w-full max-w-[700px] h-[750px] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
               >
                 <div className="w-56 bg-[#111] border-r border-[#222] p-6 flex flex-col gap-2">
