@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position, useNodeId } from 'reactflow';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -58,20 +58,96 @@ export const InputWebcamNode = memo(({ selected, data }: any) => (
   </BaseNode>
 ));
 
-export const InputImageNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
-    <div className="flex flex-col gap-2 p-1">
-      <input 
-        type="text" 
-        className="bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
-        placeholder="path/to/image.jpg"
-        value={data.params?.path || ''}
-        onChange={(e) => data.onChangeParams({ path: e.target.value })}
-      />
-      <div className="text-[7px] text-gray-500 uppercase font-black">Local File Path</div>
-    </div>
-  </BaseNode>
-));
+export const InputImageNode = memo(({ selected, data }: any) => {
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      // In Tauri, we might need a better way to get full path,
+      // but if the file is in the same dir or we use a workaround:
+      data.onChangeParams({ path: (file as any).path || file.name });
+    }
+  };
+
+  return (
+    <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
+      <div 
+        className="flex flex-col gap-2 p-1"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+      >
+        <div className="flex gap-1">
+          <input 
+            type="text" 
+            className="flex-1 bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
+            placeholder="path/to/image.jpg"
+            value={data.params?.path || ''}
+            onChange={(e) => data.onChangeParams({ path: e.target.value })}
+          />
+        </div>
+        <div className="text-[7px] text-gray-500 uppercase font-black">Drop file or enter path</div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const InputMovieNode = memo(({ selected, data }: any) => {
+  const meta = data.node_data || {};
+  const total = meta.total_frames || 0;
+  const current = meta.current_frame || 0;
+  const isPlaying = data.params?.playing || false;
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      data.onChangeParams({ path: (file as any).path || file.name });
+    }
+  };
+
+  return (
+    <BaseNode title="Movie File" icon={Film} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
+      <div 
+        className="flex flex-col gap-3 p-1 min-w-[140px]"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+      >
+        <input 
+          type="text" 
+          className="bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
+          placeholder="path/to/movie.mp4"
+          value={data.params?.path || ''}
+          onChange={(e) => data.onChangeParams({ path: e.target.value })}
+        />
+        
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => data.onChangeParams({ playing: !isPlaying })}
+              className={`p-1 rounded ${isPlaying ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} hover:bg-opacity-30`}
+            >
+              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+            </button>
+            <div className="text-[9px] font-mono text-gray-400">
+              {current} / {total}
+            </div>
+          </div>
+          
+          <input 
+            type="range"
+            min="0"
+            max={total - 1}
+            value={isPlaying ? current : (data.params?.scrub_index || 0)}
+            onChange={(e) => data.onChangeParams({ scrub_index: parseInt(e.target.value), playing: false })}
+            disabled={total <= 0}
+            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent"
+          />
+        </div>
+        <div className="text-[7px] text-gray-500 uppercase font-black">Controls + Drag & Drop</div>
+      </div>
+    </BaseNode>
+  );
+});
 
 export const SolidColorNode = memo(({ selected, data }: any) => (
   <BaseNode title="Solid Color" icon={Palette} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>

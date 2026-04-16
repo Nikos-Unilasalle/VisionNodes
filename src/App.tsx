@@ -7,7 +7,7 @@ import 'reactflow/dist/style.css';
 import { 
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -26,6 +26,7 @@ const initialEdges: Edge[] = [
 const nodeTypes = {
   input_webcam: N.InputWebcamNode,
   input_image: N.InputImageNode,
+  input_movie: N.InputMovieNode,
   input_solid_color: N.SolidColorNode,
   filter_canny: N.FilterCannyNode,
   filter_blur: N.FilterBlurNode,
@@ -57,6 +58,7 @@ const CATEGORIES = [
   { id: 'src', label: 'Sources', icon: Camera, nodes: [
     { type: 'input_webcam', label: 'Webcam' },
     { type: 'input_image', label: 'Image File' },
+    { type: 'input_movie', label: 'Movie File' },
     { type: 'input_solid_color', label: 'Solid Color' }
   ]},
   { id: 'cv', label: 'Filters', icon: Waves, nodes: [

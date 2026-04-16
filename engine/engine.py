@@ -92,6 +92,49 @@ class ImageInput(NodeProcessor):
             self.last_path = path
         return {"main": self.cached_img}
 
+class MovieInput(NodeProcessor):
+    def __init__(self):
+        self.last_path = ""
+        self.cap = None
+        self.total_frames = 0
+        self.current_frame = 0
+
+    def process(self, inputs, params):
+        path = params.get('path', '')
+        if not path: return {"main": None}
+        
+        # Handle path change
+        if path != self.last_path:
+            if self.cap: self.cap.release()
+            self.cap = cv2.VideoCapture(path)
+            self.last_path = path
+            self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.current_frame = 0
+            
+        if not self.cap or not self.cap.isOpened(): return {"main": None}
+        
+        playing = params.get('playing', False)
+        scrub_index = int(params.get('scrub_index', 0))
+        
+        # Determine which frame to read
+        if playing:
+            ret, frame = self.cap.read()
+            if not ret: # Loop
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, frame = self.cap.read()
+            self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+        else:
+            # If paused, we follow scrub_index
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, scrub_index)
+            ret, frame = self.cap.read()
+            self.current_frame = scrub_index
+            
+        return {
+            "main": frame if ret else None, 
+            "total_frames": self.total_frames, 
+            "current_frame": self.current_frame
+        }
+
 class SolidColorNode(NodeProcessor):
     def process(self, inputs, params):
         r = int(params.get('r', 255))
@@ -459,6 +502,7 @@ class VisionEngine:
         self.registry = {
             'input_webcam': WebcamInput(self),
             'input_image': ImageInput(),
+            'input_movie': MovieInput(),
             'input_solid_color': SolidColorNode(),
             'filter_canny': CannyFilter(),
             'filter_blur': BlurFilter(),
