@@ -176,15 +176,6 @@ export const FilterThresholdNode = memo(({ selected, data }: any) => (
   </BaseNode>
 ));
 
-export const FilterGlitchNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Glitch" icon={Ghost} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]}>
-    <div className="flex flex-col gap-1 p-1">
-      <input type="range" min="0" max="1" step="0.01" value={data.params?.amount || 0.1} onChange={(e) => data.onChangeParams({ amount: parseFloat(e.target.value) })} className="w-24 accent-accent" />
-      <div className="text-[7px] text-gray-500 uppercase font-black">Distortion: {(data.params?.amount || 0).toFixed(2)}</div>
-    </div>
-  </BaseNode>
-));
-
 export const FilterColorMaskNode = memo(({ selected }: any) => (
   <BaseNode title="Color Mask" icon={Palette} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
     <div className="text-[9px] text-gray-500 uppercase font-black">HSV Isolation</div>

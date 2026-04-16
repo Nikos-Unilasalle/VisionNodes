@@ -177,32 +177,6 @@ class ThresholdFilter(NodeProcessor):
         _, res = cv2.threshold(gray, int(params.get('threshold', 127)), 255, cv2.THRESH_BINARY)
         return {"main": res, "mask": res}
 
-class GlitchFilter(NodeProcessor):
-    def process(self, inputs, params):
-        img = inputs.get('image')
-        if img is None: return {"main": None}
-        
-        amt = float(params.get('amount', 0.1))
-        if amt <= 0: return {"main": img}
-        
-        h, w = img.shape[:2]
-        res = img.copy()
-        
-        # 1. RGB Split
-        split_amt = int(amt * 20)
-        if split_amt > 0:
-            res[:, :, 0] = np.roll(res[:, :, 0], split_amt, axis=1) # R
-            res[:, :, 2] = np.roll(res[:, :, 2], -split_amt, axis=1) # B
-            
-        # 2. Scanline displacement (Glitch lines)
-        for _ in range(int(amt * 15)):
-            y = np.random.randint(0, h)
-            shipe_h = np.random.randint(2, 10)
-            shift = np.random.randint(-int(amt*50), int(amt*50))
-            res[y:y+shipe_h, :] = np.roll(res[y:y+shipe_h, :], shift, axis=1)
-            
-        return {"main": res}
-
 # --- GEOMETRIC UNITS ---
 class FlipNode(NodeProcessor):
     def process(self, inputs, params):
@@ -534,7 +508,6 @@ class VisionEngine:
             'filter_blur': BlurFilter(),
             'filter_gray': GrayFilter(),
             'filter_threshold': ThresholdFilter(),
-            'filter_glitch': GlitchFilter(),
             'geom_flip': FlipNode(),
             'geom_resize': ResizeNode(),
             'analysis_flow': OpticalFlowNode(),
