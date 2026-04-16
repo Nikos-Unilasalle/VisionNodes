@@ -115,7 +115,10 @@ function App() {
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
+    // Collect all statically-defined node types to avoid duplicates
+    const staticTypes = new Set(CATEGORIES.flatMap(c => c.nodes.map(n => n.type)));
     (pluginSchemas || []).forEach(schema => {
+      if (staticTypes.has(schema.type)) return; // skip already registered
       let targetCat = cats.find((c: any) => c.id === schema.category);
       if (!targetCat) {
          targetCat = {

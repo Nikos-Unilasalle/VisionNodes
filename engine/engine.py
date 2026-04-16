@@ -303,29 +303,36 @@ class MorphologyNode(NodeProcessor):
 class OverlayNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image') or inputs.get('main') or inputs.get('raw_frame')
-        data = inputs.get('data')
         if img is None: return {"main": None}
+        
         res = img.copy()
         if len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
         h, w = res.shape[:2]
+        
         # Default fallback values (used only when data doesn't contain its own style)
         col = (0, 255, 0)
         thick = 2
         
-        if isinstance(data, dict):
-            if data.get('_type') == 'graphics':
-                self._draw_graphics(res, data, w, h, col, thick)
-            elif 'xmin' in data:
-                cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, dict):
-                    if item.get('_type') == 'graphics':
-                        self._draw_graphics(res, item, w, h, col, thick)
-                    elif 'xmin' in item:
-                        cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
-        elif isinstance(data, (float, int)):
-            cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
+        # Process multiple data inputs
+        for key in ['data', 'data_2', 'data_3', 'data_4']:
+            data = inputs.get(key)
+            if data is None: continue
+            
+            if isinstance(data, dict):
+                if data.get('_type') == 'graphics':
+                    self._draw_graphics(res, data, w, h, col, thick)
+                elif 'xmin' in data:
+                    cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
+            elif isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict):
+                        if item.get('_type') == 'graphics':
+                            self._draw_graphics(res, item, w, h, col, thick)
+                        elif 'xmin' in item:
+                            cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
+            elif isinstance(data, (float, int)):
+                cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
+                
         return {"main": res}
 
     def _draw_graphics(self, img, data, w, h, default_col, default_thick):
