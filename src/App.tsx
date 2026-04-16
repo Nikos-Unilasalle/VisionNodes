@@ -7,7 +7,7 @@ import 'reactflow/dist/style.css';
 import { 
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -25,6 +25,7 @@ const initialEdges: Edge[] = [
 
 const nodeTypes = {
   input_webcam: N.InputWebcamNode,
+  input_image: N.InputImageNode,
   input_solid_color: N.SolidColorNode,
   filter_canny: N.FilterCannyNode,
   filter_blur: N.FilterBlurNode,
@@ -55,6 +56,7 @@ const nodeTypes = {
 const CATEGORIES = [
   { id: 'src', label: 'Sources', icon: Camera, nodes: [
     { type: 'input_webcam', label: 'Webcam' },
+    { type: 'input_image', label: 'Image File' },
     { type: 'input_solid_color', label: 'Solid Color' }
   ]},
   { id: 'cv', label: 'Filters', icon: Waves, nodes: [
@@ -86,10 +88,7 @@ const CATEGORIES = [
     { type: 'analysis_flow_viz', label: 'Flow Viz' }
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
-    { type: 'draw_overlay', label: 'Visual Overlay' },
-    { type: 'draw_point', label: 'Draw Point' },
-    { type: 'draw_line', label: 'Draw Line' },
-    { type: 'draw_rect', label: 'Draw Rect' }
+    { type: 'draw_overlay', label: 'Visual Overlay' }
   ]},
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector' },

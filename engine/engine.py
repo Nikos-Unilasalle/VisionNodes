@@ -80,6 +80,18 @@ class WebcamInput(NodeProcessor):
         if self.engine.current_cap_index != idx: self.engine.switch_camera(idx)
         return {"main": inputs.get('raw_frame')}
 
+class ImageInput(NodeProcessor):
+    def __init__(self):
+        self.last_path = ""
+        self.cached_img = None
+    def process(self, inputs, params):
+        path = params.get('path', '')
+        if not path: return {"main": None}
+        if path != self.last_path:
+            self.cached_img = cv2.imread(path)
+            self.last_path = path
+        return {"main": self.cached_img}
+
 class SolidColorNode(NodeProcessor):
     def process(self, inputs, params):
         r = int(params.get('r', 255))
@@ -446,6 +458,7 @@ class VisionEngine:
         self.connected_clients = set()
         self.registry = {
             'input_webcam': WebcamInput(self),
+            'input_image': ImageInput(),
             'input_solid_color': SolidColorNode(),
             'filter_canny': CannyFilter(),
             'filter_blur': BlurFilter(),

@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Handle, Position, useNodeId } from 'reactflow';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -55,6 +55,21 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
 export const InputWebcamNode = memo(({ selected, data }: any) => (
   <BaseNode title="Webcam" icon={Camera} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
     <div className="text-[10px] text-green-500 font-mono">ID: {data.params?.device_index || 0}</div>
+  </BaseNode>
+));
+
+export const InputImageNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
+    <div className="flex flex-col gap-2 p-1">
+      <input 
+        type="text" 
+        className="bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
+        placeholder="path/to/image.jpg"
+        value={data.params?.path || ''}
+        onChange={(e) => data.onChangeParams({ path: e.target.value })}
+      />
+      <div className="text-[7px] text-gray-500 uppercase font-black">Local File Path</div>
+    </div>
   </BaseNode>
 ));
 
