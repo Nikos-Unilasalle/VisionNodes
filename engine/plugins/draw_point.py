@@ -1,4 +1,4 @@
-from ..engine_core import vision_node, NodeProcessor
+from __main__ import vision_node, NodeProcessor
 import numpy as np
 
 @vision_node(
