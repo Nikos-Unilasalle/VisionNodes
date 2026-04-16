@@ -505,9 +505,15 @@ class VisionEngine:
                         th = e.get('targetHandle', '').split('__')[-1]
                         val = source_res.get(sh)
                         if val is not None:
-                            if th: inputs[th] = val
-                            if isinstance(val, np.ndarray): inputs['image'] = val
-                            else: inputs['data'] = val
+                            if th:
+                                inputs[th] = val
+                                # Convenience mapping for main inputs
+                                if th in ['image', 'main']: inputs['image'] = val
+                                if th == 'data': inputs['data'] = val
+                            else:
+                                # Fallback mapping if no handle is specified
+                                if isinstance(val, np.ndarray): inputs['image'] = val
+                                else: inputs['data'] = val
                 proc = self.registry.get(ntype)
                 if proc:
                     try:

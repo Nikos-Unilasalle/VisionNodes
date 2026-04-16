@@ -75,14 +75,15 @@ const CATEGORIES = [
     { type: 'geom_flip', label: 'Flip' },
     { type: 'geom_resize', label: 'Resize' }
   ]},
-  { id: 'motion', label: 'Motion', icon: Wind, nodes: [
-    { type: 'analysis_flow', label: 'Optical Flow' },
-    { type: 'analysis_flow_viz', label: 'Flow Viz' },
-    { type: 'analysis_zone_mean', label: 'Zone Mean' }
-  ]},
-  { id: 'ai', label: 'Tracking', icon: User, nodes: [
+  { id: 'track', label: 'Tracking', icon: User, nodes: [
     { type: 'analysis_face_mp', label: 'Face Tracker' },
-    { type: 'analysis_hand_mp', label: 'Hand Tracker' }
+    { type: 'analysis_hand_mp', label: 'Hand Tracker' },
+    { type: 'analysis_flow', label: 'Optical Flow' }
+  ]},
+  { id: 'visualize', label: 'Visualizers', icon: Eye, nodes: [
+    { type: 'data_inspector', label: 'Inspect Unit' },
+    { type: 'analysis_zone_mean', label: 'Area Monitor' },
+    { type: 'analysis_flow_viz', label: 'Flow Viz' }
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
     { type: 'draw_overlay', label: 'Visual Overlay' },
@@ -93,8 +94,7 @@ const CATEGORIES = [
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector' },
     { type: 'data_coord_splitter', label: 'Coord Splitter' },
-    { type: 'data_coord_combine', label: 'Coord Combine' },
-    { type: 'data_inspector', label: 'Inspect Unit' }
+    { type: 'data_coord_combine', label: 'Coord Combine' }
   ]},
   { id: 'noise', label: 'Noise', icon: Ghost, nodes: [] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [

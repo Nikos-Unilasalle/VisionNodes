@@ -135,7 +135,7 @@ export const AnalysisFlowVizNode = memo(({ selected }: any) => (
 ));
 
 export const AnalysisZoneMeanNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Zone Mean" icon={Target} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}, {id: 'scalar', color: 'data'}]}>
+  <BaseNode title="Area Monitor" icon={Target} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}, {id: 'scalar', color: 'data'}]}>
     <div className="text-xl font-mono text-center text-white">{(data.node_data?.scalar || 0).toFixed(4)}</div>
   </BaseNode>
 ));
