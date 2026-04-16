@@ -1,8 +1,8 @@
 # VisionNodes Studio
 
-VisionNodes est un environnement de développement nodale ultra-fluide pour le prototypage rapide d'algorithmes de Vision par Ordinateur (CV) et d'IA. Entièrement programmé par Gemini 3.1 Pro et Gemini 3 Flash, il combine la puissance de **OpenCV** et **MediaPipe** avec une interface React moderne et réactive.
+VisionNodes est un environnement de développement nodale pour le prototypage rapide d'algorithmes de Vision par Ordinateur (CV) et d'IA. Entièrement programmé par Gemini 3.1 Pro et Gemini 3 Flash, il combine la puissance de **OpenCV** et **MediaPipe** avec une interface React moderne et réactive.
 
-![VisionNodes Header](https://raw.githubusercontent.com/Nikos-Unilasalle/VisionNodes/main/public/header_preview.png) *(Note: Placeholder pour une future capture d'écran)*
+![VisionNodes Header](./cover.png)
 
 ---
 
