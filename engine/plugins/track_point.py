@@ -3,7 +3,7 @@ from __main__ import vision_node, NodeProcessor
 @vision_node(
     type_id='geom_track_point',
     label='Track Point',
-    category='ai',
+    category='track',
     icon='Target',
     inputs=[
         {'id': 'data', 'color': 'dict'},

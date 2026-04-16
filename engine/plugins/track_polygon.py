@@ -4,7 +4,7 @@ import numpy as np
 @vision_node(
     type_id='geom_track_polygon',
     label='Track Polygon',
-    category='ai',
+    category='track',
     icon='Target',
     inputs=[
         {'id': 'data', 'color': 'dict'},

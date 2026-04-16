@@ -4,7 +4,7 @@ import cv2
 @vision_node(
     type_id='plugin_mask_counter',
     label='Area Monitor',
-    category='analysis', # Will create a new tab 'Analysis' automatically!
+    category='visualize', # Will now appear in Visualizers tab
     icon='Hash',
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[
