@@ -404,122 +404,124 @@ function App() {
 
         {/* Right Panel */}
         <div 
-          className="relative bg-[#000] border-l border-[#222] flex flex-col z-10 shadow-2xl shrink-0"
-          style={{ width: rightPanelWidth }}
+          className="bg-[#0a0a0a] border-l border-[#1a1a1a] flex flex-col relative shrink-0 transition-all duration-300 h-full overflow-hidden"
+          style={{ width: selectedNodeId ? rightPanelWidth : 0, opacity: selectedNodeId ? 1 : 0 }}
         >
           {/* Resize Handle */}
           <div 
             className="absolute left-0 top-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize hover:bg-accent/50 z-20 transition-colors duration-150"
             onMouseDown={() => isResizing.current = true}
           />
-          
-          <div className="h-10 border-b border-[#222] flex items-center px-4 bg-[#1a1a1a]">
-            <Settings size={14} className="text-gray-500 mr-2" />
-            <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Unit Inspector</span>
-          </div>
-          
-          <div className="p-10 flex flex-col gap-10 overflow-y-auto scrollbar-hide">
-            {selectedNode ? (
-              <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
-                <div className="flex items-center gap-5">
-                   <div className="w-16 h-16 bg-accent/5 rounded-3xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
-                      <Cpu size={32} />
-                   </div>
-                   <div>
-                      <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
-                      <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
-                   </div>
+
+          <div className="h-full flex flex-col">
+            <div className="h-10 border-b border-[#222] flex items-center px-4 bg-[#1a1a1a] shrink-0">
+              <Settings size={14} className="text-gray-500 mr-2" />
+              <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Unit Inspector</span>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto scrollbar-hide p-10">
+              {selectedNode ? (
+                <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
+                  <div className="flex items-center gap-5">
+                     <div className="w-16 h-16 bg-accent/5 rounded-3xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
+                        <Cpu size={32} />
+                     </div>
+                     <div>
+                        <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
+                        <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
+                     </div>
+                  </div>
+
+                  <div className="space-y-8 pb-32">
+                    {/* --- ALL SLIDERS --- */}
+                    {selectedNode.type === 'input_webcam' && (
+                      <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
+                    )}
+                    {selectedNode.type === 'input_solid_color' && (
+                      <>
+                        <Slider label="Red" val={selectedNode.data.params.r ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
+                        <Slider label="Green" val={selectedNode.data.params.g ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
+                        <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
+                        <Slider label="Width" val={selectedNode.data.params.width ?? 640} min={100} max={1920} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
+                        <Slider label="Height" val={selectedNode.data.params.height ?? 480} min={100} max={1080} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'filter_canny' && (
+                      <>
+                        <Slider label="Threshold Low" val={selectedNode.data.params.low || 100} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {low: v})} />
+                        <Slider label="Threshold High" val={selectedNode.data.params.high || 200} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {high: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'filter_blur' && (
+                      <Slider label="Blur Kernel" val={selectedNode.data.params.size || 5} min={1} max={51} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
+                    )}
+                    {selectedNode.type === 'filter_threshold' && (
+                      <Slider label="Threshold Value" val={selectedNode.data.params.threshold || 127} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
+                    )}
+                    {selectedNode.type === 'geom_resize' && (
+                      <Slider label="Scale Factor" val={selectedNode.data.params.scale || 1} min={0.1} max={3} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {scale: v})} />
+                    )}
+                    {selectedNode.type === 'geom_flip' && (
+                      <Slider label="Flip Code (0,1,-1)" val={selectedNode.data.params.flip_mode || 1} min={-1} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {flip_mode: v})} />
+                    )}
+                    {selectedNode.type === 'filter_color_mask' && (
+                      <>
+                        <Slider label="Hue Min" val={selectedNode.data.params.h_min || 0} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_min: v})} />
+                        <Slider label="Hue Max" val={selectedNode.data.params.h_max || 179} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_max: v})} />
+                        <Slider label="Sat Min" val={selectedNode.data.params.s_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {s_min: v})} />
+                        <Slider label="Value Min" val={selectedNode.data.params.v_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {v_min: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'filter_morphology' && (
+                      <>
+                        <Slider label="Operation (0=Dilate, 1=Erode)" val={selectedNode.data.params.operation || 0} min={0} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {operation: v})} />
+                        <Slider label="Kernel Size" val={selectedNode.data.params.size || 5} min={3} max={21} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'analysis_face_mp' && (
+                      <Slider label="Track Count" val={selectedNode.data.params.max_faces || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {max_faces: v})} />
+                    )}
+                    {selectedNode.type === 'analysis_hand_mp' && (
+                      <Slider label="Hand Count" val={selectedNode.data.params.max_hands || 2} min={1} max={4} onChange={v => updateNodeParams(selectedNode.id, {max_hands: v})} />
+                    )}
+                    {selectedNode.type === 'analysis_flow' && (
+                      <>
+                         <Slider label="Pyr Scale" val={selectedNode.data.params.pyr_scale || 0.5} min={0.1} max={0.9} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {pyr_scale: v})} />
+                         <Slider label="Levels" val={selectedNode.data.params.levels || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {levels: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'draw_overlay' && (
+                      <>
+                        <Slider label="Thickness" val={selectedNode.data.params.thickness || 2} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {thickness: v})} />
+                        <Slider label="Red" val={selectedNode.data.params.r ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
+                        <Slider label="Green" val={selectedNode.data.params.g ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
+                        <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
+                      </>
+                    )}
+                    {selectedNode.type === 'data_list_selector' && (
+                      <Slider label="List Index" val={selectedNode.data.params.index || 0} min={0} max={10} onChange={v => updateNodeParams(selectedNode.id, {index: v})} />
+                    )}
+
+                    {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => (
+                      <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />
+                    ))}
+
+                    {selectedNode.data.node_data && (
+                      <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3 shadow-inner">
+                         <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2 bg-black/20 p-2 rounded-lg"><Activity size={10}/> Analysis Data</div>
+                         <pre className="text-[10px] font-mono text-accent/80 max-h-32 overflow-auto scrollbar-hide italic leading-relaxed">
+                            {JSON.stringify(selectedNode.data.node_data, null, 2)}
+                         </pre>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                <div className="space-y-8 pb-32">
-                  {/* --- ALL SLIDERS FOR PERMANENT ACCESSIBILITY --- */}
-                  {selectedNode.type === 'input_webcam' && (
-                    <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
-                  )}
-                  {selectedNode.type === 'input_solid_color' && (
-                    <>
-                      <Slider label="Red" val={selectedNode.data.params.r ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
-                      <Slider label="Green" val={selectedNode.data.params.g ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
-                      <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
-                      <Slider label="Width" val={selectedNode.data.params.width ?? 640} min={100} max={1920} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
-                      <Slider label="Height" val={selectedNode.data.params.height ?? 480} min={100} max={1080} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'filter_canny' && (
-                    <>
-                      <Slider label="Threshold Low" val={selectedNode.data.params.low || 100} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {low: v})} />
-                      <Slider label="Threshold High" val={selectedNode.data.params.high || 200} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {high: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'filter_blur' && (
-                    <Slider label="Blur Kernel" val={selectedNode.data.params.size || 5} min={1} max={51} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
-                  )}
-                  {selectedNode.type === 'filter_threshold' && (
-                    <Slider label="Threshold Value" val={selectedNode.data.params.threshold || 127} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
-                  )}
-                  {selectedNode.type === 'geom_resize' && (
-                    <Slider label="Scale Factor" val={selectedNode.data.params.scale || 1} min={0.1} max={3} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {scale: v})} />
-                  )}
-                  {selectedNode.type === 'geom_flip' && (
-                    <Slider label="Flip Code (0,1,-1)" val={selectedNode.data.params.flip_mode || 1} min={-1} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {flip_mode: v})} />
-                  )}
-                  {selectedNode.type === 'filter_color_mask' && (
-                    <>
-                      <Slider label="Hue Min" val={selectedNode.data.params.h_min || 0} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_min: v})} />
-                      <Slider label="Hue Max" val={selectedNode.data.params.h_max || 179} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_max: v})} />
-                      <Slider label="Sat Min" val={selectedNode.data.params.s_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {s_min: v})} />
-                      <Slider label="Value Min" val={selectedNode.data.params.v_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {v_min: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'filter_morphology' && (
-                    <>
-                      <Slider label="Operation (0=Dilate, 1=Erode)" val={selectedNode.data.params.operation || 0} min={0} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {operation: v})} />
-                      <Slider label="Kernel Size" val={selectedNode.data.params.size || 5} min={3} max={21} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'analysis_face_mp' && (
-                    <Slider label="Track Count" val={selectedNode.data.params.max_faces || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {max_faces: v})} />
-                  )}
-                  {selectedNode.type === 'analysis_hand_mp' && (
-                    <Slider label="Hand Count" val={selectedNode.data.params.max_hands || 2} min={1} max={4} onChange={v => updateNodeParams(selectedNode.id, {max_hands: v})} />
-                  )}
-                  {selectedNode.type === 'analysis_flow' && (
-                    <>
-                       <Slider label="Pyr Scale" val={selectedNode.data.params.pyr_scale || 0.5} min={0.1} max={0.9} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {pyr_scale: v})} />
-                       <Slider label="Levels" val={selectedNode.data.params.levels || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {levels: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'draw_overlay' && (
-                    <>
-                      <Slider label="Thickness" val={selectedNode.data.params.thickness || 2} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {thickness: v})} />
-                      <Slider label="Red" val={selectedNode.data.params.r ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
-                      <Slider label="Green" val={selectedNode.data.params.g ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
-                      <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
-                    </>
-                  )}
-                  {selectedNode.type === 'data_list_selector' && (
-                    <Slider label="List Index" val={selectedNode.data.params.index || 0} min={0} max={10} onChange={v => updateNodeParams(selectedNode.id, {index: v})} />
-                  )}
-
-                  {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => (
-                    <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />
-                  ))}
-
-                  {selectedNode.data.node_data && (
-                    <div className="p-6 bg-black/40 rounded-3xl border border-white/5 space-y-4 shadow-inner">
-                       <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em] flex items-center gap-2"><Activity size={12}/> Analysis Data</div>
-                       <pre className="text-[10px] font-mono text-accent/80 max-h-56 overflow-auto scrollbar-hide italic leading-relaxed">
-                          {JSON.stringify(selectedNode.data.node_data, null, 2)}
-                       </pre>
-                    </div>
-                  )}
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">
+                  <Layout size={120} />
                 </div>
-              </div>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">
-                <Layout size={120} />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

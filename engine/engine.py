@@ -302,7 +302,8 @@ class MorphologyNode(NodeProcessor):
 # --- UTILS & TERMINALS ---
 class OverlayNode(NodeProcessor):
     def process(self, inputs, params):
-        img, data = inputs.get('image'), inputs.get('data')
+        img = inputs.get('image') or inputs.get('main') or inputs.get('raw_frame')
+        data = inputs.get('data')
         if img is None: return {"main": None}
         res = img.copy()
         if len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
@@ -342,13 +343,12 @@ class OverlayNode(NodeProcessor):
             cv2.circle(img, scaled_pts[0], thick*2, color, -1)
         elif shape == 'line' and len(scaled_pts) >= 2:
             cv2.line(img, scaled_pts[0], scaled_pts[1], color, thick)
-        elif shape == 'polygon' and len(scaled_pts) >= 3:
-            pts_arr = np.array([scaled_pts], np.int32)
-            if data.get('fill', False):
-                overlay = img.copy()
-                cv2.fillPoly(overlay, pts_arr, color)
-                cv2.addWeighted(overlay, 0.4, img, 0.6, 0, img)
-            cv2.polylines(img, pts_arr, True, color, thick)
+        elif shape == 'rect' and len(scaled_pts) >= 2:
+            cv2.rectangle(img, scaled_pts[0], scaled_pts[1], color, -1 if data.get('fill') else thick)
+        elif shape == 'polygon' and len(scaled_pts) > 2:
+            pts_arr = np.array(scaled_pts, np.int32).reshape((-1, 1, 2))
+            if data.get('fill'): cv2.fillPoly(img, [pts_arr], color)
+            cv2.polylines(img, [pts_arr], True, color, thick)
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
