@@ -32,6 +32,7 @@ const nodeTypes = {
   filter_blur: N.FilterBlurNode,
   filter_gray: N.FilterGrayNode,
   filter_threshold: N.FilterThresholdNode,
+  filter_glitch: N.FilterGlitchNode,
   filter_morphology: N.FilterMorphologyNode,
   filter_color_mask: N.FilterColorMaskNode,
   geom_flip: N.GeomFlipNode,
@@ -97,7 +98,9 @@ const CATEGORIES = [
     { type: 'data_coord_splitter', label: 'Coord Splitter' },
     { type: 'data_coord_combine', label: 'Coord Combine' }
   ]},
-  { id: 'noise', label: 'Noise', icon: Ghost, nodes: [] },
+  { id: 'noise', label: 'Noise', icon: Ghost, nodes: [
+    { type: 'filter_glitch', label: 'Glitch Effect' }
+  ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Final Display' }
   ] }

@@ -167,13 +167,21 @@ export const FilterBlurNode = memo(({ selected }: any) => (
   <BaseNode title="Blur" icon={Ghost} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterGrayNode = memo(({ selected }: any) => (
-  <BaseNode title="Grayscale" icon={Eye} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const FilterThresholdNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Threshold" icon={Waves} selected={selected} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]}>
+    <div className="flex flex-col gap-1 p-1">
+      <input type="range" min="0" max="255" value={data.params?.threshold || 127} onChange={(e) => data.onChangeParams({ threshold: parseInt(e.target.value) })} className="w-24 accent-accent" />
+      <div className="text-[7px] text-gray-500 uppercase font-black">Level: {data.params?.threshold || 127}</div>
+    </div>
+  </BaseNode>
 ));
 
-export const FilterMorphologyNode = memo(({ selected }: any) => (
-  <BaseNode title="Morphology" icon={Waves} selected={selected} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Erode / Dilate</div>
+export const FilterGlitchNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Glitch" icon={Ghost} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]}>
+    <div className="flex flex-col gap-1 p-1">
+      <input type="range" min="0" max="1" step="0.01" value={data.params?.amount || 0.1} onChange={(e) => data.onChangeParams({ amount: parseFloat(e.target.value) })} className="w-24 accent-accent" />
+      <div className="text-[7px] text-gray-500 uppercase font-black">Distortion: {(data.params?.amount || 0).toFixed(2)}</div>
+    </div>
   </BaseNode>
 ));
 
@@ -183,8 +191,14 @@ export const FilterColorMaskNode = memo(({ selected }: any) => (
   </BaseNode>
 ));
 
-export const FilterThresholdNode = memo(({ selected }: any) => (
-  <BaseNode title="Threshold" icon={Zap} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} />
+export const FilterGrayNode = memo(({ selected }: any) => (
+  <BaseNode title="Grayscale" icon={Eye} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+));
+
+export const FilterMorphologyNode = memo(({ selected }: any) => (
+  <BaseNode title="Morphology" icon={Waves} selected={selected} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
+    <div className="text-[9px] text-gray-500 uppercase font-black">Erode / Dilate</div>
+  </BaseNode>
 ));
 
 export const GeomFlipNode = memo(({ selected }: any) => (
