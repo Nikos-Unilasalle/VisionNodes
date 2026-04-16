@@ -1,12 +1,12 @@
-# 👁️ VisionNodes Studio
+# VisionNodes Studio
 
-VisionNodes est un environnement de développement nodale ultra-fluide pour le prototypage rapide d'algorithmes de Vision par Ordinateur (CV) et d'IA. Il combine la puissance de **OpenCV** et **MediaPipe** avec une interface React moderne et réactive.
+VisionNodes est un environnement de développement nodale ultra-fluide pour le prototypage rapide d'algorithmes de Vision par Ordinateur (CV) et d'IA. Entièrement programmé par Gemini 3.1 Pro et Gemini 3 Flash, il combine la puissance de **OpenCV** et **MediaPipe** avec une interface React moderne et réactive.
 
 ![VisionNodes Header](https://raw.githubusercontent.com/Nikos-Unilasalle/VisionNodes/main/public/header_preview.png) *(Note: Placeholder pour une future capture d'écran)*
 
 ---
 
-## 🚀 Installation Rapide
+## Installation Rapide
 
 ### 1. Prérequis
 - Node.js (v18+)
@@ -35,7 +35,7 @@ Il faut lancer le moteur Python ET l'interface :
 
 ---
 
-## 🛠️ Guide du Développeur : Créer de nouveaux Nœuds
+## Guide du Développeur : Créer de nouveaux Nœuds
 
 VisionNodes utilise un système de **Plugins Dynamiques**. Vous n'avez pas besoin de toucher au code source du moteur ou de l'interface pour ajouter des fonctionnalités.
 
@@ -86,16 +86,16 @@ class InvertNode(NodeProcessor):
 
 ### Couleurs des Connecteurs
 Utilisez ces noms de couleurs pour assurer la compatibilité entre les nœuds :
-- 🔵 `image` : Flux vidéo standard (BGR).
-- ⚪ `mask` : Masques binaires (1 canal).
-- 🟢 `scalar` / `data` / `dict` : Valeurs numériques ou objets JSON.
-- 🟣 `list` : Listes de détections.
-- 🔴 `flow` : Vecteurs de mouvement (Optical Flow).
-- ⚪ `any` : Connecteur universel (accepte tout).
+- `image` : Flux vidéo standard (BGR).
+- `mask` : Masques binaires (1 canal).
+- `scalar` / `data` / `dict` : Valeurs numériques ou objets JSON.
+- `list` : Listes de détections.
+- `flow` : Vecteurs de mouvement (Optical Flow).
+- `any` : Connecteur universel (accepte tout).
 
 ---
 
-## 📂 Structure du Projet
+## Structure du Projet
 
 ```text
 .
@@ -111,5 +111,5 @@ Utilisez ces noms de couleurs pour assurer la compatibilité entre les nœuds :
 
 ---
 
-## 📜 Licence
+## Licence
 Projet développé dans un but éducatif et de recherche. Libre d'utilisation sous licence MIT.
