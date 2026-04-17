@@ -84,6 +84,7 @@ const CATEGORIES = [
     { type: 'analysis_hand_mp', label: 'Hand Tracker' },
     { type: 'analysis_flow', label: 'Optical Flow' }
   ]},
+  { id: 'features', label: 'Features', icon: Target, nodes: [] },
   { id: 'visualize', label: 'Visualizers', icon: Eye, nodes: [
     { type: 'data_inspector', label: 'Inspect Unit' },
     { type: 'analysis_zone_mean', label: 'Area Monitor' },
@@ -97,6 +98,8 @@ const CATEGORIES = [
     { type: 'data_coord_splitter', label: 'Coord Splitter' },
     { type: 'data_coord_combine', label: 'Coord Combine' }
   ]},
+  { id: 'logic', label: 'Logic', icon: Zap, nodes: [] },
+  { id: 'scientific', label: 'Scientific', icon: Activity, nodes: [] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Final Display' }
   ] }
@@ -176,16 +179,24 @@ function App() {
     return nodes.map(node => {
       const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${node.id}:`));
       const techData = dataKeys.length > 0 ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]])) : nodesData[node.id];
+      
+      let dynamicColor = null;
+      if (node.type === 'logic_switch') {
+        const edge = edges.find(e => e.target === node.id && (e.targetHandle?.endsWith('if_true') || e.targetHandle?.endsWith('if_false')));
+        if (edge) dynamicColor = edge.sourceHandle?.split('__')[0];
+      }
+
       return { 
         ...node, 
         data: { 
           ...node.data, 
           node_data: techData,
+          dynamicColor,
           onChangeParams: (p: any) => updateNodeParams(node.id, p)
         } 
       };
     });
-  }, [nodes, nodesData]);
+  }, [nodes, nodesData, edges]);
 
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
 
@@ -233,7 +244,7 @@ function App() {
     const sourceType = connection.sourceHandle.split('__')[0];
     const targetType = connection.targetHandle.split('__')[0];
     
-    if (targetType === 'any') return true;
+    if (targetType === 'any' || sourceType === 'any') return true;
     
     const sourceColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || sourceType;
     const targetColor = N.HANDLE_COLORS[targetType as keyof typeof N.HANDLE_COLORS] || targetType;
@@ -437,7 +448,7 @@ function App() {
           {isAddMenuOpen && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-20" onClick={() => { setIsAddMenuOpen(false); setPendingConnection(null); }}>
               <div 
-                className="bg-[#181818] border border-[#333] w-full max-w-[700px] h-[750px] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
+                className="bg-[#181818] border border-[#333] w-full max-w-[700px] h-[85vh] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
               >
                 <div className="w-56 bg-[#111] border-r border-[#222] p-6 flex flex-col gap-2">

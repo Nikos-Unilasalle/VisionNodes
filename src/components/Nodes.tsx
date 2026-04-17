@@ -2,11 +2,16 @@ import React, { memo } from 'react';
 import { Handle, Position, useNodeId } from 'reactflow';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
+  Plus, Info
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import { 
+  AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip,
+  BarChart, Bar, Cell
+} from 'recharts';
 
-export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', mask: '#d1d5db', flow: '#ef4444', any: '#ffffff' };
+export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
 
 const StyledHandle = ({ type, position, id, color = 'image', top }: any) => {
   const nodeId = useNodeId();
@@ -41,7 +46,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
         <Icon size={14} className="text-gray-400" />
         <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200">{title}</span>
       </div>
-      <div className="p-4 text-[10px] text-gray-400 flex flex-col gap-2">
+      <div className="p-2 text-[10px] text-gray-400 flex flex-col gap-2">
         {children}
       </div>
       {outputs.map((out: any, i: number) => (
@@ -245,16 +250,81 @@ export const OutputDisplayNode = memo(({ selected }: any) => (
   ]} />
 ));
 
+// --- SCIENTIFIC NODES ---
+
+export const ScientificPlotterNode = memo(({ selected, data }: any) => {
+  const [history, setHistory] = React.useState<any[]>([]);
+  const val = data.node_data?.value;
+
+  React.useEffect(() => {
+    if (val !== undefined && val !== null) {
+      setHistory(prev => {
+        const next = [...prev, { time: Date.now(), v: val }];
+        const limit = data.params?.buffer_size || 100;
+        return next.slice(-limit);
+      });
+    }
+  }, [val, data.params?.buffer_size]);
+
+  return (
+    <BaseNode title="Plotter" icon={Activity} selected={selected} color="blue" inputs={[{id: 'value', color: 'scalar'}]} outputs={[{id: 'value', color: 'scalar'}]}>
+      <div className="h-20 w-full -mx-2 mt-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={history}>
+            <defs>
+              <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <Area type="monotone" dataKey="v" stroke="#22d3ee" strokeWidth={2} fillOpacity={1} fill="url(#colorV)" isAnimationActive={false} />
+            <YAxis hide domain={[data.params?.min_y ?? 'auto', data.params?.max_y ?? 'auto']} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const ScientificStatsNode = memo(({ selected, data }: any) => {
+  const stats = data.node_data || {};
+  const entries = [
+    { label: 'Mean', v: stats.mean, color: 'text-cyan-400' },
+    { label: 'Median', v: stats.median, color: 'text-blue-400' },
+    { label: 'Std Dev', v: stats.std, color: 'text-purple-400' },
+    { label: 'Range', v: (stats.max - stats.min), color: 'text-emerald-400' }
+  ];
+
+  return (
+    <BaseNode title="Statistics" icon={Info} selected={selected} color="accent" inputs={[{id: 'data_list', color: 'list'}]} outputs={[
+      {id: 'mean', color: 'scalar'}, {id: 'median', color: 'scalar'}, {id: 'std', color: 'scalar'}, {id: 'min', color: 'scalar'}, {id: 'max', color: 'scalar'}
+    ]}>
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        {entries.map(e => (
+          <div key={e.label} className="bg-black/40 p-2 rounded-lg border border-white/5">
+             <div className="text-[7px] text-gray-500 uppercase font-black">{e.label}</div>
+             <div className={`text-[9px] font-mono ${e.color} font-bold`}>{e.v?.toFixed(3) ?? '---'}</div>
+          </div>
+        ))}
+      </div>
+    </BaseNode>
+  );
+});
+
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
   const IconCmp = (LucideIcons as any)[schema.icon] || Box;
 
+  if (schema.type === 'sci_plotter') return <ScientificPlotterNode selected={selected} data={data} />;
+  if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
+
+  const outputs = data.dynamicColor 
+    ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
+    : schema.outputs;
+
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
-      <div className="text-[9px] text-gray-500 uppercase font-black">Dynamic Plugin</div>
-      {data.node_data && data.node_data.display_text && (
-        <div className="text-xl font-mono text-center text-yellow-500 py-2">{data.node_data.display_text}</div>
-      )}
+    <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="accent" inputs={schema.inputs} outputs={outputs}>
+      {/* Minimalist: internal content moved to Inspector */}
     </BaseNode>
   );
 });
