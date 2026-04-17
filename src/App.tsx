@@ -1,16 +1,19 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import ReactFlow, { 
   addEdge, Background, Controls, applyEdgeChanges, applyNodeChanges,
-  Node, Edge, Connection, EdgeChange, NodeChange, Panel
+  Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { 
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
-  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film
+  Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
+  Pause, Play
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
+import logo from './assets/logo.svg';
+import { motion } from 'framer-motion';
 
 const initialNodes: Node[] = [
   { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
@@ -423,12 +426,12 @@ function App() {
     <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
       <header className="h-10 bg-[#151515] border-b border-[#222] flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-6">
-           <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-accent rounded rotate-45 flex items-center justify-center shadow-lg shadow-accent/20 transition-transform hover:rotate-90">
-                 <Cpu size={10} className="text-white" />
-              </div>
-              <h1 className="text-[10px] font-black tracking-[0.3em] text-white uppercase">VisionNodes Studio</h1>
-           </div>
+            <div className="flex items-center gap-2">
+               <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
+                  <img src={logo} alt="Logo" className="h-full w-auto object-contain" />
+               </div>
+               <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VisionNodes Studio</h1>
+            </div>
            <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
               {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
            </div>
@@ -447,7 +450,7 @@ function App() {
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             fitView
           >
-            <Background color="#111" variant="lines" gap={40} size={1} />
+            <Background color="#111" variant={BackgroundVariant.Lines} gap={40} size={1} />
             <Controls className="bg-[#1a1a1a] border-[#333] fill-white" />
             <Panel position="top-left">
               <button 
@@ -514,9 +517,15 @@ function App() {
             </div>
           )}
 
-          <div className="absolute bottom-6 left-6 w-[400px] aspect-video bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-all duration-700">
-             {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain" />}
-          </div>
+          <motion.div 
+            drag
+            dragMomentum={false}
+            whileHover={{ scale: 1.02, cursor: 'grab' }}
+            whileDrag={{ scale: 1.05, cursor: 'grabbing', zIndex: 100 }}
+            className="absolute bottom-6 left-6 w-[400px] aspect-video bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+          >
+             {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" />}
+          </motion.div>
         </div>
 
         {/* Right Panel */}

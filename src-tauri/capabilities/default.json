@@ -6,6 +6,15 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "dialog:default"
+    "dialog:default",
+    {
+      "identifier": "shell:allow-execute",
+      "args": [
+        {
+          "sidecar": true,
+          "name": "bin/engine-bin"
+        }
+      ]
+    }
   ]
 }

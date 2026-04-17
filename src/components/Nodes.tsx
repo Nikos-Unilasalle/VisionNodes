@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position, useNodeId } from 'reactflow';
+import { open } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
@@ -62,6 +63,25 @@ export const InputWebcamNode = memo(({ selected }: any) => (
 ));
 
 export const InputImageNode = memo(({ selected, data }: any) => {
+  const preview = data.node_data?.preview;
+  
+  const handleBrowse = async () => {
+    try {
+      const selectedFile = await open({
+        multiple: false,
+        filters: [{
+          name: 'Image',
+          extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff']
+        }]
+      });
+      if (selectedFile && typeof selectedFile === 'string') {
+        data.onChangeParams?.({ path: selectedFile });
+      }
+    } catch (err) {
+      console.error('Failed to open dialog:', err);
+    }
+  };
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -72,19 +92,55 @@ export const InputImageNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
-      <div 
-        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 group-hover:opacity-100 transition-opacity"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onDrop}
-      >
-        <Plus size={20} className="text-gray-500" />
-        <div className="text-[7px] text-gray-500 uppercase font-black mt-2">Drop Image</div>
-      </div>
+      {preview ? (
+        <div className="relative group" onClick={handleBrowse}>
+          <img 
+            src={`data:image/jpeg;base64,${preview}`} 
+            alt="Preview" 
+            className="w-full h-32 object-cover rounded-lg border border-[#333] mb-1" 
+          />
+          <div 
+            className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-green-500/50"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={onDrop}
+          >
+            <Search size={20} className="text-white mb-1" />
+            <div className="text-[7px] text-white uppercase font-black">Browse / Drop</div>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={onDrop}
+          onClick={handleBrowse}
+        >
+          <Search size={20} className="text-gray-500 mb-2" />
+          <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Image</div>
+        </div>
+      )}
     </BaseNode>
   );
 });
 
 export const InputMovieNode = memo(({ selected, data }: any) => {
+  const handleBrowse = async () => {
+    try {
+      const selectedFile = await open({
+        multiple: false,
+        filters: [{
+          name: 'Video',
+          extensions: ['mp4', 'mov', 'avi', 'mkv', 'webm']
+        }]
+      });
+      if (selectedFile && typeof selectedFile === 'string') {
+        data.onChangeParams?.({ path: selectedFile });
+      }
+    } catch (err) {
+      console.error('Failed to open dialog:', err);
+    }
+  };
+
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -96,12 +152,13 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Movie File" icon={Film} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
       <div 
-        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 group-hover:opacity-100 transition-opacity"
+        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
+        onClick={handleBrowse}
       >
-        <Film size={20} className="text-gray-500" />
-        <div className="text-[7px] text-gray-500 uppercase font-black mt-2">Drop Movie</div>
+        <Search size={20} className="text-gray-500 mb-2" />
+        <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Movie</div>
       </div>
     </BaseNode>
   );

@@ -10,6 +10,17 @@ import urllib.request
 from collections import deque
 from abc import ABC, abstractmethod
 
+def list_available_cameras():
+    index = 0
+    arr = []
+    while index < 5:
+        cap = cv2.VideoCapture(index)
+        if cap.isOpened():
+            arr.append(index)
+            cap.release()
+        index += 1
+    return arr
+
 # --- AI Setup (MediaPipe) ---
 MODEL_PATH = "face_landmarker.task"
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
@@ -48,14 +59,18 @@ def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, 
             "outputs": outputs or [],
             "params": params or []
         })
-        NODE_CLASS_REGISTRY[type_id] = cls()
+        NODE_CLASS_REGISTRY[type_id] = cls
         return cls
     return decorator
 
 def load_plugins():
     import importlib.util
     import glob
-    plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
+    import sys
+    if hasattr(sys, '_MEIPASS'):
+        plugin_dir = os.path.join(sys._MEIPASS, "engine", "plugins")
+    else:
+        plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
     os.makedirs(plugin_dir, exist_ok=True)
     for file in glob.glob(os.path.join(plugin_dir, "*.py")):
         if os.path.basename(file) == "__init__.py": continue
@@ -75,7 +90,7 @@ class NodeProcessor(ABC):
 
 # --- INPUT UNITS ---
 class WebcamInput(NodeProcessor):
-    def __init__(self, engine): self.engine = engine
+    def __init__(self, engine=None): self.engine = engine
     def process(self, inputs, params):
         idx = int(params.get('device_index', 0))
         if self.engine.current_cap_index != idx: self.engine.switch_camera(idx)
@@ -88,10 +103,38 @@ class ImageInput(NodeProcessor):
     def process(self, inputs, params):
         path = params.get('path', '')
         if not path: return {"main": None}
-        if path != self.last_path:
-            self.cached_img = cv2.imread(path)
-            self.last_path = path
-        return {"main": self.cached_img}
+        
+        # Absolute path resolution
+        full_path = os.path.abspath(os.path.expanduser(path))
+        
+        if full_path != self.last_path:
+            print(f"[Engine] Loading Image: {full_path}")
+            img = cv2.imread(full_path)
+            if img is not None:
+                self.cached_img = img
+                self.last_path = full_path
+            else:
+                print(f"[Error] Failed to load image at: {full_path}")
+                # Don't update last_path so we can retry
+                return {"main": None}
+
+        if self.cached_img is not None:
+             out = {"main": self.cached_img}
+             # Generate a small preview
+             try:
+                 h, w = self.cached_img.shape[:2]
+                 sc = 120 / h
+                 preview_w = int(w * sc)
+                 if preview_w > 0:
+                    preview_img = cv2.resize(self.cached_img, (preview_w, 120))
+                    _, buf = cv2.imencode('.jpg', preview_img, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                    out["preview"] = base64.b64encode(buf).decode('utf-8')
+             except Exception as e:
+                 print(f"[Warning] Preview generation failed: {e}")
+             
+             return out
+        
+        return {"main": None}
 
 class MovieInput(NodeProcessor):
     def __init__(self):
@@ -104,12 +147,21 @@ class MovieInput(NodeProcessor):
         path = params.get('path', '')
         if not path: return {"main": None}
         
-        if path != self.last_path:
+        full_path = os.path.abspath(os.path.expanduser(path))
+        
+        if full_path != self.last_path:
             if self.cap: self.cap.release()
-            self.cap = cv2.VideoCapture(path)
-            self.last_path = path
-            self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.current_frame = 0
+            print(f"[Engine] Attempting to open video: {full_path}")
+            cap = cv2.VideoCapture(full_path)
+            if cap.isOpened():
+                self.cap = cap
+                self.last_path = full_path
+                self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                self.current_frame = 0
+                print(f"[Success] Video opened. Total frames: {self.total_frames}")
+            else:
+                print(f"[Error] OpenCV could not open video: {full_path}")
+                return {"main": None}
             
         if not self.cap or not self.cap.isOpened(): return {"main": None}
         
@@ -394,10 +446,32 @@ class CoordToMaskNode(NodeProcessor):
         img_ref, data = inputs.get('image'), inputs.get('data')
         w, h = (img_ref.shape[1], img_ref.shape[0]) if img_ref is not None else (int(params.get('width', 640)), int(params.get('height', 480)))
         mask = np.zeros((h, w), dtype=np.uint8)
-        if isinstance(data, dict) and 'xmin' in data: cv2.rectangle(mask, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), 255, -1)
-        elif isinstance(data, list):
-            for item in data:
-                if isinstance(item, dict) and 'xmin' in item: cv2.rectangle(mask, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), 255, -1)
+        
+        items = data if isinstance(data, list) else [data] if data else []
+        for item in items:
+            if not isinstance(item, dict): continue
+            
+            # Case 1: Landmarks (MediaPipe format: list of {'x', 'y'})
+            if 'landmarks' in item:
+                lms = item['landmarks']
+                pts = np.array([(int(lm['x'] * w), int(lm['y'] * h)) for lm in lms], np.int32)
+                if len(pts) > 2:
+                    hull = cv2.convexHull(pts)
+                    cv2.fillPoly(mask, [hull], 255)
+            
+            # Case 2: Points (List of [x, y])
+            elif 'pts' in item:
+                pts = np.array([(int(p[0] * w), int(p[1] * h)) for p in item['pts']], np.int32)
+                if len(pts) > 2:
+                    cv2.fillPoly(mask, [pts], 255)
+            
+            # Case 3: Simple Box
+            elif 'xmin' in item:
+                cv2.rectangle(mask, 
+                    (int(item['xmin']*w), int(item['ymin']*h)), 
+                    (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), 
+                    255, -1)
+                    
         return {"mask": mask}
 
 class MaskBlendNode(NodeProcessor):
@@ -428,15 +502,16 @@ class VisionEngine:
         self.graph = {"nodes": [], "edges": []}
         self.sorted_nodes = []
         self.connected_clients = set()
+        self.node_instances = {}
         self.registry = {
-            'input_webcam': WebcamInput(self), 'input_image': ImageInput(), 'input_movie': MovieInput(), 'input_solid_color': SolidColorNode(),
-            'filter_canny': CannyFilter(), 'filter_blur': BlurFilter(), 'filter_gray': GrayFilter(), 'filter_threshold': ThresholdFilter(),
-            'geom_flip': FlipNode(), 'geom_resize': ResizeNode(), 'analysis_flow': OpticalFlowNode(), 'analysis_flow_viz': FlowVizNode(),
-            'analysis_zone_mean': ZoneMeanNode(), 'analysis_face_mp': FaceDetectionNode(), 'analysis_hand_mp': HandDetectionNode(),
-            'filter_color_mask': ColorMaskNode(), 'filter_morphology': MorphologyNode(), 'draw_overlay': OverlayNode(),
-            'util_coord_to_mask': CoordToMaskNode(), 'util_mask_blend': MaskBlendNode(), 'data_list_selector': ListSelectorNode(),
-            'data_coord_splitter': CoordSplitterNode(), 'data_coord_combine': CoordCombineNode(), 'data_inspector': InspectorNode(),
-            'output_display': DisplayOutput()
+            'input_webcam': WebcamInput, 'input_image': ImageInput, 'input_movie': MovieInput, 'input_solid_color': SolidColorNode,
+            'filter_canny': CannyFilter, 'filter_blur': BlurFilter, 'filter_gray': GrayFilter, 'filter_threshold': ThresholdFilter,
+            'geom_flip': FlipNode, 'geom_resize': ResizeNode, 'analysis_flow': OpticalFlowNode, 'analysis_flow_viz': FlowVizNode,
+            'analysis_zone_mean': ZoneMeanNode, 'analysis_face_mp': FaceDetectionNode, 'analysis_hand_mp': HandDetectionNode,
+            'filter_color_mask': ColorMaskNode, 'filter_morphology': MorphologyNode, 'draw_overlay': OverlayNode,
+            'util_coord_to_mask': CoordToMaskNode, 'util_mask_blend': MaskBlendNode, 'data_list_selector': ListSelectorNode,
+            'data_coord_splitter': CoordSplitterNode, 'data_coord_combine': CoordCombineNode, 'data_inspector': InspectorNode,
+            'output_display': DisplayOutput
         }
         self.registry.update(NODE_CLASS_REGISTRY)
 
@@ -457,6 +532,10 @@ class VisionEngine:
                 degr[v] -= 1
                 if degr[v] == 0: q.append(v)
         self.sorted_nodes = [nodes[nid] for nid in s_ids if nid in nodes]
+        
+        # Prune unused instances
+        active_nids = set(nodes.keys())
+        self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
 
     async def run(self):
         while True:
@@ -481,7 +560,19 @@ class VisionEngine:
                             else:
                                 if isinstance(val, np.ndarray): inputs['image'] = val
                                 else: inputs['data'] = val
-                proc = self.registry.get(ntype)
+                # Get or create instance for this specific node
+                if nid not in self.node_instances:
+                    cls = self.registry.get(ntype)
+                    if cls:
+                        # Handle special cases if needed, or pass engine reference
+                        try:
+                            # Try passing self (engine) in case it's needed
+                            self.node_instances[nid] = cls(self)
+                        except TypeError:
+                            # Fallback to no-args init
+                            self.node_instances[nid] = cls()
+                
+                proc = self.node_instances.get(nid)
                 if proc:
                     try:
                         out = proc.process(inputs, node.get('data', {}).get('params', {}))
@@ -519,13 +610,20 @@ class VisionEngine:
 load_plugins()
 engine = VisionEngine()
 
-async def main():
+async def main(engine_instance):
     try:
-        async with websockets.serve(engine.hdl, "localhost", 8765):
-            await engine.run()
+        async with websockets.serve(engine_instance.hdl, "localhost", 8765):
+            await engine_instance.run()
     except Exception as e:
         print(f"Server Error: {e}")
 
 if __name__ == "__main__":
-    try: asyncio.run(main())
-    except KeyboardInterrupt: print("\n[Engine] Stopped.")
+    print("[Engine] Starting OpenCV Sidecar...")
+    cameras = list_available_cameras()
+    print(f"[Engine] Available cameras: {cameras}")
+    
+    engine = VisionEngine()
+    try:
+        asyncio.run(main(engine))
+    except KeyboardInterrupt:
+        print("\n[Engine] Stopped.")
