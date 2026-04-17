@@ -11,7 +11,12 @@ from __main__ import vision_node, NodeProcessor
     ],
     outputs=[{'id': 'result', 'color': 'scalar'}],
     params=[
-        {'id': 'operation', 'min': 0, 'max': 3, 'step': 1, 'default': 0},
+        {
+            'id': 'operation', 
+            'type': 'enum',
+            'options': ['Add (+)', 'Subtract (-)', 'Multiply (*)', 'Divide (/)'],
+            'default': 0
+        },
         {'id': 'value_b', 'min': -100, 'max': 100, 'step': 1, 'default': 0}
     ]
 )

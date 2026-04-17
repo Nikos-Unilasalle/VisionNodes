@@ -52,10 +52,8 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
 };
 
 // --- NODES ---
-export const InputWebcamNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Webcam" icon={Camera} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
-    <div className="text-[10px] text-green-500 font-mono">ID: {data.params?.device_index || 0}</div>
-  </BaseNode>
+export const InputWebcamNode = memo(({ selected }: any) => (
+  <BaseNode title="Webcam" icon={Camera} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const InputImageNode = memo(({ selected, data }: any) => {
@@ -63,100 +61,49 @@ export const InputImageNode = memo(({ selected, data }: any) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
-      // In Tauri, we might need a better way to get full path,
-      // but if the file is in the same dir or we use a workaround:
-      data.onChangeParams({ path: (file as any).path || file.name });
+      data.onChangeParams?.({ path: (file as any).path || file.name });
     }
   };
 
   return (
     <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
       <div 
-        className="flex flex-col gap-2 p-1"
+        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 group-hover:opacity-100 transition-opacity"
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
       >
-        <div className="flex gap-1">
-          <input 
-            type="text" 
-            className="flex-1 bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
-            placeholder="path/to/image.jpg"
-            value={data.params?.path || ''}
-            onChange={(e) => data.onChangeParams({ path: e.target.value })}
-          />
-        </div>
-        <div className="text-[7px] text-gray-500 uppercase font-black">Drop file or enter path</div>
+        <Plus size={20} className="text-gray-500" />
+        <div className="text-[7px] text-gray-500 uppercase font-black mt-2">Drop Image</div>
       </div>
     </BaseNode>
   );
 });
 
 export const InputMovieNode = memo(({ selected, data }: any) => {
-  const meta = data.node_data || {};
-  const total = meta.total_frames || 0;
-  const current = meta.current_frame || 0;
-  const isPlaying = data.params?.playing || false;
-
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
-      data.onChangeParams({ path: (file as any).path || file.name });
+      data.onChangeParams?.({ path: (file as any).path || file.name });
     }
   };
 
   return (
     <BaseNode title="Movie File" icon={Film} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
       <div 
-        className="flex flex-col gap-3 p-1 min-w-[140px]"
+        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 group-hover:opacity-100 transition-opacity"
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
       >
-        <input 
-          type="text" 
-          className="bg-black/40 border border-[#333] rounded px-2 py-1 text-[9px] text-white outline-none focus:border-accent"
-          placeholder="path/to/movie.mp4"
-          value={data.params?.path || ''}
-          onChange={(e) => data.onChangeParams({ path: e.target.value })}
-        />
-        
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => data.onChangeParams({ playing: !isPlaying })}
-              className={`p-1 rounded ${isPlaying ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'} hover:bg-opacity-30`}
-            >
-              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-            </button>
-            <div className="text-[9px] font-mono text-gray-400">
-              {current} / {total}
-            </div>
-          </div>
-          
-          <input 
-            type="range"
-            min="0"
-            max={total - 1}
-            value={isPlaying ? current : (data.params?.scrub_index || 0)}
-            onChange={(e) => data.onChangeParams({ scrub_index: parseInt(e.target.value), playing: false })}
-            disabled={total <= 0}
-            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent"
-          />
-        </div>
-        <div className="text-[7px] text-gray-500 uppercase font-black">Controls + Drag & Drop</div>
+        <Film size={20} className="text-gray-500" />
+        <div className="text-[7px] text-gray-500 uppercase font-black mt-2">Drop Movie</div>
       </div>
     </BaseNode>
   );
 });
 
-export const SolidColorNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Solid Color" icon={Palette} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
-    <div className="flex gap-2 text-[9px] font-black items-center justify-center pt-2 pb-1">
-       <span className="text-red-500 bg-red-500/10 px-2 py-1 rounded">R:{data.params?.r ?? 255}</span>
-       <span className="text-green-500 bg-green-500/10 px-2 py-1 rounded">G:{data.params?.g ?? 0}</span>
-       <span className="text-blue-500 bg-blue-500/10 px-2 py-1 rounded">B:{data.params?.b ?? 0}</span>
-    </div>
-  </BaseNode>
+export const SolidColorNode = memo(({ selected }: any) => (
+  <BaseNode title="Solid Color" icon={Palette} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const FilterCannyNode = memo(({ selected }: any) => (
@@ -167,13 +114,8 @@ export const FilterBlurNode = memo(({ selected }: any) => (
   <BaseNode title="Blur" icon={Ghost} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterThresholdNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Threshold" icon={Waves} selected={selected} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]}>
-    <div className="flex flex-col gap-1 p-1">
-      <input type="range" min="0" max="255" value={data.params?.threshold || 127} onChange={(e) => data.onChangeParams({ threshold: parseInt(e.target.value) })} className="w-24 accent-accent" />
-      <div className="text-[7px] text-gray-500 uppercase font-black">Level: {data.params?.threshold || 127}</div>
-    </div>
-  </BaseNode>
+export const FilterThresholdNode = memo(({ selected }: any) => (
+  <BaseNode title="Threshold" icon={Waves} selected={selected} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} />
 ));
 
 export const FilterColorMaskNode = memo(({ selected }: any) => (
@@ -204,9 +146,7 @@ export const AnalysisFaceMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_faces || 3;
   const outputs = [{id: 'main', color: 'image'}, {id: 'faces_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `face_${i}`, color: 'data' }))];
   return (
-    <BaseNode title="Face Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs}>
-      <div className="text-[9px] text-gray-500 uppercase font-black">MediaPipe Face ({max})</div>
-    </BaseNode>
+    <BaseNode title="Face Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
 
@@ -214,9 +154,7 @@ export const AnalysisHandMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_hands || 2;
   const outputs = [{id: 'main', color: 'image'}, {id: 'hands_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `hand_${i}`, color: 'data' }))];
   return (
-    <BaseNode title="Hand Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs}>
-      <div className="text-[9px] text-gray-500 uppercase font-black">MediaPipe Hands ({max})</div>
-    </BaseNode>
+    <BaseNode title="Hand Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
 
@@ -261,10 +199,8 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const DataListSelectorNode = memo(({ selected, data }: any) => (
-  <BaseNode title="List Selector" icon={Database} selected={selected} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]}>
-    <div className="text-[10px] text-purple-400 font-mono">Index: {data.params?.index || 0}</div>
-  </BaseNode>
+export const DataListSelectorNode = memo(({ selected }: any) => (
+  <BaseNode title="List Selector" icon={Database} selected={selected} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
 ));
 
 export const DataCoordSplitterNode = memo(({ selected }: any) => (

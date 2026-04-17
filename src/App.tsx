@@ -176,7 +176,14 @@ function App() {
     return nodes.map(node => {
       const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${node.id}:`));
       const techData = dataKeys.length > 0 ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]])) : nodesData[node.id];
-      return { ...node, data: { ...node.data, node_data: techData } };
+      return { 
+        ...node, 
+        data: { 
+          ...node.data, 
+          node_data: techData,
+          onChangeParams: (p: any) => updateNodeParams(node.id, p)
+        } 
+      };
     });
   }, [nodes, nodesData]);
 
@@ -522,6 +529,35 @@ function App() {
                     {selectedNode.type === 'input_webcam' && (
                       <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
                     )}
+                    {selectedNode.type === 'input_image' && (
+                      <TextInput label="Image Path" val={selectedNode.data.params.path || ''} onChange={v => updateNodeParams(selectedNode.id, {path: v})} />
+                    )}
+                    {selectedNode.type === 'input_movie' && (
+                      <div className="space-y-6">
+                        <TextInput label="Movie Path" val={selectedNode.data.params.path || ''} onChange={v => updateNodeParams(selectedNode.id, {path: v})} />
+                        <div className="flex flex-col gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                          <label className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Playback Control</label>
+                          <div className="flex items-center justify-between">
+                            <button 
+                              onClick={() => updateNodeParams(selectedNode.id, { playing: !selectedNode.data.params.playing })}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold transition-all ${selectedNode.data.params.playing ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-green-500 text-white shadow-lg shadow-green-500/20'}`}
+                            >
+                              {selectedNode.data.params.playing ? <><Pause size={14} /> Stop</> : <><Play size={14} /> Start</>}
+                            </button>
+                            <div className="text-[10px] font-mono text-gray-400">
+                              Frame: {selectedNode.data.node_data?.current_frame || 0} / {selectedNode.data.node_data?.total_frames || 0}
+                            </div>
+                          </div>
+                          <Slider 
+                            label="Scrub" 
+                            val={selectedNode.data.params.playing ? (selectedNode.data.node_data?.current_frame || 0) : (selectedNode.data.params.scrub_index || 0)} 
+                            min={0} 
+                            max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
+                            onChange={v => updateNodeParams(selectedNode.id, { scrub_index: v, playing: false })} 
+                          />
+                        </div>
+                      </div>
+                    )}
                     {selectedNode.type === 'input_solid_color' && (
                       <>
                         <Slider label="Red" val={selectedNode.data.params.r ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
@@ -581,7 +617,19 @@ function App() {
                     )}
 
                     {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => {
+                      const isEnum = p.type === 'enum' || p.options;
                       const isString = p.type === 'string' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'string';
+                      
+                      if (isEnum) {
+                        return <SelectInput 
+                          key={p.id} 
+                          label={p.label || p.id} 
+                          val={selectedNode.data.params[p.id] ?? p.default ?? 0} 
+                          options={p.options || []}
+                          onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} 
+                        />;
+                      }
+                      
                       if (isString) {
                         return <TextInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                       }
@@ -631,6 +679,21 @@ const TextInput = ({ label, val, onChange }: any) => (
       className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
       placeholder={`Enter ${label.toLowerCase()}...`}
     />
+  </div>
+);
+
+const SelectInput = ({ label, val, options, onChange }: any) => (
+  <div className="space-y-4 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <select 
+      value={val} 
+      onChange={(e) => onChange(parseInt(e.target.value))} 
+      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
+    >
+      {options.map((opt: string, i: number) => (
+        <option key={i} value={i} className="bg-[#1a1a1a]">{opt}</option>
+      ))}
+    </select>
   </div>
 );
 
