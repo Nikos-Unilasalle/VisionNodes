@@ -6,6 +6,7 @@ import cv2
     label='Invert Color',
     category='cv',
     icon='Palette',
+    description="Inverts all colors in the image (negative effect).",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[]

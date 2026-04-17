@@ -6,6 +6,7 @@ import cv2
     label='Invert Mask',
     category='mask',
     icon='Layers',
+    description="Inverts a binary mask (black becomes white and vice versa).",
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[{'id': 'main', 'color': 'mask'}],
     params=[]

@@ -5,6 +5,7 @@ from __main__ import vision_node, NodeProcessor
     label='Track Point',
     category='track',
     icon='Target',
+    description="Extracts the precise coordinates of a specific tracked landmark (e.g., joints).",
     inputs=[
         {'id': 'data', 'color': 'dict'},
         {'id': 'image', 'color': 'image'}

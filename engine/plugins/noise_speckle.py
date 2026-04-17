@@ -1,4 +1,5 @@
 from __main__ import vision_node, NodeProcessor
+import cv2
 import numpy as np
 
 @vision_node(
@@ -6,6 +7,7 @@ import numpy as np
     label='Speckle Noise',
     category='noise',
     icon='Ghost',
+    description="Adds multiplicative noise to simulate complex interference.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

@@ -7,6 +7,7 @@ import numpy as np
     label='Simple Image Blend',
     category='blend',
     icon='Layers',
+    description="Linearly blends two images based on a simple opacity factor.",
     inputs=[
         {'id': 'image_a', 'color': 'image'},
         {'id': 'image_b', 'color': 'image'}

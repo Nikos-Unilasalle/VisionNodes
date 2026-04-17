@@ -1,11 +1,13 @@
 from __main__ import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='plugin_pixelate',
     label='Pixelate Filter',
     category='cv',
     icon='Hash',
+    description="Reduces the apparent resolution of the image to create a pixelated effect.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

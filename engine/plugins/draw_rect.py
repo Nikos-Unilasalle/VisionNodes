@@ -1,11 +1,11 @@
 from __main__ import vision_node, NodeProcessor
-import numpy as np
 
 @vision_node(
     type_id='draw_rect',
     label='Draw Rect',
     category='draw',
     icon='Box',
+    description="Defines a rectangle to be displayed over the video stream.",
     inputs=[
         {'id': 'x1', 'color': 'scalar'},
         {'id': 'y1', 'color': 'scalar'},

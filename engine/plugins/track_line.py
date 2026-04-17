@@ -5,7 +5,8 @@ import math
     type_id='geom_track_line',
     label='Track Line',
     category='track',
-    icon='Target',
+    icon='Maximize',
+    description="Calculates the distance in pixels between two tracked landmarks.",
     inputs=[
         {'id': 'data', 'color': 'dict'},
         {'id': 'image', 'color': 'image'}

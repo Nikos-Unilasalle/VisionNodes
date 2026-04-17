@@ -1,4 +1,5 @@
 from __main__ import vision_node, NodeProcessor
+import cv2
 import numpy as np
 
 @vision_node(
@@ -6,6 +7,7 @@ import numpy as np
     label='Gaussian Noise',
     category='noise',
     icon='Ghost',
+    description="Adds Gaussian noise to simulate film grain or a noisy sensor.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

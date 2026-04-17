@@ -56,52 +56,60 @@ const nodeTypes = {
 
 const CATEGORIES = [
   { id: 'src', label: 'Sources', icon: Camera, nodes: [
-    { type: 'input_webcam', label: 'Webcam' },
-    { type: 'input_image', label: 'Image File' },
-    { type: 'input_movie', label: 'Movie File' },
-    { type: 'input_solid_color', label: 'Solid Color' }
+    { type: 'input_webcam', label: 'Webcam', description: 'Captures live video feed from your system camera.' },
+    { type: 'input_image', label: 'Image File', description: 'Loads a static image from your local drive.' },
+    { type: 'input_movie', label: 'Movie File', description: 'Plays a video file with playback and scrubbing controls.' },
+    { type: 'input_solid_color', label: 'Solid Color', description: 'Generates an image of a custom solid color.' }
   ]},
   { id: 'cv', label: 'Filters', icon: Waves, nodes: [
-    { type: 'filter_canny', label: 'Canny Edge' },
-    { type: 'filter_blur', label: 'Gaussian Blur' },
-    { type: 'filter_gray', label: 'Grayscale' },
-    { type: 'filter_threshold', label: 'Threshold' }
+    { type: 'filter_canny', label: 'Canny Edge', description: 'Detects edges using the Canny algorithm (line drawing effect).' },
+    { type: 'filter_blur', label: 'Gaussian Blur', description: 'Applies a Gaussian blur to smooth the image and reduce noise.' },
+    { type: 'filter_gray', label: 'Grayscale', description: 'Converts the image to grayscale (black and white).' },
+    { type: 'filter_threshold', label: 'Threshold', description: 'Separates the image into black and white based on intensity threshold.' }
   ]},
   { id: 'mask', label: 'Masks', icon: Layers, nodes: [
-    { type: 'filter_color_mask', label: 'Color Mask' },
-    { type: 'filter_morphology', label: 'Morphology' },
-    { type: 'util_coord_to_mask', label: 'Coord To Mask' }
+    { type: 'filter_color_mask', label: 'Color Mask', description: 'Creates a mask by isolating a range of colors (HSV).' },
+    { type: 'filter_morphology', label: 'Morphology', description: 'Dilation or erosion operations to clean up masks.' },
+    { type: 'util_coord_to_mask', label: 'Coord To Mask', description: 'Transforms detection coordinates into a white mask.' }
   ]},
   { id: 'blend', label: 'Blending', icon: Box, nodes: [
-    { type: 'util_mask_blend', label: 'Mask Blend' }
+    { type: 'util_mask_blend', label: 'Mask Blend', description: 'Blends two images using a mask as an alpha layer.' }
   ]},
   { id: 'geom', label: 'Geometric', icon: Move, nodes: [
-    { type: 'geom_flip', label: 'Flip' },
-    { type: 'geom_resize', label: 'Resize' }
+    { type: 'geom_flip', label: 'Flip', description: 'Inverts the image horizontally or vertically.' },
+    { type: 'geom_resize', label: 'Resize', description: 'Changes the image resolution (scaling).' },
+    { type: 'geom_perspective', label: 'Perspective Warp', description: 'Straightens a distorted area into a flat rectangle via 4 points.' },
+    { type: 'util_manual_points', label: 'Manual 4 Points', description: 'Manually defines 4 reference points for geometric calculations.' }
   ]},
   { id: 'track', label: 'Tracking', icon: User, nodes: [
-    { type: 'analysis_face_mp', label: 'Face Tracker' },
-    { type: 'analysis_hand_mp', label: 'Hand Tracker' },
-    { type: 'analysis_flow', label: 'Optical Flow' }
+    { type: 'analysis_face_mp', label: 'Face Tracker', description: 'Detects and tracks faces and facial landmarks (MediaPipe).' },
+    { type: 'analysis_hand_mp', label: 'Hand Tracker', description: 'Detects and tracks hands and joints (MediaPipe).' },
+    { type: 'analysis_flow', label: 'Optical Flow', description: 'Analyzes the movement of every pixel between two frames.' }
   ]},
-  { id: 'features', label: 'Features', icon: Target, nodes: [] },
+  { id: 'features', label: 'Features', icon: Target, nodes: [
+    { type: 'feat_find_contours', label: 'Find Contours', description: 'Detects and extracts isolated shapes from a binary mask.' },
+    { type: 'feat_hough_circles', label: 'Hough Circles', description: 'Identifies perfect circular shapes through mathematical calculation.' },
+    { type: 'feat_hough_lines', label: 'Hough Lines', description: 'Detects straight line segments (walls, joints, etc.).' },
+    { type: 'feat_clahe', label: 'CLAHE (Contrast)', description: 'Improves local image contrast adaptively.' },
+    { type: 'feat_bilateral', label: 'Bilateral Filter', description: 'Smoothes the image while preserving edge sharpness.' }
+  ] },
   { id: 'visualize', label: 'Visualizers', icon: Eye, nodes: [
-    { type: 'data_inspector', label: 'Inspect Unit' },
-    { type: 'analysis_zone_mean', label: 'Area Monitor' },
-    { type: 'analysis_flow_viz', label: 'Flow Viz' }
+    { type: 'data_inspector', label: 'Inspect Unit', description: 'Displays the raw data content flowing through a link.' },
+    { type: 'analysis_zone_mean', label: 'Area Monitor', description: 'Calculates the average flow in a specific area of the frame.' },
+    { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' }
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
-    { type: 'draw_overlay', label: 'Visual Overlay' }
+    { type: 'draw_overlay', label: 'Visual Overlay', description: 'Draws shapes and text over the main video stream.' }
   ]},
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
-    { type: 'data_list_selector', label: 'List Selector' },
-    { type: 'data_coord_splitter', label: 'Coord Splitter' },
-    { type: 'data_coord_combine', label: 'Coord Combine' }
+    { type: 'data_list_selector', label: 'List Selector', description: 'Extracts a specific item from a list of detections.' },
+    { type: 'data_coord_splitter', label: 'Coord Splitter', description: 'Splits a coordinate dictionary into 4 scalar values.' },
+    { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
   { id: 'logic', label: 'Logic', icon: Zap, nodes: [] },
   { id: 'scientific', label: 'Scientific', icon: Activity, nodes: [] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
-    { type: 'output_display', label: 'Final Display' }
+    { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' }
   ] }
 ];
 
@@ -186,17 +194,23 @@ function App() {
         if (edge) dynamicColor = edge.sourceHandle?.split('__')[0];
       }
 
+      const schema = (pluginSchemas || []).find(s => s.type === node.type);
+      const staticNode = CATEGORIES.flatMap(c => c.nodes).find(n => n.type === node.type);
+      const description = schema?.description || (staticNode as any)?.description;
+      
       return { 
         ...node, 
         data: { 
           ...node.data, 
+          schema,
+          description,
           node_data: techData,
           dynamicColor,
           onChangeParams: (p: any) => updateNodeParams(node.id, p)
         } 
       };
     });
-  }, [nodes, nodesData, edges]);
+  }, [nodes, nodesData, edges, pluginSchemas]);
 
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
 
@@ -531,6 +545,9 @@ function App() {
                      </div>
                      <div>
                         <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
+                        {selectedNode.data.description && (
+                          <p className="text-[10px] text-gray-400 italic mt-1 leading-relaxed opacity-80">{selectedNode.data.description}</p>
+                        )}
                         <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
                      </div>
                   </div>
@@ -674,7 +691,9 @@ const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
   <div className="space-y-4 group">
     <div className="flex justify-between text-[10px]">
       <label className="text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <span className="text-accent font-black font-mono bg-accent/10 px-3 py-1 rounded-lg border border-accent/20">{val}</span>
+      <span className="text-accent font-black font-mono bg-accent/10 px-3 py-1 rounded-lg border border-accent/20">
+        {typeof val === 'number' && val % 1 !== 0 ? val.toFixed(3) : val}
+      </span>
     </div>
     <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#222] rounded-full appearance-none cursor-pointer accent-accent" />
   </div>

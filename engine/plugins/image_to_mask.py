@@ -1,11 +1,13 @@
 from __main__ import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='plugin_image_to_mask',
     label='Image to Mask',
     category='mask',
     icon='Layers',
+    description="Converts any image to a binary mask using its brightness.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'mask', 'color': 'mask'}],
     params=[]

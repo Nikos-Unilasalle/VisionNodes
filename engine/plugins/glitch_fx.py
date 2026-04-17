@@ -8,6 +8,7 @@ import random
     label='Glitch FX',
     category='cv',
     icon='Zap',
+    description="Applies random digital distortions for a 'glitch' effect.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

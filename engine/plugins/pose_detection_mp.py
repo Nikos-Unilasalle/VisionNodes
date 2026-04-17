@@ -17,6 +17,7 @@ except ImportError:
     label='Pose Tracker',
     category='track',
     icon='User',
+    description="Analyzes and tracks human body posture (33 keypoints) via MediaPipe.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main', 'color': 'image'},

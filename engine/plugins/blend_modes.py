@@ -7,6 +7,7 @@ import numpy as np
     label='Advanced Blend',
     category='blend',
     icon='Layers',
+    description="Blends two images using advanced layer blend modes (Product, Overlay, etc.).",
     inputs=[
         {'id': 'image_a', 'color': 'image'},
         {'id': 'image_b', 'color': 'image'}

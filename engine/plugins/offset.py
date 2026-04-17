@@ -7,6 +7,7 @@ import numpy as np
     label='Offset Shift',
     category='geom',
     icon='Move',
+    description="Shifts the image horizontally or vertically with wrapping.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

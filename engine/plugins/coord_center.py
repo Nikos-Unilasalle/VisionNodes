@@ -5,6 +5,7 @@ from __main__ import vision_node, NodeProcessor
     label='Coord Center',
     category='util',
     icon='Target',
+    description="Calculates the center point of a coordinate dictionary (bounding box).",
     inputs=[{'id': 'data', 'color': 'dict'}],
     outputs=[
         {'id': 'cx', 'color': 'scalar'},

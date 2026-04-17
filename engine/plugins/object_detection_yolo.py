@@ -15,6 +15,7 @@ except ImportError:
     label='YOLO Detector',
     category='track',
     icon='Zap',
+    description="High-performance object detection (80 classes) using the YOLOv11 model.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main', 'color': 'image'},

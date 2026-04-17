@@ -4,8 +4,9 @@ from __main__ import NodeProcessor, vision_node
     type_id="logic_compare",
     label="Data Compare",
     category="logic",
-    icon="Activity",
-    inputs=[{"id": "a", "color": "any"}, {"id": "b", "color": "any"}],
+    icon="Layers",
+    description="Compares two numerical values using a selected operator (>, <, ==, etc.) and returns true or false.",
+    inputs=[{"id": "in_a", "color": "scalar"}, {"id": "in_b", "color": "scalar"}],
     outputs=[{"id": "result", "color": "boolean"}],
     params=[
         {"id": "op", "label": "Operator", "type": "enum", "options": ["==", "!=", ">", "<", ">=", "<="], "default": 0}
@@ -43,7 +44,8 @@ class CompareNode(NodeProcessor):
     type_id="logic_presence",
     label="Presence Check",
     category="logic",
-    icon="Search",
+    icon="User",
+    description="Checks if a list is not empty or if a value is non-NULL. Useful for triggering events.",
     inputs=[{"id": "data", "color": "any"}],
     outputs=[{"id": "found", "color": "boolean"}]
 )
@@ -69,6 +71,7 @@ class PresenceNode(NodeProcessor):
     label="Switch",
     category="logic",
     icon="Zap",
+    description="Toggles between two input streams based on a control signal (true/false).",
     inputs=[
         {"id": "condition", "color": "boolean"},
         {"id": "if_true", "color": "any"},
@@ -93,6 +96,7 @@ class SwitchNode(NodeProcessor):
     label="Logic Gate",
     category="logic",
     icon="Layers",
+    description="Performs basic logical operations (AND, OR, XOR, NOT) on two signals.",
     inputs=[{"id": "in_a", "color": "boolean"}, {"id": "in_b", "color": "boolean"}],
     outputs=[{"id": "result", "color": "boolean"}],
     params=[

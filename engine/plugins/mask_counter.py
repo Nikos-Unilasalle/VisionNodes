@@ -1,11 +1,13 @@
 from __main__ import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='plugin_mask_counter',
     label='Area Monitor',
-    category='visualize', # Will now appear in Visualizers tab
+    category='visualize',
     icon='Hash',
+    description="Counts the number of white pixels in a mask to evaluate surface area.",
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[
         {'id': 'main', 'color': 'mask'},

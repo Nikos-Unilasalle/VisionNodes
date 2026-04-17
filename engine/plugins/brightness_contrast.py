@@ -7,6 +7,7 @@ import numpy as np
     label='Bright & Contrast',
     category='cv',
     icon='Zap',
+    description="Adjusts the brightness and contrast of the image.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

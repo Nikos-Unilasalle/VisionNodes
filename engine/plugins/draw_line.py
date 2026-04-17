@@ -1,11 +1,11 @@
 from __main__ import vision_node, NodeProcessor
-import numpy as np
 
 @vision_node(
     type_id='draw_line',
     label='Draw Line',
     category='draw',
     icon='Target',
+    description="Defines a line between two coordinates for graphical overlay.",
     inputs=[
         {'id': 'x1', 'color': 'scalar'},
         {'id': 'y1', 'color': 'scalar'},

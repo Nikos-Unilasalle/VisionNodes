@@ -6,6 +6,7 @@ import cv2
     label='Mask to Image',
     category='mask',
     icon='Layers',
+    description="Converts a binary mask (1 channel) to a standard image (3 channels).",
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[]

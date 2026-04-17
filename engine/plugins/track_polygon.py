@@ -6,6 +6,7 @@ import numpy as np
     label='Track Polygon',
     category='track',
     icon='Target',
+    description="Calculates the area of a zone defined by multiple tracked landmarks.",
     inputs=[
         {'id': 'data', 'color': 'dict'},
         {'id': 'image', 'color': 'image'}

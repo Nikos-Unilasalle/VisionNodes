@@ -7,6 +7,7 @@ import numpy as np
     label='Sobel Edge filter',
     category='cv',
     icon='Activity',
+    description="Detects horizontal and vertical gradients using the Sobel operator.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

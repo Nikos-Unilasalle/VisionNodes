@@ -17,6 +17,7 @@ except ImportError:
     label='Object Detector',
     category='track',
     icon='Box',
+    description="Detects common objects (80 categories) using the fast MediaPipe model.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main', 'color': 'image'},

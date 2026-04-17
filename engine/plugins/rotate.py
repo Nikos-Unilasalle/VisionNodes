@@ -1,11 +1,13 @@
 from __main__ import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='plugin_rotate',
     label='Rotate Image',
     category='geom',
     icon='Move',
+    description="Applies a custom rotation and scaling to the video stream.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

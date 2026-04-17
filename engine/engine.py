@@ -36,13 +36,14 @@ except Exception as e:
 NODE_SCHEMAS = []
 NODE_CLASS_REGISTRY = {}
 
-def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None):
+def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None, description=""):
     def decorator(cls):
         NODE_SCHEMAS.append({
             "type": type_id,
             "label": label,
             "category": category,
             "icon": icon,
+            "description": description,
             "inputs": inputs or [],
             "outputs": outputs or [],
             "params": params or []
@@ -366,6 +367,10 @@ class OverlayNode(NodeProcessor):
             if data.get('fill'): cv2.fillPoly(img, [pts_arr], color)
             cv2.polylines(img, [pts_arr], True, color, max(1, thick))
             if 'label' in data: cv2.putText(img, data['label'], (scaled_pts[0][0], scaled_pts[0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        elif shape == 'circle' and len(scaled_pts) > 0:
+            rad = int(data.get('radius', 0.1) * w) if rel else int(data.get('radius', 10))
+            cv2.circle(img, scaled_pts[0], rad, color, max(1, thick))
+            if 'label' in data: cv2.putText(img, data['label'], (scaled_pts[0][0] - rad, scaled_pts[0][1] - rad - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):

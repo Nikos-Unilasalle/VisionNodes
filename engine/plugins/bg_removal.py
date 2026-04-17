@@ -7,6 +7,7 @@ import numpy as np
     label='BG Removal',
     category='cv',
     icon='Ghost',
+    description="Subtracts the static background to isolate only moving objects.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main', 'color': 'image'},

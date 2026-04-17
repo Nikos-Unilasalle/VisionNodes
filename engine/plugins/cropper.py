@@ -1,11 +1,13 @@
 from __main__ import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='geom_cropper',
     label='Auto Cropper',
     category='geom',
     icon='Maximize',
+    description="Crops a specific rectangular area from the image (cropping).",
     inputs=[
         {'id': 'image', 'color': 'image'},
         {'id': 'data', 'color': 'dict'}

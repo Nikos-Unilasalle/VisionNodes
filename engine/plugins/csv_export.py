@@ -7,6 +7,7 @@ import time
     label='CSV Export',
     category='out',
     icon='Database',
+    description="Exports input values to a timestamped CSV file for future analysis.",
     inputs=[
         {'id': 'val_1', 'color': 'any'},
         {'id': 'val_2', 'color': 'any'},

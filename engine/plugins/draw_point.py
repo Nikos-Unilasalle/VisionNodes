@@ -1,11 +1,11 @@
 from __main__ import vision_node, NodeProcessor
-import numpy as np
 
 @vision_node(
     type_id='draw_point',
     label='Draw Point',
     category='draw',
     icon='Target',
+    description="Defines a graphical point to overlay on the image.",
     inputs=[
         {'id': 'x', 'color': 'scalar'},
         {'id': 'y', 'color': 'scalar'}

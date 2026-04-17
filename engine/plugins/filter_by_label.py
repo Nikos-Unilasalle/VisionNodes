@@ -5,6 +5,7 @@ from __main__ import vision_node, NodeProcessor
     label='Label Filter',
     category='util',
     icon='Search',
+    description="Filters a list of detections to keep only specific labels (e.g., 'person').",
     inputs=[{'id': 'list_in', 'color': 'list'}],
     outputs=[
         {'id': 'list_out', 'color': 'list'},

@@ -5,6 +5,7 @@ from __main__ import vision_node, NodeProcessor
     label='Math Op',
     category='math',
     icon='Hash',
+    description="Performs simple mathematical operations (+, -, *, /) on two numerical values.",
     inputs=[
         {'id': 'a', 'color': 'scalar'}, 
         {'id': 'b', 'color': 'scalar'}
