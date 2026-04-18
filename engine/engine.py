@@ -423,6 +423,10 @@ class OverlayNode(NodeProcessor):
             rad = int(data.get('radius', 0.1) * w) if rel else int(data.get('radius', 10))
             cv2.circle(img, scaled_pts[0], rad, color, max(1, thick))
             if 'label' in data: cv2.putText(img, data['label'], (scaled_pts[0][0] - rad, scaled_pts[0][1] - rad - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        elif shape == 'text' and len(scaled_pts) > 0:
+            text = str(data.get('text', data.get('label', '')))
+            scale = float(data.get('font_scale', 1.0))
+            cv2.putText(img, text, scaled_pts[0], cv2.FONT_HERSHEY_SIMPLEX, scale, color, max(1, thick))
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):

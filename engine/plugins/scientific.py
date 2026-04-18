@@ -5,7 +5,7 @@ from __main__ import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_plotter",
     label="Plotter",
-    category="scientific",
+    category="analysis",
     icon="Activity",
     description="Real-time graph visualizer for tracking numerical data changes over time.",
     inputs=[{"id": "value", "color": "scalar"}],
@@ -24,7 +24,7 @@ class PlotterNode(NodeProcessor):
 @vision_node(
     type_id="sci_stats",
     label="Statistics",
-    category="scientific",
+    category="analysis",
     icon="Info",
     description="Calculates key statistical metrics (mean, median, standard deviation) from a list.",
     inputs=[{"id": "data_list", "color": "list"}],
@@ -63,7 +63,7 @@ class StatsNode(NodeProcessor):
 @vision_node(
     type_id="sci_heatmap",
     label="Heatmap",
-    category="scientific",
+    category="analysis",
     icon="Wind",
     description="Generates a cumulative heatmap based on provided detection points.",
     inputs=[{"id": "image", "color": "image"}, {"id": "points", "color": "any"}],
