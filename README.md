@@ -1,58 +1,86 @@
 # VisionNodes Studio
 
-VisionNodes est un environnement de développement nodale pour le prototypage rapide d'algorithmes de Vision par Ordinateur (CV) et d'IA. Entièrement programmé par Gemini 3.1 Pro et Gemini 3 Flash, il combine la puissance de **OpenCV** et **MediaPipe** avec une interface React moderne et réactive.
+VisionNodes is a node-based development environment for rapid prototyping of Computer Vision (CV) and AI algorithms. Built with React and powered by **OpenCV** and **MediaPipe**, it provides a modern and responsive interface for visual programming.
 
-![VisionNodes Header](./cover.png)
+<p align="center">
+  <img src="./src/assets/logo.svg" width="200" alt="VisionNodes Logo">
+</p>
 
 ---
 
-## Installation Rapide
+## Quick Installation
 
-### 1. Prérequis
-- Node.js (v18+)
-- Python 3.10+
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Python** (3.10+)
 
-### 2. Clonage et Dépendances
+### 2. Setup & Dependencies
 ```bash
+# Clone the repository
 git clone https://github.com/Nikos-Unilasalle/VisionNodes.git
 cd VisionNodes
 
-# Frontend
+# Install Frontend dependencies
 npm install
 
-# Backend (Python)
+# Setup Backend (Python virtual environment)
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\activate   # Windows
-pip install opencv-python mediapipe websockets numpy
+pip install opencv-python mediapipe websockets numpy ultralytics
 ```
 
-### 3. Lancement
-Il faut lancer le moteur Python ET l'interface :
-- **Moteur** : `python engine/engine.py`
-- **UI** : `npm run dev`
+### 3. Running the Studio
+To launch both the Python logic engine and the GUI in a single command:
+```bash
+npm run studio
+```
+
+### 4. Compiling a Standalone App
+You can build a native desktop executable for your OS:
+```bash
+npm run tauri build
+```
 
 ---
 
-## Guide du Développeur : Créer de nouveaux Nœuds
+## Recent Features 🚀
 
-VisionNodes utilise un système de **Plugins Dynamiques**. Vous n'avez pas besoin de toucher au code source du moteur ou de l'interface pour ajouter des fonctionnalités.
+### 📊 Advanced Scientific Analysis (Analysis Category)
+VisionNodes now includes dedicated tools for quantitative data extraction:
+- **Watershed Segmentation**: Separate complex or touching objects.
+- **Marker Analysis**: Automatically calculate centroid (coordinates), surface (area), and ID for every segmented "island".
+- **Statistics & Heatmaps**: Visualize real-time distributions and activity zones.
 
-### Le Système de Plugins
-Tous les fichiers `.py` placés dans le dossier `engine/plugins/` sont automatiquement chargés au démarrage.
+### 🔄 "On Each" Iterator & Dynamic Text
+The **On Each** node allows powerful visualization loops:
+- **Smart Overlay**: Repeat any graphic element (text, circle, rectangle) over a list of detections (YOLO, MediaPipe, or Marker Analysis).
+- **Dynamic Variable Injection**: Automatically display IDs, Labels, Areas, or Confidence Scores at the center of each object.
 
-#### Structure d'un Nœud (Exemple: Invert Color)
-Créez un fichier `engine/plugins/mon_filtre.py` :
+### 🎨 Native Text Rendering
+High-performance text rendering support via the OpenCV engine, accessible through the **Draw Text** node.
+
+---
+
+## Developer Guide: Creating Custom Nodes
+
+VisionNodes uses a **Dynamic Plugin System**. You can add new features without touching the core engine or UI code.
+
+### Plugin System
+Any `.py` file placed in the `engine/plugins/` directory is automatically scanned and loaded at startup.
+
+#### Node Structure Example:
+Create a file `engine/plugins/my_filter.py`:
 
 ```python
 from __main__ import vision_node, NodeProcessor
 import cv2
 
 @vision_node(
-    type_id='mon_filtre_unique',   # Identifiant unique
-    label='Inverser Couleurs',     # Nom affiché dans l'UI
-    category='cv',                 # Catégorie (cv, mask, math, noise, ai, help...)
-    icon='Zap',                   # Icône Lucide-React
+    type_id='my_unique_filter',    # Unique identifier
+    label='Invert Colors',         # Display name in UI
+    category='cv',                 # Category (cv, analysis, mask, util, visualize...)
+    icon='Zap',                    # Lucide-React icon name
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
@@ -61,72 +89,42 @@ import cv2
 )
 class InvertNode(NodeProcessor):
     def process(self, inputs, params):
-        # 1. Récupérer les entrées
         img = inputs.get('image')
         if img is None: return {'main': None}
         
-        # 2. Logique de traitement (OpenCV)
         res = cv2.bitwise_not(img)
-        
-        # 3. Retourner les sorties
         return {'main': res}
 ```
 
-### Paramètres de la Décoration `@vision_node`
-| Champ | Description |
-| :--- | :--- |
-| `type_id` | Identifiant interne (doit être unique). |
-| `label` | Nom humain affiché sur le nœud. |
-| `category` | Organise le nœud dans le menu "Add Module". |
-| `icon` | Nom d'une icône [Lucide](https://lucide.dev/icons). |
-| `inputs` | Liste des ports d'entrée (ID + Couleur). |
-| `outputs` | Liste des ports de sortie. |
-| `params` | Génère automatiquement des Sliders dans l'inspecteur de droite. |
-
-### Couleurs des Connecteurs
-Utilisez ces noms de couleurs pour assurer la compatibilité entre les nœuds :
-- `image` : Flux vidéo standard (BGR).
-- `mask` : Masques binaires (1 canal).
-- `scalar` / `data` / `dict` : Valeurs numériques ou objets JSON.
-- `list` : Listes de détections.
-- `flow` : Vecteurs de mouvement (Optical Flow).
-- `any` : Connecteur universel (accepte tout).
+### Handle Colors
+Use these color IDs for connector compatibility:
+- **`image`** (#3b82f6): Standard video flux (BGR).
+- **`data` / `dict`** (#22c55e): Numerical objects or JSON dictionaries.
+- **`list`** (#a855f7): Lists of detections (YOLO, MediaPipe).
+- **`scalar`** (#eab308): Single numerical values.
+- **`mask`** (#d1d5db): Binary masks (1-channel).
+- **`flow`** (#ef4444): Optical Flow motion vectors.
+- **`boolean`** (#22d3ee): Logic True/False values.
+- **`any`** (#ffffff): Universal connector (accepts anything).
 
 ---
 
-## Nouveautés Récentes 🚀
-
-### 📊 Analyse Scientifique Avancée (Catégorie Analysis)
-VisionNodes propose désormais des outils dédiés à l'analyse quantitative :
-- **Watershed Segmentation** : Séparez des objets complexes ou se touchant.
-- **Marker Analysis** : Calculez automatiquement le centre de masse (coordonnées), la surface (aire) et l'ID de chaque "îlot" de pixels.
-- **Statistics & Heatmaps** : Visualisez les données et les zones d'activité intense.
-
-### 🔄 Itérateur "On Each" & Texte Dynamique
-Le nouveau node **On Each** révolutionne la visualisation :
-- **Superposition intelligente** : Répétez n'importe quel élément graphique (texte, cercle, rectangle) sur chaque objet d'une liste (YOLO, MediaPipe, ou Analyse).
-- **Texte Dynamique** : Affichez automatiquement l'ID, le Label, l'Aire ou le Score de confiance au centre de chaque détection.
-
-### 🎨 Rendu de Texte Natif
-Support complet du rendu de texte haute performance via le moteur OpenCV, accessible via le node **Draw Text**.
-
----
-
-## Structure du Projet
+## Project Structure
 
 ```text
 .
-├── engine/              # Moteur Python (Core)
-│   ├── engine.py        # Logic principal & Serveur WebSocket
-│   └── plugins/         # Vos nœuds personnalisés (.py)
-├── src/                 # Code source React (Frontend)
-│   ├── components/      # Définitions UI des nœuds
-│   └── App.tsx          # Gestion de la Graph-Logic
-├── public/              # Assets statiques
-└── package.json         # Dépendances Node.js
+├── engine/              # Python Logic Engine (Core)
+│   ├── engine.py        # Main logic & WebSocket server
+│   └── plugins/         # Your custom nodes (.py)
+├── src/                 # React Frontend source
+│   ├── components/      # UI Node definitions
+│   └── App.tsx          # Graph Logic management
+├── src-tauri/           # Native Desktop integration (Rust/Tauri)
+├── public/              # Static assets
+└── package.json         # Node.js dependencies & scripts
 ```
 
 ---
 
-## Licence
-Projet développé dans un but éducatif et de recherche. Libre d'utilisation sous licence MIT.
+## License
+Developed for educational and research purposes. Free to use under the MIT License.
