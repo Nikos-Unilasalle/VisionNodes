@@ -655,6 +655,7 @@ function App() {
                     {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => {
                       const isEnum = p.type === 'enum' || p.options;
                       const isString = p.type === 'string' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'string';
+                      const isNumber = p.type === 'number' || p.type === 'float';
                       
                       if (isEnum) {
                         return <SelectInput 
@@ -669,6 +670,11 @@ function App() {
                       if (isString) {
                         return <TextInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                       }
+
+                      if (isNumber) {
+                        return <NumberInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                      }
+
                       return <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                     })}
 
@@ -716,6 +722,19 @@ const TextInput = ({ label, val, onChange }: any) => (
       onChange={(e) => onChange(e.target.value)} 
       className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
       placeholder={`Enter ${label.toLowerCase()}...`}
+    />
+  </div>
+);
+
+const NumberInput = ({ label, val, onChange }: any) => (
+  <div className="space-y-4 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <input 
+      type="number" 
+      step="any"
+      value={val} 
+      onChange={(e) => onChange(parseFloat(e.target.value) || 0)} 
+      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all font-mono"
     />
   </div>
 );

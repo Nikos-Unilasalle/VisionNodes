@@ -25,9 +25,36 @@ from __main__ import vision_node, NodeProcessor
 )
 class DrawTextNode(NodeProcessor):
     def process(self, inputs, params):
-        text = str(params.get('text', 'Hello'))
+        template = str(params.get('text', 'Hello'))
         
-        # Priority to inputs, then params
+        # 1. Prepare formatting context (variables a-z)
+        context = {}
+        for i in range(26):
+            char = chr(97 + i)
+            val = inputs.get(char)
+            # Format numbers nicely
+            if isinstance(val, float):
+                context[char] = val
+            elif val is not None:
+                context[char] = val
+            else:
+                context[char] = "---"
+        
+        # 2. Try to format the template
+        try:
+            if "{" in template and "}" in template:
+                text = template.format(**context)
+            else:
+                text = template
+        except Exception:
+            text = template
+            
+        # 3. Dynamic text input override (highest priority)
+        input_text = inputs.get('text')
+        if input_text is not None:
+            text = str(input_text)
+            
+        # 4. Position Logic
         x = float(inputs.get('x', params.get('x', 0.5)))
         y = float(inputs.get('y', params.get('y', 0.5)))
         

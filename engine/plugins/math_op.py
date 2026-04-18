@@ -18,7 +18,7 @@ from __main__ import vision_node, NodeProcessor
             'options': ['Add (+)', 'Subtract (-)', 'Multiply (*)', 'Divide (/)'],
             'default': 0
         },
-        {'id': 'value_b', 'min': -100, 'max': 100, 'step': 1, 'default': 0}
+        {'id': 'value_b', 'label': 'Manual B', 'type': 'number', 'default': 0}
     ]
 )
 class MathOpNode(NodeProcessor):

@@ -17,12 +17,22 @@ export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e
 const StyledHandle = ({ type, position, id, color = 'image', top }: any) => {
   const nodeId = useNodeId();
   const handleId = `${color}__${id}`;
+  const isLeft = position === Position.Left;
+  
   return (
     <Handle
       type={type}
       position={position}
       id={handleId}
-      style={{ background: HANDLE_COLORS[color as keyof typeof HANDLE_COLORS] || color, width: 10, height: 10, border: '2px solid #111', top: top }}
+      style={{ 
+        background: HANDLE_COLORS[color as keyof typeof HANDLE_COLORS] || color, 
+        width: 10, 
+        height: 10, 
+        border: '2px solid #111', 
+        top: top,
+        [isLeft ? 'left' : 'right']: -5,
+        zIndex: 50
+      }}
       onClick={(e) => {
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent('remove-handle-edge', { detail: { nodeId, handleId, type } }));
@@ -31,19 +41,33 @@ const StyledHandle = ({ type, position, id, color = 'image', top }: any) => {
   );
 };
 
-const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [] }: any) => {
+const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0 }: any) => {
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
                       color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
                       color === 'red' ? 'border-red-500 shadow-red-500/20' :
                       'border-gray-500 shadow-gray-500/20';
                       
+  const totalInputs = inputs.length + var_count;
+  const totalOutputs = outputs.length;
+  const maxPorts = Math.max(totalInputs, totalOutputs);
+  const minHeight = Math.max(64, maxPorts * 28 + 40);
+
   return (
-    <div className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} w-52 overflow-hidden shadow-2xl`}>
+    <div 
+        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} w-52 shadow-2xl relative`}
+        style={{ minHeight }}
+    >
       {inputs.map((inp: any, i: number) => (
-        <StyledHandle key={inp.id} type="target" position={Position.Left} id={inp.id} color={inp.color} top={`${(i + 1) * (100 / (inputs.length + 1))}%`} />
+        <StyledHandle key={inp.id} type="target" position={Position.Left} id={inp.id} color={inp.color} top={`${(i + 1) * (100 / (totalInputs + 1))}%`} />
       ))}
-      <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333]">
+      {Array.from({ length: var_count }).map((_, i) => {
+        const char = String.fromCharCode(97 + i);
+        return (
+          <StyledHandle key={char} type="target" position={Position.Left} id={char} color="scalar" top={`${(inputs.length + i + 1) * (100 / (totalInputs + 1))}%`} />
+        );
+      })}
+      <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl">
         <Icon size={14} className="text-gray-400" />
         <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200">{title}</span>
       </div>
@@ -51,7 +75,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
         {children}
       </div>
       {outputs.map((out: any, i: number) => (
-        <StyledHandle key={out.id} type="source" position={Position.Right} id={out.id} color={out.color} top={`${(i + 1) * (100 / (outputs.length + 1))}%`} />
+        <StyledHandle key={out.id} type="source" position={Position.Right} id={out.id} color={out.color} top={`${(i + 1) * (100 / (totalOutputs + 1))}%`} />
       ))}
     </div>
   );
@@ -368,12 +392,38 @@ export const ScientificStatsNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const DrawTextNode = memo(({ selected, data }: any) => {
+  const schema = data.schema || { label: 'Draw Text', inputs: [], outputs: [] };
+  const varCount = data.params?.var_count || 0;
+  
+  const addVar = () => data.onChangeParams?.({ var_count: Math.min(varCount + 1, 10) });
+  const remVar = () => data.onChangeParams?.({ var_count: Math.max(varCount - 1, 0) });
+
+  return (
+    <BaseNode title="Draw Text" icon={LucideIcons.Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount}>
+      <div className="flex flex-col gap-2 p-1">
+        <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+          <span className="text-[8px] font-black uppercase text-gray-500 font-mono tracking-tighter">Variables ({varCount})</span>
+          <div className="flex gap-1">
+            <button onClick={remVar} className="w-5 h-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 transition-all font-black text-xs">-</button>
+            <button onClick={addVar} className="w-5 h-5 flex items-center justify-center bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded border border-green-500/20 transition-all font-black text-xs">+</button>
+          </div>
+        </div>
+        {varCount > 0 && (
+          <div className="text-[7px] text-gray-500 italic px-1">Placeholders: {'{'}a{'}'}, {'{'}b{'}'}...</div>
+        )}
+      </div>
+    </BaseNode>
+  );
+});
+
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
   const IconCmp = (LucideIcons as any)[schema.icon] || Box;
 
   if (schema.type === 'sci_plotter') return <ScientificPlotterNode selected={selected} data={data} />;
   if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
+  if (schema.type === 'draw_text') return <DrawTextNode selected={selected} data={data} />;
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
