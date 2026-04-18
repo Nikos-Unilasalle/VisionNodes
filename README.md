@@ -95,6 +95,24 @@ Utilisez ces noms de couleurs pour assurer la compatibilité entre les nœuds :
 
 ---
 
+## Nouveautés Récentes 🚀
+
+### 📊 Analyse Scientifique Avancée (Catégorie Analysis)
+VisionNodes propose désormais des outils dédiés à l'analyse quantitative :
+- **Watershed Segmentation** : Séparez des objets complexes ou se touchant.
+- **Marker Analysis** : Calculez automatiquement le centre de masse (coordonnées), la surface (aire) et l'ID de chaque "îlot" de pixels.
+- **Statistics & Heatmaps** : Visualisez les données et les zones d'activité intense.
+
+### 🔄 Itérateur "On Each" & Texte Dynamique
+Le nouveau node **On Each** révolutionne la visualisation :
+- **Superposition intelligente** : Répétez n'importe quel élément graphique (texte, cercle, rectangle) sur chaque objet d'une liste (YOLO, MediaPipe, ou Analyse).
+- **Texte Dynamique** : Affichez automatiquement l'ID, le Label, l'Aire ou le Score de confiance au centre de chaque détection.
+
+### 🎨 Rendu de Texte Natif
+Support complet du rendu de texte haute performance via le moteur OpenCV, accessible via le node **Draw Text**.
+
+---
+
 ## Structure du Projet
 
 ```text
