@@ -5,6 +5,7 @@ export function useVisionEngine() {
   const [nodesData, setNodesData] = useState<Record<string, any>>({});
   const [pluginSchemas, setPluginSchemas] = useState<any[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [lastCommands, setLastCommands] = useState<any[]>([]);
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -20,6 +21,11 @@ export function useVisionEngine() {
             setFrame(`data:image/jpeg;base64,${msg.image}`);
             if (msg.nodes_data) {
                 setNodesData(msg.nodes_data);
+            }
+            if (msg.commands && msg.commands.length > 0) {
+              setLastCommands(msg.commands);
+            } else {
+              setLastCommands(prev => prev.length > 0 ? [] : prev);
             }
           } else if (msg.type === 'schema') {
             setPluginSchemas(msg.nodes);
@@ -46,5 +52,5 @@ export function useVisionEngine() {
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph };
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, lastCommands };
 }

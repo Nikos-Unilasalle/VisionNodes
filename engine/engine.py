@@ -140,6 +140,12 @@ class ImageInput(NodeProcessor):
         # Absolute path resolution
         full_path = os.path.abspath(os.path.expanduser(path))
         
+        # If not found, check if it's in the public directory (common for snapshots)
+        if not os.path.exists(full_path):
+            alt_path = os.path.abspath(os.path.join(os.getcwd(), "public", path))
+            if os.path.exists(alt_path):
+                full_path = alt_path
+        
         if full_path != self.last_path:
             print(f"[Engine] Loading Image: {full_path}")
             img = cv2.imread(full_path)
@@ -201,16 +207,26 @@ class MovieInput(NodeProcessor):
         playing = params.get('playing', False)
         scrub_index = int(params.get('scrub_index', 0))
         
+        start_f = int(params.get('start_frame', 0))
+        end_f = int(params.get('end_frame', self.total_frames - 1))
+        if end_f < start_f: end_f = self.total_frames - 1
+
         if playing:
+            self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+            if self.current_frame < start_f or self.current_frame > end_f:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, start_f)
+            
             ret, frame = self.cap.read()
             if not ret: 
-                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, start_f)
                 ret, frame = self.cap.read()
             self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
         else:
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, scrub_index)
+            # Constrain scrubbing to the trim range
+            scrub_clamped = max(start_f, min(scrub_index, end_f))
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, scrub_clamped)
             ret, frame = self.cap.read()
-            self.current_frame = scrub_index
+            self.current_frame = scrub_clamped
             
         return {
             "main": frame if ret else None, 
@@ -580,7 +596,7 @@ class VisionEngine:
             if not ret: 
                 await asyncio.sleep(0.1)
                 continue
-            results, node_datas, final_img = {}, {}, frame
+            results, node_datas, final_img, commands = {}, {}, frame, []
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
                 inputs = {"raw_frame": frame}
@@ -615,7 +631,8 @@ class VisionEngine:
                         out = proc.process(inputs, node.get('data', {}).get('params', {}))
                         results[nid] = out
                         for k, v in out.items():
-                            if k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
+                            if k == "_command" and v: commands.append(v)
+                            elif k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
                         if ntype == 'output_display' and out.get('main') is not None: final_img = out['main']
                     except Exception as e: print(f"Error {nid}: {e}")
             if final_img is not None:
@@ -627,7 +644,12 @@ class VisionEngine:
                         hsv[..., 0], hsv[..., 2] = ang * 180 / np.pi / 2, cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
                         final_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
                     _, buf = cv2.imencode('.jpg', final_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
-                    msg = json.dumps({"type": "update", "image": base64.b64encode(buf).decode('utf-8'), "nodes_data": node_datas})
+                    msg = json.dumps({
+                        "type": "update", 
+                        "image": base64.b64encode(buf).decode('utf-8'), 
+                        "nodes_data": node_datas,
+                        "commands": commands
+                    })
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
             await asyncio.sleep(1/30)

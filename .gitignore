@@ -20,3 +20,11 @@ __pycache__/
 
 # Tauri
 src-tauri/target/
+src-tauri/bin/
+
+# Build
+build/
+engine-bin.spec
+
+# Data
+public/snapshots/
