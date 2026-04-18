@@ -1,6 +1,6 @@
 # VisionNodes Studio
 
-VisionNodes is a node-based development environment for rapid prototyping of Computer Vision (CV) and AI algorithms. Built with React and powered by **OpenCV** and **MediaPipe**, it provides a modern and responsive interface for visual programming.
+VisionNodes is a node-based development environment for rapid prototyping of Computer Vision (CV) and AI algorithms. Built with React and powered by **OpenCV**, it provides a modern and responsive interface for visual programming.
 
 <p align="center">
   <img src="./src/assets/logo.svg" width="200" alt="VisionNodes Logo">
