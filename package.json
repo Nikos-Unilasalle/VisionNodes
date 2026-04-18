@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "studio": "(lsof -ti :8765 | xargs kill -9 2>/dev/null || true) && sleep 1 && concurrently \"./.venv/bin/python3 engine/engine.py\" \"npm run tauri dev\"",
+    "studio": "[ -d node_modules ] || (echo '📦 Missing node_modules. Installing...' && npm install); (lsof -ti :8765 | xargs kill -9 2>/dev/null || true) && sleep 1 && concurrently \"./.venv/bin/python3 engine/engine.py\" \"npm run tauri dev\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"

@@ -1,3 +1,36 @@
+import sys
+import subprocess
+
+def check_and_install_dependencies():
+    # Map package names to import names
+    deps = {
+        "opencv-python": "cv2",
+        "mediapipe": "mediapipe",
+        "websockets": "websockets",
+        "numpy": "numpy",
+        "ultralytics": "ultralytics"
+    }
+    
+    missing = []
+    for pkg, import_name in deps.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing.append(pkg)
+            
+    if missing:
+        print(f"\n📦 VISION NODES :: Missing dependencies: {missing}")
+        print("🚀 Automating installation... please wait.\n")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            print("\n✅ Installation complete. Starting engine...\n")
+        except Exception as e:
+            print(f"\n❌ Auto-install failed: {e}")
+            print("👉 Please run manually: pip install -r requirements.txt\n")
+
+# Run bootstrap before other imports
+check_and_install_dependencies()
+
 import asyncio
 import json
 import cv2
