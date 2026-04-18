@@ -3,7 +3,7 @@ from __main__ import vision_node, NodeProcessor
 @vision_node(
     type_id='draw_text',
     label='Draw Text',
-    category='drawing',
+    category='draw',
     icon='Type',
     description="Creates a text graphic element that can be displayed or repeated.",
     inputs=[

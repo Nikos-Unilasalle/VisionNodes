@@ -124,7 +124,7 @@ function App() {
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const isResizing = useRef(false);
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph } = useVisionEngine();
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, lastCommands } = useVisionEngine();
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
@@ -355,11 +355,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [copyNodes, pasteNodes]);
 
-  const addNode = (type: string, label: string, schema?: any) => {
+  const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     const id = `node-${Date.now()}`;
-    const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 350, y: 350 };
+    const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 450, y: 450 };
     setNodes((nds) => {
-      const nextNodes = [...nds, { id, type, position, data: { label, params: {}, schema } }];
+      const nextNodes = [...nds, { id, type, position, data: { label, params: initialParams, schema } }];
       if (pendingConnection && pendingConnection.sourceNode) {
         setTimeout(() => {
           const newEl = document.querySelector(`[data-id="${id}"]`);
@@ -396,6 +396,20 @@ function App() {
   };
 
   useEffect(() => { if (isConnected) updateGraph(nodes, edges); }, [isConnected]);
+
+  useEffect(() => {
+    if (lastCommands && lastCommands.length > 0) {
+      lastCommands.forEach(cmd => {
+        if (cmd.type === 'add_node') {
+          // Determine label based on type
+          let label = "New Node";
+          if (cmd.node_type === 'input_image') label = "Captured Frame";
+          
+          addNode(cmd.node_type, label, null, cmd.params);
+        }
+      });
+    }
+  }, [lastCommands]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const filteredNodes = useMemo(() => {
@@ -584,6 +598,22 @@ function App() {
                               Frame: {selectedNode.data.node_data?.current_frame || 0} / {selectedNode.data.node_data?.total_frames || 0}
                             </div>
                           </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <Slider 
+                              label="Start" 
+                              val={selectedNode.data.params.start_frame || 0} 
+                              min={0} 
+                              max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
+                              onChange={v => updateNodeParams(selectedNode.id, { start_frame: v })} 
+                            />
+                            <Slider 
+                              label="End" 
+                              val={selectedNode.data.params.end_frame ?? (selectedNode.data.node_data?.total_frames ? selectedNode.data.node_data.total_frames - 1 : 0)} 
+                              min={0} 
+                              max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
+                              onChange={v => updateNodeParams(selectedNode.id, { end_frame: v })} 
+                            />
+                          </div>
                           <Slider 
                             label="Scrub" 
                             val={selectedNode.data.params.playing ? (selectedNode.data.node_data?.current_frame || 0) : (selectedNode.data.params.scrub_index || 0)} 
@@ -675,7 +705,26 @@ function App() {
                         return <NumberInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                       }
 
-                      return <Slider key={p.id} label={p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                      if (p.type === 'trigger') {
+                        return (
+                          <div key={p.id} className="space-y-4 group">
+                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">
+                              {p.label || p.id}
+                            </label>
+                            <button 
+                              onClick={() => {
+                                updateNodeParams(selectedNode.id, { [p.id]: 1 });
+                                setTimeout(() => updateNodeParams(selectedNode.id, { [p.id]: 0 }), 100);
+                              }}
+                              className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
+                            >
+                              <Zap size={14} /> {p.label || "Execute"}
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return <Slider key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                     })}
 
                     {selectedNode.data.node_data && (
@@ -703,11 +752,17 @@ function App() {
 
 const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
   <div className="space-y-4 group">
-    <div className="flex justify-between text-[10px]">
+    <div className="flex justify-between items-center text-[10px]">
       <label className="text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <span className="text-accent font-black font-mono bg-accent/10 px-3 py-1 rounded-lg border border-accent/20">
-        {typeof val === 'number' && val % 1 !== 0 ? val.toFixed(3) : val}
-      </span>
+      <input 
+        type="number"
+        min={min}
+        max={max}
+        step={step}
+        value={val}
+        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        className="bg-accent/10 border border-accent/20 rounded px-2 py-0.5 text-accent font-black font-mono text-right w-20 outline-none focus:border-accent/50 transition-all"
+      />
     </div>
     <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#222] rounded-full appearance-none cursor-pointer accent-accent" />
   </div>
