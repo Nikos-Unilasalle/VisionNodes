@@ -11,11 +11,10 @@ VisionNodes est un environnement de développement nodale pour le prototypage ra
 ### 1. Prérequis
 - Node.js (v18+)
 - Python 3.10+
-- Clés SSH configurées pour GitHub
 
 ### 2. Clonage et Dépendances
 ```bash
-git clone git@github.com:Nikos-Unilasalle/VisionNodes.git
+git clone https://github.com/Nikos-Unilasalle/VisionNodes.git
 cd VisionNodes
 
 # Frontend
