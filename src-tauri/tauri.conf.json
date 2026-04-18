@@ -33,9 +33,7 @@
       "icons/icon.ico"
     ],
     "resources": [],
-    "externalBin": [
-      "bin/engine-bin"
-    ],
+    "externalBin": [],
     "macOS": {
       "infoPlist": "Info.plist",
       "entitlements": "entitlements.plist"

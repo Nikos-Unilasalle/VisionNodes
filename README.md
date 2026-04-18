@@ -27,7 +27,11 @@ npm install
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\activate   # Windows
-pip install opencv-python mediapipe websockets numpy ultralytics
+pip install opencv-python mediapipe websockets numpy ultralytics pytesseract
+
+# Optional (for OCR)
+brew install tesseract  # macOS
+# sudo apt install tesseract-ocr  # Linux
 ```
 
 ### 3. Running the Studio
@@ -59,6 +63,16 @@ The **On Each** node allows powerful visualization loops:
 
 ### 🎨 Native Text Rendering
 High-performance text rendering support via the OpenCV engine, accessible through the **Draw Text** node.
+
+### 📄 Project Persistence (.vn)
+- **Save & Load**: Projects can now be saved as `.vn` files (JSON format) capturing the entire graph state, node positions, and parameter values.
+- **Examples Library**: Quick-start with pre-configured templates for OCR, Motion, and Feature detection.
+
+### 🧠 Advanced Computer Vision Nodes
+- **OCR (Optical Character Recognition)**: Integrated **Tesseract** and **EAST** text detector (model auto-downloads on first use).
+- **Feature Tracking**: **SIFT**, **ORB**, **FAST**, and **Harris** detectors for advanced image matching.
+- **Background Subtraction**: **MOG2** and **KNN** algorithms for precise movement segmentation.
+- **Advanced Geometry**: **Polygon Approximation**, **Fit Rectangle**, and **Non-Cropping Rotation**.
 
 ---
 

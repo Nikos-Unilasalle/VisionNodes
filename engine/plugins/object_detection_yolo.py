@@ -11,7 +11,7 @@ except ImportError:
     YOLO_AVAILABLE = False
 
 @vision_node(
-    type_id='analysis_object_yolo',
+    type_id='object_detection_yolo',
     label='YOLO Detector',
     category='track',
     icon='Zap',
@@ -62,9 +62,16 @@ class YoloDetectionNode(NodeProcessor):
             
         conf = float(params.get('confidence', 25)) / 100.0
         size_idx = int(params.get('model_size', 0))
-        
-        if self.model is None or size_idx != ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"].index(self.current_model_name):
+
+        if self.model is None:
             self._load_model(size_idx)
+        else:
+            try:
+                current_idx = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"].index(self.current_model_name)
+                if size_idx != current_idx:
+                    self._load_model(size_idx)
+            except ValueError:
+                self._load_model(size_idx)
             
         if self.model is None: return {"main": image, "objects_list": []}
 

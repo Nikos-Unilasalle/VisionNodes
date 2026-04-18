@@ -1,10 +1,10 @@
 import React, { memo } from 'react';
-import { Handle, Position, useNodeId } from 'reactflow';
+import { Handle, Position, useNodeId, NodeResizeControl } from 'reactflow';
 import { open } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
-  Plus, Info
+  Plus, Info, Save, FolderOpen, BookOpen
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -244,6 +244,17 @@ export const AnalysisHandMPNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const AnalysisPoseMPNode = memo(({ selected }: any) => {
+  const outputs = [
+    {id: 'main', color: 'image'}, 
+    {id: 'pose_list', color: 'list'},
+    {id: 'data', color: 'dict'}
+  ];
+  return (
+    <BaseNode title="Pose Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
+  );
+});
+
 export const AnalysisFlowNode = memo(({ selected }: any) => (
   <BaseNode title="Optical Flow" icon={Activity} selected={selected} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]}>
     <div className="text-[9px] text-gray-500 uppercase font-black">Motion Vectors</div>
@@ -273,15 +284,33 @@ export const DrawOverlayNode = memo(({ selected }: any) => (
 export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = data.node_data?.data_out;
   const isScalar = typeof d === 'number';
+  const nodeId = useNodeId();
   
   return (
-    <BaseNode title="Inspector" icon={Eye} selected={selected} color="accent" inputs={[{id: 'data', color: 'any'}]}>
-      {isScalar ? (
-        <div className="text-xl font-mono text-center text-yellow-500 py-4">{d.toFixed(4)}</div>
-      ) : (
-        <pre className="text-[9px] font-mono bg-black/60 p-2 rounded h-20 overflow-auto">{JSON.stringify(d, null, 2)}</pre>
-      )}
-    </BaseNode>
+    <div className="relative group/node">
+      <NodeResizeControl 
+        minWidth={160} 
+        minHeight={100} 
+        style={{ background: 'transparent', border: 'none' }}
+        onResize={(_, { width, height }) => {
+          data.onChangeParams?.({ width, height });
+        }}
+      >
+        <div className="absolute bottom-1 right-1 w-3 h-3 border-r-2 border-b-2 border-gray-600 rounded-br cursor-nwse-resize opacity-20 group-hover/node:opacity-100 transition-opacity" />
+      </NodeResizeControl>
+      
+      <div style={{ width: data.params?.width || 208, height: data.params?.height || 'auto' }}>
+        <BaseNode title="Inspector" icon={Eye} selected={selected} color="accent" inputs={[{id: 'data', color: 'any'}]}>
+          {isScalar ? (
+            <div className="text-xl font-mono text-center text-yellow-500 py-4">{d.toFixed(4)}</div>
+          ) : (
+            <pre className="text-[9px] font-mono bg-black/60 p-2 rounded h-full overflow-auto scrollbar-hide">
+              {JSON.stringify(d, null, 2)}
+            </pre>
+          )}
+        </BaseNode>
+      </div>
+    </div>
   );
 });
 

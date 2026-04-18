@@ -8,12 +8,16 @@ import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play
+  Pause, Play, Save, FolderOpen, BookOpen
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
 import logo from './assets/logo.svg';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { save, open } from '@tauri-apps/plugin-dialog';
+import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { documentDir, join } from '@tauri-apps/api/path';
+import { EXAMPLES } from './data/examples';
 
 const initialNodes: Node[] = [
   { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
@@ -41,6 +45,7 @@ const nodeTypes = {
   geom_resize: N.GeomResizeNode,
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
+  analysis_pose_mp: N.AnalysisPoseMPNode,
   analysis_flow: N.AnalysisFlowNode,
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_zone_mean: N.AnalysisZoneMeanNode,
@@ -87,6 +92,7 @@ const CATEGORIES = [
   { id: 'track', label: 'Tracking', icon: User, nodes: [
     { type: 'analysis_face_mp', label: 'Face Tracker', description: 'Detects and tracks faces and facial landmarks (MediaPipe).' },
     { type: 'analysis_hand_mp', label: 'Hand Tracker', description: 'Detects and tracks hands and joints (MediaPipe).' },
+    { type: 'analysis_pose_mp', label: 'Pose Tracker', description: 'Analyzes and tracks human body posture (33 keypoints) via MediaPipe.' },
     { type: 'analysis_flow', label: 'Optical Flow', description: 'Analyzes the movement of every pixel between two frames.' }
   ]},
   { id: 'features', label: 'Features', icon: Target, nodes: [
@@ -123,8 +129,60 @@ function App() {
   const [pendingConnection, setPendingConnection] = useState<any>(null);
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
+  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const isResizing = useRef(false);
   const { frame, nodesData, pluginSchemas, isConnected, updateGraph, lastCommands } = useVisionEngine();
+
+  const saveProject = async () => {
+    try {
+      const docDir = await documentDir();
+      const defaultPath = await join(docDir, 'VisionNodes');
+      
+      // Ensure directory exists
+      if (!(await exists('VisionNodes', { baseDir: BaseDirectory.Document }))) {
+        await mkdir('VisionNodes', { baseDir: BaseDirectory.Document });
+      }
+
+      const path = await save({
+        defaultPath: await join(defaultPath, 'project.vn'),
+        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+      });
+
+      if (path) {
+        const content = JSON.stringify({ nodes, edges }, null, 2);
+        await writeTextFile(path, content);
+        console.log('Project saved to', path);
+      }
+    } catch (err) {
+      console.error('Failed to save project:', err);
+    }
+  };
+
+  const loadProject = async () => {
+    try {
+      const path = await open({
+        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }],
+        multiple: false
+      });
+
+      if (path && typeof path === 'string') {
+        const content = await readTextFile(path);
+        const { nodes: newNodes, edges: newEdges } = JSON.parse(content);
+        setNodes(newNodes);
+        setEdges(newEdges);
+        updateGraph(newNodes, newEdges);
+      }
+    } catch (err) {
+      console.error('Failed to load project:', err);
+    }
+  };
+
+  const loadExample = (example: any) => {
+    setNodes(example.nodes);
+    setEdges(example.edges);
+    updateGraph(example.nodes, example.edges);
+    setIsExamplesOpen(false);
+  };
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
@@ -445,9 +503,59 @@ function App() {
                </div>
                <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VisionNodes Studio</h1>
             </div>
-           <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
+            <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
               {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
            </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+           <div className="relative">
+              <button 
+                onClick={() => setIsExamplesOpen(!isExamplesOpen)}
+                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+              >
+                <BookOpen size={14} /> Examples
+              </button>
+              <AnimatePresence>
+                {isExamplesOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsExamplesOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-hidden"
+                    >
+                      {EXAMPLES.map((ex, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => loadExample(ex)}
+                          className="w-full text-left p-3 hover:bg-accent/10 rounded-lg group transition-all"
+                        >
+                          <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">{ex.name}</div>
+                          <div className="text-[8px] text-gray-500 mt-1 leading-tight">{ex.description}</div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+           </div>
+           
+           <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+           <button 
+            onClick={loadProject}
+            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+           >
+            <FolderOpen size={14} /> Open
+           </button>
+           <button 
+            onClick={saveProject}
+            className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 hover:bg-accent/20 rounded-lg text-[10px] font-bold text-accent transition-all shadow-lg shadow-accent/5"
+           >
+            <Save size={14} /> Save .vn
+           </button>
         </div>
       </header>
 
