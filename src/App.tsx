@@ -110,7 +110,6 @@ const CATEGORIES = [
     { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
   { id: 'logic', label: 'Logic', icon: Zap, nodes: [] },
-  { id: 'scientific', label: 'Scientific', icon: Activity, nodes: [] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' }
   ] }
