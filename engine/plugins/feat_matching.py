@@ -42,6 +42,18 @@ class FeatureMatcherNode(NodeProcessor):
                                       class_id=int(d.get('class_id', -1))))
         return cv_kps
 
+    def _draw_fallback(self, img1, img2):
+        if img1 is None: return img2
+        if img2 is None: return img1
+        h1, w1 = img1.shape[:2]
+        h2, w2 = img2.shape[:2]
+        out_img = np.zeros((max(h1, h2), w1 + w2, 3), dtype=np.uint8)
+        c1 = img1 if len(img1.shape) == 3 else cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+        c2 = img2 if len(img2.shape) == 3 else cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+        out_img[:h1, :w1] = c1
+        out_img[:h2, w1:w1+w2] = c2
+        return out_img
+
     def process(self, inputs, params):
         des1 = inputs.get('des1')
         des2 = inputs.get('des2')
@@ -53,8 +65,19 @@ class FeatureMatcherNode(NodeProcessor):
         if des1 is None or des2 is None or img1 is None or img2 is None:
             return {"main": img1 if img1 is not None else img2, "matches_count": 0}
             
+        # Ensure descriptors are contiguous and have enough features for k=2 matching
+        if len(des1) < 2 or len(des2) < 2:
+            return {"main": self._draw_fallback(img1, img2), "matches_count": 0}
+
+        # Ensure descriptors are in the correct format for OpenCV
+        if not isinstance(des1, np.ndarray) or not isinstance(des2, np.ndarray):
+             return {"main": self._draw_fallback(img1, img2), "matches_count": 0}
+             
+        if not des1.flags['C_CONTIGUOUS']: des1 = np.ascontiguousarray(des1)
+        if not des2.flags['C_CONTIGUOUS']: des2 = np.ascontiguousarray(des2)
+
         method = int(params.get('method', 0))
-        norm_idx = int(params.get('norm', 1)) # Default to Hamming for ORB
+        norm_idx = int(params.get('norm', 1)) 
         norm = cv2.NORM_L2 if norm_idx == 0 else cv2.NORM_HAMMING
         ratio = float(params.get('ratio_test', 0.75))
         max_m = int(params.get('max_matches', 50))
@@ -82,34 +105,16 @@ class FeatureMatcherNode(NodeProcessor):
             # Draw Matches
             out_img = None
             if kp1_dicts and kp2_dicts:
-                # Convert back to cv2.KeyPoint
                 cv_kp1 = self._to_cv_kp(kp1_dicts, img1.shape)
                 cv_kp2 = self._to_cv_kp(kp2_dicts, img2.shape)
-                
-                # Sort by distance and limit to max_display
                 good = sorted(good, key = lambda x:x.distance)
                 display_matches = good[:max_m]
-                
-                # Draw visual lines
                 out_img = cv2.drawMatches(img1, cv_kp1, img2, cv_kp2, display_matches, None, 
                                         flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
             else:
-                # Fallback: side-by-side if no keypoints
-                h1, w1 = img1.shape[:2]
-                h2, w2 = img2.shape[:2]
-                out_img = np.zeros((max(h1, h2), w1 + w2, 3), dtype=np.uint8)
-                out_img[:h1, :w1] = img1 if len(img1.shape)==3 else cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
-                out_img[:h2, w1:w1+w2] = img2 if len(img2.shape)==3 else cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+                out_img = self._draw_fallback(img1, img2)
             
             return {"main": out_img, "matches_count": len(good)}
         except Exception as e:
             print(f"Matching Error: {e}")
-            # Ensure stable view by returning a combined side-by-side view even on error
-            if img1 is not None and img2 is not None:
-                h1, w1 = img1.shape[:2]
-                h2, w2 = img2.shape[:2]
-                err_img = np.zeros((max(h1, h2), w1 + w2, 3), dtype=np.uint8)
-                err_img[:h1, :w1] = img1 if len(img1.shape)==3 else cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
-                err_img[:h2, w1:w1+w2] = img2 if len(img2.shape)==3 else cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
-                return {"main": err_img, "matches_count": 0}
-            return {"main": img1, "matches_count": 0}
+            return {"main": self._draw_fallback(img1, img2), "matches_count": 0}

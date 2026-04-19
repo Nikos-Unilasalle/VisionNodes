@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "setup": "./setup.sh",
     "studio": "[ -d node_modules ] || (echo '📦 Missing node_modules. Installing...' && npm install); (lsof -ti:8765,1420 | xargs kill -9 2>/dev/null || true) && sleep 1 && npm run tauri dev",
     "build": "tsc && vite build",
     "preview": "vite preview",

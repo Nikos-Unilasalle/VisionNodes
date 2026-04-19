@@ -8,7 +8,9 @@ def check_and_install_dependencies():
         "mediapipe": "mediapipe",
         "websockets": "websockets",
         "numpy": "numpy",
-        "ultralytics": "ultralytics"
+        "ultralytics": "ultralytics",
+        "torch": "torch",
+        "pytesseract": "pytesseract"
     }
     
     missing = []
@@ -20,13 +22,14 @@ def check_and_install_dependencies():
             
     if missing:
         print(f"\n📦 VISION NODES :: Missing dependencies: {missing}")
-        print("🚀 Automating installation... please wait.\n")
+        print("🚀 For a clean experience, please run: npm run setup\n")
+        print("Trying auto-installation... please wait.\n")
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
             print("\n✅ Installation complete. Starting engine...\n")
         except Exception as e:
             print(f"\n❌ Auto-install failed: {e}")
-            print("👉 Please run manually: pip install -r requirements.txt\n")
+            print("👉 Please run manually: npm run setup or pip install -r engine/requirements.txt\n")
 
 # Run bootstrap before other imports
 check_and_install_dependencies()
@@ -442,6 +445,21 @@ class MorphologyNode(NodeProcessor):
         res = cv2.dilate(mask, kernel, iterations=1) if op == 0 else cv2.erode(mask, kernel, iterations=1)
         return {"mask": res}
 
+@vision_node(
+    type_id='draw_overlay',
+    label='Visual Overlay',
+    category='draw',
+    icon='PenTool',
+    description="Draws graphical elements (from Draw Text, trackers, etc.) over an image. Connect graphics to the 'data' inputs.",
+    inputs=[
+        {'id': 'image', 'color': 'image'},
+        {'id': 'data', 'color': 'any'},
+        {'id': 'data_2', 'color': 'any'},
+        {'id': 'data_3', 'color': 'any'},
+        {'id': 'data_4', 'color': 'any'}
+    ],
+    outputs=[{'id': 'main', 'color': 'image'}]
+)
 class OverlayNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image', inputs.get('main', inputs.get('raw_frame')))
@@ -450,18 +468,24 @@ class OverlayNode(NodeProcessor):
         if len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
         h, w = res.shape[:2]
         col, thick = (0, 255, 0), 2
-        for key in ['data', 'data_2', 'data_3', 'data_4']:
-            data = inputs.get(key)
+        
+        # Scan ALL inputs for graphics or detection data
+        for key, data in inputs.items():
             if data is None: continue
             if isinstance(data, dict):
-                if data.get('_type') == 'graphics': self._draw_graphics(res, data, w, h, col, thick)
-                elif 'xmin' in data: cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
+                if data.get('_type') == 'graphics': 
+                    self._draw_graphics(res, data, w, h, col, thick)
+                elif 'xmin' in data: 
+                    cv2.rectangle(res, (int(data['xmin']*w), int(data['ymin']*h)), (int((data['xmin']+data['width'])*w), int((data['ymin']+data['height'])*h)), col, thick)
             elif isinstance(data, list):
                 for item in data:
                     if isinstance(item, dict):
-                        if item.get('_type') == 'graphics': self._draw_graphics(res, item, w, h, col, thick)
-                        elif 'xmin' in item: cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
-            elif isinstance(data, (float, int)): cv2.putText(res, f"v: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
+                        if item.get('_type') == 'graphics': 
+                            self._draw_graphics(res, item, w, h, col, thick)
+                        elif 'xmin' in item: 
+                            cv2.rectangle(res, (int(item['xmin']*w), int(item['ymin']*h)), (int((item['xmin']+item['width'])*w), int((item['ymin']+item['height'])*h)), col, thick)
+            elif isinstance(data, (float, int)) and key != 'raw_frame': 
+                cv2.putText(res, f"{key}: {data:.4f}", (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, col, thick)
         return {"main": res}
     def _draw_graphics(self, img, data, w, h, default_col, default_thick):
         shape, pts, rel = data.get('shape', 'point'), data.get('pts', []), data.get('relative', True)

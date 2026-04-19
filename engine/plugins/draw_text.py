@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 from __main__ import vision_node, NodeProcessor
 
 @vision_node(
@@ -5,8 +7,9 @@ from __main__ import vision_node, NodeProcessor
     label='Draw Text',
     category='draw',
     icon='Type',
-    description="Creates a text graphic element that can be displayed or repeated.",
+    description="Draws text on an image or creates a graphic element. Connect text to the 'text' input and optionally an 'image'.",
     inputs=[
+        {'id': 'text', 'color': 'string'},
         {'id': 'image', 'color': 'image'},
         {'id': 'x', 'color': 'scalar'},
         {'id': 'y', 'color': 'scalar'}
@@ -25,34 +28,35 @@ from __main__ import vision_node, NodeProcessor
 )
 class DrawTextNode(NodeProcessor):
     def process(self, inputs, params):
-        template = str(params.get('text', 'Hello'))
-        
-        # 1. Prepare formatting context (variables a-z)
+        # 1. Determine the base template (Input socket has priority over Param)
+        input_text = inputs.get('text')
+        if input_text is not None and str(input_text).strip() != "":
+            template = str(input_text)
+        else:
+            template = str(params.get('text', 'Hello'))
+            
+        # 2. Prepare formatting context (variables a-z)
         context = {}
         for i in range(26):
             char = chr(97 + i)
             val = inputs.get(char)
             # Format numbers nicely
-            if isinstance(val, float):
-                context[char] = val
+            if isinstance(val, (int, float)):
+                context[char] = f"{val:.2f}" if isinstance(val, float) else str(val)
             elif val is not None:
-                context[char] = val
+                context[char] = str(val)
             else:
                 context[char] = "---"
         
-        # 2. Try to format the template
+        # 3. Try to format the template
         try:
             if "{" in template and "}" in template:
                 text = template.format(**context)
             else:
                 text = template
         except Exception:
+            # Fallback if formatting fails (e.g. missing variable in braces)
             text = template
-            
-        # 3. Dynamic text input override (highest priority)
-        input_text = inputs.get('text')
-        if input_text is not None:
-            text = str(input_text)
             
         # 4. Position Logic
         x = float(inputs.get('x', params.get('x', 0.5)))
@@ -76,4 +80,14 @@ class DrawTextNode(NodeProcessor):
         }
         
         img = inputs.get('image')
+        if img is not None:
+            # Direct drawing fallback
+            img = img.copy()
+            if len(img.shape) == 2: img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            h, w = img.shape[:2]
+            scaled_x, scaled_y = int(x * w), int(y * h)
+            # Use BGR for OpenCV drawing
+            bgr_col = (b, g, r) 
+            cv2.putText(img, text, (scaled_x, scaled_y), cv2.FONT_HERSHEY_SIMPLEX, scale, bgr_col, thick)
+            
         return {"main": img, "graphic": graphic}

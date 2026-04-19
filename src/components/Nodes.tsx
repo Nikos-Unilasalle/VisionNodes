@@ -4,17 +4,23 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
-  Plus, Info, Save, FolderOpen, BookOpen, Video
+  Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+
+const getIcon = (name: string, fallback = Box) => {
+  if (!name) return fallback;
+  const icon = (LucideIcons as any)[name];
+  return icon || fallback;
+};
 import { 
   AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip,
   BarChart, Bar, Cell
 } from 'recharts';
 
-export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
+export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
 
-const StyledHandle = ({ type, position, id, color = 'image', top }: any) => {
+const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any) => {
   const nodeId = useNodeId();
   const handleId = `${color}__${id}`;
   const isLeft = position === Position.Left;
@@ -31,7 +37,8 @@ const StyledHandle = ({ type, position, id, color = 'image', top }: any) => {
         border: '2px solid #111', 
         top: top,
         [isLeft ? 'left' : 'right']: -5,
-        zIndex: 50
+        zIndex: 50,
+        position: 'absolute'
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -51,32 +58,55 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
   const totalInputs = inputs.length + var_count;
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
-  const minHeight = Math.max(64, maxPorts * 28 + 40);
+  const minHeight = Math.max(80, maxPorts * 32 + 45);
 
   return (
     <div 
         className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} w-52 shadow-2xl relative`}
         style={{ minHeight }}
     >
-      {inputs.map((inp: any, i: number) => (
-        <StyledHandle key={inp.id} type="target" position={Position.Left} id={inp.id} color={inp.color} top={`${(i + 1) * (100 / (totalInputs + 1))}%`} />
-      ))}
-      {Array.from({ length: var_count }).map((_, i) => {
-        const char = String.fromCharCode(97 + i);
+      {/* Inputs with Labels */}
+      {inputs.map((inp: any, i: number) => {
+        const top = `${(i + 1) * (100 / (totalInputs + 1))}%`;
         return (
-          <StyledHandle key={char} type="target" position={Position.Left} id={char} color="scalar" top={`${(inputs.length + i + 1) * (100 / (totalInputs + 1))}%`} />
+          <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" />
+            <span className="ml-[12px] text-[7px] font-black text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>
+          </div>
         );
       })}
-      <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl">
-        <Icon size={14} className="text-gray-400" />
-        <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200">{title}</span>
+      
+      {/* Dynamic Variables with Labels */}
+      {Array.from({ length: var_count }).map((_, i) => {
+        const char = String.fromCharCode(97 + i);
+        const top = `${(inputs.length + i + 1) * (100 / (totalInputs + 1))}%`;
+        return (
+          <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" />
+            <span className="ml-[12px] text-[8px] font-black text-accent uppercase tracking-widest">{char}</span>
+          </div>
+        );
+      })}
+
+      <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl overflow-hidden">
+        <Icon size={14} className="text-gray-400 group-hover:text-accent transition-colors shrink-0" />
+        <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">{title}</span>
       </div>
+      
       <div className="p-2 text-[10px] text-gray-400 flex flex-col gap-2">
         {children}
       </div>
-      {outputs.map((out: any, i: number) => (
-        <StyledHandle key={out.id} type="source" position={Position.Right} id={out.id} color={out.color} top={`${(i + 1) * (100 / (totalOutputs + 1))}%`} />
-      ))}
+
+      {/* Outputs with Labels */}
+      {outputs.map((out: any, i: number) => {
+        const top = `${(i + 1) * (100 / (totalOutputs + 1))}%`;
+        return (
+          <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+            <span className="mr-[12px] text-[7px] font-black text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>
+            <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" />
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -397,6 +427,37 @@ export const OutputDisplayNode = memo(({ selected }: any) => (
   ]} />
 ));
 
+// --- LOGIC & MATH ---
+
+export const MathNode = memo(({ selected, data }: any) => {
+  const schema = data.schema || { label: 'Math', icon: 'Calculator', inputs: [], outputs: [] };
+  const IconCmp = getIcon(schema.icon, Calculator);
+  return <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
+});
+
+export const StringNode = memo(({ selected, data }: any) => {
+  const schema = data.schema || { label: 'String', icon: 'Type', inputs: [], outputs: [] };
+  const IconCmp = getIcon(schema.icon, Type);
+  return (
+    <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
+       {data.node_data?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{data.node_data.result}</div>}
+    </BaseNode>
+  );
+});
+
+export const PythonNode = memo(({ selected, data }: any) => {
+  return (
+    <BaseNode title="Python Script" icon={Zap} selected={selected} color="red" 
+              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]} 
+              outputs={[{id: 'out_main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
+      <div className="flex flex-col gap-1 opacity-60">
+        <div className="text-[8px] font-bold text-red-500/80">DYNAMIC ENGINE</div>
+        <div className="text-[7px] italic truncate">{data.params?.code?.substring(0, 30)}...</div>
+      </div>
+    </BaseNode>
+  );
+});
+
 // --- SCIENTIFIC NODES ---
 
 export const ScientificPlotterNode = memo(({ selected, data }: any) => {
@@ -466,7 +527,7 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
   const remVar = () => data.onChangeParams?.({ var_count: Math.max(varCount - 1, 0) });
 
   return (
-    <BaseNode title="Draw Text" icon={LucideIcons.Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount}>
+    <BaseNode title="Draw Text" icon={Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount}>
       <div className="flex flex-col gap-2 p-1">
         <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
           <span className="text-[8px] font-black uppercase text-gray-500 font-mono tracking-tighter">Variables ({varCount})</span>
@@ -485,7 +546,7 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
 
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
-  const IconCmp = (LucideIcons as any)[schema.icon] || Box;
+  const IconCmp = getIcon(schema.icon, Box);
 
   if (schema.type === 'sci_plotter') return <ScientificPlotterNode selected={selected} data={data} />;
   if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
