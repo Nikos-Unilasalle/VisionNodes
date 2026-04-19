@@ -27,15 +27,24 @@ class PerspectiveWarpNode(NodeProcessor):
         out_h = int(params.get('height', 600))
         
         # Convert normalized points to pixels
-        # Expecting src_pts to be a list of 4 dicts with x, y or list of [x, y]
         pts = []
         for p in src_pts[:4]:
+            x, y = 0, 0
             if isinstance(p, dict):
-                x, y = p.get('x', 0), p.get('y', 0)
-                if 'center' in p: x, y = p['center']['x'], p['center']['y']
-            else:
+                # Priority 1: Simple x,y
+                if 'x' in p and 'y' in p:
+                    x, y = p['x'], p['y']
+                # Priority 2: Graphics structure (pts list)
+                elif 'pts' in p and len(p['pts']) > 0:
+                    pt_val = p['pts'][0]
+                    x, y = pt_val[0], pt_val[1]
+                # Priority 3: Center dict
+                elif 'center' in p:
+                    x, y = p['center'].get('x', 0), p['center'].get('y', 0)
+            elif isinstance(p, (list, tuple)) and len(p) >= 2:
                 x, y = p[0], p[1]
-            pts.append([x * w, y * h])
+            
+            pts.append([float(x) * w, float(y) * h])
             
         src_arr = np.array(pts, dtype=np.float32)
         dst_arr = np.array([
@@ -56,7 +65,13 @@ class PerspectiveWarpNode(NodeProcessor):
     category="geom",
     icon="MousePointer",
     description="Allows manual definition of 4 reference points on the image for calculations.",
-    inputs=[{"id": "image", "color": "image"}],
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "p1", "color": "dict"},
+        {"id": "p2", "color": "dict"},
+        {"id": "p3", "color": "dict"},
+        {"id": "p4", "color": "dict"}
+    ],
     outputs=[{"id": "points", "color": "list"}],
     params=[
         {"id": "x1", "label": "P1 X", "type": "scalar", "min": 0, "max": 1, "step": 0.001, "default": 0.1},
@@ -71,10 +86,26 @@ class PerspectiveWarpNode(NodeProcessor):
 )
 class ManualPointsNode(NodeProcessor):
     def process(self, inputs, params):
-        pts = [
-            {"x": float(params.get('x1', 0.1)), "y": float(params.get('y1', 0.1))},
-            {"x": float(params.get('x2', 0.9)), "y": float(params.get('y2', 0.1))},
-            {"x": float(params.get('x3', 0.9)), "y": float(params.get('y3', 0.9))},
-            {"x": float(params.get('x4', 0.1)), "y": float(params.get('y4', 0.9))}
-        ]
+        pts = []
+        for i in range(1, 5):
+            # Try to get from input first
+            p_in = inputs.get(f'p{i}')
+            x, y = None, None
+            
+            if p_in and isinstance(p_in, dict):
+                # Handle everything: simple {x,y}, graphics {pts:[]}, or center {center:{x,y}}
+                if 'x' in p_in and 'y' in p_in:
+                    x, y = p_in['x'], p_in['y']
+                elif 'pts' in p_in and len(p_in['pts']) > 0:
+                    pt_val = p_in['pts'][0]
+                    x, y = pt_val[0], pt_val[1]
+                elif 'center' in p_in:
+                    x, y = p_in['center'].get('x'), p_in['center'].get('y')
+            
+            # Fallback to params if input is missing or invalid
+            if x is None: x = params.get(f'x{i}', 0.1)
+            if y is None: y = params.get(f'y{i}', 0.1)
+            
+            pts.append({"x": float(x), "y": float(y)})
+            
         return {"points": pts}

@@ -8,7 +8,7 @@ import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play, Save, FolderOpen, BookOpen
+  Pause, Play, Save, FolderOpen, BookOpen, Type
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -16,7 +16,7 @@ import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
-import { documentDir, join } from '@tauri-apps/api/path';
+// Removed documentDir and join to avoid Path plugin dependency
 import { EXAMPLES } from './data/examples';
 
 const initialNodes: Node[] = [
@@ -60,6 +60,25 @@ const nodeTypes = {
   data_coord_combine: N.DataCoordCombineNode,
   data_inspector: N.DataInspectorNode,
   output_display: N.OutputDisplayNode,
+  logic_python: N.PythonNode,
+  math_add: N.MathNode,
+  math_sub: N.MathNode,
+  math_mul: N.MathNode,
+  math_div: N.MathNode,
+  math_mod: N.MathNode,
+  math_min: N.MathNode,
+  math_max: N.MathNode,
+  math_pow: N.MathNode,
+  math_abs: N.MathNode,
+  math_round: N.MathNode,
+  math_sin: N.MathNode,
+  math_cos: N.MathNode,
+  math_clamp: N.MathNode,
+  string_input: N.StringNode,
+  string_concat: N.StringNode,
+  string_split: N.StringNode,
+  string_length: N.StringNode,
+  string_case: N.StringNode,
 };
 
 const CATEGORIES = [
@@ -115,7 +134,31 @@ const CATEGORIES = [
     { type: 'data_coord_splitter', label: 'Coord Splitter', description: 'Splits a coordinate dictionary into 4 scalar values.' },
     { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
-  { id: 'logic', label: 'Logic', icon: Zap, nodes: [] },
+  { id: 'math', label: 'Math', icon: Hash, nodes: [
+    { type: 'math_add', label: 'Add', description: 'Adds two values (a + b).' },
+    { type: 'math_sub', label: 'Subtract', description: 'Subtracts b from a (a - b).' },
+    { type: 'math_mul', label: 'Multiply', description: 'Multiplies two values (a * b).' },
+    { type: 'math_div', label: 'Divide', description: 'Divides a by b (a / b).' },
+    { type: 'math_mod', label: 'Modulo', description: 'Returns the remainder of a / b.' },
+    { type: 'math_min', label: 'Min', description: 'Returns the smaller of two values.' },
+    { type: 'math_max', label: 'Max', description: 'Returns the larger of two values.' },
+    { type: 'math_pow', label: 'Power', description: 'Calculates a raised to the power of b.' },
+    { type: 'math_abs', label: 'Absolute', description: 'Removes the negative sign from a value.' },
+    { type: 'math_round', label: 'Round', description: 'Rounds to the nearest integer.' },
+    { type: 'math_sin', label: 'Sin', description: 'Sine of an angle in radians.' },
+    { type: 'math_cos', label: 'Cos', description: 'Cosine of an angle in radians.' },
+    { type: 'math_clamp', label: 'Clamp', description: 'Constrains a value between min and max.' }
+  ] },
+  { id: 'strings', label: 'Strings', icon: Type, nodes: [
+    { type: 'string_input', label: 'String Input', description: 'Manual text entry for logic and display.' },
+    { type: 'string_concat', label: 'Concatenate', description: 'Joins two strings together.' },
+    { type: 'string_split', label: 'Split', description: 'Splits a string into a list via a separator.' },
+    { type: 'string_length', label: 'Length', description: 'Counts the number of characters.' },
+    { type: 'string_case', label: 'Case Change', description: 'Converts to Upper or Lower case.' }
+  ] },
+  { id: 'logic', label: 'Logic', icon: Zap, nodes: [
+    { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' }
+  ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' }
   ] }
@@ -162,16 +205,8 @@ function App() {
 
   const saveProject = async () => {
     try {
-      const docDir = await documentDir();
-      const defaultPath = await join(docDir, 'VisionNodes');
-      
-      // Ensure directory exists
-      if (!(await exists('VisionNodes', { baseDir: BaseDirectory.Document }))) {
-        await mkdir('VisionNodes', { baseDir: BaseDirectory.Document });
-      }
-
       const path = await save({
-        defaultPath: await join(defaultPath, 'project.vn'),
+        defaultPath: 'project.vn',
         filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
       });
 
@@ -851,6 +886,9 @@ function App() {
                       }
                       
                       if (isString) {
+                        if (p.id === 'code') {
+                           return <CodeInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                        }
                         return <TextInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                       }
 
@@ -964,6 +1002,30 @@ const SelectInput = ({ label, val, options, onChange }: any) => (
         <option key={i} value={i} className="bg-[#1a1a1a]">{opt}</option>
       ))}
     </select>
+  </div>
+);
+
+const CodeInput = ({ label, val, onChange }: any) => (
+  <div className="space-y-4 group">
+    <div className="flex items-center justify-between">
+      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <div className="text-[8px] font-mono text-gray-600 bg-white/5 px-2 py-0.5 rounded">Python 3.x</div>
+    </div>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 w-8 bg-black/20 border-r border-white/5 flex flex-col items-center pt-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none">
+        {val.split('\n').map((_: any, i: number) => <div key={i}>{i+1}</div>)}
+      </div>
+      <textarea 
+        value={val} 
+        onChange={(e) => onChange(e.target.value)} 
+        spellCheck={false}
+        className="w-full h-80 bg-[#0c0c0c] border border-[#222] group-hover:border-accent/40 rounded-xl pl-10 pr-4 py-3 text-[11px] text-accent/90 font-mono outline-none focus:border-accent transition-all leading-relaxed resize-none scrollbar-hide shadow-inner"
+        placeholder={`Write your script here...`}
+      />
+    </div>
+    <div className="flex gap-2">
+       <div className="text-[8px] text-gray-500 italic px-1">Available: a, b, c, d (inputs) | out_main, out_scalar... (outputs)</div>
+    </div>
   </div>
 );
 
