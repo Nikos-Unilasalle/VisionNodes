@@ -4,7 +4,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
-  Plus, Info, Save, FolderOpen, BookOpen
+  Plus, Info, Save, FolderOpen, BookOpen, Video
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { 
@@ -175,14 +175,51 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode title="Movie File" icon={Film} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
-      <div 
-        className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onDrop}
-        onClick={handleBrowse}
-      >
-        <Search size={20} className="text-gray-500 mb-2" />
-        <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Movie</div>
+      <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
+        {data.node_data?.preview && (
+          <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
+            <img 
+              src={`data:image/jpeg;base64,${data.node_data.preview}`} 
+              className="w-full h-auto object-cover opacity-80 group-hover/preview:opacity-100 transition-opacity duration-500"
+              alt="Movie Preview"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute bottom-2 left-2 right-2">
+                <div className="text-[10px] font-black text-white/90 truncate drop-shadow-md flex items-center gap-1.5">
+                    <Film size={12} className="text-accent" />
+                    {data.node_data.filename || "Movie Loaded"}
+                </div>
+            </div>
+          </div>
+        )}
+        
+        {!data.node_data?.preview && (
+          <div className="py-8 flex flex-col items-center justify-center gap-3 bg-black/20 rounded-2xl border border-dashed border-white/10 opacity-40">
+            <div className="p-3 bg-white/5 rounded-full">
+                <Video size={24} className="text-gray-400" />
+            </div>
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">No Media Loaded</div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:border-accent/20 transition-all duration-300">
+            <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Source Path</div>
+            <div className="text-[11px] font-mono text-white/70 truncate">{data.params?.path || "No path selected..."}</div>
+          </div>
+
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${data?.params?.playing ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-gray-600'}`} />
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {data?.params?.playing ? 'Playing' : 'Paused'}
+            </span>
+          </div>
+            <div className="text-[10px] font-mono text-accent font-bold">
+              {data.node_data?.current_frame || 0} / {data.node_data?.total_frames || 0}
+            </div>
+          </div>
+        </div>
       </div>
     </BaseNode>
   );

@@ -15,7 +15,7 @@ import { useVisionEngine } from './hooks/useVisionEngine';
 import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { EXAMPLES } from './data/examples';
 
@@ -131,7 +131,34 @@ function App() {
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const isResizing = useRef(false);
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, lastCommands } = useVisionEngine();
+
+  const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+  
+  const handleCapture = useCallback(async (nodeId: string, base64: string) => {
+    try {
+      const path = await save({
+        defaultPath: `capture_${nodeId}_${Date.now()}.png`,
+        filters: [{
+          name: 'Image',
+          extensions: ['png']
+        }]
+      });
+
+      if (path) {
+        // Most robust way to convert base64 to Uint8Array in modern JS
+        const res = await fetch(`data:image/png;base64,${base64}`);
+        const arrayBuffer = await res.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+        
+        await writeFile(path, bytes);
+        console.log("Image saved successfully to:", path);
+      }
+    } catch (err) {
+      console.error('Failed to save image:', err);
+    }
+  }, []);
+
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, lastCommands } = useVisionEngine(handleCapture);
 
   const saveProject = async () => {
     try {
@@ -262,11 +289,14 @@ function App() {
         ...node, 
         data: { 
           ...node.data, 
+          params: node.data?.params || {},
           schema,
           description,
           node_data: techData,
           dynamicColor,
-          onChangeParams: (p: any) => updateNodeParams(node.id, p)
+          onChangeParams: (p: any) => {
+            setNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
+          }
         } 
       };
     });
@@ -275,28 +305,24 @@ function App() {
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
-    setNodes((nds) => {
-      const nextNodes = applyNodeChanges(changes, nds);
-      updateGraph(nextNodes, edges);
-      return nextNodes;
-    });
-  }, [edges, updateGraph]);
+    setNodes((nds) => applyNodeChanges(changes, nds));
+  }, []);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    setEdges((eds) => {
-      const nextEdges = applyEdgeChanges(changes, eds);
-      updateGraph(nodes, nextEdges);
-      return nextEdges;
-    });
-  }, [nodes, updateGraph]);
+    setEdges((eds) => applyEdgeChanges(changes, eds));
+  }, []);
 
   const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => {
-      const nextEdges = addEdge({ ...params, id: `e-${Date.now()}` }, eds);
-      updateGraph(nodes, nextEdges);
-      return nextEdges;
-    });
-  }, [nodes, updateGraph]);
+    setEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
+  }, []);
+
+  // Centralized graph synchronization to prevent loops
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isConnected) updateGraph(nodes, edges);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [nodes, edges, isConnected, updateGraph]);
 
   const onConnectEnd = useCallback((event: any, connectionState?: any) => {
     if (connectionState && connectionState.isValid === false) {
@@ -348,25 +374,19 @@ function App() {
 
     if (edgeToInsert && edgeToInsert.source !== node.id && edgeToInsert.target !== node.id) {
       setEdges((eds) => {
-        const nextEdges = eds.filter(e => e.id !== edgeToInsert.id).concat([
+        return eds.filter(e => e.id !== edgeToInsert.id).concat([
           { id: `e-${Date.now()}-1`, source: edgeToInsert.source, target: node.id, sourceHandle: edgeToInsert.sourceHandle, targetHandle: 'main' },
           { id: `e-${Date.now()}-2`, source: node.id, target: edgeToInsert.target, sourceHandle: 'main', targetHandle: edgeToInsert.targetHandle }
         ]);
-        setTimeout(() => updateGraph(nodes, nextEdges), 10);
-        return nextEdges;
       });
     }
-  }, [nodes, edges, updateGraph]);
+  }, [nodes, edges]);
 
   const updateNodeParams = (id: string, params: any) => {
-    setNodes((nds) => {
-      const nextNodes = nds.map((node) => {
+    setNodes((nds) => nds.map((node) => {
         if (node.id === id) return { ...node, data: { ...node.data, params: { ...node.data.params, ...params } } };
         return node;
-      });
-      updateGraph(nextNodes, edges);
-      return nextNodes;
-    });
+    }));
   };
 
   const copyNodes = useCallback(() => {
@@ -491,7 +511,7 @@ function App() {
     };
     window.addEventListener('remove-handle-edge', handleRemoveEdge);
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
-  }, [nodes, updateGraph]);
+  }, []);
 
   return (
     <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
@@ -567,7 +587,8 @@ function App() {
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStop={onNodeDragStop}
             onEdgeClick={(_, edge) => setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; })}
-            nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => setSelectedNodeId(null)}
+            nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
+            onNodeContextMenu={(e, node) => { e.preventDefault(); setMenu({ id: node.id, x: e.clientX, y: e.clientY }); }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             fitView
           >
@@ -582,6 +603,30 @@ function App() {
               </button>
             </Panel>
           </ReactFlow>
+
+          {menu && (
+            <div 
+              className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
+              style={{ top: menu.y, left: menu.x }}
+              onClick={() => setMenu(null)}
+            >
+              <button 
+                onClick={() => requestCapture(menu.id)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+              >
+                <Save size={16} className="text-accent group-hover:text-white" />
+                <span>Save as Image...</span>
+              </button>
+              <div className="h-px bg-white/5 my-1 mx-2" />
+              <button 
+                onClick={() => setNodes(nds => nds.filter(n => n.id !== menu.id))}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500 rounded-xl text-white text-[11px] font-bold transition-all group"
+              >
+                <Plus size={16} className="text-red-500 group-hover:text-white rotate-45" />
+                <span>Delete Node</span>
+              </button>
+            </div>
+          )}
 
           {isAddMenuOpen && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-20" onClick={() => { setIsAddMenuOpen(false); setPendingConnection(null); }}>
@@ -814,19 +859,24 @@ function App() {
                       }
 
                       if (p.type === 'trigger') {
+                        const isSnapshotSave = selectedNode.type === 'util_snapshot' && p.id === 'save_to_disk';
                         return (
                           <div key={p.id} className="space-y-4 group">
                             <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">
-                              {p.label || p.id}
+                               {p.label || p.id}
                             </label>
                             <button 
                               onClick={() => {
-                                updateNodeParams(selectedNode.id, { [p.id]: 1 });
-                                setTimeout(() => updateNodeParams(selectedNode.id, { [p.id]: 0 }), 100);
+                                if (isSnapshotSave) {
+                                  requestCapture(selectedNode.id);
+                                } else {
+                                  updateNodeParams(selectedNode.id, { [p.id]: 1 });
+                                  setTimeout(() => updateNodeParams(selectedNode.id, { [p.id]: 0 }), 100);
+                                }
                               }}
                               className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
                             >
-                              <Zap size={14} /> {p.label || "Execute"}
+                              <Save size={14} /> {p.label || "Execute"}
                             </button>
                           </div>
                         );
