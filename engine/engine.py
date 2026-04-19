@@ -228,10 +228,25 @@ class MovieInput(NodeProcessor):
             ret, frame = self.cap.read()
             self.current_frame = scrub_clamped
             
+        # Generate a small preview for the UI
+        preview_b64 = None
+        if ret and frame is not None:
+            try:
+                h, w = frame.shape[:2]
+                sc = 120 / h
+                preview_w = int(w * sc)
+                if preview_w > 0:
+                    preview_img = cv2.resize(frame, (preview_w, 120))
+                    _, buf = cv2.imencode('.jpg', preview_img, [cv2.IMWRITE_JPEG_QUALITY, 50])
+                    preview_b64 = base64.b64encode(buf).decode('utf-8')
+            except: pass
+
         return {
             "main": frame if ret else None, 
             "total_frames": self.total_frames, 
-            "current_frame": self.current_frame
+            "current_frame": self.current_frame,
+            "preview": preview_b64,
+            "filename": os.path.basename(full_path)
         }
 
 class SolidColorNode(NodeProcessor):
@@ -567,6 +582,7 @@ class VisionEngine:
             'output_display': DisplayOutput
         }
         self.registry.update(NODE_CLASS_REGISTRY)
+        self.pending_capture = None
 
     def switch_camera(self, idx):
         self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
@@ -630,6 +646,21 @@ class VisionEngine:
                     try:
                         out = proc.process(inputs, node.get('data', {}).get('params', {}))
                         results[nid] = out
+                        
+                        # Handle On-Demand Capture
+                        if self.pending_capture == nid and out.get('main') is not None:
+                            try:
+                                capture_img = out['main']
+                                if len(capture_img.shape) == 2: capture_img = cv2.cvtColor(capture_img, cv2.COLOR_GRAY2BGR)
+                                _, c_buf = cv2.imencode('.png', capture_img)
+                                c_b64 = base64.b64encode(c_buf).decode('utf-8')
+                                async def send_capture(b):
+                                    msg = json.dumps({"type": "node_capture", "node_id": nid, "image": b})
+                                    if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
+                                asyncio.create_task(send_capture(c_b64))
+                                self.pending_capture = None # Reset
+                            except Exception as ce: print(f"Capture Error: {ce}")
+
                         for k, v in out.items():
                             if k == "_command" and v: commands.append(v)
                             elif k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
@@ -663,6 +694,8 @@ class VisionEngine:
             async for m in ws:
                 d = json.loads(m)
                 if d.get('type') == 'update_graph': self.update_graph(d.get('graph', {}))
+                elif d.get('type') == 'request_node_capture': 
+                    self.pending_capture = d.get('node_id')
         except: pass
         finally: self.connected_clients.remove(ws)
 

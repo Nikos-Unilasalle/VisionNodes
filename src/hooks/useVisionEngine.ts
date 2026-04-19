@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export function useVisionEngine() {
+export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => void) {
   const [frame, setFrame] = useState<string | null>(null);
   const [nodesData, setNodesData] = useState<Record<string, any>>({});
   const [pluginSchemas, setPluginSchemas] = useState<any[]>([]);
@@ -29,6 +29,8 @@ export function useVisionEngine() {
             }
           } else if (msg.type === 'schema') {
             setPluginSchemas(msg.nodes);
+          } else if (msg.type === 'node_capture') {
+            onCapture?.(msg.node_id, msg.image);
           }
         } catch (e) {}
       };
@@ -41,7 +43,7 @@ export function useVisionEngine() {
 
     connect();
     return () => ws.current?.close();
-  }, []);
+  }, [onCapture]);
 
   const updateGraph = useCallback((nodes: any[], edges: any[]) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
@@ -52,5 +54,11 @@ export function useVisionEngine() {
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, lastCommands };
+  const requestCapture = useCallback((nodeId: string) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'request_node_capture', node_id: nodeId }));
+    }
+  }, []);
+
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, lastCommands };
 }

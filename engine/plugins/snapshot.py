@@ -12,7 +12,8 @@ from __main__ import NodeProcessor, vision_node
     inputs=[{"id": "image", "color": "image"}],
     outputs=[{"id": "main", "color": "image"}],
     params=[
-        {"id": "capture", "label": "Take Snapshot", "type": "trigger", "default": 0}
+        {"id": "capture", "label": "Take Snapshot", "type": "trigger", "default": 0},
+        {"id": "save_to_disk", "label": "Save as Pict", "type": "trigger", "default": 0}
     ]
 )
 class SnapshotNode(NodeProcessor):
