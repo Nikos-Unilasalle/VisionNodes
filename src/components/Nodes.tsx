@@ -348,11 +348,72 @@ export const AnalysisFlowVizNode = memo(({ selected }: any) => (
   <BaseNode title="Flow Viz" icon={Palette} selected={selected} color="accent" inputs={[{id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const AnalysisZoneMeanNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Area Monitor" icon={Target} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}, {id: 'scalar', color: 'data'}]}>
-    <div className="text-xl font-mono text-center text-white">{(data.node_data?.scalar || 0).toFixed(4)}</div>
-  </BaseNode>
-));
+export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
+  const nodeData = data.node_data || {};
+  const val = nodeData.scalar ?? 0;
+  const displayText = nodeData.display_text || `${val.toFixed(data.params?.precision ?? 3)}`;
+  
+  const parts = displayText.trim().split(/\s+/);
+  const num = parts[0] || '0.000';
+  const unit = parts[1] || '';
+
+  // Simple normalization for the progress bar
+  const mode = data.params?.mode ?? 0;
+  let progress = 0;
+  let themeColor = '#22c55e'; // Default data green
+
+  if (mode === 1) { // Flow
+    progress = (val / 5.0) * 100;
+    themeColor = HANDLE_COLORS.flow;
+  } else if (mode === 2) { // Area
+    progress = (val / 100000) * 100;
+    themeColor = HANDLE_COLORS.mask;
+  } else if (mode >= 3 && mode <= 6) { // Image
+    progress = (val / 255) * 100;
+    themeColor = HANDLE_COLORS.image;
+  } else if (mode === 7) { // Count
+    progress = (val / 20) * 100;
+    themeColor = HANDLE_COLORS.list;
+  } else {
+    progress = (val / 100) * 100;
+  }
+
+  return (
+    <BaseNode 
+      title={data.schema?.label || "Universal Monitor"} 
+      icon={Target} 
+      selected={selected} 
+      color="blue" 
+      inputs={[
+        {id: 'data', color: 'data'},
+        {id: 'image', color: 'image'}, 
+        {id: 'mask', color: 'mask'}
+      ]} 
+      outputs={[
+        {id: 'main', color: 'image'}, 
+        {id: 'scalar', color: 'scalar'}
+      ]}
+    >
+      <div className="flex flex-col items-center justify-center py-4 bg-black/40 rounded-xl border border-white/5 shadow-inner">
+        <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1 opacity-60">Live Monitor</div>
+        
+        <div className="flex items-baseline gap-1.5 px-4 truncate w-full justify-center">
+           <span className="text-xl font-bold font-mono text-emerald-400 tracking-tighter drop-shadow-md truncate">
+             {num}
+           </span>
+           {unit && <span className="text-[9px] font-black uppercase tracking-widest shrink-0" style={{ color: themeColor }}>{unit}</span>}
+        </div>
+
+        <div className="mt-3 w-3/4 h-1 bg-white/5 rounded-full overflow-hidden">
+           <div 
+             className="h-full shadow-[0_0_8px_rgba(34,197,94,0.3)] transition-all duration-300"
+             style={{ width: `${Math.min(100, Math.max(2, progress))}%`, backgroundColor: themeColor }}
+           />
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
 
 export const DrawOverlayNode = memo(({ selected }: any) => (
   <BaseNode title="Overlay" icon={PenTool} selected={selected} color="accent" inputs={[

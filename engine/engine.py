@@ -333,14 +333,99 @@ class FlowVizNode(NodeProcessor):
         hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
         return {"main": cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)}
 
-class ZoneMeanNode(NodeProcessor):
+@vision_node(
+    type_id="analysis_monitor",
+    label="Universal Monitor",
+    category="analysis",
+    icon="Target",
+    description="Universal measurement tool for flow, area, brightness, and counting objects.",
+    inputs=[
+        {"id": "data", "color": "data"},
+        {"id": "image", "color": "image"},
+        {"id": "mask", "color": "mask"}
+    ],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "scalar", "color": "scalar"}
+    ],
+    params=[
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Auto", "Flux (Motion)", "Area (Mask)", "Brightness", "Red Channel", "Green Channel", "Blue Channel", "Count (Elements)"], "default": 0},
+        {"id": "scale", "label": "Scale Factor", "type": "scalar", "min": 0, "max": 1000, "default": 1.0},
+        {"id": "offset", "label": "Offset", "type": "scalar", "min": -1000, "max": 1000, "default": 0.0},
+        {"id": "precision", "label": "Decimals", "type": "scalar", "min": 0, "max": 5, "default": 3}
+    ]
+)
+class UniversalMonitorNode(NodeProcessor):
     def process(self, inputs, params):
-        flow = inputs.get('data')
+        data = inputs.get('data')
+        img = inputs.get('image', inputs.get('main'))
+        mask = inputs.get('mask')
+        
+        mode = int(params.get('mode', 0))
+        scale = float(params.get('scale', 1.0))
+        offset = float(params.get('offset', 0.0))
+        precision = int(params.get('precision', 3))
+        
         val = 0.0
-        if flow is not None:
-            mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
-            val = float(np.mean(mag))
-        return {"main": inputs.get('image'), "scalar": val}
+        unit = ""
+        
+        # 1. Determine Mode if Auto
+        if mode == 0: # Auto
+            if data is not None:
+                if isinstance(data, np.ndarray):
+                    if len(data.shape) == 3 and data.shape[2] == 2: mode = 1 # Flux
+                    else: mode = 3 # Brightness (approx)
+                elif isinstance(data, list): mode = 7 # Count
+                else: mode = 3 # Scalar?
+            elif mask is not None: mode = 2 # Area
+            elif img is not None: mode = 3 # Brightness
+        
+        # 2. Execution
+        if mode == 1: # Flux (Motion)
+            flow = data if isinstance(data, np.ndarray) and len(data.shape) == 3 and data.shape[2] == 2 else None
+            if flow is not None:
+                mag, _ = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+                if mask is not None:
+                    # Apply mask if provided
+                    mask_res = cv2.resize(mask, (mag.shape[1], mag.shape[0]))
+                    if len(mask_res.shape) == 3: mask_res = cv2.cvtColor(mask_res, cv2.COLOR_BGR2GRAY)
+                    mag = mag[mask_res > 0]
+                val = float(np.mean(mag)) if mag.size > 0 else 0.0
+                unit = "flux"
+        
+        elif mode == 2: # Area (Mask)
+            m = mask if mask is not None else data
+            if m is not None and isinstance(m, np.ndarray):
+                if len(m.shape) == 3: m = cv2.cvtColor(m, cv2.COLOR_BGR2GRAY)
+                val = float(cv2.countNonZero(m))
+                unit = "px"
+        
+        elif mode in [3, 4, 5, 6]: # Brightness or Color Channels
+            im = img if img is not None else data
+            if im is not None and isinstance(im, np.ndarray):
+                if len(im.shape) == 2: # Grayscale
+                    val = float(np.mean(im))
+                else: # BGR
+                    if mode == 3: val = float(np.mean(im)) # Global
+                    elif mode == 4: val = float(np.mean(im[..., 2])) # R
+                    elif mode == 5: val = float(np.mean(im[..., 1])) # G
+                    elif mode == 6: val = float(np.mean(im[..., 0])) # B
+                unit = "lvl"
+        
+        elif mode == 7: # Count (Elements)
+            lst = data if isinstance(data, (list, dict)) else []
+            if isinstance(lst, dict): val = 1.0 # Presence
+            else: val = float(len(lst))
+            unit = "items"
+            
+        # 3. Post-process
+        final_val = (val * scale) + offset
+        
+        return {
+            "main": img if img is not None else mask,
+            "scalar": final_val,
+            "display_text": f"{final_val:.{precision}f} {unit}"
+        }
 
 class FaceDetectionNode(NodeProcessor):
     def __init__(self):
@@ -599,7 +684,7 @@ class VisionEngine:
             'input_webcam': WebcamInput, 'input_image': ImageInput, 'input_movie': MovieInput, 'input_solid_color': SolidColorNode,
             'filter_canny': CannyFilter, 'filter_blur': BlurFilter, 'filter_gray': GrayFilter, 'filter_threshold': ThresholdFilter,
             'geom_flip': FlipNode, 'geom_resize': ResizeNode, 'analysis_flow': OpticalFlowNode, 'analysis_flow_viz': FlowVizNode,
-            'analysis_zone_mean': ZoneMeanNode, 'analysis_face_mp': FaceDetectionNode, 'analysis_hand_mp': HandDetectionNode,
+            'analysis_monitor': UniversalMonitorNode, 'analysis_face_mp': FaceDetectionNode, 'analysis_hand_mp': HandDetectionNode,
             'filter_color_mask': ColorMaskNode, 'filter_morphology': MorphologyNode, 'draw_overlay': OverlayNode,
             'util_coord_to_mask': CoordToMaskNode, 'util_mask_blend': MaskBlendNode, 'data_list_selector': ListSelectorNode,
             'data_coord_splitter': CoordSplitterNode, 'data_coord_combine': CoordCombineNode, 'data_inspector': InspectorNode,

@@ -47,7 +47,9 @@ const nodeTypes = {
   analysis_pose_mp: N.AnalysisPoseMPNode,
   analysis_flow: N.AnalysisFlowNode,
   analysis_flow_viz: N.AnalysisFlowVizNode,
-  analysis_zone_mean: N.AnalysisZoneMeanNode,
+  analysis_monitor: N.AnalysisMonitorNode,
+  analysis_zone_mean: N.AnalysisMonitorNode,
+  plugin_mask_counter: N.AnalysisMonitorNode,
   draw_overlay: N.DrawOverlayNode,
   draw_point: N.GenericCustomNode,
   draw_line: N.GenericCustomNode,
@@ -122,7 +124,7 @@ const CATEGORIES = [
   ] },
   { id: 'visualize', label: 'Visualizers', icon: Eye, nodes: [
     { type: 'data_inspector', label: 'Inspect Unit', description: 'Displays the raw data content flowing through a link.' },
-    { type: 'analysis_zone_mean', label: 'Area Monitor', description: 'Calculates the average flow in a specific area of the frame.' },
+    { type: 'analysis_monitor', label: 'Universal Monitor', description: 'Ultra-polyvalent measurement tool (Flux, Areas, Brightness, Counting).' },
     { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' }
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
@@ -272,7 +274,9 @@ function App() {
   const dynamicNodeTypes = useMemo(() => {
     const types: any = { ...nodeTypes };
     (pluginSchemas || []).forEach(schema => {
-      types[schema.type] = N.GenericCustomNode;
+      if (!types[schema.type]) {
+        types[schema.type] = N.GenericCustomNode;
+      }
     });
     return types;
   }, [pluginSchemas]);
