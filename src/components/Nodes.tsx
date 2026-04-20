@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position, useNodeId, NodeResizeControl } from 'reactflow';
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
@@ -48,7 +48,7 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
   );
 };
 
-const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0 }: any) => {
+const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0, width = 'w-64', headerExtra }: any) => {
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
                       color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
@@ -58,7 +58,15 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
   const totalInputs = inputs.length + var_count;
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
-  const minHeight = Math.max(80, maxPorts * 32 + 45);
+  const minHeight = Math.max(100, maxPorts * 36 + 60);
+
+  // Offset ports downward by 45px to avoid title collision
+  const getPortTop = (index: number, total: number) => {
+    if (total === 0) return '50%';
+    const startOffset = 45; // pixels from top
+    const spacing = 32;
+    return `${startOffset + index * spacing}px`;
+  };
 
   return (
     <div 
@@ -67,11 +75,11 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
     >
       {/* Inputs with Labels */}
       {inputs.map((inp: any, i: number) => {
-        const top = `${(i + 1) * (100 / (totalInputs + 1))}%`;
+        const top = getPortTop(i, totalInputs);
         return (
           <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" />
-            <span className="ml-[12px] text-[7px] font-black text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>
+            <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>
           </div>
         );
       })}
@@ -79,18 +87,21 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
       {/* Dynamic Variables with Labels */}
       {Array.from({ length: var_count }).map((_, i) => {
         const char = String.fromCharCode(97 + i);
-        const top = `${(inputs.length + i + 1) * (100 / (totalInputs + 1))}%`;
+        const top = getPortTop(inputs.length + i, totalInputs);
         return (
           <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" />
-            <span className="ml-[12px] text-[8px] font-black text-accent uppercase tracking-widest">{char}</span>
+            <span className="ml-[12px] text-[8px] font-medium text-accent uppercase tracking-widest">{char}</span>
           </div>
         );
       })}
 
-      <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl overflow-hidden">
-        <Icon size={14} className="text-gray-400 group-hover:text-accent transition-colors shrink-0" />
-        <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">{title}</span>
+      <div className="bg-[#222] px-4 py-2 flex items-center justify-between border-b border-[#333] rounded-t-xl overflow-hidden group/header">
+        <div className="flex items-center gap-3 truncate">
+          <Icon size={14} className="text-gray-400 group-hover:text-accent transition-colors shrink-0" />
+          <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">{title}</span>
+        </div>
+        {headerExtra}
       </div>
       
       <div className="p-2 text-[10px] text-gray-400 flex flex-col gap-2">
@@ -99,10 +110,10 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
 
       {/* Outputs with Labels */}
       {outputs.map((out: any, i: number) => {
-        const top = `${(i + 1) * (100 / (totalOutputs + 1))}%`;
+        const top = getPortTop(i, totalOutputs);
         return (
           <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
-            <span className="mr-[12px] text-[7px] font-black text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>
+            <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>
             <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" />
           </div>
         );
@@ -544,6 +555,63 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const UtilCSVExportNode = memo(({ selected, data }: any) => {
+  const handleBrowse = async () => {
+    try {
+      const selected = await save({
+        filters: [{ name: 'CSV', extensions: ['csv'] }]
+      });
+      if (selected && typeof selected === 'string') {
+        const lastSlash = Math.max(selected.lastIndexOf('/'), selected.lastIndexOf('\\'));
+        const path = selected.substring(0, lastSlash);
+        let filename = selected.substring(lastSlash + 1);
+        if (filename.toLowerCase().endsWith('.csv')) {
+          filename = filename.substring(0, filename.length - 4);
+        }
+        data.onChangeParams?.({ path, filename });
+      }
+    } catch (err) {
+      console.error('Failed to open dialog:', err);
+    }
+  };
+
+  const statusDot = (
+    <div className={`w-2.5 h-2.5 rounded-full ${data.params?.record ? 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-gray-600'}`} />
+  );
+
+  return (
+    <BaseNode 
+      title="CSV Export" 
+      icon={Database} 
+      selected={selected} 
+      color="accent" 
+      inputs={data.schema?.inputs || []}
+      headerExtra={statusDot}
+    >
+      <div className="p-3 space-y-3 mx-6">
+        <button 
+          onClick={handleBrowse}
+          className="w-full py-4 bg-accent/10 hover:bg-accent/20 border border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group"
+        >
+          <FolderOpen size={20} className="text-accent group-hover:scale-110 transition-transform" />
+          <div className="text-[10px] font-black text-accent uppercase tracking-widest text-center">Select Export Path</div>
+        </button>
+        
+        <div className="space-y-2">
+          <div className="px-3 py-2 bg-black/40 rounded-xl border border-white/5">
+            <div className="text-[7px] text-gray-500 uppercase font-black mb-1">Target Folder</div>
+            <div className="text-[9px] font-mono text-gray-400 truncate">{data.params?.path || "Not selected"}</div>
+          </div>
+          <div className="px-3 py-2 bg-black/40 rounded-xl border border-white/5">
+            <div className="text-[7px] text-gray-500 uppercase font-black mb-1">Base Filename</div>
+            <div className="text-[9px] font-mono text-white/70 truncate">{data.params?.filename || "capture"}.csv</div>
+          </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Box);
@@ -551,6 +619,7 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
   if (schema.type === 'sci_plotter') return <ScientificPlotterNode selected={selected} data={data} />;
   if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
   if (schema.type === 'draw_text') return <DrawTextNode selected={selected} data={data} />;
+  if (schema.type === 'util_csv_export') return <UtilCSVExportNode selected={selected} data={data} />;
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
