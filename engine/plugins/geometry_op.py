@@ -109,3 +109,70 @@ class ManualPointsNode(NodeProcessor):
             pts.append({"x": float(x), "y": float(y)})
             
         return {"points": pts}
+
+@vision_node(
+    type_id="util_roi_polygon",
+    label="ROI Polygon",
+    category="geom",
+    icon="Scaling",
+    description="Interactive polygonal mask generator to define Regions of Interest.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}, {"id": "pts", "color": "list"}],
+    params=[
+        {"id": "points", "label": "Points", "type": "string", "default": "[]"},
+        {"id": "filled", "label": "Filled", "type": "boolean", "default": True},
+        {"id": "thickness", "label": "Thickness", "type": "scalar", "min": 1, "max": 20, "default": 2}
+    ]
+)
+class ROIPolygonNode(NodeProcessor):
+    def process(self, inputs, params):
+        import json, base64
+        img = inputs.get('image')
+        h, w = (img.shape[0], img.shape[1]) if img is not None else (480, 640)
+        
+        points_str = params.get('points', '[]')
+        try:
+            pts_data = json.loads(points_str)
+        except:
+            pts_data = []
+            
+        mask = np.zeros((h, w), dtype=np.uint8)
+        
+        # Performance optimization: Send a small preview for the editor
+        preview_b64 = None
+        if img is not None:
+            # We encode every ~6 frames to save bandwidth/CPU (assuming 30fps)
+            if not hasattr(self, '_frame_count'): self._frame_count = 0
+            self._frame_count += 1
+            if self._frame_count % 6 == 0:
+                try:
+                    # Resize to something reasonable for background
+                    ph, pw = 360, int(360 * (w/h))
+                    pimg = cv2.resize(img, (pw, ph))
+                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                    preview_b64 = base64.b64encode(buf).decode('utf-8')
+                    self._last_preview = preview_b64
+                except: pass
+            else:
+                preview_b64 = getattr(self, '_last_preview', None)
+
+        if len(pts_data) > 0:
+            # Convert normalized points to pixel coordinates
+            pts_array = []
+            for p in pts_data:
+                if isinstance(p, dict):
+                    pts_array.append([float(p.get('x', 0)) * w, float(p.get('y', 0)) * h])
+                elif isinstance(p, (list, tuple)) and len(p) >= 2:
+                    pts_array.append([float(p[0]) * w, float(p[1]) * h])
+            
+            pts = np.array(pts_array, np.int32)
+            
+            if len(pts) >= 3:
+                if params.get('filled', True):
+                    cv2.fillPoly(mask, [pts], 255)
+                else:
+                    cv2.polylines(mask, [pts], True, 255, int(params.get('thickness', 2)))
+            elif len(pts) == 2:
+                 cv2.line(mask, tuple(pts[0]), tuple(pts[1]), 255, int(params.get('thickness', 2)))
+        
+        return {"main": img, "mask": mask, "pts": pts_data, "main_preview": preview_b64}

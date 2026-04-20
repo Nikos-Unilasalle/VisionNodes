@@ -415,13 +415,106 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const ROIPolygonNode = memo(({ selected, data }: any) => {
+  const [points, setPoints] = React.useState<any[]>([]);
+  const frame = data.node_data?.main_preview || data.node_data?.main;
+  const onOpenEditor = data.onOpenEditor;
+  
+  React.useEffect(() => {
+    if (data.params?.points) {
+      try {
+        const p = JSON.parse(data.params.points);
+        if (Array.isArray(p)) setPoints(p);
+      } catch (e) {}
+    }
+  }, [data.params?.points]);
+
+  return (
+    <BaseNode 
+      title="ROI Polygon" 
+      icon={Scaling} 
+      selected={selected} 
+      color="accent" 
+      inputs={[{id: 'image', color: 'image'}]} 
+      outputs={[
+        {id: 'main', color: 'image'}, 
+        {id: 'mask', color: 'mask'}, 
+        {id: 'pts', color: 'list'}
+      ]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/roi shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-60 grayscale-[50%]" alt="ROI Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+               <Image size={24} className="opacity-10" />
+            </div>
+          )}
+          
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              {points.length >= 3 && (
+                <polygon
+                  points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                  className="fill-accent/30 stroke-accent stroke-[0.012] drop-shadow-[0_0_8px_rgba(var(--color-accent),0.5)]"
+                  style={{ vectorEffect: 'non-scaling-stroke' }}
+                />
+              )}
+              {points.length > 0 && points.length < 3 && (
+                 <polyline
+                   points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                   fill="none"
+                   stroke="var(--color-accent)"
+                   strokeWidth="0.012"
+                 />
+              )}
+              {points.map((p, i) => (
+                <circle 
+                  key={i} cx={p.x} cy={p.y} 
+                  className="fill-white stroke-accent" 
+                  style={{ r: 4, strokeWidth: 1.5, vectorEffect: 'non-scaling-stroke' }} 
+                />
+              ))}
+            </svg>
+          </svg>
+          
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+             <button 
+               onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+               className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 hover:scale-110 active:scale-95 flex items-center gap-2"
+             >
+               <Scaling size={12} /> Edit Region
+             </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between px-1">
+           <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
+             {points.length} Vertices
+           </div>
+           <button 
+             onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+             className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline"
+           >
+             Modify Shape
+           </button>
+        </div>
+      </div>
+      <NodeResizeControl minWidth={200} minHeight={150}>
+         <div className="absolute bottom-1 right-1 w-2 h-2 border-r-2 border-b-2 border-white/20" />
+      </NodeResizeControl>
+    </BaseNode>
+  );
+});
+
 export const DrawOverlayNode = memo(({ selected }: any) => (
   <BaseNode title="Overlay" icon={PenTool} selected={selected} color="accent" inputs={[
     {id: 'image', color: 'image'}, 
-    {id: 'data', color: 'any'}, 
-    {id: 'data_2', color: 'any'}, 
-    {id: 'data_3', color: 'any'}, 
-    {id: 'data_4', color: 'any'}
+    {id: 'data', color: 'data'}, 
+    {id: 'data_2', color: 'data'}, 
+    {id: 'data_3', color: 'data'}, 
+    {id: 'data_4', color: 'data'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
@@ -444,7 +537,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
       </NodeResizeControl>
       
       <div style={{ width: data.params?.width || 208, height: data.params?.height || 'auto' }}>
-        <BaseNode title="Inspector" icon={Eye} selected={selected} color="accent" inputs={[{id: 'data', color: 'any'}]}>
+        <BaseNode title="Inspector" icon={Eye} selected={selected} color="accent" inputs={[{id: 'data', color: 'data'}]}>
           {isScalar ? (
             <div className="text-xl font-mono text-center text-yellow-500 py-4">{d.toFixed(4)}</div>
           ) : (
