@@ -18,16 +18,15 @@ import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
 import { EXAMPLES } from './data/examples';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
-  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
-  { id: 'node-2', type: 'analysis_face_mp', position: { x: 300, y: 150 }, data: { label: 'Face Tracking', params: { max_faces: 3 } } },
-  { id: 'node-4', type: 'output_display', position: { x: 600, y: 150 }, data: { label: 'Display Outlet', params: {} } },
+  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
+  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display Outlet', params: {} } },
 ];
 
 const initialEdges: Edge[] = [
-  { id: 'e1-2', source: 'node-1', target: 'node-2', sourceHandle: 'image__main', targetHandle: 'image__image' },
-  { id: 'e2-4', source: 'node-2', target: 'node-4', sourceHandle: 'image__main', targetHandle: 'image__main' },
+  { id: 'e1-4', source: 'node-1', target: 'node-4', sourceHandle: 'image__main', targetHandle: 'image__main' },
 ];
 
 const nodeTypes = {
@@ -176,6 +175,7 @@ function App() {
   const isResizing = useRef(false);
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+  const [instance, setInstance] = useState<any>(null);
   
   const handleCapture = useCallback(async (nodeId: string, base64: string) => {
     try {
@@ -295,14 +295,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsAddMenuOpen(false);
-        setPendingConnection(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.title = "Vision Nodes Studio";
   }, []);
 
   const nodesWithData = useMemo(() => {
@@ -461,12 +454,36 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'c') copyNodes();
-      if ((e.metaKey || e.ctrlKey) && e.key === 'v') pasteNodes();
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdKey = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdKey && e.key === 'c') copyNodes();
+      if (cmdKey && e.key === 'v') pasteNodes();
+      
+      if (e.shiftKey && e.key.toLowerCase() === 'm') setIsAddMenuOpen(prev => !prev);
+      if (e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setNodes(nds => nds.map(n => ({ ...n, selected: true })));
+      }
+      if (e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
+      if (e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
+      if (e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        getCurrentWindow().isFullscreen().then(is => getCurrentWindow().setFullscreen(!is));
+      }
+      if (cmdKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        instance?.fitView();
+      }
+
+      if (e.key === 'Escape') {
+        setIsAddMenuOpen(false);
+        setPendingConnection(null);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes]);
+  }, [copyNodes, pasteNodes, instance]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     const id = `node-${Date.now()}`;
@@ -556,7 +573,7 @@ function App() {
                <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
                   <img src={logo} alt="Logo" className="h-full w-auto object-contain" />
                </div>
-               <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VisionNodes Studio</h1>
+               <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
             </div>
             <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
               {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
@@ -618,6 +635,7 @@ function App() {
         <div className="flex-1 relative overflow-hidden bg-[#080808]" onContextMenu={e => e.preventDefault()}>
           <ReactFlow
             nodes={nodesWithData} edges={edges}
+            onInit={setInstance}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} 
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStop={onNodeDragStop}
@@ -625,6 +643,7 @@ function App() {
             nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
             onNodeContextMenu={(e, node) => { e.preventDefault(); setMenu({ id: node.id, x: e.clientX, y: e.clientY }); }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
           >
             <Background color="#111" variant={BackgroundVariant.Lines} gap={40} size={1} />
@@ -723,7 +742,7 @@ function App() {
             dragMomentum={false}
             whileHover={{ scale: 1.02, cursor: 'grab' }}
             whileDrag={{ scale: 1.05, cursor: 'grabbing', zIndex: 100 }}
-            className="absolute bottom-6 left-6 w-[400px] aspect-video bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+            className="absolute bottom-6 left-[49px] w-[400px] aspect-video bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
           >
              {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" />}
           </motion.div>
@@ -893,7 +912,11 @@ function App() {
                       }
 
                       if (isNumber) {
-                        return <NumberInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                        return <NumberInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} onChange={(v: any) => updateNodeParams(selectedNode.id, { [p.id]: v })} />;
+                      }
+
+                      if (p.type === 'toggle' || p.type === 'bool' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'boolean') {
+                        return <ToggleInput key={p.id} label={p.label || p.id} val={!!(selectedNode.data.params[p.id] ?? p.default)} onChange={(v: any) => updateNodeParams(selectedNode.id, { [p.id]: v })} />;
                       }
 
                       if (p.type === 'trigger') {
@@ -1026,6 +1049,18 @@ const CodeInput = ({ label, val, onChange }: any) => (
     <div className="flex gap-2">
        <div className="text-[8px] text-gray-500 italic px-1">Available: a, b, c, d (inputs) | out_main, out_scalar... (outputs)</div>
     </div>
+  </div>
+);
+
+const ToggleInput = ({ label, val, onChange }: any) => (
+  <div className="flex items-center justify-between py-2 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <button 
+      onClick={() => onChange(!val)}
+      className={`w-10 h-5 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#222]'}`}
+    >
+      <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${val ? 'left-6' : 'left-1'}`} />
+    </button>
   </div>
 );
 
