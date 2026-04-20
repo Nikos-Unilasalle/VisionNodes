@@ -669,7 +669,29 @@ class InspectorNode(NodeProcessor):
     def process(self, inputs, params): return {"main": inputs.get('image'), "data_out": inputs.get('data')}
 
 class DisplayOutput(NodeProcessor):
-    def process(self, inputs, params): return {"main": inputs.get('image')}
+    def process(self, inputs, params):
+        img = inputs.get('main')
+        mask = inputs.get('mask_in')
+        flow = inputs.get('flow_in')
+        
+        # Determine base image
+        res = img if img is not None else flow
+        if res is None and mask is not None:
+            # If only mask, show it as grayscale
+            res = mask
+            
+        # Overlay mask if both exist
+        if img is not None and mask is not None:
+            # Resize mask to img if needed
+            if mask.shape[:2] != img.shape[:2]:
+                mask = cv2.resize(mask, (img.shape[1], img.shape[0]))
+            
+            # Create red overlay for mask
+            overlay = img.copy()
+            overlay[mask > 0] = [0, 0, 255] # Red BGR
+            res = cv2.addWeighted(overlay, 0.4, img, 0.6, 0)
+            
+        return {"main": res}
 
 # --- CORE ENGINE ---
 class VisionEngine:
