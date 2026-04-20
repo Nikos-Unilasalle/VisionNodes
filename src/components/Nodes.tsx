@@ -453,30 +453,28 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
           )}
           
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {/* Layer 1: Stretched Polygon */}
             <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
               {points.length >= 3 && (
                 <polygon
                   points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                  className="fill-accent/30 stroke-accent stroke-[0.012] drop-shadow-[0_0_8px_rgba(var(--color-accent),0.5)]"
-                  style={{ vectorEffect: 'non-scaling-stroke' }}
+                  className="fill-accent/30 stroke-accent"
+                  style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }}
                 />
               )}
-              {points.length > 0 && points.length < 3 && (
-                 <polyline
-                   points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                   fill="none"
-                   stroke="var(--color-accent)"
-                   strokeWidth="0.012"
-                 />
-              )}
-              {points.map((p, i) => (
-                <circle 
-                  key={i} cx={p.x} cy={p.y} 
-                  className="fill-white stroke-accent" 
-                  style={{ r: 4, strokeWidth: 1.5, vectorEffect: 'non-scaling-stroke' }} 
-                />
-              ))}
             </svg>
+
+            {/* Layer 2: Circular Points */}
+            {points.map((p, i) => (
+              <circle 
+                key={i} 
+                cx={`${p.x * 100}%`} 
+                cy={`${p.y * 100}%`} 
+                r={4}
+                className="fill-white stroke-accent" 
+                style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} 
+              />
+            ))}
           </svg>
           
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
