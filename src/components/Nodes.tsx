@@ -538,8 +538,8 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
   const remVar = () => data.onChangeParams?.({ var_count: Math.max(varCount - 1, 0) });
 
   return (
-    <BaseNode title="Draw Text" icon={Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount}>
-      <div className="flex flex-col gap-2 p-1">
+    <BaseNode title="Draw Text" icon={Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount} width="w-80">
+      <div className="flex flex-col gap-2 p-1 mx-6">
         <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
           <span className="text-[8px] font-black uppercase text-gray-500 font-mono tracking-tighter">Variables ({varCount})</span>
           <div className="flex gap-1">
