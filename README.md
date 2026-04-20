@@ -15,24 +15,26 @@ VisionNodes is a node-based development environment for rapid prototyping of Com
 - **Python** (3.10+)
 
 ### 2. Setup & Dependencies
+
+The easiest way to install all dependencies (Frontend, Rust, and Python) is to use the unified setup script:
+
 ```bash
 # Clone the repository
 git clone https://github.com/Nikos-Unilasalle/VisionNodes.git
 cd VisionNodes
 
-# Install Frontend dependencies
-npm install
-
-# Setup Backend (Python virtual environment)
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate   # Windows
-pip install opencv-python mediapipe websockets numpy ultralytics pytesseract
-
-# Optional (for OCR)
-brew install tesseract  # macOS
-# sudo apt install tesseract-ocr  # Linux
+# Run the unified setup (Linux/macOS)
+chmod +x setup.sh
+./setup.sh
 ```
+
+The script will automatically:
+1. Install npm packages.
+2. Check for Rust/Tauri.
+3. Create a Python virtual environment in `.venv`.
+4. Install all AI and Vision libraries (Torch, OpenCV, YOLO, etc.).
+5. Check for Tesseract OCR.
+
 
 ### 3. Running the Studio
 To launch both the Python logic engine and the GUI in a single command:
