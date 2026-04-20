@@ -1194,12 +1194,13 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
           )}
           
           <svg className="absolute inset-0 w-full h-full cursor-crosshair" onMouseDown={handleSvgMouseDown}>
+            {/* Layer 1: Stretched Polygon/Lines */}
             <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
               {points.length >= 3 && (
                 <polygon
                   points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                  className="fill-accent/20 stroke-accent stroke-[0.005]"
-                  style={{ pointerEvents: 'none' }}
+                  className="fill-accent/20 stroke-accent"
+                  style={{ strokeWidth: 0.004, pointerEvents: 'none' }}
                 />
               )}
               {points.length > 0 && (
@@ -1207,47 +1208,47 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
                    points={points.map(p => `${p.x},${p.y}`).join(' ')}
                    fill="none"
                    stroke="var(--color-accent)"
-                   strokeWidth="0.005"
-                   strokeDasharray={points.length >= 3 ? "none" : "0.01 0.01"}
-                   style={{ pointerEvents: 'none' }}
+                   style={{ strokeWidth: 0.004, strokeDasharray: points.length >= 3 ? "none" : "0.01 0.01", pointerEvents: 'none' }}
                  />
               )}
-
-              {points.map((p, i) => (
-                <circle
-                  key={i}
-                  cx={p.x} cy={p.y} 
-                  fill={selectedIndex === i ? "white" : "var(--color-accent)"}
-                  stroke={selectedIndex === i ? "var(--color-accent)" : "white"}
-                  strokeWidth="2"
-                  className="cursor-move"
-                  style={{ r: 6, vectorEffect: 'non-scaling-stroke' }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                    if (e.button === 2) { 
-                       setPoints(prev => prev.filter((_, idx) => idx !== i));
-                       setSelectedIndex(null);
-                       return; 
-                    }
-                    
-                    setSelectedIndex(i);
-                    const move = (moveEvent: MouseEvent) => {
-                      const rect = containerRef.current?.getBoundingClientRect();
-                      if (!rect) return;
-                      const nx = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width));
-                      const ny = Math.max(0, Math.min(1, (moveEvent.clientY - rect.top) / rect.height));
-                      updatePoint(i, nx, ny);
-                    };
-                    const up = () => {
-                      window.removeEventListener('mousemove', move);
-                      window.removeEventListener('mouseup', up);
-                    };
-                    window.addEventListener('mousemove', move);
-                    window.addEventListener('mouseup', up);
-                  }}
-                />
-              ))}
             </svg>
+
+            {/* Layer 2: Pixel-Precise Interaction Points */}
+            {points.map((p, i) => (
+              <circle
+                key={i}
+                cx={`${p.x * 100}%`}
+                cy={`${p.y * 100}%`}
+                r={selectedIndex === i ? 8 : 6}
+                fill={selectedIndex === i ? "white" : "var(--color-accent)"}
+                stroke={selectedIndex === i ? "var(--color-accent)" : "white"}
+                strokeWidth="2"
+                className="cursor-move"
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  if (e.button === 2) { 
+                     setPoints(prev => prev.filter((_, idx) => idx !== i));
+                     setSelectedIndex(null);
+                     return; 
+                  }
+                  
+                  setSelectedIndex(i);
+                  const move = (moveEvent: MouseEvent) => {
+                    const rect = containerRef.current?.getBoundingClientRect();
+                    if (!rect) return;
+                    const nx = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width));
+                    const ny = Math.max(0, Math.min(1, (moveEvent.clientY - rect.top) / rect.height));
+                    updatePoint(i, nx, ny);
+                  };
+                  const up = () => {
+                    window.removeEventListener('mousemove', move);
+                    window.removeEventListener('mouseup', up);
+                  };
+                  window.addEventListener('mousemove', move);
+                  window.addEventListener('mouseup', up);
+                }}
+              />
+            ))}
           </svg>
         </div>
       </div>
