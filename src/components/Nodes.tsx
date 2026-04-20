@@ -58,7 +58,12 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
   const totalInputs = inputs.length + var_count;
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
-  const minHeight = Math.max(100, maxPorts * 36 + 60);
+  
+  const startOffset = 45;
+  const spacing = 32;
+  // Compact height: last port position + 35px padding
+  const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 35) : 90;
+  const minHeight = Math.max(portsHeight, 90);
 
   // Offset ports downward by 45px to avoid title collision
   const getPortTop = (index: number, total: number) => {
