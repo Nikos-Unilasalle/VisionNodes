@@ -193,6 +193,77 @@ class MyNode(NodeProcessor):
 
 **Data types** (for `color` in inputs/outputs): `image`, `scalar`, `boolean`, `list`, `dict`, `mask`, `string`, `any`.
 
+## 🐧 Linux Installation Guide
+
+VisionNodes works on Linux (tested on Arch Linux with KDE Wayland). A few extra steps are required compared to macOS.
+
+### Prerequisites
+
+```bash
+# Arch Linux
+sudo pacman -S nodejs npm rustup webkit2gtk-4.1 gtk3 base-devel
+
+# Ubuntu / Debian
+sudo apt install nodejs npm curl build-essential libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+```
+
+For Rust:
+```bash
+rustup default stable
+```
+
+### Installation
+
+```bash
+git clone https://github.com/Nikos-Unilasalle/VisionNodes
+cd VisionNodes
+npm run setup
+```
+
+### Launch
+
+```bash
+npm run studio
+```
+
+### Known Issues & Fixes
+
+#### White screen on Wayland / WebKitGTK 2.48+
+
+WebKitGTK 2.48 and above uses a new DMA-BUF renderer that causes a white screen on many Linux setups. The `npm run studio` script already sets the required environment variable (`WEBKIT_DISABLE_DMABUF_RENDERER=1`), but if you launch the app another way, set it manually:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run tauri dev
+```
+
+If the issue persists after an interrupted or failed first launch, clear the WebKit cache:
+
+```bash
+rm -rf ~/.local/share/com.visionnodes.app/WebKitCache
+rm -rf ~/.local/share/com.visionnodes.app/CacheStorage
+```
+
+#### Camera not detected
+
+Linux enumerates cameras differently from macOS. If the webcam node shows a black frame, open the node's settings panel and set **Device Index** to `0`. You can verify your camera index with:
+
+```bash
+v4l2-ctl --list-devices
+```
+
+#### Port already in use (8765)
+
+If you force-quit the app, the Python engine may keep running. `npm run studio` handles this automatically. If you still get a port error, kill it manually:
+
+```bash
+ss -tlnp | grep 8765   # find the PID
+kill -9 <PID>
+```
+
+---
+
+## 🤝 Fork & Contribute
+
 Stateful nodes (requiring memory between frames) inherit from `NodeProcessor` normally and use instance variables — the engine preserves one instance per node per session.
 
 ---
