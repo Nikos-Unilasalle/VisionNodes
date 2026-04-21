@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
-import logo from './assets/logo.svg';
+import logo from './assets/logo.svg?url';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
@@ -23,7 +23,7 @@ import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } 
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
-  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
+  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
   { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display Outlet', params: {} } },
 ];
 

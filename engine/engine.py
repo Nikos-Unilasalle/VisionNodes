@@ -46,11 +46,13 @@ import urllib.request
 from collections import deque
 from abc import ABC, abstractmethod
 
+CAP_BACKEND = cv2.CAP_V4L2 if hasattr(cv2, 'CAP_V4L2') else cv2.CAP_ANY
+
 def list_available_cameras():
     index = 0
     arr = []
     while index < 5:
-        cap = cv2.VideoCapture(index)
+        cap = cv2.VideoCapture(index, CAP_BACKEND)
         if cap.isOpened():
             arr.append(index)
             cap.release()
@@ -792,7 +794,7 @@ class DisplayOutput(NodeProcessor):
 class VisionEngine:
     def __init__(self):
         self.current_cap_index = 0
-        self.cap = cv2.VideoCapture(self.current_cap_index)
+        self.cap = cv2.VideoCapture(self.current_cap_index, CAP_BACKEND)
         self.graph = {"nodes": [], "edges": []}
         self.sorted_nodes = []
         self.connected_clients = set()
@@ -817,7 +819,7 @@ class VisionEngine:
             self.fallback_img = cv2.imread(img_path)
 
     def switch_camera(self, idx):
-        self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
+        self.cap.release(); self.cap = cv2.VideoCapture(idx, CAP_BACKEND); self.current_cap_index = idx
 
     def update_graph(self, g):
         self.graph = g
@@ -959,20 +961,34 @@ class VisionEngine:
         finally: self.connected_clients.remove(ws)
 
 load_plugins()
-engine = VisionEngine()
 
 async def main(engine_instance):
     try:
-        async with websockets.serve(engine_instance.hdl, "localhost", 8765):
+        async with websockets.serve(engine_instance.hdl, "127.0.0.1", 8765):
             await engine_instance.run()
     except Exception as e:
         print(f"Server Error: {e}")
 
+def free_port(port):
+    import signal
+    try:
+        result = subprocess.run(['ss', '-tlnp', f'sport = :{port}'],
+                                capture_output=True, text=True)
+        for line in result.stdout.splitlines():
+            if f':{port}' in line and 'pid=' in line:
+                pid = int(line.split('pid=')[1].split(',')[0])
+                if pid != os.getpid():
+                    os.kill(pid, signal.SIGKILL)
+        time.sleep(0.3)
+    except Exception:
+        pass
+
 if __name__ == "__main__":
     print("[Engine] Starting OpenCV Sidecar...")
+    free_port(8765)
     cameras = list_available_cameras()
     print(f"[Engine] Available cameras: {cameras}")
-    
+
     engine = VisionEngine()
     try:
         asyncio.run(main(engine))
