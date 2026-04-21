@@ -48,7 +48,7 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
   );
 };
 
-const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
+const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
                       color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
@@ -102,7 +102,10 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
           <Icon size={14} className="text-gray-400 group-hover:text-accent transition-colors shrink-0" />
           <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">{title}</span>
         </div>
-        {headerExtra}
+        <div className="flex items-center gap-1 shrink-0">
+          {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse" />}
+          {headerExtra}
+        </div>
       </div>
       
       <div className="p-2 text-[10px] text-gray-400 flex flex-col gap-2">
@@ -124,8 +127,8 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
 };
 
 // --- NODES ---
-export const InputWebcamNode = memo(({ selected }: any) => (
-  <BaseNode title="Webcam" icon={Camera} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]} />
+export const InputWebcamNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Webcam" icon={Camera} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const InputImageNode = memo(({ selected, data }: any) => {
@@ -157,7 +160,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
   };
 
   return (
-    <BaseNode title="Image File" icon={Image} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
+    <BaseNode title="Image File" icon={Image} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
       {preview ? (
         <div className="relative group" onClick={handleBrowse}>
           <img 
@@ -216,7 +219,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   };
 
   return (
-    <BaseNode title="Movie File" icon={Film} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]}>
+    <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
       <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
         {data.node_data?.preview && (
           <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
@@ -267,49 +270,47 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const SolidColorNode = memo(({ selected }: any) => (
-  <BaseNode title="Solid Color" icon={Palette} selected={selected} color="green" outputs={[{id: 'main', color: 'image'}]} />
+export const SolidColorNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterCannyNode = memo(({ selected }: any) => (
-  <BaseNode title="Canny Edge" icon={Waves} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const FilterCannyNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Canny Edge" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterBlurNode = memo(({ selected }: any) => (
-  <BaseNode title="Blur" icon={Ghost} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const FilterBlurNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Blur" icon={Ghost} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterThresholdNode = memo(({ selected }: any) => (
-  <BaseNode title="Threshold" icon={Waves} selected={selected} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} />
+export const FilterThresholdNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Threshold" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} />
 ));
 
-export const FilterColorMaskNode = memo(({ selected }: any) => (
-  <BaseNode title="Color Mask" icon={Palette} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
+export const FilterColorMaskNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Color Mask" icon={Palette} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
-
-export const FilterGrayNode = memo(({ selected }: any) => (
-  <BaseNode title="Grayscale" icon={Eye} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const FilterGrayNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Grayscale" icon={Eye} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const FilterMorphologyNode = memo(({ selected }: any) => (
-  <BaseNode title="Morphology" icon={Waves} selected={selected} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
+export const FilterMorphologyNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Morphology" icon={Waves} selected={selected} data={data} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
-
-export const GeomFlipNode = memo(({ selected }: any) => (
-  <BaseNode title="Flip" icon={Move} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const GeomFlipNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Flip" icon={Move} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const GeomResizeNode = memo(({ selected }: any) => (
-  <BaseNode title="Resize" icon={Scaling} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const GeomResizeNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Resize" icon={Scaling} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const AnalysisFaceMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_faces || 3;
   const outputs = [{id: 'main', color: 'image'}, {id: 'faces_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `face_${i}`, color: 'data' }))];
   return (
-    <BaseNode title="Face Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
+    <BaseNode title="Face Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
 
@@ -317,27 +318,27 @@ export const AnalysisHandMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_hands || 2;
   const outputs = [{id: 'main', color: 'image'}, {id: 'hands_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `hand_${i}`, color: 'data' }))];
   return (
-    <BaseNode title="Hand Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
+    <BaseNode title="Hand Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
 
-export const AnalysisPoseMPNode = memo(({ selected }: any) => {
+export const AnalysisPoseMPNode = memo(({ selected, data }: any) => {
   const outputs = [
-    {id: 'main', color: 'image'}, 
+    {id: 'main', color: 'image'},
     {id: 'pose_list', color: 'list'},
     {id: 'data', color: 'dict'}
   ];
   return (
-    <BaseNode title="Pose Tracker" icon={User} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
+    <BaseNode title="Pose Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
 
-export const AnalysisFlowNode = memo(({ selected }: any) => (
-  <BaseNode title="Optical Flow" icon={Activity} selected={selected} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} />
+export const AnalysisFlowNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Optical Flow" icon={Activity} selected={selected} data={data} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} />
 ));
 
-export const AnalysisFlowVizNode = memo(({ selected }: any) => (
-  <BaseNode title="Flow Viz" icon={Palette} selected={selected} color="accent" inputs={[{id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}]} />
+export const AnalysisFlowVizNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Flow Viz" icon={Palette} selected={selected} data={data} color="accent" inputs={[{id: 'data', color: 'flow'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
@@ -360,18 +361,19 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
   else { progress = (val / 100) * 100; }
 
   return (
-    <BaseNode 
-      title={data.schema?.label || "Universal Monitor"} 
-      icon={Target} 
-      selected={selected} 
-      color="blue" 
+    <BaseNode
+      title={data.schema?.label || "Universal Monitor"}
+      icon={Target}
+      selected={selected}
+      data={data}
+      color="blue"
       inputs={[
         {id: 'data', color: 'any'},
-        {id: 'image', color: 'image'}, 
+        {id: 'image', color: 'image'},
         {id: 'mask', color: 'mask'}
-      ]} 
+      ]}
       outputs={[
-        {id: 'main', color: 'image'}, 
+        {id: 'main', color: 'image'},
         {id: 'scalar', color: 'scalar'}
       ]}
     >
@@ -409,15 +411,16 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
   }, [data.params?.points]);
 
   return (
-    <BaseNode 
-      title="ROI Polygon" 
-      icon={Scaling} 
-      selected={selected} 
-      color="accent" 
-      inputs={[{id: 'image', color: 'image'}]} 
+    <BaseNode
+      title="ROI Polygon"
+      icon={Scaling}
+      selected={selected}
+      data={data}
+      color="accent"
+      inputs={[{id: 'image', color: 'image'}]}
       outputs={[
-        {id: 'main', color: 'image'}, 
-        {id: 'mask', color: 'mask'}, 
+        {id: 'main', color: 'image'},
+        {id: 'mask', color: 'mask'},
         {id: 'pts', color: 'list'}
       ]}
     >
@@ -485,12 +488,12 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const DrawOverlayNode = memo(({ selected }: any) => (
-  <BaseNode title="Overlay" icon={PenTool} selected={selected} color="accent" inputs={[
-    {id: 'image', color: 'image'}, 
-    {id: 'data', color: 'data'}, 
-    {id: 'data_2', color: 'data'}, 
-    {id: 'data_3', color: 'data'}, 
+export const DrawOverlayNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Overlay" icon={PenTool} selected={selected} data={data} color="accent" inputs={[
+    {id: 'image', color: 'image'},
+    {id: 'data', color: 'data'},
+    {id: 'data_2', color: 'data'},
+    {id: 'data_3', color: 'data'},
     {id: 'data_4', color: 'data'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
@@ -576,9 +579,12 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
         </div>
 
         {/* Title bar */}
-        <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl shrink-0">
-          <Eye size={14} className="text-gray-400 shrink-0" />
-          <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate flex-1">Inspector</span>
+        <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0">
+          <div className="flex items-center gap-3 truncate">
+            <Eye size={14} className="text-gray-400 shrink-0" />
+            <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">Inspector</span>
+          </div>
+          {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
         </div>
 
         {/* Scrollable content */}
@@ -613,22 +619,20 @@ export const DataCoordCombineNode = memo(({ selected }: any) => (
   ]} />
 ));
 
-export const UtilCoordToMaskNode = memo(({ selected }: any) => (
-  <BaseNode title="Coord To Mask" icon={Layers} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'dict'}]} outputs={[{id: 'mask', color: 'mask'}]} />
+export const UtilCoordToMaskNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Coord To Mask" icon={Layers} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'dict'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
-
-export const UtilMaskBlendNode = memo(({ selected }: any) => (
-  <BaseNode title="Mask Blend" icon={Layers} selected={selected} color="accent" inputs={[
-    {id: 'image_a', color: 'image'}, 
-    {id: 'image_b', color: 'image'}, 
+export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Mask Blend" icon={Layers} selected={selected} data={data} color="accent" inputs={[
+    {id: 'image_a', color: 'image'},
+    {id: 'image_b', color: 'image'},
     {id: 'mask', color: 'mask'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-
-export const OutputDisplayNode = memo(({ selected }: any) => (
-  <BaseNode title="Final Out" icon={Maximize} selected={selected} color="green" inputs={[
+export const OutputDisplayNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Final Out" icon={Maximize} selected={selected} data={data} color="green" inputs={[
     {id: 'main', color: 'image'},
     {id: 'mask_in', color: 'mask'},
     {id: 'flow_in', color: 'flow'}
@@ -660,8 +664,8 @@ export const PythonNode = memo(({ selected, data }: any) => {
   const displayLine = firstComment || lines.find(l => l !== '') || '';
 
   return (
-    <BaseNode title="Python Script" icon={Zap} selected={selected} color="red" 
-              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]} 
+    <BaseNode title="Python Script" icon={Zap} selected={selected} data={data} color="red"
+              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]}
               outputs={[{id: 'out_main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
       {displayLine && (
         <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/40 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
@@ -829,7 +833,7 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
     : schema.outputs;
 
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="accent" inputs={schema.inputs} outputs={outputs}>
+    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
       {/* Minimalist: internal content moved to Inspector */}
     </BaseNode>
   );
