@@ -49,8 +49,6 @@ const nodeTypes = {
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_monitor: N.AnalysisMonitorNode,
   util_roi_polygon: N.ROIPolygonNode,
-  analysis_zone_mean: N.AnalysisMonitorNode,
-  plugin_mask_counter: N.AnalysisMonitorNode,
   draw_overlay: N.DrawOverlayNode,
   draw_point: N.GenericCustomNode,
   draw_line: N.GenericCustomNode,
@@ -616,21 +614,40 @@ function App() {
   return (
     <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
       <header className="h-10 bg-[#151515] border-b border-[#222] flex items-center justify-between px-4 z-50">
-        <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-               <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
-                  <img src={logo} alt="Logo" className="h-full w-auto object-contain" />
-               </div>
-               <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
+              <img src={logo} alt="Logo" className="h-full w-auto object-contain" />
             </div>
-            <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
-              {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
-           </div>
+            <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
+          </div>
+          <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
+            {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
+          </div>
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+          <button
+            onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
+            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+          >
+            <Plus size={14} /> New
+          </button>
+          <button
+            onClick={loadProject}
+            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+          >
+            <FolderOpen size={14} /> Open
+          </button>
+          <button
+            onClick={saveProject}
+            className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 hover:bg-accent/20 rounded-lg text-[10px] font-bold text-accent transition-all shadow-lg shadow-accent/5"
+          >
+            <Save size={14} /> Save .vn
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
            <div className="relative">
-              <button 
+              <button
                 onClick={() => setIsExamplesOpen(!isExamplesOpen)}
                 className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
               >
@@ -661,21 +678,6 @@ function App() {
                 )}
               </AnimatePresence>
            </div>
-           
-           <div className="h-4 w-[1px] bg-[#222] mx-1" />
-
-           <button 
-            onClick={loadProject}
-            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
-           >
-            <FolderOpen size={14} /> Open
-           </button>
-           <button 
-            onClick={saveProject}
-            className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 hover:bg-accent/20 rounded-lg text-[10px] font-bold text-accent transition-all shadow-lg shadow-accent/5"
-           >
-            <Save size={14} /> Save .vn
-           </button>
         </div>
       </header>
 

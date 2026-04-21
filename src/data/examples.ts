@@ -64,18 +64,22 @@ export const EXAMPLES = [
   },
   {
     name: "YOLO Object Detection",
-    description: "Détection d'objets avec YOLOv11 et overlays dynamiques.",
+    description: "Détection d'objets sur une image statique avec YOLOv11. Affiche les boîtes englobantes, le compte total et la liste des objets détectés.",
     nodes: [
-      { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
-      { id: "yolo-1", type: "object_detection_yolo", position: { x: 300, y: 150 }, data: { label: "YOLOv11", params: { confidence: 0.25 } } },
-      { id: "overlay-1", type: "draw_overlay", position: { x: 550, y: 150 }, data: { label: "Visual Overlay", params: {} } },
-      { id: "disp-1", type: "output_display", position: { x: 800, y: 150 }, data: { label: "Final Out", params: {} } }
+      { id: "src-1",     type: "input_image",           position: { x: 50,  y: 200 }, data: { label: "Things (things.jpg)", params: { path: "samples/things.jpg" } } },
+      { id: "yolo-1",   type: "object_detection_yolo",  position: { x: 300, y: 200 }, data: { label: "YOLO Detector",       params: { confidence: 25, model_size: 0 } } },
+      { id: "overlay-1", type: "draw_overlay",           position: { x: 570, y: 200 }, data: { label: "Bounding Boxes",      params: {} } },
+      { id: "disp-1",   type: "output_display",         position: { x: 840, y: 200 }, data: { label: "Annotated View",      params: {} } },
+      { id: "mon-1",    type: "analysis_monitor",       position: { x: 570, y: 420 }, data: { label: "Object Count",        params: { mode: 7 } } },
+      { id: "ins-1",    type: "data_inspector",         position: { x: 840, y: 420 }, data: { label: "Detection List",      params: { filter_key: "label" } } }
     ],
     edges: [
-      { id: "e1", source: "src-1", target: "yolo-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e2", source: "src-1", target: "overlay-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e3", source: "yolo-1", target: "overlay-1", sourceHandle: "list__detections", targetHandle: "any__data" },
-      { id: "e4", source: "overlay-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" }
+      { id: "e1", source: "src-1",     target: "yolo-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2", source: "src-1",     target: "overlay-1", sourceHandle: "image__main",       targetHandle: "image__image" },
+      { id: "e3", source: "yolo-1",   target: "overlay-1", sourceHandle: "list__objects_list", targetHandle: "any__data" },
+      { id: "e4", source: "overlay-1", target: "disp-1",   sourceHandle: "image__main",        targetHandle: "image__main" },
+      { id: "e5", source: "yolo-1",   target: "mon-1",     sourceHandle: "list__objects_list", targetHandle: "data__data" },
+      { id: "e6", source: "yolo-1",   target: "ins-1",     sourceHandle: "list__objects_list", targetHandle: "any__data" }
     ]
   },
   {
@@ -186,8 +190,8 @@ export const EXAMPLES = [
     ],
     edges: [
       { id: "e1", source: "src-1", target: "mog-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e2", source: "src-1", target: "blend-1", sourceHandle: "image__main", targetHandle: "image_a" },
-      { id: "e3", source: "mog-1", target: "blend-1", sourceHandle: "mask__mask", targetHandle: "image_b" },
+      { id: "e2", source: "src-1", target: "blend-1", sourceHandle: "image__main", targetHandle: "image__image_a" },
+      { id: "e3", source: "mog-1", target: "blend-1", sourceHandle: "mask__mask", targetHandle: "image__image_b" },
       { id: "e4", source: "blend-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" }
     ]
   },
@@ -254,36 +258,36 @@ export const EXAMPLES = [
     ]
   },
   {
-    name: "Pedestrian Counter & Logger",
-    description: "Compte les personnes détectées en temps réel avec SORT : chaque piéton reçoit un ID unique persistant. Le nombre de tracks actifs est loggé en continu via un Inspector.",
+    name: "Sprint Race Tracker",
+    description: "Détecte et suit chaque coureur avec SORT sur une vidéo de sprint. Chaque athlète reçoit un ID unique persistant. Compte cumulatif des IDs vus affiché en temps réel.",
     nodes: [
-      { id: "src-1",    type: "input_webcam",         position: { x: 50,   y: 250 }, data: { label: "Webcam",             params: { device_index: 0 } } },
+      { id: "src-1",    type: "input_movie",           position: { x: 50,   y: 250 }, data: { label: "Movie File",        params: { path: "samples/sprint.mp4" } } },
       { id: "yolo-1",   type: "object_detection_yolo", position: { x: 300,  y: 250 }, data: { label: "YOLO Detector",     params: { confidence: 35, model_size: 0 } } },
-      { id: "filter-1", type: "util_filter_label",     position: { x: 560,  y: 250 }, data: { label: "Filter: Person",    params: { query: "person" } } },
+      { id: "filter-1", type: "util_filter_label",     position: { x: 560,  y: 50  }, data: { label: "Label Filter",      params: { query: "person" } } },
       { id: "sort-1",   type: "tracker_sort",          position: { x: 820,  y: 250 }, data: { label: "SORT Tracker",      params: { max_age: 8, min_hits: 2, iou_threshold: 25 } } },
-      { id: "py-1",     type: "logic_python",          position: { x: 820,  y: 460 }, data: {
-          label: "Cumulative Counter",
+      { id: "py-1",     type: "logic_python",          position: { x: 960,  y: 460 }, data: {
+          label: "Python Script",
           params: {
             code: "# Compte les IDs uniques vus depuis le lancement\n# 'a' = liste des tracks actifs | 'b' = count actuel\nif 'seen_ids' not in state:\n    state['seen_ids'] = set()\n\nif isinstance(a, list):\n    for t in a:\n        if isinstance(t, dict) and 'track_id' in t:\n            state['seen_ids'].add(t['track_id'])\n\nactive = int(b) if b is not None else 0\ntotal  = len(state['seen_ids'])\n\nout_scalar = float(total)\nout_any    = f'Active: {active}  |  Total seen: {total}'"
           }
       }},
-      { id: "viz-1",    type: "tracker_visualize",     position: { x: 1080, y: 250 }, data: { label: "Track Visualizer", params: { show_trail: 1, trail_length: 25, show_id: 1, show_label: 1, thickness: 2, fill_alpha: 15 } } },
-      { id: "disp-1",   type: "output_display",        position: { x: 1340, y: 250 }, data: { label: "Final Output",     params: {} } },
-      { id: "ins-1",    type: "data_inspector",        position: { x: 1080, y: 460 }, data: { label: "Live Stats",       params: {} } },
-      { id: "mon-1",    type: "analysis_monitor",      position: { x: 300,  y: 460 }, data: { label: "Detection Count",  params: { mode: 7 } } }
+      { id: "viz-1",    type: "tracker_visualize",     position: { x: 1080, y: 50  }, data: { label: "Track Visualizer", params: { show_trail: 1, trail_length: 25, show_id: 1, show_label: 1, thickness: 2, fill_alpha: 15 } } },
+      { id: "disp-1",   type: "output_display",        position: { x: 1340, y: 50  }, data: { label: "Final Out",        params: {} } },
+      { id: "mon-1",    type: "analysis_monitor",      position: { x: 1340, y: 280 }, data: { label: "Universal Monitor", params: { mode: 7 } } },
+      { id: "ins-1",    type: "data_inspector",        position: { x: 1080, y: 460 }, data: { label: "Inspector",        params: {} } }
     ],
     edges: [
-      { id: "e1",  source: "src-1",    target: "yolo-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
-      { id: "e2",  source: "yolo-1",   target: "filter-1",sourceHandle: "list__objects_list", targetHandle: "list__list_in" },
-      { id: "e3",  source: "filter-1", target: "sort-1",  sourceHandle: "list__list_out",     targetHandle: "list__detections" },
-      { id: "e4",  source: "src-1",    target: "sort-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
-      { id: "e5",  source: "sort-1",   target: "viz-1",   sourceHandle: "list__tracks",       targetHandle: "list__tracks" },
-      { id: "e6",  source: "src-1",    target: "viz-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
-      { id: "e7",  source: "viz-1",    target: "disp-1",  sourceHandle: "image__main",        targetHandle: "image__main" },
-      { id: "e8",  source: "sort-1",   target: "py-1",    sourceHandle: "list__tracks",       targetHandle: "any__a" },
-      { id: "e9",  source: "sort-1",   target: "py-1",    sourceHandle: "scalar__count",      targetHandle: "any__b" },
-      { id: "e10", source: "py-1",     target: "ins-1",   sourceHandle: "any__out_any",       targetHandle: "any__data" },
-      { id: "e11", source: "filter-1", target: "mon-1",   sourceHandle: "list__list_out",     targetHandle: "data__data" }
+      { id: "e1",  source: "src-1",    target: "yolo-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2",  source: "yolo-1",   target: "filter-1", sourceHandle: "list__objects_list", targetHandle: "list__list_in" },
+      { id: "e3",  source: "filter-1", target: "sort-1",   sourceHandle: "list__list_out",     targetHandle: "list__detections" },
+      { id: "e4",  source: "src-1",    target: "sort-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e5",  source: "sort-1",   target: "viz-1",    sourceHandle: "list__tracks",       targetHandle: "list__tracks" },
+      { id: "e6",  source: "sort-1",   target: "viz-1",    sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e7",  source: "viz-1",    target: "disp-1",   sourceHandle: "image__main",        targetHandle: "image__main" },
+      { id: "e8",  source: "sort-1",   target: "py-1",     sourceHandle: "list__tracks",       targetHandle: "any__a" },
+      { id: "e9",  source: "sort-1",   target: "py-1",     sourceHandle: "scalar__count",      targetHandle: "any__b" },
+      { id: "e10", source: "py-1",     target: "ins-1",    sourceHandle: "any__out_any",       targetHandle: "any__data" },
+      { id: "e11", source: "filter-1", target: "mon-1",    sourceHandle: "list__list_out",     targetHandle: "data__data" }
     ]
   }
 ];
