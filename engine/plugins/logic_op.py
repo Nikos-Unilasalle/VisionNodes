@@ -14,8 +14,8 @@ from __main__ import NodeProcessor, vision_node
 )
 class CompareNode(NodeProcessor):
     def process(self, inputs, params):
-        a = inputs.get('a')
-        b = inputs.get('b')
+        a = inputs.get('in_a')
+        b = inputs.get('in_b')
         op_idx = params.get('op', 0)
         
         # Default fallback

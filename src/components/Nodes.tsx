@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Handle, Position, useNodeId, NodeResizeControl, NodeResizer } from 'reactflow';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
@@ -18,7 +18,7 @@ import {
   BarChart, Bar, Cell
 } from 'recharts';
 
-export const HANDLE_COLORS = { image: '#3b82f6', data: '#22c55e', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
+export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
 
 const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any) => {
   const nodeId = useNodeId();
@@ -551,14 +551,45 @@ const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
   return <span>{String(data)}</span>;
 };
 
+const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness']);
+
 export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = data.node_data?.data_out;
+  const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const accentBorder = selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]';
+
+  // Extract available keys from dict or list-of-dicts
+  const keys = useMemo(() => {
+    if (!d) return [];
+    const keySet = new Set<string>();
+    if (Array.isArray(d)) {
+      d.slice(0, 8).forEach(item => {
+        if (item && typeof item === 'object' && !Array.isArray(item))
+          Object.keys(item).forEach(k => { if (!HIDDEN_KEYS.has(k)) keySet.add(k); });
+      });
+    } else if (d && typeof d === 'object' && !Array.isArray(d)) {
+      Object.keys(d).forEach(k => { if (!HIDDEN_KEYS.has(k)) keySet.add(k); });
+    }
+    return Array.from(keySet);
+  }, [d]);
+
+  // Reset filter when keys change (different data type connected)
+  useEffect(() => {
+    if (filterKey && !keys.includes(filterKey)) setFilterKey(null);
+  }, [keys]);
+
+  // Compute filtered display value
+  const displayData = useMemo(() => {
+    if (!filterKey || !d) return d;
+    if (Array.isArray(d)) return d.map(item =>
+      (item && typeof item === 'object') ? item[filterKey] : item
+    );
+    if (typeof d === 'object') return (d as any)[filterKey];
+    return d;
+  }, [d, filterKey]);
 
   return (
     <div className="w-full h-full group/node" style={{ minWidth: 180, minHeight: 120, position: 'relative' }}>
-      
-      {/* NodeResizer — handles must have z-index above the visual shell */}
       <NodeResizer
         isVisible={selected}
         minWidth={180}
@@ -567,13 +598,10 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
         handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
         lineStyle={{ borderColor: 'var(--accent, #7c3aed)', borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
       />
-
-      {/* Visual shell — z-index: 0 ensures it stays BELOW the resize handles */}
-      <div 
+      <div
         className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
         style={{ position: 'relative', zIndex: 0 }}
       >
-        {/* Input handle */}
         <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
           <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
         </div>
@@ -587,9 +615,34 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
           {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
         </div>
 
+        {/* Key filter pills — only shown when dict/list-of-dicts detected */}
+        {keys.length > 0 && (
+          <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#2a2a2a] bg-[#1e1e1e] overflow-x-auto scrollbar-hide shrink-0">
+            <button
+              onClick={() => setFilterKey(null)}
+              className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
+                filterKey === null
+                  ? 'bg-accent/80 text-white'
+                  : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
+              }`}
+            >all</button>
+            {keys.map(k => (
+              <button
+                key={k}
+                onClick={() => setFilterKey(k === filterKey ? null : k)}
+                className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
+                  filterKey === k
+                    ? 'bg-cyan-500/70 text-white'
+                    : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                }`}
+              >{k}</button>
+            ))}
+          </div>
+        )}
+
         {/* Scrollable content */}
         <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
-          <JsonTreeView data={d} />
+          <JsonTreeView data={displayData} />
         </div>
       </div>
     </div>
@@ -666,7 +719,7 @@ export const PythonNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Python Script" icon={Zap} selected={selected} data={data} color="red"
               inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]}
-              outputs={[{id: 'out_main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
+              outputs={[{id: 'main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
       {displayLine && (
         <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/40 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
           <div className="text-[7px] font-mono text-emerald-400/70 truncate text-center italic">{displayLine}</div>
