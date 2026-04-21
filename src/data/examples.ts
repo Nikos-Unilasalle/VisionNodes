@@ -119,27 +119,40 @@ export const EXAMPLES = [
     ]
   },
   {
-    name: "Scientific Cell Segmenter",
-    description: "Segmentation watershed multi-étapes pour séparer des objets qui se touchent.",
+    name: "Stone Wall Segmenter",
+    description: "Segmente chaque pierre d'un mur avec watershed : seuillage Otsu inversé, nettoyage morphologique, transform distance, filtrage des marqueurs par aire et analyse.",
     nodes: [
-      { id: "src-1", type: "input_image", position: { x: 50, y: 150 }, data: { label: "Cells Image", params: {} } },
-      { id: "gray-1", type: "filter_gray", position: { x: 250, y: 150 }, data: { label: "Grayscale", params: {} } },
-      { id: "thresh-1", type: "feat_threshold_adv", position: { x: 450, y: 150 }, data: { label: "Otsu Threshold", params: { mode: 2 } } },
-      { id: "morph-1", type: "feat_morphology_adv", position: { x: 650, y: 150 }, data: { label: "Cleaning (Closing)", params: { operation: 1, size: 5 } } },
-      { id: "dist-1", type: "feat_distance_transform", position: { x: 250, y: 350 }, data: { label: "Distance Map", params: {} } },
-      { id: "markers-1", type: "feat_connected_components", position: { x: 450, y: 350 }, data: { label: "Markers", params: {} } },
-      { id: "wshed-1", type: "feat_watershed", position: { x: 650, y: 350 }, data: { label: "Watershed", params: {} } },
-      { id: "disp-1", type: "output_display", position: { x: 850, y: 250 }, data: { label: "Final Segmentation", params: {} } }
+      { id: "src-1",         type: "input_image",              position: { x: 50,   y: 200 }, data: { label: "Stone Wall (stonewall.png)", params: { path: "samples/stonewall.png" } } },
+      { id: "gray-1",        type: "filter_gray",               position: { x: 260,  y: 200 }, data: { label: "Grayscale",                  params: {} } },
+      { id: "thresh-1",      type: "feat_threshold_adv",        position: { x: 470,  y: 200 }, data: { label: "Otsu Inv (stones = white)",  params: { mode: 3 } } },
+      { id: "morph-open-1",  type: "feat_morphology_adv",       position: { x: 680,  y: 200 }, data: { label: "Opening (Remove Noise)",     params: { operation: 0, shape: 2, size: 5 } } },
+      { id: "morph-close-1", type: "feat_morphology_adv",       position: { x: 890,  y: 200 }, data: { label: "Closing (Fill Stone Holes)", params: { operation: 1, shape: 2, size: 15 } } },
+      { id: "dist-1",        type: "feat_distance_transform",   position: { x: 470,  y: 430 }, data: { label: "Distance Transform",         params: { dist_type: 0, mask_size: 1 } } },
+      { id: "thresh-dist-1", type: "feat_threshold_adv",        position: { x: 680,  y: 430 }, data: { label: "Peak Threshold (70%)",       params: { mode: 4 } } },
+      { id: "markers-1",     type: "feat_connected_components", position: { x: 890,  y: 430 }, data: { label: "Seed Markers",               params: {} } },
+      { id: "filter-1",      type: "feat_marker_filter",        position: { x: 1100, y: 430 }, data: { label: "Filter Small Fragments",     params: { min_area: 800, max_area: 500000, area_unit: 0, remap_ids: 1 } } },
+      { id: "wshed-1",       type: "feat_watershed",            position: { x: 1100, y: 200 }, data: { label: "Watershed",                  params: { visualization: 2, boundary_color: 1, boundary_thickness: 2, region_alpha: 0.5 } } },
+      { id: "analysis-1",    type: "sci_marker_analysis",       position: { x: 1310, y: 430 }, data: { label: "Stone Analysis",             params: { show_labels: 1, show_points: 1, font_scale: 0.8, thickness: 2, coord_type: 0 } } },
+      { id: "count-ins-1",   type: "data_inspector",            position: { x: 1310, y: 640 }, data: { label: "Stone Count",                params: {} } },
+      { id: "disp-1",        type: "output_display",            position: { x: 1310, y: 200 }, data: { label: "Segmentation View",          params: {} } },
+      { id: "disp-2",        type: "output_display",            position: { x: 1520, y: 430 }, data: { label: "Stone Analysis View",        params: {} } }
     ],
     edges: [
-      { id: "e1", source: "src-1", target: "gray-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e2", source: "gray-1", target: "thresh-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e3", source: "thresh-1", target: "morph-1", sourceHandle: "mask__mask", targetHandle: "any__mask" },
-      { id: "e4", source: "morph-1", target: "dist-1", sourceHandle: "mask__mask", targetHandle: "any__mask" },
-      { id: "e5", source: "dist-1", target: "markers-1", sourceHandle: "main__main", targetHandle: "any__mask" },
-      { id: "e6", source: "src-1", target: "wshed-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e7", source: "markers-1", target: "wshed-1", sourceHandle: "any__markers", targetHandle: "any__markers" },
-      { id: "e8", source: "wshed-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" }
+      { id: "e1",  source: "src-1",         target: "gray-1",        sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e2",  source: "gray-1",        target: "thresh-1",      sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e3",  source: "thresh-1",      target: "morph-open-1",  sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e4",  source: "morph-open-1",  target: "morph-close-1", sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e5",  source: "morph-close-1", target: "dist-1",        sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e6",  source: "dist-1",        target: "thresh-dist-1", sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e7",  source: "thresh-dist-1", target: "markers-1",     sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e8",  source: "markers-1",     target: "filter-1",      sourceHandle: "any__markers",     targetHandle: "any__markers" },
+      { id: "e9",  source: "src-1",         target: "wshed-1",       sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e10", source: "filter-1",      target: "wshed-1",       sourceHandle: "any__markers_out", targetHandle: "any__markers" },
+      { id: "e11", source: "wshed-1",       target: "disp-1",        sourceHandle: "image__main",      targetHandle: "image__main" },
+      { id: "e12", source: "wshed-1",       target: "analysis-1",    sourceHandle: "any__markers_out", targetHandle: "any__markers" },
+      { id: "e13", source: "src-1",         target: "analysis-1",    sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e14", source: "analysis-1",    target: "disp-2",        sourceHandle: "image__main",      targetHandle: "image__main" },
+      { id: "e15", source: "wshed-1",       target: "count-ins-1",   sourceHandle: "scalar__count",    targetHandle: "any__data" }
     ]
   },
   {
@@ -199,6 +212,25 @@ export const EXAMPLES = [
       { id: "e7", source: "src-1", target: "match-1", sourceHandle: "image__main", targetHandle: "image__img1" },
       { id: "e8", source: "src-2", target: "match-1", sourceHandle: "image__main", targetHandle: "image__img2" },
       { id: "e9", source: "match-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" }
+    ]
+  },
+  {
+    name: "Warp Affine: Animated Transform",
+    description: "Un Python Node calcule une matrice affine 2x3 animée (rotation + zoom oscillant). Warp Affine l'applique. Compose compare original et résultat côte à côte.",
+    nodes: [
+      { id: "src-1",     type: "input_image",     position: { x: 50,  y: 200 }, data: { label: "Portrait (portrait.jpeg)", params: { path: "samples/portrait.jpeg" } } },
+      { id: "py-1",      type: "logic_python",    position: { x: 280, y: 360 }, data: { label: "Affine Matrix",   params: { code: "# Rotation + zoom oscillant\nif 'f' not in state: state['f'] = 0\nstate['f'] += 1\n\nangle = state['f'] * 0.8\nscale = 1.0 + 0.2 * np.sin(state['f'] * 0.04)\n\nif a is not None and isinstance(a, np.ndarray):\n    h, w = a.shape[:2]\n    M = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)\n    out_any = M.tolist()" } } },
+      { id: "warp-1",    type: "geom_warp_affine", position: { x: 540, y: 200 }, data: { label: "Warp Affine",    params: {} } },
+      { id: "compose-1", type: "util_compose",    position: { x: 770, y: 200 }, data: { label: "Checkerboard",   params: { mode: 6, split_pos: 10 } } },
+      { id: "disp-1",    type: "output_display",  position: { x: 1010, y: 200 }, data: { label: "Final Output",  params: {} } }
+    ],
+    edges: [
+      { id: "e1", source: "src-1",     target: "py-1",      sourceHandle: "image__main",    targetHandle: "any__a" },
+      { id: "e2", source: "py-1",      target: "warp-1",    sourceHandle: "any__out_any",   targetHandle: "any__matrix" },
+      { id: "e3", source: "src-1",     target: "warp-1",    sourceHandle: "image__main",    targetHandle: "image__image" },
+      { id: "e4", source: "src-1",     target: "compose-1", sourceHandle: "image__main",    targetHandle: "image__image_a" },
+      { id: "e5", source: "warp-1",    target: "compose-1", sourceHandle: "image__main",    targetHandle: "image__image_b" },
+      { id: "e6", source: "compose-1", target: "disp-1",    sourceHandle: "image__main",    targetHandle: "image__main" }
     ]
   },
   {

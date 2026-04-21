@@ -60,5 +60,11 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, lastCommands };
+  const setPreviewNode = useCallback((nodeId: string | null) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'set_preview_node', node_id: nodeId }));
+    }
+  }, []);
+
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands };
 }

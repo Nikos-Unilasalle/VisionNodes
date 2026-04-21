@@ -161,29 +161,138 @@ class ConnectedComponentsNode(NodeProcessor):
     icon="Target",
     description="Separates overlapping objects using marker-controlled watershed algorithm.",
     inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "any"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}, {"id": "count", "color": "scalar"}],
     params=[
-        {"id": "draw_boundaries", "label": "Draw Boundaries", "type": "enum", "options": ["No", "Yes"], "default": 1}
+        {"id": "visualization", "label": "Visualization", "type": "enum", "options": ["Original + Boundaries", "Colorized Regions", "Regions + Boundaries", "Original"], "default": 0},
+        {"id": "boundary_color", "label": "Boundary Color", "type": "enum", "options": ["Red", "Green", "Blue", "White", "Black", "Yellow"], "default": 0},
+        {"id": "boundary_thickness", "label": "Boundary Thickness", "type": "scalar", "min": 1, "max": 5, "default": 1},
+        {"id": "region_alpha", "label": "Region Alpha", "type": "scalar", "min": 0.0, "max": 1.0, "default": 0.5}
     ]
 )
 class WatershedNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
         markers = inputs.get('markers')
-        if img is None or markers is None: return {"main": img, "markers_out": markers}
-        
-        # Ensure img is 3-channel BGR
+        if img is None or markers is None: return {"main": img, "markers_out": markers, "count": 0}
+
         if len(img.shape) == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        
-        # cv2.watershed expects int32 markers and BGR image
-        # It modifies markers in-place
+
         markers_copy = markers.copy().astype(np.int32)
         res_markers = cv2.watershed(img, markers_copy)
-        
-        out_img = img.copy()
-        if int(params.get('draw_boundaries', 1)) == 1:
-            # markers == -1 are the boundaries
-            out_img[res_markers == -1] = [0, 0, 255] # Red boundaries
-            
-        return {"main": out_img, "markers_out": res_markers}
+
+        BOUNDARY_COLORS = [
+            (0, 0, 255),    # Red
+            (0, 255, 0),    # Green
+            (255, 0, 0),    # Blue
+            (255, 255, 255),# White
+            (0, 0, 0),      # Black
+            (0, 255, 255),  # Yellow
+        ]
+        viz_mode = int(params.get('visualization', 0))
+        b_color = BOUNDARY_COLORS[min(int(params.get('boundary_color', 0)), len(BOUNDARY_COLORS)-1)]
+        b_thick = int(params.get('boundary_thickness', 1))
+        alpha = float(params.get('region_alpha', 0.5))
+
+        valid_labels = np.unique(res_markers)
+        valid_labels = valid_labels[(valid_labels > 0)]
+        count = len(valid_labels)
+
+        def colorize(markers_map):
+            n = max(1, count)
+            vis = (np.clip(markers_map, 0, None).astype(np.float32) * (255.0 / n)).astype(np.uint8)
+            colored = cv2.applyColorMap(vis, cv2.COLORMAP_JET)
+            colored[markers_map <= 0] = 0
+            return colored
+
+        def draw_boundaries(base, thick):
+            out = base.copy()
+            boundary_mask = (res_markers == -1)
+            if thick <= 1:
+                out[boundary_mask] = b_color
+            else:
+                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (thick, thick))
+                dilated = cv2.dilate(boundary_mask.astype(np.uint8), kernel)
+                out[dilated > 0] = b_color
+            return out
+
+        if viz_mode == 0:  # Original + Boundaries
+            out_img = draw_boundaries(img.copy(), b_thick)
+        elif viz_mode == 1:  # Colorized Regions
+            colored = colorize(res_markers)
+            out_img = cv2.addWeighted(img, 1.0 - alpha, colored, alpha, 0)
+        elif viz_mode == 2:  # Regions + Boundaries
+            colored = colorize(res_markers)
+            blended = cv2.addWeighted(img, 1.0 - alpha, colored, alpha, 0)
+            out_img = draw_boundaries(blended, b_thick)
+        else:  # Original
+            out_img = img.copy()
+
+        return {"main": out_img, "markers_out": res_markers, "count": count}
+
+@vision_node(
+    type_id="feat_marker_filter",
+    label="Marker Filter",
+    category="features",
+    icon="Filter",
+    description="Filters markers (label map) by area, removing regions outside the min/max range.",
+    inputs=[{"id": "markers", "color": "any"}, {"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}, {"id": "count", "color": "scalar"}],
+    params=[
+        {"id": "min_area", "label": "Min Area", "type": "scalar", "min": 0, "max": 1000000, "default": 0},
+        {"id": "max_area", "label": "Max Area", "type": "scalar", "min": 0, "max": 1000000, "default": 100000},
+        {"id": "area_unit", "label": "Area Unit", "type": "enum", "options": ["Pixels", "% of image"], "default": 0},
+        {"id": "remap_ids", "label": "Remap IDs", "type": "enum", "options": ["No", "Yes"], "default": 1}
+    ]
+)
+class MarkerFilterNode(NodeProcessor):
+    def process(self, inputs, params):
+        markers = inputs.get('markers')
+        img = inputs.get('image')
+        if markers is None: return {"main": img, "markers_out": None, "count": 0}
+
+        m = markers.astype(np.int32)
+        h, w = m.shape[:2]
+        total_pixels = h * w
+
+        min_area = float(params.get('min_area', 0))
+        max_area = float(params.get('max_area', 100000))
+        area_unit = int(params.get('area_unit', 0))
+        remap = int(params.get('remap_ids', 1)) == 1
+
+        if area_unit == 1:  # % of image -> pixels
+            min_area = min_area / 100.0 * total_pixels
+            max_area = max_area / 100.0 * total_pixels
+
+        valid_labels = np.unique(m)
+        valid_labels = valid_labels[valid_labels > 0]
+
+        filtered = np.zeros_like(m)
+        kept = 0
+        new_id = 1
+
+        for label_id in valid_labels:
+            mask = (m == label_id)
+            area = float(np.sum(mask))
+            if min_area <= area <= max_area:
+                if remap:
+                    filtered[mask] = new_id
+                    new_id += 1
+                else:
+                    filtered[mask] = label_id
+                kept += 1
+
+        n = max(1, kept)
+        vis = (np.clip(filtered, 0, None).astype(np.float32) * (255.0 / n)).astype(np.uint8)
+        colored = cv2.applyColorMap(vis, cv2.COLORMAP_JET)
+        colored[filtered <= 0] = 0
+
+        if img is not None:
+            base = img.copy()
+            if len(base.shape) == 2:
+                base = cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
+            out_img = cv2.addWeighted(base, 0.5, colored, 0.5, 0)
+        else:
+            out_img = colored
+
+        return {"main": out_img, "markers_out": filtered, "count": kept}

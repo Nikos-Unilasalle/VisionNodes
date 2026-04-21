@@ -139,15 +139,21 @@ class ImageInput(NodeProcessor):
     def process(self, inputs, params):
         path = params.get('path', '')
         if not path: return {"main": None}
-        
+
         # Absolute path resolution
         full_path = os.path.abspath(os.path.expanduser(path))
-        
-        # If not found, check if it's in the public directory (common for snapshots)
+
         if not os.path.exists(full_path):
-            alt_path = os.path.abspath(os.path.join(os.getcwd(), "public", path))
-            if os.path.exists(alt_path):
-                full_path = alt_path
+            # Relative to project root (parent of engine dir)
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            alt_root = os.path.join(project_root, path)
+            if os.path.exists(alt_root):
+                full_path = alt_root
+            else:
+                # Relative to cwd/public
+                alt_public = os.path.abspath(os.path.join(os.getcwd(), "public", path))
+                if os.path.exists(alt_public):
+                    full_path = alt_public
         
         if full_path != self.last_path:
             print(f"[Engine] Loading Image: {full_path}")
@@ -728,6 +734,7 @@ class VisionEngine:
         }
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
+        self.preview_node_id = None
 
     def switch_camera(self, idx):
         self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
@@ -809,7 +816,15 @@ class VisionEngine:
                         for k, v in out.items():
                             if k == "_command" and v: commands.append(v)
                             elif k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
-                        if ntype == 'output_display' and out.get('main') is not None: final_img = out['main']
+                        if self.preview_node_id and nid == self.preview_node_id:
+                            preview_img = out.get('main')
+                            if preview_img is None:
+                                for _v in out.values():
+                                    if isinstance(_v, np.ndarray) and len(_v.shape) >= 2:
+                                        preview_img = _v; break
+                            if preview_img is not None: final_img = preview_img
+                        elif not self.preview_node_id and ntype == 'output_display' and out.get('main') is not None:
+                            final_img = out['main']
                     except Exception as e: print(f"Error {nid}: {e}")
             if final_img is not None:
                 try:
@@ -839,8 +854,10 @@ class VisionEngine:
             async for m in ws:
                 d = json.loads(m)
                 if d.get('type') == 'update_graph': self.update_graph(d.get('graph', {}))
-                elif d.get('type') == 'request_node_capture': 
+                elif d.get('type') == 'request_node_capture':
                     self.pending_capture = d.get('node_id')
+                elif d.get('type') == 'set_preview_node':
+                    self.preview_node_id = d.get('node_id')  # None resets to output_display
         except: pass
         finally: self.connected_clients.remove(ws)
 

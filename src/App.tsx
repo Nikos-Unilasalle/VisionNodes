@@ -165,7 +165,8 @@ const CATEGORIES = [
     { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' }
   ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
-    { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' }
+    { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' },
+    { type: 'util_compose', label: 'Compose', description: 'Combines two images: side-by-side, split view, blend, difference, or checkerboard.' }
   ] }
 ];
 
@@ -182,6 +183,11 @@ function App() {
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
+  const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
+  const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
+  const previewResizing = useRef(false);
+  const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
+  const previewAspect = useRef(16 / 9);
   const [instance, setInstance] = useState<any>(null);
   
   const handleCapture = useCallback(async (nodeId: string, base64: string) => {
@@ -208,7 +214,7 @@ function App() {
     }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, lastCommands } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands } = useVisionEngine(handleCapture);
 
   const saveProject = async () => {
     try {
@@ -307,11 +313,20 @@ function App() {
     document.title = "Vision Nodes Studio";
   }, []);
 
+  const STATIC_IMAGE_PRODUCERS = useMemo(() => new Set([
+    'input_webcam', 'input_image', 'input_movie', 'input_solid_color',
+    'filter_canny', 'filter_blur', 'filter_gray', 'filter_threshold',
+    'filter_morphology', 'filter_color_mask', 'geom_flip', 'geom_resize',
+    'analysis_face_mp', 'analysis_hand_mp', 'analysis_pose_mp',
+    'analysis_flow', 'analysis_flow_viz', 'util_roi_polygon', 'draw_overlay',
+    'util_coord_to_mask', 'util_mask_blend', 'logic_python', 'output_display',
+  ]), []);
+
   const nodesWithData = useMemo(() => {
     return nodes.map(node => {
       const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${node.id}:`));
       const techData = dataKeys.length > 0 ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]])) : nodesData[node.id];
-      
+
       let dynamicColor = null;
       if (node.type === 'logic_switch') {
         const edge = edges.find(e => e.target === node.id && (e.targetHandle?.endsWith('if_true') || e.targetHandle?.endsWith('if_false')));
@@ -321,24 +336,42 @@ function App() {
       const schema = (pluginSchemas || []).find(s => s.type === node.type);
       const staticNode = CATEGORIES.flatMap(c => c.nodes).find(n => n.type === node.type);
       const description = schema?.description || (staticNode as any)?.description;
-      
-      return { 
-        ...node, 
-        data: { 
-          ...node.data, 
+
+      return {
+        ...node,
+        data: {
+          ...node.data,
           params: node.data?.params || {},
           schema,
           description,
           node_data: techData,
           dynamicColor,
+          isVisualized: node.id === visualizedNodeId,
           onOpenEditor: () => setRoiEditingId(node.id),
           onChangeParams: (p: any) => {
             setNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           }
-        } 
+        }
       };
     });
-  }, [nodes, nodesData, edges, pluginSchemas]);
+  }, [nodes, nodesData, edges, pluginSchemas, visualizedNodeId]);
+
+  const canVisualize = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return false;
+    if (node.type === 'output_display') return true;
+    if (STATIC_IMAGE_PRODUCERS.has(node.type || '')) return true;
+    const schema = (pluginSchemas || []).find(s => s.type === node.type);
+    if (schema?.outputs?.some((o: any) => o.color === 'image' || o.color === 'mask')) return true;
+    return false;
+  }, [nodes, pluginSchemas, STATIC_IMAGE_PRODUCERS]);
+
+  const handleVisualize = useCallback((nodeId: string) => {
+    const newId = visualizedNodeId === nodeId ? null : nodeId;
+    setVisualizedNodeId(newId);
+    setPreviewNode(newId);
+    setMenu(null);
+  }, [visualizedNodeId, setPreviewNode]);
 
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
 
@@ -685,12 +718,24 @@ function App() {
           </AnimatePresence>
 
           {menu && (
-            <div 
+            <div
               className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
               style={{ top: menu.y, left: menu.x }}
               onClick={() => setMenu(null)}
             >
-              <button 
+              {canVisualize(menu.id) && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleVisualize(menu.id); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <Eye size={16} className={visualizedNodeId === menu.id ? "text-yellow-400 group-hover:text-white" : "text-accent group-hover:text-white"} />
+                    <span>{visualizedNodeId === menu.id ? 'Stop Visualizing' : 'Visualiser'}</span>
+                  </button>
+                  <div className="h-px bg-white/5 my-1 mx-2" />
+                </>
+              )}
+              <button
                 onClick={() => requestCapture(menu.id)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
               >
@@ -698,8 +743,11 @@ function App() {
                 <span>Save as Image...</span>
               </button>
               <div className="h-px bg-white/5 my-1 mx-2" />
-              <button 
-                onClick={() => setNodes(nds => nds.filter(n => n.id !== menu.id))}
+              <button
+                onClick={() => {
+                  if (menu.id === visualizedNodeId) { setVisualizedNodeId(null); setPreviewNode(null); }
+                  setNodes(nds => nds.filter(n => n.id !== menu.id));
+                }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500 rounded-xl text-white text-[11px] font-bold transition-all group"
               >
                 <Plus size={16} className="text-red-500 group-hover:text-white rotate-45" />
@@ -763,14 +811,43 @@ function App() {
             </div>
           )}
 
-          <motion.div 
+          <motion.div
             drag
             dragMomentum={false}
-            whileHover={{ scale: 1.02, cursor: 'grab' }}
-            whileDrag={{ scale: 1.05, cursor: 'grabbing', zIndex: 100 }}
-            className="absolute bottom-6 left-[49px] w-[400px] aspect-video bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+            whileHover={{ cursor: 'grab' }}
+            whileDrag={{ cursor: 'grabbing', zIndex: 100 }}
+            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+            style={{ width: previewSize.w, height: previewSize.h }}
           >
-             {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" />}
+            {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" onLoad={(e) => {
+              const img = e.currentTarget;
+              if (img.naturalWidth && img.naturalHeight) previewAspect.current = img.naturalWidth / img.naturalHeight;
+            }} />}
+            <div
+              className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-10 flex items-end justify-end pb-1 pr-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                previewResizing.current = true;
+                previewResizeStart.current = { x: e.clientX, y: e.clientY, w: previewSize.w, h: previewSize.h };
+                const onMove = (ev: MouseEvent) => {
+                  if (!previewResizing.current) return;
+                  const dw = ev.clientX - previewResizeStart.current.x;
+                  const newW = Math.max(160, previewResizeStart.current.w + dw);
+                  setPreviewSize({ w: newW, h: Math.round(newW / previewAspect.current) });
+                };
+                const onUp = () => {
+                  previewResizing.current = false;
+                  window.removeEventListener('mousemove', onMove);
+                  window.removeEventListener('mouseup', onUp);
+                };
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+              }}
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" className="text-white/30">
+                <path d="M8 0 L8 8 L0 8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+            </div>
           </motion.div>
         </div>
 
