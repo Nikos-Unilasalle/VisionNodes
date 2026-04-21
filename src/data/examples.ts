@@ -1,7 +1,7 @@
 export const EXAMPLES = [
   {
     name: "OCR Scanner (Tesseract)",
-    description: "Detects text regions with EAST and reads them with Tesseract.",
+    description: "Détecte des zones de texte avec EAST et les lit avec Tesseract.",
     nodes: [
       { id: "src-1", type: "input_image", position: { x: 50, y: 200 }, data: { label: "Sample Image", params: {} } },
       { id: "east-1", type: "ocr_east_detect", position: { x: 300, y: 200 }, data: { label: "Text Detector (EAST)", params: { min_confidence: 0.5 } } },
@@ -21,7 +21,7 @@ export const EXAMPLES = [
   },
   {
     name: "Movement Analysis (MOG2)",
-    description: "Detects moving objects using background subtraction and identifies their contours.",
+    description: "Détecte les objets en mouvement par soustraction de fond et identifie leurs contours.",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 200 }, data: { label: "Webcam", params: { device_index: 0 } } },
       { id: "mog-1", type: "bg_sub_mog2", position: { x: 300, y: 200 }, data: { label: "MOG2 Subtractor", params: { history: 500, threshold: 16 } } },
@@ -38,7 +38,7 @@ export const EXAMPLES = [
   },
   {
     name: "Harris Corner Detection",
-    description: "Detects corners in an image using the Harris operator.",
+    description: "Détecte les coins d'une image avec l'opérateur Harris.",
     nodes: [
       { id: "src-1", type: "input_image", position: { x: 50, y: 200 }, data: { label: "Sample Image", params: {} } },
       { id: "harris-1", type: "feat_harris", position: { x: 300, y: 200 }, data: { label: "Harris Corners", params: { threshold: 0.01 } } },
@@ -51,7 +51,7 @@ export const EXAMPLES = [
   },
   {
     name: "Body Pose Tracking",
-    description: "Real-time human pose estimation using MediaPipe.",
+    description: "Estimation de pose humaine en temps réel avec MediaPipe.",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
       { id: "pose-1", type: "analysis_pose_mp", position: { x: 300, y: 150 }, data: { label: "Pose Tracker", params: { model_complexity: 1 } } },
@@ -64,10 +64,10 @@ export const EXAMPLES = [
   },
   {
     name: "YOLO Object Detection",
-    description: "Detected objects with YOLOv8 and dynamic overlays.",
+    description: "Détection d'objets avec YOLOv11 et overlays dynamiques.",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
-      { id: "yolo-1", type: "object_detection_yolo", position: { x: 300, y: 150 }, data: { label: "YOLOv8", params: { confidence: 0.25 } } },
+      { id: "yolo-1", type: "object_detection_yolo", position: { x: 300, y: 150 }, data: { label: "YOLOv11", params: { confidence: 0.25 } } },
       { id: "overlay-1", type: "draw_overlay", position: { x: 550, y: 150 }, data: { label: "Visual Overlay", params: {} } },
       { id: "disp-1", type: "output_display", position: { x: 800, y: 150 }, data: { label: "Final Out", params: {} } }
     ],
@@ -79,8 +79,48 @@ export const EXAMPLES = [
     ]
   },
   {
+    name: "SORT Multi-Object Tracking",
+    description: "Suivi multi-objets en temps réel : YOLO détecte les objets, SORT leur assigne un ID persistant avec Kalman Filter + algorithme hongrois.",
+    nodes: [
+      { id: "src-1",   type: "input_webcam",         position: { x: 50,   y: 200 }, data: { label: "Webcam",        params: { device_index: 0 } } },
+      { id: "yolo-1",  type: "object_detection_yolo", position: { x: 300,  y: 200 }, data: { label: "YOLO Detector", params: { confidence: 30, model_size: 0 } } },
+      { id: "sort-1",  type: "tracker_sort",          position: { x: 560,  y: 200 }, data: { label: "SORT Tracker",  params: { max_age: 5, min_hits: 2, iou_threshold: 30 } } },
+      { id: "viz-1",   type: "tracker_visualize",     position: { x: 820,  y: 200 }, data: { label: "Track Viz",     params: { show_trail: 1, trail_length: 30, show_id: 1, show_label: 1, thickness: 2 } } },
+      { id: "disp-1",  type: "output_display",        position: { x: 1080, y: 200 }, data: { label: "Final Output",  params: {} } },
+      { id: "count-1", type: "data_inspector",        position: { x: 560,  y: 380 }, data: { label: "Track Count",   params: {} } }
+    ],
+    edges: [
+      { id: "e1", source: "src-1",  target: "yolo-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2", source: "yolo-1", target: "sort-1",  sourceHandle: "list__objects_list", targetHandle: "list__detections" },
+      { id: "e3", source: "src-1",  target: "sort-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e4", source: "sort-1", target: "viz-1",   sourceHandle: "list__tracks",       targetHandle: "list__tracks" },
+      { id: "e5", source: "src-1",  target: "viz-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e6", source: "viz-1",  target: "disp-1",  sourceHandle: "image__main",        targetHandle: "image__main" },
+      { id: "e7", source: "sort-1", target: "count-1", sourceHandle: "scalar__count",      targetHandle: "any__data" }
+    ]
+  },
+  {
+    name: "DeepSORT Multi-Object Tracking",
+    description: "Suivi multi-objets avec réidentification visuelle : YOLO + DeepSORT (Kalman + CNN embeddings) pour des IDs plus stables même après occultation.",
+    nodes: [
+      { id: "src-1",  type: "input_webcam",         position: { x: 50,   y: 200 }, data: { label: "Webcam",         params: { device_index: 0 } } },
+      { id: "yolo-1", type: "object_detection_yolo", position: { x: 300,  y: 200 }, data: { label: "YOLO Detector",  params: { confidence: 30, model_size: 0 } } },
+      { id: "ds-1",   type: "tracker_deepsort",      position: { x: 560,  y: 200 }, data: { label: "DeepSORT",       params: { max_age: 5, n_init: 2, embedder: 0, max_cosine_dist: 40 } } },
+      { id: "viz-1",  type: "tracker_visualize",     position: { x: 820,  y: 200 }, data: { label: "Track Viz",      params: { show_trail: 1, trail_length: 40, show_id: 1, show_label: 1, thickness: 2, fill_alpha: 10 } } },
+      { id: "disp-1", type: "output_display",        position: { x: 1080, y: 200 }, data: { label: "Final Output",   params: {} } }
+    ],
+    edges: [
+      { id: "e1", source: "src-1",  target: "yolo-1", sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2", source: "yolo-1", target: "ds-1",   sourceHandle: "list__objects_list", targetHandle: "list__detections" },
+      { id: "e3", source: "src-1",  target: "ds-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e4", source: "ds-1",   target: "viz-1",  sourceHandle: "list__tracks",       targetHandle: "list__tracks" },
+      { id: "e5", source: "src-1",  target: "viz-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e6", source: "viz-1",  target: "disp-1", sourceHandle: "image__main",        targetHandle: "image__main" }
+    ]
+  },
+  {
     name: "Scientific Cell Segmenter",
-    description: "Multi-stage watershed segmentation for separating touching objects.",
+    description: "Segmentation watershed multi-étapes pour séparer des objets qui se touchent.",
     nodes: [
       { id: "src-1", type: "input_image", position: { x: 50, y: 150 }, data: { label: "Cells Image", params: {} } },
       { id: "gray-1", type: "filter_gray", position: { x: 250, y: 150 }, data: { label: "Grayscale", params: {} } },
@@ -104,7 +144,7 @@ export const EXAMPLES = [
   },
   {
     name: "Interactive Magic Painter",
-    description: "Draw on screen using your finger landmarks (Hand Tracker).",
+    description: "Dessine à l'écran avec les landmarks de la main (Hand Tracker).",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
       { id: "hand-1", type: "analysis_hand_mp", position: { x: 250, y: 150 }, data: { label: "Hand Tracker", params: { max_hands: 1 } } },
@@ -124,7 +164,7 @@ export const EXAMPLES = [
   },
   {
     name: "Ghost Motion Trail",
-    description: "Creates an artistic motion trail by blending background motion over time.",
+    description: "Crée un trail artistique en mélangeant le fond en mouvement dans le temps.",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
       { id: "mog-1", type: "bg_sub_mog2", position: { x: 250, y: 150 }, data: { label: "Movement Mask", params: { history: 100 } } },
@@ -140,7 +180,7 @@ export const EXAMPLES = [
   },
   {
     name: "Feature Matching (ORB)",
-    description: "Compare two images and find similarities using ORB keypoints and a Brute-Force matcher.",
+    description: "Compare deux images et trouve des similitudes avec les keypoints ORB et un matcher Brute-Force.",
     nodes: [
       { id: "src-1", type: "input_image", position: { x: 50, y: 50 }, data: { label: "Template Image", params: {} } },
       { id: "src-2", type: "input_image", position: { x: 50, y: 300 }, data: { label: "Scene Image", params: {} } },
@@ -163,7 +203,7 @@ export const EXAMPLES = [
   },
   {
     name: "Python: Image Stats",
-    description: "Uses a custom Python script to invert the image and calculate its average brightness.",
+    description: "Script Python personnalisé pour inverser l'image et calculer sa luminosité moyenne.",
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
       { id: "py-1", type: "logic_python", position: { x: 300, y: 150 }, data: { 
@@ -180,5 +220,39 @@ export const EXAMPLES = [
       { id: "e2", source: "py-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" },
       { id: "e3", source: "py-1", target: "ins-1", sourceHandle: "any__out_any", targetHandle: "any__data" }
     ]
+  },
+  {
+    name: "Pedestrian Counter & Logger",
+    description: "Compte les personnes détectées en temps réel avec SORT : chaque piéton reçoit un ID unique persistant. Le nombre de tracks actifs est loggé en continu via un Inspector.",
+    nodes: [
+      { id: "src-1",    type: "input_webcam",         position: { x: 50,   y: 250 }, data: { label: "Webcam",             params: { device_index: 0 } } },
+      { id: "yolo-1",   type: "object_detection_yolo", position: { x: 300,  y: 250 }, data: { label: "YOLO Detector",     params: { confidence: 35, model_size: 0 } } },
+      { id: "filter-1", type: "util_filter_label",     position: { x: 560,  y: 250 }, data: { label: "Filter: Person",    params: { query: "person" } } },
+      { id: "sort-1",   type: "tracker_sort",          position: { x: 820,  y: 250 }, data: { label: "SORT Tracker",      params: { max_age: 8, min_hits: 2, iou_threshold: 25 } } },
+      { id: "py-1",     type: "logic_python",          position: { x: 820,  y: 460 }, data: {
+          label: "Cumulative Counter",
+          params: {
+            code: "# Compte les IDs uniques vus depuis le lancement\n# 'a' = liste des tracks actifs | 'b' = count actuel\nif 'seen_ids' not in state:\n    state['seen_ids'] = set()\n\nif isinstance(a, list):\n    for t in a:\n        if isinstance(t, dict) and 'track_id' in t:\n            state['seen_ids'].add(t['track_id'])\n\nactive = int(b) if b is not None else 0\ntotal  = len(state['seen_ids'])\n\nout_scalar = float(total)\nout_any    = f'Active: {active}  |  Total seen: {total}'"
+          }
+      }},
+      { id: "viz-1",    type: "tracker_visualize",     position: { x: 1080, y: 250 }, data: { label: "Track Visualizer", params: { show_trail: 1, trail_length: 25, show_id: 1, show_label: 1, thickness: 2, fill_alpha: 15 } } },
+      { id: "disp-1",   type: "output_display",        position: { x: 1340, y: 250 }, data: { label: "Final Output",     params: {} } },
+      { id: "ins-1",    type: "data_inspector",        position: { x: 1080, y: 460 }, data: { label: "Live Stats",       params: {} } },
+      { id: "mon-1",    type: "analysis_monitor",      position: { x: 300,  y: 460 }, data: { label: "Detection Count",  params: { mode: 7 } } }
+    ],
+    edges: [
+      { id: "e1",  source: "src-1",    target: "yolo-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2",  source: "yolo-1",   target: "filter-1",sourceHandle: "list__objects_list", targetHandle: "list__list_in" },
+      { id: "e3",  source: "filter-1", target: "sort-1",  sourceHandle: "list__list_out",     targetHandle: "list__detections" },
+      { id: "e4",  source: "src-1",    target: "sort-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e5",  source: "sort-1",   target: "viz-1",   sourceHandle: "list__tracks",       targetHandle: "list__tracks" },
+      { id: "e6",  source: "src-1",    target: "viz-1",   sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e7",  source: "viz-1",    target: "disp-1",  sourceHandle: "image__main",        targetHandle: "image__main" },
+      { id: "e8",  source: "sort-1",   target: "py-1",    sourceHandle: "list__tracks",       targetHandle: "any__a" },
+      { id: "e9",  source: "sort-1",   target: "py-1",    sourceHandle: "scalar__count",      targetHandle: "any__b" },
+      { id: "e10", source: "py-1",     target: "ins-1",   sourceHandle: "any__out_any",       targetHandle: "any__data" },
+      { id: "e11", source: "filter-1", target: "mon-1",   sourceHandle: "list__list_out",     targetHandle: "data__data" }
+    ]
   }
 ];
+
