@@ -126,3 +126,22 @@ class MathClampNode(NodeProcessor):
         low = float(inputs.get('min', params.get('min', 0.0)))
         high = float(inputs.get('max', params.get('max', 1.0)))
         return {'result': max(low, min(high, v))}
+
+@vision_node(type_id='math_distance', label='Math: Distance', category='math', icon='Maximize', 
+             inputs=[{'id': 'p1', 'color': 'dict'}, {'id': 'p2', 'color': 'dict'}],
+             outputs=[{'id': 'result', 'color': 'scalar'}],
+             params=[])
+class MathDistanceNode(NodeProcessor):
+    def process(self, inputs, params):
+        p1 = inputs.get('p1', {})
+        p2 = inputs.get('p2', {})
+        
+        # Fallback to 0 if dictionary is missing keys or empty
+        x1 = float(p1.get('x', p1.get('xmin', 0.0)))
+        y1 = float(p1.get('y', p1.get('ymin', 0.0)))
+        x2 = float(p2.get('x', p2.get('xmin', 0.0)))
+        y2 = float(p2.get('y', p2.get('ymin', 0.0)))
+        
+        return {'result': math.sqrt((x2 - x1)**2 + (y2 - y1)**2)}
+
+

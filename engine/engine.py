@@ -375,8 +375,9 @@ class UniversalMonitorNode(NodeProcessor):
                 if isinstance(data, np.ndarray):
                     if len(data.shape) == 3 and data.shape[2] == 2: mode = 1 # Flux
                     else: mode = 3 # Brightness (approx)
-                elif isinstance(data, list): mode = 7 # Count
-                else: mode = 3 # Scalar?
+                elif isinstance(data, (list, tuple)): mode = 7 # Count
+                elif isinstance(data, (int, float)): mode = 8 # Scalar
+                else: mode = 3 
             elif mask is not None: mode = 2 # Area
             elif img is not None: mode = 3 # Brightness
         
@@ -413,10 +414,23 @@ class UniversalMonitorNode(NodeProcessor):
                 unit = "lvl"
         
         elif mode == 7: # Count (Elements)
-            lst = data if isinstance(data, (list, dict)) else []
-            if isinstance(lst, dict): val = 1.0 # Presence
-            else: val = float(len(lst))
+            if isinstance(data, (list, tuple)):
+                val = float(len(data))
+            elif isinstance(data, dict):
+                val = 1.0 # One object
+            elif isinstance(data, (int, float)):
+                val = float(data) # Treat scalar as its value
+            else:
+                val = 0.0
             unit = "items"
+        
+        elif mode == 8: # Scalar Value
+            if isinstance(data, (int, float)):
+                val = float(data)
+            elif isinstance(data, str):
+                try: val = float(data)
+                except: val = 0.0
+            unit = ""
             
         # 3. Post-process
         final_val = (val * scale) + offset
@@ -424,7 +438,7 @@ class UniversalMonitorNode(NodeProcessor):
         return {
             "main": img if img is not None else mask,
             "scalar": final_val,
-            "display_text": f"{final_val:.{precision}f} {unit}"
+            "display_text": f"{final_val:.{precision}f} {unit}".strip()
         }
 
 class FaceDetectionNode(NodeProcessor):

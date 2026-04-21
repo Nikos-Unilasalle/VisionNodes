@@ -20,16 +20,23 @@ from __main__ import vision_node, NodeProcessor
                  'id': 'code', 
                  'label': 'Python Script', 
                  'type': 'string', 
-                 'default': "# Logic here\n# Inputs: a, b, c, d\n# Outputs: out_main, out_scalar, out_list, out_dict, out_any\n\nout_main = a if isinstance(a, np.ndarray) else None\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None\n"
+                 'default': "# Logic here\n# Inputs: a, b, c, d\n# State persistant entre frames: state['my_var']\n# Outputs: out_main, out_scalar, out_list, out_dict, out_any\n\nout_main = a if isinstance(a, np.ndarray) else None\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None\n"
              }])
 class PythonNode(NodeProcessor):
+    def __init__(self):
+        super().__init__()
+        # Dictionnaire persistant entre les frames — accessible via `state` dans le script
+        self._state: dict = {}
+
     def process(self, inputs, params):
         code = params.get('code', '')
         
-        # Setup context
+        # Setup context — `state` est persistant entre les appels
         ctx = {
+            '__builtins__': __builtins__,
             'np': np,
             'cv2': cv2,
+            'state': self._state,
             'a': inputs.get('a'),
             'b': inputs.get('b'),
             'c': inputs.get('c'),
@@ -42,7 +49,7 @@ class PythonNode(NodeProcessor):
         }
         
         try:
-            exec(code, {}, ctx)
+            exec(code, ctx)
         except Exception as e:
             print(f"[Python Node Error] {e}")
             ctx['out_any'] = f"Error: {str(e)}"

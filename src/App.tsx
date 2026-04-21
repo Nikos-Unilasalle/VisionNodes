@@ -76,6 +76,7 @@ const nodeTypes = {
   math_sin: N.MathNode,
   math_cos: N.MathNode,
   math_clamp: N.MathNode,
+  math_distance: N.MathNode,
   string_input: N.StringNode,
   string_concat: N.StringNode,
   string_split: N.StringNode,
@@ -150,7 +151,8 @@ const CATEGORIES = [
     { type: 'math_round', label: 'Round', description: 'Rounds to the nearest integer.' },
     { type: 'math_sin', label: 'Sin', description: 'Sine of an angle in radians.' },
     { type: 'math_cos', label: 'Cos', description: 'Cosine of an angle in radians.' },
-    { type: 'math_clamp', label: 'Clamp', description: 'Constrains a value between min and max.' }
+    { type: 'math_clamp', label: 'Clamp', description: 'Constrains a value between min and max.' },
+    { type: 'math_distance', label: 'Distance', description: 'Calculates the Euclidean distance between two points.' }
   ] },
   { id: 'strings', label: 'Strings', icon: Type, nodes: [
     { type: 'string_input', label: 'String Input', description: 'Manual text entry for logic and display.' },
@@ -496,8 +498,13 @@ function App() {
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     const id = `node-${Date.now()}`;
     const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 450, y: 450 };
+    // Some nodes need a default style so NodeResizer works from the start
+    const defaultStyle: Record<string, Record<string, number>> = {
+      data_inspector: { width: 220, height: 200 },
+    };
+    const nodeStyle = defaultStyle[type] || {};
     setNodes((nds) => {
-      const nextNodes = [...nds, { id, type, position, data: { label, params: initialParams, schema } }];
+      const nextNodes = [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }];
       if (pendingConnection && pendingConnection.sourceNode) {
         setTimeout(() => {
           const newEl = document.querySelector(`[data-id="${id}"]`);
@@ -1047,29 +1054,114 @@ const SelectInput = ({ label, val, options, onChange }: any) => (
   </div>
 );
 
-const CodeInput = ({ label, val, onChange }: any) => (
-  <div className="space-y-4 group">
-    <div className="flex items-center justify-between">
-      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <div className="text-[8px] font-mono text-gray-600 bg-white/5 px-2 py-0.5 rounded">Python 3.x</div>
-    </div>
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 w-8 bg-black/20 border-r border-white/5 flex flex-col items-center pt-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none">
-        {val.split('\n').map((_: any, i: number) => <div key={i}>{i+1}</div>)}
+const highlightPython = (code: string): string => {
+  const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  
+  // Single-pass tokenizer to avoid nested span corruption
+  const tokens = [
+    { name: 'comment', regex: /#.*/, color: '#6b7280', italic: true },
+    { name: 'string', regex: /(['"])(?:(?!\1|\\).|\\.)*\1/, color: '#a7f3d0' }, // yellow-green
+    { name: 'keyword', regex: /\b(def|class|return|if|elif|else|for|while|in|not|and|or|import|from|as|pass|break|continue|try|except|finally|with|yield|lambda|global|nonlocal|raise|del|assert|True|False|None)\b/, color: '#c084fc', bold: true },
+    { name: 'builtin', regex: /\b(print|len|range|list|dict|set|tuple|int|float|str|bool|type|isinstance|enumerate|zip|map|filter|sorted|reversed|min|max|sum|abs|round|open|input|super)\b/, color: '#60a5fa' },
+    { name: 'state', regex: /\b(self|state)\b/, color: '#f472b6' },
+    { name: 'decorator', regex: /@\w+/, color: '#f472b6' },
+    { name: 'number', regex: /\b\d+\.?\d*/, color: '#fb923c' },
+    { name: 'operator', regex: /[=\+\-\*\/\%\&\|\^<>!]+/, color: '#06b6d4' }
+  ];
+
+  let html = '';
+  let i = 0;
+  const escapedCode = code;
+
+  const processLine = (line: string) => {
+    let result = '';
+    let pos = 0;
+    while (pos < line.length) {
+      let match = null;
+      let bestToken = null;
+
+      for (const token of tokens) {
+        const m = token.regex.exec(line.slice(pos));
+        if (m && m.index === 0) {
+          match = m[0];
+          bestToken = token;
+          break;
+        }
+      }
+
+      if (match && bestToken) {
+        const style = `color: ${bestToken.color};${bestToken.italic ? ' font-style: italic;' : ''}${bestToken.bold ? ' font-weight: 600;' : ''}`;
+        result += `<span style="${style}">${esc(match)}</span>`;
+        pos += match.length;
+      } else {
+        result += esc(line[pos]);
+        pos++;
+      }
+    }
+    return result;
+  };
+
+  return code.split('\n').map(processLine).join('\n');
+};
+
+const CodeInput = ({ label, val, onChange }: any) => {
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const highlightRef = React.useRef<HTMLDivElement>(null);
+
+  const syncScroll = () => {
+    if (textareaRef.current && highlightRef.current) {
+      highlightRef.current.scrollTop  = textareaRef.current.scrollTop;
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  };
+
+  const lineCount = (val || '').split('\n').length;
+
+  return (
+    <div className="space-y-2 group">
+      <div className="flex items-center justify-between">
+        <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+        <div className="text-[8px] font-mono text-gray-600 bg-white/5 px-2 py-0.5 rounded">Python 3.x</div>
       </div>
-      <textarea 
-        value={val} 
-        onChange={(e) => onChange(e.target.value)} 
-        spellCheck={false}
-        className="w-full h-80 bg-[#0c0c0c] border border-[#222] group-hover:border-accent/40 rounded-xl pl-10 pr-4 py-3 text-[11px] text-accent/90 font-mono outline-none focus:border-accent transition-all leading-relaxed resize-none scrollbar-hide shadow-inner"
-        placeholder={`Write your script here...`}
-      />
+
+      <div className="relative rounded-xl overflow-hidden border border-[#222] group-hover:border-accent/40 transition-all shadow-inner bg-[#0a0a0a]">
+        {/* Line numbers */}
+        <div className="absolute inset-y-0 left-0 w-8 bg-black/30 border-r border-white/5 flex flex-col items-center pt-3 pb-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none z-10 overflow-hidden">
+          {Array.from({ length: lineCount }, (_, i) => (
+            <div key={i} className="leading-relaxed h-[1.5em] flex items-center">{i + 1}</div>
+          ))}
+        </div>
+
+        {/* Syntax highlighted overlay (non-interactive) */}
+        <div
+          ref={highlightRef}
+          aria-hidden="true"
+          className="absolute inset-0 left-8 pt-3 pb-3 pr-4 text-[11px] font-mono leading-relaxed overflow-hidden pointer-events-none whitespace-pre select-none"
+          dangerouslySetInnerHTML={{ __html: highlightPython(val || '') + '\n' }}
+        />
+
+        {/* Transparent textarea (captures all input) */}
+        <textarea
+          ref={textareaRef}
+          value={val}
+          onChange={(e) => onChange(e.target.value)}
+          onScroll={syncScroll}
+          spellCheck={false}
+          className="relative w-full h-80 bg-transparent pl-10 pr-4 py-3 text-[11px] font-mono text-transparent caret-white outline-none resize-none scrollbar-hide leading-relaxed z-[1]"
+          placeholder="Write your script here..."
+          style={{ caretColor: '#fff' }}
+        />
+      </div>
+
+      <div className="flex gap-2">
+        <div className="text-[8px] text-gray-500 italic px-1">
+          Inputs: <span className="text-pink-400">a, b, c, d</span> · Persistence: <span className="text-pink-400">state['key']</span> · Outputs: <span className="text-blue-400">out_main, out_scalar, out_list, out_dict, out_any</span>
+        </div>
+      </div>
     </div>
-    <div className="flex gap-2">
-       <div className="text-[8px] text-gray-500 italic px-1">Available: a, b, c, d (inputs) | out_main, out_scalar... (outputs)</div>
-    </div>
-  </div>
-);
+  );
+};
+
 
 const ToggleInput = ({ label, val, onChange }: any) => (
   <div className="flex items-center justify-between py-2 group">

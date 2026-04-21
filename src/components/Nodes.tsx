@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Handle, Position, useNodeId, NodeResizeControl } from 'reactflow';
+import { Handle, Position, useNodeId, NodeResizeControl, NodeResizer } from 'reactflow';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
@@ -48,7 +48,7 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
   );
 };
 
-const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0, width = 'w-64', headerExtra }: any) => {
+const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
                       color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
@@ -61,22 +61,18 @@ const BaseNode = ({ title, icon: Icon, children, selected, color = 'accent', inp
   
   const startOffset = 45;
   const spacing = 32;
-  // Compact height: last port position + 35px padding
   const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 35) : 90;
   const minHeight = Math.max(portsHeight, 90);
 
-  // Offset ports downward by 45px to avoid title collision
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';
-    const startOffset = 45; // pixels from top
-    const spacing = 32;
-    return `${startOffset + index * spacing}px`;
+    return `${45 + index * 32}px`;
   };
 
   return (
     <div 
-        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} w-52 shadow-2xl relative`}
-        style={{ minHeight }}
+        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} shadow-2xl relative w-52`}
+        style={{ minHeight, ...(width ? { width: typeof width === 'number' ? `${width}px` : width } : {}) }}
     >
       {/* Inputs with Labels */}
       {inputs.map((inp: any, i: number) => {
@@ -288,20 +284,18 @@ export const FilterThresholdNode = memo(({ selected }: any) => (
 ));
 
 export const FilterColorMaskNode = memo(({ selected }: any) => (
-  <BaseNode title="Color Mask" icon={Palette} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">HSV Isolation</div>
-  </BaseNode>
+  <BaseNode title="Color Mask" icon={Palette} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
+
 
 export const FilterGrayNode = memo(({ selected }: any) => (
   <BaseNode title="Grayscale" icon={Eye} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const FilterMorphologyNode = memo(({ selected }: any) => (
-  <BaseNode title="Morphology" icon={Waves} selected={selected} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Erode / Dilate</div>
-  </BaseNode>
+  <BaseNode title="Morphology" icon={Waves} selected={selected} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
+
 
 export const GeomFlipNode = memo(({ selected }: any) => (
   <BaseNode title="Flip" icon={Move} selected={selected} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
@@ -339,9 +333,7 @@ export const AnalysisPoseMPNode = memo(({ selected }: any) => {
 });
 
 export const AnalysisFlowNode = memo(({ selected }: any) => (
-  <BaseNode title="Optical Flow" icon={Activity} selected={selected} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Motion Vectors</div>
-  </BaseNode>
+  <BaseNode title="Optical Flow" icon={Activity} selected={selected} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} />
 ));
 
 export const AnalysisFlowVizNode = memo(({ selected }: any) => (
@@ -355,28 +347,17 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
   
   const parts = displayText.trim().split(/\s+/);
   const num = parts[0] || '0.000';
-  const unit = parts[1] || '';
+  const unit = parts.slice(1).join(' ') || '';
 
-  // Simple normalization for the progress bar
   const mode = data.params?.mode ?? 0;
   let progress = 0;
-  let themeColor = '#22c55e'; // Default data green
+  let themeColor = '#22c55e';
 
-  if (mode === 1) { // Flow
-    progress = (val / 5.0) * 100;
-    themeColor = HANDLE_COLORS.flow;
-  } else if (mode === 2) { // Area
-    progress = (val / 100000) * 100;
-    themeColor = HANDLE_COLORS.mask;
-  } else if (mode >= 3 && mode <= 6) { // Image
-    progress = (val / 255) * 100;
-    themeColor = HANDLE_COLORS.image;
-  } else if (mode === 7) { // Count
-    progress = (val / 20) * 100;
-    themeColor = HANDLE_COLORS.list;
-  } else {
-    progress = (val / 100) * 100;
-  }
+  if (mode === 1) { progress = (val / 5.0) * 100; themeColor = HANDLE_COLORS.flow; }
+  else if (mode === 2) { progress = (val / 100000) * 100; themeColor = HANDLE_COLORS.mask; }
+  else if (mode >= 3 && mode <= 6) { progress = (val / 255) * 100; themeColor = HANDLE_COLORS.image; }
+  else if (mode === 7) { progress = (val / 20) * 100; themeColor = HANDLE_COLORS.list; }
+  else { progress = (val / 100) * 100; }
 
   return (
     <BaseNode 
@@ -385,7 +366,7 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
       selected={selected} 
       color="blue" 
       inputs={[
-        {id: 'data', color: 'data'},
+        {id: 'data', color: 'any'},
         {id: 'image', color: 'image'}, 
         {id: 'mask', color: 'mask'}
       ]} 
@@ -394,21 +375,19 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
         {id: 'scalar', color: 'scalar'}
       ]}
     >
-      <div className="flex flex-col items-center justify-center py-4 bg-black/40 rounded-xl border border-white/5 shadow-inner">
-        <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1 opacity-60">Live Monitor</div>
-        
-        <div className="flex items-baseline gap-1.5 px-4 truncate w-full justify-center">
-           <span className="text-xl font-bold font-mono text-emerald-400 tracking-tighter drop-shadow-md truncate">
-             {num}
-           </span>
-           {unit && <span className="text-[9px] font-black uppercase tracking-widest shrink-0" style={{ color: themeColor }}>{unit}</span>}
+      <div className="flex flex-col items-center justify-center py-3 bg-black/40 rounded-xl border border-white/5 shadow-inner gap-1">
+        <div className="text-[7px] font-black text-gray-600 uppercase tracking-widest">Live Monitor</div>
+        <div className="flex items-baseline gap-1 px-2 w-full justify-center">
+          <span className="text-2xl font-bold font-mono tracking-tighter drop-shadow-md" style={{ color: themeColor }}>
+            {num}
+          </span>
+          {unit && <span className="text-[9px] font-black uppercase tracking-wider shrink-0 text-gray-400">{unit}</span>}
         </div>
-
-        <div className="mt-3 w-3/4 h-1 bg-white/5 rounded-full overflow-hidden">
-           <div 
-             className="h-full shadow-[0_0_8px_rgba(34,197,94,0.3)] transition-all duration-300"
-             style={{ width: `${Math.min(100, Math.max(2, progress))}%`, backgroundColor: themeColor }}
-           />
+        <div className="w-4/5 h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+          <div 
+            className="h-full transition-all duration-300"
+            style={{ width: `${Math.min(100, Math.max(2, progress))}%`, backgroundColor: themeColor, boxShadow: `0 0 6px ${themeColor}80` }}
+          />
         </div>
       </div>
     </BaseNode>
@@ -516,38 +495,103 @@ export const DrawOverlayNode = memo(({ selected }: any) => (
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
+// Recursive Component to render JSON with colors
+const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
+  if (data === null || data === undefined) return <span className="text-gray-500 italic">null</span>;
+  
+  if (typeof data === 'number') return <span className="text-yellow-400 font-mono">{data.toFixed(4)}</span>;
+  if (typeof data === 'boolean') return <span className="text-orange-400 font-mono uppercase text-[8px]">{data.toString()}</span>;
+  if (typeof data === 'string') return <span className="text-cyan-300 font-mono">"{data}"</span>;
+  
+  if (Array.isArray(data)) {
+    if (data.length === 0) return <span className="text-gray-500">[]</span>;
+    return (
+      <div className="flex flex-col gap-1">
+        <span className="text-[7px] text-purple-400/60 uppercase font-black tracking-widest">List ({data.length})</span>
+        <div className="pl-2 border-l border-white/5 flex flex-col gap-1">
+          {data.slice(0, 10).map((val, i) => (
+            <div key={i} className="flex gap-2 items-start shrink-0">
+               <span className="text-[7px] text-gray-600 font-mono mt-1">{i}</span>
+               <JsonTreeView data={val} level={level + 1} />
+            </div>
+          ))}
+          {data.length > 10 && <span className="text-[7px] text-gray-600 italic">... and {data.length - 10} more</span>}
+        </div>
+      </div>
+    );
+  }
+  
+  if (typeof data === 'object') {
+    const keys = Object.keys(data);
+    if (keys.length === 0) return <span className="text-gray-500">{"{}"}</span>;
+    return (
+      <div className="flex flex-col gap-1 w-full overflow-hidden">
+        <div className="pl-2 border-l border-white/10 flex flex-col gap-1.5 py-1">
+          {keys.map(key => {
+            const isGraphics = key === '_type' || key === 'shape' || key === 'pts';
+            if (isGraphics && level > 0) return null; // Skip deep graphics props to save space
+            
+            return (
+              <div key={key} className="flex flex-col gap-0.5 shrink-0 max-w-full overflow-hidden">
+                <span className="text-[7px] font-black uppercase tracking-tight text-cyan-500/80">{key}</span>
+                <div className="pl-2 border-l border-cyan-500/10 min-w-0 break-all overflow-hidden flex flex-wrap">
+                  <JsonTreeView data={data[key]} level={level + 1} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  
+  return <span>{String(data)}</span>;
+};
+
 export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = data.node_data?.data_out;
-  const isScalar = typeof d === 'number';
-  const nodeId = useNodeId();
-  
+  const accentBorder = selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]';
+
   return (
-    <div className="relative group/node">
-      <NodeResizeControl 
-        minWidth={160} 
-        minHeight={100} 
-        style={{ background: 'transparent', border: 'none' }}
-        onResize={(_, { width, height }) => {
-          data.onChangeParams?.({ width, height });
-        }}
-      >
-        <div className="absolute bottom-1 right-1 w-3 h-3 border-r-2 border-b-2 border-gray-600 rounded-br cursor-nwse-resize opacity-20 group-hover/node:opacity-100 transition-opacity" />
-      </NodeResizeControl>
+    <div className="w-full h-full group/node" style={{ minWidth: 180, minHeight: 120, position: 'relative' }}>
       
-      <div style={{ width: data.params?.width || 208, height: data.params?.height || 'auto' }}>
-        <BaseNode title="Inspector" icon={Eye} selected={selected} color="accent" inputs={[{id: 'data', color: 'data'}]}>
-          {isScalar ? (
-            <div className="text-xl font-mono text-center text-yellow-500 py-4">{d.toFixed(4)}</div>
-          ) : (
-            <pre className="text-[9px] font-mono bg-black/60 p-2 rounded h-full overflow-auto scrollbar-hide">
-              {JSON.stringify(d, null, 2)}
-            </pre>
-          )}
-        </BaseNode>
+      {/* NodeResizer — handles must have z-index above the visual shell */}
+      <NodeResizer
+        isVisible={selected}
+        minWidth={180}
+        minHeight={120}
+        color="var(--accent, #7c3aed)"
+        handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
+        lineStyle={{ borderColor: 'var(--accent, #7c3aed)', borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
+      />
+
+      {/* Visual shell — z-index: 0 ensures it stays BELOW the resize handles */}
+      <div 
+        className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
+        style={{ position: 'relative', zIndex: 0 }}
+      >
+        {/* Input handle */}
+        <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+          <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
+        </div>
+
+        {/* Title bar */}
+        <div className="bg-[#222] px-4 py-2 flex items-center gap-3 border-b border-[#333] rounded-t-xl shrink-0">
+          <Eye size={14} className="text-gray-400 shrink-0" />
+          <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate flex-1">Inspector</span>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
+          <JsonTreeView data={d} />
+        </div>
       </div>
     </div>
   );
 });
+
+
+
 
 export const DataListSelectorNode = memo(({ selected }: any) => (
   <BaseNode title="List Selector" icon={Database} selected={selected} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
@@ -556,36 +600,32 @@ export const DataListSelectorNode = memo(({ selected }: any) => (
 export const DataCoordSplitterNode = memo(({ selected }: any) => (
   <BaseNode title="Coord Splitter" icon={Database} selected={selected} color="green" inputs={[{id: 'dict_in', color: 'dict'}]} outputs={[
     {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
-  ]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Dict → 4 Scalars</div>
-  </BaseNode>
+  ]} />
 ));
+
+
 
 export const DataCoordCombineNode = memo(({ selected }: any) => (
   <BaseNode title="Coord Combine" icon={Database} selected={selected} color="green" inputs={[
     {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
   ]} outputs={[
     {id: 'dict_out', color: 'dict'}
-  ]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">4 Scalars → Dict</div>
-  </BaseNode>
+  ]} />
 ));
 
 export const UtilCoordToMaskNode = memo(({ selected }: any) => (
-  <BaseNode title="Coord To Mask" icon={Layers} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'dict'}]} outputs={[{id: 'mask', color: 'mask'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Dict → Raster Mask</div>
-  </BaseNode>
+  <BaseNode title="Coord To Mask" icon={Layers} selected={selected} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'dict'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
+
 
 export const UtilMaskBlendNode = memo(({ selected }: any) => (
   <BaseNode title="Mask Blend" icon={Layers} selected={selected} color="accent" inputs={[
     {id: 'image_a', color: 'image'}, 
     {id: 'image_b', color: 'image'}, 
     {id: 'mask', color: 'mask'}
-  ]} outputs={[{id: 'main', color: 'image'}]}>
-    <div className="text-[9px] text-gray-500 uppercase font-black">Alpha Compositing</div>
-  </BaseNode>
+  ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
+
 
 export const OutputDisplayNode = memo(({ selected }: any) => (
   <BaseNode title="Final Out" icon={Maximize} selected={selected} color="green" inputs={[
@@ -614,17 +654,25 @@ export const StringNode = memo(({ selected, data }: any) => {
 });
 
 export const PythonNode = memo(({ selected, data }: any) => {
+  const code = data.params?.code || '';
+  const lines = code.split('\n').map(l => l.trim());
+  const firstComment = lines.find(l => l.startsWith('#'));
+  const displayLine = firstComment || lines.find(l => l !== '') || '';
+
   return (
     <BaseNode title="Python Script" icon={Zap} selected={selected} color="red" 
               inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]} 
               outputs={[{id: 'out_main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
-      <div className="flex flex-col gap-1 opacity-60">
-        <div className="text-[8px] font-bold text-red-500/80">DYNAMIC ENGINE</div>
-        <div className="text-[7px] italic truncate">{data.params?.code?.substring(0, 30)}...</div>
-      </div>
+      {displayLine && (
+        <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/40 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
+          <div className="text-[7px] font-mono text-emerald-400/70 truncate text-center italic">{displayLine}</div>
+        </div>
+      )}
     </BaseNode>
   );
 });
+
+
 
 // --- SCIENTIFIC NODES ---
 
@@ -754,13 +802,11 @@ export const UtilCSVExportNode = memo(({ selected, data }: any) => {
           <div className="text-[10px] font-black text-accent uppercase tracking-widest text-center">Select Export Path</div>
         </button>
         
-        <div className="space-y-2">
-          <div className="px-3 py-2 bg-black/40 rounded-xl border border-white/5">
-            <div className="text-[7px] text-gray-500 uppercase font-black mb-1">Target Folder</div>
+        <div className="space-y-4">
+          <div className="px-3 py-2.5 bg-black/40 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
             <div className="text-[9px] font-mono text-gray-400 truncate">{data.params?.path || "Not selected"}</div>
           </div>
-          <div className="px-3 py-2 bg-black/40 rounded-xl border border-white/5">
-            <div className="text-[7px] text-gray-500 uppercase font-black mb-1">Base Filename</div>
+          <div className="px-3 py-2.5 bg-black/40 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
             <div className="text-[9px] font-mono text-white/70 truncate">{data.params?.filename || "capture"}.csv</div>
           </div>
         </div>
