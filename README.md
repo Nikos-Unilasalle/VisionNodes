@@ -1,146 +1,108 @@
-# VisionNodes Studio
+# 👁️ VisionNodes Studio
 
-VisionNodes is a node-based development environment for rapid prototyping of Computer Vision (CV) and AI algorithms. Built with React and powered by **OpenCV**, it provides a modern and responsive interface for visual programming.
+**VisionNodes** is a high-performance, node-based development environment designed for rapid prototyping of **Computer Vision (CV)** and **Artificial Intelligence (AI)** algorithms. 
+
+It provides a modern, interactive "Studio" experience where you can chain complex models, scientific analysis tools, and custom logic in real-time.
 
 <p align="center">
-  <img src="./src/assets/logo.svg" width="200" alt="VisionNodes Logo">
+  <img src="./src/assets/logo.svg" width="180" alt="VisionNodes Logo">
 </p>
 
 ---
 
-## Quick Installation
+## 🌟 Core Pillars
 
-### 1. Prerequisites
-- **Node.js** (v18+)
-- **Python** (3.10+)
-
-### 2. Setup & Dependencies
-
-The easiest way to install all dependencies (Frontend, Rust, and Python) is to use the unified setup script:
-
-```bash
-# Clone the repository
-git clone https://github.com/Nikos-Unilasalle/VisionNodes.git
-cd VisionNodes
-
-# Run the unified setup (Linux/macOS)
-chmod +x setup.sh
-./setup.sh
-```
-
-The script will automatically:
-1. Install npm packages.
-2. Check for Rust/Tauri.
-3. Create a Python virtual environment in `.venv`.
-4. Install all AI and Vision libraries (Torch, OpenCV, YOLO, etc.).
-5. Check for Tesseract OCR.
-
-
-### 3. Running the Studio
-To launch both the Python logic engine and the GUI in a single command:
-```bash
-npm run studio
-```
-
-### 4. Compiling a Standalone App
-You can build a native desktop executable for your OS:
-```bash
-npm run tauri build
-```
+- ⚡ **Real-Time Execution**: See the impact of every parameter change instantly on the video flux.
+- 🧠 **AI-Native**: Deep integration with state-of-the-art models like YOLOv11 and MediaPipe.
+- 🧪 **Scientific Precision**: Built-in tools for quantitative analysis (Watershed, Marker Analysis, Statistics).
+- 🛠️ **Zero-Friction Extensibility**: Add custom Python nodes or dynamic plugins by simply dropping a file.
+- 🎨 **Visual Programming**: Powered by ReactFlow for a sleek, responsive, and intuitive graph interface.
 
 ---
 
-## Recent Features 🚀
+## 🚀 Key Features & Models
 
-### 📊 Advanced Scientific Analysis (Analysis Category)
-VisionNodes now includes dedicated tools for quantitative data extraction:
-- **Watershed Segmentation**: Separate complex or touching objects.
-- **Marker Analysis**: Automatically calculate centroid (coordinates), surface (area), and ID for every segmented "island".
-- **Statistics & Heatmaps**: Visualize real-time distributions and activity zones.
+### 🧠 Modern AI & Tracking
+VisionNodes comes pre-loaded with industry-standard AI capabilities:
+- **Object Detection**: YOLOv11 (Ultralytics) for robust, high-speed multi-class detection.
+- **Human Sensing**: MediaPipe integration for **Face Mesh**, **Hand Tracking**, and **Pose Estimation**.
+- **Robust Tracking**: 
+  - **SORT**: Simple Online and Realtime Tracking for high-speed ID persistence.
+  - **DeepSORT**: Advanced tracking with CNN visual embeddings to handle occlusions.
+- **Tracker Visualization**: Customizable trails, ID labels, and historic trajectories.
 
-### 🔄 "On Each" Iterator & Dynamic Text
-The **On Each** node allows powerful visualization loops:
-- **Smart Overlay**: Repeat any graphic element (text, circle, rectangle) over a list of detections (YOLO, MediaPipe, or Marker Analysis).
-- **Dynamic Variable Injection**: Automatically display IDs, Labels, Areas, or Confidence Scores at the center of each object.
+### 📊 Scientific & Quantitative Analysis
+Move beyond simple detection to real scientific data extraction:
+- **Watershed Analysis**: Advanced segmentation for separating touching or overlapping objects.
+- **Marker Analysis**: Automatically extracts coordinates, area/surface (px), and intensity for every segmented island.
+- **Universal Monitor**: Real-time counter and scalar display for any connected data stream.
+- **Scientific Plotter**: Live graphing of numerical data (brightness, object counts, areas) with history buffers.
 
-### 🎨 Native Text Rendering
-High-performance text rendering support via the OpenCV engine, accessible through the **Draw Text** node.
+### 🛠️ Custom Logic & Scripting
+- **Python Script Node**: Write custom logic directly in the UI. 
+  - **Persistent State**: Use the `state` dictionary to store data between frames (e.g., cumulative counters).
+  - **Syntax Highlighting**: Modern Python editor with real-time feedback.
+- **Math & Strings**: Complete suite of boolean, arithmetic, and string manipulation nodes.
+- **Coord Splitter/Combine**: Seamlessly convert between dictionary objects and raw scalars.
 
-### 📄 Project Persistence (.vn)
-- **Save & Load**: Projects can now be saved as `.vn` files (JSON format) capturing the entire graph state, node positions, and parameter values.
-- **Examples Library**: Quick-start with pre-configured templates for OCR, Motion, and Feature detection.
-
-### 🧠 Advanced Computer Vision Nodes
-- **OCR (Optical Character Recognition)**: Integrated **Tesseract** and **EAST** text detector (model auto-downloads on first use).
-- **Feature Tracking**: **SIFT**, **ORB**, **FAST**, and **Harris** detectors for advanced image matching.
-- **Background Subtraction**: **MOG2** and **KNN** algorithms for precise movement segmentation.
-- **Advanced Geometry**: **Polygon Approximation**, **Fit Rectangle**, and **Non-Cropping Rotation**.
+### 🎨 Drawing & Visuals
+- **Dynamic Overlays**: Layer text, points, lines, and polygons over your vision results.
+- **Draw Text**: Native OpenCV text rendering with dynamic variable injection.
+- **Blend Modes**: Alpha compositing and advanced blending for multi-layer masks.
 
 ---
 
-## Developer Guide: Creating Custom Nodes
+## 📂 Examples Library
 
-VisionNodes uses a **Dynamic Plugin System**. You can add new features without touching the core engine or UI code.
+VisionNodes includes a built-in library of templates to get you started:
+- **Pedestrian Counter**: YOLO + DeepSORT + Cumulative Python Counter.
+- **OCR Scanner**: Tesseract-based reading with EAST text detection.
+- **Interactive Painter**: Hand landmark tracking used as a virtual brush.
+- **Cell Segmenter**: Scientific workflow using Watershed to count segmented cells.
+- **Ghost Trail**: Background subtraction combined with temporal blending.
 
-### Plugin System
-Any `.py` file placed in the `engine/plugins/` directory is automatically scanned and loaded at startup.
+---
 
-#### Node Structure Example:
-Create a file `engine/plugins/my_filter.py`:
+## 🛠️ Developer Guide: Creating Custom Nodes
 
+VisionNodes uses a **Dynamic Plugin System**. Any `.py` file placed in `engine/plugins/` is automatically discovered.
+
+### Plugin Example: `engine/plugins/my_node.py`
 ```python
 from __main__ import vision_node, NodeProcessor
-import cv2
 
 @vision_node(
-    type_id='my_unique_filter',    # Unique identifier
-    label='Invert Colors',         # Display name in UI
-    category='cv',                 # Category (cv, analysis, mask, util, visualize...)
-    icon='Zap',                    # Lucide-React icon name
+    type_id='my_filter', label='My Custom Filter', category='cv', icon='Zap',
     inputs=[{'id': 'image', 'color': 'image'}],
-    outputs=[{'id': 'main', 'color': 'image'}],
-    params=[
-        {'id': 'intensity', 'min': 0, 'max': 100, 'default': 50}
-    ]
+    outputs=[{'id': 'main', 'color': 'image'}]
 )
-class InvertNode(NodeProcessor):
+class MyNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
-        if img is None: return {'main': None}
-        
-        res = cv2.bitwise_not(img)
-        return {'main': res}
-```
-
-### Handle Colors
-Use these color IDs for connector compatibility:
-- **`image`** (#3b82f6): Standard video flux (BGR).
-- **`data` / `dict`** (#22c55e): Numerical objects or JSON dictionaries.
-- **`list`** (#a855f7): Lists of detections (YOLO, MediaPipe).
-- **`scalar`** (#eab308): Single numerical values.
-- **`mask`** (#d1d5db): Binary masks (1-channel).
-- **`flow`** (#ef4444): Optical Flow motion vectors.
-- **`boolean`** (#22d3ee): Logic True/False values.
-- **`any`** (#ffffff): Universal connector (accepts anything).
-
----
-
-## Project Structure
-
-```text
-.
-├── engine/              # Python Logic Engine (Core)
-│   ├── engine.py        # Main logic & WebSocket server
-│   └── plugins/         # Your custom nodes (.py)
-├── src/                 # React Frontend source
-│   ├── components/      # UI Node definitions
-│   └── App.tsx          # Graph Logic management
-├── src-tauri/           # Native Desktop integration (Rust/Tauri)
-├── public/              # Static assets
-└── package.json         # Node.js dependencies & scripts
+        # Your OpenCV / AI logic here
+        return {'main': img}
 ```
 
 ---
 
-## License
-Developed for educational and research purposes. Free to use under the MIT License.
+## 🤝 Fork & Contribute
+
+VisionNodes is an open-source project designed to grow with the community. We highly encourage you to:
+
+1. 🍴 **Fork this repository** to create your own custom nodes and workflows.
+2. 🐛 **Open Issues** for bugs or feature requests (like new model integrations).
+3. 🚀 **Submit Pull Requests** to improve the core engine or add to the plugin library.
+
+Whether you are a researcher, a hobbyist, or a pro developer, your contributions help make VisionNodes the most powerful visual tool for AI Vision.
+
+---
+
+## 📦 Tech Stack
+- **Frontend**: React, ReactFlow, Vite, Tailwind CSS.
+- **Backend Engine**: Python 3.10+, FastAPI (WebSockets), OpenCV, PyTorch, MediaPipe.
+- **Desktop**: Rust & Tauri for native performance and OS integration.
+
+---
+
+## 📜 License
+Developed for educational and research purposes. Free to use under the **MIT License**.
