@@ -8,6 +8,10 @@ It provides a modern, interactive "Studio" experience where you can chain comple
   <img src="./src/assets/logo.svg" width="180" alt="VisionNodes Logo">
 </p>
 
+<p align="center">
+  <img src="./cover.png" width="100%" alt="VisionNodes Studio Cover">
+</p>
+
 ---
 
 ## 🌟 Core Pillars
