@@ -10,7 +10,7 @@ import numpy as np
     description="Crops a specific rectangular area from the image (cropping).",
     inputs=[
         {'id': 'image', 'color': 'image'},
-        {'id': 'data', 'color': 'dict'}
+        {'id': 'data', 'color': 'any'}
     ],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

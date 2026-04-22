@@ -823,7 +823,13 @@ function App() {
           >
             {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" onLoad={(e) => {
               const img = e.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) previewAspect.current = img.naturalWidth / img.naturalHeight;
+              if (img.naturalWidth && img.naturalHeight) {
+                const newAspect = img.naturalWidth / img.naturalHeight;
+                if (Math.abs(newAspect - previewAspect.current) > 0.02) {
+                  previewAspect.current = newAspect;
+                  setPreviewSize(prev => ({ w: prev.w, h: Math.round(prev.w / newAspect) }));
+                }
+              }
             }} />}
             <div
               className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-10 flex items-end justify-end pb-1 pr-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -889,7 +895,12 @@ function App() {
                   <div className="space-y-8 pb-32">
                     {/* --- ALL SLIDERS --- */}
                     {selectedNode.type === 'input_webcam' && (
-                      <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
+                      <>
+                        <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
+                        <Slider label="Width (0 = auto)" val={selectedNode.data.params.width || 0} min={0} max={3840} step={160} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
+                        <Slider label="Height (0 = auto)" val={selectedNode.data.params.height || 0} min={0} max={2160} step={120} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
+                        <Slider label="FPS (0 = auto)" val={selectedNode.data.params.fps || 0} min={0} max={120} step={5} onChange={v => updateNodeParams(selectedNode.id, {fps: v})} />
+                      </>
                     )}
                     {selectedNode.type === 'input_image' && (
                       <TextInput label="Image Path" val={selectedNode.data.params.path || ''} onChange={v => updateNodeParams(selectedNode.id, {path: v})} />

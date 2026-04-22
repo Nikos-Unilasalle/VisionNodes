@@ -289,6 +289,25 @@ export const EXAMPLES = [
       { id: "e10", source: "py-1",     target: "ins-1",    sourceHandle: "any__out_any",       targetHandle: "any__data" },
       { id: "e11", source: "filter-1", target: "mon-1",    sourceHandle: "list__list_out",     targetHandle: "data__data" }
     ]
+  },
+  {
+    name: "EVM Pulse Detector (Wu et al. 2012)",
+    description: "Eulerian Video Magnification — détecte le pouls par amplification des variations de couleur (Cr/Cb) du visage. Paramètres conformes au papier original : alpha=120, bande 0.83–1.0 Hz (50–60 BPM). Le Plotter affiche la forme d'onde Cr en temps réel (oscillations = battements cardiaques).",
+    nodes: [
+      { id: "src-1",  type: "input_movie",      position: { x: 50,  y: 220 }, data: { label: "Face Video",      params: { path: "samples/face.mp4", playing: true } } },
+      { id: "evm-1",  type: "plugin_evm_color",  position: { x: 310, y: 220 }, data: { label: "EVM Color",       params: { alpha: 200, low_cutoff: 830, high_cutoff: 1000, fps: 30, levels: 2, attenuation: 10 } } },
+      { id: "disp-1", type: "output_display",    position: { x: 580, y: 220 }, data: { label: "Amplified View",  params: {} } },
+      { id: "mon-1",  type: "analysis_monitor",  position: { x: 310, y: 440 }, data: { label: "Pulse Signal",    params: { mode: 8, scale: 1, precision: 4 } } },
+      { id: "plot-1", type: "sci_plotter",       position: { x: 310, y: 600 }, data: { label: "Cr Waveform",     params: { buffer_size: 150, min_y: -32, max_y: 19 } } },
+      { id: "disp-2", type: "output_display",    position: { x: 580, y: 440 }, data: { label: "Color Delta Vis", params: {} } }
+    ],
+    edges: [
+      { id: "e1", source: "src-1", target: "evm-1",  sourceHandle: "image__main",        targetHandle: "image__image" },
+      { id: "e2", source: "evm-1", target: "disp-1", sourceHandle: "image__main",        targetHandle: "image__main" },
+      { id: "e3", source: "evm-1", target: "mon-1",  sourceHandle: "scalar__signal",     targetHandle: "any__data" },
+      { id: "e4", source: "evm-1", target: "plot-1", sourceHandle: "scalar__signal",     targetHandle: "scalar__value" },
+      { id: "e5", source: "evm-1", target: "disp-2", sourceHandle: "image__filtered_vis",targetHandle: "image__main" }
+    ]
   }
 ];
 
