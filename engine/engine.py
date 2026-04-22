@@ -552,11 +552,22 @@ class ColorMaskNode(NodeProcessor):
         image = inputs.get('image')
         if image is None: return {"mask": None}
         if len(image.shape) == 2 or image.shape[2] == 1: image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-        h_min, h_max = params.get('h_min', 0), params.get('h_max', 179)
-        s_min, s_max = params.get('s_min', 0), params.get('s_max', 255)
-        v_min, v_max = params.get('v_min', 0), params.get('v_max', 255)
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
+        mode = int(params.get('mode', 0))
+        if mode == 1:
+            r = int(params.get('r', 128))
+            g = int(params.get('g', 128))
+            b = int(params.get('b', 128))
+            thresh = int(params.get('threshold', 30))
+            target = np.array([b, g, r], dtype=np.float32)
+            diff = image.astype(np.float32) - target
+            dist = np.sqrt(np.sum(diff ** 2, axis=2))
+            mask = (dist <= thresh).astype(np.uint8) * 255
+        else:
+            h_min, h_max = params.get('h_min', 0), params.get('h_max', 179)
+            s_min, s_max = params.get('s_min', 0), params.get('s_max', 255)
+            v_min, v_max = params.get('v_min', 0), params.get('v_max', 255)
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
         return {"mask": mask}
 
 class MorphologyNode(NodeProcessor):
