@@ -321,11 +321,24 @@ class FlipNode(NodeProcessor):
         return {"main": cv2.flip(img, int(params.get('flip_mode', 1)))}
 
 class ResizeNode(NodeProcessor):
+    _INTERP = {0: cv2.INTER_NEAREST, 1: cv2.INTER_LINEAR, 2: cv2.INTER_CUBIC, 3: cv2.INTER_LANCZOS4}
+
     def process(self, inputs, params):
-        img = inputs.get('image')
+        img = inputs.get('image') or inputs.get('main')
         if img is None: return {"main": None}
-        sc = float(params.get('scale', 1.0))
-        return {"main": cv2.resize(img, None, fx=sc, fy=sc)}
+        interp = self._INTERP.get(int(params.get('interpolation', 1)), cv2.INTER_LINEAR)
+        mode = int(params.get('mode', 0))
+        if mode == 1:
+            w = int(params.get('target_width', 640))
+            h = int(params.get('target_height', 480))
+            if w <= 0 or h <= 0: return {"main": img}
+            result = cv2.resize(img, (w, h), interpolation=interp)
+        else:
+            sc = float(params.get('scale', 1.0))
+            if sc <= 0: sc = 1.0
+            result = cv2.resize(img, None, fx=sc, fy=sc, interpolation=interp)
+        h_out, w_out = result.shape[:2]
+        return {"main": result, "width": w_out, "height": h_out}
 
 # --- ANALYSIS & FLOW ---
 class OpticalFlowNode(NodeProcessor):
