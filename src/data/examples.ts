@@ -298,7 +298,7 @@ export const EXAMPLES = [
       { id: "evm-1",  type: "plugin_evm_color",  position: { x: 310, y: 220 }, data: { label: "EVM Color",       params: { alpha: 200, low_cutoff: 830, high_cutoff: 1000, fps: 30, levels: 2, attenuation: 10 } } },
       { id: "disp-1", type: "output_display",    position: { x: 580, y: 220 }, data: { label: "Amplified View",  params: {} } },
       { id: "mon-1",  type: "analysis_monitor",  position: { x: 310, y: 440 }, data: { label: "Pulse Signal",    params: { mode: 8, scale: 1, precision: 4 } } },
-      { id: "plot-1", type: "sci_plotter",       position: { x: 310, y: 600 }, data: { label: "Cr Waveform",     params: { buffer_size: 150, min_y: -32, max_y: 19 } } },
+      { id: "plot-1", type: "sci_plotter",       position: { x: 310, y: 600 }, data: { label: "Cr Waveform",     params: { buffer_size: 150, min_y: 0, max_y: 24 } } },
       { id: "disp-2", type: "output_display",    position: { x: 580, y: 440 }, data: { label: "Color Delta Vis", params: {} } }
     ],
     edges: [
