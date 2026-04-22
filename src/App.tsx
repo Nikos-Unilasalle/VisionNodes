@@ -61,6 +61,8 @@ const nodeTypes = {
   data_inspector: N.DataInspectorNode,
   output_display: N.OutputDisplayNode,
   logic_python: N.PythonNode,
+  canvas_note: N.CanvasNoteNode,
+  output_movie: N.OutputMovieNode,
   math_add: N.MathNode,
   math_sub: N.MathNode,
   math_mul: N.MathNode,
@@ -164,7 +166,11 @@ const CATEGORIES = [
   ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' },
+    { type: 'output_movie', label: 'Movie Export', description: 'Records the pipeline to an MP4 file, or records webcam directly and creates a Movie node on stop.' },
     { type: 'util_compose', label: 'Compose', description: 'Combines two images: side-by-side, split view, blend, difference, or checkerboard.' }
+  ] },
+  { id: 'canvas', label: 'Canvas', icon: Type, nodes: [
+    { type: 'canvas_note', label: 'Note', description: 'Annotation text block. Double-click to edit. Drag & resize freely.' }
   ] }
 ];
 
@@ -533,6 +539,7 @@ function App() {
     // Some nodes need a default style so NodeResizer works from the start
     const defaultStyle: Record<string, Record<string, number>> = {
       data_inspector: { width: 220, height: 200 },
+      canvas_note: { width: 300, height: 180 },
     };
     const nodeStyle = defaultStyle[type] || {};
     setNodes((nds) => {
@@ -581,6 +588,7 @@ function App() {
           // Determine label based on type
           let label = "New Node";
           if (cmd.node_type === 'input_image') label = "Captured Frame";
+          if (cmd.node_type === 'input_movie') label = "Recorded Video";
           
           addNode(cmd.node_type, label, null, cmd.params);
         }
@@ -920,6 +928,71 @@ function App() {
 
                   <div className="space-y-8 pb-32">
                     {/* --- ALL SLIDERS --- */}
+                    {selectedNode.type === 'canvas_note' && (() => {
+                      const NOTE_PALETTE_INS = [
+                        { bg: '#a8e6cf', dark: '#1a3d2e', label: 'Padua' },
+                        { bg: '#dcedbf', dark: '#2a3a1a', label: 'Caper' },
+                        { bg: '#ffd4b8', dark: '#3a2010', label: 'Romantic' },
+                        { bg: '#ffa8a3', dark: '#3a1010', label: 'Cornflower' },
+                        { bg: '#ff667d', dark: '#1a0a0a', label: 'Watermelon' },
+                      ];
+                      const bgColor = selectedNode.data.params.bg_color || '#ffd4b8';
+                      const textColor = selectedNode.data.params.text_color || '#3a2010';
+                      return (
+                        <>
+                          <div className="space-y-4 group">
+                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
+                            <textarea
+                              value={selectedNode.data.params.text || ''}
+                              onChange={e => updateNodeParams(selectedNode.id, { text: e.target.value })}
+                              className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none resize-none transition-all"
+                              style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)', fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
+                              placeholder="Enter note text…"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
+                            <div className="flex gap-3 flex-wrap">
+                              {NOTE_PALETTE_INS.map(({ bg, dark, label }) => (
+                                <button
+                                  key={bg}
+                                  title={label}
+                                  onClick={() => updateNodeParams(selectedNode.id, { bg_color: bg, text_color: dark })}
+                                  className="flex flex-col items-center gap-1.5 group/swatch"
+                                >
+                                  <div
+                                    className="w-10 h-10 rounded-xl transition-all duration-150 group-hover/swatch:scale-110"
+                                    style={{
+                                      background: bg,
+                                      border: bgColor === bg ? '3px solid rgba(0,0,0,0.4)' : '2px solid rgba(0,0,0,0.1)',
+                                      boxShadow: bgColor === bg ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none',
+                                    }}
+                                  />
+                                  <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between py-2">
+                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Text Color</label>
+                            <div className="flex gap-2">
+                              {['#ffffff', NOTE_PALETTE_INS.find(p => p.bg === bgColor)?.dark || '#1a1a1a'].map(c => (
+                                <button
+                                  key={c}
+                                  onClick={() => updateNodeParams(selectedNode.id, { text_color: c })}
+                                  className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
+                                  style={{
+                                    background: c,
+                                    borderColor: textColor === c ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)',
+                                    boxShadow: textColor === c ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none',
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                     {selectedNode.type === 'input_webcam' && (
                       <>
                         <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
@@ -994,9 +1067,33 @@ function App() {
                     {selectedNode.type === 'filter_threshold' && (
                       <Slider label="Threshold Value" val={selectedNode.data.params.threshold || 127} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
                     )}
-                    {selectedNode.type === 'geom_resize' && (
-                      <Slider label="Scale Factor" val={selectedNode.data.params.scale || 1} min={0.1} max={3} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {scale: v})} />
-                    )}
+                    {selectedNode.type === 'geom_resize' && (() => {
+                      const mode = selectedNode.data.params.mode ?? 0;
+                      return (
+                        <>
+                          <SelectInput
+                            label="Mode"
+                            val={mode}
+                            options={['Scale Factor', 'Fixed Size']}
+                            onChange={(v: number) => updateNodeParams(selectedNode.id, { mode: v })}
+                          />
+                          {mode === 0 ? (
+                            <Slider label="Scale Factor" val={selectedNode.data.params.scale ?? 1} min={0.05} max={4} step={0.05} onChange={v => updateNodeParams(selectedNode.id, { scale: v })} />
+                          ) : (
+                            <>
+                              <Slider label="Target Width (px)" val={selectedNode.data.params.target_width ?? 640} min={1} max={3840} step={1} onChange={v => updateNodeParams(selectedNode.id, { target_width: v })} />
+                              <Slider label="Target Height (px)" val={selectedNode.data.params.target_height ?? 480} min={1} max={2160} step={1} onChange={v => updateNodeParams(selectedNode.id, { target_height: v })} />
+                            </>
+                          )}
+                          <SelectInput
+                            label="Interpolation"
+                            val={selectedNode.data.params.interpolation ?? 1}
+                            options={['Nearest', 'Linear', 'Cubic', 'Lanczos']}
+                            onChange={(v: number) => updateNodeParams(selectedNode.id, { interpolation: v })}
+                          />
+                        </>
+                      );
+                    })()}
                     {selectedNode.type === 'geom_flip' && (
                       <Slider label="Flip Code (0,1,-1)" val={selectedNode.data.params.flip_mode || 1} min={-1} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {flip_mode: v})} />
                     )}

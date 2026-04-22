@@ -1,0 +1,516 @@
+{
+  "nodes": [
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": {
+        "x": -452.6105081459157,
+        "y": 291.31557941262685
+      },
+      "data": {
+        "label": "Billes (billes.jpg)",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/galets.jpg"
+        }
+      },
+      "width": 208,
+      "height": 211,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -452.6105081459157,
+        "y": 291.31557941262685
+      },
+      "dragging": false
+    },
+    {
+      "id": "gray-1",
+      "type": "filter_gray",
+      "position": {
+        "x": 326.70004722854065,
+        "y": 374.9314573077128
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {}
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 326.70004722854065,
+        "y": 374.9314573077128
+      },
+      "dragging": false
+    },
+    {
+      "id": "thresh-1",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 326.4929923659444,
+        "y": 248.93070091814639
+      },
+      "data": {
+        "label": "Otsu (billes = white)",
+        "params": {
+          "mode": 0,
+          "threshold": 95
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 326.4929923659444,
+        "y": 248.93070091814639
+      },
+      "dragging": false
+    },
+    {
+      "id": "morph-open-1",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 583.6086638923651,
+        "y": 154.53159360564322
+      },
+      "data": {
+        "label": "Opening (Remove Noise)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 9.96,
+          "iterations": 5
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 583.6086638923651,
+        "y": 154.53159360564322
+      }
+    },
+    {
+      "id": "morph-close-1",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 583.1039550365978,
+        "y": 257.87617721394184
+      },
+      "data": {
+        "label": "Closing (Fill Holes)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 2,
+          "iterations": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 583.1039550365978,
+        "y": 257.87617721394184
+      },
+      "dragging": false
+    },
+    {
+      "id": "dist-1",
+      "type": "feat_distance_transform",
+      "position": {
+        "x": 585.7282002902997,
+        "y": 362.0705749001109
+      },
+      "data": {
+        "label": "Distance Transform",
+        "params": {
+          "dist_type": 2,
+          "mask_size": 0
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 585.7282002902997,
+        "y": 362.0705749001109
+      },
+      "dragging": false
+    },
+    {
+      "id": "thresh-dist-1",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 585.9105749891987,
+        "y": 492.98035017791653
+      },
+      "data": {
+        "label": "Peak Threshold (70%)",
+        "params": {
+          "mode": 0,
+          "threshold": 53
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 585.9105749891987,
+        "y": 492.98035017791653
+      }
+    },
+    {
+      "id": "markers-1",
+      "type": "feat_connected_components",
+      "position": {
+        "x": 856.0514426467327,
+        "y": 295.4368938524096
+      },
+      "data": {
+        "label": "Seed Markers",
+        "params": {}
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 856.0514426467327,
+        "y": 295.4368938524096
+      },
+      "dragging": false
+    },
+    {
+      "id": "filter-1",
+      "type": "feat_marker_filter",
+      "position": {
+        "x": 859.5037017930877,
+        "y": 457.3552861793231
+      },
+      "data": {
+        "label": "Filter Small Fragments",
+        "params": {
+          "min_area": 200,
+          "max_area": 500000,
+          "area_unit": 0,
+          "remap_ids": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 859.5037017930877,
+        "y": 457.3552861793231
+      },
+      "dragging": false
+    },
+    {
+      "id": "wshed-1",
+      "type": "feat_watershed",
+      "position": {
+        "x": 1235.8796638906722,
+        "y": 276.12875021945774
+      },
+      "data": {
+        "label": "Watershed",
+        "params": {
+          "visualization": 2,
+          "boundary_color": 0,
+          "boundary_thickness": 4,
+          "region_alpha": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1235.8796638906722,
+        "y": 276.12875021945774
+      }
+    },
+    {
+      "id": "analysis-1",
+      "type": "sci_marker_analysis",
+      "position": {
+        "x": 1236.1317211874689,
+        "y": 436.8537578279668
+      },
+      "data": {
+        "label": "Marble Analysis",
+        "params": {
+          "show_labels": 1,
+          "show_points": 1,
+          "font_scale": 0.8,
+          "thickness": 3,
+          "coord_type": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1236.1317211874689,
+        "y": 436.8537578279668
+      },
+      "dragging": false
+    },
+    {
+      "id": "count-ins-1",
+      "type": "data_inspector",
+      "position": {
+        "x": 1526.5686783462374,
+        "y": 599.7631963728302
+      },
+      "data": {
+        "label": "Marble Count",
+        "params": {}
+      },
+      "width": 202,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1526.5686783462374,
+        "y": 599.7631963728302
+      },
+      "dragging": false,
+      "style": {
+        "width": 202,
+        "height": 120
+      },
+      "resizing": false
+    },
+    {
+      "id": "disp-1",
+      "type": "output_display",
+      "position": {
+        "x": 1511.167720522356,
+        "y": 250.88772223436183
+      },
+      "data": {
+        "label": "Segmentation View",
+        "params": {}
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1511.167720522356,
+        "y": 250.88772223436183
+      },
+      "dragging": false
+    },
+    {
+      "id": "disp-2",
+      "type": "output_display",
+      "position": {
+        "x": 1520,
+        "y": 430
+      },
+      "data": {
+        "label": "Marble Analysis View",
+        "params": {}
+      },
+      "width": 208,
+      "height": 144
+    },
+    {
+      "id": "node-1776885243551",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": -209.76359724519807,
+        "y": 274.56334133785657
+      },
+      "style": {},
+      "data": {
+        "label": "ROI Polygon",
+        "params": {
+          "points": "[{\"x\":0.045012165450121655,\"y\":0.0027624309392265192},{\"x\":0.049878345498783457,\"y\":0.988950276243094},{\"x\":0.9476885644768857,\"y\":0.988950276243094},{\"x\":0.9452554744525548,\"y\":0}]"
+        }
+      },
+      "width": 208,
+      "height": 242,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -209.76359724519807,
+        "y": 274.56334133785657
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776885277292",
+      "type": "geom_perspective",
+      "position": {
+        "x": 42.03643134904132,
+        "y": 299.6783473526284
+      },
+      "style": {},
+      "data": {
+        "label": "Perspective Warp",
+        "params": {}
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 42.03643134904132,
+        "y": 299.6783473526284
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e2",
+      "source": "gray-1",
+      "target": "thresh-1",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e3",
+      "source": "thresh-1",
+      "target": "morph-open-1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e4",
+      "source": "morph-open-1",
+      "target": "morph-close-1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e5",
+      "source": "morph-close-1",
+      "target": "dist-1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e8",
+      "source": "markers-1",
+      "target": "filter-1",
+      "sourceHandle": "any__markers",
+      "targetHandle": "any__markers",
+      "selected": false
+    },
+    {
+      "id": "e10",
+      "source": "filter-1",
+      "target": "wshed-1",
+      "sourceHandle": "any__markers_out",
+      "targetHandle": "any__markers",
+      "selected": false
+    },
+    {
+      "id": "e11",
+      "source": "wshed-1",
+      "target": "disp-1",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e12",
+      "source": "wshed-1",
+      "target": "analysis-1",
+      "sourceHandle": "any__markers_out",
+      "targetHandle": "any__markers"
+    },
+    {
+      "id": "e14",
+      "source": "analysis-1",
+      "target": "disp-2",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-1776884759002-1",
+      "source": "wshed-1",
+      "target": "analysis-1",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "main"
+    },
+    {
+      "id": "e-1776884759002-2",
+      "source": "analysis-1",
+      "target": "count-ins-1",
+      "sourceHandle": "main",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "dist-1",
+      "sourceHandle": "image__main",
+      "target": "thresh-dist-1",
+      "targetHandle": "image__image",
+      "id": "e-1776884794323"
+    },
+    {
+      "source": "thresh-dist-1",
+      "sourceHandle": "mask__mask",
+      "target": "markers-1",
+      "targetHandle": "any__mask",
+      "id": "e-1776884799928",
+      "selected": false
+    },
+    {
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "node-1776885243551",
+      "targetHandle": "image__image",
+      "id": "e-1776885250809"
+    },
+    {
+      "source": "node-1776885243551",
+      "sourceHandle": "list__pts",
+      "target": "node-1776885277292",
+      "targetHandle": "list__src_pts",
+      "id": "e-1776885282244"
+    },
+    {
+      "source": "node-1776885243551",
+      "sourceHandle": "image__main",
+      "target": "node-1776885277292",
+      "targetHandle": "image__image",
+      "id": "e-1776885283524"
+    },
+    {
+      "source": "node-1776885277292",
+      "sourceHandle": "image__main",
+      "target": "gray-1",
+      "targetHandle": "image__image",
+      "id": "e-1776885285762"
+    },
+    {
+      "source": "wshed-1",
+      "sourceHandle": "image__main",
+      "target": "analysis-1",
+      "targetHandle": "image__image",
+      "id": "e-1776885477693"
+    },
+    {
+      "source": "analysis-1",
+      "sourceHandle": "scalar__count",
+      "target": "count-ins-1",
+      "targetHandle": "any__data",
+      "id": "e-1776885491418"
+    },
+    {
+      "id": "e-1776885831315-1",
+      "source": "thresh-1",
+      "target": "morph-close-1",
+      "sourceHandle": "main",
+      "targetHandle": "main"
+    },
+    {
+      "source": "node-1776885277292",
+      "sourceHandle": "image__main",
+      "target": "wshed-1",
+      "targetHandle": "image__image",
+      "id": "e-1776886059893"
+    }
+  ]
+}

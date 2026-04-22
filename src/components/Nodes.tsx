@@ -421,7 +421,7 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
   const [points, setPoints] = React.useState<any[]>([]);
   const frame = data.node_data?.main_preview || data.node_data?.main;
   const onOpenEditor = data.onOpenEditor;
-  
+
   React.useEffect(() => {
     if (data.params?.points) {
       try {
@@ -451,60 +451,32 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
             <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-60 grayscale-[50%]" alt="ROI Preview" />
           ) : (
             <div className="w-full aspect-video flex items-center justify-center text-gray-800">
-               <Image size={24} className="opacity-10" />
+              <Image size={24} className="opacity-10" />
             </div>
           )}
-          
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
-            {/* Layer 1: Stretched Polygon */}
             <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
               {points.length >= 3 && (
-                <polygon
-                  points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                  className="fill-accent/30 stroke-accent"
-                  style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }}
-                />
+                <polygon points={points.map(p => `${p.x},${p.y}`).join(' ')} className="fill-accent/30 stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
               )}
             </svg>
-
-            {/* Layer 2: Circular Points */}
             {points.map((p, i) => (
-              <circle 
-                key={i} 
-                cx={`${p.x * 100}%`} 
-                cy={`${p.y * 100}%`} 
-                r={4}
-                className="fill-white stroke-accent" 
-                style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} 
-              />
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} className="fill-white stroke-accent" style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
             ))}
           </svg>
-          
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-             <button 
-               onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
-               className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2"
-             >
-               <Scaling size={12} /> Edit Region
-             </button>
+            <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Scaling size={12} /> Edit Region
+            </button>
           </div>
         </div>
-
         <div className="flex items-center justify-between px-1">
-           <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
-             {points.length} Vertices
-           </div>
-           <button 
-             onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
-             className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline"
-           >
-             Modify Shape
-           </button>
+          <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{points.length} Vertices</div>
+          <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline">
+            Modify Shape
+          </button>
         </div>
       </div>
-      <NodeResizeControl minWidth={200} minHeight={150}>
-         <div className="absolute bottom-1 right-1 w-2 h-2 border-r-2 border-b-2 border-white/20" />
-      </NodeResizeControl>
     </BaseNode>
   );
 });
@@ -612,7 +584,6 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   return (
     <div className="w-full h-full group/node" style={{ minWidth: 180, minHeight: 120, position: 'relative' }}>
       <NodeResizer
-        isVisible={selected}
         minWidth={180}
         minHeight={120}
         color="var(--accent, #7c3aed)"
@@ -888,6 +859,170 @@ export const UtilCSVExportNode = memo(({ selected, data }: any) => {
             <div className="text-[9px] font-mono text-white/70 truncate">{data.params?.filename || "capture"}.csv</div>
           </div>
         </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+const NOTE_PALETTE = [
+  { bg: '#a8e6cf', dark: '#1a3d2e' },
+  { bg: '#dcedbf', dark: '#2a3a1a' },
+  { bg: '#ffd4b8', dark: '#3a2010' },
+  { bg: '#ffa8a3', dark: '#3a1010' },
+  { bg: '#ff667d', dark: '#1a0a0a' },
+];
+
+export const CanvasNoteNode = memo(({ selected, data }: any) => {
+  const [editing, setEditing] = useState(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const text = data.params?.text || '';
+  const bgColor = data.params?.bg_color || '#ffd4b8';
+  const textColor = data.params?.text_color || '#3a2010';
+
+  React.useEffect(() => {
+    if (editing) textareaRef.current?.focus();
+  }, [editing]);
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditing(true);
+  };
+
+  const resizerColor = `${bgColor}99`;
+  const placeholder = textColor + '55';
+
+  return (
+    <div
+      className="w-full h-full relative group/note"
+      style={{ minWidth: 120, minHeight: 60 }}
+      onDoubleClick={handleDoubleClick}
+    >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={120}
+        minHeight={60}
+        color={resizerColor}
+        handleStyle={{ width: 8, height: 8, borderRadius: 50, background: resizerColor, border: '2px solid rgba(0,0,0,0.15)', zIndex: 20 }}
+        lineStyle={{ borderColor: resizerColor, borderStyle: 'dashed', zIndex: 20 }}
+      />
+      <div
+        className={`w-full h-full rounded-2xl overflow-hidden transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
+        style={{ background: bgColor }}
+      >
+        {editing ? (
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => data.onChangeParams?.({ text: e.target.value })}
+            onBlur={() => setEditing(false)}
+            onKeyDown={e => {
+              if (e.key === 'Escape') setEditing(false);
+              e.stopPropagation();
+            }}
+            className="nodrag nopan w-full h-full bg-transparent border-none outline-none resize-none p-4 leading-relaxed"
+            style={{ color: textColor, fontSize: 13, fontFamily: 'Roboto, sans-serif', fontWeight: 400, caretColor: textColor }}
+            placeholder="Write your note here..."
+          />
+        ) : (
+          <div
+            className="p-4 w-full h-full overflow-hidden select-none cursor-text"
+            style={{
+              color: text ? textColor : placeholder,
+              fontSize: 13,
+              fontFamily: 'Roboto, sans-serif',
+              fontWeight: 400,
+              lineHeight: '1.65',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              fontStyle: text ? 'normal' : 'italic',
+            }}
+          >
+            {text || 'Double-click to edit…'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+export const OutputMovieNode = memo(({ selected, data }: any) => {
+  const mode = data.params?.mode ?? 0;
+  const recording = data.params?.recording ?? false;
+  const outputPath = data.params?.output_path || '';
+  const frameCount = data.node_data?.frame_count ?? 0;
+
+  const handleBrowse = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { save: saveDialog } = await import('@tauri-apps/plugin-dialog');
+      const selectedPath = await saveDialog({
+        defaultPath: mode === 1 ? 'webcam_recording.mp4' : 'export.mp4',
+        filters: [{ name: 'Video', extensions: ['mp4'] }]
+      });
+      if (selectedPath) data.onChangeParams?.({ output_path: selectedPath });
+    } catch (err) {
+      console.error('Browse error:', err);
+    }
+  };
+
+  const inputs = mode === 0 ? [{ id: 'image', color: 'image' }] : [];
+
+  return (
+    <BaseNode
+      title="Movie Export"
+      icon={Film}
+      selected={selected}
+      data={data}
+      color={recording ? 'red' : 'accent'}
+      inputs={inputs}
+      headerExtra={recording ? <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" /> : null}
+    >
+      <div className="p-2 space-y-2 nodrag">
+        {/* Mode tabs */}
+        <div className="flex gap-0.5 p-0.5 bg-black/30 rounded-lg">
+          {['Stream', 'Webcam'].map((label, i) => (
+            <button
+              key={i}
+              onClick={e => { e.stopPropagation(); data.onChangeParams?.({ mode: i, recording: false }); }}
+              className={`flex-1 py-1 rounded text-[8px] font-black uppercase transition-all ${mode === i ? 'bg-accent text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Output path */}
+        <button
+          onClick={handleBrowse}
+          className="w-full py-1.5 px-2 bg-white/5 hover:bg-white/10 border border-dashed border-white/20 hover:border-white/40 rounded-lg text-left transition-all"
+        >
+          <div className="text-[7px] text-gray-600 uppercase font-black mb-0.5">Output Path</div>
+          <div className="text-[9px] font-mono text-gray-300 truncate">
+            {outputPath ? outputPath.split(/[/\\]/).pop() : 'Click to select…'}
+          </div>
+        </button>
+
+        {/* Record / Stop */}
+        <button
+          onClick={e => { e.stopPropagation(); data.onChangeParams?.({ recording: !recording }); }}
+          className={`w-full py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+            recording
+              ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+              : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          {recording
+            ? <><div className="w-2.5 h-2.5 rounded-sm bg-white" /> Stop</>
+            : <><div className="w-2.5 h-2.5 rounded-full bg-red-400" /> Record</>}
+        </button>
+
+        {recording && frameCount > 0 && (
+          <div className="text-center text-[9px] font-mono text-red-400 animate-pulse">{frameCount} frames captured</div>
+        )}
+        {!recording && mode === 1 && (
+          <div className="text-[8px] text-gray-600 italic text-center leading-tight">Webcam: a Movie node is created on stop</div>
+        )}
       </div>
     </BaseNode>
   );

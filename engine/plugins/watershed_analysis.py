@@ -26,6 +26,10 @@ class AdvancedThresholdNode(NodeProcessor):
         mode = int(params.get('mode', 0))
         val = int(params.get('threshold', 127))
         
+        # Otsu's method requires 8-bit or 16-bit images. Convert float to uint8.
+        if mode in [2, 3] and gray.dtype != np.uint8:
+            gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        
         res = None
         if mode == 0: # Binary
             _, res = cv2.threshold(gray, val, 255, cv2.THRESH_BINARY)
