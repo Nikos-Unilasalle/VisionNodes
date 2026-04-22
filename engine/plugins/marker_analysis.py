@@ -15,7 +15,8 @@ from __main__ import NodeProcessor, vision_node
         {"id": "show_points", "label": "Show Centroids", "type": "enum", "options": ["No", "Yes"], "default": 1},
         {"id": "font_scale", "label": "Font Scale", "type": "scalar", "min": 0.1, "max": 2.0, "default": 0.6},
         {"id": "thickness", "label": "Thickness", "type": "scalar", "min": 1, "max": 5, "default": 1},
-        {"id": "coord_type", "label": "Coordinates", "type": "enum", "options": ["Relative (0-1)", "Pixels"], "default": 0}
+        {"id": "coord_type", "label": "Coordinates", "type": "enum", "options": ["Relative (0-1)", "Pixels"], "default": 0},
+        {"id": "text_color", "label": "Text Color", "type": "enum", "options": ["Green", "Red", "Blue", "White", "Black", "Yellow"], "default": 0}
     ]
 )
 class MarkerAnalysisNode(NodeProcessor):
@@ -46,6 +47,12 @@ class MarkerAnalysisNode(NodeProcessor):
         thickness = int(params.get('thickness', 1))
         is_relative = int(params.get('coord_type', 0)) == 0
         
+        color_idx = int(params.get('text_color', 0))
+        bgr_colors = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (255, 255, 255), (0, 0, 0), (0, 255, 255)]
+        hex_colors = ["#00ff00", "#ff0000", "#0000ff", "#ffffff", "#000000", "#ffff00"]
+        color = bgr_colors[min(color_idx, len(bgr_colors)-1)]
+        color_hex = hex_colors[min(color_idx, len(hex_colors)-1)]
+        
         # Efficiently extract stats
         # Watershed markers: -1 is boundary, 1, 2, 3... are labels.
         # connectedComponents markers: 0 is background, 1, 2, 3... are labels.
@@ -57,8 +64,6 @@ class MarkerAnalysisNode(NodeProcessor):
         # We usually care about labels > 0
         valid_labels = labels[labels > 0]
         count = len(valid_labels)
-        
-        color = (0, 255, 0) # Green for text/points
         
         for label_id in valid_labels:
             # Get mask for this label
@@ -87,7 +92,7 @@ class MarkerAnalysisNode(NodeProcessor):
                     "shape": "point",
                     "pts": [[float(cx/w), float(cy/h)]],
                     "relative": True,
-                    "color": "#00ff00"
+                    "color": color_hex
                 })
                 
                 # Overlay

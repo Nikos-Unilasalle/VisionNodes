@@ -8,7 +8,8 @@ import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette
+  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette,
+  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -82,6 +83,7 @@ const nodeTypes = {
   string_split: N.StringNode,
   string_length: N.StringNode,
   string_case: N.StringNode,
+  canvas_frame: N.CanvasFrameNode,
 };
 
 const CATEGORIES = [
@@ -170,7 +172,8 @@ const CATEGORIES = [
     { type: 'util_compose', label: 'Compose', description: 'Combines two images: side-by-side, split view, blend, difference, or checkerboard.' }
   ] },
   { id: 'canvas', label: 'Canvas', icon: Type, nodes: [
-    { type: 'canvas_note', label: 'Note', description: 'Annotation text block. Double-click to edit. Drag & resize freely.' }
+    { type: 'canvas_note', label: 'Note', description: 'Annotation text block. Double-click to edit. Drag & resize freely.' },
+    { type: 'canvas_frame', label: 'Frame', description: 'A colored container to group and organize nodes visually.' }
   ] }
 ];
 
@@ -183,6 +186,7 @@ function App() {
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(false);
   const isResizing = useRef(false);
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
@@ -537,9 +541,10 @@ function App() {
     const id = `node-${Date.now()}`;
     const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 450, y: 450 };
     // Some nodes need a default style so NodeResizer works from the start
-    const defaultStyle: Record<string, Record<string, number>> = {
+    const defaultStyle: Record<string, any> = {
       data_inspector: { width: 220, height: 200 },
       canvas_note: { width: 300, height: 180 },
+      canvas_frame: { width: 400, height: 400, zIndex: -1 },
     };
     const nodeStyle = defaultStyle[type] || {};
     setNodes((nds) => {
@@ -580,6 +585,28 @@ function App() {
   };
 
   useEffect(() => { if (isConnected) updateGraph(nodes, edges); }, [isConnected]);
+
+  const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
+    setNodes(nds => {
+      const selectedIds = nds.filter(n => n.selected).map(n => n.id);
+      if (selectedIds.length < 2) return nds;
+      
+      const selNodes = nds.filter(n => n.selected);
+      const avgX = selNodes.reduce((acc, n) => acc + n.position.x, 0) / selNodes.length;
+      const avgY = selNodes.reduce((acc, n) => acc + n.position.y, 0) / selNodes.length;
+      
+      return nds.map(n => {
+        if (!n.selected) return n;
+        return {
+          ...n,
+          position: {
+            x: direction === 'vertical' ? avgX : n.position.x,
+            y: direction === 'horizontal' ? avgY : n.position.y
+          }
+        };
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (lastCommands && lastCommands.length > 0) {
@@ -634,6 +661,34 @@ function App() {
             {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
           </div>
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
+          
+          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button 
+              onClick={() => alignNodes('horizontal')}
+              title="Align Horizontally"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <AlignHorizontalDistributeCenter size={14} />
+            </button>
+            <button 
+              onClick={() => alignNodes('vertical')}
+              title="Align Vertically"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <AlignVerticalDistributeCenter size={14} />
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-1" />
+            <button 
+              onClick={() => setSnapEnabled(!snapEnabled)}
+              title="Snap to Grid"
+              className={`p-1 rounded transition-colors ${snapEnabled ? 'text-accent bg-accent/20' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}
+            >
+              <Grid3x3 size={14} />
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
           <button
             onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
             className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
@@ -702,6 +757,7 @@ function App() {
             nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
             onNodeContextMenu={(e, node) => { e.preventDefault(); setMenu({ id: node.id, x: e.clientX, y: e.clientY }); }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
+            snapToGrid={snapEnabled} snapGrid={[20, 20]}
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
           >
@@ -928,28 +984,42 @@ function App() {
 
                   <div className="space-y-8 pb-32">
                     {/* --- ALL SLIDERS --- */}
-                    {selectedNode.type === 'canvas_note' && (() => {
+                    {(selectedNode.type === 'canvas_note' || selectedNode.type === 'canvas_frame') && (() => {
                       const NOTE_PALETTE_INS = [
                         { bg: '#a8e6cf', dark: '#1a3d2e', label: 'Padua' },
                         { bg: '#dcedbf', dark: '#2a3a1a', label: 'Caper' },
                         { bg: '#ffd4b8', dark: '#3a2010', label: 'Romantic' },
                         { bg: '#ffa8a3', dark: '#3a1010', label: 'Cornflower' },
                         { bg: '#ff667d', dark: '#1a0a0a', label: 'Watermelon' },
+                        { bg: '#333333', dark: '#ffffff', label: 'Obsidian' },
                       ];
-                      const bgColor = selectedNode.data.params.bg_color || '#ffd4b8';
-                      const textColor = selectedNode.data.params.text_color || '#3a2010';
+                      const bgColor = selectedNode.data.params.bg_color || (selectedNode.type === 'canvas_frame' ? '#333333' : '#ffd4b8');
+                      const textColor = selectedNode.data.params.text_color || (selectedNode.type === 'canvas_frame' ? '#ffffff' : '#3a2010');
                       return (
                         <>
-                          <div className="space-y-4 group">
-                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
-                            <textarea
-                              value={selectedNode.data.params.text || ''}
-                              onChange={e => updateNodeParams(selectedNode.id, { text: e.target.value })}
-                              className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none resize-none transition-all"
-                              style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)', fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
-                              placeholder="Enter note text…"
-                            />
-                          </div>
+                          {selectedNode.type === 'canvas_note' ? (
+                            <div className="space-y-4 group mb-6">
+                              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
+                              <textarea
+                                value={selectedNode.data.params.text || ''}
+                                onChange={e => updateNodeParams(selectedNode.id, { text: e.target.value })}
+                                className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none resize-none transition-all"
+                                style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)', fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
+                                placeholder="Enter note text…"
+                              />
+                            </div>
+                          ) : (
+                            <div className="space-y-4 group mb-6">
+                              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Frame Title</label>
+                              <input
+                                value={selectedNode.data.params.title || 'Frame Layer'}
+                                onChange={e => updateNodeParams(selectedNode.id, { title: e.target.value })}
+                                className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none transition-all font-black text-center"
+                                style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)' }}
+                                placeholder="Enter frame title…"
+                              />
+                            </div>
+                          )}
                           <div className="space-y-4">
                             <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
                             <div className="flex gap-3 flex-wrap">

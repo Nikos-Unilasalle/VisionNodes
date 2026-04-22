@@ -584,6 +584,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   return (
     <div className="w-full h-full group/node" style={{ minWidth: 180, minHeight: 120, position: 'relative' }}>
       <NodeResizer
+        isVisible={selected}
         minWidth={180}
         minHeight={120}
         color="var(--accent, #7c3aed)"
@@ -907,8 +908,8 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
         lineStyle={{ borderColor: resizerColor, borderStyle: 'dashed', zIndex: 20 }}
       />
       <div
-        className={`w-full h-full rounded-2xl overflow-hidden transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
-        style={{ background: bgColor }}
+        className={`w-full h-full rounded-lg overflow-hidden transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
+        style={{ background: bgColor, border: `1px solid ${resizerColor}` }}
       >
         {editing ? (
           <textarea
@@ -1045,5 +1046,53 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
     <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
       {/* Minimalist: internal content moved to Inspector */}
     </BaseNode>
+  );
+});
+
+export const CanvasFrameNode = memo(({ selected, data }: any) => {
+  const [editing, setEditing] = useState(false);
+  const title = data.params?.title || 'Frame Layer';
+  const bgColor = data.params?.bg_color || '#333333';
+  const textColor = data.params?.text_color || '#ffffff';
+
+  return (
+    <div className="relative group/frame w-full h-full">
+      <NodeResizer
+        isVisible={selected}
+        minWidth={200}
+        minHeight={150}
+        color={bgColor}
+        handleStyle={{ width: 12, height: 12, borderRadius: 2, border: 'none', background: bgColor, zIndex: -1 }}
+        lineStyle={{ borderColor: bgColor, borderWidth: 2, borderStyle: 'solid', zIndex: -1 }}
+      />
+      <div
+        className="w-full h-full rounded-xl border-2 transition-all flex flex-col overflow-hidden"
+        style={{ borderColor: bgColor, backgroundColor: `${bgColor}15` }}
+      >
+        <div 
+          className="px-4 py-2 font-black text-xs uppercase tracking-widest truncate cursor-text select-none"
+          style={{ backgroundColor: bgColor, color: textColor }}
+          onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
+        >
+          {editing ? (
+            <input 
+              autoFocus
+              className="bg-black/20 w-full outline-none px-1 py-0.5 rounded"
+              style={{ color: textColor }}
+              value={title}
+              onChange={e => data.onChangeParams?.({ title: e.target.value })}
+              onBlur={() => setEditing(false)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === 'Escape') setEditing(false);
+                e.stopPropagation();
+              }}
+            />
+          ) : (
+            title
+          )}
+        </div>
+        <div className="flex-1 pointer-events-none" />
+      </div>
+    </div>
   );
 });
