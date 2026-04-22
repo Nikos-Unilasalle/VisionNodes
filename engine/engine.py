@@ -126,11 +126,25 @@ class NodeProcessor(ABC):
 
 # --- INPUT UNITS ---
 class WebcamInput(NodeProcessor):
-    def __init__(self, engine=None): self.engine = engine
+    def __init__(self, engine=None):
+        self.engine = engine
+        self._applied = {}
+
     def process(self, inputs, params):
         idx = int(params.get('device_index', 0))
-        if self.engine.current_cap_index != idx: self.engine.switch_camera(idx)
-        return {"main": inputs.get('raw_frame')}
+        if self.engine.current_cap_index != idx:
+            self.engine.switch_camera(idx)
+            self._applied = {}
+        cap = self.engine.cap
+        for prop, key in ((cv2.CAP_PROP_FRAME_WIDTH, 'width'), (cv2.CAP_PROP_FRAME_HEIGHT, 'height'), (cv2.CAP_PROP_FPS, 'fps')):
+            val = int(params.get(key, 0))
+            if val > 0 and self._applied.get(key) != val:
+                cap.set(prop, val)
+                self._applied[key] = val
+        aw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        ah = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        af = cap.get(cv2.CAP_PROP_FPS)
+        return {"main": inputs.get('raw_frame'), "width": aw, "height": ah, "fps": round(af, 1)}
 
 class ImageInput(NodeProcessor):
     def __init__(self):
@@ -167,10 +181,9 @@ class ImageInput(NodeProcessor):
                 return {"main": None}
 
         if self.cached_img is not None:
-             out = {"main": self.cached_img}
-             # Generate a small preview
+             h, w = self.cached_img.shape[:2]
+             out = {"main": self.cached_img, "width": w, "height": h, "depth": "8-bit"}
              try:
-                 h, w = self.cached_img.shape[:2]
                  sc = 120 / h
                  preview_w = int(w * sc)
                  if preview_w > 0:
@@ -179,7 +192,6 @@ class ImageInput(NodeProcessor):
                     out["preview"] = base64.b64encode(buf).decode('utf-8')
              except Exception as e:
                  print(f"[Warning] Preview generation failed: {e}")
-             
              return out
         
         return {"main": None}
@@ -250,12 +262,18 @@ class MovieInput(NodeProcessor):
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
             except: pass
 
+        vw = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        vh = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        vfps = self.cap.get(cv2.CAP_PROP_FPS)
+        dur = round(self.total_frames / vfps, 1) if vfps > 0 else 0
         return {
-            "main": frame if ret else None, 
-            "total_frames": self.total_frames, 
+            "main": frame if ret else None,
+            "total_frames": self.total_frames,
             "current_frame": self.current_frame,
             "preview": preview_b64,
-            "filename": os.path.basename(full_path)
+            "filename": os.path.basename(full_path),
+            "width": vw, "height": vh,
+            "fps": round(vfps, 1), "duration": dur,
         }
 
 class SolidColorNode(NodeProcessor):

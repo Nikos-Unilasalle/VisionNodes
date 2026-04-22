@@ -127,9 +127,18 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 };
 
 // --- NODES ---
-export const InputWebcamNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Webcam" icon={Camera} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]} />
-));
+export const InputWebcamNode = memo(({ selected, data }: any) => {
+  const nd = data.node_data || {};
+  return (
+    <BaseNode title="Webcam" icon={Camera} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
+      {nd.width ? (
+        <div className="px-1 pb-1">
+          <div className="text-[10px] font-mono text-accent font-bold">{nd.width}×{nd.height} · {nd.fps}fps · 8-bit BGR</div>
+        </div>
+      ) : null}
+    </BaseNode>
+  );
+});
 
 export const InputImageNode = memo(({ selected, data }: any) => {
   const preview = data.node_data?.preview;
@@ -186,6 +195,11 @@ export const InputImageNode = memo(({ selected, data }: any) => {
         >
           <Search size={20} className="text-gray-500 mb-2" />
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Image</div>
+        </div>
+      )}
+      {data.node_data?.width && (
+        <div className="px-1 pt-1">
+          <div className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height} · 8-bit BGR</div>
         </div>
       )}
     </BaseNode>
@@ -248,10 +262,17 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
         )}
 
         <div className="space-y-3">
-          <div className="p-3 bg-white/5 rounded-2xl border border-white/5 group-hover:border-accent/20 transition-all duration-300">
-            <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Source Path</div>
-            <div className="text-[11px] font-mono text-white/70 truncate">{data.params?.path || "No path selected..."}</div>
-          </div>
+          {(data.node_data?.width || data.node_data?.fps) && (
+            <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+              <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Video Info</div>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {data.node_data?.width && <span className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height}</span>}
+                {data.node_data?.fps   && <span className="text-[10px] font-mono text-white/60">{data.node_data.fps} fps</span>}
+                {data.node_data?.duration && <span className="text-[10px] font-mono text-white/60">{data.node_data.duration}s</span>}
+                <span className="text-[10px] font-mono text-white/30">8-bit</span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
@@ -308,7 +329,7 @@ export const GeomResizeNode = memo(({ selected, data }: any) => (
 
 export const AnalysisFaceMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_faces || 3;
-  const outputs = [{id: 'main', color: 'image'}, {id: 'faces_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `face_${i}`, color: 'data' }))];
+  const outputs = [{id: 'main', color: 'image'}, {id: 'faces_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `face_${i}`, color: 'dict' }))];
   return (
     <BaseNode title="Face Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
@@ -316,7 +337,7 @@ export const AnalysisFaceMPNode = memo(({ selected, data }: any) => {
 
 export const AnalysisHandMPNode = memo(({ selected, data }: any) => {
   const max = data.params?.max_hands || 2;
-  const outputs = [{id: 'main', color: 'image'}, {id: 'hands_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `hand_${i}`, color: 'data' }))];
+  const outputs = [{id: 'main', color: 'image'}, {id: 'hands_list', color: 'list'}, ...Array.from({ length: max }).map((_, i) => ({ id: `hand_${i}`, color: 'dict' }))];
   return (
     <BaseNode title="Hand Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
