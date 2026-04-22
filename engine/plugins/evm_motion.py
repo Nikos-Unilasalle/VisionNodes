@@ -12,10 +12,14 @@ _INT_W, _INT_H = 320, 240  # fixed internal resolution for motion EVM
     description=(
         "Eulerian Video Magnification — motion amplification (Wu et al. 2012). "
         "Amplifies subtle spatial motions via Laplacian pyramid + IIR bandpass per level. "
+        "Optional mask input: restricts both analysis and amplification to masked pixels. "
         "lambda_c attenuates fine spatial scales (paper: 80px for motion). "
         "motion_mag output = mean absolute motion amplitude per frame."
     ),
-    inputs=[{'id': 'image', 'color': 'image'}],
+    inputs=[
+        {'id': 'image', 'color': 'image'},
+        {'id': 'mask',  'color': 'mask'},
+    ],
     outputs=[
         {'id': 'main',       'color': 'image'},
         {'id': 'motion_mag', 'color': 'scalar'},
@@ -35,6 +39,12 @@ class EVMMotionNode(NodeProcessor):
     low_cutoff / high_cutoff: mHz.
     lambda_c: spatial wavelength cutoff (px). Level l has wavelength 2^(l+1)px.
               Levels below lambda_c get attenuated proportionally.
+
+    Mask workflow (when mask connected):
+      1. Bounding-box crop → Laplacian pyramid + IIR on small patch only  (compute saving)
+      2. motion_mag averaged on masked pixels only                         (better SNR)
+      3. Amplification blended back with mask weight                       (no background artifacts)
+
     Internal processing at 320×240 — stable state regardless of crop size variation.
     """
 
@@ -68,7 +78,8 @@ class EVMMotionNode(NodeProcessor):
         return result
 
     def process(self, inputs, params):
-        img = inputs.get('image')
+        img  = inputs.get('image')
+        mask = inputs.get('mask')
         if img is None:
             return {'main': None, 'motion_mag': 0.0, 'motion_vis': None}
 
@@ -87,9 +98,28 @@ class EVMMotionNode(NodeProcessor):
         r_high = 1.0 - np.exp(-2.0 * np.pi * high_hz / fps)
         r_low  = 1.0 - np.exp(-2.0 * np.pi * low_hz  / fps)
 
-        # Fixed internal resolution — prevents state resets on crop size changes
         h, w = img.shape[:2]
-        frame_small = cv2.resize(img, (_INT_W, _INT_H)).astype(np.float32) / 255.0
+
+        # --- Normalise mask → float weight map and bounding box ---
+        has_mask = False
+        mask_f   = None
+        x1, y1, x2, y2 = 0, 0, w, h
+
+        if mask is not None:
+            m = mask if mask.ndim == 2 else cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+            m = cv2.resize(m, (w, h)) if m.shape[:2] != (h, w) else m
+            if m.any():
+                has_mask = True
+                mask_f   = (m > 0).astype(np.float32)[:, :, np.newaxis]
+                bx, by, bw, bh = cv2.boundingRect((m > 0).astype(np.uint8))
+                pad = 8
+                x1 = max(0, bx - pad);  y1 = max(0, by - pad)
+                x2 = min(w, bx+bw+pad); y2 = min(h, by+bh+pad)
+
+        roi = img[y1:y2, x1:x2]
+
+        # Fixed internal resolution — prevents state resets on crop size changes
+        frame_small = cv2.resize(roi, (_INT_W, _INT_H)).astype(np.float32) / 255.0
 
         pyr = self._build_laplacian_pyramid(frame_small, levels)
 
@@ -97,7 +127,7 @@ class EVMMotionNode(NodeProcessor):
             self.low1 = [lv.copy() for lv in pyr]
             self.low2 = [lv.copy() for lv in pyr]
 
-        amp_pyr = []
+        amp_pyr       = []
         motion_signal = 0.0
 
         for l, lv in enumerate(pyr):
@@ -108,20 +138,44 @@ class EVMMotionNode(NodeProcessor):
             self.low2[l] = (1.0 - r_low)  * self.low2[l] + r_low  * lv
             filtered = self.low1[l] - self.low2[l]
 
-            motion_signal += float(np.mean(np.abs(filtered))) * alpha_eff
+            # Signal: masked pixels only if mask available (Strategy 2)
+            if has_mask:
+                lh, lw = filtered.shape[:2]
+                roi_mask_lv = cv2.resize(
+                    (mask_f[y1:y2, x1:x2, 0] * 255).astype(np.uint8),
+                    (lw, lh)) > 0
+                if roi_mask_lv.any():
+                    motion_signal += float(np.mean(np.abs(filtered)[roi_mask_lv])) * alpha_eff
+                else:
+                    motion_signal += float(np.mean(np.abs(filtered))) * alpha_eff
+            else:
+                motion_signal += float(np.mean(np.abs(filtered))) * alpha_eff
+
             amp_pyr.append(lv + alpha_eff * filtered)
 
         reconstructed_small = self._collapse_laplacian_pyramid(amp_pyr)
         reconstructed_small = np.clip(reconstructed_small, 0.0, 1.0)
 
-        # Scale back to original frame size
-        reconstructed = cv2.resize(reconstructed_small, (w, h))
-        result = (reconstructed * 255).astype(np.uint8)
+        # Scale back to roi size
+        roi_h, roi_w = y2 - y1, x2 - x1
+        reconstructed_roi = cv2.resize(reconstructed_small, (roi_w, roi_h))
+
+        # Blend amplification with mask and paste into full frame (Strategy 1 + 3)
+        result = img.astype(np.float32) / 255.0
+        if has_mask:
+            roi_mask_f = mask_f[y1:y2, x1:x2]
+            orig_roi   = result[y1:y2, x1:x2]
+            result[y1:y2, x1:x2] = orig_roi * (1.0 - roi_mask_f) + reconstructed_roi * roi_mask_f
+        else:
+            result[y1:y2, x1:x2] = reconstructed_roi
+        result = (np.clip(result, 0.0, 1.0) * 255).astype(np.uint8)
 
         # Motion delta visualization
-        orig_small = cv2.resize(img.astype(np.float32) / 255.0, (_INT_W, _INT_H))
+        orig_small = cv2.resize(roi.astype(np.float32) / 255.0, (_INT_W, _INT_H))
         delta_small = np.clip(0.5 + (reconstructed_small - orig_small) * 3.0, 0.0, 1.0)
-        motion_vis = (cv2.resize(delta_small, (w, h)) * 255).astype(np.uint8)
+        motion_vis_roi = (cv2.resize(delta_small, (roi_w, roi_h)) * 255).astype(np.uint8)
+        motion_vis = np.full((h, w, 3), 128, dtype=np.uint8)
+        motion_vis[y1:y2, x1:x2] = motion_vis_roi
 
         return {
             'main':       result,

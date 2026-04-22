@@ -5,10 +5,10 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { 
-  Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info, 
+  Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play, Save, FolderOpen, BookOpen, Type
+  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -182,6 +182,7 @@ function App() {
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
+  const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
@@ -831,6 +832,31 @@ function App() {
                 }
               }
             }} />}
+            {pickColorNodeId && (
+              <div
+                className="absolute inset-0 z-30"
+                style={{ cursor: 'crosshair' }}
+                onClick={(e) => {
+                  const container = e.currentTarget.parentElement!;
+                  const imgEl = container.querySelector('img') as HTMLImageElement | null;
+                  if (!imgEl || !frame) return;
+                  const rect = imgEl.getBoundingClientRect();
+                  const px = e.clientX - rect.left;
+                  const py = e.clientY - rect.top;
+                  // sample via canvas
+                  const canvas = document.createElement('canvas');
+                  canvas.width = imgEl.naturalWidth;
+                  canvas.height = imgEl.naturalHeight;
+                  const ctx = canvas.getContext('2d')!;
+                  ctx.drawImage(imgEl, 0, 0);
+                  const scaleX = imgEl.naturalWidth / rect.width;
+                  const scaleY = imgEl.naturalHeight / rect.height;
+                  const [r, g, b] = ctx.getImageData(Math.floor(px * scaleX), Math.floor(py * scaleY), 1, 1).data;
+                  updateNodeParams(pickColorNodeId, { r, g, b });
+                  setPickColorNodeId(null);
+                }}
+              />
+            )}
             <div
               className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-10 flex items-end justify-end pb-1 pr-1 opacity-0 group-hover:opacity-100 transition-opacity"
               onMouseDown={(e) => {
@@ -974,14 +1000,52 @@ function App() {
                     {selectedNode.type === 'geom_flip' && (
                       <Slider label="Flip Code (0,1,-1)" val={selectedNode.data.params.flip_mode || 1} min={-1} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {flip_mode: v})} />
                     )}
-                    {selectedNode.type === 'filter_color_mask' && (
-                      <>
-                        <Slider label="Hue Min" val={selectedNode.data.params.h_min || 0} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_min: v})} />
-                        <Slider label="Hue Max" val={selectedNode.data.params.h_max || 179} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_max: v})} />
-                        <Slider label="Sat Min" val={selectedNode.data.params.s_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {s_min: v})} />
-                        <Slider label="Value Min" val={selectedNode.data.params.v_min || 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {v_min: v})} />
-                      </>
-                    )}
+                    {selectedNode.type === 'filter_color_mask' && (() => {
+                      const mode = selectedNode.data.params.mode ?? 0;
+                      const r = selectedNode.data.params.r ?? 128;
+                      const g = selectedNode.data.params.g ?? 128;
+                      const b = selectedNode.data.params.b ?? 128;
+                      return (
+                        <>
+                          <SelectInput
+                            label="Mode"
+                            val={mode}
+                            options={['HSV Range', 'RGB + Threshold']}
+                            onChange={(v: number) => updateNodeParams(selectedNode.id, {mode: v})}
+                          />
+                          {mode === 0 ? (
+                            <>
+                              <Slider label="Hue Min" val={selectedNode.data.params.h_min ?? 0} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_min: v})} />
+                              <Slider label="Hue Max" val={selectedNode.data.params.h_max ?? 179} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_max: v})} />
+                              <Slider label="Sat Min" val={selectedNode.data.params.s_min ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {s_min: v})} />
+                              <Slider label="Value Min" val={selectedNode.data.params.v_min ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {v_min: v})} />
+                            </>
+                          ) : (
+                            <>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-400">Target Color</span>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded border border-[#333]" style={{backgroundColor: `rgb(${r},${g},${b})`}} />
+                                    <button
+                                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors ${pickColorNodeId === selectedNode.id ? 'bg-accent text-black border-accent' : 'border-[#333] text-gray-300 hover:border-accent/50'}`}
+                                      onClick={() => setPickColorNodeId(prev => prev === selectedNode.id ? null : selectedNode.id)}
+                                    >
+                                      <Pipette size={11} />
+                                      Pick
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              <Slider label="R" val={r} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
+                              <Slider label="G" val={g} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
+                              <Slider label="B" val={b} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
+                              <Slider label="Threshold" val={selectedNode.data.params.threshold ?? 30} min={1} max={200} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                     {selectedNode.type === 'filter_morphology' && (
                       <>
                         <Slider label="Operation (0=Dilate, 1=Erode)" val={selectedNode.data.params.operation || 0} min={0} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {operation: v})} />
