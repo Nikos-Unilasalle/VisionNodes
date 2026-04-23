@@ -144,4 +144,12 @@ class MathDistanceNode(NodeProcessor):
         
         return {'result': math.sqrt((x2 - x1)**2 + (y2 - y1)**2)}
 
+@vision_node(type_id='scalar_input', label='Number', category='math', icon='Hash',
+             inputs=[],
+             outputs=[{'id': 'value', 'color': 'scalar'}],
+             params=[{'id': 'value', 'label': 'Value', 'type': 'number', 'default': 0}])
+class ScalarInputNode(NodeProcessor):
+    def process(self, inputs, params):
+        return {'value': float(params.get('value', 0))}
+
 

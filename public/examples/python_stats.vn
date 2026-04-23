@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    { "id": "src-1",  "type": "input_webcam",  "position": { "x": 50,  "y": 150 }, "data": { "label": "Webcam",        "params": {} } },
+    { "id": "py-1",   "type": "logic_python",  "position": { "x": 300, "y": 150 }, "data": { "label": "Custom Script", "params": { "code": "# Invert image and get mean\nout_main = 255 - a if a is not None else None\nif a is not None:\n    out_scalar = float(np.mean(a))\n    out_any = f'Avg Brightness: {out_scalar:.1f}'" } } },
+    { "id": "disp-1", "type": "output_display","position": { "x": 550, "y": 150 }, "data": { "label": "Inverted View", "params": {} } },
+    { "id": "ins-1",  "type": "data_inspector","position": { "x": 550, "y": 350 }, "data": { "label": "Stats View",    "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1", "target": "py-1",   "sourceHandle": "image__main",  "targetHandle": "any__a" },
+    { "id": "e2", "source": "py-1",  "target": "disp-1", "sourceHandle": "image__main",  "targetHandle": "image__main" },
+    { "id": "e3", "source": "py-1",  "target": "ins-1",  "sourceHandle": "any__out_any", "targetHandle": "any__data" }
+  ]
+}

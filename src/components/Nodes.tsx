@@ -245,7 +245,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   };
 
   return (
-    <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
+    <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}, {id: 'frame', label: 'Frame', color: 'scalar'}]}>
       <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
         {data.node_data?.preview && (
           <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
@@ -561,7 +561,10 @@ const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness'
 export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = data.node_data?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
-  const accentBorder = selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]';
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const cIdx = data?.params?.color_index;
+  const customBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
+  const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]');
 
   // Extract available keys from dict or list-of-dicts
   const keys = useMemo(() => {
@@ -605,17 +608,18 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
       />
       <div
         className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
-        style={{ position: 'relative', zIndex: 0 }}
+        style={{ position: 'relative', zIndex: 0, ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) }}
       >
         <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
           <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
         </div>
 
         {/* Title bar */}
-        <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0">
+        <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0"
+             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
           <div className="flex items-center gap-3 truncate">
-            <Eye size={14} className="text-gray-400 shrink-0" />
-            <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">Inspector</span>
+            <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
+            <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>Inspector</span>
           </div>
           {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
         </div>

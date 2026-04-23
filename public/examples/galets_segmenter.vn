@@ -1,0 +1,40 @@
+{
+  "nodes": [
+    { "id": "src-1",              "type": "input_image",              "position": { "x": -452, "y": 291 }, "data": { "label": "Billes (billes.jpg)",      "params": { "path": "samples/galets.jpg" } } },
+    { "id": "node-1776885243551", "type": "util_roi_polygon",         "position": { "x": -209, "y": 274 }, "data": { "label": "ROI Polygon",              "params": { "points": "[{\"x\":0.045,\"y\":0.002},{\"x\":0.049,\"y\":0.988},{\"x\":0.947,\"y\":0.988},{\"x\":0.945,\"y\":0}]" } } },
+    { "id": "node-1776885277292", "type": "geom_perspective",         "position": { "x": 42,   "y": 299 }, "data": { "label": "Perspective Warp",         "params": {} } },
+    { "id": "gray-1",             "type": "filter_gray",              "position": { "x": 326,  "y": 374 }, "data": { "label": "Grayscale",                "params": {} } },
+    { "id": "thresh-1",           "type": "feat_threshold_adv",       "position": { "x": 326,  "y": 248 }, "data": { "label": "Otsu (billes = white)",    "params": { "mode": 0, "threshold": 95 } } },
+    { "id": "morph-open-1",       "type": "feat_morphology_adv",      "position": { "x": 583,  "y": 154 }, "data": { "label": "Opening (Remove Noise)",   "params": { "operation": 0, "shape": 2, "size": 9.96, "iterations": 5 } } },
+    { "id": "morph-close-1",      "type": "feat_morphology_adv",      "position": { "x": 583,  "y": 257 }, "data": { "label": "Closing (Fill Holes)",     "params": { "operation": 1, "shape": 2, "size": 2, "iterations": 1 } } },
+    { "id": "dist-1",             "type": "feat_distance_transform",  "position": { "x": 585,  "y": 362 }, "data": { "label": "Distance Transform",       "params": { "dist_type": 2, "mask_size": 0 } } },
+    { "id": "thresh-dist-1",      "type": "feat_threshold_adv",       "position": { "x": 585,  "y": 492 }, "data": { "label": "Peak Threshold (70%)",     "params": { "mode": 0, "threshold": 53 } } },
+    { "id": "markers-1",          "type": "feat_connected_components","position": { "x": 856,  "y": 295 }, "data": { "label": "Seed Markers",             "params": {} } },
+    { "id": "filter-1",           "type": "feat_marker_filter",       "position": { "x": 859,  "y": 457 }, "data": { "label": "Filter Small Fragments",   "params": { "min_area": 200, "max_area": 500000, "area_unit": 0, "remap_ids": 1 } } },
+    { "id": "wshed-1",            "type": "feat_watershed",           "position": { "x": 1235, "y": 276 }, "data": { "label": "Watershed",                "params": { "visualization": 2, "boundary_color": 0, "boundary_thickness": 4, "region_alpha": 0 } } },
+    { "id": "analysis-1",         "type": "sci_marker_analysis",      "position": { "x": 1236, "y": 436 }, "data": { "label": "Marker Analysis",          "params": { "show_labels": 1, "show_points": 1, "font_scale": 0.8, "thickness": 3, "coord_type": 0 } } },
+    { "id": "disp-1",             "type": "output_display",           "position": { "x": 1511, "y": 250 }, "data": { "label": "Segmentation View",        "params": {} } },
+    { "id": "disp-2",             "type": "output_display",           "position": { "x": 1520, "y": 430 }, "data": { "label": "Marble Analysis View",     "params": {} } },
+    { "id": "count-ins-1",        "type": "data_inspector",           "position": { "x": 1526, "y": 599 }, "data": { "label": "Marble Count",             "params": {} } }
+  ],
+  "edges": [
+    { "id": "e-src-roi",        "source": "src-1",              "sourceHandle": "image__main",    "target": "node-1776885243551", "targetHandle": "image__image" },
+    { "id": "e-1776885282244",  "source": "node-1776885243551", "sourceHandle": "list__pts",      "target": "node-1776885277292", "targetHandle": "list__src_pts" },
+    { "id": "e-1776885283524",  "source": "node-1776885243551", "sourceHandle": "image__main",    "target": "node-1776885277292", "targetHandle": "image__image" },
+    { "id": "e-1776885285762",  "source": "node-1776885277292", "sourceHandle": "image__main",    "target": "gray-1",             "targetHandle": "image__image" },
+    { "id": "e2",               "source": "gray-1",             "sourceHandle": "image__main",    "target": "thresh-1",           "targetHandle": "image__image" },
+    { "id": "e3",               "source": "thresh-1",           "sourceHandle": "mask__mask",     "target": "morph-open-1",       "targetHandle": "any__mask" },
+    { "id": "e4",               "source": "morph-open-1",       "sourceHandle": "mask__mask",     "target": "morph-close-1",      "targetHandle": "any__mask" },
+    { "id": "e5",               "source": "morph-close-1",      "sourceHandle": "mask__mask",     "target": "dist-1",             "targetHandle": "any__mask" },
+    { "id": "e-1776884794323",  "source": "dist-1",             "sourceHandle": "image__main",    "target": "thresh-dist-1",      "targetHandle": "image__image" },
+    { "id": "e-1776884799928",  "source": "thresh-dist-1",      "sourceHandle": "mask__mask",     "target": "markers-1",          "targetHandle": "any__mask" },
+    { "id": "e8",               "source": "markers-1",          "sourceHandle": "any__markers",   "target": "filter-1",           "targetHandle": "any__markers" },
+    { "id": "e10",              "source": "filter-1",           "sourceHandle": "any__markers_out","target": "wshed-1",            "targetHandle": "any__markers" },
+    { "id": "e-persp-wshed",    "source": "node-1776885277292", "sourceHandle": "image__main",    "target": "wshed-1",            "targetHandle": "image__image" },
+    { "id": "e11",              "source": "wshed-1",            "sourceHandle": "image__main",    "target": "disp-1",             "targetHandle": "image__main" },
+    { "id": "e12",              "source": "wshed-1",            "sourceHandle": "any__markers_out","target": "analysis-1",        "targetHandle": "any__markers" },
+    { "id": "e-1776885477693",  "source": "wshed-1",            "sourceHandle": "image__main",    "target": "analysis-1",         "targetHandle": "image__image" },
+    { "id": "e14",              "source": "analysis-1",         "sourceHandle": "image__main",    "target": "disp-2",             "targetHandle": "image__main" },
+    { "id": "e-1776885491418",  "source": "analysis-1",         "sourceHandle": "scalar__count",  "target": "count-ins-1",        "targetHandle": "any__data" }
+  ]
+}

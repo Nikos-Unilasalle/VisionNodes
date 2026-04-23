@@ -1,0 +1,21 @@
+{
+  "nodes": [
+    { "id": "src-1",   "type": "input_image",  "position": { "x": 50,  "y": 50  }, "data": { "label": "Template Image",    "params": {} } },
+    { "id": "src-2",   "type": "input_image",  "position": { "x": 50,  "y": 300 }, "data": { "label": "Scene Image",       "params": {} } },
+    { "id": "orb-1",   "type": "feat_orb",     "position": { "x": 300, "y": 50  }, "data": { "label": "ORB A",             "params": { "n_features": 500 } } },
+    { "id": "orb-2",   "type": "feat_orb",     "position": { "x": 300, "y": 300 }, "data": { "label": "ORB B",             "params": { "n_features": 500 } } },
+    { "id": "match-1", "type": "feat_matcher", "position": { "x": 550, "y": 175 }, "data": { "label": "Feature Matcher",   "params": { "method": 0, "norm": 1, "max_matches": 50 } } },
+    { "id": "disp-1",  "type": "output_display","position":{ "x": 850, "y": 175 }, "data": { "label": "Matches View",      "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",   "target": "orb-1",   "sourceHandle": "image__main",      "targetHandle": "image__image" },
+    { "id": "e2", "source": "src-2",   "target": "orb-2",   "sourceHandle": "image__main",      "targetHandle": "image__image" },
+    { "id": "e3", "source": "orb-1",   "target": "match-1", "sourceHandle": "any__descriptors", "targetHandle": "any__des1" },
+    { "id": "e4", "source": "orb-2",   "target": "match-1", "sourceHandle": "any__descriptors", "targetHandle": "any__des2" },
+    { "id": "e5", "source": "orb-1",   "target": "match-1", "sourceHandle": "list__keypoints",  "targetHandle": "list__kp1" },
+    { "id": "e6", "source": "orb-2",   "target": "match-1", "sourceHandle": "list__keypoints",  "targetHandle": "list__kp2" },
+    { "id": "e7", "source": "src-1",   "target": "match-1", "sourceHandle": "image__main",      "targetHandle": "image__img1" },
+    { "id": "e8", "source": "src-2",   "target": "match-1", "sourceHandle": "image__main",      "targetHandle": "image__img2" },
+    { "id": "e9", "source": "match-1", "target": "disp-1",  "sourceHandle": "image__main",      "targetHandle": "image__main" }
+  ]
+}
