@@ -83,6 +83,20 @@ except Exception as e:
 NODE_SCHEMAS = []
 NODE_CLASS_REGISTRY = {}
 
+# Thread-safe notification queue — plugins call send_notification(), engine drains each frame
+import queue as _queue
+_notification_queue = _queue.Queue()
+
+def send_notification(message, progress=None, level='info', notif_id=None):
+    """Send a progress/status notification to the frontend canvas."""
+    import uuid
+    _notification_queue.put_nowait({
+        'id': notif_id or ('notif_' + str(uuid.uuid4())[:8]),
+        'message': message,
+        'progress': progress,
+        'level': level,
+    })
+
 def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None, description=""):
     def decorator(cls):
         NODE_SCHEMAS.append({
@@ -912,6 +926,16 @@ class VisionEngine:
                     })
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
+            # Drain notification queue (filled by plugin threads)
+            while not _notification_queue.empty():
+                try:
+                    notif = _notification_queue.get_nowait()
+                    notif_msg = json.dumps({"type": "notification", **notif})
+                    if self.connected_clients:
+                        await asyncio.gather(*[c.send(notif_msg) for c in list(self.connected_clients)], return_exceptions=True)
+                except Exception:
+                    pass
+
             await asyncio.sleep(1/30)
 
     async def hdl(self, ws):

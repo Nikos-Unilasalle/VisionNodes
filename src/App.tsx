@@ -46,6 +46,10 @@ const nodeTypes = {
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
   analysis_pose_mp: N.AnalysisPoseMPNode,
+  analysis_head_pose: N.AnalysisHeadPoseNode,
+  transform_eye_crop: N.TransformEyeCropNode,
+  analysis_gaze: N.AnalysisGazeNode,
+  math_vec_to_screen: N.MathVecToScreenNode,
   analysis_flow: N.AnalysisFlowNode,
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_monitor: N.AnalysisMonitorNode,
@@ -85,6 +89,7 @@ const nodeTypes = {
   string_length: N.StringNode,
   string_case: N.StringNode,
   canvas_frame: N.CanvasFrameNode,
+  sci_plotter: N.ScientificPlotterNode,
 };
 
 const CATEGORIES = [
@@ -119,6 +124,9 @@ const CATEGORIES = [
     { type: 'analysis_face_mp', label: 'Face Tracker', description: 'Detects and tracks faces and facial landmarks (MediaPipe).' },
     { type: 'analysis_hand_mp', label: 'Hand Tracker', description: 'Detects and tracks hands and joints (MediaPipe).' },
     { type: 'analysis_pose_mp', label: 'Pose Tracker', description: 'Analyzes and tracks human body posture (33 keypoints) via MediaPipe.' },
+    { type: 'analysis_head_pose', label: 'Head Pose', description: 'Estimates 3D head orientation (yaw, pitch, roll) from facial landmarks via solvePnP.' },
+    { type: 'transform_eye_crop', label: 'Eye Crop', description: 'Crops and aligns left/right eye regions from facial landmarks. Reusable for any eye classifier.' },
+    { type: 'analysis_gaze', label: 'Gaze Estimator', description: 'Estimates gaze direction (yaw/pitch) via L2CS-Net. Requires pip install l2cs + weights.' },
     { type: 'analysis_flow', label: 'Optical Flow', description: 'Analyzes the movement of every pixel between two frames.' }
   ]},
   { id: 'features', label: 'Features', icon: Target, nodes: [
@@ -131,7 +139,8 @@ const CATEGORIES = [
   { id: 'visualize', label: 'Visualizers', icon: Eye, nodes: [
     { type: 'data_inspector', label: 'Inspect Unit', description: 'Displays the raw data content flowing through a link.' },
     { type: 'analysis_monitor', label: 'Universal Monitor', description: 'Ultra-polyvalent measurement tool (Flux, Areas, Brightness, Counting).' },
-    { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' }
+    { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' },
+    { type: 'sci_plotter', label: 'Plotter', description: 'Multi-series real-time graph. Connect up to 5 scalar or list inputs. Resizable.' },
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
     { type: 'draw_overlay', label: 'Visual Overlay', description: 'Draws shapes and text over the main video stream.' }
@@ -142,6 +151,7 @@ const CATEGORIES = [
     { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
   { id: 'math', label: 'Math', icon: Hash, nodes: [
+    { type: 'math_vec_to_screen', label: 'Vec → Screen', description: 'Maps a yaw/pitch direction vector to normalized screen coordinates (x, y). Smoothing + calibration.' },
     { type: 'math_add', label: 'Add', description: 'Adds two values (a + b).' },
     { type: 'math_sub', label: 'Subtract', description: 'Subtracts b from a (a - b).' },
     { type: 'math_mul', label: 'Multiply', description: 'Multiplies two values (a * b).' },
@@ -229,7 +239,7 @@ function App() {
     }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification } = useVisionEngine(handleCapture);
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
@@ -944,9 +954,54 @@ function App() {
             </Panel>
           </ReactFlow>
 
+          {/* Engine notification bar */}
+          {notifications.length > 0 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-2 w-[500px] max-w-[90vw]">
+              {notifications.map(n => {
+                const isError = n.level === 'error';
+                const isDone  = n.progress !== null && n.progress >= 1;
+                const isRunning = n.progress !== null && n.progress < 1;
+                return (
+                  <div key={n.id} className={`bg-[#111]/97 backdrop-blur border rounded-xl px-4 py-3 shadow-2xl ${isError ? 'border-red-500/40' : isDone ? 'border-green-500/30' : 'border-white/10'}`}>
+                    <div className="flex items-center gap-2">
+                      {isRunning && (
+                        <svg className="animate-spin shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="12" r="10" stroke="#333" strokeWidth="3"/>
+                          <path d="M12 2a10 10 0 0 1 10 10" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round"/>
+                        </svg>
+                      )}
+                      {isError  && <span className="text-red-400 text-[12px] shrink-0">✕</span>}
+                      {isDone   && <span className="text-green-400 text-[12px] shrink-0">✓</span>}
+                      <span className={`text-[11px] font-mono flex-1 min-w-0 break-words ${isError ? 'text-red-300' : 'text-white/80'}`}>
+                        {n.message}
+                      </span>
+                      {n.progress !== null && !isError && (
+                        <span className="text-[10px] text-white/40 shrink-0 ml-1">{Math.round(n.progress * 100)}%</span>
+                      )}
+                      {(isError || isDone) && (
+                        <button
+                          onClick={() => dismissNotification(n.id)}
+                          className="ml-2 text-white/30 hover:text-white/70 shrink-0 text-[14px] leading-none transition-colors"
+                        >×</button>
+                      )}
+                    </div>
+                    {n.progress !== null && (
+                      <div className="mt-2 h-1 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${isError ? 'bg-red-500' : isDone ? 'bg-green-500' : 'bg-blue-500'}`}
+                          style={{ width: `${Math.min(100, Math.round(n.progress * 100))}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <AnimatePresence>
             {roiEditingId && (
-               <ROIEditorOverlay 
+               <ROIEditorOverlay
                  nodeId={roiEditingId} 
                  node={nodesWithData.find(n => n.id === roiEditingId)}
                  nodesData={nodesData}

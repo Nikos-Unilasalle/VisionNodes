@@ -28,7 +28,8 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
     description="Rendu visuel des tracks SORT/DeepSORT : boîtes colorées par ID, labels et trails de trajectoire.",
     inputs=[
         {'id': 'image',  'color': 'image'},
-        {'id': 'tracks', 'color': 'list'}
+        {'id': 'tracks', 'color': 'list'},
+        {'id': 'point',  'color': 'dict'}
     ],
     outputs=[
         {'id': 'main',   'color': 'image'},
@@ -52,14 +53,14 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
 class TrackVisualizerNode(NodeProcessor):
     def __init__(self):
         super().__init__()
-        # Historique des centroïdes par track_id
         self._trails: dict[int, deque] = defaultdict(lambda: deque(maxlen=120))
-        # IDs actifs au dernier frame (pour purger les trails obsolètes)
         self._active_ids: set[int] = set()
+        self._point_trail: deque = deque(maxlen=120)
 
     def process(self, inputs: dict, params: dict) -> dict:
         image  = inputs.get('image')
         tracks = inputs.get('tracks', [])
+        point  = inputs.get('point')
 
         if image is None:
             return {'main': None}
@@ -171,5 +172,36 @@ class TrackVisualizerNode(NodeProcessor):
             if sid in self._trails:
                 del self._trails[sid]
         self._active_ids = current_ids
+
+        # ── Single point input ───────────────────────────────────────────────
+        if isinstance(point, dict):
+            pts = point.get('pts')
+            relative = point.get('relative', True)
+            if pts and len(pts) > 0:
+                px, py = pts[0]
+                if relative:
+                    px, py = int(px * w), int(py * h)
+                else:
+                    px, py = int(px), int(py)
+                self._point_trail.append((px, py))
+
+                pt_color = (
+                    point.get('b', 0),
+                    point.get('g', 255),
+                    point.get('r', 80),
+                )
+                radius = point.get('thickness', 8)
+
+                # Trail
+                if show_trail and len(self._point_trail) > 1:
+                    pts_list = list(self._point_trail)[-trail_length:]
+                    for k in range(1, len(pts_list)):
+                        alpha = k / len(pts_list)
+                        lw = max(1, int(thickness * alpha))
+                        cv2.line(res, pts_list[k - 1], pts_list[k], pt_color, lw)
+
+                cv2.circle(res, (px, py), radius, pt_color, -1)
+        else:
+            self._point_trail.clear()
 
         return {'main': res}

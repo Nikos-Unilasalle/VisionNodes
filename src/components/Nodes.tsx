@@ -4,7 +4,8 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
-  Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp
+  Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
+  Crosshair, Monitor
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -13,9 +14,9 @@ const getIcon = (name: string, fallback = Box) => {
   const icon = (LucideIcons as any)[name];
   return icon || fallback;
 };
-import { 
+import {
   AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip,
-  BarChart, Bar, Cell
+  BarChart, Bar, Cell, LineChart, Line
 } from 'recharts';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
@@ -365,6 +366,30 @@ export const AnalysisPoseMPNode = memo(({ selected, data }: any) => {
     <BaseNode title="Pose Tracker" icon={User} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={outputs} />
   );
 });
+
+export const AnalysisHeadPoseNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Head Pose" icon={Crosshair} selected={selected} data={data} color="accent"
+    inputs={[{id: 'image', color: 'image'}, {id: 'face', color: 'dict'}]}
+    outputs={[{id: 'main', color: 'image'}, {id: 'pose', color: 'dict'}]} />
+));
+
+export const TransformEyeCropNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Eye Crop" icon={Eye} selected={selected} data={data} color="blue"
+    inputs={[{id: 'image', color: 'image'}, {id: 'face', color: 'dict'}]}
+    outputs={[{id: 'eye_left', color: 'image'}, {id: 'eye_right', color: 'image'}, {id: 'meta', color: 'dict'}]} />
+));
+
+export const AnalysisGazeNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Gaze Estimator" icon={Eye} selected={selected} data={data} color="green"
+    inputs={[{id: 'image', color: 'image'}]}
+    outputs={[{id: 'main', color: 'image'}, {id: 'gaze', color: 'dict'}, {id: 'yaw', color: 'scalar'}, {id: 'pitch', color: 'scalar'}]} />
+));
+
+export const MathVecToScreenNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Vec → Screen" icon={Monitor} selected={selected} data={data} color="green"
+    inputs={[{id: '3Dvector', color: 'dict'}, {id: 'image', color: 'image'}]}
+    outputs={[{id: 'main', color: 'image'}, {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'point', color: 'dict'}]} />
+));
 
 export const AnalysisFlowNode = memo(({ selected, data }: any) => (
   <BaseNode title="Optical Flow" icon={Activity} selected={selected} data={data} color="red" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'data', color: 'flow'}]} />
@@ -743,36 +768,105 @@ export const PythonNode = memo(({ selected, data }: any) => {
 // --- SCIENTIFIC NODES ---
 
 export const ScientificPlotterNode = memo(({ selected, data }: any) => {
-  const [history, setHistory] = React.useState<any[]>([]);
-  const val = data.node_data?.value;
+  const SERIES_COLORS = ['#22d3ee', '#22c55e', '#f97316', '#a855f7', '#f43f5e'];
+  const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
+  const nd = data.node_data || {};
+  const bufSize = Number(data.params?.buffer_size ?? 100);
+
+  const [histories, setHistories] = React.useState<Record<string, number[]>>({});
 
   React.useEffect(() => {
-    if (val !== undefined && val !== null) {
-      setHistory(prev => {
-        const next = [...prev, { time: Date.now(), v: val }];
-        const limit = data.params?.buffer_size || 100;
-        return next.slice(-limit);
-      });
-    }
-  }, [val, data.params?.buffer_size]);
+    setHistories(prev => {
+      const next: Record<string, number[]> = { ...prev };
+      let changed = false;
+      for (const k of KEYS) {
+        const v = (nd as any)[k];
+        if (v === undefined || v === null) continue;
+        if (typeof v === 'number') {
+          const cur = prev[k] ?? [];
+          if (cur.length === 0 || cur[cur.length - 1] !== v) {
+            next[k] = [...cur, v].slice(-bufSize);
+            changed = true;
+          }
+        } else if (Array.isArray(v)) {
+          next[k] = (v as any[]).map(Number).filter((n: number) => !isNaN(n)).slice(-bufSize);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [nd.v0, nd.v1, nd.v2, nd.v3, nd.v4, bufSize]);
+
+  const chartData = React.useMemo(() => {
+    const maxLen = Math.max(0, ...KEYS.map(k => histories[k]?.length ?? 0));
+    if (maxLen === 0) return [];
+    return Array.from({ length: maxLen }, (_, i) => {
+      const pt: any = { t: i };
+      for (const k of KEYS) {
+        const arr = histories[k];
+        if (arr && i < arr.length) pt[k] = arr[i];
+      }
+      return pt;
+    });
+  }, [histories]);
+
+  const activeSeries = KEYS.filter(k => (histories[k]?.length ?? 0) > 0);
+  const PORT_TOPS = ['20%', '35%', '50%', '65%', '80%'];
+  const minY = data.params?.min_y;
+  const maxY = data.params?.max_y;
+  const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
 
   return (
-    <BaseNode title="Plotter" icon={Activity} selected={selected} data={data} color="blue" inputs={[{id: 'value', color: 'scalar'}]} outputs={[{id: 'value', color: 'scalar'}]}>
-      <div className="h-20 w-full -mx-2 mt-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={history}>
-            <defs>
-              <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <Area type="monotone" dataKey="v" stroke="#22d3ee" strokeWidth={2} fillOpacity={1} fill="url(#colorV)" isAnimationActive={false} />
-            <YAxis hide domain={[data.params?.min_y ?? 'auto', data.params?.max_y ?? 'auto']} />
-          </AreaChart>
-        </ResponsiveContainer>
+    <div className="w-full h-full group/node" style={{ minWidth: 240, minHeight: 180, position: 'relative' }}>
+      <NodeResizer isVisible={selected} minWidth={240} minHeight={180}
+        color="var(--accent, #7c3aed)"
+        handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
+        lineStyle={{ borderColor: 'var(--accent, #7c3aed)', borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
+      />
+      <div className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]'} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}>
+        {KEYS.map((k, i) => (
+          <div key={`in-${k}`} className="absolute left-0 flex items-center pointer-events-none"
+               style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={k} color="any" top="50%" />
+            <span className="ml-[12px] text-[7px] font-bold uppercase" style={{ color: SERIES_COLORS[i] }}>{k}</span>
+          </div>
+        ))}
+        {KEYS.map((k, i) => (
+          <div key={`out-${k}`} className="absolute right-0 flex items-center justify-end pointer-events-none"
+               style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
+            <span className="mr-[12px] text-[7px] font-bold uppercase" style={{ color: SERIES_COLORS[i] }}>{k}</span>
+            <StyledHandle type="source" position={Position.Right} id={k} color="any" top="50%" />
+          </div>
+        ))}
+        <div className="bg-[#222] px-3 py-1.5 flex items-center gap-2 border-b border-[#333] rounded-t-xl shrink-0">
+          <Activity size={12} className="text-cyan-400 shrink-0" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Plotter</span>
+          <div className="ml-auto flex gap-1">
+            {activeSeries.map(k => (
+              <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
+                   style={{ backgroundColor: SERIES_COLORS[KEYS.indexOf(k)] }} />
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 min-h-0 w-full px-1 py-1">
+          {chartData.length === 0
+            ? <div className="w-full h-full flex items-center justify-center">
+                <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
+              </div>
+            : <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 2, right: 18, bottom: 0, left: 0 }}>
+                  <YAxis hide domain={yDomain} />
+                  {activeSeries.map(k => (
+                    <Line key={k} type="monotone" dataKey={k}
+                      stroke={SERIES_COLORS[KEYS.indexOf(k)]} strokeWidth={1.5}
+                      dot={false} isAnimationActive={false} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+          }
+        </div>
       </div>
-    </BaseNode>
+    </div>
   );
 });
 
