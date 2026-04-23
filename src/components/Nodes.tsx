@@ -49,12 +49,19 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
 };
 
 const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const cIdx = data?.params?.color_index;
+  const customBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
+  const customText = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : data?.params?.text_color;
+
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
                       color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
                       color === 'red' ? 'border-red-500 shadow-red-500/20' :
                       'border-gray-500 shadow-gray-500/20';
                       
+  const borderClass = customBg ? '' : (selected ? accentColor : 'border-[#333]');
+
   const totalInputs = inputs.length + var_count;
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
@@ -71,8 +78,12 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
   return (
     <div 
-        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${selected ? accentColor + ' shadow-lg scale-105' : 'border-[#333]'} shadow-2xl relative w-52`}
-        style={{ minHeight, ...(width ? { width: typeof width === 'number' ? `${width}px` : width } : {}) }}
+        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-52`}
+        style={{ 
+          minHeight, 
+          ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
+          ...(width ? { width: typeof width === 'number' ? `${width}px` : width } : {}) 
+        }}
     >
       {/* Inputs with Labels */}
       {inputs.map((inp: any, i: number) => {
@@ -97,10 +108,11 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
         );
       })}
 
-      <div className="bg-[#222] px-4 py-2 flex items-center justify-between border-b border-[#333] rounded-t-xl overflow-hidden group/header">
+      <div className="bg-[#222] px-4 py-2 flex items-center justify-between border-b border-[#333] rounded-t-[10px] overflow-hidden group/header"
+           style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <div className="flex items-center gap-3 truncate">
-          <Icon size={14} className="text-gray-400 group-hover:text-accent transition-colors shrink-0" />
-          <span className="font-bold text-[10px] uppercase tracking-widest text-gray-200 truncate">{title}</span>
+          <Icon size={14} className="shrink-0 transition-colors" style={customBg ? { color: customBg } : {}} />
+          <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>{title}</span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse" />}
@@ -865,12 +877,77 @@ export const UtilCSVExportNode = memo(({ selected, data }: any) => {
   );
 });
 
-const NOTE_PALETTE = [
-  { bg: '#a8e6cf', dark: '#1a3d2e' },
-  { bg: '#dcedbf', dark: '#2a3a1a' },
-  { bg: '#ffd4b8', dark: '#3a2010' },
-  { bg: '#ffa8a3', dark: '#3a1010' },
-  { bg: '#ff667d', dark: '#1a0a0a' },
+export const PALETTES = [
+  {
+    name: 'Astro',
+    colors: [
+      { bg: '#2B2B85', dark: '#ffffff' },
+      { bg: '#5C5EDC', dark: '#ffffff' },
+      { bg: '#8A8DF6', dark: '#111111' },
+      { bg: '#BBAEFE', dark: '#111111' },
+      { bg: '#FEADFE', dark: '#111111' }
+    ]
+  },
+  {
+    name: 'Moon',
+    colors: [
+      { bg: '#EAE9F5', dark: '#111111' },
+      { bg: '#B3C3DE', dark: '#111111' },
+      { bg: '#7698C3', dark: '#ffffff' },
+      { bg: '#486B8E', dark: '#ffffff' },
+      { bg: '#29405C', dark: '#ffffff' }
+    ]
+  },
+  {
+    name: 'Florest Moth',
+    colors: [
+      { bg: '#4A5D23', dark: '#ffffff' },
+      { bg: '#8F994B', dark: '#111111' },
+      { bg: '#C1C881', dark: '#111111' },
+      { bg: '#EAE6AA', dark: '#111111' },
+      { bg: '#E0AA90', dark: '#111111' }
+    ]
+  },
+  {
+    name: 'Cyberpunk Dreams',
+    colors: [
+      { bg: '#FF127B', dark: '#ffffff' },
+      { bg: '#C21584', dark: '#ffffff' },
+      { bg: '#741A8E', dark: '#ffffff' },
+      { bg: '#3C1361', dark: '#ffffff' },
+      { bg: '#1D0A35', dark: '#ffffff' }
+    ]
+  },
+  {
+    name: 'Night Winter',
+    colors: [
+      { bg: '#111F36', dark: '#ffffff' },
+      { bg: '#234476', dark: '#ffffff' },
+      { bg: '#406E9E', dark: '#ffffff' },
+      { bg: '#7DABC6', dark: '#111111' },
+      { bg: '#C8E2ED', dark: '#111111' }
+    ]
+  },
+  {
+    name: '90s Anime',
+    colors: [
+      { bg: '#FF645F', dark: '#ffffff' },
+      { bg: '#FFAD48', dark: '#111111' },
+      { bg: '#FFDE87', dark: '#111111' },
+      { bg: '#6FA4D2', dark: '#111111' },
+      { bg: '#5D4585', dark: '#ffffff' }
+    ]
+  },
+  {
+    name: 'Original VN',
+    colors: [
+      { bg: '#a8e6cf', dark: '#1a3d2e' },
+      { bg: '#dcedbf', dark: '#2a3a1a' },
+      { bg: '#ffd4b8', dark: '#3a2010' },
+      { bg: '#ffa8a3', dark: '#3a1010' },
+      { bg: '#ff667d', dark: '#1a0a0a' }
+    ]
+  }
 ];
 
 export const CanvasNoteNode = memo(({ selected, data }: any) => {
@@ -878,8 +955,10 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const text = data.params?.text || '';
-  const bgColor = data.params?.bg_color || '#ffd4b8';
-  const textColor = data.params?.text_color || '#3a2010';
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const cIdx = data?.params?.color_index;
+  const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#ffd4b8');
+  const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#3a2010');
 
   React.useEffect(() => {
     if (editing) textareaRef.current?.focus();
@@ -1052,8 +1131,10 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const title = data.params?.title || 'Frame Layer';
-  const bgColor = data.params?.bg_color || '#333333';
-  const textColor = data.params?.text_color || '#ffffff';
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const cIdx = data?.params?.color_index;
+  const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
+  const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#ffffff');
 
   return (
     <div className="relative group/frame w-full h-full">

@@ -193,6 +193,8 @@ function App() {
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
+  const [activePaletteIndex, setActivePaletteIndex] = useState(6); // 6 is Original VN
+  const [isPaletteSelectOpen, setIsPaletteSelectOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
@@ -286,7 +288,7 @@ function App() {
       }
       targetCat!.nodes.push({ type: schema.type, label: schema.label, schema: schema } as any);
     });
-    return cats;
+    return cats.sort((a, b) => a.label.localeCompare(b.label));
   }, [pluginSchemas]);
 
   const activeCategory: any = dynamicCategories.find(c => c.id === activeCategoryId) || dynamicCategories[0];
@@ -355,6 +357,7 @@ function App() {
           description,
           node_data: techData,
           dynamicColor,
+          activePaletteIndex,
           isVisualized: node.id === visualizedNodeId,
           onOpenEditor: () => setRoiEditingId(node.id),
           onChangeParams: (p: any) => {
@@ -647,6 +650,24 @@ function App() {
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
   }, []);
 
+  const coloredEdges = useMemo(() => {
+    return edges.map(edge => {
+      let strokeColor = '#555';
+      if (edge.sourceHandle) {
+        const sourceType = edge.sourceHandle.split('__')[0];
+        strokeColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || strokeColor;
+      }
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          stroke: strokeColor,
+          strokeWidth: 2,
+        }
+      };
+    });
+  }, [edges]);
+
   return (
     <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
       <header className="h-10 bg-[#151515] border-b border-[#222] flex items-center justify-between px-4 z-50">
@@ -662,6 +683,31 @@ function App() {
           </div>
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
           
+          <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button
+              onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
+              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
+            >
+              <Plus size={14} /> New
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={loadProject}
+              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
+            >
+              <FolderOpen size={14} /> Open
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={saveProject}
+              className="flex items-center gap-2 px-3 py-1 bg-accent/10 hover:bg-accent/20 rounded-md text-[10px] font-bold text-accent transition-all"
+            >
+              <Save size={14} /> Save .vn
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
           <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button 
               onClick={() => alignNodes('horizontal')}
@@ -689,27 +735,88 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <button
-            onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
-            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
-          >
-            <Plus size={14} /> New
-          </button>
-          <button
-            onClick={loadProject}
-            className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
-          >
-            <FolderOpen size={14} /> Open
-          </button>
-          <button
-            onClick={saveProject}
-            className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 hover:bg-accent/20 rounded-lg text-[10px] font-bold text-accent transition-all shadow-lg shadow-accent/5"
-          >
-            <Save size={14} /> Save .vn
-          </button>
+          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button 
+              onClick={() => addNode('input_image', 'Image File')}
+              title="Add Image Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <Image size={14} />
+            </button>
+            <button 
+              onClick={() => addNode('input_movie', 'Movie File')}
+              title="Add Movie Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <Film size={14} />
+            </button>
+            <button 
+              onClick={() => addNode('input_webcam', 'Webcam')}
+              title="Add Webcam Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <Camera size={14} />
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button 
+              onClick={() => addNode('canvas_note', 'Note')}
+              title="Add Note Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <Type size={14} />
+            </button>
+            <button 
+              onClick={() => addNode('canvas_frame', 'Frame')}
+              title="Add Frame Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <Layout size={14} />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
+           <div className="relative">
+              <button
+                onClick={() => setIsPaletteSelectOpen(!isPaletteSelectOpen)}
+                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+              >
+                <Palette size={14} /> Palette
+              </button>
+              <AnimatePresence>
+                {isPaletteSelectOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsPaletteSelectOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-hidden"
+                    >
+                      {N.PALETTES.map((pal, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => { setActivePaletteIndex(i); setIsPaletteSelectOpen(false); }}
+                          className={`w-full text-left p-2 rounded-lg group transition-all flex flex-col gap-1.5 ${i === activePaletteIndex ? 'bg-accent/20 border border-accent/30' : 'hover:bg-white/5 border border-transparent'}`}
+                        >
+                          <div className="text-[9px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">{pal.name}</div>
+                          <div className="flex h-3 w-full rounded overflow-hidden">
+                             {pal.colors.map((c, ci) => (
+                               <div key={ci} className="flex-1" style={{ backgroundColor: c.bg }} />
+                             ))}
+                          </div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+           </div>
+           
            <div className="relative">
               <button
                 onClick={() => setIsExamplesOpen(!isExamplesOpen)}
@@ -748,7 +855,7 @@ function App() {
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#080808]" onContextMenu={e => e.preventDefault()}>
           <ReactFlow
-            nodes={nodesWithData} edges={edges}
+            nodes={nodesWithData} edges={coloredEdges}
             onInit={setInstance}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} 
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
@@ -768,7 +875,7 @@ function App() {
                 onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
                 className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
               >
-                <Plus size={14} /> Add Module
+                <Plus size={14} /> Add Node
               </button>
             </Panel>
           </ReactFlow>
@@ -810,6 +917,31 @@ function App() {
                 <span>Save as Image...</span>
               </button>
               <div className="h-px bg-white/5 my-1 mx-2" />
+              
+              <div className="px-3 py-2 flex items-center justify-center gap-1.5 flex-wrap">
+                 {N.PALETTES[activePaletteIndex].colors.map((c: any, i: number) => (
+                    <button 
+                      key={i} 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
+                      }} 
+                      className="w-4 h-4 rounded-full border border-black/20 shadow-sm hover:scale-125 transition-transform" 
+                      style={{ backgroundColor: c.bg }} 
+                    />
+                 ))}
+                 <button 
+                    onClick={(e) => {
+                       e.stopPropagation();
+                       setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
+                    }} 
+                    className="w-4 h-4 rounded-full border border-white/20 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center text-[10px] text-gray-500 bg-transparent shrink-0"
+                 >
+                    ×
+                 </button>
+              </div>
+              <div className="h-px bg-white/5 my-1 mx-2" />
+
               <button
                 onClick={() => {
                   if (menu.id === visualizedNodeId) { setVisualizedNodeId(null); setPreviewNode(null); }
