@@ -8,7 +8,7 @@ import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette,
+  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3
 } from 'lucide-react';
 import * as N from './components/Nodes';
@@ -63,6 +63,7 @@ const nodeTypes = {
   output_display: N.OutputDisplayNode,
   logic_python: N.PythonNode,
   canvas_note: N.CanvasNoteNode,
+  canvas_reroute: N.CanvasRerouteNode,
   output_movie: N.OutputMovieNode,
   math_add: N.MathNode,
   math_sub: N.MathNode,
@@ -173,7 +174,8 @@ const CATEGORIES = [
   ] },
   { id: 'canvas', label: 'Canvas', icon: Type, nodes: [
     { type: 'canvas_note', label: 'Note', description: 'Annotation text block. Double-click to edit. Drag & resize freely.' },
-    { type: 'canvas_frame', label: 'Frame', description: 'A colored container to group and organize nodes visually.' }
+    { type: 'canvas_frame', label: 'Frame', description: 'Wraps and labels a group of nodes. Drag to encapsulate nodes.' },
+    { type: 'canvas_reroute', label: 'Reroute', description: 'Pass-through node to organize wires.' }
   ] }
 ];
 
@@ -567,7 +569,8 @@ function App() {
     const defaultStyle: Record<string, any> = {
       data_inspector: { width: 220, height: 200 },
       canvas_note: { width: 300, height: 180 },
-      canvas_frame: { width: 400, height: 400, zIndex: -1 },
+      canvas_reroute: { width: 16, height: 16 },
+      canvas_frame: { width: 500, height: 400, zIndex: -1 },
     };
     const nodeStyle = defaultStyle[type] || {};
     setNodes((nds) => {
@@ -671,22 +674,34 @@ function App() {
   }, []);
 
   const coloredEdges = useMemo(() => {
-    return edges.map(edge => {
-      let strokeColor = '#555';
+    const resolveColor = (edge: any, visited = new Set()): string => {
+      if (!edge || visited.has(edge.id)) return '#555';
+      visited.add(edge.id);
+      
+      const sourceNode = nodes.find(n => n.id === edge.source);
+      if (sourceNode?.type === 'canvas_reroute') {
+        const incomingEdge = edges.find(e => e.target === sourceNode.id);
+        if (incomingEdge) {
+          return resolveColor(incomingEdge, visited);
+        }
+      }
+      
       if (edge.sourceHandle) {
         const sourceType = edge.sourceHandle.split('__')[0];
-        strokeColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || strokeColor;
+        return (N.HANDLE_COLORS as any)[sourceType] || '#555';
       }
-      return {
-        ...edge,
-        style: {
-          ...edge.style,
-          stroke: strokeColor,
-          strokeWidth: 2,
-        }
-      };
-    });
-  }, [edges]);
+      return '#555';
+    };
+
+    return edges.map((edge: any) => ({
+      ...edge,
+      style: {
+        ...edge.style,
+        stroke: resolveColor(edge),
+        strokeWidth: 2,
+      }
+    }));
+  }, [edges, nodes]);
 
   return (
     <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
@@ -796,6 +811,13 @@ function App() {
             >
               <Layout size={14} />
             </button>
+            <button 
+              onClick={() => addNode('canvas_reroute', 'Reroute')}
+              title="Add Reroute Node"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <GitCommit size={14} />
+            </button>
           </div>
         </div>
 
@@ -882,7 +904,10 @@ function App() {
             onNodeDragStop={onNodeDragStop}
             onEdgeClick={(_, edge) => setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; })}
             nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
-            onNodeContextMenu={(e, node) => { e.preventDefault(); setMenu({ id: node.id, x: e.clientX, y: e.clientY }); }}
+            onNodeContextMenu={(e, node) => { 
+              e.preventDefault(); 
+              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY }); 
+            }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
