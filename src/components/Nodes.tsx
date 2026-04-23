@@ -657,20 +657,20 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
 
 
 
-export const DataListSelectorNode = memo(({ selected }: any) => (
-  <BaseNode title="List Selector" icon={Database} selected={selected} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
+export const DataListSelectorNode = memo(({ selected, data }: any) => (
+  <BaseNode title="List Selector" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
 ));
 
-export const DataCoordSplitterNode = memo(({ selected }: any) => (
-  <BaseNode title="Coord Splitter" icon={Database} selected={selected} color="green" inputs={[{id: 'dict_in', color: 'dict'}]} outputs={[
+export const DataCoordSplitterNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Coord Splitter" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'dict_in', color: 'dict'}]} outputs={[
     {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
   ]} />
 ));
 
 
 
-export const DataCoordCombineNode = memo(({ selected }: any) => (
-  <BaseNode title="Coord Combine" icon={Database} selected={selected} color="green" inputs={[
+export const DataCoordCombineNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Coord Combine" icon={Database} selected={selected} data={data} color="green" inputs={[
     {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
   ]} outputs={[
     {id: 'dict_out', color: 'dict'}
@@ -702,14 +702,14 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => (
 export const MathNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Math', icon: 'Calculator', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Calculator);
-  return <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
+  return <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
 });
 
 export const StringNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'String', icon: 'Type', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Type);
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
+    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
        {data.node_data?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{data.node_data.result}</div>}
     </BaseNode>
   );
@@ -753,7 +753,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   }, [val, data.params?.buffer_size]);
 
   return (
-    <BaseNode title="Plotter" icon={Activity} selected={selected} color="blue" inputs={[{id: 'value', color: 'scalar'}]} outputs={[{id: 'value', color: 'scalar'}]}>
+    <BaseNode title="Plotter" icon={Activity} selected={selected} data={data} color="blue" inputs={[{id: 'value', color: 'scalar'}]} outputs={[{id: 'value', color: 'scalar'}]}>
       <div className="h-20 w-full -mx-2 mt-1">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={history}>
@@ -782,7 +782,7 @@ export const ScientificStatsNode = memo(({ selected, data }: any) => {
   ];
 
   return (
-    <BaseNode title="Statistics" icon={Info} selected={selected} color="accent" inputs={[{id: 'data_list', color: 'list'}]} outputs={[
+    <BaseNode title="Statistics" icon={Info} selected={selected} data={data} color="accent" inputs={[{id: 'data_list', color: 'list'}]} outputs={[
       {id: 'mean', color: 'scalar'}, {id: 'median', color: 'scalar'}, {id: 'std', color: 'scalar'}, {id: 'min', color: 'scalar'}, {id: 'max', color: 'scalar'}
     ]}>
       <div className="grid grid-cols-2 gap-2 mt-2">
@@ -805,7 +805,7 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
   const remVar = () => data.onChangeParams?.({ var_count: Math.max(varCount - 1, 0) });
 
   return (
-    <BaseNode title="Draw Text" icon={Type} selected={selected} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount} width="w-80">
+    <BaseNode title="Draw Text" icon={Type} selected={selected} data={data} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount} width="w-80">
       <div className="flex flex-col gap-2 p-1 mx-6">
         <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
           <span className="text-[8px] font-black uppercase text-gray-500 font-mono tracking-tighter">Variables ({varCount})</span>
@@ -851,6 +851,7 @@ export const UtilCSVExportNode = memo(({ selected, data }: any) => {
       title="CSV Export" 
       icon={Database} 
       selected={selected} 
+      data={data}
       color="accent" 
       inputs={data.schema?.inputs || []}
       headerExtra={statusDot}

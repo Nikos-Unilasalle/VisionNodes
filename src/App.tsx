@@ -196,6 +196,7 @@ function App() {
   const [activePaletteIndex, setActivePaletteIndex] = useState(6); // 6 is Original VN
   const [isPaletteSelectOpen, setIsPaletteSelectOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
+  const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
   const previewAspect = useRef(16 / 9);
@@ -226,49 +227,6 @@ function App() {
   }, []);
 
   const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands } = useVisionEngine(handleCapture);
-
-  const saveProject = async () => {
-    try {
-      const path = await save({
-        defaultPath: 'project.vn',
-        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
-      });
-
-      if (path) {
-        const content = JSON.stringify({ nodes, edges }, null, 2);
-        await writeTextFile(path, content);
-        console.log('Project saved to', path);
-      }
-    } catch (err) {
-      console.error('Failed to save project:', err);
-    }
-  };
-
-  const loadProject = async () => {
-    try {
-      const path = await open({
-        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }],
-        multiple: false
-      });
-
-      if (path && typeof path === 'string') {
-        const content = await readTextFile(path);
-        const { nodes: newNodes, edges: newEdges } = JSON.parse(content);
-        setNodes(newNodes);
-        setEdges(newEdges);
-        updateGraph(newNodes, newEdges);
-      }
-    } catch (err) {
-      console.error('Failed to load project:', err);
-    }
-  };
-
-  const loadExample = (example: any) => {
-    setNodes(example.nodes);
-    setEdges(example.edges);
-    updateGraph(example.nodes, example.edges);
-    setIsExamplesOpen(false);
-  };
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
@@ -506,6 +464,68 @@ function App() {
     setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
     setEdges(eds => [...eds, ...newEdges]);
   }, []);
+
+  const saveProject = async () => {
+    try {
+      const path = await save({
+        defaultPath: 'project.vn',
+        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+      });
+
+      if (path) {
+        const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
+        const content = JSON.stringify({ nodes, edges, ui }, null, 2);
+        await writeTextFile(path, content);
+        console.log('Project saved to', path);
+      }
+    } catch (err) {
+      console.error('Failed to save project:', err);
+    }
+  };
+
+  const loadProject = async () => {
+    try {
+      const path = await open({
+        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }],
+        multiple: false
+      });
+
+      if (path && typeof path === 'string') {
+        const content = await readTextFile(path);
+        const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
+        setNodes(newNodes);
+        setEdges(newEdges);
+        if (ui) {
+            if (ui.previewSize) setPreviewSize(ui.previewSize);
+            if (ui.previewPos) setPreviewPos(ui.previewPos);
+            if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
+            if (ui.visualizedNodeId !== undefined) {
+               setVisualizedNodeId(ui.visualizedNodeId);
+               setPreviewNode(ui.visualizedNodeId);
+            }
+        }
+        updateGraph(newNodes, newEdges);
+      }
+    } catch (err) {
+      console.error('Failed to load project:', err);
+    }
+  };
+
+  const loadExample = (example: any) => {
+    setNodes(example.nodes);
+    setEdges(example.edges);
+    if (example.ui) {
+        if (example.ui.previewSize) setPreviewSize(example.ui.previewSize);
+        if (example.ui.previewPos) setPreviewPos(example.ui.previewPos);
+        if (example.ui.activePaletteIndex !== undefined) setActivePaletteIndex(example.ui.activePaletteIndex);
+        if (example.ui.visualizedNodeId !== undefined) {
+           setVisualizedNodeId(example.ui.visualizedNodeId);
+           setPreviewNode(example.ui.visualizedNodeId);
+        }
+    }
+    updateGraph(example.nodes, example.edges);
+    setIsExamplesOpen(false);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1013,6 +1033,8 @@ function App() {
           <motion.div
             drag
             dragMomentum={false}
+            animate={{ x: previewPos.x, y: previewPos.y }}
+            onDragEnd={(e, info) => setPreviewPos({ x: previewPos.x + info.offset.x, y: previewPos.y + info.offset.y })}
             whileHover={{ cursor: 'grab' }}
             whileDrag={{ cursor: 'grabbing', zIndex: 100 }}
             className="absolute bottom-6 left-[49px] bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
@@ -1117,16 +1139,10 @@ function App() {
                   <div className="space-y-8 pb-32">
                     {/* --- ALL SLIDERS --- */}
                     {(selectedNode.type === 'canvas_note' || selectedNode.type === 'canvas_frame') && (() => {
-                      const NOTE_PALETTE_INS = [
-                        { bg: '#a8e6cf', dark: '#1a3d2e', label: 'Padua' },
-                        { bg: '#dcedbf', dark: '#2a3a1a', label: 'Caper' },
-                        { bg: '#ffd4b8', dark: '#3a2010', label: 'Romantic' },
-                        { bg: '#ffa8a3', dark: '#3a1010', label: 'Cornflower' },
-                        { bg: '#ff667d', dark: '#1a0a0a', label: 'Watermelon' },
-                        { bg: '#333333', dark: '#ffffff', label: 'Obsidian' },
-                      ];
-                      const bgColor = selectedNode.data.params.bg_color || (selectedNode.type === 'canvas_frame' ? '#333333' : '#ffd4b8');
-                      const textColor = selectedNode.data.params.text_color || (selectedNode.type === 'canvas_frame' ? '#ffffff' : '#3a2010');
+                      const currentPalette = N.PALETTES[activePaletteIndex].colors;
+                      const cIdx = selectedNode.data.params.color_index;
+                      const bgColor = cIdx !== undefined ? currentPalette[cIdx % 5].bg : (selectedNode.data.params.bg_color || (selectedNode.type === 'canvas_frame' ? '#333333' : '#ffd4b8'));
+                      const textColor = cIdx !== undefined ? currentPalette[cIdx % 5].dark : (selectedNode.data.params.text_color || (selectedNode.type === 'canvas_frame' ? '#ffffff' : '#3a2010'));
                       return (
                         <>
                           {selectedNode.type === 'canvas_note' ? (
@@ -1155,22 +1171,22 @@ function App() {
                           <div className="space-y-4">
                             <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
                             <div className="flex gap-3 flex-wrap">
-                              {NOTE_PALETTE_INS.map(({ bg, dark, label }) => (
+                              {currentPalette.map(({ bg, dark, label }: any, i: number) => (
                                 <button
                                   key={bg}
                                   title={label}
-                                  onClick={() => updateNodeParams(selectedNode.id, { bg_color: bg, text_color: dark })}
+                                  onClick={() => updateNodeParams(selectedNode.id, { color_index: i })}
                                   className="flex flex-col items-center gap-1.5 group/swatch"
                                 >
                                   <div
                                     className="w-10 h-10 rounded-xl transition-all duration-150 group-hover/swatch:scale-110"
                                     style={{
                                       background: bg,
-                                      border: bgColor === bg ? '3px solid rgba(0,0,0,0.4)' : '2px solid rgba(0,0,0,0.1)',
-                                      boxShadow: bgColor === bg ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none',
+                                      border: (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '3px solid rgba(0,0,0,0.4)' : '2px solid rgba(0,0,0,0.1)',
+                                      boxShadow: (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none',
                                     }}
                                   />
-                                  <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+                                  <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider overflow-hidden max-w-[40px] text-ellipsis whitespace-nowrap">{label}</span>
                                 </button>
                               ))}
                             </div>
@@ -1178,10 +1194,10 @@ function App() {
                           <div className="flex items-center justify-between py-2">
                             <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Text Color</label>
                             <div className="flex gap-2">
-                              {['#ffffff', NOTE_PALETTE_INS.find(p => p.bg === bgColor)?.dark || '#1a1a1a'].map(c => (
+                              {['#ffffff', currentPalette[(cIdx !== undefined ? cIdx : 0) % 5]?.dark || '#1a1a1a'].map(c => (
                                 <button
                                   key={c}
-                                  onClick={() => updateNodeParams(selectedNode.id, { text_color: c })}
+                                  onClick={() => updateNodeParams(selectedNode.id, { text_color: c, color_index: undefined })}
                                   className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
                                   style={{
                                     background: c,
