@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
-import { Handle, Position, useNodeId, NodeResizeControl, NodeResizer } from 'reactflow';
+import { Handle, Position, useNodeId, NodeResizeControl, NodeResizer, useEdges } from 'reactflow';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
@@ -1174,6 +1174,39 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
           )}
         </div>
         <div className="flex-1 pointer-events-none" />
+      </div>
+    </div>
+  );
+});
+
+export const CanvasRerouteNode = memo(({ selected, id }: any) => {
+  const edges = useEdges();
+  const incomingEdge = edges.find((e: any) => e.target === id);
+  const color = incomingEdge?.style?.stroke || '#555555';
+
+  return (
+    <div className="w-full h-full flex items-center justify-center">
+      <div 
+        className="relative w-3 h-3 rounded-full transition-all duration-200" 
+        style={{ 
+          background: color, 
+          border: '1.5px solid rgba(255,255,255,0.8)',
+          boxShadow: selected ? `0 0 0 2px ${color}80, 0 4px 6px -1px rgba(0,0,0,0.5)` : '0 2px 4px -1px rgba(0,0,0,0.5)',
+          transform: selected ? 'scale(1.2)' : 'scale(1)'
+        }}
+      >
+        <Handle 
+          type="target" 
+          position={Position.Left} 
+          id="any__in" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-0 pointer-events-auto" 
+        />
+        <Handle 
+          type="source" 
+          position={Position.Right} 
+          id="any__out" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 opacity-0 pointer-events-auto" 
+        />
       </div>
     </div>
   );

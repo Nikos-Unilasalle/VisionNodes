@@ -730,6 +730,20 @@ class MaskBlendNode(NodeProcessor):
 class InspectorNode(NodeProcessor):
     def process(self, inputs, params): return {"main": inputs.get('image'), "data_out": inputs.get('data')}
 
+class RerouteNode(NodeProcessor):
+    def process(self, inputs, params):
+        out = {}
+        for k, v in inputs.items():
+            if k != 'raw_frame':
+                out[k] = v
+        # Ensure 'main', 'image', 'data' exist if any other exist, since we don't know the intent
+        first_val = next(iter(out.values()), None) if out else None
+        if 'main' not in out: out['main'] = first_val
+        if 'image' not in out: out['image'] = first_val
+        if 'data' not in out: out['data'] = first_val
+        if 'out' not in out: out['out'] = first_val
+        return out
+
 class DisplayOutput(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('main')
@@ -772,11 +786,16 @@ class VisionEngine:
             'filter_color_mask': ColorMaskNode, 'filter_morphology': MorphologyNode, 'draw_overlay': OverlayNode,
             'util_coord_to_mask': CoordToMaskNode, 'util_mask_blend': MaskBlendNode, 'data_list_selector': ListSelectorNode,
             'data_coord_splitter': CoordSplitterNode, 'data_coord_combine': CoordCombineNode, 'data_inspector': InspectorNode,
-            'output_display': DisplayOutput
+            'output_display': DisplayOutput, 'canvas_reroute': RerouteNode
         }
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
         self.preview_node_id = None
+        
+        self.fallback_img = None
+        img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "img", "fallback.jpg")
+        if os.path.exists(img_path):
+            self.fallback_img = cv2.imread(img_path)
 
     def switch_camera(self, idx):
         self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
@@ -806,7 +825,7 @@ class VisionEngine:
             if not ret: 
                 await asyncio.sleep(0.1)
                 continue
-            results, node_datas, final_img, commands = {}, {}, frame, []
+            results, node_datas, final_img, commands = {}, {}, None, []
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
                 inputs = {"raw_frame": frame}
@@ -868,6 +887,10 @@ class VisionEngine:
                         elif not self.preview_node_id and ntype == 'output_display' and out.get('main') is not None:
                             final_img = out['main']
                     except Exception as e: print(f"Error {nid}: {e}")
+            if final_img is None:
+                final_img = getattr(self, 'fallback_img', None)
+                if final_img is None:
+                    final_img = np.zeros((480, 640, 3), dtype=np.uint8)
             if final_img is not None:
                 try:
                     if len(final_img.shape) == 2: final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
