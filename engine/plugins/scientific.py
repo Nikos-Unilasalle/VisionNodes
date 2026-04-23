@@ -5,21 +5,37 @@ from __main__ import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_plotter",
     label="Plotter",
-    category="analysis",
+    category="visualize",
     icon="Activity",
-    description="Real-time graph visualizer for tracking numerical data changes over time.",
-    inputs=[{"id": "value", "color": "scalar"}],
-    outputs=[{"id": "value", "color": "scalar"}],
+    description="Multi-series real-time graph. Connect up to 5 scalar or list inputs (v0–v4). Resizable.",
+    inputs=[
+        {"id": "v0", "color": "any"},
+        {"id": "v1", "color": "any"},
+        {"id": "v2", "color": "any"},
+        {"id": "v3", "color": "any"},
+        {"id": "v4", "color": "any"},
+    ],
+    outputs=[
+        {"id": "v0", "color": "any"},
+        {"id": "v1", "color": "any"},
+        {"id": "v2", "color": "any"},
+        {"id": "v3", "color": "any"},
+        {"id": "v4", "color": "any"},
+    ],
     params=[
         {"id": "buffer_size", "label": "History Size", "type": "scalar", "min": 10, "max": 500, "default": 100},
-        {"id": "min_y", "label": "Y-Axis Min", "type": "scalar", "min": -1000, "max": 1000, "default": 0},
-        {"id": "max_y", "label": "Y-Axis Max", "type": "scalar", "min": -1000, "max": 1000, "default": 1}
+        {"id": "min_y", "label": "Y-Axis Min", "type": "float", "min": -1000, "max": 1000, "default": 0},
+        {"id": "max_y", "label": "Y-Axis Max", "type": "float", "min": -1000, "max": 1000, "default": 1},
     ]
 )
 class PlotterNode(NodeProcessor):
     def process(self, inputs, params):
-        val = inputs.get('value', 0.0)
-        return {"value": val, "display_text": f"Tracking: {val:.4f}"}
+        out = {}
+        for k in ('v0', 'v1', 'v2', 'v3', 'v4'):
+            v = inputs.get(k)
+            if v is not None:
+                out[k] = v
+        return out
 
 @vision_node(
     type_id="sci_stats",

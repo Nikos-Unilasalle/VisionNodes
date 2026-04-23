@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+export type EngineNotification = {
+  id: string;
+  message: string;
+  progress: number | null;
+  level: 'info' | 'warning' | 'error';
+};
+
 export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => void) {
   const [frame, setFrame] = useState<string | null>(null);
   const [nodesData, setNodesData] = useState<Record<string, any>>({});
   const [pluginSchemas, setPluginSchemas] = useState<any[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastCommands, setLastCommands] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<EngineNotification[]>([]);
   const ws = useRef<WebSocket | null>(null);
+  const dismissTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
     const connect = () => {
@@ -31,6 +40,28 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
             setPluginSchemas(msg.nodes);
           } else if (msg.type === 'node_capture') {
             onCapture?.(msg.node_id, msg.image);
+          } else if (msg.type === 'notification') {
+            const n: EngineNotification = {
+              id: msg.id, message: msg.message,
+              progress: msg.progress ?? null, level: msg.level ?? 'info'
+            };
+            setNotifications(prev => {
+              const idx = prev.findIndex(x => x.id === n.id);
+              return idx >= 0 ? prev.map((x, i) => i === idx ? n : x) : [...prev, n];
+            });
+            // Errors: never auto-dismiss (user must click ×)
+            // Completion (progress=1): dismiss after 3s
+            // In-progress: keep until updated
+            if (n.level !== 'error') {
+              const delay = (n.progress !== null && n.progress >= 1) ? 3000 : 60000;
+              clearTimeout(dismissTimers.current[n.id]);
+              dismissTimers.current[n.id] = setTimeout(() => {
+                setNotifications(prev => prev.filter(x => x.id !== n.id));
+                delete dismissTimers.current[n.id];
+              }, delay);
+            } else {
+              clearTimeout(dismissTimers.current[n.id]);
+            }
           }
         } catch (e) {}
       };
@@ -66,5 +97,11 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands };
+  const dismissNotification = (id: string) => {
+    clearTimeout(dismissTimers.current[id]);
+    delete dismissTimers.current[id];
+    setNotifications(prev => prev.filter(x => x.id !== id));
+  };
+
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification };
 }
