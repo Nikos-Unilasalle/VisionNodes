@@ -23,7 +23,7 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
 @vision_node(
     type_id='tracker_visualize',
     label='Track Visualizer',
-    category='track',
+    category='draw',
     icon='Tv2',
     description="Rendu visuel des tracks SORT/DeepSORT : boîtes colorées par ID, labels et trails de trajectoire.",
     inputs=[
