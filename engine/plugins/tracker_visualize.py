@@ -41,6 +41,12 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
         {'id': 'thickness',    'label': 'Box Thickness',      'min': 1, 'max': 10, 'step': 1,   'default': 2},
         {'id': 'font_scale',   'label': 'Font Scale (%)',     'min': 1, 'max': 100,'step': 1,   'default': 40},
         {'id': 'fill_alpha',   'label': 'Box Fill Alpha (%)', 'min': 0, 'max': 60, 'step': 1,   'default': 10},
+        {'id': 'show_point',        'label': 'Show Point',          'min': 0, 'max': 1,   'step': 1,   'default': 0},
+        {'id': 'point_radius',      'label': 'Point Radius',        'min': 1, 'max': 40,  'step': 1,   'default': 6},
+        {'id': 'point_use_id_color','label': 'Point: use ID color', 'min': 0, 'max': 1,   'step': 1,   'default': 1},
+        {'id': 'point_r',           'label': 'Point R',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
+        {'id': 'point_g',           'label': 'Point G',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
+        {'id': 'point_b',           'label': 'Point B',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
     ]
 )
 class TrackVisualizerNode(NodeProcessor):
@@ -69,8 +75,14 @@ class TrackVisualizerNode(NodeProcessor):
         show_id      = bool(int(params.get('show_id', 1)))
         show_label   = bool(int(params.get('show_label', 1)))
         thickness    = int(params.get('thickness', 2))
-        font_scale   = float(params.get('font_scale', 40)) / 100.0
-        fill_alpha   = float(params.get('fill_alpha', 10)) / 100.0
+        font_scale        = float(params.get('font_scale', 40)) / 100.0
+        fill_alpha        = float(params.get('fill_alpha', 10)) / 100.0
+        show_point        = bool(int(params.get('show_point', 0)))
+        point_radius      = int(params.get('point_radius', 6))
+        point_use_id_color= bool(int(params.get('point_use_id_color', 1)))
+        point_r           = int(params.get('point_r', 255))
+        point_g           = int(params.get('point_g', 255))
+        point_b           = int(params.get('point_b', 255))
 
         if not isinstance(tracks, list) or len(tracks) == 0:
             return {'main': res}
@@ -112,6 +124,10 @@ class TrackVisualizerNode(NodeProcessor):
             cy = (y1 + y2) // 2
             trail_deq = self._trails[tid]
             trail_deq.append((cx, cy))
+
+            if show_point:
+                pt_color = color_bgr if point_use_id_color else (point_b, point_g, point_r)
+                cv2.circle(res, (cx, cy), point_radius, pt_color, -1)
 
             if show_trail and len(trail_deq) > 1:
                 pts = list(trail_deq)[-trail_length:]

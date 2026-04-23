@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    { "id": "src-1",      "type": "input_image",       "position": { "x": 50,   "y": 200 }, "data": { "label": "Sample Image",          "params": {} } },
+    { "id": "east-1",     "type": "ocr_east_detect",   "position": { "x": 300,  "y": 200 }, "data": { "label": "Text Detector (EAST)",  "params": { "min_confidence": 0.5 } } },
+    { "id": "selector-1", "type": "data_list_selector","position": { "x": 550,  "y": 200 }, "data": { "label": "Select First Region",   "params": { "index": 0 } } },
+    { "id": "tess-1",     "type": "ocr_tesseract",     "position": { "x": 800,  "y": 200 }, "data": { "label": "OCR (Tesseract)",       "params": { "lang": 0 } } },
+    { "id": "ins-1",      "type": "data_inspector",    "position": { "x": 1050, "y": 200 }, "data": { "label": "Text Inspector",        "params": {} } },
+    { "id": "disp-1",     "type": "output_display",    "position": { "x": 800,  "y": 400 }, "data": { "label": "Final Display",         "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",      "target": "east-1",     "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e2", "source": "east-1",     "target": "selector-1", "sourceHandle": "list__text_regions", "targetHandle": "list__list_in" },
+    { "id": "e3", "source": "src-1",      "target": "tess-1",     "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e4", "source": "selector-1", "target": "tess-1",     "sourceHandle": "dict__item_out",     "targetHandle": "dict__box" },
+    { "id": "e5", "source": "tess-1",     "target": "ins-1",      "sourceHandle": "any__text",          "targetHandle": "any__data" },
+    { "id": "e6", "source": "east-1",     "target": "disp-1",     "sourceHandle": "image__main",        "targetHandle": "image__main" }
+  ]
+}

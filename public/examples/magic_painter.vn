@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    { "id": "src-1",     "type": "input_webcam",      "position": { "x": 50,   "y": 150 }, "data": { "label": "Webcam",       "params": {} } },
+    { "id": "hand-1",    "type": "analysis_hand_mp",  "position": { "x": 250,  "y": 150 }, "data": { "label": "Hand Tracker", "params": { "max_hands": 1 } } },
+    { "id": "sel-1",     "type": "data_list_selector","position": { "x": 450,  "y": 150 }, "data": { "label": "Tip of Index", "params": { "index": 8 } } },
+    { "id": "point-1",   "type": "draw_point",        "position": { "x": 650,  "y": 150 }, "data": { "label": "Finger Point", "params": { "r": 0, "g": 255, "b": 255, "thickness": 10 } } },
+    { "id": "overlay-1", "type": "draw_overlay",      "position": { "x": 850,  "y": 150 }, "data": { "label": "Draw Layer",   "params": {} } },
+    { "id": "disp-1",    "type": "output_display",    "position": { "x": 1050, "y": 150 }, "data": { "label": "Canvas View",  "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",   "target": "hand-1",    "sourceHandle": "image__main",   "targetHandle": "image__image" },
+    { "id": "e2", "source": "src-1",   "target": "overlay-1", "sourceHandle": "image__main",   "targetHandle": "image__image" },
+    { "id": "e3", "source": "hand-1",  "target": "sel-1",     "sourceHandle": "data__hand_0",  "targetHandle": "list__list_in" },
+    { "id": "e4", "source": "sel-1",   "target": "point-1",   "sourceHandle": "any__item_out", "targetHandle": "scalar__x" },
+    { "id": "e5", "source": "point-1", "target": "overlay-1", "sourceHandle": "dict__draw",    "targetHandle": "any__data" },
+    { "id": "e6", "source": "overlay-1","target": "disp-1",   "sourceHandle": "image__main",   "targetHandle": "image__main" }
+  ]
+}

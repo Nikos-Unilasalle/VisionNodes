@@ -1,0 +1,1488 @@
+{
+  "nodes": [
+    {
+      "id": "node-4",
+      "type": "output_display",
+      "position": {
+        "x": 2636.800262045092,
+        "y": 87.36047870117721
+      },
+      "data": {
+        "label": "Display Outlet",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2636.800262045092,
+        "y": 87.36047870117721
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776927198621",
+      "type": "input_webcam",
+      "position": {
+        "x": 35.32945917319175,
+        "y": 106.78348756554338
+      },
+      "style": {},
+      "data": {
+        "label": "Webcam",
+        "params": {
+          "device_index": 1,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 35.32945917319175,
+        "y": 106.78348756554338
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928209916",
+      "type": "analysis_face_mp",
+      "position": {
+        "x": 288.6877066970555,
+        "y": 106.78348756554338
+      },
+      "style": {},
+      "data": {
+        "label": "Face Tracker",
+        "params": {
+          "color_index": 1,
+          "max_faces": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 288.6877066970555,
+        "y": 111.15527756059413
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928276513",
+      "type": "geom_track_point",
+      "position": {
+        "x": 560,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Track Point",
+        "params": {
+          "point_id": 61,
+          "color_index": 1
+        },
+        "schema": {
+          "type": "geom_track_point",
+          "label": "Track Point",
+          "category": "track",
+          "icon": "Target",
+          "description": "Extracts the precise coordinates of a specific tracked landmark (e.g., joints).",
+          "inputs": [
+            {
+              "id": "data",
+              "color": "dict"
+            },
+            {
+              "id": "image",
+              "color": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "x",
+              "color": "scalar"
+            },
+            {
+              "id": "y",
+              "color": "scalar"
+            },
+            {
+              "id": "draw",
+              "color": "dict"
+            }
+          ],
+          "params": [
+            {
+              "id": "point_id",
+              "min": 0,
+              "max": 477,
+              "step": 1,
+              "default": 8
+            },
+            {
+              "id": "absolute",
+              "min": 0,
+              "max": 1,
+              "step": 1,
+              "default": 0
+            },
+            {
+              "id": "thickness",
+              "min": 1,
+              "max": 20,
+              "step": 1,
+              "default": 5
+            },
+            {
+              "id": "r",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0
+            },
+            {
+              "id": "g",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 255
+            },
+            {
+              "id": "b",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928283867-0.6549439590251004",
+      "type": "geom_track_point",
+      "position": {
+        "x": 560,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Track Point",
+        "params": {
+          "point_id": 306,
+          "color_index": 1
+        },
+        "schema": {
+          "type": "geom_track_point",
+          "label": "Track Point",
+          "category": "track",
+          "icon": "Target",
+          "description": "Extracts the precise coordinates of a specific tracked landmark (e.g., joints).",
+          "inputs": [
+            {
+              "id": "data",
+              "color": "dict"
+            },
+            {
+              "id": "image",
+              "color": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "x",
+              "color": "scalar"
+            },
+            {
+              "id": "y",
+              "color": "scalar"
+            },
+            {
+              "id": "draw",
+              "color": "dict"
+            }
+          ],
+          "params": [
+            {
+              "id": "point_id",
+              "min": 0,
+              "max": 477,
+              "step": 1,
+              "default": 8
+            },
+            {
+              "id": "absolute",
+              "min": 0,
+              "max": 1,
+              "step": 1,
+              "default": 0
+            },
+            {
+              "id": "thickness",
+              "min": 1,
+              "max": 20,
+              "step": 1,
+              "default": 5
+            },
+            {
+              "id": "r",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0
+            },
+            {
+              "id": "g",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 255
+            },
+            {
+              "id": "b",
+              "min": 0,
+              "max": 255,
+              "step": 1,
+              "default": 0
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928339261",
+      "type": "data_group_dicts",
+      "position": {
+        "x": 1260,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Group Dicts",
+        "params": {
+          "color_index": 3
+        },
+        "schema": {
+          "type": "data_group_dicts",
+          "label": "Group Dicts",
+          "category": "util",
+          "icon": "Layers",
+          "description": "Groups multiple dictionaries (e.g. data outputs) into a single list of dictionaries.",
+          "inputs": [
+            {
+              "id": "dict1",
+              "color": "dict"
+            },
+            {
+              "id": "dict2",
+              "color": "dict"
+            },
+            {
+              "id": "dict3",
+              "color": "dict"
+            },
+            {
+              "id": "dict4",
+              "color": "dict"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "list"
+            }
+          ],
+          "params": []
+        }
+      },
+      "width": 208,
+      "height": 176,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928389320",
+      "type": "data_coord_combine",
+      "position": {
+        "x": 940,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Coord Combine",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 176,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 940,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928402570-0.6024858036260399",
+      "type": "data_coord_combine",
+      "position": {
+        "x": 940,
+        "y": 460
+      },
+      "style": {},
+      "data": {
+        "label": "Coord Combine",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 176,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 940,
+        "y": 460
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928521256",
+      "type": "tracker_visualize",
+      "position": {
+        "x": 1600,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Track Visualizer",
+        "params": {
+          "color_index": 2,
+          "show_trail": 0,
+          "trail_length": 2,
+          "show_id": 0,
+          "thickness": 1,
+          "fill_alpha": 0,
+          "font_scale": 100,
+          "show_point": 1,
+          "point_radius": 16,
+          "point_use_id_color": 1,
+          "point_r": 0,
+          "point_g": 255
+        },
+        "schema": {
+          "type": "tracker_visualize",
+          "label": "Track Visualizer",
+          "category": "draw",
+          "icon": "Tv2",
+          "description": "Rendu visuel des tracks SORT/DeepSORT : boîtes colorées par ID, labels et trails de trajectoire.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "tracks",
+              "color": "list"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            }
+          ],
+          "params": [
+            {
+              "id": "show_trail",
+              "label": "Show Trail",
+              "min": 0,
+              "max": 1,
+              "step": 1,
+              "default": 1
+            },
+            {
+              "id": "trail_length",
+              "label": "Trail Length (frames)",
+              "min": 2,
+              "max": 120,
+              "step": 1,
+              "default": 30
+            },
+            {
+              "id": "show_id",
+              "label": "Show Track ID",
+              "min": 0,
+              "max": 1,
+              "step": 1,
+              "default": 1
+            },
+            {
+              "id": "show_label",
+              "label": "Show Class Label",
+              "min": 0,
+              "max": 1,
+              "step": 1,
+              "default": 1
+            },
+            {
+              "id": "thickness",
+              "label": "Box Thickness",
+              "min": 1,
+              "max": 10,
+              "step": 1,
+              "default": 2
+            },
+            {
+              "id": "font_scale",
+              "label": "Font Scale (%)",
+              "min": 1,
+              "max": 100,
+              "step": 1,
+              "default": 40
+            },
+            {
+              "id": "fill_alpha",
+              "label": "Box Fill Alpha (%)",
+              "min": 0,
+              "max": 60,
+              "step": 1,
+              "default": 10
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1600,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928674420",
+      "type": "math_distance",
+      "position": {
+        "x": 1260,
+        "y": 460
+      },
+      "style": {},
+      "data": {
+        "label": "Distance",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 460
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776928731663",
+      "type": "math_mul",
+      "position": {
+        "x": 1520,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Multiply",
+        "params": {
+          "value_b": 100,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1520,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776929645929",
+      "type": "logic_compare",
+      "position": {
+        "x": 1800,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Data Compare",
+        "params": {
+          "op": 2,
+          "color_index": 3
+        },
+        "schema": {
+          "type": "logic_compare",
+          "label": "Data Compare",
+          "category": "logic",
+          "icon": "Layers",
+          "description": "Compares two numerical values using a selected operator (>, <, ==, etc.) and returns true or false.",
+          "inputs": [
+            {
+              "id": "in_a",
+              "color": "scalar"
+            },
+            {
+              "id": "in_b",
+              "color": "scalar"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "color": "boolean"
+            }
+          ],
+          "params": [
+            {
+              "id": "op",
+              "label": "Operator",
+              "type": "enum",
+              "options": [
+                "==",
+                "!=",
+                ">",
+                "<",
+                ">=",
+                "<="
+              ],
+              "default": 0
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1800,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776929672831",
+      "type": "scalar_input",
+      "position": {
+        "x": 1520,
+        "y": 400
+      },
+      "style": {},
+      "data": {
+        "label": "Number",
+        "params": {
+          "value": 10,
+          "color_index": 3
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "number",
+              "default": 0
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1520,
+        "y": 400
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776929709350",
+      "type": "logic_collect",
+      "position": {
+        "x": 1800,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "Collect",
+        "params": {
+          "color_index": 3
+        },
+        "schema": {
+          "type": "logic_collect",
+          "label": "Collect",
+          "category": "logic",
+          "icon": "ListPlus",
+          "description": "Accumule des valeurs dans une liste quand la condition est vraie. Exporte en CSV à la demande.",
+          "inputs": [
+            {
+              "id": "condition",
+              "label": "Condition",
+              "color": "boolean"
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "color": "any"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "list",
+              "label": "List",
+              "color": "list"
+            },
+            {
+              "id": "count",
+              "label": "Count",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "mode",
+              "label": "Mode",
+              "type": "enum",
+              "options": [
+                "Every True frame",
+                "Rising edge only"
+              ],
+              "default": 0
+            },
+            {
+              "id": "reset",
+              "label": "Reset List",
+              "type": "trigger",
+              "default": 0
+            },
+            {
+              "id": "export",
+              "label": "Export CSV",
+              "type": "trigger",
+              "default": 0
+            },
+            {
+              "id": "filename",
+              "label": "Filename",
+              "type": "string",
+              "default": "collected"
+            },
+            {
+              "id": "path",
+              "label": "Folder",
+              "type": "string",
+              "default": "exports"
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1800,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776929732297-0.7690993319587301",
+      "type": "data_inspector",
+      "position": {
+        "x": 2369.8097905135687,
+        "y": 660.3176748542672
+      },
+      "style": {
+        "width": 193,
+        "height": 281
+      },
+      "data": {
+        "label": "Inspect Unit",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 193,
+      "height": 281,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2369.8097905135687,
+        "y": 660.3176748542672
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1776929810061",
+      "type": "util_csv_export",
+      "position": {
+        "x": 2640,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "CSV Export",
+        "params": {
+          "path": "/Users/nikos/Desktop/Document VNStudio",
+          "filename": "test",
+          "record": false,
+          "color_index": 0
+        },
+        "schema": {
+          "type": "util_csv_export",
+          "label": "CSV Export",
+          "category": "out",
+          "icon": "Database",
+          "description": "Expote les données vers un fichier CSV. Un nouveau fichier est créé à chaque activation.",
+          "inputs": [
+            {
+              "id": "val_1",
+              "color": "any"
+            },
+            {
+              "id": "val_2",
+              "color": "any"
+            },
+            {
+              "id": "val_3",
+              "color": "any"
+            },
+            {
+              "id": "val_4",
+              "color": "any"
+            },
+            {
+              "id": "val_5",
+              "color": "any"
+            },
+            {
+              "id": "val_6",
+              "color": "any"
+            },
+            {
+              "id": "val_7",
+              "color": "any"
+            },
+            {
+              "id": "val_8",
+              "color": "any"
+            }
+          ],
+          "outputs": [],
+          "params": [
+            {
+              "id": "record",
+              "label": "Recording",
+              "type": "toggle",
+              "default": false
+            },
+            {
+              "id": "filename",
+              "label": "Base Name",
+              "type": "string",
+              "default": "capture"
+            },
+            {
+              "id": "path",
+              "label": "Folder Path",
+              "type": "string",
+              "default": "exports"
+            },
+            {
+              "id": "auto_timestamp",
+              "label": "Auto Timestamp",
+              "type": "bool",
+              "default": true
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 304,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2640,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776930227099",
+      "type": "geom_cropper",
+      "position": {
+        "x": 1900,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Auto Cropper",
+        "params": {
+          "color_index": 2
+        },
+        "schema": {
+          "type": "geom_cropper",
+          "label": "Auto Cropper",
+          "category": "geom",
+          "icon": "Maximize",
+          "description": "Crops a specific rectangular area from the image (cropping).",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "data",
+              "color": "any"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            }
+          ],
+          "params": [
+            {
+              "id": "padding",
+              "min": 0,
+              "max": 100,
+              "default": 10
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1900,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776930311222",
+      "type": "draw_text",
+      "position": {
+        "x": 2200,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Draw Text",
+        "params": {
+          "text": "Smiles: {a}",
+          "var_count": 1,
+          "x": 0.04,
+          "y": 0.09,
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "color_index": 2
+        },
+        "schema": {
+          "type": "draw_text",
+          "label": "Draw Text",
+          "category": "draw",
+          "icon": "Type",
+          "description": "Draws text on an image or creates a graphic element. Connect text to the 'text' input and optionally an 'image'.",
+          "inputs": [
+            {
+              "id": "text",
+              "color": "string"
+            },
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "x",
+              "color": "scalar"
+            },
+            {
+              "id": "y",
+              "color": "scalar"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            },
+            {
+              "id": "graphic",
+              "color": "dict"
+            }
+          ],
+          "params": [
+            {
+              "id": "text",
+              "label": "Text",
+              "type": "string",
+              "default": "Hello"
+            },
+            {
+              "id": "x",
+              "label": "X Pos",
+              "type": "scalar",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.5
+            },
+            {
+              "id": "y",
+              "label": "Y Pos",
+              "type": "scalar",
+              "min": 0,
+              "max": 1,
+              "step": 0.01,
+              "default": 0.5
+            },
+            {
+              "id": "font_scale",
+              "label": "Size",
+              "type": "scalar",
+              "min": 0.1,
+              "max": 5,
+              "step": 0.1,
+              "default": 1
+            },
+            {
+              "id": "thickness",
+              "label": "Thickness",
+              "type": "scalar",
+              "min": 1,
+              "max": 10,
+              "step": 1,
+              "default": 2
+            },
+            {
+              "id": "r",
+              "label": "Red",
+              "type": "scalar",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            },
+            {
+              "id": "g",
+              "label": "Green",
+              "type": "scalar",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            },
+            {
+              "id": "b",
+              "label": "Blue",
+              "type": "scalar",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 208,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776931626188",
+      "type": "analysis_monitor",
+      "position": {
+        "x": 2366.9070725106203,
+        "y": 347.36198372108913
+      },
+      "style": {},
+      "data": {
+        "label": "Universal Monitor",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2366.9070725106203,
+        "y": 347.36198372108913
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776931649789-0.5893530904765598",
+      "type": "analysis_monitor",
+      "position": {
+        "x": 2366.758602549143,
+        "y": 502.7354217759382
+      },
+      "style": {},
+      "data": {
+        "label": "Universal Monitor",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2366.758602549143,
+        "y": 502.7354217759382
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776931674836-0.31710932674867864",
+      "type": "analysis_monitor",
+      "position": {
+        "x": 2367.280401203558,
+        "y": 955.8418795912312
+      },
+      "style": {},
+      "data": {
+        "label": "Universal Monitor",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2367.280401203558,
+        "y": 955.8418795912312
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776931758362",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 2100,
+        "y": 480
+      },
+      "style": {
+        "width": 16,
+        "height": 16
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {}
+      },
+      "width": 16,
+      "height": 16,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2100,
+        "y": 480
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1776931809942-0.0658277492703534",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 2040,
+        "y": 280
+      },
+      "style": {
+        "width": 16,
+        "height": 16
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {}
+      },
+      "width": 16,
+      "height": 16,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2040,
+        "y": 280
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-1776928211825-1",
+      "source": "node-1776927198621",
+      "target": "node-1776928209916",
+      "sourceHandle": "image__main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1776928248503-1",
+      "source": "node-1776928209916",
+      "target": "node-1776928245603",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1776928248503-2",
+      "source": "node-1776928245603",
+      "target": "node-4",
+      "sourceHandle": "main",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "source": "node-1776928209916",
+      "sourceHandle": "image__main",
+      "target": "node-1776928245603",
+      "targetHandle": "image__image",
+      "id": "e-1776928253584",
+      "selected": false
+    },
+    {
+      "source": "node-1776928209916",
+      "sourceHandle": "dict__face_0",
+      "target": "node-1776928276513",
+      "targetHandle": "dict__data",
+      "id": "e-1776928281719",
+      "selected": false
+    },
+    {
+      "source": "node-1776928209916",
+      "sourceHandle": "dict__face_0",
+      "target": "node-1776928283867-0.6549439590251004",
+      "targetHandle": "dict__data",
+      "id": "e-1776928288806",
+      "selected": false
+    },
+    {
+      "source": "node-1776928339261",
+      "sourceHandle": "list__main",
+      "target": "node-1776928245603",
+      "targetHandle": "list__tracks",
+      "id": "e-1776928352583",
+      "selected": false
+    },
+    {
+      "source": "node-1776928276513",
+      "sourceHandle": "scalar__x",
+      "target": "node-1776928389320",
+      "targetHandle": "scalar__x",
+      "id": "e-1776928395813",
+      "selected": false
+    },
+    {
+      "source": "node-1776928276513",
+      "sourceHandle": "scalar__y",
+      "target": "node-1776928389320",
+      "targetHandle": "scalar__y",
+      "id": "e-1776928397186",
+      "selected": false
+    },
+    {
+      "source": "node-1776928389320",
+      "sourceHandle": "dict__dict_out",
+      "target": "node-1776928339261",
+      "targetHandle": "dict__dict1",
+      "id": "e-1776928399316",
+      "selected": false
+    },
+    {
+      "source": "node-1776928283867-0.6549439590251004",
+      "sourceHandle": "scalar__x",
+      "target": "node-1776928402570-0.6024858036260399",
+      "targetHandle": "scalar__x",
+      "id": "e-1776928406780",
+      "selected": false
+    },
+    {
+      "source": "node-1776928402570-0.6024858036260399",
+      "sourceHandle": "dict__dict_out",
+      "target": "node-1776928339261",
+      "targetHandle": "dict__dict2",
+      "id": "e-1776928411632",
+      "selected": false
+    },
+    {
+      "source": "node-1776928283867-0.6549439590251004",
+      "sourceHandle": "scalar__y",
+      "target": "node-1776928402570-0.6024858036260399",
+      "targetHandle": "scalar__y",
+      "id": "e-1776928451660",
+      "selected": false
+    },
+    {
+      "source": "node-1776928339261",
+      "sourceHandle": "list__main",
+      "target": "node-1776928521256",
+      "targetHandle": "list__tracks",
+      "id": "e-1776928547881",
+      "selected": false
+    },
+    {
+      "source": "node-1776928389320",
+      "sourceHandle": "dict__dict_out",
+      "target": "node-1776928674420",
+      "targetHandle": "dict__p1",
+      "id": "e-1776928679933",
+      "selected": false
+    },
+    {
+      "source": "node-1776928402570-0.6024858036260399",
+      "sourceHandle": "dict__dict_out",
+      "target": "node-1776928674420",
+      "targetHandle": "dict__p2",
+      "id": "e-1776928682394",
+      "selected": false
+    },
+    {
+      "id": "e-1776928736142-1",
+      "source": "node-1776928674420",
+      "target": "node-1776928731663",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "source": "node-1776928674420",
+      "sourceHandle": "scalar__result",
+      "target": "node-1776928731663",
+      "targetHandle": "scalar__a",
+      "id": "e-1776928745440",
+      "selected": false
+    },
+    {
+      "source": "node-1776928731663",
+      "sourceHandle": "scalar__result",
+      "target": "node-1776929645929",
+      "targetHandle": "scalar__in_a",
+      "id": "e-1776929660410",
+      "selected": false
+    },
+    {
+      "source": "node-1776929672831",
+      "sourceHandle": "scalar__value",
+      "target": "node-1776929645929",
+      "targetHandle": "scalar__in_b",
+      "id": "e-1776929681236",
+      "selected": false
+    },
+    {
+      "source": "node-1776928731663",
+      "sourceHandle": "scalar__result",
+      "target": "node-1776929709350",
+      "targetHandle": "any__value",
+      "id": "e-1776929726531",
+      "selected": false
+    },
+    {
+      "source": "node-1776929709350",
+      "sourceHandle": "list__list",
+      "target": "node-1776929732297-0.7690993319587301",
+      "targetHandle": "any__data",
+      "id": "e-1776929735704",
+      "selected": false
+    },
+    {
+      "source": "node-1776928209916",
+      "sourceHandle": "image__main",
+      "target": "node-1776928521256",
+      "targetHandle": "image__image",
+      "id": "e-1776930259920",
+      "selected": false
+    },
+    {
+      "source": "node-1776928521256",
+      "sourceHandle": "image__main",
+      "target": "node-1776930227099",
+      "targetHandle": "image__image",
+      "id": "e-1776930275166",
+      "selected": false
+    },
+    {
+      "source": "node-1776930311222",
+      "sourceHandle": "image__main",
+      "target": "node-4",
+      "targetHandle": "image__main",
+      "id": "e-1776930412056",
+      "selected": false
+    },
+    {
+      "source": "node-1776930227099",
+      "sourceHandle": "image__main",
+      "target": "node-1776930311222",
+      "targetHandle": "image__image",
+      "id": "e-1776930414554",
+      "selected": false
+    },
+    {
+      "id": "e-1776930597913-1",
+      "source": "node-1776928209916",
+      "target": "node-1776928521256",
+      "sourceHandle": "dict__face_0",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "source": "node-1776928731663",
+      "sourceHandle": "scalar__result",
+      "target": "node-1776931626188",
+      "targetHandle": "any__data",
+      "id": "e-1776931631020",
+      "selected": false
+    },
+    {
+      "id": "e-1776931740086-2",
+      "source": "node-1776929732297-0.7690993319587301",
+      "target": "node-1776929810061",
+      "sourceHandle": "main",
+      "targetHandle": "any__val_1"
+    },
+    {
+      "source": "node-1776929709350",
+      "sourceHandle": "scalar__count",
+      "target": "node-1776931758362",
+      "targetHandle": "any__in",
+      "id": "e-1776931776629",
+      "selected": false
+    },
+    {
+      "source": "node-1776931758362",
+      "sourceHandle": "any__out",
+      "target": "node-1776929810061",
+      "targetHandle": "any__val_1",
+      "id": "e-1776931784323",
+      "selected": false
+    },
+    {
+      "source": "node-1776931758362",
+      "sourceHandle": "any__out",
+      "target": "node-1776931674836-0.31710932674867864",
+      "targetHandle": "any__data",
+      "id": "e-1776931790693",
+      "selected": false
+    },
+    {
+      "source": "node-1776931758362",
+      "sourceHandle": "any__out",
+      "target": "node-1776930311222",
+      "targetHandle": "scalar__a",
+      "id": "e-1776931797891",
+      "selected": false
+    },
+    {
+      "source": "node-1776929645929",
+      "sourceHandle": "boolean__result",
+      "target": "node-1776931809942-0.0658277492703534",
+      "targetHandle": "any__in",
+      "id": "e-1776931834337",
+      "selected": false
+    },
+    {
+      "source": "node-1776931809942-0.0658277492703534",
+      "sourceHandle": "any__out",
+      "target": "node-1776929709350",
+      "targetHandle": "boolean__condition",
+      "id": "e-1776931837035",
+      "selected": false
+    },
+    {
+      "source": "node-1776931809942-0.0658277492703534",
+      "sourceHandle": "any__out",
+      "target": "node-1776931649789-0.5893530904765598",
+      "targetHandle": "any__data",
+      "id": "e-1776931840002",
+      "selected": false
+    },
+    {
+      "id": "e-1776931968658-1",
+      "source": "node-1776928209916",
+      "target": "node-1776928521256",
+      "sourceHandle": "dict__face_0",
+      "targetHandle": "main"
+    },
+    {
+      "id": "e-1776931997438-1",
+      "source": "node-1776928209916",
+      "target": "node-1776928521256",
+      "sourceHandle": "list__faces_list",
+      "targetHandle": "main"
+    },
+    {
+      "id": "e-1776932024197-1",
+      "source": "node-1776928209916",
+      "target": "node-1776928521256",
+      "sourceHandle": "dict__face_0",
+      "targetHandle": "main"
+    },
+    {
+      "source": "node-1776928209916",
+      "sourceHandle": "dict__face_0",
+      "target": "node-1776930227099",
+      "targetHandle": "any__data",
+      "id": "e-1776932031220"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 520,
+      "h": 501
+    },
+    "previewPos": {
+      "x": 50.66015625,
+      "y": -23.50390625
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "node-4"
+  }
+}

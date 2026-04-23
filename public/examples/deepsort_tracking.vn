@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    { "id": "src-1",  "type": "input_webcam",         "position": { "x": 50,   "y": 200 }, "data": { "label": "Webcam",        "params": { "device_index": 0 } } },
+    { "id": "yolo-1", "type": "object_detection_yolo","position": { "x": 300,  "y": 200 }, "data": { "label": "YOLO Detector", "params": { "confidence": 30, "model_size": 0 } } },
+    { "id": "ds-1",   "type": "tracker_deepsort",     "position": { "x": 560,  "y": 200 }, "data": { "label": "DeepSORT",      "params": { "max_age": 5, "n_init": 2, "embedder": 0, "max_cosine_dist": 40 } } },
+    { "id": "viz-1",  "type": "tracker_visualize",    "position": { "x": 820,  "y": 200 }, "data": { "label": "Track Viz",     "params": { "show_trail": 1, "trail_length": 40, "show_id": 1, "show_label": 1, "thickness": 2, "fill_alpha": 10 } } },
+    { "id": "disp-1", "type": "output_display",       "position": { "x": 1080, "y": 200 }, "data": { "label": "Final Output",  "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",  "target": "yolo-1", "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e2", "source": "yolo-1", "target": "ds-1",   "sourceHandle": "list__objects_list", "targetHandle": "list__detections" },
+    { "id": "e3", "source": "src-1",  "target": "ds-1",   "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e4", "source": "ds-1",   "target": "viz-1",  "sourceHandle": "list__tracks",       "targetHandle": "list__tracks" },
+    { "id": "e5", "source": "src-1",  "target": "viz-1",  "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e6", "source": "viz-1",  "target": "disp-1", "sourceHandle": "image__main",        "targetHandle": "image__main" }
+  ]
+}

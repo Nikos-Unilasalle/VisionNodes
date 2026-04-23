@@ -18,7 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
-import { EXAMPLES } from './data/examples';
+// Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
@@ -188,6 +188,7 @@ function App() {
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
+  const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
   const [snapEnabled, setSnapEnabled] = useState(false);
   const isResizing = useRef(false);
 
@@ -513,21 +514,39 @@ function App() {
     }
   };
 
-  const loadExample = (example: any) => {
-    setNodes(example.nodes);
-    setEdges(example.edges);
-    if (example.ui) {
-        if (example.ui.previewSize) setPreviewSize(example.ui.previewSize);
-        if (example.ui.previewPos) setPreviewPos(example.ui.previewPos);
-        if (example.ui.activePaletteIndex !== undefined) setActivePaletteIndex(example.ui.activePaletteIndex);
-        if (example.ui.visualizedNodeId !== undefined) {
-           setVisualizedNodeId(example.ui.visualizedNodeId);
-           setPreviewNode(example.ui.visualizedNodeId);
+  const applyExampleData = (data: any) => {
+    const nodes = data.nodes || [];
+    const edges = data.edges || [];
+    setNodes(nodes);
+    setEdges(edges);
+    if (data.ui) {
+        if (data.ui.previewSize) setPreviewSize(data.ui.previewSize);
+        if (data.ui.previewPos) setPreviewPos(data.ui.previewPos);
+        if (data.ui.activePaletteIndex !== undefined) setActivePaletteIndex(data.ui.activePaletteIndex);
+        if (data.ui.visualizedNodeId !== undefined) {
+           setVisualizedNodeId(data.ui.visualizedNodeId);
+           setPreviewNode(data.ui.visualizedNodeId);
         }
     }
-    updateGraph(example.nodes, example.edges);
+    updateGraph(nodes, edges);
     setIsExamplesOpen(false);
   };
+
+  const loadExample = async (file: string) => {
+    try {
+      const data = await fetch(`/examples/${file}`).then(r => r.json());
+      applyExampleData(data);
+    } catch(e) {
+      console.error('Failed to load example:', file, e);
+    }
+  };
+
+  useEffect(() => {
+    fetch('/examples/manifest.json')
+      .then(r => r.json())
+      .then(setExamples)
+      .catch(e => console.error('Failed to load examples manifest:', e));
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -874,12 +893,12 @@ function App() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-hidden"
+                      className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
                     >
-                      {EXAMPLES.map((ex, i) => (
-                        <button 
+                      {examples.map((ex, i) => (
+                        <button
                           key={i}
-                          onClick={() => loadExample(ex)}
+                          onClick={() => loadExample(ex.file)}
                           className="w-full text-left p-3 hover:bg-accent/10 rounded-lg group transition-all"
                         >
                           <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">{ex.name}</div>

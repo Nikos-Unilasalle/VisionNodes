@@ -268,6 +268,7 @@ class MovieInput(NodeProcessor):
         dur = round(self.total_frames / vfps, 1) if vfps > 0 else 0
         return {
             "main": frame if ret else None,
+            "frame": self.current_frame,
             "total_frames": self.total_frames,
             "current_frame": self.current_frame,
             "preview": preview_b64,
@@ -837,7 +838,10 @@ class VisionEngine:
                         if val is not None:
                             if th:
                                 inputs[th] = val
-                                if th in ['image', 'main']: inputs['image'] = val
+                                if th in ['image', 'main'] and isinstance(val, np.ndarray):
+                                    inputs['image'] = val
+                                elif th == 'image':
+                                    inputs.pop('image', None)  # val not ndarray — don't pollute image slot
                                 if th == 'data': inputs['data'] = val
                             else:
                                 if isinstance(val, np.ndarray): inputs['image'] = val

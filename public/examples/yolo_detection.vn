@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    { "id": "src-1",     "type": "input_image",          "position": { "x": 50,  "y": 200 }, "data": { "label": "Things (things.jpg)", "params": { "path": "samples/things.jpg" } } },
+    { "id": "yolo-1",   "type": "object_detection_yolo", "position": { "x": 300, "y": 200 }, "data": { "label": "YOLO Detector",       "params": { "confidence": 25, "model_size": 0 } } },
+    { "id": "overlay-1","type": "draw_overlay",           "position": { "x": 570, "y": 200 }, "data": { "label": "Bounding Boxes",      "params": {} } },
+    { "id": "disp-1",   "type": "output_display",        "position": { "x": 840, "y": 200 }, "data": { "label": "Annotated View",      "params": {} } },
+    { "id": "mon-1",    "type": "analysis_monitor",      "position": { "x": 570, "y": 420 }, "data": { "label": "Object Count",        "params": { "mode": 7 } } },
+    { "id": "ins-1",    "type": "data_inspector",        "position": { "x": 840, "y": 420 }, "data": { "label": "Detection List",      "params": { "filter_key": "label" } } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",    "target": "yolo-1",   "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e2", "source": "src-1",    "target": "overlay-1","sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e3", "source": "yolo-1",  "target": "overlay-1","sourceHandle": "list__objects_list", "targetHandle": "any__data" },
+    { "id": "e4", "source": "overlay-1","target": "disp-1",   "sourceHandle": "image__main",        "targetHandle": "image__main" },
+    { "id": "e5", "source": "yolo-1",  "target": "mon-1",    "sourceHandle": "list__objects_list", "targetHandle": "data__data" },
+    { "id": "e6", "source": "yolo-1",  "target": "ins-1",    "sourceHandle": "list__objects_list", "targetHandle": "any__data" }
+  ]
+}

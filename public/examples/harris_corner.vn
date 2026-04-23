@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "id": "src-1",    "type": "input_image",   "position": { "x": 50,  "y": 200 }, "data": { "label": "Sample Image",    "params": {} } },
+    { "id": "harris-1", "type": "feat_harris",   "position": { "x": 300, "y": 200 }, "data": { "label": "Harris Corners", "params": { "threshold": 0.01 } } },
+    { "id": "disp-1",   "type": "output_display","position": { "x": 600, "y": 200 }, "data": { "label": "Corners Display","params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",    "target": "harris-1", "sourceHandle": "image__main", "targetHandle": "image__image" },
+    { "id": "e2", "source": "harris-1", "target": "disp-1",   "sourceHandle": "image__main", "targetHandle": "image__main" }
+  ]
+}
