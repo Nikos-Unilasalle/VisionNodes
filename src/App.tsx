@@ -1356,9 +1356,9 @@ function App() {
           </motion.div>
         </div>
 
-        {/* Right Panel */}
-        <div 
-          className="bg-[#0a0a0a] border-l border-[#1a1a1a] flex flex-col relative shrink-0 transition-all duration-300 h-full overflow-hidden"
+        {/* Right Panel — absolute overlay so canvas never resizes */}
+        <div
+          className="absolute right-0 top-0 bg-[#0a0a0a] border-l border-[#1a1a1a] flex flex-col transition-all duration-300 h-full overflow-hidden z-10"
           style={{ width: selectedNodeId ? rightPanelWidth : 0, opacity: selectedNodeId ? 1 : 0 }}
         >
           {/* Resize Handle */}
@@ -1373,7 +1373,7 @@ function App() {
               <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Unit Inspector</span>
             </div>
             
-            <div className="flex-1 overflow-y-auto scrollbar-hide p-10">
+            <div className="flex-1 overflow-y-auto p-10">
               {selectedNode ? (
                 <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
                   <div className="flex items-center gap-5">
