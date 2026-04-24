@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import ReactFlow, { 
+import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
+import ReactFlow, {
   addEdge, Background, Controls, applyEdgeChanges, applyNodeChanges,
-  Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant
+  Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant,
+  NodeResizer
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { 
@@ -30,7 +31,61 @@ const initialEdges: Edge[] = [
   { id: 'e1-4', source: 'node-1', target: 'node-4', sourceHandle: 'image__main', targetHandle: 'image__main' },
 ];
 
-const nodeTypes = {
+const withNodeResizer = (
+  Component: React.ComponentType<any>,
+  minWidth: number,
+  minHeight: number,
+  getColor?: (data: any) => string
+) => memo(({ selected, data, ...props }: any) => {
+  const color = getColor ? getColor(data) : 'var(--accent, #7c3aed)';
+  return (
+    <div className="w-full h-full" style={{ minWidth, minHeight, position: 'relative' }}>
+      <NodeResizer
+        isVisible={selected}
+        minWidth={minWidth}
+        minHeight={minHeight}
+        color={color}
+        handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
+        lineStyle={{ borderColor: color, borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
+      />
+      <Component selected={selected} data={data} {...props} />
+    </div>
+  );
+});
+
+const getNoteColor = (data: any) => {
+  const cIdx = data?.params?.color_index;
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const bg = cIdx !== undefined ? N.PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#ffd4b8');
+  return bg + '99';
+};
+const getFrameColor = (data: any) => {
+  const cIdx = data?.params?.color_index;
+  const palIdx = data?.activePaletteIndex ?? 6;
+  return cIdx !== undefined ? N.PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
+};
+
+const withNodeColor = (Component: React.ComponentType<any>) =>
+  memo(({ selected, data, ...props }: any) => {
+    const cIdx = data?.params?.color_index;
+    const palIdx = data?.activePaletteIndex ?? 6;
+    const customBg = cIdx !== undefined
+      ? N.PALETTES[palIdx]?.colors[cIdx % 5]?.bg
+      : data?.params?.bg_color;
+    const customText = cIdx !== undefined
+      ? N.PALETTES[palIdx]?.colors[cIdx % 5]?.dark
+      : data?.params?.text_color;
+    return (
+      <N.NodeColorProvider value={{ customBg, customText }}>
+        <Component selected={selected} data={data} {...props} />
+      </N.NodeColorProvider>
+    );
+  });
+
+// Stable wrapped component for dynamic plugin nodes
+const ColoredGenericCustomNode = withNodeColor(N.GenericCustomNode);
+
+const _nodeTypes = {
   input_webcam: N.InputWebcamNode,
   input_image: N.InputImageNode,
   input_movie: N.InputMovieNode,
@@ -63,10 +118,10 @@ const nodeTypes = {
   data_list_selector: N.DataListSelectorNode,
   data_coord_splitter: N.DataCoordSplitterNode,
   data_coord_combine: N.DataCoordCombineNode,
-  data_inspector: N.DataInspectorNode,
+  data_inspector: withNodeResizer(N.DataInspectorNode, 180, 120),
   output_display: N.OutputDisplayNode,
   logic_python: N.PythonNode,
-  canvas_note: N.CanvasNoteNode,
+  canvas_note: withNodeResizer(N.CanvasNoteNode, 120, 60, getNoteColor),
   canvas_reroute: N.CanvasRerouteNode,
   output_movie: N.OutputMovieNode,
   math_add: N.MathNode,
@@ -88,9 +143,13 @@ const nodeTypes = {
   string_split: N.StringNode,
   string_length: N.StringNode,
   string_case: N.StringNode,
-  canvas_frame: N.CanvasFrameNode,
-  sci_plotter: N.ScientificPlotterNode,
+  canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
+  sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
 };
+
+const nodeTypes = Object.fromEntries(
+  Object.entries(_nodeTypes).map(([k, v]) => [k, withNodeColor(v as any)])
+) as typeof _nodeTypes;
 
 const CATEGORIES = [
   { id: 'src', label: 'Sources', icon: Camera, nodes: [
@@ -239,7 +298,51 @@ function App() {
     }
   }, []);
 
+  const capturePlotterAsImage = useCallback(async (nodeId: string) => {
+    try {
+      const svgEl = document.querySelector(`[data-id="${nodeId}"] .recharts-wrapper svg`) as SVGSVGElement | null;
+      if (!svgEl) { console.error('Plotter SVG not found for node', nodeId); return; }
+
+      const width = svgEl.clientWidth || 400;
+      const height = svgEl.clientHeight || 300;
+      const svgData = new XMLSerializer().serializeToString(svgEl);
+      const url = URL.createObjectURL(new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' }));
+
+      const img = document.createElement('img') as HTMLImageElement;
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          try {
+            const path = await save({
+              defaultPath: `plotter_${Date.now()}.png`,
+              filters: [{ name: 'Image', extensions: ['png'] }]
+            });
+            if (path) await writeFile(path, new Uint8Array(await blob.arrayBuffer()));
+          } catch (err) { console.error('Failed to save plotter image:', err); }
+        }, 'image/png');
+      };
+      img.src = url;
+    } catch (err) { console.error('Failed to capture plotter:', err); }
+  }, []);
+
   const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification } = useVisionEngine(handleCapture);
+
+  const handleSaveAsImage = useCallback((nodeId: string) => {
+    const nodeType = nodes.find(n => n.id === nodeId)?.type;
+    if (nodeType === 'sci_plotter') {
+      capturePlotterAsImage(nodeId);
+    } else {
+      requestCapture(nodeId);
+    }
+  }, [nodes, capturePlotterAsImage, requestCapture]);
 
   const dynamicCategories = useMemo(() => {
     const cats = CATEGORIES.map(c => ({...c, nodes: [...c.nodes]}));
@@ -268,7 +371,7 @@ function App() {
     const types: any = { ...nodeTypes };
     (pluginSchemas || []).forEach(schema => {
       if (!types[schema.type]) {
-        types[schema.type] = N.GenericCustomNode;
+        types[schema.type] = ColoredGenericCustomNode;
       }
     });
     return types;
@@ -600,6 +703,7 @@ function App() {
       canvas_note: { width: 300, height: 180 },
       canvas_reroute: { width: 16, height: 16 },
       canvas_frame: { width: 500, height: 400, zIndex: -1 },
+      sci_plotter: { width: 320, height: 220 },
     };
     const nodeStyle = defaultStyle[type] || {};
     setNodes((nds) => {
@@ -1029,7 +1133,7 @@ function App() {
                 </>
               )}
               <button
-                onClick={() => requestCapture(menu.id)}
+                onClick={() => handleSaveAsImage(menu.id)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
               >
                 <Save size={16} className="text-accent group-hover:text-white" />

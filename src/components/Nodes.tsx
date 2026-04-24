@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
-import { Handle, Position, useNodeId, NodeResizeControl, NodeResizer, useEdges } from 'reactflow';
+import { Handle, Position, useNodeId, useEdges } from 'reactflow';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
@@ -20,6 +20,10 @@ import {
 } from 'recharts';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
+
+const NodeColorContext = React.createContext<{ customBg?: string; customText?: string }>({});
+export const useNodeColor = () => React.useContext(NodeColorContext);
+export const NodeColorProvider = NodeColorContext.Provider;
 
 const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any) => {
   const nodeId = useNodeId();
@@ -50,10 +54,13 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
 };
 
 const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
+  const { customBg: ctxBg, customText: ctxText } = useNodeColor();
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
-  const customBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
-  const customText = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : data?.params?.text_color;
+  const computedBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
+  const computedText = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : data?.params?.text_color;
+  const customBg = ctxBg ?? computedBg;
+  const customText = ctxText ?? computedText;
 
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
@@ -586,9 +593,7 @@ const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness'
 export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = data.node_data?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
-  const palIdx = data?.activePaletteIndex ?? 6;
-  const cIdx = data?.params?.color_index;
-  const customBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
+  const { customBg } = useNodeColor();
   const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]');
 
   // Extract available keys from dict or list-of-dicts
@@ -622,62 +627,52 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   }, [d, filterKey]);
 
   return (
-    <div className="w-full h-full group/node" style={{ minWidth: 180, minHeight: 120, position: 'relative' }}>
-      <NodeResizer
-        isVisible={selected}
-        minWidth={180}
-        minHeight={120}
-        color="var(--accent, #7c3aed)"
-        handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
-        lineStyle={{ borderColor: 'var(--accent, #7c3aed)', borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
-      />
-      <div
-        className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
-        style={{ position: 'relative', zIndex: 0, ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) }}
-      >
-        <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
-          <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
-        </div>
+    <div
+      className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
+      style={{ position: 'relative', zIndex: 0, ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) }}
+    >
+      <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+        <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
+      </div>
 
-        {/* Title bar */}
-        <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0"
-             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-          <div className="flex items-center gap-3 truncate">
-            <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
-            <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>Inspector</span>
-          </div>
-          {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
+      {/* Title bar */}
+      <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0"
+           style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+        <div className="flex items-center gap-3 truncate">
+          <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
+          <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>Inspector</span>
         </div>
+        {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
+      </div>
 
-        {/* Key filter pills — only shown when dict/list-of-dicts detected */}
-        {keys.length > 0 && (
-          <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#2a2a2a] bg-[#1e1e1e] overflow-x-auto scrollbar-hide shrink-0">
+      {/* Key filter pills — only shown when dict/list-of-dicts detected */}
+      {keys.length > 0 && (
+        <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#2a2a2a] bg-[#1e1e1e] overflow-x-auto scrollbar-hide shrink-0">
+          <button
+            onClick={() => setFilterKey(null)}
+            className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
+              filterKey === null
+                ? 'bg-accent/80 text-white'
+                : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
+            }`}
+          >all</button>
+          {keys.map(k => (
             <button
-              onClick={() => setFilterKey(null)}
+              key={k}
+              onClick={() => setFilterKey(k === filterKey ? null : k)}
               className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-                filterKey === null
-                  ? 'bg-accent/80 text-white'
+                filterKey === k
+                  ? 'bg-cyan-500/70 text-white'
                   : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
               }`}
-            >all</button>
-            {keys.map(k => (
-              <button
-                key={k}
-                onClick={() => setFilterKey(k === filterKey ? null : k)}
-                className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
-                  filterKey === k
-                    ? 'bg-cyan-500/70 text-white'
-                    : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
-                }`}
-              >{k}</button>
-            ))}
-          </div>
-        )}
-
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
-          <JsonTreeView data={displayData} />
+            >{k}</button>
+          ))}
         </div>
+      )}
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
+        <JsonTreeView data={displayData} />
       </div>
     </div>
   );
@@ -768,6 +763,7 @@ export const PythonNode = memo(({ selected, data }: any) => {
 // --- SCIENTIFIC NODES ---
 
 export const ScientificPlotterNode = memo(({ selected, data }: any) => {
+  const { customBg } = useNodeColor();
   const SERIES_COLORS = ['#22d3ee', '#22c55e', '#f97316', '#a855f7', '#f43f5e'];
   const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   const nd = data.node_data || {};
@@ -817,13 +813,10 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
 
   return (
-    <div className="w-full h-full group/node" style={{ minWidth: 240, minHeight: 180, position: 'relative' }}>
-      <NodeResizer isVisible={selected} minWidth={240} minHeight={180}
-        color="var(--accent, #7c3aed)"
-        handleStyle={{ width: 8, height: 8, borderRadius: 2, zIndex: 20 }}
-        lineStyle={{ borderColor: 'var(--accent, #7c3aed)', borderWidth: 1, opacity: selected ? 0.4 : 0, zIndex: 20 }}
-      />
-      <div className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]'} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}>
+    <div
+      className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]')}`}
+      style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
+    >
         {KEYS.map((k, i) => (
           <div key={`in-${k}`} className="absolute left-0 flex items-center pointer-events-none"
                style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
@@ -866,7 +859,6 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
           }
         </div>
       </div>
-    </div>
   );
 });
 
@@ -1073,54 +1065,41 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
   return (
     <div
-      className="w-full h-full relative group/note"
-      style={{ minWidth: 120, minHeight: 60 }}
+      className={`w-full h-full rounded-lg overflow-hidden group/note transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
+      style={{ background: bgColor, border: `1px solid ${resizerColor}` }}
       onDoubleClick={handleDoubleClick}
     >
-      <NodeResizer
-        isVisible={selected}
-        minWidth={120}
-        minHeight={60}
-        color={resizerColor}
-        handleStyle={{ width: 8, height: 8, borderRadius: 50, background: resizerColor, border: '2px solid rgba(0,0,0,0.15)', zIndex: 20 }}
-        lineStyle={{ borderColor: resizerColor, borderStyle: 'dashed', zIndex: 20 }}
-      />
-      <div
-        className={`w-full h-full rounded-lg overflow-hidden transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
-        style={{ background: bgColor, border: `1px solid ${resizerColor}` }}
-      >
-        {editing ? (
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={e => data.onChangeParams?.({ text: e.target.value })}
-            onBlur={() => setEditing(false)}
-            onKeyDown={e => {
-              if (e.key === 'Escape') setEditing(false);
-              e.stopPropagation();
-            }}
-            className="nodrag nopan w-full h-full bg-transparent border-none outline-none resize-none p-4 leading-relaxed"
-            style={{ color: textColor, fontSize: 13, fontFamily: 'Roboto, sans-serif', fontWeight: 400, caretColor: textColor }}
-            placeholder="Write your note here..."
-          />
-        ) : (
-          <div
-            className="p-4 w-full h-full overflow-hidden select-none cursor-text"
-            style={{
-              color: text ? textColor : placeholder,
-              fontSize: 13,
-              fontFamily: 'Roboto, sans-serif',
-              fontWeight: 400,
-              lineHeight: '1.65',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              fontStyle: text ? 'normal' : 'italic',
-            }}
-          >
-            {text || 'Double-click to edit…'}
-          </div>
-        )}
-      </div>
+      {editing ? (
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={e => data.onChangeParams?.({ text: e.target.value })}
+          onBlur={() => setEditing(false)}
+          onKeyDown={e => {
+            if (e.key === 'Escape') setEditing(false);
+            e.stopPropagation();
+          }}
+          className="nodrag nopan w-full h-full bg-transparent border-none outline-none resize-none p-4 leading-relaxed"
+          style={{ color: textColor, fontSize: 13, fontFamily: 'Roboto, sans-serif', fontWeight: 400, caretColor: textColor }}
+          placeholder="Write your note here..."
+        />
+      ) : (
+        <div
+          className="p-4 w-full h-full overflow-hidden select-none cursor-text"
+          style={{
+            color: text ? textColor : placeholder,
+            fontSize: 13,
+            fontFamily: 'Roboto, sans-serif',
+            fontWeight: 400,
+            lineHeight: '1.65',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            fontStyle: text ? 'normal' : 'italic',
+          }}
+        >
+          {text || 'Double-click to edit…'}
+        </div>
+      )}
     </div>
   );
 });
@@ -1236,43 +1215,33 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#ffffff');
 
   return (
-    <div className="relative group/frame w-full h-full">
-      <NodeResizer
-        isVisible={selected}
-        minWidth={200}
-        minHeight={150}
-        color={bgColor}
-        handleStyle={{ width: 12, height: 12, borderRadius: 2, border: 'none', background: bgColor, zIndex: -1 }}
-        lineStyle={{ borderColor: bgColor, borderWidth: 2, borderStyle: 'solid', zIndex: -1 }}
-      />
+    <div
+      className="w-full h-full rounded-xl border-2 group/frame transition-all flex flex-col overflow-hidden"
+      style={{ borderColor: bgColor, backgroundColor: `${bgColor}15` }}
+    >
       <div
-        className="w-full h-full rounded-xl border-2 transition-all flex flex-col overflow-hidden"
-        style={{ borderColor: bgColor, backgroundColor: `${bgColor}15` }}
+        className="px-4 py-2 font-black text-xs uppercase tracking-widest truncate cursor-text select-none"
+        style={{ backgroundColor: bgColor, color: textColor }}
+        onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
       >
-        <div 
-          className="px-4 py-2 font-black text-xs uppercase tracking-widest truncate cursor-text select-none"
-          style={{ backgroundColor: bgColor, color: textColor }}
-          onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
-        >
-          {editing ? (
-            <input 
-              autoFocus
-              className="bg-black/20 w-full outline-none px-1 py-0.5 rounded"
-              style={{ color: textColor }}
-              value={title}
-              onChange={e => data.onChangeParams?.({ title: e.target.value })}
-              onBlur={() => setEditing(false)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === 'Escape') setEditing(false);
-                e.stopPropagation();
-              }}
-            />
-          ) : (
-            title
-          )}
-        </div>
-        <div className="flex-1 pointer-events-none" />
+        {editing ? (
+          <input
+            autoFocus
+            className="bg-black/20 w-full outline-none px-1 py-0.5 rounded"
+            style={{ color: textColor }}
+            value={title}
+            onChange={e => data.onChangeParams?.({ title: e.target.value })}
+            onBlur={() => setEditing(false)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === 'Escape') setEditing(false);
+              e.stopPropagation();
+            }}
+          />
+        ) : (
+          title
+        )}
       </div>
+      <div className="flex-1 pointer-events-none" />
     </div>
   );
 });

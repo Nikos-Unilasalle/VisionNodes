@@ -97,7 +97,7 @@ def send_notification(message, progress=None, level='info', notif_id=None):
         'level': level,
     })
 
-def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None, description=""):
+def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None, description="", resizable=False, min_width=200, min_height=150, colorable=True):
     def decorator(cls):
         NODE_SCHEMAS.append({
             "type": type_id,
@@ -107,7 +107,11 @@ def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, 
             "description": description,
             "inputs": inputs or [],
             "outputs": outputs or [],
-            "params": params or []
+            "params": params or [],
+            "resizable": resizable,
+            "min_width": min_width,
+            "min_height": min_height,
+            "colorable": colorable,
         })
         NODE_CLASS_REGISTRY[type_id] = cls
         return cls
