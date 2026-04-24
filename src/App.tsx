@@ -248,9 +248,40 @@ const CATEGORIES = [
   ] }
 ];
 
+type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[] };
+const CANVAS_IDS = ['c1', 'c2', 'c3', 'c4'];
+const CANVAS_NAMES = ['Scene 1', 'Scene 2', 'Scene 3', 'Scene 4'];
+const makeInitialCanvases = (): Canvas[] => CANVAS_IDS.map((id, i) => ({
+  id,
+  name: CANVAS_NAMES[i],
+  nodes: i === 0 ? initialNodes : [],
+  edges: i === 0 ? initialEdges : [],
+}));
+
 function App() {
-  const [nodes, setNodes] = useState<Node[]>(initialNodes);
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [canvases, setCanvases] = useState<Canvas[]>(makeInitialCanvases);
+  const [activeCanvasId, setActiveCanvasId] = useState('c1');
+  const activeCanvasIdRef = useRef('c1');
+  useEffect(() => { activeCanvasIdRef.current = activeCanvasId; }, [activeCanvasId]);
+
+  const nodes = useMemo(
+    () => canvases.find(c => c.id === activeCanvasId)?.nodes ?? [],
+    [canvases, activeCanvasId]
+  );
+  const edges = useMemo(
+    () => canvases.find(c => c.id === activeCanvasId)?.edges ?? [],
+    [canvases, activeCanvasId]
+  );
+  const setNodes = useCallback((updater: Node[] | ((nds: Node[]) => Node[])) => {
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, nodes: typeof updater === 'function' ? updater(c.nodes) : updater }
+      : c));
+  }, []);
+  const setEdges = useCallback((updater: Edge[] | ((eds: Edge[]) => Edge[])) => {
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, edges: typeof updater === 'function' ? updater(c.edges) : updater }
+      : c));
+  }, []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<any>(null);
@@ -744,6 +775,10 @@ function App() {
   };
 
   useEffect(() => { if (isConnected) updateGraph(nodes, edges); }, [isConnected]);
+  useEffect(() => {
+    setSelectedNodeId(null);
+    if (isConnected) updateGraph(nodes, edges);
+  }, [activeCanvasId]);
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
     setNodes(nds => {
@@ -877,7 +912,7 @@ function App() {
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
           <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
-            <button 
+            <button
               onClick={() => alignNodes('horizontal')}
               title="Align Horizontally"
               className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
@@ -955,6 +990,21 @@ function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            {canvases.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setActiveCanvasId(c.id)}
+                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                  activeCanvasId === c.id
+                    ? 'bg-accent/20 text-accent'
+                    : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
            <div className="relative">
               <button
                 onClick={() => setIsPaletteSelectOpen(!isPaletteSelectOpen)}

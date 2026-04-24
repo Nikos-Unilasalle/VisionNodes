@@ -5,7 +5,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor
+  Crosshair, Monitor, Lock, LockOpen
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -764,14 +764,17 @@ export const PythonNode = memo(({ selected, data }: any) => {
 
 export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
-  const SERIES_COLORS = ['#22d3ee', '#22c55e', '#f97316', '#a855f7', '#f43f5e'];
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
   const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   const nd = data.node_data || {};
   const bufSize = Number(data.params?.buffer_size ?? 100);
+  const frozen = !!data.params?.freeze;
 
   const [histories, setHistories] = React.useState<Record<string, number[]>>({});
 
   React.useEffect(() => {
+    if (frozen) return;
     setHistories(prev => {
       const next: Record<string, number[]> = { ...prev };
       let changed = false;
@@ -791,7 +794,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
       }
       return changed ? next : prev;
     });
-  }, [nd.v0, nd.v1, nd.v2, nd.v3, nd.v4, bufSize]);
+  }, [nd.v0, nd.v1, nd.v2, nd.v3, nd.v4, bufSize, frozen]);
 
   const chartData = React.useMemo(() => {
     const maxLen = Math.max(0, ...KEYS.map(k => histories[k]?.length ?? 0));
@@ -818,10 +821,9 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
       style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
     >
         {KEYS.map((k, i) => (
-          <div key={`in-${k}`} className="absolute left-0 flex items-center pointer-events-none"
+          <div key={`in-${k}`} className="absolute left-0 pointer-events-none"
                style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={k} color="any" top="50%" />
-            <span className="ml-[12px] text-[7px] font-bold uppercase" style={{ color: SERIES_COLORS[i] }}>{k}</span>
           </div>
         ))}
         {KEYS.map((k, i) => (
@@ -831,14 +833,24 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
             <StyledHandle type="source" position={Position.Right} id={k} color="any" top="50%" />
           </div>
         ))}
-        <div className="bg-[#222] px-3 py-1.5 flex items-center gap-2 border-b border-[#333] rounded-t-xl shrink-0">
-          <Activity size={12} className="text-cyan-400 shrink-0" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Plotter</span>
-          <div className="ml-auto flex gap-1">
+        <div className="bg-[#222] px-3 py-1.5 flex items-center gap-2 border-b border-[#333] rounded-t-xl shrink-0"
+             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+          <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter</span>
+          <div className="ml-auto flex items-center gap-2">
             {activeSeries.map(k => (
               <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
                    style={{ backgroundColor: SERIES_COLORS[KEYS.indexOf(k)] }} />
             ))}
+            <button
+              className="nodrag pointer-events-auto ml-1 transition-opacity hover:opacity-100"
+              style={{ opacity: frozen ? 1 : 0.4 }}
+              onClick={e => { e.stopPropagation(); data.onChangeParams?.({ freeze: !frozen }); }}
+            >
+              {frozen
+                ? <Lock size={10} className="text-yellow-400" />
+                : <LockOpen size={10} className="text-gray-400" />}
+            </button>
           </div>
         </div>
         <div className="flex-1 min-h-0 w-full px-1 py-1">
