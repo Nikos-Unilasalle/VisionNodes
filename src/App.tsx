@@ -1641,6 +1641,9 @@ function App() {
                       const isEnum = p.type === 'enum' || p.options;
                       const isString = p.type === 'string' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'string';
                       const isNumber = p.type === 'number' || p.type === 'float';
+                      const pMin = p.min ?? 0;
+                      const pMax = p.max ?? 100;
+                      const pStep = p.step != null ? p.step : (Number.isInteger(pMin) && Number.isInteger(pMax) ? 1 : (pMax - pMin) / 100);
                       
                       if (isEnum) {
                         return <SelectInput 
@@ -1691,7 +1694,7 @@ function App() {
                         );
                       }
 
-                      return <Slider key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={p.min || 0} max={p.max || 100} step={p.step || 1} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
+                      return <Slider key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={pMin} max={pMax} step={pStep} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
                     })}
 
                     {selectedNode.data.node_data && (

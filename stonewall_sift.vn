@@ -1,0 +1,43 @@
+{
+  "nodes": [
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": { "x": 50, "y": 200 },
+      "data": {
+        "label": "Stonewall",
+        "params": { "path": "samples/stonewall.jpg" }
+      }
+    },
+    {
+      "id": "sift-1",
+      "type": "feat_sift",
+      "position": { "x": 330, "y": 200 },
+      "data": {
+        "label": "SIFT Detector",
+        "params": {
+          "n_features": 500,
+          "contrast_thresh": 0.04
+        }
+      }
+    },
+    {
+      "id": "overlay-1",
+      "type": "draw_overlay",
+      "position": { "x": 620, "y": 200 },
+      "data": { "label": "Draw Keypoints", "params": {} }
+    },
+    {
+      "id": "disp-1",
+      "type": "output_display",
+      "position": { "x": 900, "y": 200 },
+      "data": { "label": "SIFT Keypoints", "params": {} }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",    "target": "sift-1",    "sourceHandle": "image__main",       "targetHandle": "image__image" },
+    { "id": "e2", "source": "src-1",    "target": "overlay-1", "sourceHandle": "image__main",       "targetHandle": "image__image" },
+    { "id": "e3", "source": "sift-1",   "target": "overlay-1", "sourceHandle": "list__keypoints",   "targetHandle": "any__data" },
+    { "id": "e4", "source": "overlay-1","target": "disp-1",    "sourceHandle": "image__main",       "targetHandle": "image__main" }
+  ]
+}
