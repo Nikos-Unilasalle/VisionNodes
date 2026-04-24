@@ -1,0 +1,44 @@
+{
+  "nodes": [
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": { "x": 50, "y": 200 },
+      "data": {
+        "label": "Stonewall",
+        "params": { "path": "samples/stonewall.jpg" }
+      }
+    },
+    {
+      "id": "harris-1",
+      "type": "feat_harris",
+      "position": { "x": 330, "y": 200 },
+      "data": {
+        "label": "Harris Corners",
+        "params": {
+          "block_size": 3,
+          "ksize": 3,
+          "k": 0.04,
+          "threshold": 0.008
+        }
+      }
+    },
+    {
+      "id": "disp-1",
+      "type": "output_display",
+      "position": { "x": 640, "y": 100 },
+      "data": { "label": "Corners (RGB)", "params": {} }
+    },
+    {
+      "id": "disp-2",
+      "type": "output_display",
+      "position": { "x": 640, "y": 320 },
+      "data": { "label": "Corner Mask", "params": {} }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",    "target": "harris-1", "sourceHandle": "image__main", "targetHandle": "image__image" },
+    { "id": "e2", "source": "harris-1", "target": "disp-1",   "sourceHandle": "image__main", "targetHandle": "image__main" },
+    { "id": "e3", "source": "harris-1", "target": "disp-2",   "sourceHandle": "mask__mask",  "targetHandle": "image__main" }
+  ]
+}
