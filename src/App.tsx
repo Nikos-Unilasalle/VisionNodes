@@ -594,7 +594,7 @@ function App() {
     }
   }, [nodes, edges]);
 
-  const updateNodeParams = (id: string, params: any) => {
+  const updateNodeParams = (id: string, params: Record<string, unknown>) => {
     setNodes((nds) => nds.map((node) => {
         if (node.id === id) return { ...node, data: { ...node.data, params: { ...node.data.params, ...params } } };
         return node;
@@ -724,18 +724,18 @@ function App() {
       if (cmdKey && e.key === 'c') copyNodes();
       if (cmdKey && e.key === 'v') pasteNodes();
       
-      if (e.shiftKey && e.key.toLowerCase() === 'm') setIsAddMenuOpen(prev => !prev);
-      if (e.shiftKey && e.key.toLowerCase() === 'a') {
+      if (cmdKey && e.key.toLowerCase() === 'm') { e.preventDefault(); setIsAddMenuOpen(prev => !prev); }
+      if (cmdKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setNodes(nds => nds.map(n => ({ ...n, selected: true })));
       }
-      if (e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
-      if (e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
-      if (e.shiftKey && e.key.toLowerCase() === 'f') {
+      if (cmdKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
+      if (cmdKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
+      if (cmdKey && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         getCurrentWindow().isFullscreen().then(is => getCurrentWindow().setFullscreen(!is));
       }
-      if (cmdKey && e.key.toLowerCase() === 'f') {
+      if (cmdKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         instance?.fitView();
       }
