@@ -17,7 +17,7 @@ from __main__ import vision_node, NodeProcessor
     ],
     params=[
         {'id': 'point_id', 'min': 0, 'max': 477, 'step': 1, 'default': 8},
-        {'id': 'absolute', 'min': 0, 'max': 1, 'step': 1, 'default': 0},
+        {'id': 'absolute', 'label': 'Absolute Coords', 'type': 'bool', 'default': False},
         {'id': 'thickness', 'min': 1, 'max': 20, 'step': 1, 'default': 5},
         {'id': 'r', 'min': 0, 'max': 255, 'step': 1, 'default': 0},
         {'id': 'g', 'min': 0, 'max': 255, 'step': 1, 'default': 255},

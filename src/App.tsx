@@ -10,7 +10,7 @@ import {
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
-  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3
+  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -98,6 +98,7 @@ const _nodeTypes = {
   filter_color_mask: N.FilterColorMaskNode,
   geom_flip: N.GeomFlipNode,
   geom_resize: N.GeomResizeNode,
+  geom_crop_rect: N.CropRectNode,
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
   analysis_pose_mp: N.AnalysisPoseMPNode,
@@ -175,6 +176,7 @@ const CATEGORIES = [
   { id: 'geom', label: 'Geometric', icon: Move, nodes: [
     { type: 'geom_flip', label: 'Flip', description: 'Inverts the image horizontally or vertically.' },
     { type: 'geom_resize', label: 'Resize', description: 'Changes the image resolution (scaling).' },
+    { type: 'geom_crop_rect', label: 'Crop', description: 'Interactive rectangular crop with drag handles.' },
     { type: 'util_roi_polygon', label: 'ROI Polygon', description: 'Interactive polygonal mask definition for ROIs.' },
     { type: 'geom_perspective', label: 'Perspective Warp', description: 'Straightens a distorted area into a flat rectangle via 4 points.' },
     { type: 'util_manual_points', label: 'Manual 4 Points', description: 'Manually defines 4 reference points for geometric calculations.' }
@@ -190,6 +192,8 @@ const CATEGORIES = [
   ]},
   { id: 'features', label: 'Features', icon: Target, nodes: [
     { type: 'feat_find_contours', label: 'Find Contours', description: 'Detects and extracts isolated shapes from a binary mask.' },
+    { type: 'feat_fill_contours',   label: 'Fill Contours',   description: 'Fills all contours from a list into a binary mask (union). Connect contours_list from Find Contours.' },
+    { type: 'feat_filter_contours', label: 'Filter Contours', description: 'Filters a contour list by elongation ratio (long/short axis) and/or area range.' },
     { type: 'feat_hough_circles', label: 'Hough Circles', description: 'Identifies perfect circular shapes through mathematical calculation.' },
     { type: 'feat_hough_lines', label: 'Hough Lines', description: 'Detects straight line segments (walls, joints, etc.).' },
     { type: 'feat_clahe', label: 'CLAHE (Contrast)', description: 'Improves local image contrast adaptively.' },
@@ -294,12 +298,18 @@ function App() {
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
+  const [cropEditingId, setCropEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6); // 6 is Original VN
   const [isPaletteSelectOpen, setIsPaletteSelectOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const previewZoomRef = useRef(1);
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+  const isPanning = useRef(false);
+  const panStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
   const previewAspect = useRef(16 / 9);
@@ -464,7 +474,11 @@ function App() {
           dynamicColor,
           activePaletteIndex,
           isVisualized: node.id === visualizedNodeId,
-          onOpenEditor: () => setRoiEditingId(node.id),
+          onOpenEditor: node.type === 'util_roi_polygon'
+            ? () => setRoiEditingId(node.id)
+            : node.type === 'geom_crop_rect'
+            ? () => setCropEditingId(node.id)
+            : undefined,
           onChangeParams: (p: any) => {
             setNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           }
@@ -779,6 +793,7 @@ function App() {
     setSelectedNodeId(null);
     if (isConnected) updateGraph(nodes, edges);
   }, [activeCanvasId]);
+
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
     setNodes(nds => {
@@ -1156,10 +1171,16 @@ function App() {
           <AnimatePresence>
             {roiEditingId && (
                <ROIEditorOverlay
-                 nodeId={roiEditingId} 
+                 nodeId={roiEditingId}
                  node={nodesWithData.find(n => n.id === roiEditingId)}
                  nodesData={nodesData}
                  onClose={() => setRoiEditingId(null)}
+               />
+            )}
+            {cropEditingId && (
+               <CropEditorOverlay
+                 node={nodesWithData.find(n => n.id === cropEditingId)}
+                 onClose={() => setCropEditingId(null)}
                />
             )}
           </AnimatePresence>
@@ -1290,19 +1311,67 @@ function App() {
             onDragEnd={(e, info) => setPreviewPos({ x: previewPos.x + info.offset.x, y: previewPos.y + info.offset.y })}
             whileHover={{ cursor: 'grab' }}
             whileDrag={{ cursor: 'grabbing', zIndex: 100 }}
+            onDoubleClick={() => { previewZoomRef.current = 1; setPreviewZoom(1); setPreviewPan({ x: 0, y: 0 }); }}
+            onWheel={(e) => {
+              e.stopPropagation();
+              const oldZoom = previewZoomRef.current;
+              const newZoom = Math.max(0.25, Math.min(8, oldZoom * (e.deltaY < 0 ? 1.1 : 0.9)));
+              previewZoomRef.current = newZoom;
+              setPreviewZoom(newZoom);
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              const mx = e.clientX - rect.left;
+              const my = e.clientY - rect.top;
+              const cx = rect.width / 2;
+              const cy = rect.height / 2;
+              setPreviewPan(p => ({
+                x: p.x + (mx - cx) * (1 / newZoom - 1 / oldZoom),
+                y: p.y + (my - cy) * (1 / newZoom - 1 / oldZoom),
+              }));
+            }}
+            onMouseDown={(e) => {
+              if (e.button !== 1) return;
+              e.preventDefault();
+              isPanning.current = true;
+              panStart.current = { mx: e.clientX, my: e.clientY, px: previewPan.x, py: previewPan.y };
+              const onMove = (ev: MouseEvent) => {
+                if (!isPanning.current) return;
+                document.body.style.cursor = 'grabbing';
+                setPreviewPan({
+                  x: panStart.current.px + (ev.clientX - panStart.current.mx),
+                  y: panStart.current.py + (ev.clientY - panStart.current.my),
+                });
+              };
+              const onUp = (ev: MouseEvent) => {
+                if (ev.button !== 1) return;
+                isPanning.current = false;
+                document.body.style.cursor = '';
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+            }}
             className="absolute bottom-6 left-[49px] bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
             style={{ width: previewSize.w, height: previewSize.h }}
           >
-            {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" onLoad={(e) => {
-              const img = e.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) {
-                const newAspect = img.naturalWidth / img.naturalHeight;
-                if (Math.abs(newAspect - previewAspect.current) > 0.02) {
-                  previewAspect.current = newAspect;
-                  setPreviewSize(prev => ({ w: prev.w, h: Math.round(prev.w / newAspect) }));
+            {frame && <img src={frame} alt="Vision"
+              className="w-full h-full object-contain pointer-events-none"
+              style={{ transform: `translate(${previewPan.x}px, ${previewPan.y}px) scale(${previewZoom})`, transformOrigin: 'center' }}
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  const newAspect = img.naturalWidth / img.naturalHeight;
+                  if (Math.abs(newAspect - previewAspect.current) > 0.02) {
+                    previewAspect.current = newAspect;
+                    setPreviewSize(prev => ({ w: prev.w, h: Math.round(prev.w / newAspect) }));
+                  }
                 }
-              }
-            }} />}
+              }} />}
+            {previewZoom !== 1 && (
+              <div className="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-black px-2 py-1 rounded-lg pointer-events-none">
+                {Math.round(previewZoom * 100)}%
+              </div>
+            )}
             {pickColorNodeId && (
               <div
                 className="absolute inset-0 z-30"
@@ -1897,6 +1966,136 @@ const ToggleInput = ({ label, val, onChange }: any) => (
   </div>
 );
 
+const CropEditorOverlay = ({ node, onClose }: any) => {
+  const frame = node?.data?.node_data?.main_preview || node?.data?.node_data?.main;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const dragMode = useRef<string | null>(null);
+  const dragStart = useRef({ mx: 0, my: 0, rect: { x: 0, y: 0, w: 0, h: 0 } });
+
+  useEffect(() => {
+    try {
+      if (node?.data?.params?.rect) setRect(JSON.parse(node.data.params.rect));
+    } catch(e) {}
+  }, [node?.id]);
+
+  const getRelPos = (e: MouseEvent | React.MouseEvent) => {
+    const r = containerRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return { x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) };
+  };
+
+  const HANDLE = 0.025;
+  const getMode = (mx: number, my: number, r: typeof rect) => {
+    const corners = { nw: [r.x, r.y], ne: [r.x+r.w, r.y], sw: [r.x, r.y+r.h], se: [r.x+r.w, r.y+r.h] } as Record<string,[number,number]>;
+    for (const [name, [cx, cy]] of Object.entries(corners))
+      if (Math.abs(mx - cx) < HANDLE && Math.abs(my - cy) < HANDLE) return name;
+    if (mx > r.x && mx < r.x+r.w && my > r.y && my < r.y+r.h) return 'move';
+    return 'draw';
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const pos = getRelPos(e);
+    dragMode.current = getMode(pos.x, pos.y, rect);
+    dragStart.current = { mx: pos.x, my: pos.y, rect: { ...rect } };
+
+    const onMove = (ev: MouseEvent) => {
+      const p = getRelPos(ev);
+      const dx = p.x - dragStart.current.mx;
+      const dy = p.y - dragStart.current.my;
+      const sr = dragStart.current.rect;
+      setRect(() => {
+        let { x, y, w, h } = sr;
+        switch (dragMode.current) {
+          case 'draw':
+            x = Math.min(dragStart.current.mx, p.x); y = Math.min(dragStart.current.my, p.y);
+            w = Math.abs(p.x - dragStart.current.mx); h = Math.abs(p.y - dragStart.current.my);
+            break;
+          case 'move':
+            x = Math.max(0, Math.min(1 - w, sr.x + dx)); y = Math.max(0, Math.min(1 - h, sr.y + dy));
+            break;
+          case 'nw':
+            x = Math.max(0, Math.min(sr.x+sr.w-0.01, sr.x+dx)); y = Math.max(0, Math.min(sr.y+sr.h-0.01, sr.y+dy));
+            w = sr.x+sr.w-x; h = sr.y+sr.h-y; break;
+          case 'ne':
+            y = Math.max(0, Math.min(sr.y+sr.h-0.01, sr.y+dy));
+            w = Math.max(0.01, Math.min(1-sr.x, sr.w+dx)); h = sr.y+sr.h-y; break;
+          case 'sw':
+            x = Math.max(0, Math.min(sr.x+sr.w-0.01, sr.x+dx));
+            w = sr.x+sr.w-x; h = Math.max(0.01, Math.min(1-sr.y, sr.h+dy)); break;
+          case 'se':
+            w = Math.max(0.01, Math.min(1-sr.x, sr.w+dx)); h = Math.max(0.01, Math.min(1-sr.y, sr.h+dy)); break;
+        }
+        return { x: Math.max(0, x), y: Math.max(0, y), w: Math.max(0.01, Math.min(1-Math.max(0,x), w)), h: Math.max(0.01, Math.min(1-Math.max(0,y), h)) };
+      });
+    };
+    const onUp = () => { dragMode.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  const save = () => { node.data.onChangeParams({ rect: JSON.stringify(rect) }); onClose(); };
+
+  const corners = [
+    { id: 'nw', x: rect.x, y: rect.y, cursor: 'nwse-resize' },
+    { id: 'ne', x: rect.x+rect.w, y: rect.y, cursor: 'nesw-resize' },
+    { id: 'sw', x: rect.x, y: rect.y+rect.h, cursor: 'nesw-resize' },
+    { id: 'se', x: rect.x+rect.w, y: rect.y+rect.h, cursor: 'nwse-resize' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-8 select-none nodrag" onContextMenu={e => e.preventDefault()}>
+      <div className="absolute top-8 left-8 flex items-center gap-4">
+        <div className="p-2 bg-accent/20 rounded-lg text-accent"><Crop size={24} /></div>
+        <div>
+          <h2 className="text-xl font-black uppercase tracking-widest text-white">CROP EDITOR</h2>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-50">Drag to draw · Corners to resize · Interior to move</p>
+        </div>
+      </div>
+
+      <div className="relative flex-1 w-full flex items-center justify-center p-4">
+        <div ref={containerRef} className="relative inline-block shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c]" onMouseDown={handleMouseDown} style={{ cursor: 'crosshair' }}>
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="block w-auto h-auto max-w-[90vw] max-h-[70vh]" draggable={false} />
+          ) : (
+            <div className="w-[800px] h-[450px] flex items-center justify-center text-gray-700"><Image size={48} className="opacity-10" /></div>
+          )}
+          <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              <rect x="0" y="0" width="1" height={rect.y} fill="rgba(0,0,0,0.55)" />
+              <rect x="0" y={rect.y+rect.h} width="1" height={1-(rect.y+rect.h)} fill="rgba(0,0,0,0.55)" />
+              <rect x="0" y={rect.y} width={rect.x} height={rect.h} fill="rgba(0,0,0,0.55)" />
+              <rect x={rect.x+rect.w} y={rect.y} width={1-(rect.x+rect.w)} height={rect.h} fill="rgba(0,0,0,0.55)" />
+              <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} fill="none" stroke="var(--color-accent)" style={{ strokeWidth: 0.004 }} />
+              {[1/3, 2/3].flatMap(t => [
+                <line key={`v${t}`} x1={rect.x+rect.w*t} y1={rect.y} x2={rect.x+rect.w*t} y2={rect.y+rect.h} stroke="rgba(255,255,255,0.2)" style={{ strokeWidth: 0.002 }} />,
+                <line key={`h${t}`} x1={rect.x} y1={rect.y+rect.h*t} x2={rect.x+rect.w} y2={rect.y+rect.h*t} stroke="rgba(255,255,255,0.2)" style={{ strokeWidth: 0.002 }} />
+              ])}
+            </svg>
+            {corners.map(c => (
+              <circle key={c.id} cx={`${c.x*100}%`} cy={`${c.y*100}%`} r={7}
+                fill="white" stroke="var(--color-accent)" strokeWidth="2" style={{ pointerEvents: 'auto', cursor: c.cursor }} />
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-[10px] font-mono text-gray-600">
+          x:{(rect.x*100).toFixed(1)}%  y:{(rect.y*100).toFixed(1)}%  —  {(rect.w*100).toFixed(1)}% × {(rect.h*100).toFixed(1)}%
+        </div>
+        <div className="flex items-center gap-4">
+          <button onClick={onClose} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Cancel</button>
+          <button onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Reset</button>
+          <button onClick={save} className="px-16 py-3 bg-accent hover:bg-blue-600 shadow-2xl shadow-accent/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-105 active:scale-95 border border-white/10">Apply Crop</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
   const [points, setPoints] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -1978,8 +2177,8 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-8 select-none nodrag" onContextMenu={e => e.preventDefault()}>
-      <div className="absolute top-8 left-8 flex items-center gap-4">
+    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-3 select-none nodrag" onContextMenu={e => e.preventDefault()}>
+      <div className="absolute top-3 left-5 flex items-center gap-4">
         <div className="p-2 bg-accent/20 rounded-lg text-accent">
           <Scaling size={24} />
         </div>
@@ -1998,7 +2197,7 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
             <img 
               ref={imgRef}
               src={`data:image/jpeg;base64,${frame}`} 
-              className="block w-auto h-auto max-w-[90vw] max-h-[70vh]" 
+              className="block w-auto h-auto max-w-[95vw] max-h-[83vh]"
               draggable={false}
             />
           ) : (
@@ -2067,7 +2266,7 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
         </div>
       </div>
 
-      <div className="mt-12 flex flex-col items-center gap-6">
+      <div className="mt-3 flex flex-col items-center gap-3">
         <div className="flex items-center gap-8 px-10 py-3 bg-white/5 rounded-3xl border border-white/5 shadow-inner backdrop-blur-md">
            <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-500">
               <span className="px-2 py-1 bg-accent/20 text-accent rounded-lg border border-accent/20">SHIFT + CLIC</span>

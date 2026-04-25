@@ -43,6 +43,11 @@ import websockets
 import time
 import os
 import urllib.request
+try:
+    from PIL import Image as _PILImage
+    _PIL_AVAILABLE = True
+except ImportError:
+    _PIL_AVAILABLE = False
 from collections import deque
 from abc import ABC, abstractmethod
 
@@ -164,6 +169,33 @@ class WebcamInput(NodeProcessor):
         af = cap.get(cv2.CAP_PROP_FPS)
         return {"main": inputs.get('raw_frame'), "width": aw, "height": ah, "fps": round(af, 1)}
 
+def _load_image_robust(path):
+    """Load any image file to uint8 BGR. Tries cv2 then PIL fallback."""
+    img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if img is None and _PIL_AVAILABLE:
+        try:
+            pil = _PILImage.open(path)
+            img = np.array(pil)
+            print(f"[Engine] PIL loaded {path} mode={pil.mode} dtype={img.dtype}")
+        except Exception as e:
+            print(f"[Engine] PIL fallback failed: {e}")
+            return None
+    if img is None:
+        return None
+    if img.dtype != np.uint8:
+        flat = img[:, :, 0] if img.ndim == 3 else img
+        lo, hi = float(np.nanmin(flat)), float(np.nanmax(flat))
+        span = hi - lo if hi != lo else 1.0
+        img = np.clip((img.astype(np.float32) - lo) / span, 0.0, 1.0)
+        img = (img * 255).astype(np.uint8)
+    if img.ndim == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    elif img.shape[2] == 1:
+        img = cv2.cvtColor(img[:, :, 0], cv2.COLOR_GRAY2BGR)
+    elif img.shape[2] == 4:
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+    return img
+
 class ImageInput(NodeProcessor):
     def __init__(self):
         self.last_path = ""
@@ -189,13 +221,12 @@ class ImageInput(NodeProcessor):
         
         if full_path != self.last_path:
             print(f"[Engine] Loading Image: {full_path}")
-            img = cv2.imread(full_path)
+            img = _load_image_robust(full_path)
             if img is not None:
                 self.cached_img = img
                 self.last_path = full_path
             else:
                 print(f"[Error] Failed to load image at: {full_path}")
-                # Don't update last_path so we can retry
                 return {"main": None}
 
         if self.cached_img is not None:
@@ -684,7 +715,7 @@ class OverlayNode(NodeProcessor):
 
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
-        d_list = inputs.get('data')
+        d_list = inputs.get('list_in') or inputs.get('data')
         if not isinstance(d_list, list): return {"item_out": None}
         idx = int(params.get('index', 0))
         return {"item_out": d_list[idx] if 0 <= idx < len(d_list) else None}
@@ -820,10 +851,11 @@ class VisionEngine:
         self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
 
     def update_graph(self, g):
-        self.graph = g
+        valid_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
+        self.graph = {**g, 'edges': valid_edges}
         nodes = {n['id']: n for n in g.get('nodes', [])}
         adj = {nid: [] for nid in nodes}; degr = {nid: 0 for nid in nodes}
-        for e in g.get('edges', []):
+        for e in valid_edges:
             if e['source'] in adj and e['target'] in adj: adj[e['source']].append(e['target']); degr[e['target']] += 1
         q = deque([nid for nid in nodes if degr[nid] == 0])
         s_ids = []
