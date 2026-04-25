@@ -5,9 +5,44 @@ NODE_SCHEMAS and NODE_CLASS_REGISTRY. Import from here instead of __main__.
 import queue
 import uuid
 from abc import ABC, abstractmethod
+from typing import Any, Optional
+from typing_extensions import TypedDict, Required
 
-NODE_SCHEMAS: list = []
-NODE_CLASS_REGISTRY: dict = {}
+
+class ParamSpec(TypedDict, total=False):
+    id: Required[str]
+    label: str
+    type: str          # 'int' | 'float' | 'number' | 'string' | 'bool' | 'toggle' | 'enum' | 'trigger' | 'code' | 'color'
+    default: Any
+    min: float
+    max: float
+    step: float
+    options: list[str]
+
+
+class PortSpec(TypedDict, total=False):
+    id: Required[str]
+    color: Required[str]  # 'image' | 'mask' | 'any' | 'scalar' | ...
+    label: str
+
+
+class NodeSchema(TypedDict, total=False):
+    type: Required[str]
+    label: Required[str]
+    category: Required[str]
+    icon: Required[str]
+    description: str
+    inputs: Required[list[PortSpec]]
+    outputs: Required[list[PortSpec]]
+    params: Required[list[ParamSpec]]
+    resizable: bool
+    min_width: int
+    min_height: int
+    colorable: bool
+
+
+NODE_SCHEMAS: list[NodeSchema] = []
+NODE_CLASS_REGISTRY: dict[str, type] = {}
 
 _notification_queue: queue.Queue = queue.Queue()
 
@@ -22,9 +57,12 @@ def send_notification(message, progress=None, level='info', notif_id=None):
 
 
 def vision_node(
-    type_id, label, category="custom", icon="PenTool",
-    inputs=None, outputs=None, params=None, description="",
-    resizable=False, min_width=200, min_height=150, colorable=True
+    type_id: str, label: str, category: str = "custom", icon: str = "PenTool",
+    inputs: Optional[list[PortSpec]] = None,
+    outputs: Optional[list[PortSpec]] = None,
+    params: Optional[list[ParamSpec]] = None,
+    description: str = "",
+    resizable: bool = False, min_width: int = 200, min_height: int = 150, colorable: bool = True,
 ):
     def decorator(cls):
         NODE_SCHEMAS.append({

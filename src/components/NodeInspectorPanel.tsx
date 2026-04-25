@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
 import { Pause, Play, Pipette, Save, Activity } from 'lucide-react';
 import { PALETTES } from './Nodes';
+import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 
 // ── Form primitives ────────────────────────────────────────────────────────
 
-export const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
+interface SliderProps { label: string; val: number; min: number; max: number; step?: number; onChange: (v: number) => void; }
+export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps) => (
   <div className="space-y-4 group">
     <div className="flex justify-between items-center text-[10px]">
       <label className="text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
@@ -19,7 +21,8 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
   </div>
 );
 
-export const TextInput = ({ label, val, onChange }: any) => (
+interface TextInputProps { label: string; val: string; onChange: (v: string) => void; }
+export const TextInput = ({ label, val, onChange }: TextInputProps) => (
   <div className="space-y-4 group">
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
@@ -30,7 +33,8 @@ export const TextInput = ({ label, val, onChange }: any) => (
   </div>
 );
 
-export const NumberInput = ({ label, val, onChange }: any) => (
+interface NumberInputProps { label: string; val: number; onChange: (v: number) => void; }
+export const NumberInput = ({ label, val, onChange }: NumberInputProps) => (
   <div className="space-y-4 group">
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
@@ -40,7 +44,8 @@ export const NumberInput = ({ label, val, onChange }: any) => (
   </div>
 );
 
-export const SelectInput = ({ label, val, options, onChange }: any) => (
+interface SelectInputProps { label: string; val: number; options: string[]; onChange: (v: number) => void; }
+export const SelectInput = ({ label, val, options, onChange }: SelectInputProps) => (
   <div className="space-y-4 group">
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <select
@@ -54,7 +59,8 @@ export const SelectInput = ({ label, val, options, onChange }: any) => (
   </div>
 );
 
-export const ToggleInput = ({ label, val, onChange }: any) => (
+interface ToggleInputProps { label: string; val: boolean; onChange: (v: boolean) => void; }
+export const ToggleInput = ({ label, val, onChange }: ToggleInputProps) => (
   <div className="flex items-center justify-between py-2 group">
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <button
@@ -101,7 +107,8 @@ const highlightPython = (code: string): string => {
   return code.split('\n').map(processLine).join('\n');
 };
 
-export const CodeInput = ({ label, val, onChange }: any) => {
+interface CodeInputProps { label: string; val: string; onChange: (v: string) => void; }
+export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
   const syncScroll = () => {
@@ -150,11 +157,12 @@ export const CodeInput = ({ label, val, onChange }: any) => {
 // ── Main panel ─────────────────────────────────────────────────────────────
 
 interface NodeInspectorPanelProps {
-  node: any;
-  liveData: any;
+  node: VNNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  liveData: Record<string, any>;
   activePaletteIndex: number;
   pickColorNodeId: string | null;
-  onUpdateParams: (id: string, params: any) => void;
+  onUpdateParams: (id: string, params: Record<string, unknown>) => void;
   onPickColorToggle: (id: string | null) => void;
   onRequestCapture: (id: string) => void;
 }
@@ -164,7 +172,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   pickColorNodeId, onUpdateParams, onPickColorToggle, onRequestCapture,
 }) => {
   const p = node.data.params;
-  const up = (params: any) => onUpdateParams(node.id, params);
+  const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
 
   return (
     <div className="space-y-8 pb-32">
@@ -203,7 +211,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             <div className="space-y-4">
               <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
               <div className="flex gap-3 flex-wrap">
-                {currentPalette.map(({ bg, dark, label }: any, i: number) => (
+                {currentPalette.map(({ bg, dark, label }: { bg: string; dark: string; label: string }, i: number) => (
                   <button key={bg} title={label} onClick={() => up({ color_index: i })} className="flex flex-col items-center gap-1.5 group/swatch">
                     <div
                       className="w-10 h-10 rounded-xl transition-all duration-150 group-hover/swatch:scale-110"
@@ -410,18 +418,18 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       )}
 
       {/* Schema-driven dynamic params (plugins) */}
-      {node.data.schema?.params?.map((sp: any) => {
+      {node.data.schema?.params?.map((sp: ParamSpec) => {
         const isEnum   = sp.type === 'enum' || sp.options;
         const isString = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
         const isNumber = sp.type === 'number' || sp.type === 'float';
         const isBool   = sp.type === 'toggle' || sp.type === 'bool' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
-        if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v: any) => up({ [sp.id]: v })} />;
+        if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
         if (isString) return sp.id === 'code'
-          ? <CodeInput  key={sp.id} label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? ''} onChange={(v: any) => up({ [sp.id]: v })} />
-          : <TextInput  key={sp.id} label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? ''} onChange={(v: any) => up({ [sp.id]: v })} />;
-        if (isNumber) return <NumberInput key={sp.id} label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} onChange={(v: any) => up({ [sp.id]: v })} />;
-        if (isBool)   return <ToggleInput key={sp.id} label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v: any) => up({ [sp.id]: v })} />;
+          ? <CodeInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
+          : <TextInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+        if (isNumber) return <NumberInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
+        if (isBool)   return <ToggleInput key={sp.id} label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
 
         if (sp.type === 'trigger') {
           const isSnapshotSave = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
@@ -445,7 +453,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           );
         }
 
-        return <Slider key={sp.id} label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v: any) => up({ [sp.id]: v })} />;
+        return <Slider key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
       })}
 
       {/* Live data debug display */}
