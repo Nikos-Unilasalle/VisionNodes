@@ -5,7 +5,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen
+  Crosshair, Monitor, Lock, LockOpen, Crop
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -169,7 +169,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
         multiple: false,
         filters: [{
           name: 'Image',
-          extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff']
+          extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']
         }]
       });
       if (selectedFile && typeof selectedFile === 'string') {
@@ -311,9 +311,19 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const SolidColorNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]} />
-));
+export const SolidColorNode = memo(({ selected, data }: any) => {
+  const r = data.params?.r ?? 0;
+  const g = data.params?.g ?? 128;
+  const b = data.params?.b ?? 255;
+  const hex = `rgb(${r},${g},${b})`;
+  return (
+    <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
+      <div className="flex justify-center py-1 nodrag">
+        <div className="w-10 h-10 rounded-full border-2 border-white/20 shadow-lg" style={{ background: hex, boxShadow: `0 0 16px 2px ${hex}55` }} />
+      </div>
+    </BaseNode>
+  );
+});
 
 export const FilterCannyNode = memo(({ selected, data }: any) => (
   <BaseNode title="Canny Edge" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
@@ -484,9 +494,11 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
       color="accent"
       inputs={[{id: 'image', color: 'image'}]}
       outputs={[
-        {id: 'main', color: 'image'},
-        {id: 'mask', color: 'mask'},
-        {id: 'pts', color: 'list'}
+        {id: 'main',       color: 'image'},
+        {id: 'mask',       color: 'mask'},
+        {id: 'masked',     color: 'image'},
+        {id: 'masked_inv', color: 'image'},
+        {id: 'pts',        color: 'list'}
       ]}
     >
       <div className="flex flex-col gap-3 nodrag">
@@ -516,8 +528,53 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
         </div>
         <div className="flex items-center justify-between px-1">
           <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{points.length} Vertices</div>
-          <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline">
-            Modify Shape
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const CropRectNode = memo(({ selected, data }: any) => {
+  const frame = data.node_data?.main_preview;
+  const onOpenEditor = data.onOpenEditor;
+
+  let rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+  try { if (data.params?.rect) rect = JSON.parse(data.params.rect); } catch(e) {}
+
+  return (
+    <BaseNode title="Crop" icon={Crop} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'image', color: 'image' }]}
+      outputs={[{ id: 'main', color: 'image' }, { id: 'width', color: 'scalar' }, { id: 'height', color: 'scalar' }]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/crop shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-60 grayscale-[50%]" alt="Crop Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Crop size={24} className="opacity-10" />
+            </div>
+          )}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h}
+                className="fill-accent/20 stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
+            </svg>
+          </svg>
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/crop:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Crop size={12} /> Edit Crop
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
+            {Math.round(rect.w * 100)}% × {Math.round(rect.h * 100)}%
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline">
+            Edit Crop
           </button>
         </div>
       </div>
@@ -528,10 +585,10 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
 export const DrawOverlayNode = memo(({ selected, data }: any) => (
   <BaseNode title="Overlay" icon={PenTool} selected={selected} data={data} color="accent" inputs={[
     {id: 'image', color: 'image'},
-    {id: 'data', color: 'data'},
-    {id: 'data_2', color: 'data'},
-    {id: 'data_3', color: 'data'},
-    {id: 'data_4', color: 'data'}
+    {id: 'data', color: 'any'},
+    {id: 'data_2', color: 'any'},
+    {id: 'data_3', color: 'any'},
+    {id: 'data_4', color: 'any'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 

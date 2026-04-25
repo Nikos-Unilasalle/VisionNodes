@@ -117,7 +117,13 @@ class ManualPointsNode(NodeProcessor):
     icon="Scaling",
     description="Interactive polygonal mask generator to define Regions of Interest.",
     inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}, {"id": "pts", "color": "list"}],
+    outputs=[
+        {"id": "main",       "color": "image"},
+        {"id": "mask",       "color": "mask"},
+        {"id": "masked",     "color": "image"},
+        {"id": "masked_inv", "color": "image"},
+        {"id": "pts",        "color": "list"}
+    ],
     params=[
         {"id": "points", "label": "Points", "type": "string", "default": "[]"},
         {"id": "filled", "label": "Filled", "type": "boolean", "default": True},
@@ -147,9 +153,9 @@ class ROIPolygonNode(NodeProcessor):
             if self._frame_count % 6 == 0:
                 try:
                     # Resize to something reasonable for background
-                    ph, pw = 360, int(360 * (w/h))
+                    ph, pw = 720, int(720 * (w/h))
                     pimg = cv2.resize(img, (pw, ph))
-                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
                     self._last_preview = preview_b64
                 except: pass
@@ -175,4 +181,10 @@ class ROIPolygonNode(NodeProcessor):
             elif len(pts) == 2:
                  cv2.line(mask, tuple(pts[0]), tuple(pts[1]), 255, int(params.get('thickness', 2)))
         
-        return {"main": img, "mask": mask, "pts": pts_data, "main_preview": preview_b64}
+        if img is not None:
+            masked     = cv2.bitwise_and(img, img, mask=mask)
+            masked_inv = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
+        else:
+            masked = masked_inv = None
+
+        return {"main": img, "mask": mask, "masked": masked, "masked_inv": masked_inv, "pts": pts_data, "main_preview": preview_b64}

@@ -16,7 +16,7 @@ import numpy as np
     params=[
         {'id': 'history', 'min': 1, 'max': 1000, 'default': 500},
         {'id': 'threshold', 'min': 1, 'max': 100, 'default': 16},
-        {'id': 'detectShadows', 'min': 0, 'max': 1, 'default': 1}
+        {'id': 'detectShadows', 'label': 'Detect Shadows', 'type': 'bool', 'default': True}
     ]
 )
 class BackgroundSubtractionNode(NodeProcessor):
