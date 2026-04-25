@@ -48,8 +48,11 @@ try:
     _PIL_AVAILABLE = True
 except ImportError:
     _PIL_AVAILABLE = False
-from collections import deque
-from abc import ABC, abstractmethod
+from registry import (
+    NODE_SCHEMAS, NODE_CLASS_REGISTRY,
+    _notification_queue, send_notification,
+    vision_node, NodeProcessor, topological_sort,
+)
 
 def list_available_cameras():
     index = 0
@@ -68,8 +71,10 @@ MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/fac
 
 def download_model():
     if not os.path.exists(MODEL_PATH):
-        try: urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        except: pass
+        try:
+            urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+        except Exception as e:
+            print(f"[Engine] Failed to download face model: {e}")
 
 try:
     import mediapipe as mp
@@ -85,51 +90,20 @@ except Exception as e:
     print(f"AI Error: {e}")
 
 # --- Plugin System ---
-NODE_SCHEMAS = []
-NODE_CLASS_REGISTRY = {}
-
-# Thread-safe notification queue — plugins call send_notification(), engine drains each frame
-import queue as _queue
-_notification_queue = _queue.Queue()
-
-def send_notification(message, progress=None, level='info', notif_id=None):
-    """Send a progress/status notification to the frontend canvas."""
-    import uuid
-    _notification_queue.put_nowait({
-        'id': notif_id or ('notif_' + str(uuid.uuid4())[:8]),
-        'message': message,
-        'progress': progress,
-        'level': level,
-    })
-
-def vision_node(type_id, label, category="custom", icon="PenTool", inputs=None, outputs=None, params=None, description="", resizable=False, min_width=200, min_height=150, colorable=True):
-    def decorator(cls):
-        NODE_SCHEMAS.append({
-            "type": type_id,
-            "label": label,
-            "category": category,
-            "icon": icon,
-            "description": description,
-            "inputs": inputs or [],
-            "outputs": outputs or [],
-            "params": params or [],
-            "resizable": resizable,
-            "min_width": min_width,
-            "min_height": min_height,
-            "colorable": colorable,
-        })
-        NODE_CLASS_REGISTRY[type_id] = cls
-        return cls
-    return decorator
 
 def load_plugins():
     import importlib.util
     import glob
     import sys
+
+    engine_dir = os.path.dirname(os.path.abspath(__file__))
+    if engine_dir not in sys.path:
+        sys.path.insert(0, engine_dir)
+
     if hasattr(sys, '_MEIPASS'):
         plugin_dir = os.path.join(sys._MEIPASS, "engine", "plugins")
     else:
-        plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
+        plugin_dir = os.path.join(engine_dir, "plugins")
     os.makedirs(plugin_dir, exist_ok=True)
     for file in glob.glob(os.path.join(plugin_dir, "*.py")):
         if os.path.basename(file) == "__init__.py": continue
@@ -141,11 +115,6 @@ def load_plugins():
             print(f"[Plugins] Loaded: {module_name}")
         except Exception as e:
             print(f"[Plugins] Failed to load {module_name}: {e}")
-
-# --- Base ---
-class NodeProcessor(ABC):
-    @abstractmethod
-    def process(self, inputs, params): pass
 
 # --- INPUT UNITS ---
 class WebcamInput(NodeProcessor):
@@ -309,7 +278,8 @@ class MovieInput(NodeProcessor):
                     preview_img = cv2.resize(frame, (preview_w, 120))
                     _, buf = cv2.imencode('.jpg', preview_img, [cv2.IMWRITE_JPEG_QUALITY, 50])
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
-            except: pass
+            except Exception as e:
+                print(f"[Engine] Preview encode error: {e}")
 
         vw = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         vh = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -538,8 +508,11 @@ class FaceDetectionNode(NodeProcessor):
         import os, urllib.request
         model_path = "face_landmarker.task"
         if not os.path.exists(model_path):
-            try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", model_path)
-            except: pass
+            try:
+                urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", model_path)
+            except Exception as e:
+                print(f"[Engine] Failed to download face_landmarker: {e}")
+                return
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
@@ -579,8 +552,11 @@ class HandDetectionNode(NodeProcessor):
         import os, urllib.request
         model_path = "hand_landmarker.task"
         if not os.path.exists(model_path):
-            try: urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", model_path)
-            except: pass
+            try:
+                urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", model_path)
+            except Exception as e:
+                print(f"[Engine] Failed to download hand_landmarker: {e}")
+                return
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
@@ -853,20 +829,11 @@ class VisionEngine:
     def update_graph(self, g):
         valid_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
         self.graph = {**g, 'edges': valid_edges}
-        nodes = {n['id']: n for n in g.get('nodes', [])}
-        adj = {nid: [] for nid in nodes}; degr = {nid: 0 for nid in nodes}
-        for e in valid_edges:
-            if e['source'] in adj and e['target'] in adj: adj[e['source']].append(e['target']); degr[e['target']] += 1
-        q = deque([nid for nid in nodes if degr[nid] == 0])
-        s_ids = []
-        while q:
-            u = q.popleft(); s_ids.append(u)
-            for v in adj[u]:
-                degr[v] -= 1
-                if degr[v] == 0: q.append(v)
+        node_list = g.get('nodes', [])
+        nodes = {n['id']: n for n in node_list}
+        s_ids = topological_sort(node_list, valid_edges)
         self.sorted_nodes = [nodes[nid] for nid in s_ids if nid in nodes]
-        
-        # Prune unused instances
+
         active_nids = set(nodes.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
 
@@ -969,26 +936,34 @@ class VisionEngine:
                     notif_msg = json.dumps({"type": "notification", **notif})
                     if self.connected_clients:
                         await asyncio.gather(*[c.send(notif_msg) for c in list(self.connected_clients)], return_exceptions=True)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Engine] Notification send error: {e}")
 
             await asyncio.sleep(1/30)
 
     async def hdl(self, ws):
         self.connected_clients.add(ws)
         if NODE_SCHEMAS:
-            try: await ws.send(json.dumps({"type": "schema", "nodes": NODE_SCHEMAS}))
-            except: pass
+            try:
+                await ws.send(json.dumps({"type": "schema", "nodes": NODE_SCHEMAS}))
+            except Exception as e:
+                print(f"[Engine] Failed to send schema: {e}")
         try:
             async for m in ws:
-                d = json.loads(m)
-                if d.get('type') == 'update_graph': self.update_graph(d.get('graph', {}))
-                elif d.get('type') == 'request_node_capture':
-                    self.pending_capture = d.get('node_id')
-                elif d.get('type') == 'set_preview_node':
-                    self.preview_node_id = d.get('node_id')  # None resets to output_display
-        except: pass
-        finally: self.connected_clients.remove(ws)
+                try:
+                    d = json.loads(m)
+                    if d.get('type') == 'update_graph':
+                        self.update_graph(d.get('graph', {}))
+                    elif d.get('type') == 'request_node_capture':
+                        self.pending_capture = d.get('node_id')
+                    elif d.get('type') == 'set_preview_node':
+                        self.preview_node_id = d.get('node_id')
+                except Exception as e:
+                    print(f"[Engine] Message handler error: {e}")
+        except Exception as e:
+            print(f"[Engine] WebSocket closed: {e}")
+        finally:
+            self.connected_clients.remove(ws)
 
 load_plugins()
 engine = VisionEngine()

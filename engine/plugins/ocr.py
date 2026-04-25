@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import urllib.request
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 # EAST Model path
 EAST_MODEL_URL = "https://github.com/oyyd/frozen_east_text_detection.pb/raw/master/frozen_east_text_detection.pb"

@@ -1,6 +1,34 @@
 import numpy as np
 import cv2
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
+
+_BLOCKED_IMPORTS = frozenset([
+    'os', 'sys', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
+    'requests', 'pathlib', 'glob', 'importlib', 'ctypes', 'mmap',
+    'builtins', 'io', 'pty', 'atexit', 'signal', 'threading', 'multiprocessing',
+])
+
+def _safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+    top = (name or '').split('.')[0]
+    if top in _BLOCKED_IMPORTS:
+        raise ImportError(f"Import of '{name}' blocked in Python Node")
+    _bi = __builtins__ if isinstance(__builtins__, dict) else vars(__builtins__)
+    return _bi['__import__'](name, globals, locals, fromlist, level)
+
+_ALLOWED = {
+    'abs', 'all', 'any', 'bin', 'bool', 'bytes', 'chr', 'complex',
+    'dict', 'divmod', 'enumerate', 'filter', 'float', 'format',
+    'frozenset', 'getattr', 'hasattr', 'hash', 'hex', 'int', 'isinstance',
+    'issubclass', 'iter', 'len', 'list', 'map', 'max', 'min', 'next',
+    'oct', 'ord', 'pow', 'print', 'range', 'repr', 'reversed', 'round',
+    'set', 'setattr', 'slice', 'sorted', 'str', 'sum', 'tuple', 'type', 'zip',
+    'ArithmeticError', 'AttributeError', 'Exception', 'IndexError', 'KeyError',
+    'NotImplementedError', 'OverflowError', 'RuntimeError', 'StopIteration',
+    'TypeError', 'ValueError', 'ZeroDivisionError',
+}
+_builtins_src = __builtins__ if isinstance(__builtins__, dict) else vars(__builtins__)
+_SAFE_BUILTINS = {k: v for k, v in _builtins_src.items() if k in _ALLOWED}
+_SAFE_BUILTINS['__import__'] = _safe_import
 
 @vision_node(type_id='logic_python', label='Python Node', category='logic', icon='Zap', 
              inputs=[
@@ -33,7 +61,7 @@ class PythonNode(NodeProcessor):
         
         # Setup context — `state` est persistant entre les appels
         ctx = {
-            '__builtins__': __builtins__,
+            '__builtins__': _SAFE_BUILTINS,
             'np': np,
             'cv2': cv2,
             'state': self._state,

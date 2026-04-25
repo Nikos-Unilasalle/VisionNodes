@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import csv
 import time
 import os
@@ -32,63 +32,68 @@ class CSVExportNode(NodeProcessor):
         super().__init__()
         self.active_file = None
         self.last_record_status = False
-        self.file_initialized = False
+        self._fh = None
+        self._writer = None
+
+    def _close_file(self):
+        if self._fh is not None:
+            try:
+                self._fh.close()
+            except Exception as e:
+                print(f"CSV Export: close error: {e}")
+            self._fh = None
+            self._writer = None
 
     def process(self, inputs, params):
         record = params.get('record', False)
-        
-        # Front montant : création d'un nouveau fichier
+
         if record and not self.last_record_status:
+            self._close_file()
             base_name = params.get('filename', 'capture')
             export_dir = params.get('path', 'exports')
             auto_time = params.get('auto_timestamp', True)
-            
-            # Gestion du dossier
+
             if not os.path.exists(export_dir):
                 try:
                     os.makedirs(export_dir)
                 except Exception as e:
                     print(f"CSV Export Error: Cannot create dir {export_dir} -> {e}")
-                    export_dir = "." # Fallback
-            
-            # Nom du fichier
+                    export_dir = "."
+
             ts = f"_{int(time.time())}" if auto_time else ""
             self.active_file = os.path.join(export_dir, f"{base_name}{ts}.csv")
-            self.file_initialized = False
-            
+
+            try:
+                self._fh = open(self.active_file, 'w', newline='')
+                self._writer = csv.writer(self._fh)
+                header = ['timestamp'] + [f'val_{i}' for i in range(1, 9)]
+                self._writer.writerow(header)
+                self._fh.flush()
+            except Exception as e:
+                print(f"CSV Export: cannot open file: {e}")
+                self._close_file()
+
+        if not record and self.last_record_status:
+            self._close_file()
+
         self.last_record_status = record
-        
-        if not record or self.active_file is None:
+
+        if not record or self._writer is None:
             return {}
-            
-        current_time = time.time()
-        
-        # Collecte des 8 valeurs
-        vals = [current_time]
-        header = ['timestamp']
-        for i in range(1, 9):
-            key = f'val_{i}'
-            vals.append(inputs.get(key))
-            header.append(key)
-        
+
         try:
-            mode = 'a' if self.file_initialized else 'w'
-            with open(self.active_file, mode, newline='') as f:
-                writer = csv.writer(f)
-                if not self.file_initialized:
-                    writer.writerow(header)
-                    self.file_initialized = True
-                
-                row = []
-                for v in vals:
-                    if v is None:
-                        row.append("")
-                    elif isinstance(v, (int, float)):
-                        row.append(f"{v:.6f}")
-                    else:
-                        row.append(str(v))
-                writer.writerow(row)
+            vals = [f"{time.time():.6f}"]
+            for i in range(1, 9):
+                v = inputs.get(f'val_{i}')
+                if v is None:
+                    vals.append("")
+                elif isinstance(v, (int, float)):
+                    vals.append(f"{v:.6f}")
+                else:
+                    vals.append(str(v))
+            self._writer.writerow(vals)
+            self._fh.flush()
         except Exception as e:
             print(f"Erreur d'écriture CSV: {e}")
-            
+
         return {}

@@ -1,7 +1,8 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 import torch
+import threading
 import os
 
 try:
@@ -45,34 +46,40 @@ class YoloDetectionNode(NodeProcessor):
 
     def _load_model(self, size_idx):
         if not YOLO_AVAILABLE: return
-        
+
         models = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"]
         name = models[int(size_idx)]
-        
+
         if name != self.current_model_name:
+            self._loading = True
             print(f"[YOLO] Loading model: {name}")
-            self.model = YOLO(name)
-            self.model.to(self.device)
-            self.current_model_name = name
+            try:
+                self.model = YOLO(name)
+                self.model.to(self.device)
+                self.current_model_name = name
+            except Exception as e:
+                print(f"[YOLO] Model load error: {e}")
+                self.model = None
+            self._loading = False
 
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None or not YOLO_AVAILABLE: 
+        if image is None or not YOLO_AVAILABLE:
             return {"main": image, "objects_list": []}
-            
+
         conf = float(params.get('confidence', 25)) / 100.0
         size_idx = int(params.get('model_size', 0))
 
-        if self.model is None:
-            self._load_model(size_idx)
-        else:
+        if self.model is None and not getattr(self, '_loading', False):
+            threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
+        elif self.model is not None:
             try:
                 current_idx = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"].index(self.current_model_name)
-                if size_idx != current_idx:
-                    self._load_model(size_idx)
+                if size_idx != current_idx and not getattr(self, '_loading', False):
+                    threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
             except ValueError:
-                self._load_model(size_idx)
-            
+                pass
+
         if self.model is None: return {"main": image, "objects_list": []}
 
         # Inference

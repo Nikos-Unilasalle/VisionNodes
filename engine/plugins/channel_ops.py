@@ -6,7 +6,7 @@ Merge: R, G, B (optional A) → composite BGR or BGRA image.
 
 import cv2
 import numpy as np
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='plugin_channel_split',

@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification
 import cv2
 import numpy as np
 import os

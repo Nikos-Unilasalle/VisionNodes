@@ -1,5 +1,6 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Handle, Position, useNodeId, useEdges } from 'reactflow';
+import { useNodeData } from '../context/NodesDataContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { 
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
@@ -148,7 +149,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
 // --- NODES ---
 export const InputWebcamNode = memo(({ selected, data }: any) => {
-  const nd = data.node_data || {};
+  const nd = useNodeData(useNodeId());
   return (
     <BaseNode title="Webcam" icon={Camera} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
       {nd.width ? (
@@ -161,7 +162,8 @@ export const InputWebcamNode = memo(({ selected, data }: any) => {
 });
 
 export const InputImageNode = memo(({ selected, data }: any) => {
-  const preview = data.node_data?.preview;
+  const nd = useNodeData(useNodeId());
+  const preview = nd?.preview;
   
   const handleBrowse = async () => {
     try {
@@ -217,9 +219,9 @@ export const InputImageNode = memo(({ selected, data }: any) => {
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Image</div>
         </div>
       )}
-      {data.node_data?.width && (
+      {nd?.width && (
         <div className="px-1 pt-1">
-          <div className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height} · 8-bit BGR</div>
+          <div className="text-[10px] font-mono text-accent font-bold">{nd.width}×{nd.height} · 8-bit BGR</div>
         </div>
       )}
     </BaseNode>
@@ -227,6 +229,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
 });
 
 export const InputMovieNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const handleBrowse = async () => {
     try {
       const selectedFile = await open({
@@ -255,10 +258,10 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}, {id: 'frame', label: 'Frame', color: 'scalar'}]}>
       <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
-        {data.node_data?.preview && (
+        {nd?.preview && (
           <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
-            <img 
-              src={`data:image/jpeg;base64,${data.node_data.preview}`} 
+            <img
+              src={`data:image/jpeg;base64,${nd.preview}`}
               className="w-full h-auto object-cover opacity-80 group-hover/preview:opacity-100 transition-opacity duration-500"
               alt="Movie Preview"
             />
@@ -266,13 +269,13 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
             <div className="absolute bottom-2 left-2 right-2">
                 <div className="text-[10px] font-black text-white/90 truncate drop-shadow-md flex items-center gap-1.5">
                     <Film size={12} className="text-accent" />
-                    {data.node_data.filename || "Movie Loaded"}
+                    {nd.filename || "Movie Loaded"}
                 </div>
             </div>
           </div>
         )}
-        
-        {!data.node_data?.preview && (
+
+        {!nd?.preview && (
           <div className="py-8 flex flex-col items-center justify-center gap-3 bg-black/20 rounded-2xl border border-dashed border-white/10 opacity-40">
             <div className="p-3 bg-white/5 rounded-full">
                 <Video size={24} className="text-gray-400" />
@@ -282,13 +285,13 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
         )}
 
         <div className="space-y-3">
-          {(data.node_data?.width || data.node_data?.fps) && (
+          {(nd?.width || nd?.fps) && (
             <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
               <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Video Info</div>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {data.node_data?.width && <span className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height}</span>}
-                {data.node_data?.fps   && <span className="text-[10px] font-mono text-white/60">{data.node_data.fps} fps</span>}
-                {data.node_data?.duration && <span className="text-[10px] font-mono text-white/60">{data.node_data.duration}s</span>}
+                {nd?.width && <span className="text-[10px] font-mono text-accent font-bold">{nd.width}×{nd.height}</span>}
+                {nd?.fps   && <span className="text-[10px] font-mono text-white/60">{nd.fps} fps</span>}
+                {nd?.duration && <span className="text-[10px] font-mono text-white/60">{nd.duration}s</span>}
                 <span className="text-[10px] font-mono text-white/30">8-bit</span>
               </div>
             </div>
@@ -302,7 +305,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
             </span>
           </div>
             <div className="text-[10px] font-mono text-accent font-bold">
-              {data.node_data?.current_frame || 0} / {data.node_data?.total_frames || 0}
+              {nd?.current_frame || 0} / {nd?.total_frames || 0}
             </div>
           </div>
         </div>
@@ -417,7 +420,7 @@ export const AnalysisFlowVizNode = memo(({ selected, data }: any) => (
 ));
 
 export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
-  const nodeData = data.node_data || {};
+  const nodeData = useNodeData(useNodeId());
   const val = nodeData.scalar ?? 0;
   const displayText = nodeData.display_text || `${val.toFixed(data.params?.precision ?? 3)}`;
   
@@ -473,7 +476,8 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
 
 export const ROIPolygonNode = memo(({ selected, data }: any) => {
   const [points, setPoints] = React.useState<any[]>([]);
-  const frame = data.node_data?.main_preview || data.node_data?.main;
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
   const onOpenEditor = data.onOpenEditor;
 
   React.useEffect(() => {
@@ -535,7 +539,7 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
 });
 
 export const CropRectNode = memo(({ selected, data }: any) => {
-  const frame = data.node_data?.main_preview;
+  const frame = useNodeData(useNodeId())?.main_preview;
   const onOpenEditor = data.onOpenEditor;
 
   let rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
@@ -648,7 +652,7 @@ const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
 const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness']);
 
 export const DataInspectorNode = memo(({ selected, data }: any) => {
-  const d = data.node_data?.data_out;
+  const d = useNodeData(useNodeId())?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const { customBg } = useNodeColor();
   const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]');
@@ -787,11 +791,12 @@ export const MathNode = memo(({ selected, data }: any) => {
 });
 
 export const StringNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const schema = data.schema || { label: 'String', icon: 'Type', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Type);
   return (
     <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
-       {data.node_data?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{data.node_data.result}</div>}
+       {nd?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{nd.result}</div>}
     </BaseNode>
   );
 });
@@ -824,7 +829,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const palIdx = data?.activePaletteIndex ?? 6;
   const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
   const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
-  const nd = data.node_data || {};
+  const nd = useNodeData(useNodeId());
   const bufSize = Number(data.params?.buffer_size ?? 100);
   const frozen = !!data.params?.freeze;
 
@@ -932,7 +937,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
 });
 
 export const ScientificStatsNode = memo(({ selected, data }: any) => {
-  const stats = data.node_data || {};
+  const stats = useNodeData(useNodeId());
   const entries = [
     { label: 'Mean', v: stats.mean, color: 'text-cyan-400' },
     { label: 'Median', v: stats.median, color: 'text-blue-400' },
@@ -1174,10 +1179,11 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 });
 
 export const OutputMovieNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const mode = data.params?.mode ?? 0;
   const recording = data.params?.recording ?? false;
   const outputPath = data.params?.output_path || '';
-  const frameCount = data.node_data?.frame_count ?? 0;
+  const frameCount = nd?.frame_count ?? 0;
 
   const handleBrowse = async (e: React.MouseEvent) => {
     e.stopPropagation();
