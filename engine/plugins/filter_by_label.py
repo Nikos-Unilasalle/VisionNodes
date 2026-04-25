@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='util_filter_label',

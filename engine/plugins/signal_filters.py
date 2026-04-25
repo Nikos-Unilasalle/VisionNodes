@@ -5,7 +5,7 @@ Numpy-only, no scipy dependency.
 """
 
 import numpy as np
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 # ---------------------------------------------------------------------------
 # 1. Moving Average

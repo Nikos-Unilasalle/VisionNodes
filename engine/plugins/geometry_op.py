@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="geom_perspective",
@@ -158,7 +158,8 @@ class ROIPolygonNode(NodeProcessor):
                     _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
                     self._last_preview = preview_b64
-                except: pass
+                except Exception as e:
+                    print(f"[CropRect] Preview encode error: {e}")
             else:
                 preview_b64 = getattr(self, '_last_preview', None)
 

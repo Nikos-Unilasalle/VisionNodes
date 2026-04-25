@@ -30,3 +30,5 @@ engine-bin.spec
 # Data
 public/snapshots/
 gaze/epoch_24_ckpt.pth.tar
+src-tauri/*.csv
+src-tauri/exports/

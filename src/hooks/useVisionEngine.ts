@@ -18,11 +18,12 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
   const dismissTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   useEffect(() => {
+    let retryDelay = 1000;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     const connect = () => {
       ws.current = new WebSocket('ws://localhost:8765');
       
-      ws.current.onopen = () => setIsConnected(true);
-
       ws.current.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
@@ -63,17 +64,28 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
               clearTimeout(dismissTimers.current[n.id]);
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('[Engine] Message parse error:', e);
+        }
+      };
+
+      ws.current.onopen = () => {
+        setIsConnected(true);
+        retryDelay = 1000;
       };
 
       ws.current.onclose = () => {
         setIsConnected(false);
-        setTimeout(connect, 2000);
+        retryTimer = setTimeout(connect, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 16000);
       };
     };
 
     connect();
-    return () => ws.current?.close();
+    return () => {
+      if (retryTimer) clearTimeout(retryTimer);
+      ws.current?.close();
+    };
   }, [onCapture]);
 
   const updateGraph = useCallback((nodes: any[], edges: any[]) => {

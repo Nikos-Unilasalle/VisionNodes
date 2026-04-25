@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 @vision_node(type_id='string_concat', label='String: Concat', category='strings', icon='PlusSquare', 
              inputs=[{'id': 'a', 'color': 'string'}, {'id': 'b', 'color': 'string'}],

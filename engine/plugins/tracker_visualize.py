@@ -6,7 +6,7 @@ Affiche les résultats de SORT ou DeepSORT avec :
 - Label + ID de tracking
 - Trail de trajectoire (historique des centroïdes)
 """
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 from collections import defaultdict, deque
