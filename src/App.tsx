@@ -10,10 +10,12 @@ import {
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
-  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop
+  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
+  Undo2, Redo2
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
+import { useHistory } from './hooks/useHistory';
 import { NodesDataContext } from './context/NodesDataContext';
 import { NodeInspectorPanel } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
@@ -303,6 +305,12 @@ function App() {
   nodesRef.current = nodes;
   edgesRef.current = edges;
 
+  const { push: histPush, undo: histUndo, redo: histRedo, canUndo, canRedo } = useHistory();
+  const lastParamPushRef = useRef(0);
+  const pushSnapshot = useCallback(() => {
+    histPush(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+  }, [histPush, activeCanvasId]);
+
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
@@ -517,16 +525,19 @@ function App() {
   }, [selectedNodeId, nodesData]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
+    if (changes.some(c => c.type === 'remove')) pushSnapshot();
     setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
+  }, [pushSnapshot]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
+    if (changes.some(c => c.type === 'remove')) pushSnapshot();
     setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
+  }, [pushSnapshot]);
 
   const onConnect = useCallback((params: Connection) => {
+    pushSnapshot();
     setEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
-  }, []);
+  }, [pushSnapshot]);
 
   // Centralized graph synchronization to prevent loops
   useEffect(() => {
@@ -595,11 +606,32 @@ function App() {
   }, [nodes, edges]);
 
   const updateNodeParams = (id: string, params: Record<string, unknown>) => {
+    const now = Date.now();
+    if (now - lastParamPushRef.current > 500) {
+      pushSnapshot();
+      lastParamPushRef.current = now;
+    }
     setNodes((nds) => nds.map((node) => {
         if (node.id === id) return { ...node, data: { ...node.data, params: { ...node.data.params, ...params } } };
         return node;
     }));
   };
+
+  const handleUndo = useCallback(() => {
+    const prev = histUndo(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+    if (!prev) return;
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+    if (isConnected) updateGraph(prev.nodes, prev.edges);
+  }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
+
+  const handleRedo = useCallback(() => {
+    const next = histRedo(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+    if (!next) return;
+    setNodes(next.nodes);
+    setEdges(next.edges);
+    if (isConnected) updateGraph(next.nodes, next.edges);
+  }, [histRedo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
 
   const copyNodes = useCallback(() => {
     const selectedNodes = nodes.filter(n => n.selected);
@@ -614,6 +646,7 @@ function App() {
   const pasteNodes = useCallback((mousePos?: {x: number, y: number}) => {
     const raw = localStorage.getItem('vision-nodes-clipboard');
     if (!raw) return;
+    pushSnapshot();
     const { nodes: copiedNodes, edges: copiedEdges } = JSON.parse(raw);
     const idMap: Record<string, string> = {};
     const newNodes = copiedNodes.map((n: any) => {
@@ -723,6 +756,8 @@ function App() {
 
       if (cmdKey && e.key === 'c') copyNodes();
       if (cmdKey && e.key === 'v') pasteNodes();
+      if (cmdKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
+      if (cmdKey && e.shiftKey && e.key === 'z') { e.preventDefault(); handleRedo(); }
       
       if (cmdKey && e.key.toLowerCase() === 'm') { e.preventDefault(); setIsAddMenuOpen(prev => !prev); }
       if (cmdKey && e.key.toLowerCase() === 'a') {
@@ -747,9 +782,10 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, instance]);
+  }, [copyNodes, pasteNodes, handleUndo, handleRedo, instance]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
+    pushSnapshot();
     const id = `node-${Date.now()}`;
     const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 450, y: 450 };
     // Some nodes need a default style so NodeResizer works from the start
@@ -912,7 +948,7 @@ function App() {
           
           <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button
-              onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
+              onClick={() => { pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
               <Plus size={14} /> New
@@ -930,6 +966,28 @@ function App() {
               className="flex items-center gap-2 px-3 py-1 bg-accent/10 hover:bg-accent/20 rounded-md text-[10px] font-bold text-accent transition-all"
             >
               <Save size={14} /> Save .vn
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+          <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button
+              onClick={handleUndo}
+              disabled={!canUndo(activeCanvasId)}
+              title="Undo (⌘Z)"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+            >
+              <Undo2 size={13} /> Undo
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={handleRedo}
+              disabled={!canRedo(activeCanvasId)}
+              title="Redo (⌘⇧Z)"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+            >
+              <Redo2 size={13} /> Redo
             </button>
           </div>
 
@@ -1109,8 +1167,9 @@ function App() {
             onInit={setInstance}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} 
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
+            onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
-            onEdgeClick={(_, edge) => setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; })}
+            onEdgeClick={(_, edge) => { pushSnapshot(); setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; }); }}
             nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
             onNodeContextMenu={(e, node) => { 
               e.preventDefault(); 
@@ -1250,6 +1309,7 @@ function App() {
 
               <button
                 onClick={() => {
+                  pushSnapshot();
                   if (menu.id === visualizedNodeId) { setVisualizedNodeId(null); setPreviewNode(null); }
                   setNodes(nds => nds.filter(n => n.id !== menu.id));
                 }}
