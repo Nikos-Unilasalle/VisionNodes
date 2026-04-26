@@ -121,6 +121,7 @@ const _nodeTypes = {
   util_coord_to_mask: N.UtilCoordToMaskNode,
   util_mask_blend: N.UtilMaskBlendNode,
   data_list_selector: N.DataListSelectorNode,
+  list_region_select: N.RegionSelectorNode,
   data_coord_splitter: N.DataCoordSplitterNode,
   data_coord_combine: N.DataCoordCombineNode,
   data_inspector: withNodeResizer(N.DataInspectorNode, 180, 120),
@@ -214,6 +215,7 @@ const CATEGORIES = [
   ]},
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector', description: 'Extracts a specific item from a list of detections.' },
+    { type: 'list_region_select', label: 'Region Selector', description: 'Filters, sorts and selects a detection region. Outputs canonical 4 corner pts (TL→TR→BR→BL) ready for perspective warp.' },
     { type: 'data_coord_splitter', label: 'Coord Splitter', description: 'Splits a coordinate dictionary into 4 scalar values.' },
     { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
