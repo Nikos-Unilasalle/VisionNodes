@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, send_notification
 import cv2
 import numpy as np
 import torch
@@ -52,13 +52,14 @@ class YoloDetectionNode(NodeProcessor):
 
         if name != self.current_model_name:
             self._loading = True
-            print(f"[YOLO] Loading model: {name}")
+            send_notification(f'YOLO: loading {name}…', progress=0.1, notif_id='yolo_load')
             try:
                 self.model = YOLO(name)
                 self.model.to(self.device)
                 self.current_model_name = name
+                send_notification(f'YOLO: ready ({name})', progress=1.0, notif_id='yolo_load')
             except Exception as e:
-                print(f"[YOLO] Model load error: {e}")
+                send_notification(f'YOLO load error: {e}', level='error', notif_id='yolo_load')
                 self.model = None
             self._loading = False
 
@@ -83,7 +84,9 @@ class YoloDetectionNode(NodeProcessor):
         if self.model is None: return {"main": image, "objects_list": []}
 
         # Inference
+        self.report_progress(0.2, 'YOLO: detecting…')
         results = self.model.predict(image, conf=conf, verbose=False, device=self.device)
+        self.report_progress(1.0, 'YOLO: done')
         
         objects_list = []
         h, w = image.shape[:2]
