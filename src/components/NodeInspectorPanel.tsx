@@ -417,8 +417,24 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         <Slider label="List Index" val={p.index || 0} min={0} max={10} onChange={v => up({ index: v })} />
       )}
 
+      {/* list_region_select */}
+      {node.type === 'list_region_select' && (() => {
+        const sortBy = p.sort_by ?? 1;
+        const byIndex = sortBy === 0;
+        return (
+          <>
+            <SelectInput label="Sort By" val={sortBy} options={['Index', 'Largest area', 'Smallest area', 'Best confidence']} onChange={(v: number) => up({ sort_by: v })} />
+            <div style={{ opacity: byIndex ? 1 : 0.35, pointerEvents: byIndex ? 'auto' : 'none' }}>
+              <Slider label="Index" val={p.index ?? 0} min={0} max={100} step={1} onChange={v => up({ index: v })} />
+            </div>
+            <Slider label="Min Area (0–1)" val={p.min_area ?? 0} min={0} max={1} step={0.001} onChange={v => up({ min_area: v })} />
+            <ToggleInput label="Require 4 pts" val={!!(p.require_pts ?? true)} onChange={v => up({ require_pts: v })} />
+          </>
+        );
+      })()}
+
       {/* Schema-driven dynamic params (plugins) */}
-      {node.data.schema?.params?.map((sp: ParamSpec) => {
+      {node.type !== 'list_region_select' && node.data.schema?.params?.map((sp: ParamSpec) => {
         const isEnum   = sp.type === 'enum' || sp.options;
         const isString = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
         const isNumber = sp.type === 'number' || sp.type === 'float';
