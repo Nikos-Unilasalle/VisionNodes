@@ -1,21 +1,19 @@
 {
   "nodes": [
-    { "id": "src-1",  "type": "input_image",       "position": { "x": 50,   "y": 220 }, "data": { "label": "book.jpg",              "params": { "path": "samples/book.jpg" } } },
-    { "id": "east-1", "type": "ocr_east_detect",    "position": { "x": 340,  "y": 220 }, "data": { "label": "Text Detector (EAST)", "params": { "min_confidence": 0.3, "width": 640, "height": 640 } } },
-    { "id": "sel-1",  "type": "list_region_select", "position": { "x": 640,  "y": 220 }, "data": { "label": "Largest Region",       "params": { "sort_by": 1, "require_pts": true, "min_area": 0.005 } } },
-    { "id": "warp-1", "type": "geom_perspective",   "position": { "x": 960,  "y": 60  }, "data": { "label": "Homography Warp",      "params": { "width": 500, "height": 600 } } },
-    { "id": "tess-1", "type": "ocr_tesseract",      "position": { "x": 1260, "y": 60  }, "data": { "label": "OCR (Tesseract)",      "params": { "psm": 1, "upscale": 3, "padding": 8 } } },
-    { "id": "draw-1", "type": "draw_text",          "position": { "x": 960,  "y": 390 }, "data": { "label": "Text Overlay",         "params": { "x": 0.05, "y": 0.93, "font_scale": 1.2, "thickness": 2, "r": 255, "g": 255, "b": 0 } } },
-    { "id": "disp-1", "type": "output_display",     "position": { "x": 1260, "y": 390 }, "data": { "label": "Display",              "params": {} } }
+    { "id": "src-1",   "type": "input_image",   "position": { "x": 50,  "y": 220 }, "data": { "label": "book.jpg",         "params": { "path": "samples/book.jpg" } } },
+    { "id": "ocr-1",   "type": "ocr_easyocr",   "position": { "x": 380, "y": 220 }, "data": { "label": "EasyOCR",          "params": { "lang": 0, "min_confidence": 0.4 } } },
+    { "id": "sel-1",   "type": "list_region_select", "position": { "x": 700, "y": 220 }, "data": { "label": "Largest Region", "params": { "sort_by": 1, "require_pts": true } } },
+    { "id": "warp-1",  "type": "geom_perspective","position": { "x": 980, "y": 60  }, "data": { "label": "Homography Warp", "params": { "width": 500, "height": 600 } } },
+    { "id": "draw-1",  "type": "draw_text",      "position": { "x": 980, "y": 370 }, "data": { "label": "Text Overlay",    "params": { "x": 0.05, "y": 0.93, "font_scale": 1.2, "thickness": 2, "r": 255, "g": 255, "b": 0 } } },
+    { "id": "disp-1",  "type": "output_display", "position": { "x": 1260,"y": 370 }, "data": { "label": "Display",         "params": {} } }
   ],
   "edges": [
-    { "id": "e1", "source": "src-1",  "target": "east-1", "sourceHandle": "image__main",        "targetHandle": "image__image"   },
-    { "id": "e2", "source": "east-1", "target": "sel-1",  "sourceHandle": "list__text_regions",  "targetHandle": "list__list_in"  },
+    { "id": "e1", "source": "src-1",  "target": "ocr-1",  "sourceHandle": "image__main",        "targetHandle": "image__image"   },
+    { "id": "e2", "source": "ocr-1",  "target": "sel-1",  "sourceHandle": "list__text_regions",  "targetHandle": "list__list_in"  },
     { "id": "e3", "source": "src-1",  "target": "warp-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
     { "id": "e4", "source": "sel-1",  "target": "warp-1", "sourceHandle": "list__pts",           "targetHandle": "list__src_pts"  },
-    { "id": "e5", "source": "warp-1", "target": "tess-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
-    { "id": "e6", "source": "east-1", "target": "draw-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
-    { "id": "e7", "source": "tess-1", "target": "draw-1", "sourceHandle": "any__text",           "targetHandle": "string__text"   },
-    { "id": "e8", "source": "draw-1", "target": "disp-1", "sourceHandle": "image__main",         "targetHandle": "image__main"    }
+    { "id": "e5", "source": "ocr-1",  "target": "draw-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
+    { "id": "e6", "source": "sel-1",  "target": "draw-1", "sourceHandle": "dict__item",          "targetHandle": "string__text"   },
+    { "id": "e7", "source": "draw-1", "target": "disp-1", "sourceHandle": "image__main",         "targetHandle": "image__main"    }
   ]
 }
