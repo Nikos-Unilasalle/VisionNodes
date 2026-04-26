@@ -70,3 +70,8 @@ body {
 .react-flow__controls-button:hover {
   background: #3a3a3a;
 }
+
+/* Selection rect is visual only — let clicks pass through to nodes below */
+.react-flow__nodesselection-rect {
+  pointer-events: none;
+}

@@ -2,11 +2,11 @@ import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Handle, Position, useNodeId, useEdges } from 'reactflow';
 import { useNodeData } from '../context/NodesDataContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { 
+import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop, Filter
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -1329,6 +1329,67 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
       </div>
       <div className="flex-1 pointer-events-none" />
     </div>
+  );
+});
+
+// ──────────────────────────────────────────────────────────────
+// GROUP NODES
+// ──────────────────────────────────────────────────────────────
+
+export const GroupNode = memo(({ selected, data }: any) => {
+  const rawInputs: { id: string; color: string }[] = data?.inputs ?? [];
+  const rawOutputs: { id: string; color: string }[] = data?.outputs ?? [];
+  const label = data?.params?.label || data?.label || 'Group';
+
+  const splitPort = (p: { id: string; color: string }) => {
+    const idx = p.id.indexOf('__');
+    return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+  };
+
+  const inputs = rawInputs.map(splitPort);
+  const outputs = rawOutputs.map(splitPort);
+
+  return (
+    <BaseNode
+      title={label}
+      icon={Package}
+      selected={selected}
+      data={data}
+      inputs={inputs}
+      outputs={outputs}
+      headerExtra={<span className="text-[8px] text-gray-600 font-mono">GROUP</span>}
+    >
+      <div className="text-[8px] text-gray-600 italic text-center py-0.5">⌥ double-click to enter</div>
+    </BaseNode>
+  );
+});
+
+export const GroupInputNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const outputs = ports.map(p => {
+    const idx = p.id.indexOf('__');
+    return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+  });
+  return (
+    <BaseNode title="Group IN" icon={LogIn} selected={selected} data={data} outputs={outputs} inputs={[]}>
+      {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">no inputs</div>}
+    </BaseNode>
+  );
+});
+
+export const GroupOutputNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+    }),
+    { id: 'new', color: 'any' },
+  ];
+  return (
+    <BaseNode title="Group OUT" icon={LogOut} selected={selected} data={data} inputs={inputs} outputs={[]}>
+      {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">connect outputs →</div>}
+    </BaseNode>
   );
 });
 

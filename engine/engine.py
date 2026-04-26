@@ -118,6 +118,26 @@ def load_plugins():
             print(f"[Plugins] Failed to load {module_name}: {e}")
 
 # --- INPUT UNITS ---
+@vision_node(
+    type_id="input_webcam",
+    label="Webcam",
+    category="src",
+    icon="Camera",
+    description="Captures live video feed from your system camera.",
+    inputs=[],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "width", "color": "scalar"},
+        {"id": "height", "color": "scalar"},
+        {"id": "fps", "color": "scalar"}
+    ],
+    params=[
+        {"id": "device_index", "label": "Device Index", "type": "int", "default": 0},
+        {"id": "width", "label": "Width", "type": "int", "default": 0},
+        {"id": "height", "label": "Height", "type": "int", "default": 0},
+        {"id": "fps", "label": "FPS", "type": "int", "default": 0}
+    ]
+)
 class WebcamInput(NodeProcessor):
     def __init__(self, engine=None):
         self.engine = engine
@@ -166,6 +186,23 @@ def _load_image_robust(path):
         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     return img
 
+@vision_node(
+    type_id="input_image",
+    label="Image File",
+    category="src",
+    icon="Image",
+    description="Loads a static image from your local drive.",
+    inputs=[],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "width", "color": "scalar"},
+        {"id": "height", "color": "scalar"},
+        {"id": "depth", "color": "string"}
+    ],
+    params=[
+        {"id": "path", "label": "File Path", "type": "string", "default": "samples/car.jpg"}
+    ]
+)
 class ImageInput(NodeProcessor):
     def __init__(self):
         self.last_path = ""
@@ -215,6 +252,28 @@ class ImageInput(NodeProcessor):
         
         return {"main": None}
 
+@vision_node(
+    type_id="input_movie",
+    label="Movie File",
+    category="src",
+    icon="Film",
+    description="Plays a video file with playback and scrubbing controls.",
+    inputs=[],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "frame", "color": "scalar"},
+        {"id": "total_frames", "color": "scalar"},
+        {"id": "fps", "color": "scalar"},
+        {"id": "duration", "color": "scalar"}
+    ],
+    params=[
+        {"id": "path", "label": "File Path", "type": "string", "default": "samples/face.mp4"},
+        {"id": "playing", "label": "Playing", "type": "bool", "default": False},
+        {"id": "scrub_index", "label": "Frame", "type": "int", "default": 0},
+        {"id": "start_frame", "label": "Start", "type": "int", "default": 0},
+        {"id": "end_frame", "label": "End", "type": "int", "default": 0}
+    ]
+)
 class MovieInput(NodeProcessor):
     def __init__(self):
         self.last_path = ""
@@ -297,6 +356,22 @@ class MovieInput(NodeProcessor):
             "fps": round(vfps, 1), "duration": dur,
         }
 
+@vision_node(
+    type_id="input_solid_color",
+    label="Solid Color",
+    category="src",
+    icon="Palette",
+    description="Generates an image of a custom solid color.",
+    inputs=[],
+    outputs=[{"id": "main", "color": "image"}],
+    params=[
+        {"id": "r", "label": "Red", "type": "int", "default": 255, "min": 0, "max": 255},
+        {"id": "g", "label": "Green", "type": "int", "default": 0, "min": 0, "max": 255},
+        {"id": "b", "label": "Blue", "type": "int", "default": 0, "min": 0, "max": 255},
+        {"id": "width", "label": "Width", "type": "int", "default": 640},
+        {"id": "height", "label": "Height", "type": "int", "default": 480}
+    ]
+)
 class SolidColorNode(NodeProcessor):
     def process(self, inputs, params):
         r, g, b = int(params.get('r', 255)), int(params.get('g', 0)), int(params.get('b', 0))
@@ -305,6 +380,19 @@ class SolidColorNode(NodeProcessor):
         return {"main": img}
 
 # --- FILTER UNITS ---
+@vision_node(
+    type_id="filter_canny",
+    label="Canny Edge",
+    category="cv",
+    icon="Waves",
+    description="Detects edges using the Canny algorithm.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}],
+    params=[
+        {"id": "low", "label": "Low Threshold", "type": "int", "default": 100, "min": 0, "max": 1000},
+        {"id": "high", "label": "High Threshold", "type": "int", "default": 200, "min": 0, "max": 1000}
+    ]
+)
 class CannyFilter(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
@@ -312,6 +400,18 @@ class CannyFilter(NodeProcessor):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
         return {"main": cv2.Canny(gray, int(params.get('low', 100)), int(params.get('high', 200)))}
 
+@vision_node(
+    type_id="filter_blur",
+    label="Gaussian Blur",
+    category="cv",
+    icon="Waves",
+    description="Applies a Gaussian blur to smooth the image.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}],
+    params=[
+        {"id": "size", "label": "Kernel Size", "type": "int", "default": 5, "min": 1, "max": 51}
+    ]
+)
 class BlurFilter(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
@@ -320,6 +420,15 @@ class BlurFilter(NodeProcessor):
         if s % 2 == 0: s += 1
         return {"main": cv2.GaussianBlur(img, (s, s), 0)}
 
+@vision_node(
+    type_id="filter_gray",
+    label="Grayscale",
+    category="cv",
+    icon="Waves",
+    description="Converts the image to grayscale.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}]
+)
 class GrayFilter(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
@@ -327,6 +436,21 @@ class GrayFilter(NodeProcessor):
         res = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
         return {"main": res}
 
+@vision_node(
+    type_id="filter_threshold",
+    label="Threshold",
+    category="cv",
+    icon="Waves",
+    description="Separates the image into black and white based on intensity.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "mask", "color": "mask"}
+    ],
+    params=[
+        {"id": "threshold", "label": "Threshold Value", "type": "int", "default": 127, "min": 0, "max": 255}
+    ]
+)
 class ThresholdFilter(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
@@ -335,12 +459,44 @@ class ThresholdFilter(NodeProcessor):
         _, res = cv2.threshold(gray, int(params.get('threshold', 127)), 255, cv2.THRESH_BINARY)
         return {"main": res, "mask": res}
 
+@vision_node(
+    type_id="geom_flip",
+    label="Flip",
+    category="geom",
+    icon="Move",
+    description="Inverts the image horizontally or vertically.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}],
+    params=[
+        {"id": "flip_mode", "label": "Mode", "type": "enum", "options": ["Vertical", "Horizontal", "Both"], "default": 1}
+    ]
+)
 class FlipNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
         if img is None: return {"main": None}
         return {"main": cv2.flip(img, int(params.get('flip_mode', 1)))}
 
+@vision_node(
+    type_id="geom_resize",
+    label="Resize",
+    category="geom",
+    icon="Scaling",
+    description="Changes the image resolution or scaling.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "width", "color": "scalar"},
+        {"id": "height", "color": "scalar"}
+    ],
+    params=[
+        {"id": "mode", "label": "Resize Mode", "type": "enum", "options": ["Scale", "Absolute"], "default": 0},
+        {"id": "scale", "label": "Scale Factor", "type": "float", "default": 1.0, "min": 0.01, "max": 10.0},
+        {"id": "target_width", "label": "Width (px)", "type": "int", "default": 640},
+        {"id": "target_height", "label": "Height (px)", "type": "int", "default": 480},
+        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Nearest", "Linear", "Cubic", "Lanczos"], "default": 1}
+    ]
+)
 class ResizeNode(NodeProcessor):
     _INTERP = {0: cv2.INTER_NEAREST, 1: cv2.INTER_LINEAR, 2: cv2.INTER_CUBIC, 3: cv2.INTER_LANCZOS4}
 
@@ -362,6 +518,26 @@ class ResizeNode(NodeProcessor):
         return {"main": result, "width": w_out, "height": h_out}
 
 # --- ANALYSIS & FLOW ---
+@vision_node(
+    type_id="analysis_flow",
+    label="Optical Flow",
+    category="track",
+    icon="Wind",
+    description="Analyzes movement between frames using Farneback algorithm.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "data", "color": "any"}
+    ],
+    params=[
+        {"id": "pyr_scale", "label": "Pyramid Scale", "type": "float", "default": 0.5},
+        {"id": "levels", "label": "Levels", "type": "int", "default": 3},
+        {"id": "winsize", "label": "Win Size", "type": "int", "default": 15},
+        {"id": "iterations", "label": "Iterations", "type": "int", "default": 3},
+        {"id": "poly_n", "label": "Poly N", "type": "int", "default": 5},
+        {"id": "poly_sigma", "label": "Poly Sigma", "type": "float", "default": 1.2}
+    ]
+)
 class OpticalFlowNode(NodeProcessor):
     def __init__(self): self.prev = None
     def process(self, inputs, params):
@@ -379,6 +555,15 @@ class OpticalFlowNode(NodeProcessor):
         self.prev = gray
         return {"main": img, "data": flow}
 
+@vision_node(
+    type_id="analysis_flow_viz",
+    label="Flow Viz",
+    category="visualize",
+    icon="Eye",
+    description="Colorized visualization of optical flow data.",
+    inputs=[{"id": "data", "color": "any"}],
+    outputs=[{"id": "main", "color": "image"}]
+)
 class FlowVizNode(NodeProcessor):
     def process(self, inputs, params):
         flow = inputs.get('data')
@@ -499,6 +684,21 @@ class UniversalMonitorNode(NodeProcessor):
             "display_text": f"{final_val:.{precision}f} {unit}".strip()
         }
 
+@vision_node(
+    type_id="analysis_face_mp",
+    label="Face Tracker",
+    category="track",
+    icon="User",
+    description="Detects and tracks faces and facial landmarks (MediaPipe).",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "faces_list", "color": "list"},
+        {"id": "main", "color": "image"}
+    ],
+    params=[
+        {"id": "max_faces", "label": "Max Faces", "type": "int", "default": 3, "min": 1, "max": 10}
+    ]
+)
 class FaceDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
@@ -543,6 +743,21 @@ class FaceDetectionNode(NodeProcessor):
         for i, face in enumerate(faces_list): out[f"face_{i}"] = face
         return out
 
+@vision_node(
+    type_id="analysis_hand_mp",
+    label="Hand Tracker",
+    category="track",
+    icon="Zap",
+    description="Detects and tracks hands and joints (MediaPipe).",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "hands_list", "color": "list"},
+        {"id": "main", "color": "image"}
+    ],
+    params=[
+        {"id": "max_hands", "label": "Max Hands", "type": "int", "default": 2, "min": 1, "max": 10}
+    ]
+)
 class HandDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
@@ -587,6 +802,28 @@ class HandDetectionNode(NodeProcessor):
         for i, hand in enumerate(hands_list): out[f"hand_{i}"] = hand
         return out
 
+@vision_node(
+    type_id="filter_color_mask",
+    label="Color Mask",
+    category="mask",
+    icon="Layers",
+    description="Creates a mask by isolating a range of colors (HSV or RGB distance).",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[{"id": "mask", "color": "mask"}],
+    params=[
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["HSV Range", "RGB Distance"], "default": 0},
+        {"id": "h_min", "label": "H Min", "type": "int", "default": 0, "min": 0, "max": 179},
+        {"id": "h_max", "label": "H Max", "type": "int", "default": 179, "min": 0, "max": 179},
+        {"id": "s_min", "label": "S Min", "type": "int", "default": 0, "min": 0, "max": 255},
+        {"id": "s_max", "label": "S Max", "type": "int", "default": 255, "min": 0, "max": 255},
+        {"id": "v_min", "label": "V Min", "type": "int", "default": 0, "min": 0, "max": 255},
+        {"id": "v_max", "label": "V Max", "type": "int", "default": 255, "min": 0, "max": 255},
+        {"id": "r", "label": "Target R", "type": "int", "default": 128},
+        {"id": "g", "label": "Target G", "type": "int", "default": 128},
+        {"id": "b", "label": "Target B", "type": "int", "default": 128},
+        {"id": "threshold", "label": "RGB Threshold", "type": "int", "default": 30}
+    ]
+)
 class ColorMaskNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
@@ -610,6 +847,19 @@ class ColorMaskNode(NodeProcessor):
             mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
         return {"mask": mask}
 
+@vision_node(
+    type_id="filter_morphology",
+    label="Morphology",
+    category="mask",
+    icon="Layers",
+    description="Dilation or erosion operations to clean up masks.",
+    inputs=[{"id": "mask", "color": "mask"}],
+    outputs=[{"id": "mask", "color": "mask"}],
+    params=[
+        {"id": "operation", "label": "Operation", "type": "enum", "options": ["Dilation", "Erosion"], "default": 0},
+        {"id": "size", "label": "Kernel Size", "type": "int", "default": 5, "min": 1, "max": 51}
+    ]
+)
 class MorphologyNode(NodeProcessor):
     def process(self, inputs, params):
         mask = inputs.get('mask', inputs.get('image'))
@@ -690,6 +940,18 @@ class OverlayNode(NodeProcessor):
             scale = float(data.get('font_scale', 1.0))
             cv2.putText(img, text, scaled_pts[0], cv2.FONT_HERSHEY_SIMPLEX, scale, color, max(1, thick))
 
+@vision_node(
+    type_id="data_list_selector",
+    label="List Selector",
+    category="util",
+    icon="Box",
+    description="Extracts a specific item from a list of detections.",
+    inputs=[{"id": "list_in", "color": "list"}],
+    outputs=[{"id": "item_out", "color": "any"}],
+    params=[
+        {"id": "index", "label": "Index", "type": "int", "default": 0}
+    ]
+)
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
         d_list = inputs.get('list_in') or inputs.get('data')
@@ -697,16 +959,60 @@ class ListSelectorNode(NodeProcessor):
         idx = int(params.get('index', 0))
         return {"item_out": d_list[idx] if 0 <= idx < len(d_list) else None}
 
+@vision_node(
+    type_id="data_coord_splitter",
+    label="Coord Splitter",
+    category="util",
+    icon="Box",
+    description="Splits a coordinate dictionary into 4 scalar values.",
+    inputs=[{"id": "data", "color": "any"}],
+    outputs=[
+        {"id": "x", "color": "scalar"},
+        {"id": "y", "color": "scalar"},
+        {"id": "w", "color": "scalar"},
+        {"id": "h", "color": "scalar"}
+    ]
+)
 class CoordSplitterNode(NodeProcessor):
     def process(self, inputs, params):
         d = inputs.get('data')
         if not isinstance(d, dict): return {"x": None, "y": None, "w": None, "h": None}
         return {"x": d.get("xmin"), "y": d.get("ymin"), "w": d.get("width"), "h": d.get("height")}
 
+@vision_node(
+    type_id="data_coord_combine",
+    label="Coord Combine",
+    category="util",
+    icon="Box",
+    description="Combines 4 scalar values into a coordinate dictionary.",
+    inputs=[
+        {"id": "x", "color": "scalar"},
+        {"id": "y", "color": "scalar"},
+        {"id": "w", "color": "scalar"},
+        {"id": "h", "color": "scalar"}
+    ],
+    outputs=[{"id": "dict_out", "color": "any"}]
+)
 class CoordCombineNode(NodeProcessor):
     def process(self, inputs, params):
         return {"dict_out": {"xmin": float(inputs.get("x", 0.0) or 0.0), "ymin": float(inputs.get("y", 0.0) or 0.0), "width": float(inputs.get("w", 0.0) or 0.0), "height": float(inputs.get("h", 0.0) or 0.0)}}
 
+@vision_node(
+    type_id="util_coord_to_mask",
+    label="Coord To Mask",
+    category="mask",
+    icon="Layers",
+    description="Transforms detection coordinates into a white mask.",
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "data", "color": "any"}
+    ],
+    outputs=[{"id": "mask", "color": "mask"}],
+    params=[
+        {"id": "width", "label": "Width (if no img)", "type": "int", "default": 640},
+        {"id": "height", "label": "Height (if no img)", "type": "int", "default": 480}
+    ]
+)
 class CoordToMaskNode(NodeProcessor):
     def process(self, inputs, params):
         img_ref, data = inputs.get('image'), inputs.get('data')
@@ -740,6 +1046,19 @@ class CoordToMaskNode(NodeProcessor):
                     
         return {"mask": mask}
 
+@vision_node(
+    type_id="util_mask_blend",
+    label="Mask Blend",
+    category="blend",
+    icon="Box",
+    description="Blends two images using a mask as an alpha layer.",
+    inputs=[
+        {"id": "image_a", "color": "image"},
+        {"id": "image_b", "color": "image"},
+        {"id": "mask", "color": "mask"}
+    ],
+    outputs=[{"id": "main", "color": "image"}]
+)
 class MaskBlendNode(NodeProcessor):
     def process(self, inputs, params):
         img_a, img_b, mask = inputs.get('image_a', inputs.get('image')), inputs.get('image_b'), inputs.get('mask')
@@ -754,9 +1073,57 @@ class MaskBlendNode(NodeProcessor):
         blended = (img_a * (1.0 - mask_normalized)) + (img_b_res * mask_normalized)
         return {"main": blended.astype(np.uint8)}
 
+@vision_node(
+    type_id="data_inspector",
+    label="Inspect Unit",
+    category="visualize",
+    icon="Eye",
+    description="Displays the raw data content flowing through a link.",
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "data", "color": "any"}
+    ],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "data_out", "color": "any"}
+    ]
+)
 class InspectorNode(NodeProcessor):
     def process(self, inputs, params): return {"main": inputs.get('image'), "data_out": inputs.get('data')}
 
+@vision_node(
+    type_id="canvas_note",
+    label="Note",
+    category="canvas",
+    icon="Type",
+    description="Annotation text block. Double-click to edit. Drag & resize freely.",
+    inputs=[],
+    outputs=[]
+)
+class NoteNode(NodeProcessor):
+    def process(self, inputs, params): return {}
+
+@vision_node(
+    type_id="canvas_frame",
+    label="Frame",
+    category="canvas",
+    icon="Box",
+    description="Wraps and labels a group of nodes. Drag to encapsulate nodes.",
+    inputs=[],
+    outputs=[]
+)
+class FrameNode(NodeProcessor):
+    def process(self, inputs, params): return {}
+
+@vision_node(
+    type_id="canvas_reroute",
+    label="Reroute",
+    category="canvas",
+    icon="GitCommit",
+    description="Pass-through node to organize wires.",
+    inputs=[{"id": "in", "color": "any"}],
+    outputs=[{"id": "out", "color": "any"}]
+)
 class RerouteNode(NodeProcessor):
     def process(self, inputs, params):
         out = {}
@@ -771,6 +1138,19 @@ class RerouteNode(NodeProcessor):
         if 'out' not in out: out['out'] = first_val
         return out
 
+@vision_node(
+    type_id="output_display",
+    label="Display",
+    category="out",
+    icon="Maximize",
+    description="The output terminal displaying the final video stream.",
+    inputs=[
+        {"id": "main", "color": "image"},
+        {"id": "mask_in", "color": "mask"},
+        {"id": "flow_in", "color": "any"}
+    ],
+    outputs=[{"id": "main", "color": "image"}]
+)
 class DisplayOutput(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('main')
@@ -797,6 +1177,78 @@ class DisplayOutput(NodeProcessor):
         return {"main": res}
 
 # --- CORE ENGINE ---
+def flatten_groups(node_list, edge_list, prefix=''):
+    """Recursively expand group_node types into flat nodes+edges."""
+    flat_nodes = []
+    flat_edges = []
+    group_ids = {n['id'] for n in node_list if n.get('type') == 'group_node'}
+    non_group_ids = {n['id'] for n in node_list if n.get('type') != 'group_node'}
+
+    for node in node_list:
+        if node.get('type') != 'group_node':
+            flat_nodes.append({**node, 'id': prefix + node['id']})
+
+    for e in edge_list:
+        src, tgt = e.get('source', ''), e.get('target', '')
+        if src in non_group_ids and tgt in non_group_ids:
+            flat_edges.append({**e, 'source': prefix + src, 'target': prefix + tgt})
+
+    for node in node_list:
+        if node.get('type') != 'group_node':
+            continue
+        g_id = node['id']
+        gprefix = prefix + g_id + '::'
+        sub = node.get('data', {}).get('subGraph', {})
+        sub_nodes = sub.get('nodes', [])
+        sub_edges = sub.get('edges', [])
+
+        gin = next((n for n in sub_nodes if n.get('type') == 'group_input'), None)
+        gout = next((n for n in sub_nodes if n.get('type') == 'group_output'), None)
+        gin_id = gin['id'] if gin else None
+        gout_id = gout['id'] if gout else None
+
+        inner_nodes = [n for n in sub_nodes if n.get('type') not in ('group_input', 'group_output')]
+        inner_edges = [e for e in sub_edges
+                       if e.get('source') not in (gin_id, gout_id)
+                       and e.get('target') not in (gin_id, gout_id)]
+
+        sub_flat_nodes, sub_flat_edges = flatten_groups(inner_nodes, inner_edges, prefix=gprefix)
+        flat_nodes.extend(sub_flat_nodes)
+        flat_edges.extend(sub_flat_edges)
+
+        for outer_e in edge_list:
+            if outer_e.get('target') != g_id or not gin_id:
+                continue
+            th = outer_e.get('targetHandle', '')
+            for inner_e in sub_edges:
+                if inner_e.get('source') != gin_id or inner_e.get('sourceHandle', '') != th:
+                    continue
+                flat_edges.append({
+                    'id': f"f_{outer_e.get('id','')}_{inner_e.get('id','')}",
+                    'source': prefix + outer_e['source'],
+                    'sourceHandle': outer_e.get('sourceHandle', ''),
+                    'target': gprefix + inner_e['target'],
+                    'targetHandle': inner_e.get('targetHandle', ''),
+                })
+
+        for outer_e in edge_list:
+            if outer_e.get('source') != g_id or not gout_id:
+                continue
+            sh = outer_e.get('sourceHandle', '')
+            for inner_e in sub_edges:
+                if inner_e.get('target') != gout_id or inner_e.get('targetHandle', '') != sh:
+                    continue
+                flat_edges.append({
+                    'id': f"f_{inner_e.get('id','')}_{outer_e.get('id','')}",
+                    'source': gprefix + inner_e['source'],
+                    'sourceHandle': inner_e.get('sourceHandle', ''),
+                    'target': prefix + outer_e['target'],
+                    'targetHandle': outer_e.get('targetHandle', ''),
+                })
+
+    return flat_nodes, flat_edges
+
+
 class VisionEngine:
     def __init__(self):
         self.current_cap_index = 0
@@ -805,16 +1257,7 @@ class VisionEngine:
         self.sorted_nodes = []
         self.connected_clients = set()
         self.node_instances = {}
-        self.registry = {
-            'input_webcam': WebcamInput, 'input_image': ImageInput, 'input_movie': MovieInput, 'input_solid_color': SolidColorNode,
-            'filter_canny': CannyFilter, 'filter_blur': BlurFilter, 'filter_gray': GrayFilter, 'filter_threshold': ThresholdFilter,
-            'geom_flip': FlipNode, 'geom_resize': ResizeNode, 'analysis_flow': OpticalFlowNode, 'analysis_flow_viz': FlowVizNode,
-            'analysis_monitor': UniversalMonitorNode, 'analysis_face_mp': FaceDetectionNode, 'analysis_hand_mp': HandDetectionNode,
-            'filter_color_mask': ColorMaskNode, 'filter_morphology': MorphologyNode, 'draw_overlay': OverlayNode,
-            'util_coord_to_mask': CoordToMaskNode, 'util_mask_blend': MaskBlendNode, 'data_list_selector': ListSelectorNode,
-            'data_coord_splitter': CoordSplitterNode, 'data_coord_combine': CoordCombineNode, 'data_inspector': InspectorNode,
-            'output_display': DisplayOutput, 'canvas_reroute': RerouteNode
-        }
+        self.registry = {}
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
         self.preview_node_id = None
@@ -828,14 +1271,13 @@ class VisionEngine:
         self.cap.release(); self.cap = cv2.VideoCapture(idx); self.current_cap_index = idx
 
     def update_graph(self, g):
-        valid_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
-        self.graph = {**g, 'edges': valid_edges}
-        node_list = g.get('nodes', [])
-        nodes = {n['id']: n for n in node_list}
-        s_ids = topological_sort(node_list, valid_edges)
-        self.sorted_nodes = [nodes[nid] for nid in s_ids if nid in nodes]
-
-        active_nids = set(nodes.keys())
+        raw_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
+        flat_nodes, flat_edges = flatten_groups(g.get('nodes', []), raw_edges)
+        self.graph = {'nodes': flat_nodes, 'edges': flat_edges}
+        nodes_dict = {n['id']: n for n in flat_nodes}
+        s_ids = topological_sort(flat_nodes, flat_edges)
+        self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
+        active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
 
     async def _drain_notifs_loop(self):
