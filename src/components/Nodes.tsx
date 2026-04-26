@@ -1119,7 +1119,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const text = data.params?.text || '';
+  const text = data.params?.text ?? '';
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#ffd4b8');
@@ -1283,7 +1283,7 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
 
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
-  const title = data.params?.title || 'Frame Layer';
+  const title = data.params?.title ?? 'Frame Layer';
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
