@@ -28,7 +28,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
   { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
-  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display Outlet', params: {} } },
+  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display', params: {} } },
 ];
 
 const initialEdges: Edge[] = [
@@ -245,7 +245,7 @@ const CATEGORIES = [
     { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' }
   ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
-    { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' },
+    { type: 'output_display', label: 'Display', description: 'The output terminal displaying the final video stream.' },
     { type: 'output_movie', label: 'Movie Export', description: 'Records the pipeline to an MP4 file, or records webcam directly and creates a Movie node on stop.' },
     { type: 'util_compose', label: 'Compose', description: 'Combines two images: side-by-side, split view, blend, difference, or checkerboard.' }
   ] },

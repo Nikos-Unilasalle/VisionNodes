@@ -775,7 +775,7 @@ export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
 ));
 
 export const OutputDisplayNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Final Out" icon={Maximize} selected={selected} data={data} color="green" inputs={[
+  <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={[
     {id: 'main', color: 'image'},
     {id: 'mask_in', color: 'mask'},
     {id: 'flow_in', color: 'flow'}
