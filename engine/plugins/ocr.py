@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 from registry import NodeProcessor, vision_node
+from list_ops import canonical_corners
 
 EAST_MODEL_URL = "https://github.com/oyyd/frozen_east_text_detection.pb/raw/master/frozen_east_text_detection.pb"
 EAST_MODEL_PATH = "frozen_east_text_detection.pb"
@@ -124,21 +125,16 @@ def _deskew_crop(img, box):
     pts_norm = box.get('pts')
 
     if pts_norm and len(pts_norm) == 4:
-        # Convert normalized [TR, TL, BL, BR] to pixel coords
-        src = np.array([[p[0]*W, p[1]*H] for p in pts_norm], dtype=np.float32)
+        # Canonical TL, TR, BR, BL order — fixes upside-down text
+        ordered = canonical_corners(pts_norm)
+        src = np.array([[p[0]*W, p[1]*H] for p in ordered], dtype=np.float32)
 
-        w = int(max(
-            np.linalg.norm(src[0] - src[1]),
-            np.linalg.norm(src[3] - src[2])
-        ))
-        h = int(max(
-            np.linalg.norm(src[1] - src[2]),
-            np.linalg.norm(src[0] - src[3])
-        ))
+        w = int(max(np.linalg.norm(src[0]-src[1]), np.linalg.norm(src[3]-src[2])))
+        h = int(max(np.linalg.norm(src[0]-src[3]), np.linalg.norm(src[1]-src[2])))
         if w < 2 or h < 2:
             return None
 
-        dst = np.array([[w-1, 0], [0, 0], [0, h-1], [w-1, h-1]], dtype=np.float32)
+        dst = np.array([[0,0],[w-1,0],[w-1,h-1],[0,h-1]], dtype=np.float32)
         M = cv2.getPerspectiveTransform(src, dst)
         return cv2.warpPerspective(img, M, (w, h))
 

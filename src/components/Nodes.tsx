@@ -6,7 +6,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -744,6 +744,18 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
 
 export const DataListSelectorNode = memo(({ selected, data }: any) => (
   <BaseNode title="List Selector" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
+));
+
+export const RegionSelectorNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Region Selector" icon={Filter} selected={selected} data={data} color="green"
+    inputs={[{id: 'list_in', color: 'list'}]}
+    outputs={[
+      {id: 'item',     color: 'dict'},
+      {id: 'pts',      color: 'list'},
+      {id: 'list_out', color: 'list'},
+      {id: 'count',    color: 'scalar'},
+    ]}
+  />
 ));
 
 export const DataCoordSplitterNode = memo(({ selected, data }: any) => (
