@@ -50,6 +50,9 @@ class EasyOcrNode(NodeProcessor):
         self._loading = False
         self._loaded_lang_idx = -1
         self._loaded_gpu = None
+        self._cache_hash = None
+        self._cache_params = None
+        self._cache_result = None
 
     def _load_reader(self, lang_idx, gpu):
         self._loading = True
@@ -94,6 +97,12 @@ class EasyOcrNode(NodeProcessor):
         if self.reader is None:
             return {'main': img, 'text_regions': [], 'texts': []}
 
+        # Cache: skip inference if image + params unchanged
+        img_hash = hash(img[::8, ::8].tobytes())
+        params_key = (lang_idx, gpu, min_conf, do_text)
+        if img_hash == self._cache_hash and params_key == self._cache_params and self._cache_result is not None:
+            return self._cache_result
+
         H, W = img.shape[:2]
         out = img.copy()
 
@@ -135,4 +144,8 @@ class EasyOcrNode(NodeProcessor):
                 cv2.putText(out, f'{text} {conf:.2f}', (x0, max(0, y0-6)),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
 
-        return {'main': out, 'text_regions': regions, 'texts': texts}
+        result = {'main': out, 'text_regions': regions, 'texts': texts}
+        self._cache_hash = img_hash
+        self._cache_params = params_key
+        self._cache_result = result
+        return result

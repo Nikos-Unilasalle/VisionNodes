@@ -36,12 +36,15 @@ class YoloDetectionNode(NodeProcessor):
         self.model = None
         self.device = 'cpu'
         self.current_model_name = ""
-        
+        self._cache_hash = None
+        self._cache_params = None
+        self._cache_result = None
+
         if torch.backends.mps.is_available():
             self.device = 'mps'
         elif torch.cuda.is_available():
             self.device = 'cuda'
-            
+
         print(f"[YOLO] Using device: {self.device}")
 
     def _load_model(self, size_idx):
@@ -83,6 +86,12 @@ class YoloDetectionNode(NodeProcessor):
 
         if self.model is None: return {"main": image, "objects_list": []}
 
+        # Cache: skip inference if image + params unchanged
+        img_hash = hash(image[::8, ::8].tobytes())
+        params_key = (conf, size_idx)
+        if img_hash == self._cache_hash and params_key == self._cache_params and self._cache_result is not None:
+            return self._cache_result
+
         # Inference
         self.report_progress(0.2, 'YOLO: detecting…')
         results = self.model.predict(image, conf=conf, verbose=False, device=self.device)
@@ -122,12 +131,11 @@ class YoloDetectionNode(NodeProcessor):
                 }
                 objects_list.append(obj_data)
 
-        out = {
-            "main": image,
-            "objects_list": objects_list
-        }
-        # Populate individual object ports
+        out = {"main": image, "objects_list": objects_list}
         for i in range(3):
             out[f"obj_{i}"] = objects_list[i] if i < len(objects_list) else None
-            
+
+        self._cache_hash = img_hash
+        self._cache_params = params_key
+        self._cache_result = out
         return out
