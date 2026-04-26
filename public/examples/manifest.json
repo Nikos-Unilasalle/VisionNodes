@@ -1,5 +1,5 @@
 [
-  { "name": "OCR Scanner (Tesseract)",          "description": "Détecte les zones de texte, sélectionne la plus grande par aire, la redresse par homographie, lit le texte avec Tesseract et l'affiche sur l'image.",       "file": "ocr_scanner.vn" },
+  { "name": "OCR Scanner (EasyOCR)",            "description": "Détecte et lit le texte avec EasyOCR, joint les fragments, isole les zones par contour + remplissage, compose un rendu coloré avec le texte reconnu en overlay.", "file": "ocr_scanner.vn" },
   { "name": "Movement Analysis (MOG2)",          "description": "Détecte les objets en mouvement par soustraction de fond et identifie leurs contours.",                                                                             "file": "movement_analysis.vn" },
   { "name": "Harris Corner Detection",           "description": "Détecte les coins d'une image avec l'opérateur Harris.",                                                                                                            "file": "harris_corner.vn" },
   { "name": "Smile Detector",                    "description": "Détecte les sourires via MediaPipe (distance coins de bouche), collecte les frames et exporte en CSV.",                                                             "file": "smile_detector.vn" },
