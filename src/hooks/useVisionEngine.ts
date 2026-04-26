@@ -115,5 +115,16 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     setNotifications(prev => prev.filter(x => x.id !== id));
   };
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification };
+  const pushNotification = useCallback((message: string, level: EngineNotification['level'] = 'info', ttl = 4000) => {
+    const id = 'fe_' + Date.now();
+    setNotifications(prev => {
+      const next = [...prev.slice(-9), { id, message, progress: null, level }];
+      return next;
+    });
+    if (ttl > 0) {
+      dismissTimers.current[id] = setTimeout(() => dismissNotification(id), ttl);
+    }
+  }, []);
+
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification };
 }
