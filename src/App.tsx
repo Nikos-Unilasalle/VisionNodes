@@ -21,7 +21,7 @@ import { NodeInspectorPanel } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
+import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -256,7 +256,7 @@ const CATEGORIES = [
   ] }
 ];
 
-type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[] };
+type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[]; filePath: string | null };
 const CANVAS_IDS = ['c1', 'c2', 'c3', 'c4'];
 const CANVAS_NAMES = ['Scene 1', 'Scene 2', 'Scene 3', 'Scene 4'];
 const makeInitialCanvases = (): Canvas[] => CANVAS_IDS.map((id, i) => ({
@@ -264,6 +264,7 @@ const makeInitialCanvases = (): Canvas[] => CANVAS_IDS.map((id, i) => ({
   name: CANVAS_NAMES[i],
   nodes: i === 0 ? initialNodes : [],
   edges: i === 0 ? initialEdges : [],
+  filePath: null,
 }));
 
 function App() {
@@ -289,6 +290,13 @@ function App() {
     setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
       ? { ...c, edges: typeof updater === 'function' ? updater(c.edges) : updater }
       : c));
+  }, []);
+  const activeFilePath = useMemo(
+    () => canvases.find(c => c.id === activeCanvasId)?.filePath ?? null,
+    [canvases, activeCanvasId]
+  );
+  const setActiveFilePath = useCallback((path: string | null) => {
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? { ...c, filePath: path } : c));
   }, []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
@@ -669,21 +677,67 @@ function App() {
     setEdges(eds => [...eds, ...newEdges]);
   }, []);
 
+  const buildProjectContent = () => {
+    const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
+    return JSON.stringify({ nodes, edges, ui }, null, 2);
+  };
+
   const saveProject = async () => {
     try {
-      const path = await save({
-        defaultPath: 'project.vn',
-        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
-      });
-
+      let path = activeFilePath;
+      if (!path) {
+        path = await save({
+          defaultPath: 'project.vn',
+          filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+        });
+      }
       if (path) {
-        const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
-        const content = JSON.stringify({ nodes, edges, ui }, null, 2);
-        await writeTextFile(path, content);
-        console.log('Project saved to', path);
+        await writeTextFile(path, buildProjectContent());
+        setActiveFilePath(path);
       }
     } catch (err) {
       console.error('Failed to save project:', err);
+    }
+  };
+
+  const saveProjectIncremental = async () => {
+    try {
+      let basePath: string | null = activeFilePath;
+      if (!basePath) {
+        basePath = await save({
+          defaultPath: 'project.vn',
+          filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+        });
+        if (!basePath) return;
+        await writeTextFile(basePath, buildProjectContent());
+        setActiveFilePath(basePath);
+        return;
+      }
+
+      // Parse: dir + stem (without .vn)
+      const lastSlash = Math.max(basePath.lastIndexOf('/'), basePath.lastIndexOf('\\'));
+      const dir = basePath.slice(0, lastSlash + 1);
+      const filename = basePath.slice(lastSlash + 1).replace(/\.vn$/i, '');
+
+      // Check if stem ends with " NN" (space + digits)
+      const numMatch = filename.match(/^(.*?) (\d+)$/);
+      if (numMatch) {
+        // Already versioned: just increment
+        const stem = numMatch[1];
+        const nextN = parseInt(numMatch[2], 10) + 1;
+        const nextPath = `${dir}${stem} ${String(nextN).padStart(2, '0')}.vn`;
+        await writeTextFile(nextPath, buildProjectContent());
+        setActiveFilePath(nextPath);
+      } else {
+        // First increment: rename original → stem 01, save stem 02
+        const path01 = `${dir}${filename} 01.vn`;
+        const path02 = `${dir}${filename} 02.vn`;
+        await rename(basePath, path01);
+        await writeTextFile(path02, buildProjectContent());
+        setActiveFilePath(path02);
+      }
+    } catch (err) {
+      console.error('Failed incremental save:', err);
     }
   };
 
@@ -699,6 +753,7 @@ function App() {
         const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
         setNodes(newNodes);
         setEdges(newEdges);
+        setActiveFilePath(path);
         if (ui) {
             if (ui.previewSize) setPreviewSize(ui.previewSize);
             if (ui.previewPos) setPreviewPos(ui.previewPos);
@@ -948,7 +1003,7 @@ function App() {
           
           <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button
-              onClick={() => { pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
+              onClick={() => { pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
               <Plus size={14} /> New
@@ -964,8 +1019,20 @@ function App() {
             <button
               onClick={saveProject}
               className="flex items-center gap-2 px-3 py-1 bg-accent/10 hover:bg-accent/20 rounded-md text-[10px] font-bold text-accent transition-all"
+              title={activeFilePath ? `Save → ${activeFilePath.split(/[\\/]/).pop()}` : 'Save As…'}
             >
-              <Save size={14} /> Save .vn
+              <Save size={14} />
+              {activeFilePath
+                ? activeFilePath.split(/[\\/]/).pop()?.replace(/\.vn$/i, '') ?? 'Save'
+                : 'Save .vn'}
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={saveProjectIncremental}
+              title="Save incremental version (+01, +02…)"
+              className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
+            >
+              +
             </button>
           </div>
 
