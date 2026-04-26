@@ -80,6 +80,8 @@ class EastDetectorNode(NodeProcessor):
         
         min_conf = float(params.get('min_confidence', 0.5))
         
+        rotated_boxes = []  # (4 corners in EAST space, for drawing)
+
         for y in range(0, numRows):
             scoresData = scores[0, 0, y]
             x0 = geometry[0, 0, y]
@@ -87,48 +89,62 @@ class EastDetectorNode(NodeProcessor):
             x2 = geometry[0, 2, y]
             x3 = geometry[0, 3, y]
             anglesData = geometry[0, 4, y]
-            
+
             for x in range(0, numCols):
                 if scoresData[x] < min_conf: continue
-                
-                (offsetX, offsetY) = (x * 4.0, y * 4.0)
+
+                offsetX, offsetY = x * 4.0, y * 4.0
                 angle = anglesData[x]
-                cos = np.cos(angle)
-                sin = np.sin(angle)
-                h = x0[x] + x2[x]
-                w = x1[x] + x3[x]
-                
-                endX = int(offsetX + (cos * x1[x]) + (sin * x2[x]))
-                endY = int(offsetY - (sin * x1[x]) + (cos * x2[x]))
-                startX = int(endX - w)
-                startY = int(endY - h)
-                
-                rects.append((startX, startY, endX, endY))
-                confidences.append(scoresData[x])
-        
+                cos_a, sin_a = np.cos(angle), np.sin(angle)
+                d0, d1, d2, d3 = x0[x], x1[x], x2[x], x3[x]
+
+                # Decode rotated corners (EAST convention)
+                # p1 = top-right
+                p1x = offsetX + cos_a * d1 + sin_a * d2
+                p1y = offsetY - sin_a * d1 + cos_a * d2
+                p2x = offsetX - cos_a * d3 + sin_a * d2
+                p2y = offsetY + sin_a * d3 + cos_a * d2
+                p3x = offsetX - cos_a * d3 - sin_a * d0
+                p3y = offsetY + sin_a * d3 - cos_a * d0
+                p4x = offsetX + cos_a * d1 - sin_a * d0
+                p4y = offsetY - sin_a * d1 - cos_a * d0
+
+                corners = np.array([[p1x, p1y], [p2x, p2y], [p3x, p3y], [p4x, p4y]], dtype=np.float32)
+
+                # Axis-aligned bbox for NMS
+                xs = [p1x, p2x, p3x, p4x]
+                ys = [p1y, p2y, p3y, p4y]
+                rects.append((int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))))
+                confidences.append(float(scoresData[x]))
+                rotated_boxes.append(corners)
+
         # NMS
         from cv2 import dnn
         indices = dnn.NMSBoxes(rects, confidences, min_conf, 0.4)
-        
+
         results = []
         if len(indices) > 0:
             for i in indices.flatten():
-                (startX, startY, endX, endY) = rects[i]
-                
-                # Scale back to original
-                sX = int(startX * rW)
-                sY = int(startY * rH)
-                eX = int(endX * rW)
-                eY = int(endY * rH)
-                
+                corners = rotated_boxes[i]
+                # Scale back to original image size
+                scaled = (corners * np.array([rW, rH])).astype(np.int32)
+
+                # Axis-aligned bbox for Tesseract crop compatibility
+                sX = int(np.clip(scaled[:, 0].min(), 0, W))
+                sY = int(np.clip(scaled[:, 1].min(), 0, H))
+                eX = int(np.clip(scaled[:, 0].max(), 0, W))
+                eY = int(np.clip(scaled[:, 1].max(), 0, H))
+
+                norm_pts = [[float(np.clip(p[0]/W, 0, 1)), float(np.clip(p[1]/H, 0, 1))] for p in scaled]
+
                 results.append({
-                    "xmin": max(0, sX/W), "ymin": max(0, sY/H), 
-                    "width": min(1.0, (eX-sX)/W), "height": min(1.0, (eY-sY)/H),
-                    "label": "text", "_type": "graphics", "shape": "rect",
-                    "pts": [[max(0, sX/W), max(0, sY/H)], [min(1.0, eX/W), min(1.0, eY/H)]],
+                    "xmin": sX/W, "ymin": sY/H,
+                    "width": (eX-sX)/W, "height": (eY-sY)/H,
+                    "label": "text", "_type": "graphics", "shape": "polygon",
+                    "pts": norm_pts,
                     "color": "#ffff00", "relative": True
                 })
-                cv2.rectangle(orig, (sX, sY), (eX, eY), (0, 255, 0), 2)
+                cv2.polylines(orig, [scaled.reshape((-1, 1, 2))], True, (0, 255, 0), 2)
                 
         return {"text_regions": results, "main": orig}
 
