@@ -149,6 +149,7 @@ const _nodeTypes = {
   string_split: N.StringNode,
   string_length: N.StringNode,
   string_case: N.StringNode,
+  string_replace: N.StringNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
 };
@@ -238,7 +239,8 @@ const CATEGORIES = [
   ] },
   { id: 'strings', label: 'Strings', icon: Type, nodes: [
     { type: 'string_input', label: 'String Input', description: 'Manual text entry for logic and display.' },
-    { type: 'string_concat', label: 'Concatenate', description: 'Joins two strings together.' },
+    { type: 'string_concat', label: 'Concatenate', description: 'Joins two strings (or a list of strings) with a separator.' },
+    { type: 'string_replace', label: 'Search & Replace', description: 'Finds and replaces text in a string. Supports regex.' },
     { type: 'string_split', label: 'Split', description: 'Splits a string into a list via a separator.' },
     { type: 'string_length', label: 'Length', description: 'Counts the number of characters.' },
     { type: 'string_case', label: 'Case Change', description: 'Converts to Upper or Lower case.' }
