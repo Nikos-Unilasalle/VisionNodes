@@ -491,12 +491,12 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode
-      title="ROI Polygon"
+      title="Mask Polygon"
       icon={Scaling}
       selected={selected}
       data={data}
       color="accent"
-      inputs={[{id: 'image', color: 'image'}]}
+      inputs={[{id: 'image', color: 'image'}, {id: 'mask_in', color: 'mask'}]}
       outputs={[
         {id: 'main',       color: 'image'},
         {id: 'mask',       color: 'mask'},

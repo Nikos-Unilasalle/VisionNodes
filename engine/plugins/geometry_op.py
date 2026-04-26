@@ -112,11 +112,11 @@ class ManualPointsNode(NodeProcessor):
 
 @vision_node(
     type_id="util_roi_polygon",
-    label="ROI Polygon",
+    label="Mask Polygon",
     category="geom",
     icon="Scaling",
-    description="Interactive polygonal mask generator to define Regions of Interest.",
-    inputs=[{"id": "image", "color": "image"}],
+    description="Interactive polygonal mask — draws a region of interest, optionally restricted by an input mask.",
+    inputs=[{"id": "image", "color": "image"}, {"id": "mask_in", "color": "mask"}],
     outputs=[
         {"id": "main",       "color": "image"},
         {"id": "mask",       "color": "mask"},
@@ -134,6 +134,7 @@ class ROIPolygonNode(NodeProcessor):
     def process(self, inputs, params):
         import json, base64
         img = inputs.get('image')
+        mask_in = inputs.get('mask_in')
         h, w = (img.shape[0], img.shape[1]) if img is not None else (480, 640)
         
         points_str = params.get('points', '[]')
@@ -182,6 +183,14 @@ class ROIPolygonNode(NodeProcessor):
             elif len(pts) == 2:
                  cv2.line(mask, tuple(pts[0]), tuple(pts[1]), 255, int(params.get('thickness', 2)))
         
+        # Combine with input mask if provided (intersection)
+        if mask_in is not None:
+            try:
+                mi = cv2.resize(mask_in, (w, h)) if mask_in.shape[:2] != (h, w) else mask_in
+                mask = cv2.bitwise_and(mask, mi)
+            except Exception:
+                pass
+
         if img is not None:
             masked     = cv2.bitwise_and(img, img, mask=mask)
             masked_inv = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
