@@ -315,9 +315,9 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
 });
 
 export const SolidColorNode = memo(({ selected, data }: any) => {
-  const r = data.params?.r ?? 0;
-  const g = data.params?.g ?? 128;
-  const b = data.params?.b ?? 255;
+  const r = data.params?.r ?? 255;
+  const g = data.params?.g ?? 0;
+  const b = data.params?.b ?? 0;
   const hex = `rgb(${r},${g},${b})`;
   return (
     <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
