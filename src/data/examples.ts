@@ -1,22 +1,25 @@
 export const EXAMPLES = [
   {
     name: "OCR Scanner (Tesseract)",
-    description: "Détecte des zones de texte avec EAST et les lit avec Tesseract.",
+    description: "Détecte les zones de texte, sélectionne la plus grande, la redresse par homographie, lit le texte et l'affiche sur l'image.",
     nodes: [
-      { id: "src-1", type: "input_image", position: { x: 50, y: 200 }, data: { label: "Sample Image", params: {} } },
-      { id: "east-1", type: "ocr_east_detect", position: { x: 300, y: 200 }, data: { label: "Text Detector (EAST)", params: { min_confidence: 0.5 } } },
-      { id: "selector-1", type: "data_list_selector", position: { x: 550, y: 200 }, data: { label: "Select First Region", params: { index: 0 } } },
-      { id: "tess-1", type: "ocr_tesseract", position: { x: 800, y: 200 }, data: { label: "OCR (Tesseract)", params: { lang: 0 } } },
-      { id: "ins-1", type: "data_inspector", position: { x: 1050, y: 200 }, data: { label: "Text Inspector", params: {} } },
-      { id: "disp-1", type: "output_display", position: { x: 800, y: 400 }, data: { label: "Final Display", params: {} } }
+      { id: "src-1",  type: "input_image",     position: { x: 50,   y: 220 }, data: { label: "book.jpg",              params: { path: "samples/book.jpg" } } },
+      { id: "east-1", type: "ocr_east_detect",  position: { x: 340,  y: 220 }, data: { label: "Text Detector (EAST)", params: { min_confidence: 0.3, width: 640, height: 640 } } },
+      { id: "py-1",   type: "logic_python",     position: { x: 640,  y: 220 }, data: { label: "Largest Region",       params: { code: "items = a if isinstance(a, list) else []\nif not items:\n    out_dict = {}; out_list = []\nelse:\n    item = max(items, key=lambda x: x.get('width',0)*x.get('height',0))\n    out_dict = item\n    pts = item.get('pts',[])\n    if len(pts) == 4:\n        out_list = pts\n    else:\n        x0=item.get('xmin',0); y0=item.get('ymin',0)\n        x1=x0+item.get('width',1); y1=y0+item.get('height',1)\n        out_list = [[x1,y0],[x0,y0],[x0,y1],[x1,y1]]" } } },
+      { id: "warp-1", type: "geom_perspective", position: { x: 960,  y: 60  }, data: { label: "Homography Warp",      params: { width: 500, height: 600 } } },
+      { id: "tess-1", type: "ocr_tesseract",    position: { x: 1260, y: 60  }, data: { label: "OCR (Tesseract)",      params: { psm: 1, upscale: 3, padding: 8 } } },
+      { id: "draw-1", type: "draw_text",        position: { x: 960,  y: 390 }, data: { label: "Text Overlay",         params: { x: 0.05, y: 0.93, font_scale: 1.2, thickness: 2, r: 255, g: 255, b: 0 } } },
+      { id: "disp-1", type: "output_display",   position: { x: 1260, y: 390 }, data: { label: "Display",              params: {} } }
     ],
     edges: [
-      { id: "e1", source: "src-1", target: "east-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e2", source: "east-1", target: "selector-1", sourceHandle: "list__text_regions", targetHandle: "list__list_in" },
-      { id: "e3", source: "src-1", target: "tess-1", sourceHandle: "image__main", targetHandle: "image__image" },
-      { id: "e4", source: "selector-1", target: "tess-1", sourceHandle: "dict__item_out", targetHandle: "dict__box" },
-      { id: "e5", source: "tess-1", target: "ins-1", sourceHandle: "any__text", targetHandle: "any__data" },
-      { id: "e6", source: "east-1", target: "disp-1", sourceHandle: "image__main", targetHandle: "image__main" }
+      { id: "e1", source: "src-1",  target: "east-1", sourceHandle: "image__main",     targetHandle: "image__image"   },
+      { id: "e2", source: "east-1", target: "py-1",   sourceHandle: "list__text_regions", targetHandle: "any__a"      },
+      { id: "e3", source: "src-1",  target: "warp-1", sourceHandle: "image__main",     targetHandle: "image__image"   },
+      { id: "e4", source: "py-1",   target: "warp-1", sourceHandle: "list__out_list",  targetHandle: "list__src_pts"  },
+      { id: "e5", source: "warp-1", target: "tess-1", sourceHandle: "image__main",     targetHandle: "image__image"   },
+      { id: "e6", source: "east-1", target: "draw-1", sourceHandle: "image__main",     targetHandle: "image__image"   },
+      { id: "e7", source: "tess-1", target: "draw-1", sourceHandle: "any__text",       targetHandle: "string__text"   },
+      { id: "e8", source: "draw-1", target: "disp-1", sourceHandle: "image__main",     targetHandle: "image__main"    }
     ]
   },
   {
