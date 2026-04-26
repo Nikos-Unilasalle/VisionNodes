@@ -5,13 +5,13 @@ import ReactFlow, {
   NodeResizer
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { 
+import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
-  Undo2, Redo2, FolderSearch, RefreshCw
+  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -152,6 +152,9 @@ const _nodeTypes = {
   string_replace: N.StringNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
+  group_node: N.GroupNode,
+  group_input: N.GroupInputNode,
+  group_output: N.GroupOutputNode,
 };
 
 const nodeTypes = Object.fromEntries(
@@ -260,6 +263,39 @@ const CATEGORIES = [
   ] }
 ];
 
+// ─── Group navigation helpers ─────────────────────────────────────────────────
+
+type GroupEntry = { groupNodeId: string };
+
+function getNestedSubGraph(
+  canvasNodes: Node[],
+  stack: GroupEntry[]
+): { nodes: Node[]; edges: Edge[] } {
+  if (stack.length === 0) return { nodes: [], edges: [] };
+  const g = canvasNodes.find(n => n.id === stack[0].groupNodeId);
+  const sub = (g?.data as any)?.subGraph ?? { nodes: [], edges: [] };
+  if (stack.length === 1) return sub;
+  return getNestedSubGraph(sub.nodes, stack.slice(1));
+}
+
+function updateNestedSubGraph(
+  canvasNodes: Node[],
+  stack: GroupEntry[],
+  field: 'nodes' | 'edges',
+  updater: (items: any[]) => any[]
+): Node[] {
+  return canvasNodes.map(n => {
+    if (n.id !== stack[0].groupNodeId) return n;
+    const sub = (n.data as any)?.subGraph ?? { nodes: [], edges: [] };
+    if (stack.length === 1) {
+      return { ...n, data: { ...n.data, subGraph: { ...sub, [field]: updater(sub[field] ?? []) } } };
+    }
+    return { ...n, data: { ...n.data, subGraph: { ...sub, nodes: updateNestedSubGraph(sub.nodes, stack.slice(1), field, updater) } } };
+  });
+}
+
+// ─── End group helpers ────────────────────────────────────────────────────────
+
 type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[]; filePath: string | null };
 const CANVAS_IDS = ['c1', 'c2', 'c3', 'c4'];
 const CANVAS_NAMES = ['Scene 1', 'Scene 2', 'Scene 3', 'Scene 4'];
@@ -277,14 +313,36 @@ function App() {
   const activeCanvasIdRef = useRef('c1');
   useEffect(() => { activeCanvasIdRef.current = activeCanvasId; }, [activeCanvasId]);
 
-  const nodes = useMemo(
+  // Root canvas nodes/edges (always top-level — sent to engine)
+  const canvasNodes = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.nodes ?? [],
     [canvases, activeCanvasId]
   );
-  const edges = useMemo(
+  const canvasEdges = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.edges ?? [],
     [canvases, activeCanvasId]
   );
+  const canvasNodesRef = useRef<Node[]>([]);
+  const canvasEdgesRef = useRef<Edge[]>([]);
+  canvasNodesRef.current = canvasNodes;
+  canvasEdgesRef.current = canvasEdges;
+
+  // Group navigation stack
+  const [groupStack, setGroupStack] = useState<GroupEntry[]>([]);
+  const groupStackRef = useRef<GroupEntry[]>([]);
+  useEffect(() => { groupStackRef.current = groupStack; }, [groupStack]);
+
+  // View nodes/edges: current-level view (may be inside a group subgraph)
+  const nodes = useMemo(() => {
+    if (groupStack.length === 0) return canvasNodes;
+    return getNestedSubGraph(canvasNodes, groupStack).nodes;
+  }, [canvasNodes, groupStack]);
+  const edges = useMemo(() => {
+    if (groupStack.length === 0) return canvasEdges;
+    return getNestedSubGraph(canvasNodes, groupStack).edges;
+  }, [canvasNodes, canvasEdges, groupStack]);
+
+  // Root-level writers (bulk operations: load, undo/redo, new canvas)
   const setNodes = useCallback((updater: Node[] | ((nds: Node[]) => Node[])) => {
     setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
       ? { ...c, nodes: typeof updater === 'function' ? updater(c.nodes) : updater }
@@ -295,6 +353,22 @@ function App() {
       ? { ...c, edges: typeof updater === 'function' ? updater(c.edges) : updater }
       : c));
   }, []);
+
+  // View-level writers (interactive operations: drag, connect, etc.)
+  const setViewNodes = useCallback((updater: Node[] | ((nds: Node[]) => Node[])) => {
+    const fn = typeof updater === 'function' ? updater : (_: Node[]) => updater as Node[];
+    if (groupStackRef.current.length === 0) { setNodes(updater); return; }
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, nodes: updateNestedSubGraph(c.nodes, groupStackRef.current, 'nodes', fn) }
+      : c));
+  }, [setNodes]);
+  const setViewEdges = useCallback((updater: Edge[] | ((eds: Edge[]) => Edge[])) => {
+    const fn = typeof updater === 'function' ? updater : (_: Edge[]) => updater as Edge[];
+    if (groupStackRef.current.length === 0) { setEdges(updater); return; }
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, nodes: updateNestedSubGraph(c.nodes, groupStackRef.current, 'edges', fn) }
+      : c));
+  }, [setEdges]);
   const activeFilePath = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.filePath ?? null,
     [canvases, activeCanvasId]
@@ -323,10 +397,11 @@ function App() {
   const { push: histPush, undo: histUndo, redo: histRedo, canUndo, canRedo } = useHistory();
   const lastParamPushRef = useRef(0);
   const pushSnapshot = useCallback(() => {
-    histPush(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+    histPush(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
   }, [histPush, activeCanvasId]);
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+  const [paneMenu, setPaneMenu] = useState<{ x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
@@ -506,7 +581,7 @@ function App() {
             ? () => setCropEditingId(node.id)
             : undefined,
           onChangeParams: (p: any) => {
-            setNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
+            setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           }
         }
       };
@@ -541,26 +616,50 @@ function App() {
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
-    setNodes((nds) => applyNodeChanges(changes, nds));
-  }, [pushSnapshot]);
+    setViewNodes((nds) => applyNodeChanges(changes, nds));
+  }, [pushSnapshot, setViewNodes]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
-    setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, [pushSnapshot]);
+    setViewEdges((eds) => applyEdgeChanges(changes, eds));
+  }, [pushSnapshot, setViewEdges]);
 
   const onConnect = useCallback((params: Connection) => {
     pushSnapshot();
-    setEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
-  }, [pushSnapshot]);
+    // Dynamic group_output port creation
+    const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
+    if (targetNode?.type === 'group_output' && params.targetHandle === 'any__new' && params.sourceHandle) {
+      const sh = params.sourceHandle;
+      const color = sh.split('__')[0] || 'any';
+      const newPort = { id: sh, color, label: `out${(targetNode.data as any)?.ports?.length ?? 0}` };
+      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+        ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+        : n));
+      // Also update parent group node's outputs list
+      if (groupStackRef.current.length > 0) {
+        const parentGroupId = groupStackRef.current[groupStackRef.current.length - 1].groupNodeId;
+        const parentStack = groupStackRef.current.slice(0, -1);
+        setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? {
+          ...c,
+          nodes: (parentStack.length > 0
+            ? updateNestedSubGraph(c.nodes, parentStack, 'nodes', (nds: Node[]) => nds.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } }))
+            : c.nodes.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } })
+          )
+        } : c));
+      }
+      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
+      return;
+    }
+    setViewEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
 
-  // Centralized graph synchronization to prevent loops
+  // Centralized graph synchronization — always sends root canvas (groups flattened by engine)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isConnected) updateGraph(nodes, edges);
+      if (isConnected) updateGraph(canvasNodes, canvasEdges);
     }, 100);
     return () => clearTimeout(timer);
-  }, [nodes, edges, isConnected, updateGraph]);
+  }, [canvasNodes, canvasEdges, isConnected, updateGraph]);
 
   const onConnectEnd = useCallback((event: any, connectionState?: any) => {
     if (connectionState && connectionState.isValid === false) {
@@ -611,14 +710,14 @@ function App() {
     });
 
     if (edgeToInsert && edgeToInsert.source !== node.id && edgeToInsert.target !== node.id) {
-      setEdges((eds) => {
+      setViewEdges((eds) => {
         return eds.filter(e => e.id !== edgeToInsert.id).concat([
           { id: `e-${Date.now()}-1`, source: edgeToInsert.source, target: node.id, sourceHandle: edgeToInsert.sourceHandle, targetHandle: 'main' },
           { id: `e-${Date.now()}-2`, source: node.id, target: edgeToInsert.target, sourceHandle: 'main', targetHandle: edgeToInsert.targetHandle }
         ]);
       });
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, setViewEdges]);
 
   const updateNodeParams = (id: string, params: Record<string, unknown>) => {
     const now = Date.now();
@@ -626,23 +725,25 @@ function App() {
       pushSnapshot();
       lastParamPushRef.current = now;
     }
-    setNodes((nds) => nds.map((node) => {
+    setViewNodes((nds) => nds.map((node) => {
         if (node.id === id) return { ...node, data: { ...node.data, params: { ...node.data.params, ...params } } };
         return node;
     }));
   };
 
   const handleUndo = useCallback(() => {
-    const prev = histUndo(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+    const prev = histUndo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
     if (!prev) return;
+    setGroupStack([]); groupStackRef.current = [];
     setNodes(prev.nodes);
     setEdges(prev.edges);
     if (isConnected) updateGraph(prev.nodes, prev.edges);
   }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
 
   const handleRedo = useCallback(() => {
-    const next = histRedo(activeCanvasId, { nodes: nodesRef.current, edges: edgesRef.current });
+    const next = histRedo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
     if (!next) return;
+    setGroupStack([]); groupStackRef.current = [];
     setNodes(next.nodes);
     setEdges(next.edges);
     if (isConnected) updateGraph(next.nodes, next.edges);
@@ -680,9 +781,9 @@ function App() {
       source: idMap[e.source],
       target: idMap[e.target]
     }));
-    setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
-    setEdges(eds => [...eds, ...newEdges]);
-  }, []);
+    setViewNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
+    setViewEdges(eds => [...eds, ...newEdges]);
+  }, [setViewNodes, setViewEdges]);
 
   const refreshWorkDir = useCallback(async (dir: string) => {
     try {
@@ -724,7 +825,7 @@ function App() {
 
   const buildProjectContent = () => {
     const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
-    return JSON.stringify({ nodes, edges, ui }, null, 2);
+    return JSON.stringify({ nodes: canvasNodes, edges: canvasEdges, ui }, null, 2);
   };
 
   const saveProject = async () => {
@@ -796,6 +897,7 @@ function App() {
     try {
       const content = await readTextFile(filePath);
       const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
+      setGroupStack([]); groupStackRef.current = [];
       setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
       if (ui) {
         if (ui.previewSize) setPreviewSize(ui.previewSize);
@@ -828,6 +930,7 @@ function App() {
   const applyExampleData = (data: any) => {
     const nodes = data.nodes || [];
     const edges = data.edges || [];
+    setGroupStack([]); groupStackRef.current = [];
     setNodes(nodes);
     setEdges(edges);
     if (data.ui) {
@@ -859,6 +962,165 @@ function App() {
       .catch(e => console.error('Failed to load examples manifest:', e));
   }, []);
 
+  // ─── Group Navigation ────────────────────────────────────────────────────────
+
+  const enterGroup = useCallback((groupNodeId: string) => {
+    const newStack = [...groupStackRef.current, { groupNodeId }];
+    setGroupStack(newStack);
+    groupStackRef.current = newStack;
+    setSelectedNodeId(null);
+    instance?.fitView({ duration: 300 });
+  }, [instance]);
+
+  const exitGroup = useCallback(() => {
+    if (groupStackRef.current.length === 0) return;
+    const newStack = groupStackRef.current.slice(0, -1);
+    setGroupStack(newStack);
+    groupStackRef.current = newStack;
+    setSelectedNodeId(null);
+    instance?.fitView({ duration: 300 });
+  }, [instance]);
+
+  const groupSelectedNodes = useCallback(() => {
+    const selected = nodesRef.current.filter(n => n.selected);
+    if (selected.length < 1) return;
+    pushSnapshot();
+
+    const selectedIds = new Set(selected.map(n => n.id));
+    const allEdges = edgesRef.current;
+
+    const innerEdges = allEdges.filter(e => selectedIds.has(e.source) && selectedIds.has(e.target));
+    const incomingEdges = allEdges.filter(e => !selectedIds.has(e.source) && selectedIds.has(e.target));
+    const outgoingEdges = allEdges.filter(e => selectedIds.has(e.source) && !selectedIds.has(e.target));
+
+    const inputPorts: { id: string; color: string; label: string }[] = [];
+    const outputPorts: { id: string; color: string; label: string }[] = [];
+    const seenIn = new Set<string>();
+    const seenOut = new Set<string>();
+
+    for (const e of incomingEdges) {
+      const th = e.targetHandle || 'any__in';
+      if (seenIn.has(th)) continue;
+      seenIn.add(th);
+      inputPorts.push({ id: th, color: th.split('__')[0] || 'any', label: `in${inputPorts.length}` });
+    }
+    for (const e of outgoingEdges) {
+      const sh = e.sourceHandle || 'any__out';
+      if (seenOut.has(sh)) continue;
+      seenOut.add(sh);
+      outputPorts.push({ id: sh, color: sh.split('__')[0] || 'any', label: `out${outputPorts.length}` });
+    }
+
+    const ts = Date.now();
+    const ginId = `gin-${ts}`;
+    const goutId = `gout-${ts + 1}`;
+    const groupId = `group-${ts + 2}`;
+
+    const xs = selected.map(n => n.position.x);
+    const ys = selected.map(n => n.position.y);
+    const minX = Math.min(...xs), minY = Math.min(...ys), maxX = Math.max(...xs) + 200;
+
+    const ginNode: Node = {
+      id: ginId, type: 'group_input',
+      position: { x: minX - 240, y: minY },
+      data: { label: 'Group IN', params: {}, ports: inputPorts }
+    };
+    const goutNode: Node = {
+      id: goutId, type: 'group_output',
+      position: { x: maxX + 60, y: minY },
+      data: { label: 'Group OUT', params: {}, ports: outputPorts }
+    };
+
+    const subEdges: Edge[] = [
+      ...innerEdges,
+      ...incomingEdges.map(e => ({
+        id: `sg-${ts}-${Math.random()}`,
+        source: ginId, sourceHandle: e.targetHandle,
+        target: e.target, targetHandle: e.targetHandle,
+      })),
+      ...outgoingEdges.map(e => ({
+        id: `sg-${ts}-${Math.random()}`,
+        source: e.source, sourceHandle: e.sourceHandle,
+        target: goutId, targetHandle: e.sourceHandle,
+      })),
+    ];
+
+    const groupNode: Node = {
+      id: groupId, type: 'group_node',
+      position: { x: (minX + maxX) / 2 - 95, y: minY - 30 },
+      data: {
+        label: 'Group', params: {},
+        inputs: inputPorts,
+        outputs: outputPorts,
+        subGraph: {
+          nodes: [...selected.map(n => ({ ...n, selected: false })), ginNode, goutNode],
+          edges: subEdges,
+        }
+      }
+    };
+
+    const outerEdges = allEdges
+      .filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target))
+      .concat(
+        incomingEdges
+          .filter((e, i, arr) => arr.findIndex(x => x.targetHandle === e.targetHandle) === i)
+          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, target: groupId }))
+      )
+      .concat(
+        outgoingEdges
+          .filter((e, i, arr) => arr.findIndex(x => x.sourceHandle === e.sourceHandle) === i)
+          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, source: groupId }))
+      );
+
+    setViewNodes(nds => [...nds.filter(n => !selectedIds.has(n.id)), groupNode]);
+    setViewEdges(_ => outerEdges);
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
+
+  const ungroupNode = useCallback((groupNodeId: string) => {
+    const groupNode = nodesRef.current.find(n => n.id === groupNodeId);
+    if (!groupNode || groupNode.type !== 'group_node') return;
+    pushSnapshot();
+
+    const sub = (groupNode.data as any)?.subGraph ?? { nodes: [], edges: [] };
+    const innerNodes: Node[] = sub.nodes.filter((n: Node) => n.type !== 'group_input' && n.type !== 'group_output');
+    const innerEdges: Edge[] = sub.edges.filter((e: Edge) => {
+      const inIds = new Set(innerNodes.map(n => n.id));
+      return inIds.has(e.source) && inIds.has(e.target);
+    });
+
+    const sub_nodes: Node[] = sub.nodes;
+    const sub_edges: Edge[] = sub.edges;
+    const ginNode = sub_nodes.find((n: Node) => n.type === 'group_input');
+    const goutNode = sub_nodes.find((n: Node) => n.type === 'group_output');
+    const ginId = ginNode?.id;
+    const goutId = goutNode?.id;
+
+    const outerEdges = edgesRef.current.filter(e => e.source !== groupNodeId && e.target !== groupNodeId);
+
+    const reconnectedIn: Edge[] = edgesRef.current
+      .filter(e => e.target === groupNodeId)
+      .flatMap(outerE => {
+        const th = outerE.targetHandle || '';
+        return sub_edges
+          .filter(se => se.source === ginId && se.sourceHandle === th)
+          .map(se => ({ ...outerE, id: `ug-${Date.now()}-${Math.random()}`, target: se.target, targetHandle: se.targetHandle }));
+      });
+
+    const reconnectedOut: Edge[] = edgesRef.current
+      .filter(e => e.source === groupNodeId)
+      .flatMap(outerE => {
+        const sh = outerE.sourceHandle || '';
+        return sub_edges
+          .filter(se => se.target === goutId && se.targetHandle === sh)
+          .map(se => ({ ...outerE, id: `ug-${Date.now()}-${Math.random()}`, source: se.source, sourceHandle: se.sourceHandle }));
+      });
+
+    setViewNodes(nds => [...nds.filter(n => n.id !== groupNodeId), ...innerNodes.map(n => ({ ...n, position: { x: n.position.x + groupNode.position.x, y: n.position.y + groupNode.position.y } }))]);
+    setViewEdges(_ => [...outerEdges, ...innerEdges, ...reconnectedIn, ...reconnectedOut]);
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
+
+  // ─── End Group Navigation ─────────────────────────────────────────────────────
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -872,7 +1134,11 @@ function App() {
       if (cmdKey && e.key.toLowerCase() === 'm') { e.preventDefault(); setIsAddMenuOpen(prev => !prev); }
       if (cmdKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        setNodes(nds => nds.map(n => ({ ...n, selected: true })));
+        setViewNodes(nds => nds.map(n => ({ ...n, selected: true })));
+      }
+      if (cmdKey && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        groupSelectedNodes();
       }
       if (cmdKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
       if (cmdKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
@@ -886,13 +1152,17 @@ function App() {
       }
 
       if (e.key === 'Escape') {
-        setIsAddMenuOpen(false);
-        setPendingConnection(null);
+        if (groupStackRef.current.length > 0) {
+          exitGroup();
+        } else {
+          setIsAddMenuOpen(false);
+          setPendingConnection(null);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, handleUndo, handleRedo, instance]);
+  }, [copyNodes, pasteNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     pushSnapshot();
@@ -907,7 +1177,7 @@ function App() {
       sci_plotter: { width: 320, height: 220 },
     };
     const nodeStyle = defaultStyle[type] || {};
-    setNodes((nds) => {
+    setViewNodes((nds) => {
       const nextNodes = [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }];
       if (pendingConnection && pendingConnection.sourceNode) {
         setTimeout(() => {
@@ -917,26 +1187,21 @@ function App() {
           const targetClass = pendingConnection.type === 'source' ? 'target' : 'source';
           const handles = Array.from(newEl.querySelectorAll(`.react-flow__handle-${targetClass}`));
           const match = handles.find(h => h.getAttribute('data-handleid')?.startsWith(`${expectedColor}__`)) || handles[0];
-          
           if (match) {
             const matchedHandleId = match.getAttribute('data-handleid');
             if (matchedHandleId) {
-              setEdges(eds => {
-                const newEdges = [...eds, {
+              setViewEdges(eds => {
+                return [...eds, {
                   id: `e-${Date.now()}`,
                   source: pendingConnection.type === 'source' ? pendingConnection.sourceNode : id,
                   target: pendingConnection.type === 'source' ? id : pendingConnection.sourceNode,
                   sourceHandle: pendingConnection.type === 'source' ? pendingConnection.sourceHandle : matchedHandleId,
                   targetHandle: pendingConnection.type === 'source' ? matchedHandleId : pendingConnection.sourceHandle
                 }];
-                updateGraph(nextNodes, newEdges);
-                return newEdges;
               });
             }
           }
         }, 50);
-      } else {
-        updateGraph(nextNodes, edges);
       }
       return nextNodes;
     });
@@ -945,34 +1210,27 @@ function App() {
   };
   addNodeRef.current = addNode;
 
-  useEffect(() => { if (isConnected) updateGraph(nodesRef.current, edgesRef.current); }, [isConnected, updateGraph]);
+  useEffect(() => { if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current); }, [isConnected, updateGraph]);
   useEffect(() => {
     setSelectedNodeId(null);
-    if (isConnected) updateGraph(nodesRef.current, edgesRef.current);
+    setGroupStack([]);
+    groupStackRef.current = [];
+    if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current);
   }, [activeCanvasId, isConnected, updateGraph]);
 
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
-    setNodes(nds => {
-      const selectedIds = nds.filter(n => n.selected).map(n => n.id);
-      if (selectedIds.length < 2) return nds;
-      
+    setViewNodes(nds => {
       const selNodes = nds.filter(n => n.selected);
+      if (selNodes.length < 2) return nds;
       const avgX = selNodes.reduce((acc, n) => acc + n.position.x, 0) / selNodes.length;
       const avgY = selNodes.reduce((acc, n) => acc + n.position.y, 0) / selNodes.length;
-      
       return nds.map(n => {
         if (!n.selected) return n;
-        return {
-          ...n,
-          position: {
-            x: direction === 'vertical' ? avgX : n.position.x,
-            y: direction === 'horizontal' ? avgY : n.position.y
-          }
-        };
+        return { ...n, position: { x: direction === 'vertical' ? avgX : n.position.x, y: direction === 'horizontal' ? avgY : n.position.y } };
       });
     });
-  }, []);
+  }, [setViewNodes]);
 
   useEffect(() => {
     if (lastCommands && lastCommands.length > 0) {
@@ -997,19 +1255,17 @@ function App() {
   useEffect(() => {
     const handleRemoveEdge = (e: any) => {
       const { nodeId, handleId, type } = e.detail;
-      setEdges((eds) => {
-        const nextEdges = eds.filter(edge => {
+      setViewEdges((eds) => {
+        return eds.filter(edge => {
           if (type === 'target') return !(edge.target === nodeId && edge.targetHandle === handleId);
           if (type === 'source') return !(edge.source === nodeId && edge.sourceHandle === handleId);
           return true;
         });
-        if (nextEdges.length !== eds.length) setTimeout(() => updateGraph(nodes, nextEdges), 10);
-        return nextEdges;
       });
     };
     window.addEventListener('remove-handle-edge', handleRemoveEdge);
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
-  }, []);
+  }, [setViewEdges]);
 
   const coloredEdges = useMemo(() => {
     const resolveColor = (edge: any, visited = new Set()): string => {
@@ -1058,7 +1314,7 @@ function App() {
           
           <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button
-              onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
+              onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setGroupStack([]); groupStackRef.current = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
               <Plus size={14} /> New
@@ -1362,11 +1618,21 @@ function App() {
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
-            onEdgeClick={(_, edge) => { pushSnapshot(); setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; }); }}
-            nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
-            onNodeContextMenu={(e, node) => { 
-              e.preventDefault(); 
-              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY }); 
+            onEdgeClick={(_, edge) => { pushSnapshot(); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
+            nodeTypes={dynamicNodeTypes}
+            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
+            onPaneClick={() => { setSelectedNodeId(null); setMenu(null); setPaneMenu(null); }}
+            onNodeContextMenu={(e, node) => {
+              e.preventDefault();
+              setPaneMenu(null);
+              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY });
+            }}
+            onPaneContextMenu={(e) => {
+              e.preventDefault();
+              setMenu(null);
+              const selectedCount = nodes.filter(n => n.selected).length;
+              if (selectedCount > 1) setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY });
             }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
@@ -1376,12 +1642,43 @@ function App() {
             <Background color="#111" variant={BackgroundVariant.Lines} gap={40} size={1} />
             <Controls className="bg-[#1a1a1a] border-[#333] fill-white" />
             <Panel position="top-left">
-              <button 
-                onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
-              >
-                <Plus size={14} /> Add Node
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                  className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
+                >
+                  <Plus size={14} /> Add Node
+                </button>
+                {groupStack.length > 0 && (
+                  <div className="flex items-center gap-1 bg-[#111]/90 backdrop-blur border border-accent/30 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-lg">
+                    <button onClick={() => { setGroupStack([]); groupStackRef.current = []; instance?.fitView({ duration: 300 }); }} className="text-gray-400 hover:text-white transition-colors">
+                      Canvas
+                    </button>
+                    {groupStack.map((entry, i) => {
+                      const parentNodes = i === 0 ? canvasNodes : getNestedSubGraph(canvasNodes, groupStack.slice(0, i)).nodes;
+                      const gNode = parentNodes.find(n => n.id === entry.groupNodeId);
+                      const label = (gNode?.data as any)?.params?.label || (gNode?.data as any)?.label || 'Group';
+                      return (
+                        <React.Fragment key={entry.groupNodeId}>
+                          <ChevronRight size={10} className="text-gray-600" />
+                          <button
+                            onClick={() => {
+                              const newStack = groupStack.slice(0, i + 1);
+                              setGroupStack(newStack);
+                              groupStackRef.current = newStack;
+                              instance?.fitView({ duration: 300 });
+                            }}
+                            className={`transition-colors ${i === groupStack.length - 1 ? 'text-accent' : 'text-gray-400 hover:text-white'}`}
+                          >
+                            {label}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+                    <span className="ml-1 text-[8px] text-gray-600 font-mono">ESC to exit</span>
+                  </div>
+                )}
+              </div>
             </Panel>
           </ReactFlow>
           </NodesDataContext.Provider>
@@ -1449,6 +1746,25 @@ function App() {
             )}
           </AnimatePresence>
 
+          {paneMenu && (() => {
+            const selCount = nodes.filter(n => n.selected).length;
+            return selCount > 1 ? (
+              <div
+                className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
+                style={{ top: paneMenu.y, left: paneMenu.x }}
+                onClick={() => setPaneMenu(null)}
+              >
+                <button
+                  onClick={() => { groupSelectedNodes(); setPaneMenu(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                >
+                  <Package size={16} className="text-accent group-hover:text-white" />
+                  <span>Group selection ({selCount} nodes)</span>
+                </button>
+              </div>
+            ) : null;
+          })()}
+
           {menu && (
             <div
               className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
@@ -1482,8 +1798,8 @@ function App() {
                       key={i} 
                       onClick={(e) => {
                         e.stopPropagation();
-                        setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
-                      }} 
+                        setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
+                      }}
                       className="w-4 h-4 rounded-full border border-black/20 shadow-sm hover:scale-125 transition-transform" 
                       style={{ backgroundColor: c.bg }} 
                     />
@@ -1491,7 +1807,7 @@ function App() {
                  <button 
                     onClick={(e) => {
                        e.stopPropagation();
-                       setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
+                       setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
                     }} 
                     className="w-4 h-4 rounded-full border border-white/20 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center text-[10px] text-gray-500 bg-transparent shrink-0"
                  >
@@ -1500,11 +1816,46 @@ function App() {
               </div>
               <div className="h-px bg-white/5 my-1 mx-2" />
 
+              {/* Group / Enter Group / Ungroup */}
+              {nodes.find(n => n.id === menu.id)?.type === 'group_node' ? (
+                <>
+                  <button
+                    onClick={() => { enterGroup(menu.id); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <LogIn size={16} className="text-accent group-hover:text-white" />
+                    <span>Enter Group</span>
+                  </button>
+                  <button
+                    onClick={() => { ungroupNode(menu.id); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <LogOut size={16} className="text-accent group-hover:text-white" />
+                    <span>Ungroup</span>
+                  </button>
+                </>
+              ) : (() => {
+                const selCount = nodes.filter(n => n.selected).length;
+                const isInSelection = nodes.find(n => n.id === menu.id)?.selected;
+                const multiSel = selCount > 1 && isInSelection;
+                if (!multiSel) return null;
+                return (
+                  <button
+                    onClick={() => { groupSelectedNodes(); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <Package size={16} className="text-accent group-hover:text-white" />
+                    <span>Group selection ({selCount} nodes)</span>
+                  </button>
+                );
+              })()}
+              <div className="h-px bg-white/5 my-1 mx-2" />
+
               <button
                 onClick={() => {
                   pushSnapshot();
                   if (menu.id === visualizedNodeId) { setVisualizedNodeId(null); setPreviewNode(null); }
-                  setNodes(nds => nds.filter(n => n.id !== menu.id));
+                  setViewNodes(nds => nds.filter(n => n.id !== menu.id));
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500 rounded-xl text-white text-[11px] font-bold transition-all group"
               >
