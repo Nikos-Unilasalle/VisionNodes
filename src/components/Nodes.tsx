@@ -799,7 +799,7 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => (
 export const MathNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Math', icon: 'Calculator', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Calculator);
-  return <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
+  return <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
 });
 
 export const StringNode = memo(({ selected, data }: any) => {
@@ -807,7 +807,7 @@ export const StringNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'String', icon: 'Type', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Type);
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
+    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
        {nd?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{nd.result}</div>}
     </BaseNode>
   );
@@ -1287,8 +1287,7 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
     : schema.outputs;
 
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
-      {/* Minimalist: internal content moved to Inspector */}
+    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
     </BaseNode>
   );
 });
