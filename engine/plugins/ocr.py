@@ -2,7 +2,25 @@ import cv2
 import numpy as np
 import os
 from registry import NodeProcessor, vision_node
-from list_ops import canonical_corners
+
+
+def canonical_corners(pts_raw):
+    """Sort 4 corners into [TL, TR, BR, BL] via sum/diff method."""
+    if not pts_raw or len(pts_raw) < 4:
+        return pts_raw
+    pts = []
+    for p in pts_raw[:4]:
+        if isinstance(p, (list, tuple)) and len(p) >= 2:
+            pts.append([float(p[0]), float(p[1])])
+        elif isinstance(p, dict):
+            pts.append([float(p.get('x', 0)), float(p.get('y', 0))])
+    if len(pts) < 4:
+        return pts_raw
+    import numpy as _np
+    a = _np.array(pts)
+    s = a.sum(axis=1);  d = _np.diff(a, axis=1).ravel()
+    return [pts[int(_np.argmin(s))], pts[int(_np.argmin(d))],
+            pts[int(_np.argmax(s))], pts[int(_np.argmax(d))]]
 
 EAST_MODEL_URL = "https://github.com/oyyd/frozen_east_text_detection.pb/raw/master/frozen_east_text_detection.pb"
 EAST_MODEL_PATH = "frozen_east_text_detection.pb"
