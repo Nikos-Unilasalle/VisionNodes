@@ -98,7 +98,9 @@ class EasyOcrNode(NodeProcessor):
         out = img.copy()
 
         try:
+            self.report_progress(0.2, 'EasyOCR: reading text…')
             raw = self.reader.readtext(img)
+            self.report_progress(1.0, 'EasyOCR: done')
         except Exception as e:
             print(f'[EasyOCR] readtext error: {e}')
             return {'main': img, 'text_regions': [], 'texts': []}

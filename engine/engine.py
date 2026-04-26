@@ -838,6 +838,19 @@ class VisionEngine:
         active_nids = set(nodes.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
 
+    async def _drain_notifs_loop(self):
+        """Background task: flush notification queue to clients every 50 ms."""
+        while True:
+            await asyncio.sleep(0.05)
+            while not _notification_queue.empty():
+                try:
+                    notif = _notification_queue.get_nowait()
+                    notif_msg = json.dumps({"type": "notification", **notif})
+                    if self.connected_clients:
+                        await asyncio.gather(*[c.send(notif_msg) for c in list(self.connected_clients)], return_exceptions=True)
+                except Exception as e:
+                    print(f"[Engine] Notification drain error: {e}")
+
     async def run(self):
         while True:
             ret, frame = self.cap.read()
@@ -879,7 +892,7 @@ class VisionEngine:
                 proc = self.node_instances.get(nid)
                 if proc:
                     try:
-                        out = proc.process(inputs, node.get('data', {}).get('params', {}))
+                        out = await asyncio.to_thread(proc.process, inputs, node.get('data', {}).get('params', {}))
                         results[nid] = out
                         
                         # Handle On-Demand Capture
@@ -930,15 +943,6 @@ class VisionEngine:
                     })
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
-            # Drain notification queue (filled by plugin threads)
-            while not _notification_queue.empty():
-                try:
-                    notif = _notification_queue.get_nowait()
-                    notif_msg = json.dumps({"type": "notification", **notif})
-                    if self.connected_clients:
-                        await asyncio.gather(*[c.send(notif_msg) for c in list(self.connected_clients)], return_exceptions=True)
-                except Exception as e:
-                    print(f"[Engine] Notification send error: {e}")
 
             await asyncio.sleep(1/30)
 
@@ -972,7 +976,10 @@ engine = VisionEngine()
 async def main(engine_instance):
     try:
         async with websockets.serve(engine_instance.hdl, "localhost", 8765):
-            await engine_instance.run()
+            await asyncio.gather(
+                engine_instance.run(),
+                engine_instance._drain_notifs_loop(),
+            )
     except Exception as e:
         print(f"Server Error: {e}")
 

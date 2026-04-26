@@ -85,6 +85,10 @@ def vision_node(
 
 
 class NodeProcessor(ABC):
+    def report_progress(self, value: float, message: str):
+        """Call from process() to stream progress to the UI. value: 0.0–1.0 (1.0 dismisses after 3s)."""
+        send_notification(message, progress=value, notif_id=f'proc_{type(self).__name__}')
+
     @abstractmethod
     def process(self, inputs, params): pass
 
