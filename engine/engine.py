@@ -10,7 +10,8 @@ def check_and_install_dependencies():
         "numpy": "numpy",
         "ultralytics": "ultralytics",
         "torch": "torch",
-        "pytesseract": "pytesseract"
+        "pytesseract": "pytesseract",
+        "easyocr": "easyocr"
     }
     
     missing = []
