@@ -422,7 +422,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         const isEnum   = sp.type === 'enum' || sp.options;
         const isString = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
         const isNumber = sp.type === 'number' || sp.type === 'float';
-        const isBool   = sp.type === 'toggle' || sp.type === 'bool' || typeof (p[sp.id] ?? sp.default) === 'boolean';
+        const isBool   = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
         if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
         if (isString) return sp.id === 'code'

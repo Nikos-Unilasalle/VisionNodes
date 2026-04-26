@@ -143,8 +143,9 @@ class ROIPolygonNode(NodeProcessor):
         except:
             pts_data = []
             
-        mask = np.zeros((h, w), dtype=np.uint8)
-        
+        # No polygon drawn = full pass-through (all white mask)
+        mask = np.ones((h, w), dtype=np.uint8) * 255 if len(pts_data) == 0 else np.zeros((h, w), dtype=np.uint8)
+
         # Performance optimization: Send a small preview for the editor
         preview_b64 = None
         if img is not None:
