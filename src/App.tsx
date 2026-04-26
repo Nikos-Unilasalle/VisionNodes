@@ -11,7 +11,7 @@ import {
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
-  Undo2, Redo2
+  Undo2, Redo2, FolderSearch, RefreshCw
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -21,7 +21,7 @@ import { NodeInspectorPanel } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename } from '@tauri-apps/plugin-fs';
+import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename, readDir } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -305,6 +305,9 @@ function App() {
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(false);
+  const [workDir, setWorkDir] = useState<string | null>(() => localStorage.getItem('vn-work-dir'));
+  const [workDirFiles, setWorkDirFiles] = useState<string[]>([]);
   const [snapEnabled, setSnapEnabled] = useState(false);
   const isResizing = useRef(false);
   const nodesRef = useRef<any[]>([]);
@@ -397,7 +400,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification } = useVisionEngine(handleCapture);
 
   const handleSaveAsImage = useCallback((nodeId: string) => {
     const nodeType = nodes.find(n => n.id === nodeId)?.type;
@@ -677,6 +680,44 @@ function App() {
     setEdges(eds => [...eds, ...newEdges]);
   }, []);
 
+  const refreshWorkDir = useCallback(async (dir: string) => {
+    try {
+      const entries = await readDir(dir);
+      const files = entries
+        .filter(e => !e.isDirectory && e.name?.endsWith('.vn'))
+        .map(e => e.name!)
+        .sort();
+      setWorkDirFiles(files);
+    } catch {
+      setWorkDirFiles([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (workDir) refreshWorkDir(workDir);
+  }, [workDir, refreshWorkDir]);
+
+  const setWorkDirAndSave = async () => {
+    const dir = await open({ directory: true, multiple: false });
+    if (dir && typeof dir === 'string') {
+      localStorage.setItem('vn-work-dir', dir);
+      setWorkDir(dir);
+    }
+  };
+
+  const confirmUnsaved = async (): Promise<boolean> => {
+    if (!activeFilePath && nodes.length === 0) return true;
+    const { ask } = await import('@tauri-apps/plugin-dialog');
+    const save = await ask(
+      activeFilePath
+        ? `"${activeFilePath.split(/[\\/]/).pop()}" has unsaved changes. Save before continuing?`
+        : 'Current scene has unsaved changes. Save before continuing?',
+      { title: 'Unsaved Changes', kind: 'warning', okLabel: 'Save', cancelLabel: 'Discard' }
+    );
+    if (save) await saveProject();
+    return true;
+  };
+
   const buildProjectContent = () => {
     const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
     return JSON.stringify({ nodes, edges, ui }, null, 2);
@@ -694,9 +735,12 @@ function App() {
       if (path) {
         await writeTextFile(path, buildProjectContent());
         setActiveFilePath(path);
+        pushNotification(`Saved → ${path.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && path.startsWith(workDir)) refreshWorkDir(workDir);
       }
     } catch (err) {
       console.error('Failed to save project:', err);
+      pushNotification('Save failed — see console', 'error');
     }
   };
 
@@ -722,52 +766,58 @@ function App() {
       // Check if stem ends with " NN" (space + digits)
       const numMatch = filename.match(/^(.*?) (\d+)$/);
       if (numMatch) {
-        // Already versioned: just increment
         const stem = numMatch[1];
         const nextN = parseInt(numMatch[2], 10) + 1;
         const nextPath = `${dir}${stem} ${String(nextN).padStart(2, '0')}.vn`;
         await writeTextFile(nextPath, buildProjectContent());
         setActiveFilePath(nextPath);
+        pushNotification(`Saved → ${nextPath.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && nextPath.startsWith(workDir)) refreshWorkDir(workDir);
       } else {
-        // First increment: rename original → stem 01, save stem 02
         const path01 = `${dir}${filename} 01.vn`;
         const path02 = `${dir}${filename} 02.vn`;
         await rename(basePath, path01);
         await writeTextFile(path02, buildProjectContent());
         setActiveFilePath(path02);
+        pushNotification(`Renamed → ${path01.split(/[\\/]/).pop()} · Saved → ${path02.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && path02.startsWith(workDir)) refreshWorkDir(workDir);
       }
     } catch (err) {
       console.error('Failed incremental save:', err);
-      console.error('activeFilePath was:', activeFilePath);
+      pushNotification('Incremental save failed — see console', 'error');
+    }
+  };
+
+  const loadProjectFromPath = async (filePath: string) => {
+    try {
+      const content = await readTextFile(filePath);
+      const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
+      setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
+      if (ui) {
+        if (ui.previewSize) setPreviewSize(ui.previewSize);
+        if (ui.previewPos) setPreviewPos(ui.previewPos);
+        if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
+        if (ui.visualizedNodeId !== undefined) { setVisualizedNodeId(ui.visualizedNodeId); setPreviewNode(ui.visualizedNodeId); }
+      }
+      updateGraph(newNodes, newEdges);
+      pushNotification(`Opened → ${filePath.split(/[\\/]/).pop()}`, 'info');
+    } catch (err) {
+      console.error('Failed to load project:', err);
+      pushNotification('Open failed — see console', 'error');
     }
   };
 
   const loadProject = async () => {
+    await confirmUnsaved();
     try {
       const path = await open({
         filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }],
         multiple: false
       });
 
-      if (path && typeof path === 'string') {
-        const content = await readTextFile(path);
-        const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
-        setNodes(newNodes);
-        setEdges(newEdges);
-        setActiveFilePath(path);
-        if (ui) {
-            if (ui.previewSize) setPreviewSize(ui.previewSize);
-            if (ui.previewPos) setPreviewPos(ui.previewPos);
-            if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
-            if (ui.visualizedNodeId !== undefined) {
-               setVisualizedNodeId(ui.visualizedNodeId);
-               setPreviewNode(ui.visualizedNodeId);
-            }
-        }
-        updateGraph(newNodes, newEdges);
-      }
+      if (path && typeof path === 'string') await loadProjectFromPath(path);
     } catch (err) {
-      console.error('Failed to load project:', err);
+      console.error('Failed to open dialog:', err);
     }
   };
 
@@ -1004,7 +1054,7 @@ function App() {
           
           <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button
-              onClick={() => { pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
+              onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
               <Plus size={14} /> New
@@ -1027,14 +1077,16 @@ function App() {
                 ? activeFilePath.split(/[\\/]/).pop()?.replace(/\.vn$/i, '') ?? 'Save'
                 : 'Save .vn'}
             </button>
-            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
-            <button
-              onClick={saveProjectIncremental}
-              title="Save incremental version (+01, +02…)"
-              className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
-            >
-              +
-            </button>
+            {activeFilePath && (<>
+              <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+              <button
+                onClick={saveProjectIncremental}
+                title="Save incremental version (+01, +02…)"
+                className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
+              >
+                +
+              </button>
+            </>)}
           </div>
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
@@ -1192,6 +1244,75 @@ function App() {
               </AnimatePresence>
            </div>
            
+           {/* My Projects panel */}
+           <div className="relative">
+              <button
+                onClick={() => setIsProjectsOpen(!isProjectsOpen)}
+                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+              >
+                <FolderSearch size={14} /> My Projects
+              </button>
+              <AnimatePresence>
+                {isProjectsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProjectsOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
+                    >
+                      {/* Define directory */}
+                      <button
+                        onClick={async () => { await setWorkDirAndSave(); }}
+                        className="w-full flex items-center gap-2 p-3 hover:bg-accent/10 rounded-lg group transition-all text-left"
+                      >
+                        <FolderSearch size={13} className="text-accent shrink-0" />
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">Set Work Directory</div>
+                          {workDir && <div className="text-[8px] text-gray-600 mt-0.5 truncate max-w-[220px]">{workDir}</div>}
+                        </div>
+                      </button>
+
+                      {workDir && (
+                        <>
+                          <div className="flex items-center justify-between px-3 py-1.5">
+                            <div className="w-full h-[1px] bg-[#2a2a2a]" />
+                            <button onClick={() => refreshWorkDir(workDir)} className="ml-2 text-gray-600 hover:text-accent transition-colors shrink-0">
+                              <RefreshCw size={10} />
+                            </button>
+                          </div>
+                          {workDirFiles.length === 0 ? (
+                            <div className="text-[9px] text-gray-600 px-3 py-2 italic">No .vn files in this directory</div>
+                          ) : (
+                            workDirFiles.map(file => (
+                              <button
+                                key={file}
+                                onClick={async () => {
+                                  await confirmUnsaved();
+                                  await loadProjectFromPath(`${workDir}/${file}`);
+                                  setIsProjectsOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/10 rounded-lg group transition-all text-left"
+                              >
+                                <Save size={11} className="text-gray-600 group-hover:text-accent shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-300 group-hover:text-accent truncate">
+                                  {file.replace(/\.vn$/i, '')}
+                                </span>
+                                {activeFilePath === `${workDir}/${file}` && (
+                                  <span className="ml-auto text-[8px] text-accent font-black uppercase tracking-wider">active</span>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+           </div>
+
            <div className="relative">
               <button
                 onClick={() => setIsExamplesOpen(!isExamplesOpen)}

@@ -13,6 +13,7 @@
     { "identifier": "fs:allow-rename",          "allow": [{ "path": "$HOME/**" }] },
     { "identifier": "fs:allow-read-text-file",  "allow": [{ "path": "$HOME/**" }] },
     { "identifier": "fs:allow-exists",          "allow": [{ "path": "$HOME/**" }] },
+    { "identifier": "fs:allow-read-dir",        "allow": [{ "path": "$HOME/**" }] },
     "fs:allow-mkdir",
     {
       "identifier": "shell:allow-execute",
