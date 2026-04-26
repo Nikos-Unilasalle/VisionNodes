@@ -2054,10 +2054,10 @@ const ROIEditorOverlay = ({ nodeId, node, nodesData, onClose }: any) => {
                 <circle
                   key={i}
                   cx={`${p.x * 100}%`} cy={`${p.y * 100}%`}
-                  r={selectedIndex === i ? 8 : 6}
+                  r={(selectedIndex === i ? 8 : 6) / zoom}
                   fill={selectedIndex === i ? 'white' : 'var(--color-accent)'}
                   stroke={selectedIndex === i ? 'var(--color-accent)' : 'white'}
-                  strokeWidth="2"
+                  strokeWidth={2 / zoom}
                   className="cursor-move"
                   onMouseDown={e => {
                     e.stopPropagation();
