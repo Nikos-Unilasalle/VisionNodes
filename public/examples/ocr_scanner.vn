@@ -1,19 +1,44 @@
 {
   "nodes": [
-    { "id": "src-1",   "type": "input_image",   "position": { "x": 50,  "y": 220 }, "data": { "label": "book.jpg",         "params": { "path": "samples/book.jpg" } } },
-    { "id": "ocr-1",   "type": "ocr_easyocr",   "position": { "x": 380, "y": 220 }, "data": { "label": "EasyOCR",          "params": { "lang": 0, "min_confidence": 0.4 } } },
-    { "id": "sel-1",   "type": "list_region_select", "position": { "x": 700, "y": 220 }, "data": { "label": "Largest Region", "params": { "sort_by": 1, "require_pts": true } } },
-    { "id": "warp-1",  "type": "geom_perspective","position": { "x": 980, "y": 60  }, "data": { "label": "Homography Warp", "params": { "width": 500, "height": 600 } } },
-    { "id": "draw-1",  "type": "draw_text",      "position": { "x": 980, "y": 370 }, "data": { "label": "Text Overlay",    "params": { "x": 0.05, "y": 0.93, "font_scale": 1.2, "thickness": 2, "r": 255, "g": 255, "b": 0 } } },
-    { "id": "disp-1",  "type": "output_display", "position": { "x": 1260,"y": 370 }, "data": { "label": "Display",         "params": {} } }
+    { "id": "src-1",             "type": "input_image",         "position": { "x": 52,    "y": 193 }, "data": { "label": "book.jpg",            "params": { "path": "samples/book.jpg" } } },
+    { "id": "ocr-1",             "type": "ocr_easyocr",         "position": { "x": 317,   "y": 194 }, "data": { "label": "OCR (EasyOCR)",       "params": { "min_confidence": 0.3, "gpu": false } } },
+    { "id": "insp-1",            "type": "data_inspector",      "position": { "x": 602,   "y": 176 }, "data": { "label": "Inspect Texts",       "params": {} }, "style": { "width": 220, "height": 200 } },
+    { "id": "thr-1",             "type": "feat_threshold_adv",  "position": { "x": 324,   "y": 427 }, "data": { "label": "Threshold",           "params": { "mode": 1, "threshold": 33 } } },
+    { "id": "ctr-1",             "type": "feat_find_contours",  "position": { "x": 554,   "y": 432 }, "data": { "label": "Find Contours",       "params": {} } },
+    { "id": "filt-1",            "type": "feat_filter_contours","position": { "x": 560,   "y": 551 }, "data": { "label": "Filter Contours",     "params": { "min_area": 600, "min_circularity": 0.15 } } },
+    { "id": "fill-1",            "type": "feat_fill_contours",  "position": { "x": 805,   "y": 549 }, "data": { "label": "Fill Contours",       "params": { "width": 1024, "height": 1024 } } },
+    { "id": "rot-1",             "type": "plugin_rotate",       "position": { "x": 1060,  "y": 460 }, "data": { "label": "Rotate",              "params": { "angle": 332 } } },
+    { "id": "solid-fg",          "type": "input_solid_color",   "position": { "x": 562,   "y": 678 }, "data": { "label": "FG Color",            "params": { "r": 0, "g": 255, "b": 255, "width": 1024, "height": 1024 } } },
+    { "id": "solid-bg",          "type": "input_solid_color",   "position": { "x": 567,   "y": 793 }, "data": { "label": "BG Color",            "params": { "r": 46, "g": 46, "b": 86, "width": 1024, "height": 1024 } } },
+    { "id": "thr-2",             "type": "feat_threshold_adv",  "position": { "x": 1060,  "y": 580 }, "data": { "label": "Threshold Mask",      "params": { "threshold": 0 } } },
+    { "id": "blend-1",           "type": "util_mask_blend",     "position": { "x": 1060,  "y": 720 }, "data": { "label": "Mask Blend",          "params": {} } },
+    { "id": "concat-1",          "type": "string_concat",       "position": { "x": 878,   "y": 200 }, "data": { "label": "Join Texts",          "params": { "separator": " " } } },
+    { "id": "replace-1",         "type": "string_replace",      "position": { "x": 1140,  "y": 212 }, "data": { "label": "Clean Text",          "params": { "search": "Zoom in on this image", "replace": "" } } },
+    { "id": "draw-1",            "type": "draw_text",           "position": { "x": 1376,  "y": 179 }, "data": { "label": "Draw Text",           "params": { "font_scale": 2.2, "thickness": 5, "r": 163, "g": 255, "b": 0, "x": 0.08, "y": 0.91 } } },
+    { "id": "overlay-1",         "type": "draw_overlay",        "position": { "x": 1620,  "y": 180 }, "data": { "label": "Visual Overlay",      "params": {} } }
   ],
   "edges": [
-    { "id": "e1", "source": "src-1",  "target": "ocr-1",  "sourceHandle": "image__main",        "targetHandle": "image__image"   },
-    { "id": "e2", "source": "ocr-1",  "target": "sel-1",  "sourceHandle": "list__text_regions",  "targetHandle": "list__list_in"  },
-    { "id": "e3", "source": "src-1",  "target": "warp-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
-    { "id": "e4", "source": "sel-1",  "target": "warp-1", "sourceHandle": "list__pts",           "targetHandle": "list__src_pts"  },
-    { "id": "e5", "source": "ocr-1",  "target": "draw-1", "sourceHandle": "image__main",         "targetHandle": "image__image"   },
-    { "id": "e6", "source": "sel-1",  "target": "draw-1", "sourceHandle": "dict__item",          "targetHandle": "string__text"   },
-    { "id": "e7", "source": "draw-1", "target": "disp-1", "sourceHandle": "image__main",         "targetHandle": "image__main"    }
-  ]
+    { "id": "e1",  "source": "src-1",    "sourceHandle": "image__main",          "target": "ocr-1",    "targetHandle": "image__image" },
+    { "id": "e2",  "source": "src-1",    "sourceHandle": "image__main",          "target": "thr-1",    "targetHandle": "image__image" },
+    { "id": "e3",  "source": "ocr-1",    "sourceHandle": "list__texts",          "target": "insp-1",   "targetHandle": "any__data" },
+    { "id": "e4",  "source": "ocr-1",    "sourceHandle": "list__texts",          "target": "concat-1", "targetHandle": "list__list_in" },
+    { "id": "e5",  "source": "thr-1",    "sourceHandle": "mask__mask",           "target": "ctr-1",    "targetHandle": "any__mask" },
+    { "id": "e6",  "source": "ctr-1",    "sourceHandle": "list__contours_list",  "target": "filt-1",   "targetHandle": "list__contours" },
+    { "id": "e7",  "source": "filt-1",   "sourceHandle": "list__contours_list",  "target": "fill-1",   "targetHandle": "list__contours" },
+    { "id": "e8",  "source": "fill-1",   "sourceHandle": "image__main",          "target": "rot-1",    "targetHandle": "image__image" },
+    { "id": "e9",  "source": "rot-1",    "sourceHandle": "image__main",          "target": "thr-2",    "targetHandle": "image__image" },
+    { "id": "e10", "source": "thr-2",    "sourceHandle": "mask__mask",           "target": "blend-1",  "targetHandle": "mask__mask" },
+    { "id": "e11", "source": "solid-fg", "sourceHandle": "image__main",          "target": "blend-1",  "targetHandle": "image__image_b" },
+    { "id": "e12", "source": "solid-bg", "sourceHandle": "image__main",          "target": "blend-1",  "targetHandle": "image__image_a" },
+    { "id": "e13", "source": "blend-1",  "sourceHandle": "image__main",          "target": "overlay-1","targetHandle": "image__image" },
+    { "id": "e14", "source": "concat-1", "sourceHandle": "string__result",       "target": "replace-1","targetHandle": "string__string" },
+    { "id": "e15", "source": "replace-1","sourceHandle": "string__result",       "target": "draw-1",   "targetHandle": "string__text" },
+    { "id": "e16", "source": "draw-1",   "sourceHandle": "dict__graphic",        "target": "overlay-1","targetHandle": "any__data" }
+  ],
+  "ui": {
+    "previewSize": { "w": 477, "h": 477 },
+    "previewPos": { "x": 49, "y": -16 },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "overlay-1"
+  }
 }
