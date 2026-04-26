@@ -738,6 +738,7 @@ function App() {
       }
     } catch (err) {
       console.error('Failed incremental save:', err);
+      console.error('activeFilePath was:', activeFilePath);
     }
   };
 

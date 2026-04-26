@@ -10,6 +10,7 @@
     "fs:default",
     "fs:allow-write-text-file",
     "fs:allow-write-file",
+    "fs:allow-rename",
     "fs:allow-mkdir",
     "fs:allow-exists",
     "fs:allow-read-text-file",
