@@ -1,0 +1,7148 @@
+[
+  {
+    "id": "src",
+    "label": "Sources",
+    "nodes": [
+      {
+        "type": "input_float_image",
+        "label": "Float Image",
+        "category": "src",
+        "icon": "FileImage",
+        "description": "Loads float32/uint16 scientific images (TIFF, NDVI, HDR, etc.) and normalizes to 8-bit for processing. Supports min-max stretch, percentile clipping, and fixed range.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "raw",
+            "color": "any"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          },
+          {
+            "id": "raw_min",
+            "color": "scalar"
+          },
+          {
+            "id": "raw_max",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "normalize",
+            "label": "Normalize",
+            "type": "enum",
+            "options": [
+              "Min-Max",
+              "Percentile",
+              "Fixed Range"
+            ],
+            "default": 1
+          },
+          {
+            "id": "p_low",
+            "label": "Percentile Low",
+            "type": "float",
+            "default": 2.0
+          },
+          {
+            "id": "p_high",
+            "label": "Percentile High",
+            "type": "float",
+            "default": 98.0
+          },
+          {
+            "id": "fixed_min",
+            "label": "Fixed Min",
+            "type": "float"
+          },
+          {
+            "id": "fixed_max",
+            "label": "Fixed Max",
+            "type": "float",
+            "default": 1.0
+          }
+        ],
+        "colorable": true
+      },
+      {
+        "type": "input_image",
+        "label": "Image File",
+        "category": "src",
+        "icon": "Image",
+        "description": "Loads a static image from your local drive.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          },
+          {
+            "id": "depth",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": "samples/car.jpg"
+          }
+        ]
+      },
+      {
+        "type": "input_movie",
+        "label": "Movie File",
+        "category": "src",
+        "icon": "Film",
+        "description": "Plays a video file with playback and scrubbing controls.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "frame",
+            "color": "scalar"
+          },
+          {
+            "id": "total_frames",
+            "color": "scalar"
+          },
+          {
+            "id": "fps",
+            "color": "scalar"
+          },
+          {
+            "id": "duration",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": "samples/face.mp4"
+          },
+          {
+            "id": "playing",
+            "label": "Playing",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "scrub_index",
+            "label": "Frame",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "start_frame",
+            "label": "Start",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "end_frame",
+            "label": "End",
+            "type": "int",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "input_solid_color",
+        "label": "Solid Color",
+        "category": "src",
+        "icon": "Palette",
+        "description": "Generates an image of a custom solid color.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "r",
+            "label": "Red",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "g",
+            "label": "Green",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "b",
+            "label": "Blue",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 640
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 480
+          }
+        ]
+      },
+      {
+        "type": "input_webcam",
+        "label": "Webcam",
+        "category": "src",
+        "icon": "Camera",
+        "description": "Captures live video feed from your system camera.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          },
+          {
+            "id": "fps",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "device_index",
+            "label": "Device Index",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "fps",
+            "label": "FPS",
+            "type": "int",
+            "default": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cv",
+    "label": "Computer Vision",
+    "nodes": [
+      {
+        "type": "filter_bg_subtraction",
+        "label": "BG Removal",
+        "category": "cv",
+        "icon": "Ghost",
+        "description": "Subtracts the static background to isolate only moving objects.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "history",
+            "min": 1,
+            "max": 1000,
+            "default": 500
+          },
+          {
+            "id": "threshold",
+            "min": 1,
+            "max": 100,
+            "default": 16
+          },
+          {
+            "id": "detectShadows",
+            "label": "Detect Shadows",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "plugin_brightness_contrast",
+        "label": "Bright & Contrast",
+        "category": "cv",
+        "icon": "Zap",
+        "description": "Adjusts the brightness and contrast of the image.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "brightness",
+            "max": 100,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "contrast",
+            "max": 100,
+            "step": 1,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "filter_canny",
+        "label": "Canny Edge",
+        "category": "cv",
+        "icon": "Waves",
+        "description": "Detects edges using the Canny algorithm.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "low",
+            "label": "Low Threshold",
+            "type": "int",
+            "default": 100,
+            "min": 0,
+            "max": 1000
+          },
+          {
+            "id": "high",
+            "label": "High Threshold",
+            "type": "int",
+            "default": 200,
+            "min": 0,
+            "max": 1000
+          }
+        ]
+      },
+      {
+        "type": "plugin_channel_merge",
+        "label": "Channel Merge",
+        "category": "cv",
+        "icon": "Layers",
+        "description": "Merges R, G, B (and optional A) channel images into a single composite image.",
+        "inputs": [
+          {
+            "id": "r",
+            "color": "image"
+          },
+          {
+            "id": "g",
+            "color": "image"
+          },
+          {
+            "id": "b",
+            "color": "image"
+          },
+          {
+            "id": "a",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "plugin_channel_split",
+        "label": "Channel Split",
+        "category": "cv",
+        "icon": "Layers",
+        "description": "Splits an image into individual R, G, B (and A) channel grayscale images.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "r",
+            "color": "image"
+          },
+          {
+            "id": "g",
+            "color": "image"
+          },
+          {
+            "id": "b",
+            "color": "image"
+          },
+          {
+            "id": "a",
+            "color": "image"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "plugin_evm_color",
+        "label": "EVM Color",
+        "category": "cv",
+        "icon": "Activity",
+        "description": "Eulerian Video Magnification \u2014 color amplification (Wu et al. 2012). Amplifies subtle Cr/Cb variations (pulse, perfusion) via Gaussian pyramid + IIR bandpass. Optional mask input: restricts both analysis and amplification to masked pixels (skin ROI). Default params target resting pulse (50\u201360 BPM). Outputs: amplified video + scientific signal (mean bandpass Cr \u00d71000, oscillates at pulse rate).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "signal",
+            "color": "scalar"
+          },
+          {
+            "id": "signal_cb",
+            "color": "scalar"
+          },
+          {
+            "id": "filtered_vis",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "alpha",
+            "min": 0,
+            "max": 250,
+            "step": 1,
+            "default": 120
+          },
+          {
+            "id": "low_cutoff",
+            "min": 0,
+            "max": 5000,
+            "step": 1,
+            "default": 830
+          },
+          {
+            "id": "high_cutoff",
+            "min": 0,
+            "max": 5000,
+            "step": 1,
+            "default": 1000
+          },
+          {
+            "id": "fps",
+            "min": 10,
+            "max": 120,
+            "step": 1,
+            "default": 30
+          },
+          {
+            "id": "levels",
+            "min": 1,
+            "max": 5,
+            "step": 1,
+            "default": 3
+          },
+          {
+            "id": "attenuation",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 3
+          }
+        ]
+      },
+      {
+        "type": "plugin_evm_motion",
+        "label": "EVM Motion",
+        "category": "cv",
+        "icon": "Waves",
+        "description": "Eulerian Video Magnification \u2014 motion amplification (Wu et al. 2012). Amplifies subtle spatial motions via Laplacian pyramid + IIR bandpass per level. Optional mask input: restricts both analysis and amplification to masked pixels. lambda_c attenuates fine spatial scales (paper: 80px for motion). motion_mag output = mean absolute motion amplitude per frame.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "motion_mag",
+            "color": "scalar"
+          },
+          {
+            "id": "motion_vis",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "alpha",
+            "min": 0,
+            "max": 200,
+            "step": 1,
+            "default": 20
+          },
+          {
+            "id": "low_cutoff",
+            "min": 0,
+            "max": 5000,
+            "step": 1,
+            "default": 40
+          },
+          {
+            "id": "high_cutoff",
+            "min": 0,
+            "max": 5000,
+            "step": 1,
+            "default": 300
+          },
+          {
+            "id": "fps",
+            "min": 10,
+            "max": 120,
+            "step": 1,
+            "default": 30
+          },
+          {
+            "id": "levels",
+            "min": 1,
+            "max": 6,
+            "step": 1,
+            "default": 4
+          },
+          {
+            "id": "lambda_c",
+            "min": 1,
+            "max": 1000,
+            "step": 1,
+            "default": 80
+          }
+        ]
+      },
+      {
+        "type": "filter_blur",
+        "label": "Gaussian Blur",
+        "category": "cv",
+        "icon": "Waves",
+        "description": "Applies a Gaussian blur to smooth the image.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "size",
+            "label": "Kernel Size",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 51
+          }
+        ]
+      },
+      {
+        "type": "filter_glitch",
+        "label": "Glitch FX",
+        "category": "cv",
+        "icon": "Zap",
+        "description": "Applies random digital distortions for a 'glitch' effect.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "intensity",
+            "min": 0,
+            "max": 100,
+            "default": 20
+          },
+          {
+            "id": "shift",
+            "min": 0,
+            "max": 50,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "filter_gray",
+        "label": "Grayscale",
+        "category": "cv",
+        "icon": "Waves",
+        "description": "Converts the image to grayscale.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      },
+      {
+        "type": "plugin_invert",
+        "label": "Invert Color",
+        "category": "cv",
+        "icon": "Palette",
+        "description": "Inverts all colors in the image (negative effect).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "plugin_pixelate",
+        "label": "Pixelate Filter",
+        "category": "cv",
+        "icon": "Hash",
+        "description": "Reduces the apparent resolution of the image to create a pixelated effect.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "blocks",
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "plugin_sobel",
+        "label": "Sobel Edge filter",
+        "category": "cv",
+        "icon": "Activity",
+        "description": "Detects horizontal and vertical gradients using the Sobel operator.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "kernel_size",
+            "min": 1,
+            "max": 7,
+            "step": 2,
+            "default": 3
+          },
+          {
+            "id": "x_dir",
+            "label": "X Direction",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "y_dir",
+            "label": "Y Direction",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "filter_threshold",
+        "label": "Threshold",
+        "category": "cv",
+        "icon": "Waves",
+        "description": "Separates the image into black and white based on intensity.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "threshold",
+            "label": "Threshold Value",
+            "type": "int",
+            "default": 127,
+            "min": 0,
+            "max": 255
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mask",
+    "label": "Masks",
+    "nodes": [
+      {
+        "type": "filter_blob_filter",
+        "label": "Blob Filter",
+        "category": "mask",
+        "icon": "Filter",
+        "description": "Removes blobs outside an area range from a binary mask using connected components. Eliminates isolated noise pixels while preserving large regions.",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_area",
+            "type": "int",
+            "default": 100,
+            "label": "Min Area (px\u00b2)"
+          },
+          {
+            "id": "max_area",
+            "type": "int",
+            "default": 0,
+            "label": "Max Area (0 = off)"
+          },
+          {
+            "id": "connectivity",
+            "type": "int",
+            "default": 8,
+            "label": "Connectivity (4 or 8)"
+          }
+        ],
+        "colorable": true
+      },
+      {
+        "type": "filter_color_mask",
+        "label": "Color Mask",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Creates a mask by isolating a range of colors (HSV or RGB distance).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "HSV Range",
+              "RGB Distance"
+            ],
+            "default": 0
+          },
+          {
+            "id": "h_min",
+            "label": "H Min",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 179
+          },
+          {
+            "id": "h_max",
+            "label": "H Max",
+            "type": "int",
+            "default": 179,
+            "min": 0,
+            "max": 179
+          },
+          {
+            "id": "s_min",
+            "label": "S Min",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "s_max",
+            "label": "S Max",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "v_min",
+            "label": "V Min",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "v_max",
+            "label": "V Max",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "r",
+            "label": "Target R",
+            "type": "int",
+            "default": 128
+          },
+          {
+            "id": "g",
+            "label": "Target G",
+            "type": "int",
+            "default": 128
+          },
+          {
+            "id": "b",
+            "label": "Target B",
+            "type": "int",
+            "default": 128
+          },
+          {
+            "id": "threshold",
+            "label": "RGB Threshold",
+            "type": "int",
+            "default": 30
+          }
+        ]
+      },
+      {
+        "type": "util_coord_to_mask",
+        "label": "Coord To Mask",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Transforms detection coordinates into a white mask.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "width",
+            "label": "Width (if no img)",
+            "type": "int",
+            "default": 640
+          },
+          {
+            "id": "height",
+            "label": "Height (if no img)",
+            "type": "int",
+            "default": 480
+          }
+        ]
+      },
+      {
+        "type": "filter_float_threshold",
+        "label": "Float Threshold",
+        "category": "mask",
+        "icon": "Sliders",
+        "description": "Thresholds a raw float32 array (e.g. NDVI, elevation) directly without 8-bit quantization loss. Connect the 'raw' output of Float Image. Water: -0.5\u21920.0, Vegetation: 0.2\u21921.0.",
+        "inputs": [
+          {
+            "id": "raw",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "low",
+            "label": "Min Value",
+            "type": "float"
+          },
+          {
+            "id": "high",
+            "label": "Max Value",
+            "type": "float",
+            "default": 0.0
+          },
+          {
+            "id": "invert",
+            "label": "Invert",
+            "type": "boolean",
+            "default": false
+          }
+        ],
+        "colorable": true
+      },
+      {
+        "type": "plugin_image_to_mask",
+        "label": "Image to Mask",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Converts any image to a binary mask using its brightness.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "plugin_invert_mask",
+        "label": "Invert Mask",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Inverts a binary mask (black becomes white and vice versa).",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "mask"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "plugin_mask_to_image",
+        "label": "Mask to Image",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Converts a binary mask (1 channel) to a standard image (3 channels).",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "filter_morphology",
+        "label": "Morphology",
+        "category": "mask",
+        "icon": "Layers",
+        "description": "Dilation or erosion operations to clean up masks.",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "operation",
+            "label": "Operation",
+            "type": "enum",
+            "options": [
+              "Dilation",
+              "Erosion"
+            ],
+            "default": 0
+          },
+          {
+            "id": "size",
+            "label": "Kernel Size",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 51
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "geom",
+    "label": "Geometry",
+    "nodes": [
+      {
+        "type": "geom_approx_poly",
+        "label": "Approx. Polygon",
+        "category": "geom",
+        "icon": "Shapes",
+        "description": "Simplifies a contour into a polygon with fewer vertices.",
+        "inputs": [
+          {
+            "id": "contour",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "approx_contour",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "epsilon_pct",
+            "label": "Precision %",
+            "type": "scalar",
+            "min": 0,
+            "max": 10,
+            "default": 2
+          },
+          {
+            "id": "closed",
+            "label": "Closed",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "geom_cropper",
+        "label": "Auto Cropper",
+        "category": "geom",
+        "icon": "Maximize",
+        "description": "Crops a specific rectangular area from the image (cropping).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "padding",
+            "min": 0,
+            "max": 100,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "geom_crop_rect",
+        "label": "Crop",
+        "category": "geom",
+        "icon": "Crop",
+        "description": "Crops a rectangular region from the image. Define the region interactively using the built-in editor.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "rect",
+            "label": "Rect",
+            "type": "string",
+            "default": "{\"x\":0.1,\"y\":0.1,\"w\":0.8,\"h\":0.8}"
+          }
+        ],
+        "colorable": true
+      },
+      {
+        "type": "geom_fit_shape",
+        "label": "Fit Shape",
+        "category": "geom",
+        "icon": "Square",
+        "description": "Calculates the bounding box or minimum area rectangle for a contour.",
+        "inputs": [
+          {
+            "id": "contour",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "bbox",
+            "color": "dict"
+          },
+          {
+            "id": "min_rect",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "padding",
+            "label": "Padding",
+            "type": "scalar",
+            "min": 0,
+            "max": 0.1,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "geom_flip",
+        "label": "Flip",
+        "category": "geom",
+        "icon": "Move",
+        "description": "Inverts the image horizontally or vertically.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "flip_mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Vertical",
+              "Horizontal",
+              "Both"
+            ],
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "util_manual_points",
+        "label": "Manual 4 Points",
+        "category": "geom",
+        "icon": "MousePointer",
+        "description": "Allows manual definition of 4 reference points on the image for calculations.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "p1",
+            "color": "dict"
+          },
+          {
+            "id": "p2",
+            "color": "dict"
+          },
+          {
+            "id": "p3",
+            "color": "dict"
+          },
+          {
+            "id": "p4",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "points",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "x1",
+            "label": "P1 X",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.1
+          },
+          {
+            "id": "y1",
+            "label": "P1 Y",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.1
+          },
+          {
+            "id": "x2",
+            "label": "P2 X",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.9
+          },
+          {
+            "id": "y2",
+            "label": "P2 Y",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.1
+          },
+          {
+            "id": "x3",
+            "label": "P3 X",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.9
+          },
+          {
+            "id": "y3",
+            "label": "P3 Y",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.9
+          },
+          {
+            "id": "x4",
+            "label": "P4 X",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.1
+          },
+          {
+            "id": "y4",
+            "label": "P4 Y",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.9
+          }
+        ]
+      },
+      {
+        "type": "util_roi_polygon",
+        "label": "Mask Polygon",
+        "category": "geom",
+        "icon": "Scaling",
+        "description": "Interactive polygonal mask \u2014 draws a region of interest, optionally restricted by an input mask.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask_in",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "masked",
+            "color": "image"
+          },
+          {
+            "id": "masked_inv",
+            "color": "image"
+          },
+          {
+            "id": "pts",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "points",
+            "label": "Points",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "id": "filled",
+            "label": "Filled",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "scalar",
+            "min": 1,
+            "max": 20,
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "plugin_offset",
+        "label": "Offset Shift",
+        "category": "geom",
+        "icon": "Move",
+        "description": "Shifts the image horizontally or vertically with wrapping.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "x_offset",
+            "max": 1000,
+            "step": 5,
+            "default": 0
+          },
+          {
+            "id": "y_offset",
+            "max": 1000,
+            "step": 5,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "geom_perspective",
+        "label": "Perspective Warp",
+        "category": "geom",
+        "icon": "Maximize",
+        "description": "Straightens a distorted area into a flat rectangle using 4 reference points.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "src_pts",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "width",
+            "label": "Out Width",
+            "type": "scalar",
+            "min": 100,
+            "max": 2000,
+            "default": 800
+          },
+          {
+            "id": "height",
+            "label": "Out Height",
+            "type": "scalar",
+            "min": 100,
+            "max": 2000,
+            "default": 600
+          }
+        ]
+      },
+      {
+        "type": "geom_resize",
+        "label": "Resize",
+        "category": "geom",
+        "icon": "Scaling",
+        "description": "Changes the image resolution or scaling.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Resize Mode",
+            "type": "enum",
+            "options": [
+              "Scale",
+              "Absolute"
+            ],
+            "default": 0
+          },
+          {
+            "id": "scale",
+            "label": "Scale Factor",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.01,
+            "max": 10.0
+          },
+          {
+            "id": "target_width",
+            "label": "Width (px)",
+            "type": "int",
+            "default": 640
+          },
+          {
+            "id": "target_height",
+            "label": "Height (px)",
+            "type": "int",
+            "default": 480
+          },
+          {
+            "id": "interpolation",
+            "label": "Interpolation",
+            "type": "enum",
+            "options": [
+              "Nearest",
+              "Linear",
+              "Cubic",
+              "Lanczos"
+            ],
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "geom_rotate_no_crop",
+        "label": "Rotate (No Crop)",
+        "category": "geom",
+        "icon": "RotateCw",
+        "description": "Rotates the image while expanding the canvas to keep all pixels visible.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "angle",
+            "label": "Angle",
+            "type": "scalar",
+            "max": 180,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "plugin_rotate",
+        "label": "Rotate Image",
+        "category": "geom",
+        "icon": "Move",
+        "description": "Applies a custom rotation and scaling to the video stream.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "angle",
+            "min": 0,
+            "max": 360,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "scale",
+            "min": 0.1,
+            "max": 3.0,
+            "step": 0.1,
+            "default": 1.0
+          }
+        ]
+      },
+      {
+        "type": "geom_warp_affine",
+        "label": "Warp Affine",
+        "category": "geom",
+        "icon": "Move",
+        "description": "Applies a 2x3 affine transformation matrix to the image.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "matrix",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "track",
+    "label": "Tracking",
+    "nodes": [
+      {
+        "type": "tracker_deepsort",
+        "label": "DeepSORT Tracker",
+        "category": "track",
+        "icon": "ScanSearch",
+        "description": "Suivi multi-objets avec DeepSORT : Kalman Filter + embeddings CNN pour une r\u00e9-identification robuste et moins de changements d'ID.",
+        "inputs": [
+          {
+            "id": "detections",
+            "color": "list"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "tracks",
+            "color": "list"
+          },
+          {
+            "id": "track_0",
+            "color": "dict"
+          },
+          {
+            "id": "track_1",
+            "color": "dict"
+          },
+          {
+            "id": "track_2",
+            "color": "dict"
+          },
+          {
+            "id": "track_3",
+            "color": "dict"
+          },
+          {
+            "id": "track_4",
+            "color": "dict"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "max_age",
+            "label": "Max Age (frames)",
+            "min": 1,
+            "max": 60,
+            "step": 1,
+            "default": 5
+          },
+          {
+            "id": "n_init",
+            "label": "Min Hits (n_init)",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 2
+          },
+          {
+            "id": "embedder",
+            "label": "Embedder (0=mobilenet 1=clip 2=torchreid)",
+            "min": 0,
+            "max": 2,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "max_cosine_dist",
+            "label": "Max Cosine Dist (%)",
+            "min": 1,
+            "max": 99,
+            "step": 1,
+            "default": 40
+          }
+        ]
+      },
+      {
+        "type": "transform_eye_crop",
+        "label": "Eye Crop",
+        "category": "track",
+        "icon": "Eye",
+        "description": "Crops and optionally aligns left and right eye regions from MediaPipe Face Tracker landmarks. Reusable for any eye-based classifier.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "face",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "eye_left",
+            "color": "image"
+          },
+          {
+            "id": "eye_right",
+            "color": "image"
+          },
+          {
+            "id": "meta",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "size",
+            "label": "Size (px)",
+            "type": "int",
+            "default": 64,
+            "min": 32,
+            "max": 256
+          },
+          {
+            "id": "padding",
+            "label": "Padding",
+            "type": "float",
+            "default": 0.4,
+            "min": 0.0,
+            "max": 1.5,
+            "step": 0.05
+          },
+          {
+            "id": "align",
+            "label": "Align",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "analysis_face_mp",
+        "label": "Face Tracker",
+        "category": "track",
+        "icon": "User",
+        "description": "Detects and tracks faces and facial landmarks (MediaPipe).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "faces_list",
+            "color": "list"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "max_faces",
+            "label": "Max Faces",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 10
+          }
+        ]
+      },
+      {
+        "type": "analysis_gaze",
+        "label": "Gaze Estimator",
+        "category": "track",
+        "icon": "Eye",
+        "description": "ETH-XGaze gaze estimation (pitch/yaw). Loads epoch_24_ckpt.pth.tar. Requires torch + torchvision.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "gaze",
+            "color": "dict"
+          },
+          {
+            "id": "yaw",
+            "color": "scalar"
+          },
+          {
+            "id": "pitch",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "weights",
+            "label": "Checkpoint path",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "calibration",
+            "label": "Camera calibration",
+            "type": "enum",
+            "options": [
+              "Auto (image-based)",
+              "Custom XML"
+            ],
+            "default": 0
+          },
+          {
+            "id": "calibration_path",
+            "label": "Calibration XML",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "pitch_offset",
+            "label": "Pitch offset (\u00b0)",
+            "type": "float",
+            "default": 0.0,
+            "max": 45.0,
+            "step": 0.5
+          },
+          {
+            "id": "yaw_offset",
+            "label": "Yaw offset (\u00b0)",
+            "type": "float",
+            "default": 0.0,
+            "max": 45.0,
+            "step": 0.5
+          }
+        ]
+      },
+      {
+        "type": "analysis_hand_mp",
+        "label": "Hand Tracker",
+        "category": "track",
+        "icon": "Zap",
+        "description": "Detects and tracks hands and joints (MediaPipe).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "hands_list",
+            "color": "list"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "max_hands",
+            "label": "Max Hands",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 10
+          }
+        ]
+      },
+      {
+        "type": "analysis_head_pose",
+        "label": "Head Pose",
+        "category": "track",
+        "icon": "Crosshair",
+        "description": "Estimates 3D head orientation (yaw, pitch, roll) via solvePnP on facial landmarks. Connect Face Tracker output.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "face",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "pose",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "draw_axes",
+            "label": "Draw Axes",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "analysis_object_mp",
+        "label": "Object Detector",
+        "category": "track",
+        "icon": "Box",
+        "description": "Detects common objects (80 categories) using the fast MediaPipe model.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "objects_list",
+            "color": "list"
+          },
+          {
+            "id": "obj_0",
+            "color": "dict"
+          },
+          {
+            "id": "obj_1",
+            "color": "dict"
+          },
+          {
+            "id": "obj_2",
+            "color": "dict"
+          },
+          {
+            "id": "obj_3",
+            "color": "dict"
+          },
+          {
+            "id": "obj_4",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "score_threshold",
+            "min": 0,
+            "max": 100,
+            "default": 50
+          },
+          {
+            "id": "max_results",
+            "min": 1,
+            "max": 20,
+            "default": 5
+          }
+        ]
+      },
+      {
+        "type": "analysis_flow",
+        "label": "Optical Flow",
+        "category": "track",
+        "icon": "Wind",
+        "description": "Analyzes movement between frames using Farneback algorithm.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "pyr_scale",
+            "label": "Pyramid Scale",
+            "type": "float",
+            "default": 0.5
+          },
+          {
+            "id": "levels",
+            "label": "Levels",
+            "type": "int",
+            "default": 3
+          },
+          {
+            "id": "winsize",
+            "label": "Win Size",
+            "type": "int",
+            "default": 15
+          },
+          {
+            "id": "iterations",
+            "label": "Iterations",
+            "type": "int",
+            "default": 3
+          },
+          {
+            "id": "poly_n",
+            "label": "Poly N",
+            "type": "int",
+            "default": 5
+          },
+          {
+            "id": "poly_sigma",
+            "label": "Poly Sigma",
+            "type": "float",
+            "default": 1.2
+          }
+        ]
+      },
+      {
+        "type": "analysis_pose_mp",
+        "label": "Pose Tracker",
+        "category": "track",
+        "icon": "User",
+        "description": "Analyzes and tracks human body posture (33 keypoints) via MediaPipe.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "pose_list",
+            "color": "list"
+          },
+          {
+            "id": "data",
+            "color": "dict"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "tracker_sort",
+        "label": "SORT Tracker",
+        "category": "track",
+        "icon": "Crosshair",
+        "description": "Suivi multi-objets en temps r\u00e9el avec SORT (Kalman Filter + Hungarian). Connecter la sortie 'objects_list' d'un d\u00e9tecteur YOLO ou MediaPipe.",
+        "inputs": [
+          {
+            "id": "detections",
+            "color": "list"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "tracks",
+            "color": "list"
+          },
+          {
+            "id": "track_0",
+            "color": "dict"
+          },
+          {
+            "id": "track_1",
+            "color": "dict"
+          },
+          {
+            "id": "track_2",
+            "color": "dict"
+          },
+          {
+            "id": "track_3",
+            "color": "dict"
+          },
+          {
+            "id": "track_4",
+            "color": "dict"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "max_age",
+            "label": "Max Age (frames)",
+            "min": 1,
+            "max": 60,
+            "step": 1,
+            "default": 5
+          },
+          {
+            "id": "min_hits",
+            "label": "Min Hits",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 2
+          },
+          {
+            "id": "iou_threshold",
+            "label": "IOU Threshold (%)",
+            "min": 5,
+            "max": 95,
+            "step": 1,
+            "default": 30
+          }
+        ]
+      },
+      {
+        "type": "geom_track_line",
+        "label": "Track Line",
+        "category": "track",
+        "icon": "Maximize",
+        "description": "Calculates the distance in pixels between two tracked landmarks.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "dict"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "distance",
+            "color": "scalar"
+          },
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "pt_a",
+            "min": 0,
+            "max": 477,
+            "step": 1,
+            "default": 4
+          },
+          {
+            "id": "pt_b",
+            "min": 0,
+            "max": 477,
+            "step": 1,
+            "default": 8
+          },
+          {
+            "id": "absolute",
+            "label": "Absolute Coords",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "thickness",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "default": 4
+          },
+          {
+            "id": "r",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "g",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          },
+          {
+            "id": "b",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "geom_track_point",
+        "label": "Track Point",
+        "category": "track",
+        "icon": "Target",
+        "description": "Extracts the precise coordinates of a specific tracked landmark (e.g., joints).",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "dict"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          },
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "point_id",
+            "min": 0,
+            "max": 477,
+            "step": 1,
+            "default": 8
+          },
+          {
+            "id": "absolute",
+            "label": "Absolute Coords",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "thickness",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "default": 5
+          },
+          {
+            "id": "r",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "g",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          },
+          {
+            "id": "b",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "geom_track_polygon",
+        "label": "Track Polygon",
+        "category": "track",
+        "icon": "Target",
+        "description": "Calculates the area of a zone defined by multiple tracked landmarks.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "dict"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "area",
+            "color": "scalar"
+          },
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "pt_1",
+            "max": 477,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "pt_2",
+            "max": 477,
+            "step": 1,
+            "default": 5
+          },
+          {
+            "id": "pt_3",
+            "max": 477,
+            "step": 1,
+            "default": 9
+          },
+          {
+            "id": "pt_4",
+            "max": 477,
+            "step": 1,
+            "default": 13
+          },
+          {
+            "id": "pt_5",
+            "max": 477,
+            "step": 1,
+            "default": 17
+          },
+          {
+            "id": "pt_6",
+            "max": 477,
+            "step": 1
+          },
+          {
+            "id": "pt_7",
+            "max": 477,
+            "step": 1
+          },
+          {
+            "id": "pt_8",
+            "max": 477,
+            "step": 1
+          },
+          {
+            "id": "pt_9",
+            "max": 477,
+            "step": 1
+          },
+          {
+            "id": "pt_10",
+            "max": 477,
+            "step": 1
+          },
+          {
+            "id": "absolute",
+            "label": "Absolute Coords",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "fill",
+            "label": "Fill",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "thickness",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "default": 2
+          },
+          {
+            "id": "r",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "g",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          },
+          {
+            "id": "b",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "object_detection_yolo",
+        "label": "YOLO Detector",
+        "category": "track",
+        "icon": "Zap",
+        "description": "High-performance object detection (80 classes) using the YOLOv11 model.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "objects_list",
+            "color": "list"
+          },
+          {
+            "id": "obj_0",
+            "color": "dict"
+          },
+          {
+            "id": "obj_1",
+            "color": "dict"
+          },
+          {
+            "id": "obj_2",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "confidence",
+            "min": 0,
+            "max": 100,
+            "default": 25
+          },
+          {
+            "id": "model_size",
+            "min": 0,
+            "max": 2,
+            "default": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "features",
+    "label": "Features",
+    "nodes": [
+      {
+        "type": "feat_bilateral",
+        "label": "Bilateral Filter",
+        "category": "features",
+        "icon": "Wind",
+        "description": "Smoothes the image while preserving edge sharpness and textures.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "diameter",
+            "label": "Diameter",
+            "type": "scalar",
+            "min": 1,
+            "max": 25,
+            "default": 9
+          },
+          {
+            "id": "sigma_color",
+            "label": "Sigma Color",
+            "type": "scalar",
+            "min": 1,
+            "max": 150,
+            "default": 75
+          },
+          {
+            "id": "sigma_space",
+            "label": "Sigma Space",
+            "type": "scalar",
+            "min": 1,
+            "max": 150,
+            "default": 75
+          }
+        ]
+      },
+      {
+        "type": "feat_clahe",
+        "label": "CLAHE (Contrast)",
+        "category": "features",
+        "icon": "Maximize",
+        "description": "Adaptively improves local image contrast (CLAHE algorithm).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "clip_limit",
+            "label": "Clip Limit",
+            "type": "scalar",
+            "min": 1,
+            "max": 10,
+            "default": 2
+          },
+          {
+            "id": "grid_size",
+            "label": "Grid Size",
+            "type": "scalar",
+            "min": 1,
+            "max": 16,
+            "default": 8
+          }
+        ]
+      },
+      {
+        "type": "util_compose",
+        "label": "Compose",
+        "category": "features",
+        "icon": "Layout",
+        "description": "Combines two images: side-by-side, split view, blend, difference, or checkerboard.",
+        "inputs": [
+          {
+            "id": "image_a",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Side by Side",
+              "Top / Bottom",
+              "Split H",
+              "Split V",
+              "Alpha Blend",
+              "Difference",
+              "Checkerboard"
+            ],
+            "default": 0
+          },
+          {
+            "id": "split_pos",
+            "label": "Split / Tile %",
+            "type": "scalar",
+            "min": 1,
+            "max": 99,
+            "default": 50
+          },
+          {
+            "id": "gap",
+            "label": "Gap / Line (px)",
+            "type": "scalar",
+            "min": 0,
+            "max": 40,
+            "default": 2
+          },
+          {
+            "id": "alpha",
+            "label": "Alpha (A)",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+          }
+        ]
+      },
+      {
+        "type": "feat_contour_props",
+        "label": "Contour Properties",
+        "category": "features",
+        "icon": "Info",
+        "description": "Calculates geometric metrics (area, center, perimeter) of an isolated shape.",
+        "inputs": [
+          {
+            "id": "contour",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "area",
+            "color": "scalar"
+          },
+          {
+            "id": "circularity",
+            "color": "scalar"
+          },
+          {
+            "id": "elongation",
+            "color": "scalar"
+          },
+          {
+            "id": "center_x",
+            "color": "scalar"
+          },
+          {
+            "id": "center_y",
+            "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "feat_distance_transform",
+        "label": "Distance Transform",
+        "category": "features",
+        "icon": "Maximize",
+        "description": "Calculates the distance from each pixel to the nearest zero pixel (mask border).",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "dist_map",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "dist_type",
+            "label": "Dist Type",
+            "type": "enum",
+            "options": [
+              "L2 (Euclidean)",
+              "L1 (Manhattan)",
+              "C (Chessboard)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "mask_size",
+            "label": "Mask Size",
+            "type": "enum",
+            "options": [
+              "3",
+              "5",
+              "Precise"
+            ],
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "feat_fast",
+        "label": "FAST Corners",
+        "category": "features",
+        "icon": "Zap",
+        "description": "Rapid corner detection optimized for real-time performance.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "keypoints",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "min": 1,
+            "max": 100,
+            "default": 10
+          },
+          {
+            "id": "nonmax",
+            "label": "Non-max Suppr.",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "feat_matcher",
+        "label": "Feature Matcher",
+        "category": "features",
+        "icon": "Link",
+        "description": "Matches features between two sets of descriptors using BF or FLANN and draws matching lines.",
+        "inputs": [
+          {
+            "id": "des1",
+            "color": "any"
+          },
+          {
+            "id": "des2",
+            "color": "any"
+          },
+          {
+            "id": "kp1",
+            "color": "list"
+          },
+          {
+            "id": "kp2",
+            "color": "list"
+          },
+          {
+            "id": "img1",
+            "color": "image"
+          },
+          {
+            "id": "img2",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "matches_count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "Brute-Force",
+              "FLANN"
+            ],
+            "default": 0
+          },
+          {
+            "id": "norm",
+            "label": "Norm Type",
+            "type": "enum",
+            "options": [
+              "L2 (SIFT)",
+              "HAMMING (ORB)"
+            ],
+            "default": 1
+          },
+          {
+            "id": "ratio_test",
+            "label": "Lowe's Ratio",
+            "type": "scalar",
+            "min": 0.1,
+            "max": 1.0,
+            "default": 0.75
+          },
+          {
+            "id": "max_matches",
+            "label": "Max Display",
+            "type": "scalar",
+            "min": 1,
+            "max": 200,
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "feat_fill_contours",
+        "label": "Fill Contours",
+        "category": "features",
+        "icon": "Pentagon",
+        "description": "Fills all contours from a list into a binary mask (union). Connect contours_list from Find Contours.",
+        "inputs": [
+          {
+            "id": "contours",
+            "color": "list"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "width",
+            "label": "Width (fallback)",
+            "type": "int",
+            "default": 512,
+            "min": 1,
+            "max": 4096
+          },
+          {
+            "id": "height",
+            "label": "Height (fallback)",
+            "type": "int",
+            "default": 512,
+            "min": 1,
+            "max": 4096
+          }
+        ]
+      },
+      {
+        "type": "feat_filter_contours",
+        "label": "Filter Contours",
+        "category": "features",
+        "icon": "Filter",
+        "description": "Filters a contour list by elongation (long/short axis ratio) and/or area. Use min_elongation > 1 to keep only elongated shapes like rivers.",
+        "inputs": [
+          {
+            "id": "contours",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "contours_list",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "max_circularity",
+            "label": "Max Circularity (0=off)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "min_circularity",
+            "label": "Min Circularity (0=off)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "min_elongation",
+            "label": "Min Elongation (1=off)",
+            "type": "float",
+            "default": 1.0,
+            "min": 1.0,
+            "max": 100.0,
+            "step": 0.5
+          },
+          {
+            "id": "max_elongation",
+            "label": "Max Elongation (0=off)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 100.0,
+            "step": 0.5
+          },
+          {
+            "id": "min_area",
+            "label": "Min Area (0=off)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 100000
+          },
+          {
+            "id": "max_area",
+            "label": "Max Area (0=off)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 100000
+          }
+        ]
+      },
+      {
+        "type": "feat_find_contours",
+        "label": "Find Contours",
+        "category": "features",
+        "icon": "Target",
+        "description": "Detects and extracts isolated shapes from a binary image (mask).",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "contours_list",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "External",
+              "List",
+              "CComp",
+              "Tree"
+            ],
+            "default": 0
+          },
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "None",
+              "Simple",
+              "TC89_L1",
+              "TC89_KCOS"
+            ],
+            "default": 1
+          },
+          {
+            "id": "min_area",
+            "label": "Min Area",
+            "type": "scalar",
+            "min": 0,
+            "max": 100000,
+            "default": 100
+          },
+          {
+            "id": "max_area",
+            "label": "Max Area (0=off)",
+            "type": "scalar",
+            "min": 0,
+            "max": 100000,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "feat_harris",
+        "label": "Harris Corners",
+        "category": "features",
+        "icon": "LayoutGrid",
+        "description": "Detects corner points using the Harris mathematical operator.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "block_size",
+            "label": "Block Size",
+            "type": "scalar",
+            "min": 2,
+            "max": 10,
+            "default": 2
+          },
+          {
+            "id": "ksize",
+            "label": "Sobel K",
+            "type": "scalar",
+            "min": 1,
+            "max": 31,
+            "default": 3
+          },
+          {
+            "id": "k",
+            "label": "Harris K",
+            "type": "scalar",
+            "min": 0,
+            "max": 0.1,
+            "default": 0.04
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "min": 0,
+            "max": 0.2,
+            "default": 0.01
+          }
+        ]
+      },
+      {
+        "type": "feat_hough_circles",
+        "label": "Hough Circles",
+        "category": "features",
+        "icon": "Target",
+        "description": "Identifies perfect circular shapes using mathematical circle transforms.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "circles_list",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "dp",
+            "label": "DP",
+            "type": "scalar",
+            "min": 1,
+            "max": 10,
+            "default": 1.2
+          },
+          {
+            "id": "min_dist",
+            "label": "Min Dist",
+            "type": "scalar",
+            "min": 1,
+            "max": 500,
+            "default": 100
+          },
+          {
+            "id": "param1",
+            "label": "Canny High",
+            "type": "scalar",
+            "min": 1,
+            "max": 500,
+            "default": 100
+          },
+          {
+            "id": "param2",
+            "label": "Threshold",
+            "type": "scalar",
+            "min": 1,
+            "max": 200,
+            "default": 30
+          },
+          {
+            "id": "min_r",
+            "label": "Min Radius",
+            "type": "scalar",
+            "min": 0,
+            "max": 500,
+            "default": 0
+          },
+          {
+            "id": "max_r",
+            "label": "Max Radius",
+            "type": "scalar",
+            "min": 0,
+            "max": 500,
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "feat_hough_lines",
+        "label": "Hough Lines",
+        "category": "features",
+        "icon": "Maximize",
+        "description": "Detects straight line segments in the image (walls, joints, etc.).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "lines_list",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "rho",
+            "label": "Rho",
+            "type": "scalar",
+            "min": 1,
+            "max": 10,
+            "default": 1
+          },
+          {
+            "id": "theta_deg",
+            "label": "Theta (deg)",
+            "type": "scalar",
+            "min": 1,
+            "max": 180,
+            "default": 1
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "min": 1,
+            "max": 500,
+            "default": 50
+          },
+          {
+            "id": "min_len",
+            "label": "Min Length",
+            "type": "scalar",
+            "min": 0,
+            "max": 500,
+            "default": 50
+          },
+          {
+            "id": "max_gap",
+            "label": "Max Gap",
+            "type": "scalar",
+            "min": 0,
+            "max": 100,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "feat_marker_filter",
+        "label": "Marker Filter",
+        "category": "features",
+        "icon": "Filter",
+        "description": "Filters markers (label map) by area, removing regions outside the min/max range.",
+        "inputs": [
+          {
+            "id": "markers",
+            "color": "any"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "markers_out",
+            "color": "any"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_area",
+            "label": "Min Area",
+            "type": "scalar",
+            "min": 0,
+            "max": 1000000,
+            "default": 0
+          },
+          {
+            "id": "max_area",
+            "label": "Max Area",
+            "type": "scalar",
+            "min": 0,
+            "max": 1000000,
+            "default": 100000
+          },
+          {
+            "id": "area_unit",
+            "label": "Area Unit",
+            "type": "enum",
+            "options": [
+              "Pixels",
+              "% of image"
+            ],
+            "default": 0
+          },
+          {
+            "id": "remap_ids",
+            "label": "Remap IDs",
+            "type": "enum",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "feat_connected_components",
+        "label": "Markers (Connected)",
+        "category": "features",
+        "icon": "Database",
+        "description": "Labels connected regions in a binary image. Each region gets a unique ID (Markers).",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "markers",
+            "color": "any"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "feat_morphology_adv",
+        "label": "Morphology (Advanced)",
+        "category": "features",
+        "icon": "Wind",
+        "description": "Advanced morphological operations like Opening, Closing, and Gradient.",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "operation",
+            "label": "Operation",
+            "type": "enum",
+            "options": [
+              "Opening",
+              "Closing",
+              "Gradient",
+              "Top Hat",
+              "Black Hat"
+            ],
+            "default": 0
+          },
+          {
+            "id": "shape",
+            "label": "Kernel Shape",
+            "type": "enum",
+            "options": [
+              "Rect",
+              "Cross",
+              "Ellipse"
+            ],
+            "default": 0
+          },
+          {
+            "id": "size",
+            "label": "Kernel Size",
+            "type": "scalar",
+            "min": 1,
+            "max": 31,
+            "step": 2,
+            "default": 5
+          },
+          {
+            "id": "iterations",
+            "label": "Iterations",
+            "type": "scalar",
+            "min": 1,
+            "max": 10,
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "feat_orb",
+        "label": "ORB Detector",
+        "category": "features",
+        "icon": "Zap",
+        "description": "Detects keypoints and computes ORB descriptors (fast and efficient).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "keypoints",
+            "color": "list"
+          },
+          {
+            "id": "descriptors",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "n_features",
+            "label": "Max Features",
+            "type": "scalar",
+            "min": 10,
+            "max": 5000,
+            "default": 500
+          },
+          {
+            "id": "scale_factor",
+            "label": "Scale Factor",
+            "type": "scalar",
+            "min": 1.1,
+            "max": 2.0,
+            "default": 1.2
+          },
+          {
+            "id": "n_levels",
+            "label": "Levels",
+            "type": "scalar",
+            "min": 1,
+            "max": 16,
+            "default": 8
+          }
+        ]
+      },
+      {
+        "type": "feat_sift",
+        "label": "SIFT Detector",
+        "category": "features",
+        "icon": "Zap",
+        "description": "Detects high-quality scale-invariant keypoints (SIFT algorithm).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "keypoints",
+            "color": "list"
+          },
+          {
+            "id": "descriptors",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "n_features",
+            "label": "Max Features",
+            "type": "scalar",
+            "min": 0,
+            "max": 5000,
+            "default": 0
+          },
+          {
+            "id": "contrast_thresh",
+            "label": "Contrast Thr",
+            "type": "scalar",
+            "min": 0,
+            "max": 0.5,
+            "default": 0.04
+          }
+        ]
+      },
+      {
+        "type": "feat_threshold_adv",
+        "label": "Threshold (Advanced)",
+        "category": "features",
+        "icon": "Layers",
+        "description": "Advanced thresholding including Otsu's method and relative percentage thresholds.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Binary",
+              "Binary Inv",
+              "Otsu",
+              "Otsu Inv",
+              "70% of Max"
+            ],
+            "default": 0
+          },
+          {
+            "id": "threshold",
+            "label": "Value",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 127
+          }
+        ]
+      },
+      {
+        "type": "feat_watershed",
+        "label": "Watershed",
+        "category": "features",
+        "icon": "Target",
+        "description": "Separates overlapping objects using marker-controlled watershed algorithm.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "markers",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "markers_out",
+            "color": "any"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "visualization",
+            "label": "Visualization",
+            "type": "enum",
+            "options": [
+              "Original + Boundaries",
+              "Colorized Regions",
+              "Regions + Boundaries",
+              "Original"
+            ],
+            "default": 0
+          },
+          {
+            "id": "boundary_color",
+            "label": "Boundary Color",
+            "type": "enum",
+            "options": [
+              "Red",
+              "Green",
+              "Blue",
+              "White",
+              "Black",
+              "Yellow"
+            ],
+            "default": 0
+          },
+          {
+            "id": "boundary_thickness",
+            "label": "Boundary Thickness",
+            "type": "scalar",
+            "min": 1,
+            "max": 5,
+            "default": 1
+          },
+          {
+            "id": "region_alpha",
+            "label": "Region Alpha",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "default": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "analysis",
+    "label": "Analysis",
+    "nodes": [
+      {
+        "type": "plugin_filter_ema",
+        "label": "Exp. Smoothing (EMA)",
+        "category": "analysis",
+        "icon": "TrendingUp",
+        "description": "Exponential moving average. alpha=1 = no smoothing, alpha\u21920 = heavy smoothing.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "alpha",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 20
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_gaussian",
+        "label": "Gaussian Smooth",
+        "category": "analysis",
+        "icon": "Bell",
+        "description": "Convolves signal buffer with a Gaussian kernel. sigma controls spread.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "window",
+            "min": 3,
+            "max": 101,
+            "step": 2,
+            "default": 15
+          },
+          {
+            "id": "sigma",
+            "min": 1,
+            "max": 50,
+            "step": 1,
+            "default": 5
+          }
+        ]
+      },
+      {
+        "type": "sci_heatmap",
+        "label": "Heatmap",
+        "category": "analysis",
+        "icon": "Wind",
+        "description": "Generates a cumulative heatmap based on provided detection points.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "points",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "res",
+            "label": "Resolution",
+            "type": "scalar",
+            "min": 16,
+            "max": 256,
+            "default": 64
+          },
+          {
+            "id": "decay",
+            "label": "Decay (Fade)",
+            "type": "scalar",
+            "min": 0,
+            "max": 0.1,
+            "step": 0.001,
+            "default": 0.01
+          },
+          {
+            "id": "intensity",
+            "label": "Intensity",
+            "type": "scalar",
+            "min": 0.1,
+            "max": 5.0,
+            "default": 1.0
+          },
+          {
+            "id": "blur",
+            "label": "Blur Radius",
+            "type": "scalar",
+            "min": 0,
+            "max": 21,
+            "step": 2,
+            "default": 5
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Jet",
+              "Hot",
+              "Magma",
+              "Viridis",
+              "Ocean"
+            ],
+            "default": 0
+          },
+          {
+            "id": "blend",
+            "label": "Alpha Blend",
+            "type": "scalar",
+            "min": 0,
+            "max": 1.0,
+            "step": 0.1,
+            "default": 0.7
+          },
+          {
+            "id": "reset",
+            "label": "Reset Buffer",
+            "type": "trigger",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_holt",
+        "label": "Holt-Winters",
+        "category": "analysis",
+        "icon": "TrendingUp",
+        "description": "Double exponential smoothing. Tracks level AND trend. alpha=smoothing, beta=trend.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "trend",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "alpha",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 20
+          },
+          {
+            "id": "beta",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "bg_sub_knn",
+        "label": "KNN Subtractor",
+        "category": "analysis",
+        "icon": "Layers",
+        "description": "Separates moving foreground objects using K-Nearest Neighbors approach.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "history",
+            "label": "History",
+            "type": "scalar",
+            "min": 1,
+            "max": 1000,
+            "default": 500
+          },
+          {
+            "id": "threshold",
+            "label": "Dist Thresh",
+            "type": "scalar",
+            "min": 0,
+            "max": 1000,
+            "default": 400
+          },
+          {
+            "id": "detect_shadows",
+            "label": "Shadows",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_kalman",
+        "label": "Kalman Filter",
+        "category": "analysis",
+        "icon": "Activity",
+        "description": "1D Kalman filter. Q = process noise (dynamics), R = measurement noise.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "q",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 1
+          },
+          {
+            "id": "r",
+            "min": 1,
+            "max": 1000,
+            "step": 1,
+            "default": 100
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_loess",
+        "label": "LOESS / LOWESS",
+        "category": "analysis",
+        "icon": "Spline",
+        "description": "Local regression smoother. span = fraction of points used for each estimate.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "span",
+            "min": 5,
+            "max": 100,
+            "step": 1,
+            "default": 30
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_lowpass",
+        "label": "Low-pass Filter",
+        "category": "analysis",
+        "icon": "WavesLadder",
+        "description": "1st-order IIR low-pass. cutoff in mHz, fps in Hz. Attenuates frequencies above cutoff.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "cutoff",
+            "min": 1,
+            "max": 5000,
+            "step": 1,
+            "default": 1000
+          },
+          {
+            "id": "fps",
+            "min": 1,
+            "max": 120,
+            "step": 1,
+            "default": 30
+          }
+        ]
+      },
+      {
+        "type": "bg_sub_mog2",
+        "label": "MOG2 Subtractor",
+        "category": "analysis",
+        "icon": "Layers",
+        "description": "Separates moving foreground objects from a static background (MOG2).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "history",
+            "label": "History",
+            "type": "scalar",
+            "min": 1,
+            "max": 1000,
+            "default": 500
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "min": 0,
+            "max": 100,
+            "default": 16
+          },
+          {
+            "id": "detect_shadows",
+            "label": "Shadows",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_marker_analysis",
+        "label": "Marker Analysis",
+        "category": "analysis",
+        "icon": "Hash",
+        "description": "Extracts data (ID, coordinates, area) from a label map (markers) and overlays IDs.",
+        "inputs": [
+          {
+            "id": "markers",
+            "color": "any"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "data_list",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "show_labels",
+            "label": "Show IDs",
+            "type": "enum",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "default": 1
+          },
+          {
+            "id": "show_points",
+            "label": "Show Centroids",
+            "type": "enum",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "default": 1
+          },
+          {
+            "id": "font_scale",
+            "label": "Font Scale",
+            "type": "scalar",
+            "min": 0.1,
+            "max": 2.0,
+            "default": 0.6
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "scalar",
+            "min": 1,
+            "max": 5,
+            "default": 1
+          },
+          {
+            "id": "coord_type",
+            "label": "Coordinates",
+            "type": "enum",
+            "options": [
+              "Relative (0-1)",
+              "Pixels"
+            ],
+            "default": 0
+          },
+          {
+            "id": "text_color",
+            "label": "Text Color",
+            "type": "enum",
+            "options": [
+              "Green",
+              "Red",
+              "Blue",
+              "White",
+              "Black",
+              "Yellow"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_median",
+        "label": "Median Filter",
+        "category": "analysis",
+        "icon": "Minus",
+        "description": "Sliding-window median. Excellent spike/outlier rejection.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "window",
+            "min": 3,
+            "max": 301,
+            "step": 2,
+            "default": 11
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_ma",
+        "label": "Moving Average",
+        "category": "analysis",
+        "icon": "TrendingUp",
+        "description": "Sliding-window mean. Reduces noise but introduces latency (window/2 frames).",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "window",
+            "min": 2,
+            "max": 300,
+            "step": 1,
+            "default": 15
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_particle",
+        "label": "Particle Filter",
+        "category": "analysis",
+        "icon": "Sparkles",
+        "description": "Sequential Monte Carlo estimator. particles = N hypotheses about the true state.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "particles",
+            "min": 10,
+            "max": 500,
+            "step": 10,
+            "default": 100
+          },
+          {
+            "id": "process_std",
+            "min": 1,
+            "max": 200,
+            "step": 1,
+            "default": 10
+          },
+          {
+            "id": "meas_std",
+            "min": 1,
+            "max": 500,
+            "step": 1,
+            "default": 50
+          }
+        ]
+      },
+      {
+        "type": "plugin_filter_savgol",
+        "label": "Savitzky-Golay",
+        "category": "analysis",
+        "icon": "Spline",
+        "description": "Polynomial least-squares smoothing. Preserves peak shapes. window must be > polyorder.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "filtered",
+            "color": "scalar"
+          },
+          {
+            "id": "raw",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "window",
+            "min": 5,
+            "max": 101,
+            "step": 2,
+            "default": 11
+          },
+          {
+            "id": "polyorder",
+            "min": 1,
+            "max": 6,
+            "step": 1,
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "sci_stats",
+        "label": "Statistics",
+        "category": "analysis",
+        "icon": "Info",
+        "description": "Calculates key statistical metrics (mean, median, standard deviation) from a list.",
+        "inputs": [
+          {
+            "id": "data_list",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mean",
+            "color": "scalar"
+          },
+          {
+            "id": "median",
+            "color": "scalar"
+          },
+          {
+            "id": "std",
+            "color": "scalar"
+          },
+          {
+            "id": "min",
+            "color": "scalar"
+          },
+          {
+            "id": "max",
+            "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "analysis_monitor",
+        "label": "Universal Monitor",
+        "category": "analysis",
+        "icon": "Target",
+        "description": "Universal measurement tool for flow, area, brightness, and counting objects.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "data"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "scalar",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Auto",
+              "Flux (Motion)",
+              "Area (Mask)",
+              "Brightness",
+              "Red Channel",
+              "Green Channel",
+              "Blue Channel",
+              "Count (Elements)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "scale",
+            "label": "Scale Factor",
+            "type": "scalar",
+            "min": 0,
+            "max": 1000,
+            "default": 1.0
+          },
+          {
+            "id": "offset",
+            "label": "Offset",
+            "type": "scalar",
+            "max": 1000,
+            "default": 0.0
+          },
+          {
+            "id": "precision",
+            "label": "Decimals",
+            "type": "scalar",
+            "min": 0,
+            "max": 5,
+            "default": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "visualize",
+    "label": "Visualizers",
+    "nodes": [
+      {
+        "type": "analysis_flow_viz",
+        "label": "Flow Viz",
+        "category": "visualize",
+        "icon": "Eye",
+        "description": "Colorized visualization of optical flow data.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      },
+      {
+        "type": "data_inspector",
+        "label": "Inspect Unit",
+        "category": "visualize",
+        "icon": "Eye",
+        "description": "Displays the raw data content flowing through a link.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "data_out",
+            "color": "any"
+          }
+        ]
+      },
+      {
+        "type": "sci_plotter",
+        "label": "Plotter",
+        "category": "visualize",
+        "icon": "Activity",
+        "description": "Multi-series real-time graph. Connect up to 5 scalar or list inputs (v0\u2013v4). Resizable.",
+        "inputs": [
+          {
+            "id": "v0",
+            "color": "any"
+          },
+          {
+            "id": "v1",
+            "color": "any"
+          },
+          {
+            "id": "v2",
+            "color": "any"
+          },
+          {
+            "id": "v3",
+            "color": "any"
+          },
+          {
+            "id": "v4",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "v0",
+            "color": "any"
+          },
+          {
+            "id": "v1",
+            "color": "any"
+          },
+          {
+            "id": "v2",
+            "color": "any"
+          },
+          {
+            "id": "v3",
+            "color": "any"
+          },
+          {
+            "id": "v4",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "buffer_size",
+            "label": "History Size",
+            "type": "scalar",
+            "min": 10,
+            "max": 500,
+            "default": 100
+          },
+          {
+            "id": "min_y",
+            "label": "Y-Axis Min",
+            "type": "float",
+            "max": 1000,
+            "default": 0
+          },
+          {
+            "id": "max_y",
+            "label": "Y-Axis Max",
+            "type": "float",
+            "max": 1000,
+            "default": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "draw",
+    "label": "Drawing",
+    "nodes": [
+      {
+        "type": "draw_line",
+        "label": "Draw Line",
+        "category": "draw",
+        "icon": "Target",
+        "description": "Defines a line between two coordinates for graphical overlay.",
+        "inputs": [
+          {
+            "id": "x1",
+            "color": "scalar"
+          },
+          {
+            "id": "y1",
+            "color": "scalar"
+          },
+          {
+            "id": "x2",
+            "color": "scalar"
+          },
+          {
+            "id": "y2",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "x1",
+            "type": "float",
+            "default": 0.1,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y1",
+            "type": "float",
+            "default": 0.1,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "x2",
+            "type": "float",
+            "default": 0.9,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y2",
+            "type": "float",
+            "default": 0.9,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "r",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "g",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "b",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "thickness",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20
+          }
+        ]
+      },
+      {
+        "type": "draw_point",
+        "label": "Draw Point",
+        "category": "draw",
+        "icon": "Target",
+        "description": "Defines a graphical point to overlay on the image.",
+        "inputs": [
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "x",
+            "type": "float",
+            "default": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y",
+            "type": "float",
+            "default": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "r",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "g",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "b",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "thickness",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 20
+          }
+        ]
+      },
+      {
+        "type": "draw_rect",
+        "label": "Draw Rect",
+        "category": "draw",
+        "icon": "Box",
+        "description": "Defines a rectangle to be displayed over the video stream.",
+        "inputs": [
+          {
+            "id": "x1",
+            "color": "scalar"
+          },
+          {
+            "id": "y1",
+            "color": "scalar"
+          },
+          {
+            "id": "x2",
+            "color": "scalar"
+          },
+          {
+            "id": "y2",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "x1",
+            "type": "float",
+            "default": 0.2,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y1",
+            "type": "float",
+            "default": 0.2,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "x2",
+            "type": "float",
+            "default": 0.8,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y2",
+            "type": "float",
+            "default": 0.8,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "r",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "g",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "b",
+            "type": "int",
+            "default": 255,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "thickness",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20
+          },
+          {
+            "id": "fill",
+            "label": "Fill",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "draw_text",
+        "label": "Draw Text",
+        "category": "draw",
+        "icon": "Type",
+        "description": "Draws text on an image or creates a graphic element. Connect text to the 'text' input and optionally an 'image'.",
+        "inputs": [
+          {
+            "id": "text",
+            "color": "string"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "graphic",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "text",
+            "label": "Text",
+            "type": "string",
+            "default": "Hello"
+          },
+          {
+            "id": "x",
+            "label": "X Pos",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "default": 0.5
+          },
+          {
+            "id": "y",
+            "label": "Y Pos",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "default": 0.5
+          },
+          {
+            "id": "font_scale",
+            "label": "Size",
+            "type": "scalar",
+            "min": 0.1,
+            "max": 5,
+            "step": 0.1,
+            "default": 1.0
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "scalar",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 2
+          },
+          {
+            "id": "r",
+            "label": "Red",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 255
+          },
+          {
+            "id": "g",
+            "label": "Green",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 255
+          },
+          {
+            "id": "b",
+            "label": "Blue",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 255
+          }
+        ]
+      },
+      {
+        "type": "tracker_visualize",
+        "label": "Track Visualizer",
+        "category": "draw",
+        "icon": "Tv2",
+        "description": "Rendu visuel des tracks SORT/DeepSORT : bo\u00eetes color\u00e9es par ID, labels et trails de trajectoire.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "tracks",
+            "color": "list"
+          },
+          {
+            "id": "point",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "show_trail",
+            "label": "Show Trail",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "trail_length",
+            "label": "Trail Length (frames)",
+            "min": 2,
+            "max": 120,
+            "step": 1,
+            "default": 30
+          },
+          {
+            "id": "show_id",
+            "label": "Show Track ID",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "show_label",
+            "label": "Show Class Label",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "thickness",
+            "label": "Box Thickness",
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "default": 2
+          },
+          {
+            "id": "font_scale",
+            "label": "Font Scale (%)",
+            "min": 1,
+            "max": 100,
+            "step": 1,
+            "default": 40
+          },
+          {
+            "id": "fill_alpha",
+            "label": "Box Fill Alpha (%)",
+            "min": 0,
+            "max": 60,
+            "step": 1,
+            "default": 10
+          },
+          {
+            "id": "show_point",
+            "label": "Show Point",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "point_radius",
+            "label": "Point Radius",
+            "min": 1,
+            "max": 40,
+            "step": 1,
+            "default": 6
+          },
+          {
+            "id": "point_use_id_color",
+            "label": "Point: use ID color",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "point_r",
+            "label": "Point R",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          },
+          {
+            "id": "point_g",
+            "label": "Point G",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          },
+          {
+            "id": "point_b",
+            "label": "Point B",
+            "min": 0,
+            "max": 255,
+            "step": 1,
+            "default": 255
+          }
+        ]
+      },
+      {
+        "type": "draw_overlay",
+        "label": "Visual Overlay",
+        "category": "draw",
+        "icon": "PenTool",
+        "description": "Draws graphical elements (from Draw Text, trackers, etc.) over an image. Connect graphics to the 'data' inputs.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "color": "any"
+          },
+          {
+            "id": "data_2",
+            "color": "any"
+          },
+          {
+            "id": "data_3",
+            "color": "any"
+          },
+          {
+            "id": "data_4",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "util",
+    "label": "Utilities",
+    "nodes": [
+      {
+        "type": "util_coord_center",
+        "label": "Coord Center",
+        "category": "util",
+        "icon": "Target",
+        "description": "Calculates the center point of a coordinate dictionary (bounding box).",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "cx",
+            "color": "scalar"
+          },
+          {
+            "id": "cy",
+            "color": "scalar"
+          },
+          {
+            "id": "dict",
+            "color": "dict"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "data_coord_combine",
+        "label": "Coord Combine",
+        "category": "util",
+        "icon": "Box",
+        "description": "Combines 4 scalar values into a coordinate dictionary.",
+        "inputs": [
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          },
+          {
+            "id": "w",
+            "color": "scalar"
+          },
+          {
+            "id": "h",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "dict_out",
+            "color": "any"
+          }
+        ]
+      },
+      {
+        "type": "data_coord_splitter",
+        "label": "Coord Splitter",
+        "category": "util",
+        "icon": "Box",
+        "description": "Splits a coordinate dictionary into 4 scalar values.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          },
+          {
+            "id": "w",
+            "color": "scalar"
+          },
+          {
+            "id": "h",
+            "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "plugin_dict_get",
+        "label": "Dict Get",
+        "category": "util",
+        "icon": "Key",
+        "description": "Extracts 1 to 3 values from a dictionary by key name. val_1/2/3 outputs accept any downstream type; scalar_1 coerces val_1 to float.",
+        "inputs": [
+          {
+            "id": "dict_in",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "val_1",
+            "color": "any"
+          },
+          {
+            "id": "val_2",
+            "color": "any"
+          },
+          {
+            "id": "val_3",
+            "color": "any"
+          },
+          {
+            "id": "scalar_1",
+            "color": "scalar"
+          },
+          {
+            "id": "dict_1",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "key_1",
+            "type": "string",
+            "default": "xmin"
+          },
+          {
+            "id": "key_2",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "key_3",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      {
+        "type": "data_group_dicts",
+        "label": "Group Dicts",
+        "category": "util",
+        "icon": "Layers",
+        "description": "Groups multiple dictionaries (e.g. data outputs) into a single list of dictionaries.",
+        "inputs": [
+          {
+            "id": "dict1",
+            "color": "dict"
+          },
+          {
+            "id": "dict2",
+            "color": "dict"
+          },
+          {
+            "id": "dict3",
+            "color": "dict"
+          },
+          {
+            "id": "dict4",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "list"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "util_filter_label",
+        "label": "Label Filter",
+        "category": "util",
+        "icon": "Search",
+        "description": "Filters a list of detections to keep only specific labels (e.g., 'person').",
+        "inputs": [
+          {
+            "id": "list_in",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list_out",
+            "color": "list"
+          },
+          {
+            "id": "item_out",
+            "color": "dict"
+          },
+          {
+            "id": "labels_list",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "query",
+            "label": "Label Tag",
+            "default": "person",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "type": "data_list_selector",
+        "label": "List Selector",
+        "category": "util",
+        "icon": "Box",
+        "description": "Extracts a specific item from a list of detections.",
+        "inputs": [
+          {
+            "id": "list_in",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "item_out",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "index",
+            "label": "Index",
+            "type": "int",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "util_on_each",
+        "label": "On Each",
+        "category": "util",
+        "icon": "Layers",
+        "description": "Applies a graphic template to every item in a coordinates list.",
+        "inputs": [
+          {
+            "id": "list_in",
+            "color": "list"
+          },
+          {
+            "id": "template",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list_out",
+            "color": "list"
+          }
+        ],
+        "params": [
+          {
+            "id": "text_source",
+            "label": "Text Content",
+            "type": "enum",
+            "options": [
+              "Template Default",
+              "ID / Index",
+              "Label",
+              "Area",
+              "Score",
+              "Coordinates"
+            ],
+            "default": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "label": "Mathematics",
+    "nodes": [
+      {
+        "type": "math_operation",
+        "label": "Math Op",
+        "category": "math",
+        "icon": "Hash",
+        "description": "Performs simple mathematical operations (+, -, *, /) on two numerical values.",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "operation",
+            "type": "enum",
+            "options": [
+              "Add (+)",
+              "Subtract (-)",
+              "Multiply (*)",
+              "Divide (/)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "Manual B",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_abs",
+        "label": "Math: Absolute",
+        "category": "math",
+        "icon": "Maximize",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "Value",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_add",
+        "label": "Math: Add",
+        "category": "math",
+        "icon": "Plus",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A (if disconnected)",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "B (if disconnected)",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_clamp",
+        "label": "Math: Clamp",
+        "category": "math",
+        "icon": "Scaling",
+        "inputs": [
+          {
+            "id": "val",
+            "color": "scalar"
+          },
+          {
+            "id": "min",
+            "color": "scalar"
+          },
+          {
+            "id": "max",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "val",
+            "label": "Value",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "min",
+            "label": "Min",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "max",
+            "label": "Max",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "math_cos",
+        "label": "Math: Cos",
+        "category": "math",
+        "icon": "Waves",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "Radians",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_distance",
+        "label": "Math: Distance",
+        "category": "math",
+        "icon": "Maximize",
+        "inputs": [
+          {
+            "id": "p1",
+            "color": "dict"
+          },
+          {
+            "id": "p2",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "math_div",
+        "label": "Math: Divide",
+        "category": "math",
+        "icon": "Divide",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A (if disconnected)",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "id": "value_b",
+            "label": "B (if disconnected)",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "math_max",
+        "label": "Math: Max",
+        "category": "math",
+        "icon": "ChevronUp",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "B",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_min",
+        "label": "Math: Min",
+        "category": "math",
+        "icon": "ChevronDown",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "B",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_mod",
+        "label": "Math: Modulo",
+        "category": "math",
+        "icon": "Hash",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A (if disconnected)",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "B (if disconnected)",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "math_mul",
+        "label": "Math: Multiply",
+        "category": "math",
+        "icon": "Hash",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A (if disconnected)",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "id": "value_b",
+            "label": "B (if disconnected)",
+            "type": "number",
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "math_pow",
+        "label": "Math: Power",
+        "category": "math",
+        "icon": "Zap",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "Base",
+            "type": "number",
+            "default": 1
+          },
+          {
+            "id": "value_b",
+            "label": "Exp",
+            "type": "number",
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "math_round",
+        "label": "Math: Round",
+        "category": "math",
+        "icon": "Target",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "Value",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_sin",
+        "label": "Math: Sin",
+        "category": "math",
+        "icon": "Waves",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "Radians",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_sub",
+        "label": "Math: Subtract",
+        "category": "math",
+        "icon": "Minus",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value_a",
+            "label": "A (if disconnected)",
+            "type": "number",
+            "default": 0
+          },
+          {
+            "id": "value_b",
+            "label": "B (if disconnected)",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "scalar_input",
+        "label": "Number",
+        "category": "math",
+        "icon": "Hash",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "value",
+            "label": "Value",
+            "type": "number",
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_vec_to_screen",
+        "label": "Vec \u2192 Screen",
+        "category": "math",
+        "icon": "Monitor",
+        "description": "Maps yaw/pitch to normalized screen coordinates [0..1]. Connect image for tan()-based projection and visual calibration feedback.",
+        "inputs": [
+          {
+            "id": "3Dvector",
+            "color": "dict"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "x",
+            "color": "scalar"
+          },
+          {
+            "id": "y",
+            "color": "scalar"
+          },
+          {
+            "id": "point",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "scale_x",
+            "label": "Scale X",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.1,
+            "max": 10.0,
+            "step": 0.05
+          },
+          {
+            "id": "scale_y",
+            "label": "Scale Y",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.1,
+            "max": 10.0,
+            "step": 0.05
+          },
+          {
+            "id": "offset_x",
+            "label": "Offset X",
+            "type": "float",
+            "default": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          {
+            "id": "offset_y",
+            "label": "Offset Y",
+            "type": "float",
+            "default": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          {
+            "id": "smooth",
+            "label": "Smoothing",
+            "type": "float",
+            "default": 0.7,
+            "min": 0.0,
+            "max": 0.99,
+            "step": 0.01
+          },
+          {
+            "id": "clamp",
+            "label": "Clamp",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "flip_x",
+            "label": "Flip X",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "flip_y",
+            "label": "Flip Y",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "strings",
+    "label": "Strings",
+    "nodes": [
+      {
+        "type": "string_case",
+        "label": "String: Case",
+        "category": "strings",
+        "icon": "Type",
+        "inputs": [
+          {
+            "id": "string",
+            "color": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "UPPER",
+              "lower"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "string_concat",
+        "label": "String: Concat",
+        "category": "strings",
+        "icon": "PlusSquare",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "string"
+          },
+          {
+            "id": "b",
+            "color": "string"
+          },
+          {
+            "id": "list_in",
+            "color": "list",
+            "label": "List"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "separator",
+            "label": "Separator",
+            "type": "string",
+            "default": ""
+          }
+        ]
+      },
+      {
+        "type": "string_input",
+        "label": "String: Input",
+        "category": "strings",
+        "icon": "Keyboard",
+        "outputs": [
+          {
+            "id": "result",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "value",
+            "label": "Text",
+            "type": "string",
+            "default": "Hello"
+          }
+        ]
+      },
+      {
+        "type": "string_length",
+        "label": "String: Length",
+        "category": "strings",
+        "icon": "Hash",
+        "inputs": [
+          {
+            "id": "string",
+            "color": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "length",
+            "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "string_replace",
+        "label": "String: Replace",
+        "category": "strings",
+        "icon": "Replace",
+        "inputs": [
+          {
+            "id": "string",
+            "color": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "search",
+            "label": "Search",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "replace",
+            "label": "Replace",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "use_regex",
+            "label": "Regex",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "id": "case",
+            "label": "Case-sensitive",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "string_split",
+        "label": "String: Split",
+        "category": "strings",
+        "icon": "Scissors",
+        "inputs": [
+          {
+            "id": "string",
+            "color": "string"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list",
+            "color": "list"
+          },
+          {
+            "id": "first",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "separator",
+            "label": "Separator",
+            "type": "string",
+            "default": " "
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "logic",
+    "label": "Logic",
+    "nodes": [
+      {
+        "type": "logic_collect",
+        "label": "Collect",
+        "category": "logic",
+        "icon": "ListPlus",
+        "description": "Accumule des valeurs dans une liste quand la condition est vraie. Exporte en CSV \u00e0 la demande.",
+        "inputs": [
+          {
+            "id": "condition",
+            "label": "Condition",
+            "color": "boolean"
+          },
+          {
+            "id": "value",
+            "label": "Value",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list",
+            "label": "List",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "label": "Count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Every True frame",
+              "Rising edge only"
+            ],
+            "default": 0
+          },
+          {
+            "id": "reset",
+            "label": "Reset List",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "export",
+            "label": "Export CSV",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "filename",
+            "label": "Filename",
+            "type": "string",
+            "default": "collected"
+          },
+          {
+            "id": "path",
+            "label": "Folder",
+            "type": "string",
+            "default": "exports"
+          }
+        ]
+      },
+      {
+        "type": "logic_compare",
+        "label": "Data Compare",
+        "category": "logic",
+        "icon": "Layers",
+        "description": "Compares two numerical values using a selected operator (>, <, ==, etc.) and returns true or false.",
+        "inputs": [
+          {
+            "id": "in_a",
+            "color": "scalar"
+          },
+          {
+            "id": "in_b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "boolean"
+          }
+        ],
+        "params": [
+          {
+            "id": "op",
+            "label": "Operator",
+            "type": "enum",
+            "options": [
+              "==",
+              "!=",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "logic_gate",
+        "label": "Logic Gate",
+        "category": "logic",
+        "icon": "Layers",
+        "description": "Performs basic logical operations (AND, OR, XOR, NOT) on two signals.",
+        "inputs": [
+          {
+            "id": "in_a",
+            "color": "boolean"
+          },
+          {
+            "id": "in_b",
+            "color": "boolean"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "boolean"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "AND",
+              "OR",
+              "XOR",
+              "NOT A"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "logic_presence",
+        "label": "Presence Check",
+        "category": "logic",
+        "icon": "User",
+        "description": "Checks if a list is not empty or if a value is non-NULL. Useful for triggering events.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "found",
+            "color": "boolean"
+          }
+        ]
+      },
+      {
+        "type": "logic_python",
+        "label": "Python Node",
+        "category": "logic",
+        "icon": "Zap",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "any"
+          },
+          {
+            "id": "b",
+            "color": "any"
+          },
+          {
+            "id": "c",
+            "color": "any"
+          },
+          {
+            "id": "d",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "out_scalar",
+            "color": "scalar"
+          },
+          {
+            "id": "out_list",
+            "color": "list"
+          },
+          {
+            "id": "out_dict",
+            "color": "dict"
+          },
+          {
+            "id": "out_any",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "code",
+            "label": "Python Script",
+            "type": "string",
+            "default": "# Logic here\n# Inputs: a, b, c, d\n# State persistant entre frames: state['my_var']\n# Outputs: out_main, out_scalar, out_list, out_dict, out_any\n\nout_main = a if isinstance(a, np.ndarray) else None\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None\n"
+          }
+        ]
+      },
+      {
+        "type": "logic_switch",
+        "label": "Switch",
+        "category": "logic",
+        "icon": "Zap",
+        "description": "Toggles between two input streams based on a control signal (true/false).",
+        "inputs": [
+          {
+            "id": "condition",
+            "color": "boolean"
+          },
+          {
+            "id": "if_true",
+            "color": "any"
+          },
+          {
+            "id": "if_false",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "output",
+            "color": "any"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blend",
+    "label": "Blending",
+    "nodes": [
+      {
+        "type": "plugin_blend_modes",
+        "label": "Advanced Blend",
+        "category": "blend",
+        "icon": "Layers",
+        "description": "Blends two images using advanced layer blend modes (Product, Overlay, etc.).",
+        "inputs": [
+          {
+            "id": "image_a",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "type": "enum",
+            "options": [
+              "Multiply",
+              "Screen",
+              "Overlay",
+              "Hard Light",
+              "Soft Light",
+              "Color Dodge",
+              "Color Burn",
+              "Linear Dodge (Add)",
+              "Linear Burn",
+              "Vivid Light",
+              "Linear Light",
+              "Pin Light",
+              "Hard Mix",
+              "Difference",
+              "Exclusion",
+              "Subtract",
+              "Divide",
+              "Grain Extract",
+              "Grain Merge",
+              "Darken",
+              "Lighten"
+            ],
+            "default": 0
+          },
+          {
+            "id": "opacity",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 100
+          }
+        ]
+      },
+      {
+        "type": "util_mask_blend",
+        "label": "Mask Blend",
+        "category": "blend",
+        "icon": "Box",
+        "description": "Blends two images using a mask as an alpha layer.",
+        "inputs": [
+          {
+            "id": "image_a",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      },
+      {
+        "type": "plugin_blend_images",
+        "label": "Simple Image Blend",
+        "category": "blend",
+        "icon": "Layers",
+        "description": "Linearly blends two images based on a simple opacity factor.",
+        "inputs": [
+          {
+            "id": "image_a",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "opacity",
+            "min": 0,
+            "max": 1,
+            "step": 0.05,
+            "default": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "out",
+    "label": "Output",
+    "nodes": [
+      {
+        "type": "util_csv_export",
+        "label": "CSV Export",
+        "category": "out",
+        "icon": "Database",
+        "description": "Expote les donn\u00e9es vers un fichier CSV. Un nouveau fichier est cr\u00e9\u00e9 \u00e0 chaque activation.",
+        "inputs": [
+          {
+            "id": "val_1",
+            "color": "any"
+          },
+          {
+            "id": "val_2",
+            "color": "any"
+          },
+          {
+            "id": "val_3",
+            "color": "any"
+          },
+          {
+            "id": "val_4",
+            "color": "any"
+          },
+          {
+            "id": "val_5",
+            "color": "any"
+          },
+          {
+            "id": "val_6",
+            "color": "any"
+          },
+          {
+            "id": "val_7",
+            "color": "any"
+          },
+          {
+            "id": "val_8",
+            "color": "any"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "record",
+            "label": "Recording",
+            "type": "toggle",
+            "default": false
+          },
+          {
+            "id": "filename",
+            "label": "Base Name",
+            "type": "string",
+            "default": "capture"
+          },
+          {
+            "id": "path",
+            "label": "Folder Path",
+            "type": "string",
+            "default": "exports"
+          },
+          {
+            "id": "auto_timestamp",
+            "label": "Auto Timestamp",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "output_display",
+        "label": "Display",
+        "category": "out",
+        "icon": "Maximize",
+        "description": "The output terminal displaying the final video stream.",
+        "inputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask_in",
+            "color": "mask"
+          },
+          {
+            "id": "flow_in",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      },
+      {
+        "type": "output_movie",
+        "label": "Movie Export",
+        "category": "out",
+        "icon": "Film",
+        "description": "Records frames to MP4. Stream mode captures from pipeline; Webcam mode records directly from camera and creates a Movie node on stop.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Stream Recording",
+              "Webcam Direct"
+            ],
+            "default": 0
+          },
+          {
+            "id": "recording",
+            "label": "Recording",
+            "type": "toggle",
+            "default": false
+          },
+          {
+            "id": "output_path",
+            "label": "Output Path",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "fps",
+            "label": "FPS",
+            "type": "number",
+            "default": 30
+          }
+        ]
+      },
+      {
+        "type": "util_snapshot",
+        "label": "Snapshot",
+        "category": "out",
+        "icon": "Camera",
+        "description": "Captures the current frame and saves it as a new image node in the workspace.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "capture",
+            "label": "Take Snapshot",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "save_to_disk",
+            "label": "Save as Pict",
+            "type": "trigger",
+            "default": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "canvas",
+    "label": "Canvas",
+    "nodes": [
+      {
+        "type": "canvas_frame",
+        "label": "Frame",
+        "category": "canvas",
+        "icon": "Box",
+        "description": "Wraps and labels a group of nodes. Drag to encapsulate nodes.",
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "type": "canvas_note",
+        "label": "Note",
+        "category": "canvas",
+        "icon": "Type",
+        "description": "Annotation text block. Double-click to edit. Drag & resize freely.",
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "type": "canvas_reroute",
+        "label": "Reroute",
+        "category": "canvas",
+        "icon": "GitCommit",
+        "description": "Pass-through node to organize wires.",
+        "inputs": [
+          {
+            "id": "in",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "out",
+            "color": "any"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "noise",
+    "label": "Noise",
+    "nodes": [
+      {
+        "type": "filter_noise_gaussian",
+        "label": "Gaussian Noise",
+        "category": "noise",
+        "icon": "Ghost",
+        "description": "Adds Gaussian noise to simulate film grain or a noisy sensor.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "sigma",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 25
+          }
+        ]
+      },
+      {
+        "type": "filter_noise_salt_pepper",
+        "label": "Salt & Pepper Noise",
+        "category": "noise",
+        "icon": "Ghost",
+        "description": "Adds random white and black pixels (impulse noise).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "amount",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 5
+          }
+        ]
+      },
+      {
+        "type": "filter_noise_speckle",
+        "label": "Speckle Noise",
+        "category": "noise",
+        "icon": "Ghost",
+        "description": "Adds multiplicative noise to simulate complex interference.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "intensity",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ocr",
+    "label": "Ocr",
+    "nodes": [
+      {
+        "type": "ocr_easyocr",
+        "label": "OCR (EasyOCR)",
+        "category": "ocr",
+        "icon": "ScanText",
+        "description": "End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Annotated"
+          },
+          {
+            "id": "text_regions",
+            "color": "list",
+            "label": "Regions"
+          },
+          {
+            "id": "texts",
+            "color": "list",
+            "label": "Text List"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "min_confidence",
+            "label": "Min Conf",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "gpu",
+            "label": "GPU",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "id": "draw_text",
+            "label": "Draw Text",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "ocr_tesseract",
+        "label": "OCR (Tesseract)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "box",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text",
+            "color": "any"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "options": [
+              "eng",
+              "fra"
+            ],
+            "default": 0
+          },
+          {
+            "id": "psm",
+            "label": "PSM Mode",
+            "type": "enum",
+            "options": [
+              "3 \u2013 Auto",
+              "6 \u2013 Uniform block",
+              "7 \u2013 Single line",
+              "8 \u2013 Single word",
+              "11 \u2013 Sparse text"
+            ],
+            "default": 1
+          },
+          {
+            "id": "padding",
+            "label": "Padding px",
+            "type": "scalar",
+            "min": 0,
+            "max": 40,
+            "default": 4
+          },
+          {
+            "id": "upscale",
+            "label": "Upscale \u00d7",
+            "type": "scalar",
+            "min": 1,
+            "max": 8,
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "ocr_east_detect",
+        "label": "Text Detector (EAST)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text_regions",
+            "color": "list"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_confidence",
+            "label": "Min Confidence",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.3
+          },
+          {
+            "id": "nms_threshold",
+            "label": "NMS Threshold",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "width",
+            "label": "Input W (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
+          },
+          {
+            "id": "height",
+            "label": "Input H (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data",
+    "label": "Data",
+    "nodes": [
+      {
+        "type": "list_region_select",
+        "label": "Region Selector",
+        "category": "data",
+        "icon": "Filter",
+        "description": "Filters and sorts a list of detection regions. Outputs the selected item and its canonical 4 corner pts (TL\u2192TR\u2192BR\u2192BL) ready for perspective warp.",
+        "inputs": [
+          {
+            "id": "list_in",
+            "color": "list"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "item",
+            "color": "dict",
+            "label": "Item"
+          },
+          {
+            "id": "pts",
+            "color": "list",
+            "label": "4 Corners"
+          },
+          {
+            "id": "list_out",
+            "color": "list",
+            "label": "Filtered List"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Count"
+          }
+        ],
+        "params": [
+          {
+            "id": "sort_by",
+            "label": "Sort By",
+            "type": "enum",
+            "options": [
+              "Index",
+              "Largest area",
+              "Smallest area",
+              "Best confidence"
+            ],
+            "default": 1
+          },
+          {
+            "id": "index",
+            "label": "Index",
+            "type": "scalar",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "require_pts",
+            "label": "Require 4 pts",
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "id": "min_area",
+            "label": "Min Area (0-1)",
+            "type": "scalar",
+            "min": 0,
+            "max": 1,
+            "step": 0.001,
+            "default": 0.0
+          }
+        ]
+      }
+    ]
+  }
+]
