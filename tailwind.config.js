@@ -7,10 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#181818",
-        surface: "#242424",
-        primary: "#3a3a3a",
-        accent: "#3b82f6",
+        background: "var(--background)",
+        surface: "var(--surface)",
+        primary: "var(--primary)",
+        "action-blue": "var(--action-blue)",
+        "pure-white": "var(--pure-white)",
+        "pure-black": "var(--pure-black)",
+        "near-black": "var(--near-black)",
+        parchment: "var(--parchment)",
+        main: "var(--text-main)",
+        dim: "var(--text-dim)",
+        "vns-border": "var(--border)",
+        divider: "var(--divider)",
       },
     },
   },
