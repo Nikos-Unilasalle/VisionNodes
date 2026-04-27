@@ -1,43 +1,440 @@
 {
   "nodes": [
-    { "id": "src-1",             "type": "input_image",         "position": { "x": 52,    "y": 193 }, "data": { "label": "book.jpg",            "params": { "path": "samples/book.jpg" } } },
-    { "id": "ocr-1",             "type": "ocr_easyocr",         "position": { "x": 317,   "y": 194 }, "data": { "label": "OCR (EasyOCR)",       "params": { "min_confidence": 0.3, "gpu": false } } },
-    { "id": "insp-1",            "type": "data_inspector",      "position": { "x": 602,   "y": 176 }, "data": { "label": "Inspect Texts",       "params": {} }, "style": { "width": 220, "height": 200 } },
-    { "id": "thr-1",             "type": "feat_threshold_adv",  "position": { "x": 324,   "y": 427 }, "data": { "label": "Threshold",           "params": { "mode": 1, "threshold": 33 } } },
-    { "id": "ctr-1",             "type": "feat_find_contours",  "position": { "x": 554,   "y": 432 }, "data": { "label": "Find Contours",       "params": {} } },
-    { "id": "filt-1",            "type": "feat_filter_contours","position": { "x": 560,   "y": 551 }, "data": { "label": "Filter Contours",     "params": { "min_area": 600, "min_circularity": 0.15 } } },
-    { "id": "fill-1",            "type": "feat_fill_contours",  "position": { "x": 805,   "y": 549 }, "data": { "label": "Fill Contours",       "params": { "width": 1024, "height": 1024 } } },
-    { "id": "rot-1",             "type": "plugin_rotate",       "position": { "x": 1060,  "y": 460 }, "data": { "label": "Rotate",              "params": { "angle": 332 } } },
-    { "id": "solid-fg",          "type": "input_solid_color",   "position": { "x": 562,   "y": 678 }, "data": { "label": "FG Color",            "params": { "r": 0, "g": 255, "b": 255, "width": 1024, "height": 1024 } } },
-    { "id": "solid-bg",          "type": "input_solid_color",   "position": { "x": 567,   "y": 793 }, "data": { "label": "BG Color",            "params": { "r": 46, "g": 46, "b": 86, "width": 1024, "height": 1024 } } },
-    { "id": "thr-2",             "type": "feat_threshold_adv",  "position": { "x": 1060,  "y": 580 }, "data": { "label": "Threshold Mask",      "params": { "threshold": 0 } } },
-    { "id": "blend-1",           "type": "util_mask_blend",     "position": { "x": 1060,  "y": 720 }, "data": { "label": "Mask Blend",          "params": {} } },
-    { "id": "concat-1",          "type": "string_concat",       "position": { "x": 878,   "y": 200 }, "data": { "label": "Join Texts",          "params": { "separator": " " } } },
-    { "id": "replace-1",         "type": "string_replace",      "position": { "x": 1140,  "y": 212 }, "data": { "label": "Clean Text",          "params": { "search": "Zoom in on this image", "replace": "" } } },
-    { "id": "draw-1",            "type": "draw_text",           "position": { "x": 1376,  "y": 179 }, "data": { "label": "Draw Text",           "params": { "font_scale": 2.2, "thickness": 5, "r": 163, "g": 255, "b": 0, "x": 0.08, "y": 0.91 } } },
-    { "id": "overlay-1",         "type": "draw_overlay",        "position": { "x": 1620,  "y": 180 }, "data": { "label": "Visual Overlay",      "params": {} } }
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": {
+        "x": 52,
+        "y": 193
+      },
+      "data": {
+        "label": "book.jpg",
+        "params": {
+          "path": "samples/book.jpg"
+        }
+      },
+      "width": 208,
+      "height": 211
+    },
+    {
+      "id": "ocr-1",
+      "type": "ocr_easyocr",
+      "position": {
+        "x": 317,
+        "y": 194
+      },
+      "data": {
+        "label": "OCR (EasyOCR)",
+        "params": {
+          "min_confidence": 0.3,
+          "gpu": false,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false
+    },
+    {
+      "id": "insp-1",
+      "type": "data_inspector",
+      "position": {
+        "x": 602,
+        "y": 176
+      },
+      "data": {
+        "label": "Inspect Texts",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "width": 220,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "thr-1",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 324,
+        "y": 427
+      },
+      "data": {
+        "label": "Threshold",
+        "params": {
+          "mode": 1,
+          "threshold": 33,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112
+    },
+    {
+      "id": "ctr-1",
+      "type": "feat_find_contours",
+      "position": {
+        "x": 554,
+        "y": 432
+      },
+      "data": {
+        "label": "Find Contours",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112
+    },
+    {
+      "id": "filt-1",
+      "type": "feat_filter_contours",
+      "position": {
+        "x": 560,
+        "y": 551
+      },
+      "data": {
+        "label": "Filter Contours",
+        "params": {
+          "min_area": 600,
+          "min_circularity": 0.15,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112
+    },
+    {
+      "id": "fill-1",
+      "type": "feat_fill_contours",
+      "position": {
+        "x": 805,
+        "y": 549
+      },
+      "data": {
+        "label": "Fill Contours",
+        "params": {
+          "width": 1024,
+          "height": 1024,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112
+    },
+    {
+      "id": "rot-1",
+      "type": "plugin_rotate",
+      "position": {
+        "x": 1060,
+        "y": 460
+      },
+      "data": {
+        "label": "Rotate",
+        "params": {
+          "angle": 332,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90
+    },
+    {
+      "id": "solid-fg",
+      "type": "input_solid_color",
+      "position": {
+        "x": 562,
+        "y": 678
+      },
+      "data": {
+        "label": "FG Color",
+        "params": {
+          "r": 0,
+          "g": 255,
+          "b": 255,
+          "width": 1024,
+          "height": 1024,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 100
+    },
+    {
+      "id": "solid-bg",
+      "type": "input_solid_color",
+      "position": {
+        "x": 567,
+        "y": 793
+      },
+      "data": {
+        "label": "BG Color",
+        "params": {
+          "r": 46,
+          "g": 46,
+          "b": 86,
+          "width": 1024,
+          "height": 1024,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 100
+    },
+    {
+      "id": "thr-2",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 1060,
+        "y": 580
+      },
+      "data": {
+        "label": "Threshold Mask",
+        "params": {
+          "threshold": 0,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "blend-1",
+      "type": "util_mask_blend",
+      "position": {
+        "x": 1060,
+        "y": 720.8721428571429
+      },
+      "data": {
+        "label": "Mask Blend",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1060,
+        "y": 720.8721428571429
+      }
+    },
+    {
+      "id": "concat-1",
+      "type": "string_concat",
+      "position": {
+        "x": 878,
+        "y": 200
+      },
+      "data": {
+        "label": "Join Texts",
+        "params": {
+          "separator": " ",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false
+    },
+    {
+      "id": "replace-1",
+      "type": "string_replace",
+      "position": {
+        "x": 1140,
+        "y": 212
+      },
+      "data": {
+        "label": "Clean Text",
+        "params": {
+          "search": "Zoom in on this image",
+          "replace": "",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "draw-1",
+      "type": "draw_text",
+      "position": {
+        "x": 1376,
+        "y": 179
+      },
+      "data": {
+        "label": "Draw Text",
+        "params": {
+          "font_scale": 2.2,
+          "thickness": 5,
+          "r": 163,
+          "g": 255,
+          "b": 0,
+          "x": 0.08,
+          "y": 0.91,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 176,
+      "selected": false
+    },
+    {
+      "id": "overlay-1",
+      "type": "draw_overlay",
+      "position": {
+        "x": 1620,
+        "y": 180
+      },
+      "data": {
+        "label": "Visual Overlay",
+        "params": {
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 208,
+      "selected": false
+    }
   ],
   "edges": [
-    { "id": "e1",  "source": "src-1",    "sourceHandle": "image__main",          "target": "ocr-1",    "targetHandle": "image__image" },
-    { "id": "e2",  "source": "src-1",    "sourceHandle": "image__main",          "target": "thr-1",    "targetHandle": "image__image" },
-    { "id": "e3",  "source": "ocr-1",    "sourceHandle": "list__texts",          "target": "insp-1",   "targetHandle": "any__data" },
-    { "id": "e4",  "source": "ocr-1",    "sourceHandle": "list__texts",          "target": "concat-1", "targetHandle": "list__list_in" },
-    { "id": "e5",  "source": "thr-1",    "sourceHandle": "mask__mask",           "target": "ctr-1",    "targetHandle": "any__mask" },
-    { "id": "e6",  "source": "ctr-1",    "sourceHandle": "list__contours_list",  "target": "filt-1",   "targetHandle": "list__contours" },
-    { "id": "e7",  "source": "filt-1",   "sourceHandle": "list__contours_list",  "target": "fill-1",   "targetHandle": "list__contours" },
-    { "id": "e8",  "source": "fill-1",   "sourceHandle": "image__main",          "target": "rot-1",    "targetHandle": "image__image" },
-    { "id": "e9",  "source": "rot-1",    "sourceHandle": "image__main",          "target": "thr-2",    "targetHandle": "image__image" },
-    { "id": "e10", "source": "thr-2",    "sourceHandle": "mask__mask",           "target": "blend-1",  "targetHandle": "mask__mask" },
-    { "id": "e11", "source": "solid-fg", "sourceHandle": "image__main",          "target": "blend-1",  "targetHandle": "image__image_b" },
-    { "id": "e12", "source": "solid-bg", "sourceHandle": "image__main",          "target": "blend-1",  "targetHandle": "image__image_a" },
-    { "id": "e13", "source": "blend-1",  "sourceHandle": "image__main",          "target": "overlay-1","targetHandle": "image__image" },
-    { "id": "e14", "source": "concat-1", "sourceHandle": "string__result",       "target": "replace-1","targetHandle": "string__string" },
-    { "id": "e15", "source": "replace-1","sourceHandle": "string__result",       "target": "draw-1",   "targetHandle": "string__text" },
-    { "id": "e16", "source": "draw-1",   "sourceHandle": "dict__graphic",        "target": "overlay-1","targetHandle": "any__data" }
+    {
+      "id": "e1",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "ocr-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e2",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "thr-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e3",
+      "source": "ocr-1",
+      "sourceHandle": "list__texts",
+      "target": "insp-1",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e4",
+      "source": "ocr-1",
+      "sourceHandle": "list__texts",
+      "target": "concat-1",
+      "targetHandle": "list__list_in",
+      "selected": false
+    },
+    {
+      "id": "e5",
+      "source": "thr-1",
+      "sourceHandle": "mask__mask",
+      "target": "ctr-1",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e6",
+      "source": "ctr-1",
+      "sourceHandle": "list__contours_list",
+      "target": "filt-1",
+      "targetHandle": "list__contours"
+    },
+    {
+      "id": "e7",
+      "source": "filt-1",
+      "sourceHandle": "list__contours_list",
+      "target": "fill-1",
+      "targetHandle": "list__contours"
+    },
+    {
+      "id": "e8",
+      "source": "fill-1",
+      "sourceHandle": "image__main",
+      "target": "rot-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e9",
+      "source": "rot-1",
+      "sourceHandle": "image__main",
+      "target": "thr-2",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e10",
+      "source": "thr-2",
+      "sourceHandle": "mask__mask",
+      "target": "blend-1",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e11",
+      "source": "solid-fg",
+      "sourceHandle": "image__main",
+      "target": "blend-1",
+      "targetHandle": "image__image_b"
+    },
+    {
+      "id": "e12",
+      "source": "solid-bg",
+      "sourceHandle": "image__main",
+      "target": "blend-1",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "id": "e13",
+      "source": "blend-1",
+      "sourceHandle": "image__main",
+      "target": "overlay-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e14",
+      "source": "concat-1",
+      "sourceHandle": "string__result",
+      "target": "replace-1",
+      "targetHandle": "string__string",
+      "selected": false
+    },
+    {
+      "id": "e15",
+      "source": "replace-1",
+      "sourceHandle": "string__result",
+      "target": "draw-1",
+      "targetHandle": "string__text",
+      "selected": false
+    },
+    {
+      "id": "e16",
+      "source": "draw-1",
+      "sourceHandle": "dict__graphic",
+      "target": "overlay-1",
+      "targetHandle": "any__data",
+      "selected": false
+    }
   ],
   "ui": {
-    "previewSize": { "w": 477, "h": 477 },
-    "previewPos": { "x": 49, "y": -16 },
+    "previewSize": {
+      "w": 477,
+      "h": 477
+    },
+    "previewPos": {
+      "x": 49,
+      "y": -16
+    },
     "activePaletteIndex": 6,
     "visualizedNodeId": "overlay-1"
   }
