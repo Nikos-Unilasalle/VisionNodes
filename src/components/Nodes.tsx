@@ -1,11 +1,12 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Handle, Position, useNodeId, useEdges } from 'reactflow';
+import { useNodeData } from '../context/NodesDataContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { 
+import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -148,7 +149,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
 // --- NODES ---
 export const InputWebcamNode = memo(({ selected, data }: any) => {
-  const nd = data.node_data || {};
+  const nd = useNodeData(useNodeId());
   return (
     <BaseNode title="Webcam" icon={Camera} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
       {nd.width ? (
@@ -161,7 +162,8 @@ export const InputWebcamNode = memo(({ selected, data }: any) => {
 });
 
 export const InputImageNode = memo(({ selected, data }: any) => {
-  const preview = data.node_data?.preview;
+  const nd = useNodeData(useNodeId());
+  const preview = nd?.preview;
   
   const handleBrowse = async () => {
     try {
@@ -169,7 +171,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
         multiple: false,
         filters: [{
           name: 'Image',
-          extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff']
+          extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']
         }]
       });
       if (selectedFile && typeof selectedFile === 'string') {
@@ -217,9 +219,9 @@ export const InputImageNode = memo(({ selected, data }: any) => {
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop Image</div>
         </div>
       )}
-      {data.node_data?.width && (
+      {nd?.width && (
         <div className="px-1 pt-1">
-          <div className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height} · 8-bit BGR</div>
+          <div className="text-[10px] font-mono text-accent font-bold">{nd.width}×{nd.height} · 8-bit BGR</div>
         </div>
       )}
     </BaseNode>
@@ -227,6 +229,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
 });
 
 export const InputMovieNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const handleBrowse = async () => {
     try {
       const selectedFile = await open({
@@ -255,10 +258,10 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}, {id: 'frame', label: 'Frame', color: 'scalar'}]}>
       <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
-        {data.node_data?.preview && (
+        {nd?.preview && (
           <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
-            <img 
-              src={`data:image/jpeg;base64,${data.node_data.preview}`} 
+            <img
+              src={`data:image/jpeg;base64,${nd.preview}`}
               className="w-full h-auto object-cover opacity-80 group-hover/preview:opacity-100 transition-opacity duration-500"
               alt="Movie Preview"
             />
@@ -266,13 +269,13 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
             <div className="absolute bottom-2 left-2 right-2">
                 <div className="text-[10px] font-black text-white/90 truncate drop-shadow-md flex items-center gap-1.5">
                     <Film size={12} className="text-accent" />
-                    {data.node_data.filename || "Movie Loaded"}
+                    {nd.filename || "Movie Loaded"}
                 </div>
             </div>
           </div>
         )}
-        
-        {!data.node_data?.preview && (
+
+        {!nd?.preview && (
           <div className="py-8 flex flex-col items-center justify-center gap-3 bg-black/20 rounded-2xl border border-dashed border-white/10 opacity-40">
             <div className="p-3 bg-white/5 rounded-full">
                 <Video size={24} className="text-gray-400" />
@@ -282,13 +285,13 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
         )}
 
         <div className="space-y-3">
-          {(data.node_data?.width || data.node_data?.fps) && (
+          {(nd?.width || nd?.fps) && (
             <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
               <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">Video Info</div>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                {data.node_data?.width && <span className="text-[10px] font-mono text-accent font-bold">{data.node_data.width}×{data.node_data.height}</span>}
-                {data.node_data?.fps   && <span className="text-[10px] font-mono text-white/60">{data.node_data.fps} fps</span>}
-                {data.node_data?.duration && <span className="text-[10px] font-mono text-white/60">{data.node_data.duration}s</span>}
+                {nd?.width && <span className="text-[10px] font-mono text-accent font-bold">{nd.width}×{nd.height}</span>}
+                {nd?.fps   && <span className="text-[10px] font-mono text-white/60">{nd.fps} fps</span>}
+                {nd?.duration && <span className="text-[10px] font-mono text-white/60">{nd.duration}s</span>}
                 <span className="text-[10px] font-mono text-white/30">8-bit</span>
               </div>
             </div>
@@ -302,7 +305,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
             </span>
           </div>
             <div className="text-[10px] font-mono text-accent font-bold">
-              {data.node_data?.current_frame || 0} / {data.node_data?.total_frames || 0}
+              {nd?.current_frame || 0} / {nd?.total_frames || 0}
             </div>
           </div>
         </div>
@@ -311,9 +314,19 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const SolidColorNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]} />
-));
+export const SolidColorNode = memo(({ selected, data }: any) => {
+  const r = data.params?.r ?? 255;
+  const g = data.params?.g ?? 0;
+  const b = data.params?.b ?? 0;
+  const hex = `rgb(${r},${g},${b})`;
+  return (
+    <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
+      <div className="flex justify-center py-1 nodrag">
+        <div className="w-10 h-10 rounded-full border-2 border-white/20 shadow-lg" style={{ background: hex, boxShadow: `0 0 16px 2px ${hex}55` }} />
+      </div>
+    </BaseNode>
+  );
+});
 
 export const FilterCannyNode = memo(({ selected, data }: any) => (
   <BaseNode title="Canny Edge" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
@@ -413,7 +426,7 @@ export const AnalysisFlowVizNode = memo(({ selected, data }: any) => (
 ));
 
 export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
-  const nodeData = data.node_data || {};
+  const nodeData = useNodeData(useNodeId());
   const val = nodeData.scalar ?? 0;
   const displayText = nodeData.display_text || `${val.toFixed(data.params?.precision ?? 3)}`;
   
@@ -469,7 +482,8 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
 
 export const ROIPolygonNode = memo(({ selected, data }: any) => {
   const [points, setPoints] = React.useState<any[]>([]);
-  const frame = data.node_data?.main_preview || data.node_data?.main;
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
   const onOpenEditor = data.onOpenEditor;
 
   React.useEffect(() => {
@@ -483,16 +497,18 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode
-      title="ROI Polygon"
+      title="Mask Polygon"
       icon={Scaling}
       selected={selected}
       data={data}
       color="accent"
-      inputs={[{id: 'image', color: 'image'}]}
+      inputs={[{id: 'image', color: 'image'}, {id: 'mask_in', color: 'mask'}]}
       outputs={[
-        {id: 'main', color: 'image'},
-        {id: 'mask', color: 'mask'},
-        {id: 'pts', color: 'list'}
+        {id: 'main',       color: 'image'},
+        {id: 'mask',       color: 'mask'},
+        {id: 'masked',     color: 'image'},
+        {id: 'masked_inv', color: 'image'},
+        {id: 'pts',        color: 'list'}
       ]}
     >
       <div className="flex flex-col gap-3 nodrag">
@@ -511,7 +527,7 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
               )}
             </svg>
             {points.map((p, i) => (
-              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} className="fill-white stroke-accent" style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={3} className="fill-white stroke-accent" style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
             ))}
           </svg>
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
@@ -522,8 +538,53 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
         </div>
         <div className="flex items-center justify-between px-1">
           <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{points.length} Vertices</div>
-          <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline">
-            Modify Shape
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const CropRectNode = memo(({ selected, data }: any) => {
+  const frame = useNodeData(useNodeId())?.main_preview;
+  const onOpenEditor = data.onOpenEditor;
+
+  let rect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+  try { if (data.params?.rect) rect = JSON.parse(data.params.rect); } catch(e) {}
+
+  return (
+    <BaseNode title="Crop" icon={Crop} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'image', color: 'image' }]}
+      outputs={[{ id: 'main', color: 'image' }, { id: 'width', color: 'scalar' }, { id: 'height', color: 'scalar' }]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/crop shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-60 grayscale-[50%]" alt="Crop Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Crop size={24} className="opacity-10" />
+            </div>
+          )}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h}
+                className="fill-accent/20 stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
+            </svg>
+          </svg>
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/crop:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Crop size={12} /> Edit Crop
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
+            {Math.round(rect.w * 100)}% × {Math.round(rect.h * 100)}%
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="text-[8px] font-black text-accent uppercase tracking-widest hover:underline">
+            Edit Crop
           </button>
         </div>
       </div>
@@ -597,7 +658,7 @@ const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
 const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness']);
 
 export const DataInspectorNode = memo(({ selected, data }: any) => {
-  const d = data.node_data?.data_out;
+  const d = useNodeData(useNodeId())?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const { customBg } = useNodeColor();
   const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]');
@@ -691,6 +752,18 @@ export const DataListSelectorNode = memo(({ selected, data }: any) => (
   <BaseNode title="List Selector" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
 ));
 
+export const RegionSelectorNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Region Selector" icon={Filter} selected={selected} data={data} color="green"
+    inputs={[{id: 'list_in', color: 'list'}]}
+    outputs={[
+      {id: 'item',     color: 'dict'},
+      {id: 'pts',      color: 'list'},
+      {id: 'list_out', color: 'list'},
+      {id: 'count',    color: 'scalar'},
+    ]}
+  />
+));
+
 export const DataCoordSplitterNode = memo(({ selected, data }: any) => (
   <BaseNode title="Coord Splitter" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'dict_in', color: 'dict'}]} outputs={[
     {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
@@ -720,7 +793,7 @@ export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
 ));
 
 export const OutputDisplayNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Final Out" icon={Maximize} selected={selected} data={data} color="green" inputs={[
+  <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={[
     {id: 'main', color: 'image'},
     {id: 'mask_in', color: 'mask'},
     {id: 'flow_in', color: 'flow'}
@@ -732,15 +805,16 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => (
 export const MathNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Math', icon: 'Calculator', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Calculator);
-  return <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
+  return <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="blue" inputs={schema.inputs} outputs={schema.outputs} />;
 });
 
 export const StringNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const schema = data.schema || { label: 'String', icon: 'Type', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Type);
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
-       {data.node_data?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{data.node_data.result}</div>}
+    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
+       {nd?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{nd.result}</div>}
     </BaseNode>
   );
 });
@@ -773,7 +847,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const palIdx = data?.activePaletteIndex ?? 6;
   const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
   const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
-  const nd = data.node_data || {};
+  const nd = useNodeData(useNodeId());
   const bufSize = Number(data.params?.buffer_size ?? 100);
   const frozen = !!data.params?.freeze;
 
@@ -881,7 +955,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
 });
 
 export const ScientificStatsNode = memo(({ selected, data }: any) => {
-  const stats = data.node_data || {};
+  const stats = useNodeData(useNodeId());
   const entries = [
     { label: 'Mean', v: stats.mean, color: 'text-cyan-400' },
     { label: 'Median', v: stats.median, color: 'text-blue-400' },
@@ -1063,7 +1137,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const text = data.params?.text || '';
+  const text = data.params?.text ?? '';
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#ffd4b8');
@@ -1123,10 +1197,11 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 });
 
 export const OutputMovieNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const mode = data.params?.mode ?? 0;
   const recording = data.params?.recording ?? false;
   const outputPath = data.params?.output_path || '';
-  const frameCount = data.node_data?.frame_count ?? 0;
+  const frameCount = nd?.frame_count ?? 0;
 
   const handleBrowse = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1218,15 +1293,14 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
     : schema.outputs;
 
   return (
-    <BaseNode title={schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
-      {/* Minimalist: internal content moved to Inspector */}
+    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
     </BaseNode>
   );
 });
 
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
-  const title = data.params?.title || 'Frame Layer';
+  const title = data.params?.title ?? 'Frame Layer';
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
@@ -1261,6 +1335,67 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
       </div>
       <div className="flex-1 pointer-events-none" />
     </div>
+  );
+});
+
+// ──────────────────────────────────────────────────────────────
+// GROUP NODES
+// ──────────────────────────────────────────────────────────────
+
+export const GroupNode = memo(({ selected, data }: any) => {
+  const rawInputs: { id: string; color: string }[] = data?.inputs ?? [];
+  const rawOutputs: { id: string; color: string }[] = data?.outputs ?? [];
+  const label = data?.params?.label || data?.label || 'Group';
+
+  const splitPort = (p: { id: string; color: string }) => {
+    const idx = p.id.indexOf('__');
+    return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+  };
+
+  const inputs = rawInputs.map(splitPort);
+  const outputs = rawOutputs.map(splitPort);
+
+  return (
+    <BaseNode
+      title={label}
+      icon={Package}
+      selected={selected}
+      data={data}
+      inputs={inputs}
+      outputs={outputs}
+      headerExtra={<span className="text-[8px] text-gray-600 font-mono">GROUP</span>}
+    >
+      <div className="text-[8px] text-gray-600 italic text-center py-0.5">⌥ double-click to enter</div>
+    </BaseNode>
+  );
+});
+
+export const GroupInputNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const outputs = ports.map(p => {
+    const idx = p.id.indexOf('__');
+    return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+  });
+  return (
+    <BaseNode title="Group IN" icon={LogIn} selected={selected} data={data} outputs={outputs} inputs={[]}>
+      {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">no inputs</div>}
+    </BaseNode>
+  );
+});
+
+export const GroupOutputNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+    }),
+    { id: 'new', color: 'any' },
+  ];
+  return (
+    <BaseNode title="Group OUT" icon={LogOut} selected={selected} data={data} inputs={inputs} outputs={[]}>
+      {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">connect outputs →</div>}
+    </BaseNode>
   );
 });
 

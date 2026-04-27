@@ -6,7 +6,7 @@ Utilise la bibliothèque 'deep-sort-realtime' (pip install deep-sort-realtime).
 Combining Kalman filtering + a CNN appearance descriptor to dramatically
 reduce identity switches compared to plain SORT.
 """
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import numpy as np
 
 try:

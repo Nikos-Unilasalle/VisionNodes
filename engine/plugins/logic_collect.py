@@ -1,7 +1,7 @@
 import csv
 import os
 import time
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='logic_collect',

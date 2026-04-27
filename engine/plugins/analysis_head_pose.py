@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 
@@ -29,7 +29,7 @@ _MODEL_3D = np.array([
         {'id': 'pose', 'color': 'dict'}
     ],
     params=[
-        {'id': 'draw_axes', 'label': 'Draw Axes', 'type': 'int', 'default': 1, 'min': 0, 'max': 1}
+        {'id': 'draw_axes', 'label': 'Draw Axes', 'type': 'bool', 'default': True}
     ]
 )
 class HeadPoseNode(NodeProcessor):

@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 
@@ -12,8 +12,8 @@ import numpy as np
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
         {'id': 'kernel_size', 'min': 1, 'max': 7, 'step': 2, 'default': 3},
-        {'id': 'x_dir', 'min': 0, 'max': 1, 'step': 1, 'default': 1},
-        {'id': 'y_dir', 'min': 0, 'max': 1, 'step': 1, 'default': 1}
+        {'id': 'x_dir', 'label': 'X Direction', 'type': 'bool', 'default': True},
+        {'id': 'y_dir', 'label': 'Y Direction', 'type': 'bool', 'default': True}
     ]
 )
 class SobelNode(NodeProcessor):

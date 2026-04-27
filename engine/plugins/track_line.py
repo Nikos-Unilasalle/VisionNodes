@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import math
 
 @vision_node(
@@ -18,7 +18,7 @@ import math
     params=[
         {'id': 'pt_a', 'min': 0, 'max': 477, 'step': 1, 'default': 4},
         {'id': 'pt_b', 'min': 0, 'max': 477, 'step': 1, 'default': 8},
-        {'id': 'absolute', 'min': 0, 'max': 1, 'step': 1, 'default': 0},
+        {'id': 'absolute', 'label': 'Absolute Coords', 'type': 'bool', 'default': False},
         {'id': 'thickness', 'min': 1, 'max': 20, 'step': 1, 'default': 4},
         {'id': 'r', 'min': 0, 'max': 255, 'step': 1, 'default': 0},
         {'id': 'g', 'min': 0, 'max': 255, 'step': 1, 'default': 255},

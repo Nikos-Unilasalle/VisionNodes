@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import numpy as np
 
 @vision_node(
@@ -26,8 +26,8 @@ import numpy as np
         {'id': 'pt_8', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
         {'id': 'pt_9', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
         {'id': 'pt_10', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
-        {'id': 'absolute', 'min': 0, 'max': 1, 'step': 1, 'default': 0},
-        {'id': 'fill', 'min': 0, 'max': 1, 'step': 1, 'default': 1},
+        {'id': 'absolute', 'label': 'Absolute Coords', 'type': 'bool', 'default': False},
+        {'id': 'fill',     'label': 'Fill',            'type': 'bool', 'default': True},
         {'id': 'thickness', 'min': 1, 'max': 20, 'step': 1, 'default': 2},
         {'id': 'r', 'min': 0, 'max': 255, 'step': 1, 'default': 0},
         {'id': 'g', 'min': 0, 'max': 255, 'step': 1, 'default': 255},

@@ -5,27 +5,40 @@ import ReactFlow, {
   NodeResizer
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { 
+import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
-  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3
+  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
+  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
+<<<<<<< HEAD
 // import logo from './assets/logo.svg?url';
 const logo = ""; // Dummy for now
+=======
+import { useHistory } from './hooks/useHistory';
+import { NodesDataContext } from './context/NodesDataContext';
+import { NodeInspectorPanel } from './components/NodeInspectorPanel';
+import logo from './assets/logo.svg';
+>>>>>>> origin/main
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
+import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename, readDir } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
+<<<<<<< HEAD
   { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
   { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display Outlet', params: {} } },
+=======
+  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
+  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display', params: {} } },
+>>>>>>> origin/main
 ];
 
 const initialEdges: Edge[] = [
@@ -99,6 +112,7 @@ const _nodeTypes = {
   filter_color_mask: N.FilterColorMaskNode,
   geom_flip: N.GeomFlipNode,
   geom_resize: N.GeomResizeNode,
+  geom_crop_rect: N.CropRectNode,
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
   analysis_pose_mp: N.AnalysisPoseMPNode,
@@ -117,6 +131,7 @@ const _nodeTypes = {
   util_coord_to_mask: N.UtilCoordToMaskNode,
   util_mask_blend: N.UtilMaskBlendNode,
   data_list_selector: N.DataListSelectorNode,
+  list_region_select: N.RegionSelectorNode,
   data_coord_splitter: N.DataCoordSplitterNode,
   data_coord_combine: N.DataCoordCombineNode,
   data_inspector: withNodeResizer(N.DataInspectorNode, 180, 120),
@@ -144,8 +159,12 @@ const _nodeTypes = {
   string_split: N.StringNode,
   string_length: N.StringNode,
   string_case: N.StringNode,
+  string_replace: N.StringNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
+  group_node: N.GroupNode,
+  group_input: N.GroupInputNode,
+  group_output: N.GroupOutputNode,
 };
 
 const nodeTypes = Object.fromEntries(
@@ -176,6 +195,7 @@ const CATEGORIES = [
   { id: 'geom', label: 'Geometric', icon: Move, nodes: [
     { type: 'geom_flip', label: 'Flip', description: 'Inverts the image horizontally or vertically.' },
     { type: 'geom_resize', label: 'Resize', description: 'Changes the image resolution (scaling).' },
+    { type: 'geom_crop_rect', label: 'Crop', description: 'Interactive rectangular crop with drag handles.' },
     { type: 'util_roi_polygon', label: 'ROI Polygon', description: 'Interactive polygonal mask definition for ROIs.' },
     { type: 'geom_perspective', label: 'Perspective Warp', description: 'Straightens a distorted area into a flat rectangle via 4 points.' },
     { type: 'util_manual_points', label: 'Manual 4 Points', description: 'Manually defines 4 reference points for geometric calculations.' }
@@ -191,6 +211,8 @@ const CATEGORIES = [
   ]},
   { id: 'features', label: 'Features', icon: Target, nodes: [
     { type: 'feat_find_contours', label: 'Find Contours', description: 'Detects and extracts isolated shapes from a binary mask.' },
+    { type: 'feat_fill_contours',   label: 'Fill Contours',   description: 'Fills all contours from a list into a binary mask (union). Connect contours_list from Find Contours.' },
+    { type: 'feat_filter_contours', label: 'Filter Contours', description: 'Filters a contour list by elongation ratio (long/short axis) and/or area range.' },
     { type: 'feat_hough_circles', label: 'Hough Circles', description: 'Identifies perfect circular shapes through mathematical calculation.' },
     { type: 'feat_hough_lines', label: 'Hough Lines', description: 'Detects straight line segments (walls, joints, etc.).' },
     { type: 'feat_clahe', label: 'CLAHE (Contrast)', description: 'Improves local image contrast adaptively.' },
@@ -207,6 +229,7 @@ const CATEGORIES = [
   ]},
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector', description: 'Extracts a specific item from a list of detections.' },
+    { type: 'list_region_select', label: 'Region Selector', description: 'Filters, sorts and selects a detection region. Outputs canonical 4 corner pts (TL→TR→BR→BL) ready for perspective warp.' },
     { type: 'data_coord_splitter', label: 'Coord Splitter', description: 'Splits a coordinate dictionary into 4 scalar values.' },
     { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
   ]},
@@ -229,7 +252,8 @@ const CATEGORIES = [
   ] },
   { id: 'strings', label: 'Strings', icon: Type, nodes: [
     { type: 'string_input', label: 'String Input', description: 'Manual text entry for logic and display.' },
-    { type: 'string_concat', label: 'Concatenate', description: 'Joins two strings together.' },
+    { type: 'string_concat', label: 'Concatenate', description: 'Joins two strings (or a list of strings) with a separator.' },
+    { type: 'string_replace', label: 'Search & Replace', description: 'Finds and replaces text in a string. Supports regex.' },
     { type: 'string_split', label: 'Split', description: 'Splits a string into a list via a separator.' },
     { type: 'string_length', label: 'Length', description: 'Counts the number of characters.' },
     { type: 'string_case', label: 'Case Change', description: 'Converts to Upper or Lower case.' }
@@ -238,7 +262,7 @@ const CATEGORIES = [
     { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' }
   ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
-    { type: 'output_display', label: 'Final Display', description: 'The output terminal displaying the final video stream.' },
+    { type: 'output_display', label: 'Display', description: 'The output terminal displaying the final video stream.' },
     { type: 'output_movie', label: 'Movie Export', description: 'Records the pipeline to an MP4 file, or records webcam directly and creates a Movie node on stop.' },
     { type: 'util_compose', label: 'Compose', description: 'Combines two images: side-by-side, split view, blend, difference, or checkerboard.' }
   ] },
@@ -249,7 +273,40 @@ const CATEGORIES = [
   ] }
 ];
 
-type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[] };
+// ─── Group navigation helpers ─────────────────────────────────────────────────
+
+type GroupEntry = { groupNodeId: string };
+
+function getNestedSubGraph(
+  canvasNodes: Node[],
+  stack: GroupEntry[]
+): { nodes: Node[]; edges: Edge[] } {
+  if (stack.length === 0) return { nodes: [], edges: [] };
+  const g = canvasNodes.find(n => n.id === stack[0].groupNodeId);
+  const sub = (g?.data as any)?.subGraph ?? { nodes: [], edges: [] };
+  if (stack.length === 1) return sub;
+  return getNestedSubGraph(sub.nodes, stack.slice(1));
+}
+
+function updateNestedSubGraph(
+  canvasNodes: Node[],
+  stack: GroupEntry[],
+  field: 'nodes' | 'edges',
+  updater: (items: any[]) => any[]
+): Node[] {
+  return canvasNodes.map(n => {
+    if (n.id !== stack[0].groupNodeId) return n;
+    const sub = (n.data as any)?.subGraph ?? { nodes: [], edges: [] };
+    if (stack.length === 1) {
+      return { ...n, data: { ...n.data, subGraph: { ...sub, [field]: updater(sub[field] ?? []) } } };
+    }
+    return { ...n, data: { ...n.data, subGraph: { ...sub, nodes: updateNestedSubGraph(sub.nodes, stack.slice(1), field, updater) } } };
+  });
+}
+
+// ─── End group helpers ────────────────────────────────────────────────────────
+
+type Canvas = { id: string; name: string; nodes: Node[]; edges: Edge[]; filePath: string | null };
 const CANVAS_IDS = ['c1', 'c2', 'c3', 'c4'];
 const CANVAS_NAMES = ['Scene 1', 'Scene 2', 'Scene 3', 'Scene 4'];
 const makeInitialCanvases = (): Canvas[] => CANVAS_IDS.map((id, i) => ({
@@ -257,6 +314,7 @@ const makeInitialCanvases = (): Canvas[] => CANVAS_IDS.map((id, i) => ({
   name: CANVAS_NAMES[i],
   nodes: i === 0 ? initialNodes : [],
   edges: i === 0 ? initialEdges : [],
+  filePath: null,
 }));
 
 function App() {
@@ -265,14 +323,36 @@ function App() {
   const activeCanvasIdRef = useRef('c1');
   useEffect(() => { activeCanvasIdRef.current = activeCanvasId; }, [activeCanvasId]);
 
-  const nodes = useMemo(
+  // Root canvas nodes/edges (always top-level — sent to engine)
+  const canvasNodes = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.nodes ?? [],
     [canvases, activeCanvasId]
   );
-  const edges = useMemo(
+  const canvasEdges = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.edges ?? [],
     [canvases, activeCanvasId]
   );
+  const canvasNodesRef = useRef<Node[]>([]);
+  const canvasEdgesRef = useRef<Edge[]>([]);
+  canvasNodesRef.current = canvasNodes;
+  canvasEdgesRef.current = canvasEdges;
+
+  // Group navigation stack
+  const [groupStack, setGroupStack] = useState<GroupEntry[]>([]);
+  const groupStackRef = useRef<GroupEntry[]>([]);
+  useEffect(() => { groupStackRef.current = groupStack; }, [groupStack]);
+
+  // View nodes/edges: current-level view (may be inside a group subgraph)
+  const nodes = useMemo(() => {
+    if (groupStack.length === 0) return canvasNodes;
+    return getNestedSubGraph(canvasNodes, groupStack).nodes;
+  }, [canvasNodes, groupStack]);
+  const edges = useMemo(() => {
+    if (groupStack.length === 0) return canvasEdges;
+    return getNestedSubGraph(canvasNodes, groupStack).edges;
+  }, [canvasNodes, canvasEdges, groupStack]);
+
+  // Root-level writers (bulk operations: load, undo/redo, new canvas)
   const setNodes = useCallback((updater: Node[] | ((nds: Node[]) => Node[])) => {
     setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
       ? { ...c, nodes: typeof updater === 'function' ? updater(c.nodes) : updater }
@@ -283,6 +363,29 @@ function App() {
       ? { ...c, edges: typeof updater === 'function' ? updater(c.edges) : updater }
       : c));
   }, []);
+
+  // View-level writers (interactive operations: drag, connect, etc.)
+  const setViewNodes = useCallback((updater: Node[] | ((nds: Node[]) => Node[])) => {
+    const fn = typeof updater === 'function' ? updater : (_: Node[]) => updater as Node[];
+    if (groupStackRef.current.length === 0) { setNodes(updater); return; }
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, nodes: updateNestedSubGraph(c.nodes, groupStackRef.current, 'nodes', fn) }
+      : c));
+  }, [setNodes]);
+  const setViewEdges = useCallback((updater: Edge[] | ((eds: Edge[]) => Edge[])) => {
+    const fn = typeof updater === 'function' ? updater : (_: Edge[]) => updater as Edge[];
+    if (groupStackRef.current.length === 0) { setEdges(updater); return; }
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current
+      ? { ...c, nodes: updateNestedSubGraph(c.nodes, groupStackRef.current, 'edges', fn) }
+      : c));
+  }, [setEdges]);
+  const activeFilePath = useMemo(
+    () => canvases.find(c => c.id === activeCanvasId)?.filePath ?? null,
+    [canvases, activeCanvasId]
+  );
+  const setActiveFilePath = useCallback((path: string | null) => {
+    setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? { ...c, filePath: path } : c));
+  }, []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<any>(null);
@@ -290,17 +393,38 @@ function App() {
   const [rightPanelWidth, setRightPanelWidth] = useState(340);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(false);
+  const [workDir, setWorkDir] = useState<string | null>(() => localStorage.getItem('vn-work-dir'));
+  const [workDirFiles, setWorkDirFiles] = useState<string[]>([]);
   const [snapEnabled, setSnapEnabled] = useState(false);
   const isResizing = useRef(false);
+  const nodesRef = useRef<any[]>([]);
+  const edgesRef = useRef<any[]>([]);
+  const addNodeRef = useRef<any>(null);
+  nodesRef.current = nodes;
+  edgesRef.current = edges;
+
+  const { push: histPush, undo: histUndo, redo: histRedo, canUndo, canRedo } = useHistory();
+  const lastParamPushRef = useRef(0);
+  const pushSnapshot = useCallback(() => {
+    histPush(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
+  }, [histPush, activeCanvasId]);
 
   const [menu, setMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+  const [paneMenu, setPaneMenu] = useState<{ x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
+  const [cropEditingId, setCropEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6); // 6 is Original VN
   const [isPaletteSelectOpen, setIsPaletteSelectOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const previewZoomRef = useRef(1);
+  const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+  const isPanning = useRef(false);
+  const panStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
   const previewAspect = useRef(16 / 9);
@@ -365,7 +489,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification } = useVisionEngine(handleCapture);
 
   const handleSaveAsImage = useCallback((nodeId: string) => {
     const nodeType = nodes.find(n => n.id === nodeId)?.type;
@@ -441,9 +565,6 @@ function App() {
 
   const nodesWithData = useMemo(() => {
     return nodes.map(node => {
-      const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${node.id}:`));
-      const techData = dataKeys.length > 0 ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]])) : nodesData[node.id];
-
       let dynamicColor = null;
       if (node.type === 'logic_switch') {
         const edge = edges.find(e => e.target === node.id && (e.targetHandle?.endsWith('if_true') || e.targetHandle?.endsWith('if_false')));
@@ -461,18 +582,21 @@ function App() {
           params: node.data?.params || {},
           schema,
           description,
-          node_data: techData,
           dynamicColor,
           activePaletteIndex,
           isVisualized: node.id === visualizedNodeId,
-          onOpenEditor: () => setRoiEditingId(node.id),
+          onOpenEditor: node.type === 'util_roi_polygon'
+            ? () => setRoiEditingId(node.id)
+            : node.type === 'geom_crop_rect'
+            ? () => setCropEditingId(node.id)
+            : undefined,
           onChangeParams: (p: any) => {
-            setNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
+            setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           }
         }
       };
     });
-  }, [nodes, nodesData, edges, pluginSchemas, visualizedNodeId]);
+  }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex]);
 
   const canVisualize = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -492,26 +616,60 @@ function App() {
   }, [visualizedNodeId, setPreviewNode]);
 
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
+  const selectedNodeLiveData = useMemo(() => {
+    if (!selectedNodeId) return {};
+    const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${selectedNodeId}:`));
+    return dataKeys.length > 0
+      ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]]))
+      : (nodesData[selectedNodeId] ?? {});
+  }, [selectedNodeId, nodesData]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
+    if (changes.some(c => c.type === 'remove')) pushSnapshot();
+    setViewNodes((nds) => applyNodeChanges(changes, nds));
+  }, [pushSnapshot, setViewNodes]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
+    if (changes.some(c => c.type === 'remove')) pushSnapshot();
+    setViewEdges((eds) => applyEdgeChanges(changes, eds));
+  }, [pushSnapshot, setViewEdges]);
 
   const onConnect = useCallback((params: Connection) => {
-    setEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
-  }, []);
+    pushSnapshot();
+    // Dynamic group_output port creation
+    const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
+    if (targetNode?.type === 'group_output' && params.targetHandle === 'any__new' && params.sourceHandle) {
+      const sh = params.sourceHandle;
+      const color = sh.split('__')[0] || 'any';
+      const newPort = { id: sh, color, label: `out${(targetNode.data as any)?.ports?.length ?? 0}` };
+      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+        ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+        : n));
+      // Also update parent group node's outputs list
+      if (groupStackRef.current.length > 0) {
+        const parentGroupId = groupStackRef.current[groupStackRef.current.length - 1].groupNodeId;
+        const parentStack = groupStackRef.current.slice(0, -1);
+        setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? {
+          ...c,
+          nodes: (parentStack.length > 0
+            ? updateNestedSubGraph(c.nodes, parentStack, 'nodes', (nds: Node[]) => nds.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } }))
+            : c.nodes.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } })
+          )
+        } : c));
+      }
+      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
+      return;
+    }
+    setViewEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
 
-  // Centralized graph synchronization to prevent loops
+  // Centralized graph synchronization — always sends root canvas (groups flattened by engine)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isConnected) updateGraph(nodes, edges);
+      if (isConnected) updateGraph(canvasNodes, canvasEdges);
     }, 100);
     return () => clearTimeout(timer);
-  }, [nodes, edges, isConnected, updateGraph]);
+  }, [canvasNodes, canvasEdges, isConnected, updateGraph]);
 
   const onConnectEnd = useCallback((event: any, connectionState?: any) => {
     if (connectionState && connectionState.isValid === false) {
@@ -562,21 +720,44 @@ function App() {
     });
 
     if (edgeToInsert && edgeToInsert.source !== node.id && edgeToInsert.target !== node.id) {
-      setEdges((eds) => {
+      setViewEdges((eds) => {
         return eds.filter(e => e.id !== edgeToInsert.id).concat([
           { id: `e-${Date.now()}-1`, source: edgeToInsert.source, target: node.id, sourceHandle: edgeToInsert.sourceHandle, targetHandle: 'main' },
           { id: `e-${Date.now()}-2`, source: node.id, target: edgeToInsert.target, sourceHandle: 'main', targetHandle: edgeToInsert.targetHandle }
         ]);
       });
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, setViewEdges]);
 
-  const updateNodeParams = (id: string, params: any) => {
-    setNodes((nds) => nds.map((node) => {
+  const updateNodeParams = (id: string, params: Record<string, unknown>) => {
+    const now = Date.now();
+    if (now - lastParamPushRef.current > 500) {
+      pushSnapshot();
+      lastParamPushRef.current = now;
+    }
+    setViewNodes((nds) => nds.map((node) => {
         if (node.id === id) return { ...node, data: { ...node.data, params: { ...node.data.params, ...params } } };
         return node;
     }));
   };
+
+  const handleUndo = useCallback(() => {
+    const prev = histUndo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
+    if (!prev) return;
+    setGroupStack([]); groupStackRef.current = [];
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+    if (isConnected) updateGraph(prev.nodes, prev.edges);
+  }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
+
+  const handleRedo = useCallback(() => {
+    const next = histRedo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
+    if (!next) return;
+    setGroupStack([]); groupStackRef.current = [];
+    setNodes(next.nodes);
+    setEdges(next.edges);
+    if (isConnected) updateGraph(next.nodes, next.edges);
+  }, [histRedo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
 
   const copyNodes = useCallback(() => {
     const selectedNodes = nodes.filter(n => n.selected);
@@ -591,6 +772,7 @@ function App() {
   const pasteNodes = useCallback((mousePos?: {x: number, y: number}) => {
     const raw = localStorage.getItem('vision-nodes-clipboard');
     if (!raw) return;
+    pushSnapshot();
     const { nodes: copiedNodes, edges: copiedEdges } = JSON.parse(raw);
     const idMap: Record<string, string> = {};
     const newNodes = copiedNodes.map((n: any) => {
@@ -609,59 +791,156 @@ function App() {
       source: idMap[e.source],
       target: idMap[e.target]
     }));
-    setNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
-    setEdges(eds => [...eds, ...newEdges]);
+    setViewNodes(nds => [...nds.map(n => ({...n, selected: false})), ...newNodes]);
+    setViewEdges(eds => [...eds, ...newEdges]);
+  }, [setViewNodes, setViewEdges]);
+
+  const refreshWorkDir = useCallback(async (dir: string) => {
+    try {
+      const entries = await readDir(dir);
+      const files = entries
+        .filter(e => !e.isDirectory && e.name?.endsWith('.vn'))
+        .map(e => e.name!)
+        .sort();
+      setWorkDirFiles(files);
+    } catch {
+      setWorkDirFiles([]);
+    }
   }, []);
+
+  useEffect(() => {
+    if (workDir) refreshWorkDir(workDir);
+  }, [workDir, refreshWorkDir]);
+
+  const setWorkDirAndSave = async () => {
+    const dir = await open({ directory: true, multiple: false });
+    if (dir && typeof dir === 'string') {
+      localStorage.setItem('vn-work-dir', dir);
+      setWorkDir(dir);
+    }
+  };
+
+  const confirmUnsaved = async (): Promise<boolean> => {
+    if (!activeFilePath && nodes.length === 0) return true;
+    const { ask } = await import('@tauri-apps/plugin-dialog');
+    const save = await ask(
+      activeFilePath
+        ? `"${activeFilePath.split(/[\\/]/).pop()}" has unsaved changes. Save before continuing?`
+        : 'Current scene has unsaved changes. Save before continuing?',
+      { title: 'Unsaved Changes', kind: 'warning', okLabel: 'Save', cancelLabel: 'Discard' }
+    );
+    if (save) await saveProject();
+    return true;
+  };
+
+  const buildProjectContent = () => {
+    const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
+    return JSON.stringify({ nodes: canvasNodes, edges: canvasEdges, ui }, null, 2);
+  };
 
   const saveProject = async () => {
     try {
-      const path = await save({
-        defaultPath: 'project.vn',
-        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
-      });
-
+      let path = activeFilePath;
+      if (!path) {
+        path = await save({
+          defaultPath: 'project.vn',
+          filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+        });
+      }
       if (path) {
-        const ui = { previewSize, previewPos, activePaletteIndex, visualizedNodeId };
-        const content = JSON.stringify({ nodes, edges, ui }, null, 2);
-        await writeTextFile(path, content);
-        console.log('Project saved to', path);
+        await writeTextFile(path, buildProjectContent());
+        setActiveFilePath(path);
+        pushNotification(`Saved → ${path.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && path.startsWith(workDir)) refreshWorkDir(workDir);
       }
     } catch (err) {
       console.error('Failed to save project:', err);
+      pushNotification('Save failed — see console', 'error');
+    }
+  };
+
+  const saveProjectIncremental = async () => {
+    try {
+      let basePath: string | null = activeFilePath;
+      if (!basePath) {
+        basePath = await save({
+          defaultPath: 'project.vn',
+          filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+        });
+        if (!basePath) return;
+        await writeTextFile(basePath, buildProjectContent());
+        setActiveFilePath(basePath);
+        return;
+      }
+
+      // Parse: dir + stem (without .vn)
+      const lastSlash = Math.max(basePath.lastIndexOf('/'), basePath.lastIndexOf('\\'));
+      const dir = basePath.slice(0, lastSlash + 1);
+      const filename = basePath.slice(lastSlash + 1).replace(/\.vn$/i, '');
+
+      // Check if stem ends with " NN" (space + digits)
+      const numMatch = filename.match(/^(.*?) (\d+)$/);
+      if (numMatch) {
+        const stem = numMatch[1];
+        const nextN = parseInt(numMatch[2], 10) + 1;
+        const nextPath = `${dir}${stem} ${String(nextN).padStart(2, '0')}.vn`;
+        await writeTextFile(nextPath, buildProjectContent());
+        setActiveFilePath(nextPath);
+        pushNotification(`Saved → ${nextPath.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && nextPath.startsWith(workDir)) refreshWorkDir(workDir);
+      } else {
+        const path01 = `${dir}${filename} 01.vn`;
+        const path02 = `${dir}${filename} 02.vn`;
+        await rename(basePath, path01);
+        await writeTextFile(path02, buildProjectContent());
+        setActiveFilePath(path02);
+        pushNotification(`Renamed → ${path01.split(/[\\/]/).pop()} · Saved → ${path02.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && path02.startsWith(workDir)) refreshWorkDir(workDir);
+      }
+    } catch (err) {
+      console.error('Failed incremental save:', err);
+      pushNotification('Incremental save failed — see console', 'error');
+    }
+  };
+
+  const loadProjectFromPath = async (filePath: string) => {
+    try {
+      const content = await readTextFile(filePath);
+      const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
+      setGroupStack([]); groupStackRef.current = [];
+      setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
+      if (ui) {
+        if (ui.previewSize) setPreviewSize(ui.previewSize);
+        if (ui.previewPos) setPreviewPos(ui.previewPos);
+        if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
+        if (ui.visualizedNodeId !== undefined) { setVisualizedNodeId(ui.visualizedNodeId); setPreviewNode(ui.visualizedNodeId); }
+      }
+      updateGraph(newNodes, newEdges);
+      pushNotification(`Opened → ${filePath.split(/[\\/]/).pop()}`, 'info');
+    } catch (err) {
+      console.error('Failed to load project:', err);
+      pushNotification('Open failed — see console', 'error');
     }
   };
 
   const loadProject = async () => {
+    await confirmUnsaved();
     try {
       const path = await open({
         filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }],
         multiple: false
       });
 
-      if (path && typeof path === 'string') {
-        const content = await readTextFile(path);
-        const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
-        setNodes(newNodes);
-        setEdges(newEdges);
-        if (ui) {
-            if (ui.previewSize) setPreviewSize(ui.previewSize);
-            if (ui.previewPos) setPreviewPos(ui.previewPos);
-            if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
-            if (ui.visualizedNodeId !== undefined) {
-               setVisualizedNodeId(ui.visualizedNodeId);
-               setPreviewNode(ui.visualizedNodeId);
-            }
-        }
-        updateGraph(newNodes, newEdges);
-      }
+      if (path && typeof path === 'string') await loadProjectFromPath(path);
     } catch (err) {
-      console.error('Failed to load project:', err);
+      console.error('Failed to open dialog:', err);
     }
   };
 
   const applyExampleData = (data: any) => {
     const nodes = data.nodes || [];
     const edges = data.edges || [];
+    setGroupStack([]); groupStackRef.current = [];
     setNodes(nodes);
     setEdges(edges);
     if (data.ui) {
@@ -693,6 +972,165 @@ function App() {
       .catch(e => console.error('Failed to load examples manifest:', e));
   }, []);
 
+  // ─── Group Navigation ────────────────────────────────────────────────────────
+
+  const enterGroup = useCallback((groupNodeId: string) => {
+    const newStack = [...groupStackRef.current, { groupNodeId }];
+    setGroupStack(newStack);
+    groupStackRef.current = newStack;
+    setSelectedNodeId(null);
+    instance?.fitView({ duration: 300 });
+  }, [instance]);
+
+  const exitGroup = useCallback(() => {
+    if (groupStackRef.current.length === 0) return;
+    const newStack = groupStackRef.current.slice(0, -1);
+    setGroupStack(newStack);
+    groupStackRef.current = newStack;
+    setSelectedNodeId(null);
+    instance?.fitView({ duration: 300 });
+  }, [instance]);
+
+  const groupSelectedNodes = useCallback(() => {
+    const selected = nodesRef.current.filter(n => n.selected);
+    if (selected.length < 1) return;
+    pushSnapshot();
+
+    const selectedIds = new Set(selected.map(n => n.id));
+    const allEdges = edgesRef.current;
+
+    const innerEdges = allEdges.filter(e => selectedIds.has(e.source) && selectedIds.has(e.target));
+    const incomingEdges = allEdges.filter(e => !selectedIds.has(e.source) && selectedIds.has(e.target));
+    const outgoingEdges = allEdges.filter(e => selectedIds.has(e.source) && !selectedIds.has(e.target));
+
+    const inputPorts: { id: string; color: string; label: string }[] = [];
+    const outputPorts: { id: string; color: string; label: string }[] = [];
+    const seenIn = new Set<string>();
+    const seenOut = new Set<string>();
+
+    for (const e of incomingEdges) {
+      const th = e.targetHandle || 'any__in';
+      if (seenIn.has(th)) continue;
+      seenIn.add(th);
+      inputPorts.push({ id: th, color: th.split('__')[0] || 'any', label: `in${inputPorts.length}` });
+    }
+    for (const e of outgoingEdges) {
+      const sh = e.sourceHandle || 'any__out';
+      if (seenOut.has(sh)) continue;
+      seenOut.add(sh);
+      outputPorts.push({ id: sh, color: sh.split('__')[0] || 'any', label: `out${outputPorts.length}` });
+    }
+
+    const ts = Date.now();
+    const ginId = `gin-${ts}`;
+    const goutId = `gout-${ts + 1}`;
+    const groupId = `group-${ts + 2}`;
+
+    const xs = selected.map(n => n.position.x);
+    const ys = selected.map(n => n.position.y);
+    const minX = Math.min(...xs), minY = Math.min(...ys), maxX = Math.max(...xs) + 200;
+
+    const ginNode: Node = {
+      id: ginId, type: 'group_input',
+      position: { x: minX - 240, y: minY },
+      data: { label: 'Group IN', params: {}, ports: inputPorts }
+    };
+    const goutNode: Node = {
+      id: goutId, type: 'group_output',
+      position: { x: maxX + 60, y: minY },
+      data: { label: 'Group OUT', params: {}, ports: outputPorts }
+    };
+
+    const subEdges: Edge[] = [
+      ...innerEdges,
+      ...incomingEdges.map(e => ({
+        id: `sg-${ts}-${Math.random()}`,
+        source: ginId, sourceHandle: e.targetHandle,
+        target: e.target, targetHandle: e.targetHandle,
+      })),
+      ...outgoingEdges.map(e => ({
+        id: `sg-${ts}-${Math.random()}`,
+        source: e.source, sourceHandle: e.sourceHandle,
+        target: goutId, targetHandle: e.sourceHandle,
+      })),
+    ];
+
+    const groupNode: Node = {
+      id: groupId, type: 'group_node',
+      position: { x: (minX + maxX) / 2 - 95, y: minY - 30 },
+      data: {
+        label: 'Group', params: {},
+        inputs: inputPorts,
+        outputs: outputPorts,
+        subGraph: {
+          nodes: [...selected.map(n => ({ ...n, selected: false })), ginNode, goutNode],
+          edges: subEdges,
+        }
+      }
+    };
+
+    const outerEdges = allEdges
+      .filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target))
+      .concat(
+        incomingEdges
+          .filter((e, i, arr) => arr.findIndex(x => x.targetHandle === e.targetHandle) === i)
+          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, target: groupId }))
+      )
+      .concat(
+        outgoingEdges
+          .filter((e, i, arr) => arr.findIndex(x => x.sourceHandle === e.sourceHandle) === i)
+          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, source: groupId }))
+      );
+
+    setViewNodes(nds => [...nds.filter(n => !selectedIds.has(n.id)), groupNode]);
+    setViewEdges(_ => outerEdges);
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
+
+  const ungroupNode = useCallback((groupNodeId: string) => {
+    const groupNode = nodesRef.current.find(n => n.id === groupNodeId);
+    if (!groupNode || groupNode.type !== 'group_node') return;
+    pushSnapshot();
+
+    const sub = (groupNode.data as any)?.subGraph ?? { nodes: [], edges: [] };
+    const innerNodes: Node[] = sub.nodes.filter((n: Node) => n.type !== 'group_input' && n.type !== 'group_output');
+    const innerEdges: Edge[] = sub.edges.filter((e: Edge) => {
+      const inIds = new Set(innerNodes.map(n => n.id));
+      return inIds.has(e.source) && inIds.has(e.target);
+    });
+
+    const sub_nodes: Node[] = sub.nodes;
+    const sub_edges: Edge[] = sub.edges;
+    const ginNode = sub_nodes.find((n: Node) => n.type === 'group_input');
+    const goutNode = sub_nodes.find((n: Node) => n.type === 'group_output');
+    const ginId = ginNode?.id;
+    const goutId = goutNode?.id;
+
+    const outerEdges = edgesRef.current.filter(e => e.source !== groupNodeId && e.target !== groupNodeId);
+
+    const reconnectedIn: Edge[] = edgesRef.current
+      .filter(e => e.target === groupNodeId)
+      .flatMap(outerE => {
+        const th = outerE.targetHandle || '';
+        return sub_edges
+          .filter(se => se.source === ginId && se.sourceHandle === th)
+          .map(se => ({ ...outerE, id: `ug-${Date.now()}-${Math.random()}`, target: se.target, targetHandle: se.targetHandle }));
+      });
+
+    const reconnectedOut: Edge[] = edgesRef.current
+      .filter(e => e.source === groupNodeId)
+      .flatMap(outerE => {
+        const sh = outerE.sourceHandle || '';
+        return sub_edges
+          .filter(se => se.target === goutId && se.targetHandle === sh)
+          .map(se => ({ ...outerE, id: `ug-${Date.now()}-${Math.random()}`, source: se.source, sourceHandle: se.sourceHandle }));
+      });
+
+    setViewNodes(nds => [...nds.filter(n => n.id !== groupNodeId), ...innerNodes.map(n => ({ ...n, position: { x: n.position.x + groupNode.position.x, y: n.position.y + groupNode.position.y } }))]);
+    setViewEdges(_ => [...outerEdges, ...innerEdges, ...reconnectedIn, ...reconnectedOut]);
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
+
+  // ─── End Group Navigation ─────────────────────────────────────────────────────
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -700,33 +1138,44 @@ function App() {
 
       if (cmdKey && e.key === 'c') copyNodes();
       if (cmdKey && e.key === 'v') pasteNodes();
+      if (cmdKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
+      if (cmdKey && e.shiftKey && e.key === 'z') { e.preventDefault(); handleRedo(); }
       
-      if (e.shiftKey && e.key.toLowerCase() === 'm') setIsAddMenuOpen(prev => !prev);
-      if (e.shiftKey && e.key.toLowerCase() === 'a') {
+      if (cmdKey && e.key.toLowerCase() === 'm') { e.preventDefault(); setIsAddMenuOpen(prev => !prev); }
+      if (cmdKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        setNodes(nds => nds.map(n => ({ ...n, selected: true })));
+        setViewNodes(nds => nds.map(n => ({ ...n, selected: true })));
       }
-      if (e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
-      if (e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
-      if (e.shiftKey && e.key.toLowerCase() === 'f') {
+      if (cmdKey && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        groupSelectedNodes();
+      }
+      if (cmdKey && e.key.toLowerCase() === 'o') { e.preventDefault(); loadProject(); }
+      if (cmdKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
+      if (cmdKey && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         getCurrentWindow().isFullscreen().then(is => getCurrentWindow().setFullscreen(!is));
       }
-      if (cmdKey && e.key.toLowerCase() === 'f') {
+      if (cmdKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         instance?.fitView();
       }
 
       if (e.key === 'Escape') {
-        setIsAddMenuOpen(false);
-        setPendingConnection(null);
+        if (groupStackRef.current.length > 0) {
+          exitGroup();
+        } else {
+          setIsAddMenuOpen(false);
+          setPendingConnection(null);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, instance]);
+  }, [copyNodes, pasteNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
+    pushSnapshot();
     const id = `node-${Date.now()}`;
     const position = pendingConnection ? { x: pendingConnection.x, y: pendingConnection.y } : { x: 450, y: 450 };
     // Some nodes need a default style so NodeResizer works from the start
@@ -738,7 +1187,7 @@ function App() {
       sci_plotter: { width: 320, height: 220 },
     };
     const nodeStyle = defaultStyle[type] || {};
-    setNodes((nds) => {
+    setViewNodes((nds) => {
       const nextNodes = [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }];
       if (pendingConnection && pendingConnection.sourceNode) {
         setTimeout(() => {
@@ -748,71 +1197,59 @@ function App() {
           const targetClass = pendingConnection.type === 'source' ? 'target' : 'source';
           const handles = Array.from(newEl.querySelectorAll(`.react-flow__handle-${targetClass}`));
           const match = handles.find(h => h.getAttribute('data-handleid')?.startsWith(`${expectedColor}__`)) || handles[0];
-          
           if (match) {
             const matchedHandleId = match.getAttribute('data-handleid');
             if (matchedHandleId) {
-              setEdges(eds => {
-                const newEdges = [...eds, {
+              setViewEdges(eds => {
+                return [...eds, {
                   id: `e-${Date.now()}`,
                   source: pendingConnection.type === 'source' ? pendingConnection.sourceNode : id,
                   target: pendingConnection.type === 'source' ? id : pendingConnection.sourceNode,
                   sourceHandle: pendingConnection.type === 'source' ? pendingConnection.sourceHandle : matchedHandleId,
                   targetHandle: pendingConnection.type === 'source' ? matchedHandleId : pendingConnection.sourceHandle
                 }];
-                updateGraph(nextNodes, newEdges);
-                return newEdges;
               });
             }
           }
         }, 50);
-      } else {
-        updateGraph(nextNodes, edges);
       }
       return nextNodes;
     });
     setIsAddMenuOpen(false);
     setPendingConnection(null);
   };
+  addNodeRef.current = addNode;
 
-  useEffect(() => { if (isConnected) updateGraph(nodes, edges); }, [isConnected]);
+  useEffect(() => { if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current); }, [isConnected, updateGraph]);
   useEffect(() => {
     setSelectedNodeId(null);
-    if (isConnected) updateGraph(nodes, edges);
-  }, [activeCanvasId]);
+    setGroupStack([]);
+    groupStackRef.current = [];
+    if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current);
+  }, [activeCanvasId, isConnected, updateGraph]);
+
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
-    setNodes(nds => {
-      const selectedIds = nds.filter(n => n.selected).map(n => n.id);
-      if (selectedIds.length < 2) return nds;
-      
+    setViewNodes(nds => {
       const selNodes = nds.filter(n => n.selected);
+      if (selNodes.length < 2) return nds;
       const avgX = selNodes.reduce((acc, n) => acc + n.position.x, 0) / selNodes.length;
       const avgY = selNodes.reduce((acc, n) => acc + n.position.y, 0) / selNodes.length;
-      
       return nds.map(n => {
         if (!n.selected) return n;
-        return {
-          ...n,
-          position: {
-            x: direction === 'vertical' ? avgX : n.position.x,
-            y: direction === 'horizontal' ? avgY : n.position.y
-          }
-        };
+        return { ...n, position: { x: direction === 'vertical' ? avgX : n.position.x, y: direction === 'horizontal' ? avgY : n.position.y } };
       });
     });
-  }, []);
+  }, [setViewNodes]);
 
   useEffect(() => {
     if (lastCommands && lastCommands.length > 0) {
       lastCommands.forEach(cmd => {
         if (cmd.type === 'add_node') {
-          // Determine label based on type
           let label = "New Node";
           if (cmd.node_type === 'input_image') label = "Captured Frame";
           if (cmd.node_type === 'input_movie') label = "Recorded Video";
-          
-          addNode(cmd.node_type, label, null, cmd.params);
+          addNodeRef.current?.(cmd.node_type, label, null, cmd.params);
         }
       });
     }
@@ -828,19 +1265,17 @@ function App() {
   useEffect(() => {
     const handleRemoveEdge = (e: any) => {
       const { nodeId, handleId, type } = e.detail;
-      setEdges((eds) => {
-        const nextEdges = eds.filter(edge => {
+      setViewEdges((eds) => {
+        return eds.filter(edge => {
           if (type === 'target') return !(edge.target === nodeId && edge.targetHandle === handleId);
           if (type === 'source') return !(edge.source === nodeId && edge.sourceHandle === handleId);
           return true;
         });
-        if (nextEdges.length !== eds.length) setTimeout(() => updateGraph(nodes, nextEdges), 10);
-        return nextEdges;
       });
     };
     window.addEventListener('remove-handle-edge', handleRemoveEdge);
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
-  }, []);
+  }, [setViewEdges]);
 
   const coloredEdges = useMemo(() => {
     const resolveColor = (edge: any, visited = new Set()): string => {
@@ -889,7 +1324,7 @@ function App() {
           
           <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
             <button
-              onClick={() => { const n: any[] = []; const e: any[] = []; setNodes(n); setEdges(e); updateGraph(n, e); }}
+              onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setGroupStack([]); groupStackRef.current = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
               <Plus size={14} /> New
@@ -905,8 +1340,44 @@ function App() {
             <button
               onClick={saveProject}
               className="flex items-center gap-2 px-3 py-1 bg-accent/10 hover:bg-accent/20 rounded-md text-[10px] font-bold text-accent transition-all"
+              title={activeFilePath ? `Save → ${activeFilePath.split(/[\\/]/).pop()}` : 'Save As…'}
             >
-              <Save size={14} /> Save .vn
+              <Save size={14} />
+              {activeFilePath
+                ? activeFilePath.split(/[\\/]/).pop()?.replace(/\.vn$/i, '') ?? 'Save'
+                : 'Save .vn'}
+            </button>
+            {activeFilePath && (<>
+              <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+              <button
+                onClick={saveProjectIncremental}
+                title="Save incremental version (+01, +02…)"
+                className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
+              >
+                +
+              </button>
+            </>)}
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+          <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+            <button
+              onClick={handleUndo}
+              disabled={!canUndo(activeCanvasId)}
+              title="Undo (⌘Z)"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+            >
+              <Undo2 size={13} /> Undo
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={handleRedo}
+              disabled={!canRedo(activeCanvasId)}
+              title="Redo (⌘⇧Z)"
+              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+            >
+              <Redo2 size={13} /> Redo
             </button>
           </div>
 
@@ -1043,6 +1514,75 @@ function App() {
               </AnimatePresence>
            </div>
            
+           {/* My Projects panel */}
+           <div className="relative">
+              <button
+                onClick={() => setIsProjectsOpen(!isProjectsOpen)}
+                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+              >
+                <FolderSearch size={14} /> My Projects
+              </button>
+              <AnimatePresence>
+                {isProjectsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProjectsOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
+                    >
+                      {/* Define directory */}
+                      <button
+                        onClick={async () => { await setWorkDirAndSave(); }}
+                        className="w-full flex items-center gap-2 p-3 hover:bg-accent/10 rounded-lg group transition-all text-left"
+                      >
+                        <FolderSearch size={13} className="text-accent shrink-0" />
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">Set Work Directory</div>
+                          {workDir && <div className="text-[8px] text-gray-600 mt-0.5 truncate max-w-[220px]">{workDir}</div>}
+                        </div>
+                      </button>
+
+                      {workDir && (
+                        <>
+                          <div className="flex items-center justify-between px-3 py-1.5">
+                            <div className="w-full h-[1px] bg-[#2a2a2a]" />
+                            <button onClick={() => refreshWorkDir(workDir)} className="ml-2 text-gray-600 hover:text-accent transition-colors shrink-0">
+                              <RefreshCw size={10} />
+                            </button>
+                          </div>
+                          {workDirFiles.length === 0 ? (
+                            <div className="text-[9px] text-gray-600 px-3 py-2 italic">No .vn files in this directory</div>
+                          ) : (
+                            workDirFiles.map(file => (
+                              <button
+                                key={file}
+                                onClick={async () => {
+                                  await confirmUnsaved();
+                                  await loadProjectFromPath(`${workDir}/${file}`);
+                                  setIsProjectsOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent/10 rounded-lg group transition-all text-left"
+                              >
+                                <Save size={11} className="text-gray-600 group-hover:text-accent shrink-0" />
+                                <span className="text-[10px] font-bold text-gray-300 group-hover:text-accent truncate">
+                                  {file.replace(/\.vn$/i, '')}
+                                </span>
+                                {activeFilePath === `${workDir}/${file}` && (
+                                  <span className="ml-auto text-[8px] text-accent font-black uppercase tracking-wider">active</span>
+                                )}
+                              </button>
+                            ))
+                          )}
+                        </>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+           </div>
+
            <div className="relative">
               <button
                 onClick={() => setIsExamplesOpen(!isExamplesOpen)}
@@ -1080,17 +1620,29 @@ function App() {
 
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#080808]" onContextMenu={e => e.preventDefault()}>
+          <NodesDataContext.Provider value={nodesData}>
           <ReactFlow
             nodes={nodesWithData} edges={coloredEdges}
             onInit={setInstance}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} 
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
+            onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
-            onEdgeClick={(_, edge) => setEdges(eds => { const n = eds.filter(e => e.id !== edge.id); updateGraph(nodes, n); return n; })}
-            nodeTypes={dynamicNodeTypes} onNodeClick={(_, node) => setSelectedNodeId(node.id)} onPaneClick={() => { setSelectedNodeId(null); setMenu(null); }}
-            onNodeContextMenu={(e, node) => { 
-              e.preventDefault(); 
-              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY }); 
+            onEdgeClick={(_, edge) => { pushSnapshot(); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
+            nodeTypes={dynamicNodeTypes}
+            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
+            onPaneClick={() => { setSelectedNodeId(null); setMenu(null); setPaneMenu(null); }}
+            onNodeContextMenu={(e, node) => {
+              e.preventDefault();
+              setPaneMenu(null);
+              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY });
+            }}
+            onPaneContextMenu={(e) => {
+              e.preventDefault();
+              setMenu(null);
+              const selectedCount = nodes.filter(n => n.selected).length;
+              if (selectedCount > 1) setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY });
             }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
@@ -1100,14 +1652,46 @@ function App() {
             <Background color="#111" variant={BackgroundVariant.Lines} gap={40} size={1} />
             <Controls className="bg-[#1a1a1a] border-[#333] fill-white" />
             <Panel position="top-left">
-              <button 
-                onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
-              >
-                <Plus size={14} /> Add Node
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                  className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
+                >
+                  <Plus size={14} /> Add Node
+                </button>
+                {groupStack.length > 0 && (
+                  <div className="flex items-center gap-1 bg-[#111]/90 backdrop-blur border border-accent/30 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-lg">
+                    <button onClick={() => { setGroupStack([]); groupStackRef.current = []; instance?.fitView({ duration: 300 }); }} className="text-gray-400 hover:text-white transition-colors">
+                      Canvas
+                    </button>
+                    {groupStack.map((entry, i) => {
+                      const parentNodes = i === 0 ? canvasNodes : getNestedSubGraph(canvasNodes, groupStack.slice(0, i)).nodes;
+                      const gNode = parentNodes.find(n => n.id === entry.groupNodeId);
+                      const label = (gNode?.data as any)?.params?.label || (gNode?.data as any)?.label || 'Group';
+                      return (
+                        <React.Fragment key={entry.groupNodeId}>
+                          <ChevronRight size={10} className="text-gray-600" />
+                          <button
+                            onClick={() => {
+                              const newStack = groupStack.slice(0, i + 1);
+                              setGroupStack(newStack);
+                              groupStackRef.current = newStack;
+                              instance?.fitView({ duration: 300 });
+                            }}
+                            className={`transition-colors ${i === groupStack.length - 1 ? 'text-accent' : 'text-gray-400 hover:text-white'}`}
+                          >
+                            {label}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+                    <span className="ml-1 text-[8px] text-gray-600 font-mono">ESC to exit</span>
+                  </div>
+                )}
+              </div>
             </Panel>
           </ReactFlow>
+          </NodesDataContext.Provider>
 
           {/* Engine notification bar */}
           {notifications.length > 0 && (
@@ -1157,13 +1741,39 @@ function App() {
           <AnimatePresence>
             {roiEditingId && (
                <ROIEditorOverlay
-                 nodeId={roiEditingId} 
+                 nodeId={roiEditingId}
                  node={nodesWithData.find(n => n.id === roiEditingId)}
                  nodesData={nodesData}
                  onClose={() => setRoiEditingId(null)}
                />
             )}
+            {cropEditingId && (
+               <CropEditorOverlay
+                 node={nodesWithData.find(n => n.id === cropEditingId)}
+                 nodesData={nodesData}
+                 onClose={() => setCropEditingId(null)}
+               />
+            )}
           </AnimatePresence>
+
+          {paneMenu && (() => {
+            const selCount = nodes.filter(n => n.selected).length;
+            return selCount > 1 ? (
+              <div
+                className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
+                style={{ top: paneMenu.y, left: paneMenu.x }}
+                onClick={() => setPaneMenu(null)}
+              >
+                <button
+                  onClick={() => { groupSelectedNodes(); setPaneMenu(null); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                >
+                  <Package size={16} className="text-accent group-hover:text-white" />
+                  <span>Group selection ({selCount} nodes)</span>
+                </button>
+              </div>
+            ) : null;
+          })()}
 
           {menu && (
             <div
@@ -1198,8 +1808,8 @@ function App() {
                       key={i} 
                       onClick={(e) => {
                         e.stopPropagation();
-                        setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
-                      }} 
+                        setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
+                      }}
                       className="w-4 h-4 rounded-full border border-black/20 shadow-sm hover:scale-125 transition-transform" 
                       style={{ backgroundColor: c.bg }} 
                     />
@@ -1207,7 +1817,7 @@ function App() {
                  <button 
                     onClick={(e) => {
                        e.stopPropagation();
-                       setNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
+                       setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
                     }} 
                     className="w-4 h-4 rounded-full border border-white/20 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center text-[10px] text-gray-500 bg-transparent shrink-0"
                  >
@@ -1216,10 +1826,46 @@ function App() {
               </div>
               <div className="h-px bg-white/5 my-1 mx-2" />
 
+              {/* Group / Enter Group / Ungroup */}
+              {nodes.find(n => n.id === menu.id)?.type === 'group_node' ? (
+                <>
+                  <button
+                    onClick={() => { enterGroup(menu.id); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <LogIn size={16} className="text-accent group-hover:text-white" />
+                    <span>Enter Group</span>
+                  </button>
+                  <button
+                    onClick={() => { ungroupNode(menu.id); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <LogOut size={16} className="text-accent group-hover:text-white" />
+                    <span>Ungroup</span>
+                  </button>
+                </>
+              ) : (() => {
+                const selCount = nodes.filter(n => n.selected).length;
+                const isInSelection = nodes.find(n => n.id === menu.id)?.selected;
+                const multiSel = selCount > 1 && isInSelection;
+                if (!multiSel) return null;
+                return (
+                  <button
+                    onClick={() => { groupSelectedNodes(); setMenu(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                  >
+                    <Package size={16} className="text-accent group-hover:text-white" />
+                    <span>Group selection ({selCount} nodes)</span>
+                  </button>
+                );
+              })()}
+              <div className="h-px bg-white/5 my-1 mx-2" />
+
               <button
                 onClick={() => {
+                  pushSnapshot();
                   if (menu.id === visualizedNodeId) { setVisualizedNodeId(null); setPreviewNode(null); }
-                  setNodes(nds => nds.filter(n => n.id !== menu.id));
+                  setViewNodes(nds => nds.filter(n => n.id !== menu.id));
                 }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500 rounded-xl text-white text-[11px] font-bold transition-all group"
               >
@@ -1291,19 +1937,67 @@ function App() {
             onDragEnd={(e, info) => setPreviewPos({ x: previewPos.x + info.offset.x, y: previewPos.y + info.offset.y })}
             whileHover={{ cursor: 'grab' }}
             whileDrag={{ cursor: 'grabbing', zIndex: 100 }}
+            onDoubleClick={() => { previewZoomRef.current = 1; setPreviewZoom(1); setPreviewPan({ x: 0, y: 0 }); }}
+            onWheel={(e) => {
+              e.stopPropagation();
+              const oldZoom = previewZoomRef.current;
+              const newZoom = Math.max(0.25, Math.min(8, oldZoom * (e.deltaY < 0 ? 1.1 : 0.9)));
+              previewZoomRef.current = newZoom;
+              setPreviewZoom(newZoom);
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              const mx = e.clientX - rect.left;
+              const my = e.clientY - rect.top;
+              const cx = rect.width / 2;
+              const cy = rect.height / 2;
+              setPreviewPan(p => ({
+                x: p.x + (mx - cx) * (1 / newZoom - 1 / oldZoom),
+                y: p.y + (my - cy) * (1 / newZoom - 1 / oldZoom),
+              }));
+            }}
+            onMouseDown={(e) => {
+              if (e.button !== 1) return;
+              e.preventDefault();
+              isPanning.current = true;
+              panStart.current = { mx: e.clientX, my: e.clientY, px: previewPan.x, py: previewPan.y };
+              const onMove = (ev: MouseEvent) => {
+                if (!isPanning.current) return;
+                document.body.style.cursor = 'grabbing';
+                setPreviewPan({
+                  x: panStart.current.px + (ev.clientX - panStart.current.mx),
+                  y: panStart.current.py + (ev.clientY - panStart.current.my),
+                });
+              };
+              const onUp = (ev: MouseEvent) => {
+                if (ev.button !== 1) return;
+                isPanning.current = false;
+                document.body.style.cursor = '';
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+            }}
             className="absolute bottom-6 left-[49px] bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
             style={{ width: previewSize.w, height: previewSize.h }}
           >
-            {frame && <img src={frame} alt="Vision" className="w-full h-full object-contain pointer-events-none" onLoad={(e) => {
-              const img = e.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) {
-                const newAspect = img.naturalWidth / img.naturalHeight;
-                if (Math.abs(newAspect - previewAspect.current) > 0.02) {
-                  previewAspect.current = newAspect;
-                  setPreviewSize(prev => ({ w: prev.w, h: Math.round(prev.w / newAspect) }));
+            {frame && <img src={frame} alt="Vision"
+              className="w-full h-full object-contain pointer-events-none"
+              style={{ transform: `translate(${previewPan.x}px, ${previewPan.y}px) scale(${previewZoom})`, transformOrigin: 'center' }}
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  const newAspect = img.naturalWidth / img.naturalHeight;
+                  if (Math.abs(newAspect - previewAspect.current) > 0.02) {
+                    previewAspect.current = newAspect;
+                    setPreviewSize(prev => ({ w: prev.w, h: Math.round(prev.w / newAspect) }));
+                  }
                 }
-              }
-            }} />}
+              }} />}
+            {previewZoom !== 1 && (
+              <div className="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-black px-2 py-1 rounded-lg pointer-events-none">
+                {Math.round(previewZoom * 100)}%
+              </div>
+            )}
             {pickColorNodeId && (
               <div
                 className="absolute inset-0 z-30"
@@ -1390,6 +2084,7 @@ function App() {
                      </div>
                   </div>
 
+<<<<<<< HEAD
                   <div className="space-y-8 pb-32">
                     {/* --- ALL SLIDERS --- */}
                     {(selectedNode.type === 'canvas_note' || selectedNode.type === 'canvas_frame') && (() => {
@@ -1698,6 +2393,17 @@ function App() {
                       </div>
                     )}
                   </div>
+=======
+                  <NodeInspectorPanel
+                    node={selectedNode}
+                    liveData={selectedNodeLiveData}
+                    activePaletteIndex={activePaletteIndex}
+                    pickColorNodeId={pickColorNodeId}
+                    onUpdateParams={updateNodeParams}
+                    onPickColorToggle={setPickColorNodeId}
+                    onRequestCapture={requestCapture}
+                  />
+>>>>>>> origin/main
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">
@@ -1712,193 +2418,162 @@ function App() {
   );
 }
 
-const Slider = ({ label, val, min, max, step = 1, onChange }: any) => (
-  <div className="space-y-4 group">
-    <div className="flex justify-between items-center text-[10px]">
-      <label className="text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <input 
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={val}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="bg-accent/10 border border-accent/20 rounded px-2 py-0.5 text-accent font-black font-mono text-right w-20 outline-none focus:border-accent/50 transition-all"
-      />
-    </div>
-    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#222] rounded-full appearance-none cursor-pointer accent-accent" />
-  </div>
-);
 
-const TextInput = ({ label, val, onChange }: any) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <input 
-      type="text" 
-      value={val} 
-      onChange={(e) => onChange(e.target.value)} 
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
-      placeholder={`Enter ${label.toLowerCase()}...`}
-    />
-  </div>
-);
+const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
+  const nd = (() => {
+    if (!node?.id || !nodesData) return {};
+    const dataKeys = Object.keys(nodesData).filter((k: string) => k.startsWith(`${node.id}:`));
+    return dataKeys.length > 0
+      ? Object.fromEntries(dataKeys.map((k: string) => [k.split(':')[1], nodesData[k]]))
+      : (nodesData[node.id] ?? {});
+  })();
+  const frame = nd?.main_preview || nd?.main;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const dragMode = useRef<string | null>(null);
+  const dragStart = useRef({ mx: 0, my: 0, rect: { x: 0, y: 0, w: 0, h: 0 } });
 
-const NumberInput = ({ label, val, onChange }: any) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <input 
-      type="number" 
-      step="any"
-      value={val} 
-      onChange={(e) => onChange(parseFloat(e.target.value) || 0)} 
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all font-mono"
-    />
-  </div>
-);
+  useEffect(() => {
+    try {
+      if (node?.data?.params?.rect) setRect(JSON.parse(node.data.params.rect));
+    } catch(e) {}
+  }, [node?.id]);
 
-const SelectInput = ({ label, val, options, onChange }: any) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <select 
-      value={val} 
-      onChange={(e) => onChange(parseInt(e.target.value))} 
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
-    >
-      {options.map((opt: string, i: number) => (
-        <option key={i} value={i} className="bg-[#1a1a1a]">{opt}</option>
-      ))}
-    </select>
-  </div>
-);
+  const getRelPos = (e: MouseEvent | React.MouseEvent) => {
+    const r = containerRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return { x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) };
+  };
 
-const highlightPython = (code: string): string => {
-  const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  
-  // Single-pass tokenizer to avoid nested span corruption
-  const tokens = [
-    { name: 'comment', regex: /#.*/, color: '#6b7280', italic: true },
-    { name: 'string', regex: /(['"])(?:(?!\1|\\).|\\.)*\1/, color: '#a7f3d0' }, // yellow-green
-    { name: 'keyword', regex: /\b(def|class|return|if|elif|else|for|while|in|not|and|or|import|from|as|pass|break|continue|try|except|finally|with|yield|lambda|global|nonlocal|raise|del|assert|True|False|None)\b/, color: '#c084fc', bold: true },
-    { name: 'builtin', regex: /\b(print|len|range|list|dict|set|tuple|int|float|str|bool|type|isinstance|enumerate|zip|map|filter|sorted|reversed|min|max|sum|abs|round|open|input|super)\b/, color: '#60a5fa' },
-    { name: 'state', regex: /\b(self|state)\b/, color: '#f472b6' },
-    { name: 'decorator', regex: /@\w+/, color: '#f472b6' },
-    { name: 'number', regex: /\b\d+\.?\d*/, color: '#fb923c' },
-    { name: 'operator', regex: /[=\+\-\*\/\%\&\|\^<>!]+/, color: '#06b6d4' }
+  const HANDLE = 0.025;
+  const getMode = (mx: number, my: number, r: typeof rect) => {
+    const corners = { nw: [r.x, r.y], ne: [r.x+r.w, r.y], sw: [r.x, r.y+r.h], se: [r.x+r.w, r.y+r.h] } as Record<string,[number,number]>;
+    for (const [name, [cx, cy]] of Object.entries(corners))
+      if (Math.abs(mx - cx) < HANDLE && Math.abs(my - cy) < HANDLE) return name;
+    if (mx > r.x && mx < r.x+r.w && my > r.y && my < r.y+r.h) return 'move';
+    return 'draw';
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const pos = getRelPos(e);
+    dragMode.current = getMode(pos.x, pos.y, rect);
+    dragStart.current = { mx: pos.x, my: pos.y, rect: { ...rect } };
+
+    const onMove = (ev: MouseEvent) => {
+      const p = getRelPos(ev);
+      const dx = p.x - dragStart.current.mx;
+      const dy = p.y - dragStart.current.my;
+      const sr = dragStart.current.rect;
+      setRect(() => {
+        let { x, y, w, h } = sr;
+        switch (dragMode.current) {
+          case 'draw':
+            x = Math.min(dragStart.current.mx, p.x); y = Math.min(dragStart.current.my, p.y);
+            w = Math.abs(p.x - dragStart.current.mx); h = Math.abs(p.y - dragStart.current.my);
+            break;
+          case 'move':
+            x = Math.max(0, Math.min(1 - w, sr.x + dx)); y = Math.max(0, Math.min(1 - h, sr.y + dy));
+            break;
+          case 'nw':
+            x = Math.max(0, Math.min(sr.x+sr.w-0.01, sr.x+dx)); y = Math.max(0, Math.min(sr.y+sr.h-0.01, sr.y+dy));
+            w = sr.x+sr.w-x; h = sr.y+sr.h-y; break;
+          case 'ne':
+            y = Math.max(0, Math.min(sr.y+sr.h-0.01, sr.y+dy));
+            w = Math.max(0.01, Math.min(1-sr.x, sr.w+dx)); h = sr.y+sr.h-y; break;
+          case 'sw':
+            x = Math.max(0, Math.min(sr.x+sr.w-0.01, sr.x+dx));
+            w = sr.x+sr.w-x; h = Math.max(0.01, Math.min(1-sr.y, sr.h+dy)); break;
+          case 'se':
+            w = Math.max(0.01, Math.min(1-sr.x, sr.w+dx)); h = Math.max(0.01, Math.min(1-sr.y, sr.h+dy)); break;
+        }
+        return { x: Math.max(0, x), y: Math.max(0, y), w: Math.max(0.01, Math.min(1-Math.max(0,x), w)), h: Math.max(0.01, Math.min(1-Math.max(0,y), h)) };
+      });
+    };
+    const onUp = () => { dragMode.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
+
+  const save = () => { node.data.onChangeParams({ rect: JSON.stringify(rect) }); onClose(); };
+
+  const corners = [
+    { id: 'nw', x: rect.x, y: rect.y, cursor: 'nwse-resize' },
+    { id: 'ne', x: rect.x+rect.w, y: rect.y, cursor: 'nesw-resize' },
+    { id: 'sw', x: rect.x, y: rect.y+rect.h, cursor: 'nesw-resize' },
+    { id: 'se', x: rect.x+rect.w, y: rect.y+rect.h, cursor: 'nwse-resize' },
   ];
 
-  let html = '';
-  let i = 0;
-  const escapedCode = code;
-
-  const processLine = (line: string) => {
-    let result = '';
-    let pos = 0;
-    while (pos < line.length) {
-      let match = null;
-      let bestToken = null;
-
-      for (const token of tokens) {
-        const m = token.regex.exec(line.slice(pos));
-        if (m && m.index === 0) {
-          match = m[0];
-          bestToken = token;
-          break;
-        }
-      }
-
-      if (match && bestToken) {
-        const style = `color: ${bestToken.color};${bestToken.italic ? ' font-style: italic;' : ''}${bestToken.bold ? ' font-weight: 600;' : ''}`;
-        result += `<span style="${style}">${esc(match)}</span>`;
-        pos += match.length;
-      } else {
-        result += esc(line[pos]);
-        pos++;
-      }
-    }
-    return result;
-  };
-
-  return code.split('\n').map(processLine).join('\n');
-};
-
-const CodeInput = ({ label, val, onChange }: any) => {
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const highlightRef = React.useRef<HTMLDivElement>(null);
-
-  const syncScroll = () => {
-    if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop  = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  };
-
-  const lineCount = (val || '').split('\n').length;
-
   return (
-    <div className="space-y-2 group">
-      <div className="flex items-center justify-between">
-        <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-        <div className="text-[8px] font-mono text-gray-600 bg-white/5 px-2 py-0.5 rounded">Python 3.x</div>
-      </div>
-
-      <div className="relative rounded-xl overflow-hidden border border-[#222] group-hover:border-accent/40 transition-all shadow-inner bg-[#0a0a0a]">
-        {/* Line numbers */}
-        <div className="absolute inset-y-0 left-0 w-8 bg-black/30 border-r border-white/5 flex flex-col items-center pt-3 pb-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none z-10 overflow-hidden">
-          {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i} className="leading-relaxed h-[1.5em] flex items-center">{i + 1}</div>
-          ))}
+    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-8 select-none nodrag" onContextMenu={e => e.preventDefault()}>
+      <div className="absolute top-8 left-8 flex items-center gap-4">
+        <div className="p-2 bg-accent/20 rounded-lg text-accent"><Crop size={24} /></div>
+        <div>
+          <h2 className="text-xl font-black uppercase tracking-widest text-white">CROP EDITOR</h2>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-50">Drag to draw · Corners to resize · Interior to move</p>
         </div>
-
-        {/* Syntax highlighted overlay (non-interactive) */}
-        <div
-          ref={highlightRef}
-          aria-hidden="true"
-          className="absolute inset-0 left-8 pt-3 pb-3 pr-4 text-[11px] font-mono leading-relaxed overflow-hidden pointer-events-none whitespace-pre select-none"
-          dangerouslySetInnerHTML={{ __html: highlightPython(val || '') + '\n' }}
-        />
-
-        {/* Transparent textarea (captures all input) */}
-        <textarea
-          ref={textareaRef}
-          value={val}
-          onChange={(e) => onChange(e.target.value)}
-          onScroll={syncScroll}
-          spellCheck={false}
-          className="relative w-full h-80 bg-transparent pl-10 pr-4 py-3 text-[11px] font-mono text-transparent caret-white outline-none resize-none scrollbar-hide leading-relaxed z-[1]"
-          placeholder="Write your script here..."
-          style={{ caretColor: '#fff' }}
-        />
       </div>
 
-      <div className="flex gap-2">
-        <div className="text-[8px] text-gray-500 italic px-1">
-          Inputs: <span className="text-pink-400">a, b, c, d</span> · Persistence: <span className="text-pink-400">state['key']</span> · Outputs: <span className="text-blue-400">out_main, out_scalar, out_list, out_dict, out_any</span>
+      <div className="relative flex-1 w-full flex items-center justify-center p-4">
+        <div ref={containerRef} className="relative inline-block shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c]" onMouseDown={handleMouseDown} style={{ cursor: 'crosshair' }}>
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="block w-auto h-auto max-w-[90vw] max-h-[70vh]" draggable={false} />
+          ) : (
+            <div className="w-[800px] h-[450px] flex items-center justify-center text-gray-700"><Image size={48} className="opacity-10" /></div>
+          )}
+          <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              <rect x="0" y="0" width="1" height={rect.y} fill="rgba(0,0,0,0.55)" />
+              <rect x="0" y={rect.y+rect.h} width="1" height={1-(rect.y+rect.h)} fill="rgba(0,0,0,0.55)" />
+              <rect x="0" y={rect.y} width={rect.x} height={rect.h} fill="rgba(0,0,0,0.55)" />
+              <rect x={rect.x+rect.w} y={rect.y} width={1-(rect.x+rect.w)} height={rect.h} fill="rgba(0,0,0,0.55)" />
+              <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} fill="none" stroke="var(--color-accent)" style={{ strokeWidth: 0.004 }} />
+              {[1/3, 2/3].flatMap(t => [
+                <line key={`v${t}`} x1={rect.x+rect.w*t} y1={rect.y} x2={rect.x+rect.w*t} y2={rect.y+rect.h} stroke="rgba(255,255,255,0.2)" style={{ strokeWidth: 0.002 }} />,
+                <line key={`h${t}`} x1={rect.x} y1={rect.y+rect.h*t} x2={rect.x+rect.w} y2={rect.y+rect.h*t} stroke="rgba(255,255,255,0.2)" style={{ strokeWidth: 0.002 }} />
+              ])}
+            </svg>
+            {corners.map(c => (
+              <circle key={c.id} cx={`${c.x*100}%`} cy={`${c.y*100}%`} r={7}
+                fill="white" stroke="var(--color-accent)" strokeWidth="2" style={{ pointerEvents: 'auto', cursor: c.cursor }} />
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-[10px] font-mono text-gray-600">
+          x:{(rect.x*100).toFixed(1)}%  y:{(rect.y*100).toFixed(1)}%  —  {(rect.w*100).toFixed(1)}% × {(rect.h*100).toFixed(1)}%
+        </div>
+        <div className="flex items-center gap-4">
+          <button onClick={onClose} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Cancel</button>
+          <button onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Reset</button>
+          <button onClick={save} className="px-16 py-3 bg-accent hover:bg-blue-600 shadow-2xl shadow-accent/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-105 active:scale-95 border border-white/10">Apply Crop</button>
         </div>
       </div>
     </div>
   );
 };
 
-
-const ToggleInput = ({ label, val, onChange }: any) => (
-  <div className="flex items-center justify-between py-2 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <button 
-      onClick={() => onChange(!val)}
-      className={`w-10 h-5 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#222]'}`}
-    >
-      <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${val ? 'left-6' : 'left-1'}`} />
-    </button>
-  </div>
-);
-
-const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
+const ROIEditorOverlay = ({ nodeId, node, nodesData, onClose }: any) => {
   const [points, setPoints] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  
-  const frame = node.data.node_data?.main_preview || node.data.node_data?.main;
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const viewportRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const isPanning = useRef(false);
+  const panOrigin = useRef({ mx: 0, my: 0, px: 0, py: 0 });
+
+  const nd = (() => {
+    if (!nodeId || !nodesData) return {};
+    const dataKeys = Object.keys(nodesData).filter((k: string) => k.startsWith(`${nodeId}:`));
+    return dataKeys.length > 0
+      ? Object.fromEntries(dataKeys.map((k: string) => [k.split(':')[1], nodesData[k]]))
+      : (nodesData[nodeId] ?? {});
+  })();
+  const frame = nd?.main_preview || nd?.main;
 
   useEffect(() => {
     if (node.data.params?.points) {
@@ -1909,181 +2584,203 @@ const ROIEditorOverlay = ({ nodeId, node, onClose }: any) => {
     }
   }, [node.id]);
 
-  // Keyboard Support
+  // Keyboard support
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
       if (selectedIndex === null) return;
-      
       const step = e.shiftKey ? 0.01 : 0.002;
       let dx = 0, dy = 0;
-      
-      if (e.key === 'ArrowLeft') dx = -step;
-      if (e.key === 'ArrowRight') dx = step;
-      if (e.key === 'ArrowUp') dy = -step;
-      if (e.key === 'ArrowDown') dy = step;
-      
-      if (dx !== 0 || dy !== 0) {
+      if (e.key === 'ArrowLeft')  dx = -step;
+      if (e.key === 'ArrowRight') dx =  step;
+      if (e.key === 'ArrowUp')    dy = -step;
+      if (e.key === 'ArrowDown')  dy =  step;
+      if (dx || dy) {
+        e.preventDefault();
         setPoints(prev => {
           const next = [...prev];
-          next[selectedIndex] = { 
-            x: Math.max(0, Math.min(1, next[selectedIndex].x + dx)), 
-            y: Math.max(0, Math.min(1, next[selectedIndex].y + dy)) 
+          next[selectedIndex] = {
+            x: Math.max(0, Math.min(1, next[selectedIndex].x + dx)),
+            y: Math.max(0, Math.min(1, next[selectedIndex].y + dy)),
           };
           return next;
         });
       }
-      
       if (e.key === 'Delete' || e.key === 'Backspace') {
         setPoints(prev => prev.filter((_, i) => i !== selectedIndex));
         setSelectedIndex(null);
       }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIndex]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedIndex, onClose]);
+
+  // Zoom via scroll wheel — centered on cursor
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const vp = viewportRef.current?.getBoundingClientRect();
+    if (!vp) return;
+    const factor = e.deltaY > 0 ? 0.85 : 1.18;
+    const newZoom = Math.max(0.5, Math.min(10, zoom * factor));
+    const ox = (e.clientX - vp.left) - vp.width  / 2;
+    const oy = (e.clientY - vp.top)  - vp.height / 2;
+    setPan({ x: ox - (ox - pan.x) * (newZoom / zoom), y: oy - (oy - pan.y) * (newZoom / zoom) });
+    setZoom(newZoom);
+  };
+
+  // Get normalized image coords from mouse event (works after any transform)
+  const imgCoords = (clientX: number, clientY: number) => {
+    const r = imgRef.current?.getBoundingClientRect();
+    if (!r) return null;
+    return {
+      x: Math.max(0, Math.min(1, (clientX - r.left) / r.width)),
+      y: Math.max(0, Math.min(1, (clientY - r.top)  / r.height)),
+    };
+  };
 
   const handleSvgMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 1) return; // middle = pan handled below
     if (e.button !== 0) return;
     if (e.shiftKey) {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      const newPoints = [...points, { x, y }];
+      const c = imgCoords(e.clientX, e.clientY);
+      if (!c) return;
+      const newPoints = [...points, c];
       setPoints(newPoints);
       setSelectedIndex(newPoints.length - 1);
-    } else {
-      setSelectedIndex(null);
+      return;
     }
+    // Start pan on empty left-click
+    isPanning.current = true;
+    panOrigin.current = { mx: e.clientX, my: e.clientY, px: pan.x, py: pan.y };
+    setSelectedIndex(null);
   };
+
+  // Pan via mousemove on viewport (when panning)
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isPanning.current) return;
+      setPan({
+        x: panOrigin.current.px + (e.clientX - panOrigin.current.mx),
+        y: panOrigin.current.py + (e.clientY - panOrigin.current.my),
+      });
+    };
+    const onUp = () => { isPanning.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, []);
 
   const updatePoint = (index: number, x: number, y: number) => {
-    setPoints(prev => {
-      const next = [...prev];
-      if (!next[index]) return prev;
-      next[index] = { x, y };
-      return next;
-    });
+    setPoints(prev => { const next = [...prev]; if (!next[index]) return prev; next[index] = { x, y }; return next; });
   };
 
-  const save = () => {
-    node.data.onChangeParams({ points: JSON.stringify(points) });
-    onClose();
-  };
+  const save = () => { node.data.onChangeParams({ points: JSON.stringify(points) }); onClose(); };
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-8 select-none nodrag" onContextMenu={e => e.preventDefault()}>
-      <div className="absolute top-8 left-8 flex items-center gap-4">
-        <div className="p-2 bg-accent/20 rounded-lg text-accent">
-          <Scaling size={24} />
-        </div>
+    <div className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center p-3 select-none nodrag" onContextMenu={e => e.preventDefault()}>
+      <div className="absolute top-3 left-5 flex items-center gap-4">
+        <div className="p-2 bg-accent/20 rounded-lg text-accent"><Scaling size={24} /></div>
         <div>
-          <h2 className="text-xl font-black uppercase tracking-widest text-white">ROI FINAL EDITOR</h2>
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-50">Precision Mapping & Boundaries Fixed</p>
+          <h2 className="text-xl font-black uppercase tracking-widest text-white">MASK POLYGON EDITOR</h2>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-50">Scroll to zoom · Drag to pan · Shift+click to add</p>
         </div>
       </div>
 
-      <div className="relative flex-1 w-full flex items-center justify-center p-4">
-        <div 
-          ref={containerRef} 
-          className="relative inline-block shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c]"
+      {/* Zoom indicator */}
+      <div className="absolute top-4 right-5 text-[10px] font-black font-mono text-accent/60 bg-accent/5 border border-accent/10 px-2 py-1 rounded-lg">
+        {Math.round(zoom * 100)}%
+      </div>
+
+      {/* Viewport */}
+      <div
+        ref={viewportRef}
+        className="relative flex-1 w-full overflow-hidden cursor-crosshair"
+        onWheel={handleWheel}
+        onMouseDown={e => { if (e.button === 1) { isPanning.current = true; panOrigin.current = { mx: e.clientX, my: e.clientY, px: pan.x, py: pan.y }; }}}
+      >
+        {/* Transformed content */}
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: 'center center' }}
         >
-          {frame ? (
-            <img 
-              ref={imgRef}
-              src={`data:image/jpeg;base64,${frame}`} 
-              className="block w-auto h-auto max-w-[90vw] max-h-[70vh]" 
-              draggable={false}
-            />
-          ) : (
-            <div className="w-[800px] h-[450px] flex flex-col items-center justify-center text-gray-700 gap-4">
-               <Image size={48} className="opacity-10" />
-            </div>
-          )}
-          
-          <svg className="absolute inset-0 w-full h-full cursor-crosshair" onMouseDown={handleSvgMouseDown}>
-            {/* Layer 1: Stretched Polygon/Lines */}
-            <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
-              {points.length >= 3 && (
-                <polygon
-                  points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                  className="fill-accent/20 stroke-accent"
-                  style={{ strokeWidth: 0.004, pointerEvents: 'none' }}
-                />
-              )}
-              {points.length > 0 && (
-                 <polyline
-                   points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                   fill="none"
-                   stroke="var(--color-accent)"
-                   style={{ strokeWidth: 0.004, strokeDasharray: points.length >= 3 ? "none" : "0.01 0.01", pointerEvents: 'none' }}
-                 />
-              )}
-            </svg>
-
-            {/* Layer 2: Pixel-Precise Interaction Points */}
-            {points.map((p, i) => (
-              <circle
-                key={i}
-                cx={`${p.x * 100}%`}
-                cy={`${p.y * 100}%`}
-                r={selectedIndex === i ? 8 : 6}
-                fill={selectedIndex === i ? "white" : "var(--color-accent)"}
-                stroke={selectedIndex === i ? "var(--color-accent)" : "white"}
-                strokeWidth="2"
-                className="cursor-move"
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  if (e.button === 2) { 
-                     setPoints(prev => prev.filter((_, idx) => idx !== i));
-                     setSelectedIndex(null);
-                     return; 
-                  }
-                  
-                  setSelectedIndex(i);
-                  const move = (moveEvent: MouseEvent) => {
-                    const rect = containerRef.current?.getBoundingClientRect();
-                    if (!rect) return;
-                    const nx = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width));
-                    const ny = Math.max(0, Math.min(1, (moveEvent.clientY - rect.top) / rect.height));
-                    updatePoint(i, nx, ny);
-                  };
-                  const up = () => {
-                    window.removeEventListener('mousemove', move);
-                    window.removeEventListener('mouseup', up);
-                  };
-                  window.addEventListener('mousemove', move);
-                  window.addEventListener('mouseup', up);
-                }}
+          <div className="relative inline-block shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c] pointer-events-auto">
+            {frame ? (
+              <img
+                ref={imgRef}
+                src={`data:image/jpeg;base64,${frame}`}
+                className="block w-auto h-auto max-w-[90vw] max-h-[80vh]"
+                draggable={false}
               />
-            ))}
-          </svg>
+            ) : (
+              <div className="w-[800px] h-[450px] flex flex-col items-center justify-center text-gray-700">
+                <Image size={48} className="opacity-10" />
+              </div>
+            )}
+
+            <svg className="absolute inset-0 w-full h-full" onMouseDown={handleSvgMouseDown}>
+              <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+                {points.length >= 3 && (
+                  <polygon points={points.map(p => `${p.x},${p.y}`).join(' ')} className="fill-accent/20 stroke-accent" style={{ strokeWidth: 0.004, pointerEvents: 'none' }} />
+                )}
+                {points.length > 0 && (
+                  <polyline points={points.map(p => `${p.x},${p.y}`).join(' ')} fill="none" stroke="var(--color-accent)" style={{ strokeWidth: 0.004, strokeDasharray: points.length >= 3 ? 'none' : '0.01 0.01', pointerEvents: 'none' }} />
+                )}
+              </svg>
+              {points.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={`${p.x * 100}%`} cy={`${p.y * 100}%`}
+                  r={(selectedIndex === i ? 8 : 6) / zoom}
+                  fill={selectedIndex === i ? 'white' : 'var(--color-accent)'}
+                  stroke={selectedIndex === i ? 'var(--color-accent)' : 'white'}
+                  strokeWidth={2 / zoom}
+                  className="cursor-move"
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    if (e.button === 2) { setPoints(prev => prev.filter((_, idx) => idx !== i)); setSelectedIndex(null); return; }
+                    setSelectedIndex(i);
+                    const move = (me: MouseEvent) => {
+                      const c = imgCoords(me.clientX, me.clientY);
+                      if (c) updatePoint(i, c.x, c.y);
+                    };
+                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                    window.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', up);
+                  }}
+                />
+              ))}
+            </svg>
+          </div>
         </div>
       </div>
 
-      <div className="mt-12 flex flex-col items-center gap-6">
-        <div className="flex items-center gap-8 px-10 py-3 bg-white/5 rounded-3xl border border-white/5 shadow-inner backdrop-blur-md">
-           <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-500">
-              <span className="px-2 py-1 bg-accent/20 text-accent rounded-lg border border-accent/20">SHIFT + CLIC</span>
-              <span>ADD</span>
-           </div>
-           <div className="w-px h-4 bg-white/10" />
-           <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-500">
-              <span className="px-2 py-1 bg-white/10 text-white rounded-lg border border-white/10">ARROWS</span>
-              <span>NUDGE</span>
-           </div>
-           <div className="w-px h-4 bg-white/10" />
-           <div className="flex items-center gap-3 text-[10px] font-black uppercase text-gray-500">
-              <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20">R-CLIC</span>
-              <span>DELETE</span>
-           </div>
+      <div className="mt-3 flex flex-col items-center gap-3">
+        <div className="flex items-center gap-6 px-8 py-3 bg-white/5 rounded-3xl border border-white/5 shadow-inner backdrop-blur-md">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500">
+            <span className="px-2 py-1 bg-accent/20 text-accent rounded-lg border border-accent/20">SHIFT+CLIC</span><span>ADD</span>
+          </div>
+          <div className="w-px h-4 bg-white/10" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500">
+            <span className="px-2 py-1 bg-white/10 text-white rounded-lg border border-white/10">DRAG</span><span>PAN</span>
+          </div>
+          <div className="w-px h-4 bg-white/10" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500">
+            <span className="px-2 py-1 bg-white/10 text-white rounded-lg border border-white/10">SCROLL</span><span>ZOOM</span>
+          </div>
+          <div className="w-px h-4 bg-white/10" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500">
+            <span className="px-2 py-1 bg-white/10 text-white rounded-lg border border-white/10">ARROWS</span><span>NUDGE</span>
+          </div>
+          <div className="w-px h-4 bg-white/10" />
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500">
+            <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded-lg border border-red-500/20">R-CLIC</span><span>DELETE</span>
+          </div>
         </div>
-
         <div className="flex items-center gap-4">
-          <button onClick={onClose} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all opacity-80 hover:opacity-100">Cancel</button>
+          <button onClick={onClose} className="px-10 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Cancel</button>
           <button onClick={() => setPoints([])} className="px-10 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-all">Clear All</button>
-          <button onClick={save} className="px-16 py-3 bg-accent hover:bg-blue-600 shadow-2xl shadow-accent/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-105 active:scale-95 border border-white/10">Apply ROI</button>
+          <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all">Reset View</button>
+          <button onClick={save} className="px-16 py-3 bg-accent hover:bg-blue-600 shadow-2xl shadow-accent/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-105 active:scale-95 border border-white/10">Apply Mask</button>
         </div>
       </div>
     </div>

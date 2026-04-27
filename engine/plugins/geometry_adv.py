@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="geom_approx_poly",

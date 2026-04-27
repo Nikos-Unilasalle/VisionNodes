@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification
 import cv2
 import numpy as np
 import os
@@ -98,9 +98,11 @@ def _normalize_face(img, landmarks_2d, rvec, tvec, cam_matrix):
         {'id': 'pitch', 'color': 'scalar'}
     ],
     params=[
-        {'id': 'weights',       'label': 'Checkpoint path', 'type': 'string', 'default': ''},
-        {'id': 'pitch_offset',  'label': 'Pitch offset (°)', 'type': 'float', 'default': 0.0,  'min': -45.0, 'max': 45.0, 'step': 0.5},
-        {'id': 'yaw_offset',    'label': 'Yaw offset (°)',   'type': 'float', 'default': 0.0,  'min': -45.0, 'max': 45.0, 'step': 0.5},
+        {'id': 'weights',          'label': 'Checkpoint path',    'type': 'string', 'default': ''},
+        {'id': 'calibration',      'label': 'Camera calibration', 'type': 'enum',   'options': ['Auto (image-based)', 'Custom XML'], 'default': 0},
+        {'id': 'calibration_path', 'label': 'Calibration XML',    'type': 'string', 'default': ''},
+        {'id': 'pitch_offset',     'label': 'Pitch offset (°)',   'type': 'float',  'default': 0.0, 'min': -45.0, 'max': 45.0, 'step': 0.5},
+        {'id': 'yaw_offset',       'label': 'Yaw offset (°)',     'type': 'float',  'default': 0.0, 'min': -45.0, 'max': 45.0, 'step': 0.5},
     ]
 )
 class GazeEstimatorNode(NodeProcessor):
@@ -112,6 +114,7 @@ class GazeEstimatorNode(NodeProcessor):
         self.loaded_weights = None
         self._loading       = False
         self._failed        = set()
+        self._calib_cache   = {}  # path → (base_cam, base_dist, orig_w, orig_h)
 
     def _load_in_thread(self, weights_path):
         try:
@@ -224,15 +227,44 @@ class GazeEstimatorNode(NodeProcessor):
             dtype=np.float64
         ).reshape(6, 1, 2)
 
-        focal = float(w)
-        cam   = np.array([[focal, 0, w/2], [0, focal, h/2], [0, 0, 1]], dtype=np.float64)
+        calib_mode = params.get('calibration', 0)
+        xml_path   = (params.get('calibration_path') or '').strip()
+
+        if calib_mode == 1 and xml_path:
+            if xml_path not in self._calib_cache:
+                if os.path.exists(xml_path):
+                    fs = cv2.FileStorage(xml_path, cv2.FILE_STORAGE_READ)
+                    base_cam  = fs.getNode('Camera_Matrix').mat()
+                    base_dist = fs.getNode('Distortion_Coefficients').mat()
+                    w_node, h_node = fs.getNode('image_Width'), fs.getNode('image_Height')
+                    orig_w = int(w_node.real()) if not w_node.empty() else 0
+                    orig_h = int(h_node.real()) if not h_node.empty() else 0
+                    fs.release()
+                    self._calib_cache[xml_path] = (base_cam, base_dist, orig_w, orig_h)
+                else:
+                    send_notification(f'Calibration XML not found: {xml_path}',
+                                      progress=None, level='error', notif_id=_NOTIF_ID)
+
+            if xml_path in self._calib_cache:
+                base_cam, base_dist, orig_w, orig_h = self._calib_cache[xml_path]
+                cam = base_cam.copy()
+                if orig_w > 0 and orig_h > 0:
+                    cam[0, 0] *= w / orig_w;  cam[0, 2] *= w / orig_w
+                    cam[1, 1] *= h / orig_h;  cam[1, 2] *= h / orig_h
+                dist = base_dist
+            else:
+                cam  = np.array([[float(w), 0, w/2], [0, float(w), h/2], [0, 0, 1]], dtype=np.float64)
+                dist = np.zeros((4, 1))
+        else:
+            cam  = np.array([[float(w), 0, w/2], [0, float(w), h/2], [0, 0, 1]], dtype=np.float64)
+            dist = np.zeros((4, 1))
 
         _, rvec, tvec = cv2.solvePnP(
-            _FACE_MODEL_3D, pts_2d, cam, np.zeros((4, 1)),
+            _FACE_MODEL_3D, pts_2d, cam, dist,
             flags=cv2.SOLVEPNP_EPNP
         )
         _, rvec, tvec = cv2.solvePnP(
-            _FACE_MODEL_3D, pts_2d, cam, np.zeros((4, 1)),
+            _FACE_MODEL_3D, pts_2d, cam, dist,
             rvec, tvec, useExtrinsicGuess=True
         )
 

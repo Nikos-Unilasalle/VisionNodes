@@ -1,7 +1,8 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, send_notification
 import cv2
 import numpy as np
 import torch
+import threading
 import os
 
 try:
@@ -35,48 +36,66 @@ class YoloDetectionNode(NodeProcessor):
         self.model = None
         self.device = 'cpu'
         self.current_model_name = ""
-        
+        self._cache_hash = None
+        self._cache_params = None
+        self._cache_result = None
+
         if torch.backends.mps.is_available():
             self.device = 'mps'
         elif torch.cuda.is_available():
             self.device = 'cuda'
-            
+
         print(f"[YOLO] Using device: {self.device}")
 
     def _load_model(self, size_idx):
         if not YOLO_AVAILABLE: return
-        
+
         models = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"]
         name = models[int(size_idx)]
-        
+
         if name != self.current_model_name:
-            print(f"[YOLO] Loading model: {name}")
-            self.model = YOLO(name)
-            self.model.to(self.device)
-            self.current_model_name = name
+            self._loading = True
+            send_notification(f'YOLO: loading {name}…', progress=0.1, notif_id='yolo_load')
+            try:
+                self.model = YOLO(name)
+                self.model.to(self.device)
+                self.current_model_name = name
+                send_notification(f'YOLO: ready ({name})', progress=1.0, notif_id='yolo_load')
+            except Exception as e:
+                send_notification(f'YOLO load error: {e}', level='error', notif_id='yolo_load')
+                self.model = None
+            self._loading = False
 
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None or not YOLO_AVAILABLE: 
+        if image is None or not YOLO_AVAILABLE:
             return {"main": image, "objects_list": []}
-            
+
         conf = float(params.get('confidence', 25)) / 100.0
         size_idx = int(params.get('model_size', 0))
 
-        if self.model is None:
-            self._load_model(size_idx)
-        else:
+        if self.model is None and not getattr(self, '_loading', False):
+            threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
+        elif self.model is not None:
             try:
                 current_idx = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"].index(self.current_model_name)
-                if size_idx != current_idx:
-                    self._load_model(size_idx)
+                if size_idx != current_idx and not getattr(self, '_loading', False):
+                    threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
             except ValueError:
-                self._load_model(size_idx)
-            
+                pass
+
         if self.model is None: return {"main": image, "objects_list": []}
 
+        # Cache: skip inference if image + params unchanged
+        img_hash = hash(image[::8, ::8].tobytes())
+        params_key = (conf, size_idx)
+        if img_hash == self._cache_hash and params_key == self._cache_params and self._cache_result is not None:
+            return self._cache_result
+
         # Inference
+        self.report_progress(0.2, 'YOLO: detecting…')
         results = self.model.predict(image, conf=conf, verbose=False, device=self.device)
+        self.report_progress(1.0, 'YOLO: done')
         
         objects_list = []
         h, w = image.shape[:2]
@@ -112,12 +131,11 @@ class YoloDetectionNode(NodeProcessor):
                 }
                 objects_list.append(obj_data)
 
-        out = {
-            "main": image,
-            "objects_list": objects_list
-        }
-        # Populate individual object ports
+        out = {"main": image, "objects_list": objects_list}
         for i in range(3):
             out[f"obj_{i}"] = objects_list[i] if i < len(objects_list) else None
-            
+
+        self._cache_hash = img_hash
+        self._cache_params = params_key
+        self._cache_result = out
         return out
