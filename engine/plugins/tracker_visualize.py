@@ -6,7 +6,7 @@ Affiche les résultats de SORT ou DeepSORT avec :
 - Label + ID de tracking
 - Trail de trajectoire (historique des centroïdes)
 """
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 from collections import defaultdict, deque
@@ -35,16 +35,16 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
         {'id': 'main',   'color': 'image'},
     ],
     params=[
-        {'id': 'show_trail',   'label': 'Show Trail',         'min': 0, 'max': 1,  'step': 1,   'default': 1},
+        {'id': 'show_trail',   'label': 'Show Trail',            'type': 'bool', 'default': True},
         {'id': 'trail_length', 'label': 'Trail Length (frames)', 'min': 2, 'max': 120, 'step': 1, 'default': 30},
-        {'id': 'show_id',      'label': 'Show Track ID',      'min': 0, 'max': 1,  'step': 1,   'default': 1},
-        {'id': 'show_label',   'label': 'Show Class Label',   'min': 0, 'max': 1,  'step': 1,   'default': 1},
-        {'id': 'thickness',    'label': 'Box Thickness',      'min': 1, 'max': 10, 'step': 1,   'default': 2},
-        {'id': 'font_scale',   'label': 'Font Scale (%)',     'min': 1, 'max': 100,'step': 1,   'default': 40},
-        {'id': 'fill_alpha',   'label': 'Box Fill Alpha (%)', 'min': 0, 'max': 60, 'step': 1,   'default': 10},
-        {'id': 'show_point',        'label': 'Show Point',          'min': 0, 'max': 1,   'step': 1,   'default': 0},
-        {'id': 'point_radius',      'label': 'Point Radius',        'min': 1, 'max': 40,  'step': 1,   'default': 6},
-        {'id': 'point_use_id_color','label': 'Point: use ID color', 'min': 0, 'max': 1,   'step': 1,   'default': 1},
+        {'id': 'show_id',      'label': 'Show Track ID',         'type': 'bool', 'default': True},
+        {'id': 'show_label',   'label': 'Show Class Label',      'type': 'bool', 'default': True},
+        {'id': 'thickness',    'label': 'Box Thickness',         'min': 1, 'max': 10, 'step': 1, 'default': 2},
+        {'id': 'font_scale',   'label': 'Font Scale (%)',        'min': 1, 'max': 100, 'step': 1, 'default': 40},
+        {'id': 'fill_alpha',   'label': 'Box Fill Alpha (%)',    'min': 0, 'max': 60, 'step': 1, 'default': 10},
+        {'id': 'show_point',        'label': 'Show Point',          'type': 'bool', 'default': False},
+        {'id': 'point_radius',      'label': 'Point Radius',        'min': 1, 'max': 40, 'step': 1, 'default': 6},
+        {'id': 'point_use_id_color','label': 'Point: use ID color', 'type': 'bool', 'default': True},
         {'id': 'point_r',           'label': 'Point R',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
         {'id': 'point_g',           'label': 'Point G',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
         {'id': 'point_b',           'label': 'Point B',             'min': 0, 'max': 255, 'step': 1,   'default': 255},

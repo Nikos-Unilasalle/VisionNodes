@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='draw_rect',
@@ -24,7 +24,7 @@ from __main__ import vision_node, NodeProcessor
         {'id': 'g', 'type': 'int', 'default': 0, 'min': 0, 'max': 255},
         {'id': 'b', 'type': 'int', 'default': 255, 'min': 0, 'max': 255},
         {'id': 'thickness', 'type': 'int', 'default': 2, 'min': 1, 'max': 20},
-        {'id': 'fill', 'type': 'int', 'default': 0, 'min': 0, 'max': 1}
+        {'id': 'fill', 'label': 'Fill', 'type': 'bool', 'default': False}
     ]
 )
 class DrawRectNode(NodeProcessor):

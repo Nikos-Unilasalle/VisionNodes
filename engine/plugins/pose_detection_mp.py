@@ -1,7 +1,8 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 import os
+import threading
 import urllib.request
 
 try:
@@ -31,39 +32,45 @@ class PoseDetectionNode(NodeProcessor):
         super().__init__()
         self.detector = None
         self.model_path = "pose_landmarker.task"
-        # Initialization is now lazy (moved to process)
+        self._init_done = False
+        if AI_AVAILABLE:
+            threading.Thread(target=self._init_detector, daemon=True).start()
 
     def _init_detector(self):
         if not AI_AVAILABLE: return
-        
+
         if not os.path.exists(self.model_path):
             url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
-            try: 
-                print(f"Downloading Pose model...")
+            try:
+                print(f"[Pose] Downloading model...")
                 urllib.request.urlretrieve(url, self.model_path)
             except Exception as e:
-                print(f"Failed to download pose model: {e}")
+                print(f"[Pose] Failed to download model: {e}")
+                self._init_done = True
                 return
 
-        base_options = python.BaseOptions(model_asset_path=self.model_path)
-        options = vision.PoseLandmarkerOptions(
-            base_options=base_options,
-            running_mode=vision.RunningMode.IMAGE,
-            num_poses=1,
-            min_pose_detection_confidence=0.5,
-            min_pose_presence_confidence=0.5,
-            min_tracking_confidence=0.5
-        )
-        self.detector = vision.PoseLandmarker.create_from_options(options)
+        try:
+            base_options = python.BaseOptions(model_asset_path=self.model_path)
+            options = vision.PoseLandmarkerOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.IMAGE,
+                num_poses=1,
+                min_pose_detection_confidence=0.5,
+                min_pose_presence_confidence=0.5,
+                min_tracking_confidence=0.5
+            )
+            self.detector = vision.PoseLandmarker.create_from_options(options)
+        except Exception as e:
+            print(f"[Pose] Init error: {e}")
+        self._init_done = True
 
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None or not AI_AVAILABLE: 
+        if image is None or not AI_AVAILABLE:
             return {"main": image, "pose_list": [], "data": {}}
-        
+
         if self.detector is None:
-            self._init_detector()
-            if self.detector is None: return {"main": image, "pose_list": [], "data": {}}
+            return {"main": image, "pose_list": [], "data": {}}
 
         # Convert to RGB for MediaPipe
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))

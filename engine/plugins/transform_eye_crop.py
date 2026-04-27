@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
 
@@ -28,7 +28,7 @@ _RIGHT_IRIS  = 473   # right iris center
     params=[
         {'id': 'size',    'label': 'Size (px)',   'type': 'int',   'default': 64,  'min': 32,  'max': 256},
         {'id': 'padding', 'label': 'Padding',     'type': 'float', 'default': 0.4, 'min': 0.0, 'max': 1.5, 'step': 0.05},
-        {'id': 'align',   'label': 'Align (0/1)', 'type': 'int',   'default': 1,   'min': 0,   'max': 1}
+        {'id': 'align',   'label': 'Align',        'type': 'bool',  'default': True}
     ]
 )
 class EyeCropNode(NodeProcessor):

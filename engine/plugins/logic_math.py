@@ -1,5 +1,5 @@
 import math
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 
 class MathBase(NodeProcessor):
     def process(self, inputs, params):

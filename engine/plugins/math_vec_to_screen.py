@@ -1,4 +1,4 @@
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import math
 import numpy as np
 import cv2
@@ -25,9 +25,9 @@ import cv2
         {'id': 'offset_x', 'label': 'Offset X',   'type': 'float', 'default': 0.0,  'min': -1.0, 'max': 1.0, 'step': 0.01},
         {'id': 'offset_y', 'label': 'Offset Y',   'type': 'float', 'default': 0.0,  'min': -1.0, 'max': 1.0, 'step': 0.01},
         {'id': 'smooth',   'label': 'Smoothing',  'type': 'float', 'default': 0.7,  'min': 0.0,  'max': 0.99,'step': 0.01},
-        {'id': 'clamp',    'label': 'Clamp (0/1)','type': 'int',   'default': 1,    'min': 0,    'max': 1},
-        {'id': 'flip_x',   'label': 'Flip X',     'type': 'int',   'default': 0,    'min': 0,    'max': 1},
-        {'id': 'flip_y',   'label': 'Flip Y',     'type': 'int',   'default': 0,    'min': 0,    'max': 1},
+        {'id': 'clamp',    'label': 'Clamp',  'type': 'bool', 'default': True},
+        {'id': 'flip_x',   'label': 'Flip X', 'type': 'bool', 'default': False},
+        {'id': 'flip_y',   'label': 'Flip Y', 'type': 'bool', 'default': False},
     ]
 )
 class VecToScreenNode(NodeProcessor):

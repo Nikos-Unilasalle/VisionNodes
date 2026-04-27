@@ -1,7 +1,7 @@
 import cv2
 import os
 import time
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="util_snapshot",

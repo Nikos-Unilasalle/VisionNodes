@@ -5,7 +5,7 @@ Ref: Bewley et al. 2016 — https://arxiv.org/abs/1602.00763
 Implémentation auto-contenue : Kalman Filter (filterpy) + Hungarian (scipy).
 Compatible avec les détections de YOLO et MediaPipe.
 """
-from __main__ import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor
 import numpy as np
 
 # ── Dépendances optionnelles ──────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="geom_perspective",
@@ -112,12 +112,18 @@ class ManualPointsNode(NodeProcessor):
 
 @vision_node(
     type_id="util_roi_polygon",
-    label="ROI Polygon",
+    label="Mask Polygon",
     category="geom",
     icon="Scaling",
-    description="Interactive polygonal mask generator to define Regions of Interest.",
-    inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}, {"id": "pts", "color": "list"}],
+    description="Interactive polygonal mask — draws a region of interest, optionally restricted by an input mask.",
+    inputs=[{"id": "image", "color": "image"}, {"id": "mask_in", "color": "mask"}],
+    outputs=[
+        {"id": "main",       "color": "image"},
+        {"id": "mask",       "color": "mask"},
+        {"id": "masked",     "color": "image"},
+        {"id": "masked_inv", "color": "image"},
+        {"id": "pts",        "color": "list"}
+    ],
     params=[
         {"id": "points", "label": "Points", "type": "string", "default": "[]"},
         {"id": "filled", "label": "Filled", "type": "boolean", "default": True},
@@ -128,6 +134,7 @@ class ROIPolygonNode(NodeProcessor):
     def process(self, inputs, params):
         import json, base64
         img = inputs.get('image')
+        mask_in = inputs.get('mask_in')
         h, w = (img.shape[0], img.shape[1]) if img is not None else (480, 640)
         
         points_str = params.get('points', '[]')
@@ -136,8 +143,9 @@ class ROIPolygonNode(NodeProcessor):
         except:
             pts_data = []
             
-        mask = np.zeros((h, w), dtype=np.uint8)
-        
+        # No polygon drawn = full pass-through (all white mask)
+        mask = np.ones((h, w), dtype=np.uint8) * 255 if len(pts_data) == 0 else np.zeros((h, w), dtype=np.uint8)
+
         # Performance optimization: Send a small preview for the editor
         preview_b64 = None
         if img is not None:
@@ -147,12 +155,13 @@ class ROIPolygonNode(NodeProcessor):
             if self._frame_count % 6 == 0:
                 try:
                     # Resize to something reasonable for background
-                    ph, pw = 360, int(360 * (w/h))
+                    ph, pw = 720, int(720 * (w/h))
                     pimg = cv2.resize(img, (pw, ph))
-                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 60])
+                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
                     self._last_preview = preview_b64
-                except: pass
+                except Exception as e:
+                    print(f"[CropRect] Preview encode error: {e}")
             else:
                 preview_b64 = getattr(self, '_last_preview', None)
 
@@ -175,4 +184,18 @@ class ROIPolygonNode(NodeProcessor):
             elif len(pts) == 2:
                  cv2.line(mask, tuple(pts[0]), tuple(pts[1]), 255, int(params.get('thickness', 2)))
         
-        return {"main": img, "mask": mask, "pts": pts_data, "main_preview": preview_b64}
+        # Combine with input mask if provided (intersection)
+        if mask_in is not None:
+            try:
+                mi = cv2.resize(mask_in, (w, h)) if mask_in.shape[:2] != (h, w) else mask_in
+                mask = cv2.bitwise_and(mask, mi)
+            except Exception:
+                pass
+
+        if img is not None:
+            masked     = cv2.bitwise_and(img, img, mask=mask)
+            masked_inv = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
+        else:
+            masked = masked_inv = None
+
+        return {"main": img, "mask": mask, "masked": masked, "masked_inv": masked_inv, "pts": pts_data, "main_preview": preview_b64}

@@ -1,0 +1,384 @@
+{
+  "nodes": [
+    {
+      "id": "webcam",
+      "type": "input_webcam",
+      "position": {
+        "x": 35,
+        "y": 199.02964833784193
+      },
+      "data": {
+        "label": "Webcam",
+        "params": {
+          "device_index": 1,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 35,
+        "y": 199.02964833784193
+      },
+      "dragging": false
+    },
+    {
+      "id": "face",
+      "type": "analysis_face_mp",
+      "position": {
+        "x": 310,
+        "y": 200
+      },
+      "data": {
+        "label": "Face Tracker",
+        "params": {
+          "color_index": 1,
+          "max_faces": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false
+    },
+    {
+      "id": "headpose",
+      "type": "analysis_head_pose",
+      "position": {
+        "x": 610,
+        "y": 60
+      },
+      "data": {
+        "label": "Head Pose",
+        "params": {
+          "color_index": 2,
+          "draw_axes": 1
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gaze",
+      "type": "analysis_gaze",
+      "position": {
+        "x": 609.0296483378419,
+        "y": 213.26131716261312
+      },
+      "data": {
+        "label": "Gaze Estimator",
+        "params": {
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 176,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 609.0296483378419,
+        "y": 213.26131716261312
+      },
+      "dragging": false
+    },
+    {
+      "id": "mon-pose",
+      "type": "analysis_monitor",
+      "position": {
+        "x": 1488.6260740246246,
+        "y": 238.35063550465185
+      },
+      "data": {
+        "label": "Head Pose Data",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1488.6260740246246,
+        "y": 238.35063550465185
+      },
+      "dragging": false
+    },
+    {
+      "id": "mul-yaw",
+      "type": "math_mul",
+      "position": {
+        "x": 920,
+        "y": 280
+      },
+      "data": {
+        "label": "Yaw rad→deg",
+        "params": {
+          "value_b": 57.296,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 920,
+        "y": 280
+      }
+    },
+    {
+      "id": "mul-pitch",
+      "type": "math_mul",
+      "position": {
+        "x": 920,
+        "y": 400
+      },
+      "data": {
+        "label": "Pitch rad→deg",
+        "params": {
+          "value_b": 57.296,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 920,
+        "y": 400
+      }
+    },
+    {
+      "id": "txt",
+      "type": "draw_text",
+      "position": {
+        "x": 1203.504021743313,
+        "y": 70.35026217613894
+      },
+      "data": {
+        "label": "Gaze Overlay",
+        "params": {
+          "text": "Gaze  yaw {a}  pitch {b}",
+          "var_count": 2,
+          "x": 0.12,
+          "y": 0.11,
+          "font_scale": 2.6,
+          "thickness": 6,
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 240,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1203.504021743313,
+        "y": 70.35026217613894
+      },
+      "dragging": false
+    },
+    {
+      "id": "plot-yaw",
+      "type": "sci_plotter",
+      "position": {
+        "x": 1206.4150767297872,
+        "y": 383.42312021641294
+      },
+      "data": {
+        "label": "Gaze Yaw (°)",
+        "params": {
+          "buffer_size": 120,
+          "min_y": -60,
+          "max_y": 60
+        }
+      },
+      "width": 240,
+      "height": 184,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1206.4150767297872,
+        "y": 383.42312021641294
+      },
+      "dragging": false,
+      "style": {
+        "width": 240,
+        "height": 184
+      },
+      "resizing": false
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": {
+        "x": 1488.1939770003034,
+        "y": 72.29096550045506
+      },
+      "data": {
+        "label": "Display Outlet",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1488.1939770003034,
+        "y": 72.29096550045506
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777095369421-0.19599742892306604",
+      "type": "analysis_monitor",
+      "position": {
+        "x": 1490.1084909167214,
+        "y": 413.5259999230419
+      },
+      "data": {
+        "label": "Head Pose Data",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1490.1084909167214,
+        "y": 413.5259999230419
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-wb-face",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "face",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-face-hp-i",
+      "source": "face",
+      "sourceHandle": "image__main",
+      "target": "headpose",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-face-hp-f",
+      "source": "face",
+      "sourceHandle": "dict__face_0",
+      "target": "headpose",
+      "targetHandle": "dict__face"
+    },
+    {
+      "id": "e-hp-gz",
+      "source": "headpose",
+      "sourceHandle": "image__main",
+      "target": "gaze",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gz-my",
+      "source": "gaze",
+      "sourceHandle": "scalar__yaw",
+      "target": "mul-yaw",
+      "targetHandle": "scalar__a",
+      "selected": false
+    },
+    {
+      "id": "e-gz-mp",
+      "source": "gaze",
+      "sourceHandle": "scalar__pitch",
+      "target": "mul-pitch",
+      "targetHandle": "scalar__a",
+      "selected": false
+    },
+    {
+      "id": "e-gz-txt",
+      "source": "gaze",
+      "sourceHandle": "image__main",
+      "target": "txt",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-my-txt",
+      "source": "mul-yaw",
+      "sourceHandle": "scalar__result",
+      "target": "txt",
+      "targetHandle": "scalar__a",
+      "selected": false
+    },
+    {
+      "id": "e-mp-txt",
+      "source": "mul-pitch",
+      "sourceHandle": "scalar__result",
+      "target": "txt",
+      "targetHandle": "scalar__b",
+      "selected": false
+    },
+    {
+      "id": "e-txt-disp",
+      "source": "txt",
+      "sourceHandle": "image__main",
+      "target": "display",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-my-plt",
+      "source": "mul-yaw",
+      "sourceHandle": "scalar__result",
+      "target": "plot-yaw",
+      "targetHandle": "scalar__value",
+      "selected": false
+    },
+    {
+      "source": "mul-yaw",
+      "sourceHandle": "scalar__result",
+      "target": "plot-yaw",
+      "targetHandle": "any__v0",
+      "id": "e-1777095318743",
+      "selected": false
+    },
+    {
+      "source": "mul-pitch",
+      "sourceHandle": "scalar__result",
+      "target": "plot-yaw",
+      "targetHandle": "any__v1",
+      "id": "e-1777095324198",
+      "selected": false
+    },
+    {
+      "source": "plot-yaw",
+      "sourceHandle": "any__v0",
+      "target": "mon-pose",
+      "targetHandle": "any__data",
+      "id": "e-1777095364796"
+    },
+    {
+      "source": "plot-yaw",
+      "sourceHandle": "any__v1",
+      "target": "node-1777095369421-0.19599742892306604",
+      "targetHandle": "any__data",
+      "id": "e-1777095374351"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 520,
+      "h": 400
+    },
+    "previewPos": {
+      "x": 73.1171875,
+      "y": -36.58203125
+    },
+    "activePaletteIndex": 2,
+    "visualizedNodeId": "display"
+  }
+}
