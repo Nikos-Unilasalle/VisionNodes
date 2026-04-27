@@ -46,13 +46,18 @@ import urllib.request
 from collections import deque
 from abc import ABC, abstractmethod
 
-CAP_BACKEND = cv2.CAP_V4L2 if hasattr(cv2, 'CAP_V4L2') else cv2.CAP_ANY
+# Optimized for Linux/Arch, use CAP_ANY as primary to avoid V4L2 index errors
+CAP_BACKEND = cv2.CAP_ANY
 
 def list_available_cameras():
     index = 0
     arr = []
-    while index < 5:
+    while index < 8:
+        # Try primary backend first, then CAP_V4L2 as fallback specifically for Linux
         cap = cv2.VideoCapture(index, CAP_BACKEND)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(index, cv2.CAP_V4L2)
+            
         if cap.isOpened():
             arr.append(index)
             cap.release()
@@ -342,24 +347,40 @@ class FlipNode(NodeProcessor):
         return {"main": cv2.flip(img, int(params.get('flip_mode', 1)))}
 
 class ResizeNode(NodeProcessor):
-    _INTERP = {0: cv2.INTER_NEAREST, 1: cv2.INTER_LINEAR, 2: cv2.INTER_CUBIC, 3: cv2.INTER_LANCZOS4}
+    INTERP = [cv2.INTER_LINEAR, cv2.INTER_NEAREST, cv2.INTER_LINEAR,
+              cv2.INTER_CUBIC, cv2.INTER_LANCZOS4, cv2.INTER_AREA]
 
     def process(self, inputs, params):
         img = inputs.get('image') or inputs.get('main')
         if img is None: return {"main": None}
-        interp = self._INTERP.get(int(params.get('interpolation', 1)), cv2.INTER_LINEAR)
-        mode = int(params.get('mode', 0))
-        if mode == 1:
-            w = int(params.get('target_width', 640))
-            h = int(params.get('target_height', 480))
-            if w <= 0 or h <= 0: return {"main": img}
-            result = cv2.resize(img, (w, h), interpolation=interp)
+
+        ih, iw = img.shape[:2]
+        mode    = int(params.get('mode', 0))
+        interp_idx = int(params.get('interp', 0))
+
+        if interp_idx == 0:  # Auto: AREA for downscale, LINEAR for upscale
+            auto_interp = None
         else:
-            sc = float(params.get('scale', 1.0))
-            if sc <= 0: sc = 1.0
-            result = cv2.resize(img, None, fx=sc, fy=sc, interpolation=interp)
-        h_out, w_out = result.shape[:2]
-        return {"main": result, "width": w_out, "height": h_out}
+            auto_interp = self.INTERP[min(interp_idx, len(self.INTERP) - 1)]
+
+        if mode == 0:  # Scale
+            sc = max(0.01, float(params.get('scale', 1.0)))
+            ow, oh = max(1, int(iw * sc)), max(1, int(ih * sc))
+        elif mode == 1:  # Fit Width
+            ow = max(1, int(params.get('width', iw)))
+            oh = max(1, int(ih * ow / iw))
+        elif mode == 2:  # Fit Height
+            oh = max(1, int(params.get('height', ih)))
+            ow = max(1, int(iw * oh / ih))
+        else:  # Exact W×H
+            ow = max(1, int(params.get('width', iw)))
+            oh = max(1, int(params.get('height', ih)))
+
+        if auto_interp is None:
+            auto_interp = cv2.INTER_AREA if (ow * oh < iw * ih) else cv2.INTER_LINEAR
+
+        out = cv2.resize(img, (ow, oh), interpolation=auto_interp)
+        return {"main": out, "width": ow, "height": oh}
 
 # --- ANALYSIS & FLOW ---
 class OpticalFlowNode(NodeProcessor):
@@ -794,7 +815,10 @@ class DisplayOutput(NodeProcessor):
 class VisionEngine:
     def __init__(self):
         self.current_cap_index = 0
+        # Initialize with flexible backend detection
         self.cap = cv2.VideoCapture(self.current_cap_index, CAP_BACKEND)
+        if not self.cap.isOpened():
+            self.cap = cv2.VideoCapture(self.current_cap_index, cv2.CAP_V4L2)
         self.graph = {"nodes": [], "edges": []}
         self.sorted_nodes = []
         self.connected_clients = set()
@@ -819,7 +843,13 @@ class VisionEngine:
             self.fallback_img = cv2.imread(img_path)
 
     def switch_camera(self, idx):
-        self.cap.release(); self.cap = cv2.VideoCapture(idx, CAP_BACKEND); self.current_cap_index = idx
+        if self.cap: self.cap.release()
+        # Primary attempt
+        self.cap = cv2.VideoCapture(idx, CAP_BACKEND)
+        # Fallback for Linux V4L2 specific indices
+        if not self.cap.isOpened():
+            self.cap = cv2.VideoCapture(idx, cv2.CAP_V4L2)
+        self.current_cap_index = idx
 
     def update_graph(self, g):
         self.graph = g

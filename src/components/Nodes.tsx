@@ -344,7 +344,13 @@ export const GeomFlipNode = memo(({ selected, data }: any) => (
 ));
 
 export const GeomResizeNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Resize" icon={Scaling} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+  <BaseNode title="Resize" icon={Scaling} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]}>
+    {data.node_data?.width && (
+      <div className="px-1 pt-1">
+        <div className="text-[10px] font-mono text-blue-400 font-bold">{data.node_data.width}×{data.node_data.height}</div>
+      </div>
+    )}
+  </BaseNode>
 ));
 
 export const AnalysisFaceMPNode = memo(({ selected, data }: any) => {
@@ -528,10 +534,10 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
 export const DrawOverlayNode = memo(({ selected, data }: any) => (
   <BaseNode title="Overlay" icon={PenTool} selected={selected} data={data} color="accent" inputs={[
     {id: 'image', color: 'image'},
-    {id: 'data', color: 'data'},
-    {id: 'data_2', color: 'data'},
-    {id: 'data_3', color: 'data'},
-    {id: 'data_4', color: 'data'}
+    {id: 'data', color: 'any'},
+    {id: 'data_2', color: 'any'},
+    {id: 'data_3', color: 'any'},
+    {id: 'data_4', color: 'any'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 

@@ -182,6 +182,10 @@ class WatershedNode(NodeProcessor):
         if len(img.shape) == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
+        h, w = img.shape[:2]
+        if markers.shape[:2] != (h, w):
+            markers = cv2.resize(markers.astype(np.float32), (w, h), interpolation=cv2.INTER_NEAREST).astype(np.int32)
+
         markers_copy = markers.copy().astype(np.int32)
         res_markers = cv2.watershed(img, markers_copy)
 

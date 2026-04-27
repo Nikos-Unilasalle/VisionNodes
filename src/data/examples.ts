@@ -690,6 +690,45 @@ export const EXAMPLES = [
       ]
   },
   {
+    name: "Billes - Segmentation Watershed",
+    description: "Segmente et compte des billes rondes : flou gaussien → seuillage Otsu → nettoyage morphologique → distance transform → marqueurs → Watershed.",
+    nodes: [
+      { id: "src-1",        type: "input_image",            position: { x: 50,   y: 200 }, data: { label: "Billes",                      params: { path: "samples/billes.jpg" } } },
+      { id: "gray-1",       type: "filter_gray",             position: { x: 260,  y: 200 }, data: { label: "Grayscale",                   params: {} } },
+      { id: "blur-1",       type: "filter_blur",             position: { x: 470,  y: 200 }, data: { label: "Gaussian Blur",               params: { size: 5 } } },
+      { id: "thresh-1",     type: "feat_threshold_adv",      position: { x: 680,  y: 200 }, data: { label: "Otsu (billes = blanc)",       params: { mode: 2 } } },
+      { id: "morph-open-1", type: "feat_morphology_adv",     position: { x: 890,  y: 200 }, data: { label: "Opening (Suppr. bruit)",      params: { operation: 0, shape: 2, size: 3, iterations: 1 } } },
+      { id: "morph-cls-1",  type: "feat_morphology_adv",     position: { x: 1100, y: 200 }, data: { label: "Closing (Boucher reflets)",   params: { operation: 1, shape: 2, size: 7, iterations: 1 } } },
+      { id: "dist-1",       type: "feat_distance_transform", position: { x: 470,  y: 430 }, data: { label: "Distance Transform",          params: { dist_type: 0, mask_size: 1 } } },
+      { id: "thresh-d-1",   type: "feat_threshold_adv",      position: { x: 680,  y: 430 }, data: { label: "Peaks (40% du Max)",         params: { mode: 4, threshold: 40 } } },
+      { id: "markers-1",    type: "feat_connected_components",position: { x: 890,  y: 430 }, data: { label: "Marqueurs (centres)",        params: {} } },
+      { id: "filter-1",     type: "feat_marker_filter",      position: { x: 1100, y: 430 }, data: { label: "Filtre petits marqueurs",     params: { min_area: 30, max_area: 500000, area_unit: 0, remap_ids: 1 } } },
+      { id: "wshed-1",      type: "feat_watershed",          position: { x: 1310, y: 200 }, data: { label: "Watershed",                   params: { visualization: 2, boundary_color: 0, boundary_thickness: 1, region_alpha: 0.45 } } },
+      { id: "analysis-1",   type: "sci_marker_analysis",     position: { x: 1310, y: 430 }, data: { label: "Analyse billes",              params: { show_labels: 1, show_points: 1, font_scale: 0.4, thickness: 1, coord_type: 0 } } },
+      { id: "count-1",      type: "data_inspector",          position: { x: 1520, y: 430 }, data: { label: "Nombre de billes",            params: {} } },
+      { id: "disp-1",       type: "output_display",          position: { x: 1520, y: 200 }, data: { label: "Segmentation",                params: {} } },
+      { id: "disp-2",       type: "output_display",          position: { x: 1310, y: 640 }, data: { label: "Vue analyse",                 params: {} } }
+    ],
+    edges: [
+      { id: "e1",  source: "src-1",        target: "gray-1",       sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e2",  source: "gray-1",       target: "blur-1",       sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e3",  source: "blur-1",       target: "thresh-1",     sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e4",  source: "thresh-1",     target: "morph-open-1", sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e5",  source: "morph-open-1", target: "morph-cls-1",  sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e6",  source: "morph-cls-1",  target: "dist-1",       sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e7",  source: "dist-1",       target: "thresh-d-1",   sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e8",  source: "thresh-d-1",   target: "markers-1",    sourceHandle: "mask__mask",       targetHandle: "any__mask" },
+      { id: "e9",  source: "markers-1",    target: "filter-1",     sourceHandle: "any__markers",     targetHandle: "any__markers" },
+      { id: "e10", source: "src-1",        target: "wshed-1",      sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e11", source: "filter-1",     target: "wshed-1",      sourceHandle: "any__markers_out", targetHandle: "any__markers" },
+      { id: "e12", source: "wshed-1",      target: "disp-1",       sourceHandle: "image__main",      targetHandle: "image__main" },
+      { id: "e13", source: "wshed-1",      target: "analysis-1",   sourceHandle: "any__markers_out", targetHandle: "any__markers" },
+      { id: "e14", source: "src-1",        target: "analysis-1",   sourceHandle: "image__main",      targetHandle: "image__image" },
+      { id: "e15", source: "analysis-1",   target: "disp-2",       sourceHandle: "image__main",      targetHandle: "image__main" },
+      { id: "e16", source: "wshed-1",      target: "count-1",      sourceHandle: "scalar__count",    targetHandle: "any__data" }
+    ]
+  },
+  {
     name: "Interactive Magic Painter",
     description: "Dessine à l'écran avec les landmarks de la main (Hand Tracker).",
     nodes: [
