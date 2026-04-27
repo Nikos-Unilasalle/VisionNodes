@@ -137,35 +137,53 @@ class FastDetectorNode(NodeProcessor):
     icon="LayoutGrid",
     description="Detects corner points using the Harris mathematical operator.",
     inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}],
+    outputs=[
+        {"id": "main",      "color": "image"},
+        {"id": "mask",      "color": "mask"},
+        {"id": "keypoints", "color": "list"},
+        {"id": "count",     "color": "scalar"},
+        {"id": "points",    "color": "list"},
+    ],
     params=[
         {"id": "block_size", "label": "Block Size", "type": "scalar", "min": 2, "max": 10, "default": 2},
-        {"id": "ksize", "label": "Sobel K", "type": "scalar", "min": 1, "max": 31, "default": 3},
-        {"id": "k", "label": "Harris K", "type": "scalar", "min": 0, "max": 0.1, "default": 0.04},
-        {"id": "threshold", "label": "Threshold", "type": "scalar", "min": 0, "max": 0.2, "default": 0.01}
+        {"id": "ksize",      "label": "Sobel K",    "type": "scalar", "min": 1, "max": 31, "default": 3},
+        {"id": "k",          "label": "Harris K",   "type": "scalar", "min": 0, "max": 0.1, "default": 0.04},
+        {"id": "threshold",  "label": "Threshold",  "type": "scalar", "min": 0, "max": 0.2, "default": 0.01}
     ]
 )
 class HarrisCornerNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
-        if img is None: return {"main": None, "mask": None}
-        
+        if img is None: return {"main": None, "mask": None, "keypoints": [], "count": 0.0, "points": []}
+
         res = img.copy() if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
         gray = np.float32(gray)
-        
+
         bs = int(params.get('block_size', 2))
         ks = int(params.get('ksize', 3))
         if ks % 2 == 0: ks += 1
-        k = float(params.get('k', 0.04))
+        k  = float(params.get('k', 0.04))
         thresh = float(params.get('threshold', 0.01))
-        
+
         dst = cv2.cornerHarris(gray, bs, ks, k)
-        # Result is dilated for marking the corners
-        dst = cv2.dilate(dst, None)
-        
+        dst_dil = cv2.dilate(dst, None)
+        thresh_val = thresh * dst_dil.max() if dst_dil.max() > 0 else 0
+
         mask = np.zeros(gray.shape, dtype=np.uint8)
-        mask[dst > thresh * dst.max()] = 255
-        res[dst > thresh * dst.max()] = [0, 0, 255]
-        
-        return {"main": res, "mask": mask}
+        mask[dst_dil > thresh_val] = 255
+        res[dst_dil > thresh_val] = [0, 0, 255]
+
+        # NMS: keep only local maxima (one point per corner)
+        ys, xs = np.where((dst == dst_dil) & (dst_dil > thresh_val))
+
+        h, w = gray.shape[:2]
+        keypoints, points = [], []
+        for y, x in zip(ys.tolist(), xs.tolist()):
+            nx, ny = float(x) / w, float(y) / h
+            keypoints.append({"_type": "graphics", "shape": "point",
+                               "pts": [[nx, ny]], "relative": True, "color": "#ff3333"})
+            points.append({"x": nx, "y": ny})
+
+        return {"main": res, "mask": mask, "keypoints": keypoints,
+                "count": float(len(keypoints)), "points": points}

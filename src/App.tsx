@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
-import logo from './assets/logo.svg?url';
+// import logo from './assets/logo.svg?url';
+const logo = ""; // Dummy for now
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile } from '@tauri-apps/plugin-fs';
@@ -877,7 +878,7 @@ function App() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
-              <img src={logo} alt="Logo" className="h-full w-auto object-contain" />
+              <span className="font-bold text-blue-500">VN</span>
             </div>
             <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
           </div>
@@ -1539,29 +1540,20 @@ function App() {
                       <Slider label="Threshold Value" val={selectedNode.data.params.threshold || 127} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
                     )}
                     {selectedNode.type === 'geom_resize' && (() => {
-                      const mode = selectedNode.data.params.mode ?? 0;
+                      const rMode = selectedNode.data.params.mode ?? 0;
                       return (
                         <>
-                          <SelectInput
-                            label="Mode"
-                            val={mode}
-                            options={['Scale Factor', 'Fixed Size']}
-                            onChange={(v: number) => updateNodeParams(selectedNode.id, { mode: v })}
-                          />
-                          {mode === 0 ? (
-                            <Slider label="Scale Factor" val={selectedNode.data.params.scale ?? 1} min={0.05} max={4} step={0.05} onChange={v => updateNodeParams(selectedNode.id, { scale: v })} />
-                          ) : (
-                            <>
-                              <Slider label="Target Width (px)" val={selectedNode.data.params.target_width ?? 640} min={1} max={3840} step={1} onChange={v => updateNodeParams(selectedNode.id, { target_width: v })} />
-                              <Slider label="Target Height (px)" val={selectedNode.data.params.target_height ?? 480} min={1} max={2160} step={1} onChange={v => updateNodeParams(selectedNode.id, { target_height: v })} />
-                            </>
+                          <SelectInput label="Mode" val={rMode} options={['Scale', 'Fit Width', 'Fit Height', 'Exact W×H']} onChange={(v: number) => updateNodeParams(selectedNode.id, {mode: v})} />
+                          {rMode === 0 && (
+                            <Slider label="Scale Factor" val={selectedNode.data.params.scale ?? 1} min={0.05} max={4} step={0.05} onChange={v => updateNodeParams(selectedNode.id, {scale: v})} />
                           )}
-                          <SelectInput
-                            label="Interpolation"
-                            val={selectedNode.data.params.interpolation ?? 1}
-                            options={['Nearest', 'Linear', 'Cubic', 'Lanczos']}
-                            onChange={(v: number) => updateNodeParams(selectedNode.id, { interpolation: v })}
-                          />
+                          {(rMode === 1 || rMode === 3) && (
+                            <Slider label="Width (px)" val={selectedNode.data.params.width ?? 640} min={1} max={7680} step={1} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
+                          )}
+                          {(rMode === 2 || rMode === 3) && (
+                            <Slider label="Height (px)" val={selectedNode.data.params.height ?? 480} min={1} max={4320} step={1} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
+                          )}
+                          <SelectInput label="Interpolation" val={selectedNode.data.params.interp ?? 0} options={['Auto', 'Nearest', 'Linear', 'Cubic', 'Lanczos', 'Area']} onChange={(v: number) => updateNodeParams(selectedNode.id, {interp: v})} />
                         </>
                       );
                     })()}

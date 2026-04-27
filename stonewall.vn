@@ -3,42 +3,49 @@
     {
       "id": "src-1",
       "type": "input_image",
-      "position": { "x": 50, "y": 200 },
-      "data": {
-        "label": "Stonewall",
-        "params": { "path": "samples/stonewall.jpg" }
-      }
+      "position": { "x": 50, "y": 250 },
+      "data": { "label": "Stonewall", "params": { "path": "samples/stonewall.jpg" } }
     },
     {
       "id": "harris-1",
       "type": "feat_harris",
-      "position": { "x": 330, "y": 200 },
+      "position": { "x": 330, "y": 250 },
       "data": {
         "label": "Harris Corners",
-        "params": {
-          "block_size": 3,
-          "ksize": 3,
-          "k": 0.04,
-          "threshold": 0.008
-        }
+        "params": { "block_size": 3, "ksize": 3, "k": 0.04, "threshold": 0.008 }
       }
+    },
+    {
+      "id": "overlay-1",
+      "type": "draw_overlay",
+      "position": { "x": 620, "y": 150 },
+      "data": { "label": "Draw Keypoints", "params": {} }
     },
     {
       "id": "disp-1",
       "type": "output_display",
-      "position": { "x": 640, "y": 100 },
-      "data": { "label": "Corners (RGB)", "params": {} }
+      "position": { "x": 900, "y": 150 },
+      "data": { "label": "Corners (overlay)", "params": {} }
     },
     {
       "id": "disp-2",
       "type": "output_display",
-      "position": { "x": 640, "y": 320 },
+      "position": { "x": 900, "y": 370 },
       "data": { "label": "Corner Mask", "params": {} }
+    },
+    {
+      "id": "count-1",
+      "type": "data_inspector",
+      "position": { "x": 620, "y": 420 },
+      "data": { "label": "Corner Count", "params": {} }
     }
   ],
   "edges": [
-    { "id": "e1", "source": "src-1",    "target": "harris-1", "sourceHandle": "image__main", "targetHandle": "image__image" },
-    { "id": "e2", "source": "harris-1", "target": "disp-1",   "sourceHandle": "image__main", "targetHandle": "image__main" },
-    { "id": "e3", "source": "harris-1", "target": "disp-2",   "sourceHandle": "mask__mask",  "targetHandle": "image__main" }
+    { "id": "e1", "source": "src-1",    "target": "harris-1",  "sourceHandle": "image__main",      "targetHandle": "image__image" },
+    { "id": "e2", "source": "src-1",    "target": "overlay-1", "sourceHandle": "image__main",      "targetHandle": "image__image" },
+    { "id": "e3", "source": "harris-1", "target": "overlay-1", "sourceHandle": "list__keypoints",  "targetHandle": "any__data" },
+    { "id": "e4", "source": "overlay-1","target": "disp-1",    "sourceHandle": "image__main",      "targetHandle": "image__main" },
+    { "id": "e5", "source": "harris-1", "target": "disp-2",    "sourceHandle": "mask__mask",       "targetHandle": "image__main" },
+    { "id": "e6", "source": "harris-1", "target": "count-1",   "sourceHandle": "scalar__count",    "targetHandle": "any__data" }
   ]
 }
