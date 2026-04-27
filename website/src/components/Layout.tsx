@@ -316,7 +316,7 @@ const ManifestoSection = () => (
         <h2 className="text-[36px] md:text-[44px] text-[var(--text-main)] mb-8">
           From debugging boilerplate<br />to algorithmic discovery.
         </h2>
-        <div className="space-y-5 text-[17px] text-[var(--text-dim)] leading-relaxed max-w-3xl mx-auto text-left md:text-center">
+        <div className="space-y-5 text-[17px] text-[var(--text-dim)] leading-relaxed max-w-3xl mx-auto text-justify">
           <p>
             VisionNodes Studio eliminates the overhead of iterative code compilation and environment management,
             allowing researchers and engineers to focus entirely on the exploration and validation of computer vision algorithms.
