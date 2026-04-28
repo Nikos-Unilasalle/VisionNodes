@@ -14,7 +14,7 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
         type="number"
         min={min} max={max} step={step} value={val}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="bg-white/5 border border-[#4f5b6b] rounded-lg px-3 py-1.5 text-accent font-black font-mono text-center w-28 outline-none focus:border-accent/60 transition-all text-[11px] shadow-sm"
+        className="bg-black/40 border border-[#4f5b6b] rounded-lg px-3 py-2 text-accent font-black font-mono text-center w-32 outline-none focus:border-accent/60 transition-all text-[13px] shadow-inner"
       />
     </div>
     <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1 bg-[#4f5b6b]/40 rounded-full appearance-none cursor-pointer accent-accent transition-all hover:bg-[#4f5b6b]/60" />
@@ -40,7 +40,7 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => (
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
       type="number" step="any" value={val} onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all font-mono"
+      className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
     />
   </div>
 );
@@ -489,11 +489,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 export const AnalysisDataPanel = ({ liveData }: { liveData: any }) => {
   if (!liveData || Object.keys(liveData).length === 0) return null;
   return (
-    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl h-full flex flex-col min-h-0">
-      <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10 shrink-0">
+    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl shrink-0">
+      <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10">
         <Activity size={10} /> Analysis Data
       </div>
-      <pre className="text-[10px] font-mono text-green-400/90 flex-1 overflow-auto scrollbar-hide italic leading-relaxed">
+      <pre className="text-[10px] font-mono text-green-400/90 max-h-48 overflow-auto scrollbar-hide italic leading-relaxed">
         {JSON.stringify(liveData, null, 2)}
       </pre>
     </div>
