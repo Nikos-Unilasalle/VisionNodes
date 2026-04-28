@@ -8,13 +8,18 @@
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #181818;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: #1a1f26;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --bg-primary: #1e2530;
+  --bg-secondary: #2c333f;
+  --bg-tertiary: #3d4452;
+  --accent: #007cf0;
 }
 
 body {
@@ -47,28 +52,28 @@ body {
 .react-flow__handle {
   width: 8px;
   height: 8px;
-  background: #555;
-  border: 2px solid #242424;
+  background: #4f5b6b;
+  border: 2px solid #1e2530;
 }
 
 .react-flow__background {
-  background-color: #181818;
+  background-color: #1e2530;
 }
 
 .react-flow__controls {
-  background: #242424;
-  border: 1px solid #3a3a3a;
-  border-radius: 4px;
+  background: #3d4452;
+  border: 1px solid #4f5b6b;
+  border-radius: 8px;
 }
 
 .react-flow__controls-button {
-  background: #242424;
-  border-bottom: 1px solid #3a3a3a;
-  color: #999;
+  background: #3d4452;
+  border-bottom: 1px solid #4f5b6b;
+  color: #a0aec0;
 }
 
 .react-flow__controls-button:hover {
-  background: #3a3a3a;
+  background: #4f5b6b;
 }
 
 /* Selection rect is visual only — let clicks pass through to nodes below */

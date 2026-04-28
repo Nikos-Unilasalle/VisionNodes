@@ -15,15 +15,10 @@ import {
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
-<<<<<<< HEAD
-// import logo from './assets/logo.svg?url';
-const logo = ""; // Dummy for now
-=======
 import { useHistory } from './hooks/useHistory';
 import { NodesDataContext } from './context/NodesDataContext';
 import { NodeInspectorPanel } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
->>>>>>> origin/main
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename, readDir } from '@tauri-apps/plugin-fs';
@@ -32,13 +27,8 @@ import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, r
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [
-<<<<<<< HEAD
-  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 0 } } },
-  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display Outlet', params: {} } },
-=======
   { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
   { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display', params: {} } },
->>>>>>> origin/main
 ];
 
 const initialEdges: Edge[] = [
@@ -470,7 +460,7 @@ function App() {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d')!;
-        ctx.fillStyle = '#1a1a1a';
+        ctx.fillStyle = '#1a1f26';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
@@ -1308,12 +1298,12 @@ function App() {
   }, [edges, nodes]);
 
   return (
-    <div className="w-full h-screen bg-[#0a0a0a] flex flex-col text-white font-sans overflow-hidden select-none">
-      <header className="h-10 bg-[#151515] border-b border-[#222] flex items-center justify-between px-4 z-50">
+    <div className="w-full h-screen bg-[#2c333f] flex flex-col text-white font-sans overflow-hidden select-none">
+      <header className="h-10 bg-[#3d4452] border-b border-[#4f5b6b] flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
-              <span className="font-bold text-blue-500">VN</span>
+              <img src={logo} className="h-6 w-6" alt="VN Logo" />
             </div>
             <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
           </div>
@@ -1322,7 +1312,7 @@ function App() {
           </div>
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
           
-          <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button
               onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setGroupStack([]); groupStackRef.current = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
               className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
@@ -1361,7 +1351,7 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <div className="flex items-center bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button
               onClick={handleUndo}
               disabled={!canUndo(activeCanvasId)}
@@ -1383,7 +1373,7 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button
               onClick={() => alignNodes('horizontal')}
               title="Align Horizontally"
@@ -1410,7 +1400,7 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button 
               onClick={() => addNode('input_image', 'Image File')}
               title="Add Image Node"
@@ -1436,7 +1426,7 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <div className="flex items-center gap-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button 
               onClick={() => addNode('canvas_note', 'Note')}
               title="Add Note Node"
@@ -1462,7 +1452,7 @@ function App() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-0.5 bg-[#1a1a1a] rounded-lg border border-[#333] p-0.5">
+          <div className="flex items-center gap-0.5 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             {canvases.map(c => (
               <button
                 key={c.id}
@@ -1492,7 +1482,7 @@ function App() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-hidden"
+                      className="absolute right-0 mt-2 w-48 bg-[#3d4452] border border-[#4f5b6b] rounded-xl shadow-2xl z-50 p-2 overflow-hidden"
                     >
                       {N.PALETTES.map((pal, i) => (
                         <button 
@@ -1530,7 +1520,7 @@ function App() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-72 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
+                      className="absolute right-0 mt-2 w-72 bg-[#3d4452] border border-[#4f5b6b] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
                     >
                       {/* Define directory */}
                       <button
@@ -1598,7 +1588,7 @@ function App() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-64 bg-[#1a1a1a] border border-[#333] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
+                      className="absolute right-0 mt-2 w-64 bg-[#3d4452] border border-[#4f5b6b] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
                     >
                       {examples.map((ex, i) => (
                         <button
@@ -1619,7 +1609,7 @@ function App() {
       </header>
 
       <div className="flex-1 flex w-full relative">
-        <div className="flex-1 relative overflow-hidden bg-[#080808]" onContextMenu={e => e.preventDefault()}>
+        <div className="flex-1 relative overflow-hidden bg-[#1e2530]" onContextMenu={e => e.preventDefault()}>
           <NodesDataContext.Provider value={nodesData}>
           <ReactFlow
             nodes={nodesWithData} edges={coloredEdges}
@@ -1649,18 +1639,18 @@ function App() {
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
           >
-            <Background color="#111" variant={BackgroundVariant.Lines} gap={40} size={1} />
-            <Controls className="bg-[#1a1a1a] border-[#333] fill-white" />
+            <Background color="rgba(255, 255, 255, 0.08)" variant={BackgroundVariant.Lines} gap={40} size={1} />
+            <Controls className="bg-[#3d4452] border-[#4f5b6b] fill-white" />
             <Panel position="top-left">
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                  className="bg-accent hover:bg-blue-600 text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
+                  className="bg-[#007cf0] hover:bg-[#006cc0] text-white p-2 px-8 rounded-full shadow-2xl transition-all font-black text-[10px] tracking-widest uppercase flex items-center gap-2"
                 >
                   <Plus size={14} /> Add Node
                 </button>
                 {groupStack.length > 0 && (
-                  <div className="flex items-center gap-1 bg-[#111]/90 backdrop-blur border border-accent/30 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-lg">
+                  <div className="flex items-center gap-1 bg-[#1e2530]/90 backdrop-blur border border-accent/30 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-lg">
                     <button onClick={() => { setGroupStack([]); groupStackRef.current = []; instance?.fitView({ duration: 300 }); }} className="text-gray-400 hover:text-white transition-colors">
                       Canvas
                     </button>
@@ -1701,7 +1691,7 @@ function App() {
                 const isDone  = n.progress !== null && n.progress >= 1;
                 const isRunning = n.progress !== null && n.progress < 1;
                 return (
-                  <div key={n.id} className={`bg-[#111]/97 backdrop-blur border rounded-xl px-4 py-3 shadow-2xl ${isError ? 'border-red-500/40' : isDone ? 'border-green-500/30' : 'border-white/10'}`}>
+                  <div key={n.id} className={`bg-[#1e2530]/97 backdrop-blur border rounded-xl px-4 py-3 shadow-2xl ${isError ? 'border-red-500/40' : isDone ? 'border-green-500/30' : 'border-white/10'}`}>
                     <div className="flex items-center gap-2">
                       {isRunning && (
                         <svg className="animate-spin shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none">
@@ -1760,7 +1750,7 @@ function App() {
             const selCount = nodes.filter(n => n.selected).length;
             return selCount > 1 ? (
               <div
-                className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
+                className="absolute z-[200] bg-[#3d4452]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
                 style={{ top: paneMenu.y, left: paneMenu.x }}
                 onClick={() => setPaneMenu(null)}
               >
@@ -1777,7 +1767,7 @@ function App() {
 
           {menu && (
             <div
-              className="absolute z-[200] bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
+              className="absolute z-[200] bg-[#3d4452]/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-1.5 min-w-[180px] animate-in zoom-in-95 duration-150 origin-top-left"
               style={{ top: menu.y, left: menu.x }}
               onClick={() => setMenu(null)}
             >
@@ -1878,10 +1868,10 @@ function App() {
           {isAddMenuOpen && (
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-20" onClick={() => { setIsAddMenuOpen(false); setPendingConnection(null); }}>
               <div 
-                className="bg-[#181818] border border-[#333] w-full max-w-[700px] h-[85vh] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
+                className="bg-[#3d4452] border border-[#4f5b6b] w-full max-w-[700px] h-[85vh] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="w-56 bg-[#111] border-r border-[#222] p-6 flex flex-col gap-2">
+                <div className="w-56 bg-[#1e2530] border-r border-[#4f5b6b] p-6 flex flex-col gap-2">
                   {dynamicCategories.map(cat => (
                     <button 
                       key={cat.id} onClick={() => setActiveCategoryId(cat.id)}
@@ -1892,7 +1882,7 @@ function App() {
                   ))}
                 </div>
                 <div className="flex-1 p-12 overflow-y-auto overflow-x-hidden flex flex-col">
-                  <div className="flex items-center justify-between mb-10 border-b border-[#222] pb-4">
+                  <div className="flex items-center justify-between mb-10 border-b border-[#4f5b6b] pb-4">
                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {searchQuery ? 'Search Results' : `Category :: ${activeCategory.label}`}
                     </h3>
@@ -1904,7 +1894,7 @@ function App() {
                         placeholder="Search modules..." 
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        className="bg-black/40 border border-[#222] rounded-xl pl-10 pr-4 py-2 text-[11px] text-white outline-none focus:border-accent/50 w-64 transition-all"
+                        className="bg-black/40 border border-[#4f5b6b] rounded-xl pl-10 pr-4 py-2 text-[11px] text-white outline-none focus:border-accent/50 w-64 transition-all"
                       />
                     </div>
                   </div>
@@ -1912,7 +1902,7 @@ function App() {
                     {filteredNodes.map((node: any) => (
                       <button
                         key={node.type} onClick={() => { addNode(node.type, node.label, node.schema); setSearchQuery(''); }}
-                        className="p-6 bg-[#222] hover:bg-accent/10 border border-[#333] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95 group"
+                        className="p-6 bg-[#222] hover:bg-accent/10 border border-[#4f5b6b] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95 group"
                       >
                         <div className="text-[11px] font-bold text-gray-200 uppercase tracking-tighter group-hover:text-accent transition-colors">{node.label}</div>
                         <div className="text-[8px] text-gray-600 font-mono mt-1 italic">{node.schema ? 'cv::plugin' : 'cv::node'}</div>
@@ -1977,7 +1967,7 @@ function App() {
               window.addEventListener('mousemove', onMove);
               window.addEventListener('mouseup', onUp);
             }}
-            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#222] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#4f5b6b] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
             style={{ width: previewSize.w, height: previewSize.h }}
           >
             {frame && <img src={frame} alt="Vision"
@@ -2053,7 +2043,7 @@ function App() {
 
         {/* Right Panel — absolute overlay so canvas never resizes */}
         <div
-          className="absolute right-0 top-0 bg-[#0a0a0a] border-l border-[#1a1a1a] flex flex-col transition-all duration-300 h-full overflow-hidden z-10"
+          className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30"
           style={{ width: selectedNodeId ? rightPanelWidth : 0, opacity: selectedNodeId ? 1 : 0 }}
         >
           {/* Resize Handle */}
@@ -2063,7 +2053,7 @@ function App() {
           />
 
           <div className="h-full flex flex-col">
-            <div className="h-10 border-b border-[#222] flex items-center px-4 bg-[#1a1a1a] shrink-0">
+            <div className="h-10 border-b border-[#4f5b6b] flex items-center px-4 bg-[#3d4452] shrink-0">
               <Settings size={14} className="text-gray-500 mr-2" />
               <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Unit Inspector</span>
             </div>
@@ -2084,316 +2074,6 @@ function App() {
                      </div>
                   </div>
 
-<<<<<<< HEAD
-                  <div className="space-y-8 pb-32">
-                    {/* --- ALL SLIDERS --- */}
-                    {(selectedNode.type === 'canvas_note' || selectedNode.type === 'canvas_frame') && (() => {
-                      const currentPalette = N.PALETTES[activePaletteIndex].colors;
-                      const cIdx = selectedNode.data.params.color_index;
-                      const bgColor = cIdx !== undefined ? currentPalette[cIdx % 5].bg : (selectedNode.data.params.bg_color || (selectedNode.type === 'canvas_frame' ? '#333333' : '#ffd4b8'));
-                      const textColor = cIdx !== undefined ? currentPalette[cIdx % 5].dark : (selectedNode.data.params.text_color || (selectedNode.type === 'canvas_frame' ? '#ffffff' : '#3a2010'));
-                      return (
-                        <>
-                          {selectedNode.type === 'canvas_note' ? (
-                            <div className="space-y-4 group mb-6">
-                              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
-                              <textarea
-                                value={selectedNode.data.params.text || ''}
-                                onChange={e => updateNodeParams(selectedNode.id, { text: e.target.value })}
-                                className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none resize-none transition-all"
-                                style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)', fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
-                                placeholder="Enter note text…"
-                              />
-                            </div>
-                          ) : (
-                            <div className="space-y-4 group mb-6">
-                              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Frame Title</label>
-                              <input
-                                value={selectedNode.data.params.title || 'Frame Layer'}
-                                onChange={e => updateNodeParams(selectedNode.id, { title: e.target.value })}
-                                className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none transition-all font-black text-center"
-                                style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)' }}
-                                placeholder="Enter frame title…"
-                              />
-                            </div>
-                          )}
-                          <div className="space-y-4">
-                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
-                            <div className="flex gap-3 flex-wrap">
-                              {currentPalette.map(({ bg, dark, label }: any, i: number) => (
-                                <button
-                                  key={bg}
-                                  title={label}
-                                  onClick={() => updateNodeParams(selectedNode.id, { color_index: i })}
-                                  className="flex flex-col items-center gap-1.5 group/swatch"
-                                >
-                                  <div
-                                    className="w-10 h-10 rounded-xl transition-all duration-150 group-hover/swatch:scale-110"
-                                    style={{
-                                      background: bg,
-                                      border: (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '3px solid rgba(0,0,0,0.4)' : '2px solid rgba(0,0,0,0.1)',
-                                      boxShadow: (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none',
-                                    }}
-                                  />
-                                  <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider overflow-hidden max-w-[40px] text-ellipsis whitespace-nowrap">{label}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between py-2">
-                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Text Color</label>
-                            <div className="flex gap-2">
-                              {['#ffffff', currentPalette[(cIdx !== undefined ? cIdx : 0) % 5]?.dark || '#1a1a1a'].map(c => (
-                                <button
-                                  key={c}
-                                  onClick={() => updateNodeParams(selectedNode.id, { text_color: c, color_index: undefined })}
-                                  className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
-                                  style={{
-                                    background: c,
-                                    borderColor: textColor === c ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)',
-                                    boxShadow: textColor === c ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none',
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      );
-                    })()}
-                    {selectedNode.type === 'input_webcam' && (
-                      <>
-                        <Slider label="Device Index" val={selectedNode.data.params.device_index || 0} min={0} max={5} onChange={v => updateNodeParams(selectedNode.id, {device_index: v})} />
-                        <Slider label="Width (0 = auto)" val={selectedNode.data.params.width || 0} min={0} max={3840} step={160} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
-                        <Slider label="Height (0 = auto)" val={selectedNode.data.params.height || 0} min={0} max={2160} step={120} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
-                        <Slider label="FPS (0 = auto)" val={selectedNode.data.params.fps || 0} min={0} max={120} step={5} onChange={v => updateNodeParams(selectedNode.id, {fps: v})} />
-                      </>
-                    )}
-                    {selectedNode.type === 'input_image' && (
-                      <TextInput label="Image Path" val={selectedNode.data.params.path || ''} onChange={v => updateNodeParams(selectedNode.id, {path: v})} />
-                    )}
-                    {selectedNode.type === 'input_movie' && (
-                      <div className="space-y-6">
-                        <TextInput label="Movie Path" val={selectedNode.data.params.path || ''} onChange={v => updateNodeParams(selectedNode.id, {path: v})} />
-                        <div className="flex flex-col gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                          <label className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Playback Control</label>
-                          <div className="flex items-center justify-between">
-                            <button 
-                              onClick={() => updateNodeParams(selectedNode.id, { playing: !selectedNode.data.params.playing })}
-                              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold transition-all ${selectedNode.data.params.playing ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-green-500 text-white shadow-lg shadow-green-500/20'}`}
-                            >
-                              {selectedNode.data.params.playing ? <><Pause size={14} /> Stop</> : <><Play size={14} /> Start</>}
-                            </button>
-                            <div className="text-[10px] font-mono text-gray-400">
-                              Frame: {selectedNode.data.node_data?.current_frame || 0} / {selectedNode.data.node_data?.total_frames || 0}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <Slider 
-                              label="Start" 
-                              val={selectedNode.data.params.start_frame || 0} 
-                              min={0} 
-                              max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
-                              onChange={v => updateNodeParams(selectedNode.id, { start_frame: v })} 
-                            />
-                            <Slider 
-                              label="End" 
-                              val={selectedNode.data.params.end_frame ?? (selectedNode.data.node_data?.total_frames ? selectedNode.data.node_data.total_frames - 1 : 0)} 
-                              min={0} 
-                              max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
-                              onChange={v => updateNodeParams(selectedNode.id, { end_frame: v })} 
-                            />
-                          </div>
-                          <Slider 
-                            label="Scrub" 
-                            val={selectedNode.data.params.playing ? (selectedNode.data.node_data?.current_frame || 0) : (selectedNode.data.params.scrub_index || 0)} 
-                            min={0} 
-                            max={(selectedNode.data.node_data?.total_frames || 1) - 1} 
-                            onChange={v => updateNodeParams(selectedNode.id, { scrub_index: v, playing: false })} 
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {selectedNode.type === 'input_solid_color' && (
-                      <>
-                        <Slider label="Red" val={selectedNode.data.params.r ?? 255} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
-                        <Slider label="Green" val={selectedNode.data.params.g ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
-                        <Slider label="Blue" val={selectedNode.data.params.b ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
-                        <Slider label="Width" val={selectedNode.data.params.width ?? 640} min={100} max={1920} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
-                        <Slider label="Height" val={selectedNode.data.params.height ?? 480} min={100} max={1080} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
-                      </>
-                    )}
-                    {selectedNode.type === 'filter_canny' && (
-                      <>
-                        <Slider label="Threshold Low" val={selectedNode.data.params.low || 100} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {low: v})} />
-                        <Slider label="Threshold High" val={selectedNode.data.params.high || 200} min={1} max={500} onChange={v => updateNodeParams(selectedNode.id, {high: v})} />
-                      </>
-                    )}
-                    {selectedNode.type === 'filter_blur' && (
-                      <Slider label="Blur Kernel" val={selectedNode.data.params.size || 5} min={1} max={51} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
-                    )}
-                    {selectedNode.type === 'filter_threshold' && (
-                      <Slider label="Threshold Value" val={selectedNode.data.params.threshold || 127} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
-                    )}
-                    {selectedNode.type === 'geom_resize' && (() => {
-                      const rMode = selectedNode.data.params.mode ?? 0;
-                      return (
-                        <>
-                          <SelectInput label="Mode" val={rMode} options={['Scale', 'Fit Width', 'Fit Height', 'Exact W×H']} onChange={(v: number) => updateNodeParams(selectedNode.id, {mode: v})} />
-                          {rMode === 0 && (
-                            <Slider label="Scale Factor" val={selectedNode.data.params.scale ?? 1} min={0.05} max={4} step={0.05} onChange={v => updateNodeParams(selectedNode.id, {scale: v})} />
-                          )}
-                          {(rMode === 1 || rMode === 3) && (
-                            <Slider label="Width (px)" val={selectedNode.data.params.width ?? 640} min={1} max={7680} step={1} onChange={v => updateNodeParams(selectedNode.id, {width: v})} />
-                          )}
-                          {(rMode === 2 || rMode === 3) && (
-                            <Slider label="Height (px)" val={selectedNode.data.params.height ?? 480} min={1} max={4320} step={1} onChange={v => updateNodeParams(selectedNode.id, {height: v})} />
-                          )}
-                          <SelectInput label="Interpolation" val={selectedNode.data.params.interp ?? 0} options={['Auto', 'Nearest', 'Linear', 'Cubic', 'Lanczos', 'Area']} onChange={(v: number) => updateNodeParams(selectedNode.id, {interp: v})} />
-                        </>
-                      );
-                    })()}
-                    {selectedNode.type === 'geom_flip' && (
-                      <Slider label="Flip Code (0,1,-1)" val={selectedNode.data.params.flip_mode || 1} min={-1} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {flip_mode: v})} />
-                    )}
-                    {selectedNode.type === 'filter_color_mask' && (() => {
-                      const mode = selectedNode.data.params.mode ?? 0;
-                      const r = selectedNode.data.params.r ?? 128;
-                      const g = selectedNode.data.params.g ?? 128;
-                      const b = selectedNode.data.params.b ?? 128;
-                      return (
-                        <>
-                          <SelectInput
-                            label="Mode"
-                            val={mode}
-                            options={['HSV Range', 'RGB + Threshold']}
-                            onChange={(v: number) => updateNodeParams(selectedNode.id, {mode: v})}
-                          />
-                          {mode === 0 ? (
-                            <>
-                              <Slider label="Hue Min" val={selectedNode.data.params.h_min ?? 0} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_min: v})} />
-                              <Slider label="Hue Max" val={selectedNode.data.params.h_max ?? 179} min={0} max={179} onChange={v => updateNodeParams(selectedNode.id, {h_max: v})} />
-                              <Slider label="Sat Min" val={selectedNode.data.params.s_min ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {s_min: v})} />
-                              <Slider label="Value Min" val={selectedNode.data.params.v_min ?? 0} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {v_min: v})} />
-                            </>
-                          ) : (
-                            <>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-400">Target Color</span>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded border border-[#333]" style={{backgroundColor: `rgb(${r},${g},${b})`}} />
-                                    <button
-                                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors ${pickColorNodeId === selectedNode.id ? 'bg-accent text-black border-accent' : 'border-[#333] text-gray-300 hover:border-accent/50'}`}
-                                      onClick={() => setPickColorNodeId(prev => prev === selectedNode.id ? null : selectedNode.id)}
-                                    >
-                                      <Pipette size={11} />
-                                      Pick
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              <Slider label="R" val={r} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {r: v})} />
-                              <Slider label="G" val={g} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {g: v})} />
-                              <Slider label="B" val={b} min={0} max={255} onChange={v => updateNodeParams(selectedNode.id, {b: v})} />
-                              <Slider label="Threshold" val={selectedNode.data.params.threshold ?? 30} min={1} max={200} onChange={v => updateNodeParams(selectedNode.id, {threshold: v})} />
-                            </>
-                          )}
-                        </>
-                      );
-                    })()}
-                    {selectedNode.type === 'filter_morphology' && (
-                      <>
-                        <Slider label="Operation (0=Dilate, 1=Erode)" val={selectedNode.data.params.operation || 0} min={0} max={1} step={1} onChange={v => updateNodeParams(selectedNode.id, {operation: v})} />
-                        <Slider label="Kernel Size" val={selectedNode.data.params.size || 5} min={3} max={21} step={2} onChange={v => updateNodeParams(selectedNode.id, {size: v})} />
-                      </>
-                    )}
-                    {selectedNode.type === 'analysis_face_mp' && (
-                      <Slider label="Track Count" val={selectedNode.data.params.max_faces || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {max_faces: v})} />
-                    )}
-                    {selectedNode.type === 'analysis_hand_mp' && (
-                      <Slider label="Hand Count" val={selectedNode.data.params.max_hands || 2} min={1} max={4} onChange={v => updateNodeParams(selectedNode.id, {max_hands: v})} />
-                    )}
-                    {selectedNode.type === 'analysis_flow' && (
-                      <>
-                         <Slider label="Pyr Scale" val={selectedNode.data.params.pyr_scale || 0.5} min={0.1} max={0.9} step={0.1} onChange={v => updateNodeParams(selectedNode.id, {pyr_scale: v})} />
-                         <Slider label="Levels" val={selectedNode.data.params.levels || 3} min={1} max={10} onChange={v => updateNodeParams(selectedNode.id, {levels: v})} />
-                      </>
-                    )}
-
-                    {selectedNode.type === 'data_list_selector' && (
-                      <Slider label="List Index" val={selectedNode.data.params.index || 0} min={0} max={10} onChange={v => updateNodeParams(selectedNode.id, {index: v})} />
-                    )}
-
-                    {selectedNode.data.schema && selectedNode.data.schema.params && selectedNode.data.schema.params.map((p: any) => {
-                      const isEnum = p.type === 'enum' || p.options;
-                      const isString = p.type === 'string' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'string';
-                      const isNumber = p.type === 'number' || p.type === 'float';
-                      const pMin = p.min ?? 0;
-                      const pMax = p.max ?? 100;
-                      const pStep = p.step != null ? p.step : (Number.isInteger(pMin) && Number.isInteger(pMax) ? 1 : (pMax - pMin) / 100);
-                      
-                      if (isEnum) {
-                        return <SelectInput 
-                          key={p.id} 
-                          label={p.label || p.id} 
-                          val={selectedNode.data.params[p.id] ?? p.default ?? 0} 
-                          options={p.options || []}
-                          onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} 
-                        />;
-                      }
-                      
-                      if (isString) {
-                        if (p.id === 'code') {
-                           return <CodeInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
-                        }
-                        return <TextInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? ''} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
-                      }
-
-                      if (isNumber) {
-                        return <NumberInput key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} onChange={(v: any) => updateNodeParams(selectedNode.id, { [p.id]: v })} />;
-                      }
-
-                      if (p.type === 'toggle' || p.type === 'bool' || typeof (selectedNode.data.params[p.id] ?? p.default) === 'boolean') {
-                        return <ToggleInput key={p.id} label={p.label || p.id} val={!!(selectedNode.data.params[p.id] ?? p.default)} onChange={(v: any) => updateNodeParams(selectedNode.id, { [p.id]: v })} />;
-                      }
-
-                      if (p.type === 'trigger') {
-                        const isSnapshotSave = selectedNode.type === 'util_snapshot' && p.id === 'save_to_disk';
-                        return (
-                          <div key={p.id} className="space-y-4 group">
-                            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">
-                               {p.label || p.id}
-                            </label>
-                            <button 
-                              onClick={() => {
-                                if (isSnapshotSave) {
-                                  requestCapture(selectedNode.id);
-                                } else {
-                                  updateNodeParams(selectedNode.id, { [p.id]: 1 });
-                                  setTimeout(() => updateNodeParams(selectedNode.id, { [p.id]: 0 }), 100);
-                                }
-                              }}
-                              className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
-                            >
-                              <Save size={14} /> {p.label || "Execute"}
-                            </button>
-                          </div>
-                        );
-                      }
-
-                      return <Slider key={p.id} label={p.label || p.id} val={selectedNode.data.params[p.id] ?? p.default ?? 0} min={pMin} max={pMax} step={pStep} onChange={(v: any) => updateNodeParams(selectedNode.id, {[p.id]: v})} />;
-                    })}
-
-                    {selectedNode.data.node_data && (
-                      <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3 shadow-inner">
-                         <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2 bg-black/20 p-2 rounded-lg"><Activity size={10}/> Analysis Data</div>
-                         <pre className="text-[10px] font-mono text-accent/80 max-h-32 overflow-auto scrollbar-hide italic leading-relaxed">
-                            {JSON.stringify(selectedNode.data.node_data, null, 2)}
-                         </pre>
-                      </div>
-                    )}
-                  </div>
-=======
                   <NodeInspectorPanel
                     node={selectedNode}
                     liveData={selectedNodeLiveData}
@@ -2403,7 +2083,6 @@ function App() {
                     onPickColorToggle={setPickColorNodeId}
                     onRequestCapture={requestCapture}
                   />
->>>>>>> origin/main
                 </div>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">

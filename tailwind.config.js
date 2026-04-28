@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        accent: "var(--accent)",
         background: "var(--background)",
         surface: "var(--surface)",
         primary: "var(--primary)",
