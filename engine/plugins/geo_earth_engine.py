@@ -94,6 +94,7 @@ class EarthEngineSourceNode(NodeProcessor):
         self._cache_data = None
         self._thumb_dirty = False
         self._ee_initialized = False
+        self._tried_auto_restore = False
 
     # ------------------------------------------------------------------ helpers
 
@@ -151,15 +152,15 @@ class EarthEngineSourceNode(NodeProcessor):
 
     # ------------------------------------------------------------------ fetch
 
-    def _do_fetch(self, params):
+    def _do_fetch(self, params, auto=False):
         try:
-            self._do_fetch_impl(params)
+            self._do_fetch_impl(params, auto=auto)
         except BaseException as e:
             send_notification(f'GEE: unexpected crash: {e}', level='error', notif_id='gee')
         finally:
             self._loading = False
 
-    def _do_fetch_impl(self, params):
+    def _do_fetch_impl(self, params, auto=False):
         if not EE_AVAILABLE:
             send_notification('earthengine-api missing: pip install earthengine-api', level='error', notif_id='gee')
             return
@@ -207,6 +208,8 @@ class EarthEngineSourceNode(NodeProcessor):
         if os.path.exists(cache_path):
             send_notification(f'GEE: cache hit ({key_hash}.tif)', notif_id='gee')
         else:
+            if auto:
+                return  # No cache on disk — don't trigger EE auth on auto-restore
             if not self._init_ee(gcp_project):
                 return
 
@@ -449,6 +452,14 @@ class EarthEngineSourceNode(NodeProcessor):
         if rising_edge and not self._loading:
             self._loading = True
             threading.Thread(target=self._do_fetch, args=(params,), daemon=True).start()
+
+        # Auto-restore from disk cache on first frame (e.g. after copy-paste)
+        if self._cache_data is None and not self._loading and not self._tried_auto_restore:
+            self._tried_auto_restore = True
+            self._loading = True
+            threading.Thread(
+                target=self._do_fetch, args=(params,), kwargs={'auto': True}, daemon=True
+            ).start()
 
         if self._cache_data is None:
             return {'geotiff': None, 'preview': None, 'meta': None}
