@@ -1465,16 +1465,11 @@ load_plugins()
 
 async def main(engine_instance):
     try:
-<<<<<<< HEAD
-        async with websockets.serve(engine_instance.hdl, "127.0.0.1", 8765):
-            await engine_instance.run()
-=======
         async with websockets.serve(engine_instance.hdl, "localhost", 8765):
             await asyncio.gather(
                 engine_instance.run(),
                 engine_instance._drain_notifs_loop(),
             )
->>>>>>> origin/main
     except Exception as e:
         print(f"Server Error: {e}")
 
