@@ -17,7 +17,7 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
         className="bg-accent/10 border border-accent/20 rounded px-2 py-0.5 text-accent font-black font-mono text-right w-20 outline-none focus:border-accent/50 transition-all"
       />
     </div>
-    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#222] rounded-full appearance-none cursor-pointer accent-accent" />
+    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#3d4452] rounded-full appearance-none cursor-pointer accent-accent" />
   </div>
 );
 
@@ -28,7 +28,7 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
     <input
       type="text" value={val} onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => e.stopPropagation()}
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
+      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
       placeholder={`Enter ${label.toLowerCase()}...`}
     />
   </div>
@@ -40,7 +40,7 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => (
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
       type="number" step="any" value={val} onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all font-mono"
+      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all font-mono"
     />
   </div>
 );
@@ -51,10 +51,10 @@ export const SelectInput = ({ label, val, options, onChange }: SelectInputProps)
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <select
       value={val} onChange={(e) => onChange(parseInt(e.target.value))}
-      className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
+      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
     >
       {options.map((opt: string, i: number) => (
-        <option key={i} value={i} className="bg-[#1a1a1a]">{opt}</option>
+        <option key={i} value={i} className="bg-[#3d4452]">{opt}</option>
       ))}
     </select>
   </div>
@@ -66,7 +66,7 @@ export const ToggleInput = ({ label, val, onChange }: ToggleInputProps) => (
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <button
       onClick={() => onChange(!val)}
-      className={`w-10 h-5 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#222]'}`}
+      className={`w-10 h-5 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#3d4452]'}`}
     >
       <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${val ? 'left-6' : 'left-1'}`} />
     </button>
@@ -123,10 +123,10 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
     <div className="space-y-2 group">
       <div className="flex items-center justify-between">
         <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-        <div className="text-[8px] font-mono text-gray-600 bg-white/5 px-2 py-0.5 rounded">Python 3.x</div>
+        <div className="text-[8px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</div>
       </div>
-      <div className="relative rounded-xl overflow-hidden border border-[#222] group-hover:border-accent/40 transition-all shadow-inner bg-[#0a0a0a]">
-        <div className="absolute inset-y-0 left-0 w-8 bg-black/30 border-r border-white/5 flex flex-col items-center pt-3 pb-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none z-10 overflow-hidden">
+      <div className="relative rounded-xl overflow-hidden border border-[#4f5b6b] group-hover:border-accent/40 transition-all shadow-inner bg-[#1e2530]">
+        <div className="absolute inset-y-0 left-0 w-8 bg-black/15 border-r border-white/5 flex flex-col items-center pt-3 pb-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none z-10 overflow-hidden">
           {Array.from({ length: lineCount }, (_, i) => (
             <div key={i} className="leading-relaxed h-[1.5em] flex items-center">{i + 1}</div>
           ))}
@@ -267,7 +267,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       {node.type === 'input_movie' && (
         <div className="space-y-6">
           <TextInput label="Movie Path" val={p.path || ''} onChange={(v: string) => up({ path: v })} />
-          <div className="flex flex-col gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+          <div className="flex flex-col gap-4 p-4 bg-white/10 rounded-2xl border border-white/5">
             <label className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Playback Control</label>
             <div className="flex items-center justify-between">
               <button
@@ -475,7 +475,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* Live data debug display */}
       {liveData && Object.keys(liveData).length > 0 && (
-        <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3 shadow-inner">
+        <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-3 shadow-inner">
           <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2 bg-black/20 p-2 rounded-lg">
             <Activity size={10} /> Analysis Data
           </div>

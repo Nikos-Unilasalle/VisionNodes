@@ -69,7 +69,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
                       color === 'red' ? 'border-red-500 shadow-red-500/20' :
                       'border-gray-500 shadow-gray-500/20';
                       
-  const borderClass = customBg ? '' : (selected ? accentColor : 'border-[#333]');
+  const borderClass = customBg ? '' : (selected ? accentColor : 'border-[#4f5b6b]');
 
   const totalInputs = inputs.length + var_count;
   const totalOutputs = outputs.length;
@@ -87,7 +87,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
   return (
     <div 
-        className={`rounded-xl bg-[#1a1a1a] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-52`}
+        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-52`}
         style={{ 
           minHeight, 
           ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
@@ -117,7 +117,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
         );
       })}
 
-      <div className="bg-[#222] px-4 py-2 flex items-center justify-between border-b border-[#333] rounded-t-[10px] overflow-hidden group/header"
+      <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between border-b border-[#4f5b6b] rounded-t-[10px] overflow-hidden group/header"
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <div className="flex items-center gap-3 truncate">
           <Icon size={14} className="shrink-0 transition-colors" style={customBg ? { color: customBg } : {}} />
@@ -197,7 +197,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
           <img 
             src={`data:image/jpeg;base64,${preview}`} 
             alt="Preview" 
-            className="w-full h-32 object-cover rounded-lg border border-[#333] mb-1" 
+            className="w-full h-32 object-cover rounded-lg border border-[#4f5b6b] mb-1" 
           />
           <div 
             className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-green-500/50"
@@ -210,7 +210,7 @@ export const InputImageNode = memo(({ selected, data }: any) => {
         </div>
       ) : (
         <div 
-          className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
+          className="flex flex-col items-center justify-center border-2 border-dashed border-[#4f5b6b] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
           onClick={handleBrowse}
@@ -259,7 +259,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
     <BaseNode title="Movie File" icon={Film} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}, {id: 'frame', label: 'Frame', color: 'scalar'}]}>
       <div className="p-4 space-y-4" onClick={handleBrowse} onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
         {nd?.preview && (
-          <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner">
+          <div className="relative group/preview rounded-2xl overflow-hidden border border-white/5 bg-black/10 shadow-inner">
             <img
               src={`data:image/jpeg;base64,${nd.preview}`}
               className="w-full h-auto object-cover opacity-80 group-hover/preview:opacity-100 transition-opacity duration-500"
@@ -276,7 +276,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
         )}
 
         {!nd?.preview && (
-          <div className="py-8 flex flex-col items-center justify-center gap-3 bg-black/20 rounded-2xl border border-dashed border-white/10 opacity-40">
+          <div className="py-8 flex flex-col items-center justify-center gap-3 bg-black/10 rounded-2xl border border-dashed border-white/10 opacity-40">
             <div className="p-3 bg-white/5 rounded-full">
                 <Video size={24} className="text-gray-400" />
             </div>
@@ -461,7 +461,7 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
         {id: 'scalar', color: 'scalar'}
       ]}
     >
-      <div className="flex flex-col items-center justify-center py-3 bg-black/40 rounded-xl border border-white/5 shadow-inner gap-1">
+      <div className="flex flex-col items-center justify-center py-3 bg-black/10 rounded-xl border border-white/5 shadow-inner gap-1">
         <div className="text-[7px] font-black text-gray-600 uppercase tracking-widest">Live Monitor</div>
         <div className="flex items-baseline gap-1 px-2 w-full justify-center">
           <span className="text-2xl font-bold font-mono tracking-tighter drop-shadow-md" style={{ color: themeColor }}>
@@ -530,7 +530,7 @@ export const ROIPolygonNode = memo(({ selected, data }: any) => {
               <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={3} className="fill-white stroke-accent" style={{ strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }} />
             ))}
           </svg>
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/roi:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
             <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
               <Scaling size={12} /> Edit Region
             </button>
@@ -571,7 +571,7 @@ export const CropRectNode = memo(({ selected, data }: any) => {
                 className="fill-accent/20 stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
             </svg>
           </svg>
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/crop:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/crop:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
             <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
               className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
               <Crop size={12} /> Edit Crop
@@ -661,7 +661,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   const d = useNodeData(useNodeId())?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const { customBg } = useNodeColor();
-  const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]');
+  const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]');
 
   // Extract available keys from dict or list-of-dicts
   const keys = useMemo(() => {
@@ -695,7 +695,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
 
   return (
     <div
-      className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
+      className={`w-full h-full rounded-xl bg-[#2c333f] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
       style={{ position: 'relative', zIndex: 0, ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) }}
     >
       <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
@@ -703,7 +703,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
       </div>
 
       {/* Title bar */}
-      <div className="bg-[#222] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#333] rounded-t-xl shrink-0"
+      <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <div className="flex items-center gap-3 truncate">
           <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
@@ -714,7 +714,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
 
       {/* Key filter pills — only shown when dict/list-of-dicts detected */}
       {keys.length > 0 && (
-        <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#2a2a2a] bg-[#1e1e1e] overflow-x-auto scrollbar-hide shrink-0">
+        <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#4f5b6b] bg-[#3d4452] overflow-x-auto scrollbar-hide shrink-0">
           <button
             onClick={() => setFilterKey(null)}
             className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
@@ -814,7 +814,7 @@ export const StringNode = memo(({ selected, data }: any) => {
   const IconCmp = getIcon(schema.icon, Type);
   return (
     <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={schema.outputs}>
-       {nd?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/40 p-2 rounded border border-white/5 truncate">{nd.result}</div>}
+       {nd?.result && <div className="text-[9px] font-mono text-cyan-400 bg-black/10 p-2 rounded border border-white/5 truncate">{nd.result}</div>}
     </BaseNode>
   );
 });
@@ -830,7 +830,7 @@ export const PythonNode = memo(({ selected, data }: any) => {
               inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]}
               outputs={[{id: 'main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}]}>
       {displayLine && (
-        <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/40 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
+        <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/10 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
           <div className="text-[7px] font-mono text-emerald-400/70 truncate text-center italic">{displayLine}</div>
         </div>
       )}
@@ -897,7 +897,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
 
   return (
     <div
-      className={`w-full h-full rounded-xl bg-[#1a1a1a] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#333]')}`}
+      className={`w-full h-full rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
       style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
     >
         {KEYS.map((k, i) => (
@@ -913,7 +913,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
             <StyledHandle type="source" position={Position.Right} id={k} color="any" top="50%" />
           </div>
         ))}
-        <div className="bg-[#222] px-3 py-1.5 flex items-center gap-2 border-b border-[#333] rounded-t-xl shrink-0"
+        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
              style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
           <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
           <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter</span>
@@ -969,7 +969,7 @@ export const ScientificStatsNode = memo(({ selected, data }: any) => {
     ]}>
       <div className="grid grid-cols-2 gap-2 mt-2">
         {entries.map(e => (
-          <div key={e.label} className="bg-black/40 p-2 rounded-lg border border-white/5">
+          <div key={e.label} className="bg-black/10 p-2 rounded-lg border border-white/5">
              <div className="text-[7px] text-gray-500 uppercase font-black">{e.label}</div>
              <div className={`text-[9px] font-mono ${e.color} font-bold`}>{e.v?.toFixed(3) ?? '---'}</div>
           </div>
@@ -989,7 +989,7 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Draw Text" icon={Type} selected={selected} data={data} inputs={schema.inputs} outputs={schema.outputs} var_count={varCount} width="w-80">
       <div className="flex flex-col gap-2 p-1 mx-6">
-        <div className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+        <div className="flex items-center justify-between bg-black/10 p-2 rounded-lg border border-white/5">
           <span className="text-[8px] font-black uppercase text-gray-500 font-mono tracking-tighter">Variables ({varCount})</span>
           <div className="flex gap-1">
             <button onClick={remVar} className="w-5 h-5 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/20 transition-all font-black text-xs">-</button>
@@ -1048,10 +1048,10 @@ export const UtilCSVExportNode = memo(({ selected, data }: any) => {
         </button>
         
         <div className="space-y-4">
-          <div className="px-3 py-2.5 bg-black/40 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
+          <div className="px-3 py-2.5 bg-black/10 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
             <div className="text-[9px] font-mono text-gray-400 truncate">{data.params?.path || "Not selected"}</div>
           </div>
-          <div className="px-3 py-2.5 bg-black/40 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
+          <div className="px-3 py-2.5 bg-black/10 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
             <div className="text-[9px] font-mono text-white/70 truncate">{data.params?.filename || "capture"}.csv</div>
           </div>
         </div>
@@ -1305,7 +1305,7 @@ const GeoTIFFReaderNode = memo(({ selected, data }: any) => {
     <BaseNode title="GeoTIFF Reader" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={outputs}>
       {thumb ? (
         <div className="relative group" onClick={handleBrowse}>
-          <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#333] mb-1" />
+          <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#4f5b6b] mb-1" />
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-green-500/50"
             onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
             <Search size={20} className="text-white mb-1" />
@@ -1313,7 +1313,7 @@ const GeoTIFFReaderNode = memo(({ selected, data }: any) => {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#4f5b6b] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
           onDragOver={(e) => e.preventDefault()} onDrop={onDrop} onClick={handleBrowse}>
           <Search size={20} className="text-gray-500 mb-2" />
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop GeoTIFF</div>
@@ -1335,9 +1335,9 @@ const GeoEarthEngineNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Earth Engine Source" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={outputs}>
       {thumb ? (
-        <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#333]" />
+        <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#4f5b6b]" />
       ) : (
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 h-32">
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#4f5b6b] rounded-lg p-4 opacity-40 h-32">
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Configure params<br/>then toggle Fetch</div>
         </div>
       )}
@@ -1429,7 +1429,7 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
         {editing ? (
           <input
             autoFocus
-            className="bg-black/20 w-full outline-none px-1 py-0.5 rounded"
+            className="bg-black/10 w-full outline-none px-1 py-0.5 rounded"
             style={{ color: textColor }}
             value={title}
             onChange={e => data.onChangeParams?.({ title: e.target.value })}
