@@ -14,10 +14,10 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
         type="number"
         min={min} max={max} step={step} value={val}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="bg-accent/10 border border-accent/20 rounded px-2 py-0.5 text-accent font-black font-mono text-right w-20 outline-none focus:border-accent/50 transition-all"
+        className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5 text-accent font-black font-mono text-center w-28 outline-none focus:border-accent/60 transition-all text-[11px]"
       />
     </div>
-    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#3d4452] rounded-full appearance-none cursor-pointer accent-accent" />
+    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#1a1f26] rounded-full appearance-none cursor-pointer accent-accent transition-all hover:bg-[#111] shadow-inner" />
   </div>
 );
 
@@ -174,6 +174,15 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 }) => {
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
+
+  // Skip manual types to avoid duplication with schema-driven loop below
+  const MANUAL_TYPES = new Set([
+    'canvas_note', 'canvas_frame', 'input_webcam', 'input_image', 'input_movie',
+    'input_solid_color', 'filter_canny', 'filter_blur', 'filter_threshold',
+    'geom_resize', 'geom_flip', 'filter_color_mask', 'filter_morphology',
+    'analysis_face_mp', 'analysis_hand_mp', 'analysis_flow',
+    'data_list_selector', 'list_region_select', 'output_display'
+  ]);
 
   return (
     <div className="space-y-8 pb-32">
@@ -435,7 +444,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       })()}
 
       {/* Schema-driven dynamic params (plugins) */}
-      {node.type !== 'list_region_select' && node.data.schema?.params?.map((sp: ParamSpec) => {
+      {!MANUAL_TYPES.has(node.type) && node.data.schema?.params?.map((sp: ParamSpec) => {
         const isEnum   = sp.type === 'enum' || sp.options;
         const isString = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
         const isNumber = sp.type === 'number' || sp.type === 'float';
