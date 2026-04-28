@@ -489,11 +489,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 export const AnalysisDataPanel = ({ liveData }: { liveData: any }) => {
   if (!liveData || Object.keys(liveData).length === 0) return null;
   return (
-    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl shrink-0">
-      <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10">
+    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl h-full flex flex-col min-h-0">
+      <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10 shrink-0">
         <Activity size={10} /> Analysis Data
       </div>
-      <pre className="text-[10px] font-mono text-green-400/90 max-h-48 overflow-auto scrollbar-hide italic leading-relaxed">
+      <pre className="text-[10px] font-mono text-green-400/90 flex-1 overflow-auto scrollbar-hide italic leading-relaxed">
         {JSON.stringify(liveData, null, 2)}
       </pre>
     </div>

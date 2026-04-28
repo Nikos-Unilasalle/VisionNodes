@@ -380,7 +380,8 @@ function App() {
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<any>(null);
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
-  const [rightPanelWidth, setRightPanelWidth] = useState(340);
+  const [rightPanelWidth, setRightPanelWidth] = useState(480);
+  const [analysisPanelHeight, setAnalysisPanelHeight] = useState(250);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
@@ -388,6 +389,7 @@ function App() {
   const [workDirFiles, setWorkDirFiles] = useState<string[]>([]);
   const [snapEnabled, setSnapEnabled] = useState(false);
   const isResizing = useRef(false);
+  const isResizingHeight = useRef(false);
   const nodesRef = useRef<any[]>([]);
   const edgesRef = useRef<any[]>([]);
   const addNodeRef = useRef<any>(null);
@@ -446,7 +448,7 @@ function App() {
 
   const capturePlotterAsImage = useCallback(async (nodeId: string) => {
     try {
-      const svgEl = document.querySelector(`[data-id="${nodeId}"] .recharts-wrapper svg`) as SVGSVGElement | null;
+      const svgEl = document.querySelector(`[data-id="${nodeId}"] .recharts-wrapper svg`) as SVGSvgElement | null;
       if (!svgEl) { console.error('Plotter SVG not found for node', nodeId); return; }
 
       const width = svgEl.clientWidth || 400;
@@ -525,11 +527,23 @@ function App() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing.current) return;
-      const newWidth = Math.max(250, Math.min(800, document.body.clientWidth - e.clientX));
-      setRightPanelWidth(newWidth);
+      if (isResizing.current) {
+        const newWidth = window.innerWidth - e.clientX;
+        setRightPanelWidth(Math.max(300, Math.min(800, newWidth)));
+      }
+      if (isResizingHeight.current) {
+         const sidebar = document.querySelector('.unit-inspector-panel');
+         if (sidebar) {
+            const sidebarRect = sidebar.getBoundingClientRect();
+            const newHeight = sidebarRect.bottom - e.clientY;
+            setAnalysisPanelHeight(Math.max(100, Math.min(600, newHeight)));
+         }
+      }
     };
-    const handleMouseUp = () => { isResizing.current = false; };
+    const handleMouseUp = () => {
+      isResizing.current = false;
+      isResizingHeight.current = false;
+    };
     
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
@@ -2043,7 +2057,7 @@ function App() {
 
         {/* Right Panel — absolute overlay so canvas never resizes */}
         <div
-          className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30"
+          className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30 unit-inspector-panel"
           style={{ width: selectedNodeId ? rightPanelWidth : 0, opacity: selectedNodeId ? 1 : 0 }}
         >
           {/* Resize Handle */}
@@ -2093,7 +2107,13 @@ function App() {
               </div>
               
               {selectedNode && (
-                <AnalysisDataPanel liveData={selectedNodeLiveData} />
+                <div style={{ height: analysisPanelHeight }} className="flex flex-col shrink-0 relative">
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-1.5 -mt-1 cursor-row-resize hover:bg-cyan-400/50 z-20 transition-colors duration-150"
+                    onMouseDown={(e) => { e.preventDefault(); isResizingHeight.current = true; }}
+                  />
+                  <AnalysisDataPanel liveData={selectedNodeLiveData} />
+                </div>
               )}
             </div>
           </div>
