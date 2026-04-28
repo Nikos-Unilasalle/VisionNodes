@@ -17,7 +17,7 @@ import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
 import { useHistory } from './hooks/useHistory';
 import { NodesDataContext } from './context/NodesDataContext';
-import { NodeInspectorPanel } from './components/NodeInspectorPanel';
+import { NodeInspectorPanel, AnalysisDataPanel } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
@@ -2058,36 +2058,42 @@ function App() {
               <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Unit Inspector</span>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-10">
-              {selectedNode ? (
-                <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
-                  <div className="flex items-center gap-5">
-                     <div className="w-16 h-16 bg-accent/5 rounded-3xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
-                        <Cpu size={32} />
-                     </div>
-                     <div>
-                        <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
-                        {selectedNode.data.description && (
-                          <p className="text-[10px] text-gray-400 italic mt-1 leading-relaxed opacity-80">{selectedNode.data.description}</p>
-                        )}
-                        <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
-                     </div>
-                  </div>
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-10 scrollbar-hide">
+                {selectedNode ? (
+                  <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
+                    <div className="flex items-center gap-5">
+                       <div className="w-16 h-16 bg-accent/5 rounded-3xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
+                          <Cpu size={32} />
+                       </div>
+                       <div>
+                          <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
+                          {selectedNode.data.description && (
+                            <p className="text-[10px] text-gray-400 italic mt-1 leading-relaxed opacity-80">{selectedNode.data.description}</p>
+                          )}
+                          <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
+                       </div>
+                    </div>
 
-                  <NodeInspectorPanel
-                    node={selectedNode}
-                    liveData={selectedNodeLiveData}
-                    activePaletteIndex={activePaletteIndex}
-                    pickColorNodeId={pickColorNodeId}
-                    onUpdateParams={updateNodeParams}
-                    onPickColorToggle={setPickColorNodeId}
-                    onRequestCapture={requestCapture}
-                  />
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">
-                  <Layout size={120} />
-                </div>
+                    <NodeInspectorPanel
+                      node={selectedNode}
+                      liveData={selectedNodeLiveData}
+                      activePaletteIndex={activePaletteIndex}
+                      pickColorNodeId={pickColorNodeId}
+                      onUpdateParams={updateNodeParams}
+                      onPickColorToggle={setPickColorNodeId}
+                      onRequestCapture={requestCapture}
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center opacity-5 py-20 grayscale pointer-events-none">
+                    <Layout size={120} />
+                  </div>
+                )}
+              </div>
+              
+              {selectedNode && (
+                <AnalysisDataPanel liveData={selectedNodeLiveData} />
               )}
             </div>
           </div>
