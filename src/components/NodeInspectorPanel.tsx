@@ -482,18 +482,21 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         return <Slider key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
       })}
 
-      {/* Live data debug display */}
-      {liveData && Object.keys(liveData).length > 0 && (
-        <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-3 shadow-inner">
-          <div className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] flex items-center gap-2 bg-black/20 p-2 rounded-lg">
-            <Activity size={10} /> Analysis Data
-          </div>
-          <pre className="text-[10px] font-mono text-accent/80 max-h-32 overflow-auto scrollbar-hide italic leading-relaxed">
-            {JSON.stringify(liveData, null, 2)}
-          </pre>
-        </div>
-      )}
-
     </div>
   );
 };
+
+export const AnalysisDataPanel = ({ liveData }: { liveData: any }) => {
+  if (!liveData || Object.keys(liveData).length === 0) return null;
+  return (
+    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl shrink-0">
+      <div className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] flex items-center gap-2 bg-black/20 p-2 rounded-lg">
+        <Activity size={10} className="text-accent" /> Analysis Data
+      </div>
+      <pre className="text-[10px] font-mono text-accent/80 max-h-48 overflow-auto scrollbar-hide italic leading-relaxed">
+        {JSON.stringify(liveData, null, 2)}
+      </pre>
+    </div>
+  );
+};
+
