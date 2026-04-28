@@ -26,14 +26,8 @@ import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, r
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-const initialNodes: Node[] = [
-  { id: 'node-1', type: 'input_webcam', position: { x: 50, y: 150 }, data: { label: 'Webcam', params: { device_index: 1 } } },
-  { id: 'node-4', type: 'output_display', position: { x: 450, y: 150 }, data: { label: 'Display', params: {} } },
-];
-
-const initialEdges: Edge[] = [
-  { id: 'e1-4', source: 'node-1', target: 'node-4', sourceHandle: 'image__main', targetHandle: 'image__main' },
-];
+const initialNodes: Node[] = [];
+const initialEdges: Edge[] = [];
 
 const withNodeResizer = (
   Component: React.ComponentType<any>,
@@ -381,7 +375,6 @@ function App() {
   const [pendingConnection, setPendingConnection] = useState<any>(null);
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(480);
-  const [analysisPanelHeight, setAnalysisPanelHeight] = useState(250);
   const [isExamplesOpen, setIsExamplesOpen] = useState(false);
   const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
@@ -448,7 +441,7 @@ function App() {
 
   const capturePlotterAsImage = useCallback(async (nodeId: string) => {
     try {
-      const svgEl = document.querySelector(`[data-id="${nodeId}"] .recharts-wrapper svg`) as SVGSvgElement | null;
+      const svgEl = document.querySelector(`[data-id="${nodeId}"] .recharts-wrapper svg`) as SVGSVGElement | null;
       if (!svgEl) { console.error('Plotter SVG not found for node', nodeId); return; }
 
       const width = svgEl.clientWidth || 400;
@@ -531,18 +524,9 @@ function App() {
         const newWidth = window.innerWidth - e.clientX;
         setRightPanelWidth(Math.max(300, Math.min(800, newWidth)));
       }
-      if (isResizingHeight.current) {
-         const sidebar = document.querySelector('.unit-inspector-panel');
-         if (sidebar) {
-            const sidebarRect = sidebar.getBoundingClientRect();
-            const newHeight = sidebarRect.bottom - e.clientY;
-            setAnalysisPanelHeight(Math.max(100, Math.min(600, newHeight)));
-         }
-      }
     };
     const handleMouseUp = () => {
       isResizing.current = false;
-      isResizingHeight.current = false;
     };
     
     window.addEventListener('mousemove', handleMouseMove);
@@ -1916,10 +1900,10 @@ function App() {
                     {filteredNodes.map((node: any) => (
                       <button
                         key={node.type} onClick={() => { addNode(node.type, node.label, node.schema); setSearchQuery(''); }}
-                        className="p-6 bg-[#222] hover:bg-accent/10 border border-[#4f5b6b] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95 group"
+                        className="p-6 bg-[#333942] hover:bg-accent/10 border border-[#4f5b6b] hover:border-accent/40 rounded-3xl text-left transition-all active:scale-95 group"
                       >
                         <div className="text-[11px] font-bold text-gray-200 uppercase tracking-tighter group-hover:text-accent transition-colors">{node.label}</div>
-                        <div className="text-[8px] text-gray-600 font-mono mt-1 italic">{node.schema ? 'cv::plugin' : 'cv::node'}</div>
+                        <div className="text-[8px] text-gray-400 font-mono mt-1 italic">{node.schema ? 'cv::plugin' : 'cv::node'}</div>
                       </button>
                     ))}
                   </div>
@@ -1934,9 +1918,7 @@ function App() {
             </div>
           )}
 
-        </div>
-
-        <motion.div
+          <motion.div
             drag
             dragMomentum={false}
             animate={{ x: previewPos.x, y: previewPos.y }}
@@ -1983,7 +1965,7 @@ function App() {
               window.addEventListener('mousemove', onMove);
               window.addEventListener('mouseup', onUp);
             }}
-            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#4f5b6b] rounded-3xl shadow-2xl overflow-hidden z-40 group hover:border-accent transition-colors duration-300"
+            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#4f5b6b] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
             style={{ width: previewSize.w, height: previewSize.h }}
           >
             {frame && <img src={frame} alt="Vision"
@@ -2055,10 +2037,11 @@ function App() {
               </svg>
             </div>
           </motion.div>
+        </div>
 
         {/* Right Panel — absolute overlay so canvas never resizes */}
         <div
-          className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30 unit-inspector-panel"
+          className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30"
           style={{ width: selectedNodeId ? rightPanelWidth : 0, opacity: selectedNodeId ? 1 : 0 }}
         >
           {/* Resize Handle */}
@@ -2108,13 +2091,7 @@ function App() {
               </div>
               
               {selectedNode && (
-                <div style={{ height: analysisPanelHeight }} className="flex flex-col shrink-0 relative">
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1.5 -mt-1 cursor-row-resize hover:bg-cyan-400/50 z-20 transition-colors duration-150"
-                    onMouseDown={(e) => { e.preventDefault(); isResizingHeight.current = true; }}
-                  />
-                  <AnalysisDataPanel liveData={selectedNodeLiveData} />
-                </div>
+                <AnalysisDataPanel liveData={selectedNodeLiveData} />
               )}
             </div>
           </div>
