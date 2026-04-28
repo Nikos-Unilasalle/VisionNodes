@@ -14,10 +14,10 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
         type="number"
         min={min} max={max} step={step} value={val}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5 text-accent font-black font-mono text-center w-28 outline-none focus:border-accent/60 transition-all text-[11px]"
+        className="bg-white/5 border border-[#4f5b6b] rounded-lg px-3 py-1.5 text-accent font-black font-mono text-center w-28 outline-none focus:border-accent/60 transition-all text-[11px] shadow-sm"
       />
     </div>
-    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1.5 bg-[#1a1f26] rounded-full appearance-none cursor-pointer accent-accent transition-all hover:bg-[#111] shadow-inner" />
+    <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1 bg-[#4f5b6b]/40 rounded-full appearance-none cursor-pointer accent-accent transition-all hover:bg-[#4f5b6b]/60" />
   </div>
 );
 

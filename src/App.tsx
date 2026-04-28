@@ -1934,7 +1934,9 @@ function App() {
             </div>
           )}
 
-          <motion.div
+        </div>
+
+        <motion.div
             drag
             dragMomentum={false}
             animate={{ x: previewPos.x, y: previewPos.y }}
@@ -1981,7 +1983,7 @@ function App() {
               window.addEventListener('mousemove', onMove);
               window.addEventListener('mouseup', onUp);
             }}
-            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#4f5b6b] rounded-3xl shadow-2xl overflow-hidden z-20 group hover:border-accent transition-colors duration-300"
+            className="absolute bottom-6 left-[49px] bg-black border-2 border-[#4f5b6b] rounded-3xl shadow-2xl overflow-hidden z-40 group hover:border-accent transition-colors duration-300"
             style={{ width: previewSize.w, height: previewSize.h }}
           >
             {frame && <img src={frame} alt="Vision"
@@ -2053,7 +2055,6 @@ function App() {
               </svg>
             </div>
           </motion.div>
-        </div>
 
         {/* Right Panel — absolute overlay so canvas never resizes */}
         <div
