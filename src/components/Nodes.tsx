@@ -20,7 +20,7 @@ import {
   BarChart, Bar, Cell, LineChart, Line
 } from 'recharts';
 
-export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff' };
+export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669' };
 
 const NodeColorContext = React.createContext<{ customBg?: string; customText?: string }>({});
 export const useNodeColor = () => React.useContext(NodeColorContext);
@@ -1279,6 +1279,113 @@ export const OutputMovieNode = memo(({ selected, data }: any) => {
   );
 });
 
+const GeoTIFFReaderNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const thumbRef = React.useRef<string>('');
+  if (nd?._thumb) thumbRef.current = nd._thumb;
+  const thumb = thumbRef.current;
+  const schema = data.schema;
+  const IconCmp = getIcon('Globe', Box);
+  const outputs = schema?.outputs || [{ id: 'geotiff', color: 'geotiff' }, { id: 'preview', color: 'image' }, { id: 'meta', color: 'dict' }];
+
+  const handleBrowse = async () => {
+    try {
+      const file = await open({ multiple: false, filters: [{ name: 'GeoTIFF', extensions: ['tif', 'tiff'] }] });
+      if (file && typeof file === 'string') data.onChangeParams?.({ file_path: file });
+    } catch {}
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) data.onChangeParams?.({ file_path: (file as any).path || file.name });
+  };
+
+  return (
+    <BaseNode title="GeoTIFF Reader" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={outputs}>
+      {thumb ? (
+        <div className="relative group" onClick={handleBrowse}>
+          <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#333] mb-1" />
+          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-green-500/50"
+            onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
+            <Search size={20} className="text-white mb-1" />
+            <div className="text-[7px] text-white uppercase font-black">Browse / Drop</div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
+          onDragOver={(e) => e.preventDefault()} onDrop={onDrop} onClick={handleBrowse}>
+          <Search size={20} className="text-gray-500 mb-2" />
+          <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop GeoTIFF</div>
+        </div>
+      )}
+    </BaseNode>
+  );
+});
+
+const GeoEarthEngineNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const thumbRef = React.useRef<string>('');
+  if (nd?._thumb) thumbRef.current = nd._thumb;
+  const thumb = thumbRef.current;
+  const schema = data.schema;
+  const IconCmp = getIcon('Map', Box);
+  const outputs = schema?.outputs || [{ id: 'geotiff', color: 'geotiff' }, { id: 'preview', color: 'image' }, { id: 'meta', color: 'dict' }];
+
+  return (
+    <BaseNode title="Earth Engine Source" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={outputs}>
+      {thumb ? (
+        <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#333]" />
+      ) : (
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#333] rounded-lg p-4 opacity-40 h-32">
+          <div className="text-[7px] text-gray-500 uppercase font-black text-center">Configure params<br/>then toggle Fetch</div>
+        </div>
+      )}
+    </BaseNode>
+  );
+});
+
+const GeoBandInfoNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const schema = data.schema;
+  const IconCmp = getIcon('List', Box);
+  const inputs  = schema?.inputs  || [{ id: 'geotiff', color: 'geotiff' }];
+  const outputs = schema?.outputs || [{ id: 'geotiff', color: 'geotiff' }];
+
+  const bandNames: string[] = nd?.band_names || [];
+  const count:  number = nd?.count  || 0;
+  const width:  number = nd?.width  || 0;
+  const height: number = nd?.height || 0;
+  const crs:    string = nd?.crs    || '—';
+  const dtype:  string = nd?.dtype  || '—';
+
+  return (
+    <BaseNode title="Band Info" icon={IconCmp} selected={selected} data={data} color="accent" inputs={inputs} outputs={outputs}>
+      <div className="px-2 pb-2 pt-1 space-y-1 min-w-[160px]">
+        {count === 0 ? (
+          <div className="text-[9px] text-gray-500 italic text-center py-3">Connecte un GeoTIFF</div>
+        ) : (
+          <>
+            <div className="flex justify-between text-[9px] text-gray-400 border-b border-white/10 pb-1 mb-1">
+              <span>{width}×{height}</span>
+              <span className="font-mono text-[8px] text-gray-500">{dtype}</span>
+            </div>
+            <div className="text-[8px] text-gray-500 truncate" title={crs}>{crs}</div>
+            <div className="mt-1 space-y-0.5">
+              {bandNames.map((name, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <span className="text-[8px] font-mono text-emerald-400 w-4 text-right shrink-0">{i + 1}</span>
+                  <span className="text-[9px] font-bold text-white/80">{name}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </BaseNode>
+  );
+});
+
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Box);
@@ -1287,6 +1394,9 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
   if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
   if (schema.type === 'draw_text') return <DrawTextNode selected={selected} data={data} />;
   if (schema.type === 'util_csv_export') return <UtilCSVExportNode selected={selected} data={data} />;
+  if (schema.type === 'geo_geotiff_reader') return <GeoTIFFReaderNode selected={selected} data={data} />;
+  if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode selected={selected} data={data} />;
+  if (schema.type === 'geo_band_info') return <GeoBandInfoNode selected={selected} data={data} />;
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
