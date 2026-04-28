@@ -11,7 +11,11 @@ def check_and_install_dependencies():
         "ultralytics": "ultralytics",
         "torch": "torch",
         "pytesseract": "pytesseract",
-        "easyocr": "easyocr"
+        "easyocr": "easyocr",
+        "rasterio": "rasterio",
+        "pyproj": "pyproj",
+        "earthengine-api": "ee",
+        "geopy": "geopy",
     }
     
     missing = []
@@ -1200,6 +1204,18 @@ class DisplayOutput(NodeProcessor):
         return {"main": res}
 
 # --- CORE ENGINE ---
+def _is_serializable(v):
+    """Reject numpy arrays, rasterio Affine, and any container holding them."""
+    if isinstance(v, (str, int, float, bool, type(None))):
+        return True
+    if isinstance(v, np.ndarray):
+        return False
+    if isinstance(v, dict):
+        return all(_is_serializable(x) for x in v.values())
+    if isinstance(v, (list, tuple)):
+        return all(_is_serializable(x) for x in v)
+    return False  # Affine, bytes, unknown objects — skip
+
 def flatten_groups(node_list, edge_list, prefix=''):
     """Recursively expand group_node types into flat nodes+edges."""
     flat_nodes = []
@@ -1385,7 +1401,8 @@ class VisionEngine:
 
                         for k, v in out.items():
                             if k == "_command" and v: commands.append(v)
-                            elif k != "main" and not isinstance(v, np.ndarray): node_datas[f"{nid}:{k}"] = v
+                            elif k != "main" and not isinstance(v, np.ndarray) and _is_serializable(v):
+                                node_datas[f"{nid}:{k}"] = v
                         if self.preview_node_id and nid == self.preview_node_id:
                             preview_img = out.get('main')
                             if preview_img is None:

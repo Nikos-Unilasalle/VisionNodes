@@ -1,7 +1,7 @@
 import type { Node } from 'reactflow';
 
 export type ParamType = 'int' | 'float' | 'number' | 'scalar' | 'string' | 'bool' | 'boolean' | 'toggle' | 'enum' | 'trigger' | 'code' | 'color';
-export type PortColor = 'image' | 'mask' | 'any' | 'scalar' | 'list' | 'dict' | 'bool' | 'string';
+export type PortColor = 'image' | 'mask' | 'any' | 'scalar' | 'list' | 'dict' | 'bool' | 'string' | 'geotiff';
 
 export interface ParamSpec {
   id: string;

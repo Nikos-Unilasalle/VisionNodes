@@ -27,6 +27,7 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
       type="text" value={val} onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => e.stopPropagation()}
       className="w-full bg-black/40 border border-[#222] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
       placeholder={`Enter ${label.toLowerCase()}...`}
     />
@@ -440,13 +441,6 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         const isNumber = sp.type === 'number' || sp.type === 'float';
         const isBool   = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
-        if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isString) return sp.id === 'code'
-          ? <CodeInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
-          : <TextInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isNumber) return <NumberInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isBool)   return <ToggleInput key={sp.id} label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
-
         if (sp.type === 'trigger') {
           const isSnapshotSave = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
           return (
@@ -458,7 +452,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                     onRequestCapture(node.id);
                   } else {
                     up({ [sp.id]: 1 });
-                    setTimeout(() => up({ [sp.id]: 0 }), 100);
+                    setTimeout(() => up({ [sp.id]: 0 }), 400);
                   }
                 }}
                 className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
@@ -468,6 +462,13 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             </div>
           );
         }
+
+        if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
+        if (isString) return sp.id === 'code'
+          ? <CodeInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
+          : <TextInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+        if (isNumber) return <NumberInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
+        if (isBool)   return <ToggleInput key={sp.id} label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
 
         return <Slider key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
       })}
