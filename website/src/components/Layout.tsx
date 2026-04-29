@@ -50,6 +50,7 @@ const PORT_COLORS: Record<string, string> = {
   list:    '#fb923c',
   any:     '#9ca3af',
   mask:    '#fbbf24',
+  audio:   '#818cf8',
 };
 
 const CATEGORY_META: Record<string, { label: string; color: string }> = {
@@ -72,6 +73,7 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   noise:     { label: 'Noise',        color: '#e879f9' },
   ocr:       { label: 'OCR',          color: '#4ade80' },
   data:      { label: 'Data',         color: '#f97316' },
+  audio:     { label: 'Audio',        color: '#818cf8' },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ export type EngineNotification = {
   level: 'info' | 'warning' | 'error';
 };
 
+
 export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => void) {
   const [frame, setFrame] = useState<string | null>(null);
   const [nodesData, setNodesData] = useState<Record<string, any>>({});

@@ -10,7 +10,11 @@ requests>=2.31.0
 # Tracking — SORT & DeepSORT
 filterpy>=1.4.5
 scipy>=1.10.0
+scikit-image>=0.21.0
 deep-sort-realtime>=1.3.2
+librosa>=0.10.0
+soundfile>=0.12.0
+sounddevice>=0.4.6
 # GIS / Remote Sensing
 rasterio>=1.3.0
 pyproj>=3.5.0

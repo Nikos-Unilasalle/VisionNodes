@@ -16,6 +16,8 @@ def check_and_install_dependencies():
         "pyproj": "pyproj",
         "earthengine-api": "ee",
         "geopy": "geopy",
+        "librosa": "librosa",
+        "soundfile": "soundfile",
     }
     
     missing = []
@@ -1364,9 +1366,9 @@ class VisionEngine:
     async def run(self):
         while True:
             ret, frame = self.cap.read()
-            if not ret: 
-                await asyncio.sleep(0.1)
-                continue
+            if not ret:
+                frame = None   # ← allow non-camera nodes (audio, geo…) to run anyway
+                await asyncio.sleep(0.05)
             results, node_datas, final_img, commands = {}, {}, None, []
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
@@ -1420,7 +1422,10 @@ class VisionEngine:
                             except Exception as ce: print(f"Capture Error: {ce}")
 
                         for k, v in out.items():
-                            if k == "_command" and v: commands.append(v)
+                            if k == "_command" and v:
+                                cmd = dict(v)
+                                if cmd.get('node_id') == '__self__': cmd['node_id'] = nid
+                                commands.append(cmd)
                             elif k != "main" and not isinstance(v, np.ndarray) and _is_serializable(v):
                                 node_datas[f"{nid}:{k}"] = v
                         if self.preview_node_id and nid == self.preview_node_id:

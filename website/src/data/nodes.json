@@ -4,6 +4,116 @@
     "label": "Sources",
     "nodes": [
       {
+        "type": "geo_earth_engine",
+        "label": "Earth Engine",
+        "category": "src",
+        "icon": "Map",
+        "description": "Download satellite imagery from Google Earth Engine. Sentinel-2, Landsat-8, MODIS. Automatic local cache.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "meta",
+            "color": "dict",
+            "label": "Meta"
+          }
+        ],
+        "params": [
+          {
+            "id": "fetch",
+            "type": "trigger",
+            "default": 0,
+            "label": "Fetch"
+          },
+          {
+            "id": "gcp_project",
+            "type": "string",
+            "default": "",
+            "label": "GCP Project ID"
+          },
+          {
+            "id": "collection",
+            "type": "enum",
+            "default": "Sentinel-2 SR",
+            "label": "Collection"
+          },
+          {
+            "id": "location",
+            "type": "string",
+            "default": "Paris, France",
+            "label": "Location or \"lat,lon\""
+          },
+          {
+            "id": "date_start",
+            "type": "string",
+            "default": "2024-01-01",
+            "label": "Start Date"
+          },
+          {
+            "id": "date_end",
+            "type": "string",
+            "default": "2024-06-01",
+            "label": "End Date"
+          },
+          {
+            "id": "cloud_max",
+            "type": "int",
+            "default": 20,
+            "min": 0,
+            "max": 100,
+            "label": "Max Clouds %"
+          },
+          {
+            "id": "size_km",
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 100,
+            "label": "ROI Size (km)"
+          },
+          {
+            "id": "scale_m",
+            "type": "int",
+            "default": 30,
+            "min": 10,
+            "max": 1000,
+            "label": "Resolution (m/px)"
+          },
+          {
+            "id": "band_preset",
+            "type": "enum",
+            "options": [
+              "RGB",
+              "RGB+NIR",
+              "All"
+            ],
+            "default": "RGB",
+            "label": "Bands"
+          },
+          {
+            "id": "custom_bands",
+            "type": "string",
+            "default": "",
+            "label": "Bands (e.g. B8 \u2014 overrides preset)"
+          },
+          {
+            "id": "cache_dir",
+            "type": "string",
+            "default": "gee_cache",
+            "label": "Cache Dir"
+          }
+        ]
+      },
+      {
         "type": "input_float_image",
         "label": "Float Image",
         "category": "src",
@@ -79,6 +189,63 @@
           }
         ],
         "colorable": true
+      },
+      {
+        "type": "geo_geotiff_reader",
+        "label": "GeoTIFF Reader",
+        "category": "src",
+        "icon": "Globe",
+        "description": "Read a local GeoTIFF file. Supports multispectral imagery (Sentinel-2, Landsat, etc.)",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "meta",
+            "color": "dict",
+            "label": "Meta"
+          }
+        ],
+        "params": [
+          {
+            "id": "file_path",
+            "type": "string",
+            "default": "",
+            "label": "File Path"
+          },
+          {
+            "id": "r_band",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "label": "Preview R"
+          },
+          {
+            "id": "g_band",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20,
+            "label": "Preview G"
+          },
+          {
+            "id": "b_band",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 20,
+            "label": "Preview B"
+          }
+        ]
       },
       {
         "type": "input_image",
@@ -3149,6 +3316,18 @@
           {
             "id": "mask",
             "color": "mask"
+          },
+          {
+            "id": "keypoints",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          },
+          {
+            "id": "points",
+            "color": "list"
           }
         ],
         "params": [
@@ -3476,6 +3655,68 @@
         ]
       },
       {
+        "type": "feat_ndwi",
+        "label": "NDWI Water Index",
+        "category": "features",
+        "icon": "Droplets",
+        "description": "Normalized Difference Water Index. Standard formula: (Green\u2212NIR)/(Green+NIR) \u2014 connect a NIR band to the second input (Sentinel-2 B8, Landsat B5). RGB Approx. mode uses (B\u2212G)/(B+G) for standard RGB images only. Water threshold: >0.2.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "nir",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "coverage",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "RGB Approx. (B\u2212G)",
+              "Green + NIR (standard)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "max": 1.0,
+            "default": 0.2,
+            "step": 0.01
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Viridis",
+              "Ocean",
+              "Jet"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
         "type": "feat_orb",
         "label": "ORB Detector",
         "category": "features",
@@ -3566,6 +3807,76 @@
         ]
       },
       {
+        "type": "feat_spectral_index",
+        "label": "Spectral Index",
+        "category": "features",
+        "icon": "Activity",
+        "description": "Generic normalized difference index (A\u2212B)/(A+B). Presets: NDWI, NDVI, NDSI. Custom: pick channels freely. Connect image_b for two-image mode (e.g. separate NIR band).",
+        "inputs": [
+          {
+            "id": "image_a",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "coverage",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "preset",
+            "label": "Preset",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "ch_a",
+            "label": "Band A",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "ch_b",
+            "label": "Band B",
+            "type": "enum",
+            "default": 1
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "scalar",
+            "max": 1.0,
+            "default": 0.2,
+            "step": 0.01
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Viridis",
+              "Ocean",
+              "Autumn"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
         "type": "feat_threshold_adv",
         "label": "Threshold (Advanced)",
         "category": "features",
@@ -3608,6 +3919,66 @@
             "min": 0,
             "max": 255,
             "default": 127
+          }
+        ]
+      },
+      {
+        "type": "feat_water_refine",
+        "label": "Water Mask Refine",
+        "category": "features",
+        "icon": "Waves",
+        "description": "Refines a water binary mask: morphological closing to fill gaps, opening to remove noise, area filter to keep only significant water bodies.",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "contours",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "close_size",
+            "label": "Close Kernel",
+            "type": "scalar",
+            "min": 0,
+            "max": 51,
+            "default": 7,
+            "step": 2
+          },
+          {
+            "id": "open_size",
+            "label": "Open Kernel",
+            "type": "scalar",
+            "min": 0,
+            "max": 21,
+            "default": 3,
+            "step": 2
+          },
+          {
+            "id": "min_area",
+            "label": "Min Area (px\u00b2)",
+            "type": "scalar",
+            "min": 0,
+            "max": 100000,
+            "default": 500,
+            "step": 100
           }
         ]
       },
@@ -4179,6 +4550,47 @@
               "Yellow"
             ],
             "default": 0
+          }
+        ]
+      },
+      {
+        "type": "sci_marker_filter",
+        "label": "Marker Filter (Area)",
+        "category": "analysis",
+        "icon": "Scissors",
+        "description": "Filters markers/labels based on their pixel area. Removes objects that are too small or too large.",
+        "inputs": [
+          {
+            "id": "markers",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "markers",
+            "color": "any"
+          },
+          {
+            "id": "count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_area",
+            "label": "Min Area (px)",
+            "type": "scalar",
+            "min": 0,
+            "max": 1000000,
+            "default": 200
+          },
+          {
+            "id": "max_area",
+            "label": "Max Area (px)",
+            "type": "scalar",
+            "min": 0,
+            "max": 10000000,
+            "default": 1000000
           }
         ]
       },
@@ -6753,6 +7165,52 @@
         "outputs": []
       },
       {
+        "type": "group_node",
+        "label": "Group",
+        "category": "canvas",
+        "icon": "Package",
+        "description": "Encapsulates a subgraph. Double-click to enter/edit.",
+        "inputs": [],
+        "outputs": [],
+        "params": [
+          {
+            "id": "label",
+            "type": "string",
+            "default": "Group"
+          }
+        ]
+      },
+      {
+        "type": "group_input",
+        "label": "Group IN",
+        "category": "canvas",
+        "icon": "LogIn",
+        "description": "Relay: group input ports into the subgraph.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "slot_0",
+            "color": "any"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "group_output",
+        "label": "Group OUT",
+        "category": "canvas",
+        "icon": "LogOut",
+        "description": "Relay: inner subgraph outputs to group output ports.",
+        "inputs": [
+          {
+            "id": "slot_0",
+            "color": "any"
+          }
+        ],
+        "outputs": [],
+        "params": []
+      },
+      {
         "type": "canvas_note",
         "label": "Note",
         "category": "canvas",
@@ -6777,6 +7235,426 @@
           {
             "id": "out",
             "color": "any"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "audio",
+    "label": "Audio Processing",
+    "nodes": [
+      {
+        "type": "plugin_audio_export",
+        "label": "Audio Export",
+        "category": "audio",
+        "icon": "Download",
+        "description": "Saves audio data to a .wav file on disk.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "path",
+            "label": "Output Path",
+            "type": "string",
+            "default": "output.wav"
+          },
+          {
+            "id": "save_now",
+            "label": "Save Now",
+            "type": "trigger"
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_input",
+        "label": "Audio File",
+        "category": "audio",
+        "icon": "Music",
+        "description": "Loads an audio file (.wav, .mp3, .flac, etc.) from disk.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          },
+          {
+            "id": "duration",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": "samples/audio.wav"
+          },
+          {
+            "id": "mono",
+            "label": "Force Mono",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_info",
+        "label": "Audio Info",
+        "category": "audio",
+        "icon": "Activity",
+        "description": "Computes RMS energy, peak amplitude, and zero-crossing rate from audio.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "rms",
+            "color": "scalar"
+          },
+          {
+            "id": "peak",
+            "color": "scalar"
+          },
+          {
+            "id": "zcr",
+            "color": "scalar"
+          },
+          {
+            "id": "samples",
+            "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_to_spectrogram",
+        "label": "Audio to Spectro",
+        "category": "audio",
+        "icon": "Waves",
+        "description": "Converts audio into a log-mel spectrogram image (dB scale).",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "n_fft",
+            "label": "N-FFT",
+            "type": "int",
+            "default": 2048,
+            "min": 256,
+            "max": 8192
+          },
+          {
+            "id": "hop_length",
+            "label": "Hop Length",
+            "type": "int",
+            "default": 512,
+            "min": 64,
+            "max": 2048
+          },
+          {
+            "id": "n_mels",
+            "label": "Mel Bands",
+            "type": "int",
+            "default": 128,
+            "min": 32,
+            "max": 256
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "Magma",
+              "Viridis",
+              "Inferno",
+              "Hot",
+              "Jet"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_freq_filter",
+        "label": "Freq Filter",
+        "category": "audio",
+        "icon": "Filter",
+        "description": "Band-pass / low-pass / high-pass IIR filter on audio. Keeps only the selected frequency range.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "filter_type",
+            "label": "Type",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "Low-pass",
+              "High-pass",
+              "Band-pass",
+              "Band-stop"
+            ]
+          },
+          {
+            "id": "low_hz",
+            "label": "Low Cut (Hz)",
+            "type": "int",
+            "default": 100,
+            "min": 1,
+            "max": 20000
+          },
+          {
+            "id": "high_hz",
+            "label": "High Cut (Hz)",
+            "type": "int",
+            "default": 4000,
+            "min": 1,
+            "max": 20000
+          },
+          {
+            "id": "order",
+            "label": "Filter Order",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 10
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_pitch_shift",
+        "label": "Pitch Shift",
+        "category": "audio",
+        "icon": "Music",
+        "description": "Shifts the pitch of audio by N semitones without changing duration.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "semitones",
+            "label": "Semitones",
+            "type": "float",
+            "default": 0.0,
+            "max": 24
+          }
+        ]
+      },
+      {
+        "type": "plugin_spectrogram_to_audio",
+        "label": "Spectro to Audio",
+        "category": "audio",
+        "icon": "Volume2",
+        "description": "Reconstructs audio from a spectrogram image using Griffin-Lim algorithm.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "sr",
+            "label": "Sample Rate",
+            "type": "int",
+            "default": 22050
+          },
+          {
+            "id": "n_fft",
+            "label": "N-FFT",
+            "type": "int",
+            "default": 2048
+          },
+          {
+            "id": "hop_length",
+            "label": "Hop Length",
+            "type": "int",
+            "default": 512
+          },
+          {
+            "id": "iterations",
+            "label": "GL Iterations",
+            "type": "int",
+            "default": 32,
+            "min": 4,
+            "max": 128
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_time_stretch",
+        "label": "Time Stretch",
+        "category": "audio",
+        "icon": "Zap",
+        "description": "Stretches or compresses audio duration without affecting pitch.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          },
+          {
+            "id": "sr",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "rate",
+            "label": "Speed Rate",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.1,
+            "max": 4.0
+          }
+        ]
+      },
+      {
+        "type": "plugin_audio_waveform",
+        "label": "Waveform View",
+        "category": "audio",
+        "icon": "Activity",
+        "description": "Renders the audio waveform as an image.",
+        "inputs": [
+          {
+            "id": "audio",
+            "color": "audio"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 640,
+            "min": 128,
+            "max": 2048
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 200,
+            "min": 64,
+            "max": 1024
+          },
+          {
+            "id": "r",
+            "label": "R",
+            "type": "int",
+            "default": 99,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "g",
+            "label": "G",
+            "type": "int",
+            "default": 102,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "b",
+            "label": "B",
+            "type": "int",
+            "default": 241,
+            "min": 0,
+            "max": 255
           }
         ]
       }
@@ -6867,6 +7745,326 @@
             "max": 100,
             "step": 1,
             "default": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "geo",
+    "label": "Geo",
+    "nodes": [
+      {
+        "type": "geo_band_calc",
+        "label": "Band Calculator",
+        "category": "geo",
+        "icon": "Calculator",
+        "description": "Free expression on bands. Variables: B1, B2, \u2026 Bn. Example: (B4-B3)/(B4+B3+1e-10)",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "raw",
+            "color": "geotiff",
+            "label": "Result"
+          },
+          {
+            "id": "colormap",
+            "color": "image",
+            "label": "Colormap"
+          }
+        ],
+        "params": [
+          {
+            "id": "expression",
+            "type": "code",
+            "default": "(B4 - B3) / (B4 + B3 + 1e-10)",
+            "label": "Expression"
+          },
+          {
+            "id": "clamp_min",
+            "type": "float",
+            "max": 0,
+            "label": "Clamp Min"
+          },
+          {
+            "id": "clamp_max",
+            "type": "float",
+            "default": 1.0,
+            "min": 0,
+            "max": 1000000.0,
+            "label": "Clamp Max"
+          },
+          {
+            "id": "colormap",
+            "type": "enum",
+            "default": "viridis",
+            "label": "Colormap"
+          }
+        ]
+      },
+      {
+        "type": "geo_band_info",
+        "label": "Band Info",
+        "category": "geo",
+        "icon": "List",
+        "description": "Display GeoTIFF metadata: bands, dimensions, CRS. Pass-through on geotiff port.",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "Pass-through"
+          }
+        ],
+        "params": []
+      },
+      {
+        "type": "geo_band_selector",
+        "label": "Band Selector",
+        "category": "geo",
+        "icon": "Layers",
+        "description": "Select 3 bands from a GeoTIFF and produce an RGB image for standard CV pipelines.",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "r_band",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "label": "R Band"
+          },
+          {
+            "id": "g_band",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20,
+            "label": "G Band"
+          },
+          {
+            "id": "b_band",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 20,
+            "label": "B Band"
+          },
+          {
+            "id": "stretch",
+            "type": "bool",
+            "default": true,
+            "label": "Auto Stretch"
+          },
+          {
+            "id": "percentile",
+            "type": "int",
+            "default": 2,
+            "min": 0,
+            "max": 10,
+            "label": "Stretch %"
+          }
+        ]
+      },
+      {
+        "type": "geo_geotiff_writer",
+        "label": "GeoTIFF Writer",
+        "category": "geo",
+        "icon": "Save",
+        "description": "Save a GeoTIFF stream to disk with geographic metadata (CRS, transform).",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "save",
+            "type": "trigger",
+            "default": 0,
+            "label": "Save"
+          },
+          {
+            "id": "file_path",
+            "type": "string",
+            "default": "output.tif",
+            "label": "File Path"
+          },
+          {
+            "id": "compression",
+            "type": "enum",
+            "options": [
+              "lzw",
+              "deflate",
+              "none"
+            ],
+            "default": "lzw",
+            "label": "Compression"
+          }
+        ]
+      },
+      {
+        "type": "geo_raster_stats",
+        "label": "Raster Stats",
+        "category": "geo",
+        "icon": "BarChart",
+        "description": "Compute per-band statistics (min, max, mean, std, median). Scalar output for selected band.",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "Pass-through"
+          },
+          {
+            "id": "stats",
+            "color": "dict",
+            "label": "All Bands"
+          },
+          {
+            "id": "min",
+            "color": "scalar"
+          },
+          {
+            "id": "max",
+            "color": "scalar"
+          },
+          {
+            "id": "mean",
+            "color": "scalar"
+          },
+          {
+            "id": "std",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "band",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "label": "Band (scalars)"
+          },
+          {
+            "id": "ignore_zeros",
+            "type": "bool",
+            "default": true,
+            "label": "Ignore Zeros"
+          }
+        ]
+      },
+      {
+        "type": "geo_spectral_index",
+        "label": "Spectral Index",
+        "category": "geo",
+        "icon": "BarChart2",
+        "description": "Compute NDVI, NDWI, NBR or EVI from a multispectral GeoTIFF.",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "colormap",
+            "color": "image",
+            "label": "Colormap"
+          },
+          {
+            "id": "raw",
+            "color": "geotiff",
+            "label": "Raw (-1\u20261)"
+          }
+        ],
+        "params": [
+          {
+            "id": "index",
+            "type": "enum",
+            "options": [
+              "NDVI",
+              "NDWI",
+              "NBR",
+              "EVI"
+            ],
+            "default": "NDVI",
+            "label": "Index"
+          },
+          {
+            "id": "nir_band",
+            "type": "int",
+            "default": 4,
+            "min": 1,
+            "max": 20,
+            "label": "NIR Band"
+          },
+          {
+            "id": "red_band",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 20,
+            "label": "Red Band"
+          },
+          {
+            "id": "green_band",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20,
+            "label": "Green Band"
+          },
+          {
+            "id": "blue_band",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 20,
+            "label": "Blue Band"
+          },
+          {
+            "id": "swir_band",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 20,
+            "label": "SWIR Band"
+          },
+          {
+            "id": "colormap",
+            "type": "enum",
+            "default": "viridis",
+            "label": "Colormap"
           }
         ]
       }

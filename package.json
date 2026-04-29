@@ -7,7 +7,7 @@
     "dev": "vite",
     "setup": "./setup.sh",
     "engine": ".venv/bin/python engine/engine.py",
-    "studio": "[ -d node_modules ] || (echo '📦 Missing node_modules. Installing...' && npm install); ss -tlnp | awk -F'pid=' '/:(8765|1420|1421) /{split($2,a,\",\");if(a[1]+0>1)print a[1]+0}' | sort -u | xargs -r kill -9 2>/dev/null; sleep 0.5; WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run tauri dev",
+    "studio": "[ -d node_modules ] || (echo '📦 Missing node_modules. Installing...' && npm install); lsof -ti:8765 -ti:1420 -ti:1421 2>/dev/null | sort -u | xargs kill -9 2>/dev/null; sleep 0.5; .venv/bin/python engine/engine.py & sleep 1 && npm run tauri dev",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",

@@ -9,7 +9,7 @@ import {
   Camera, Waves, Ghost, Maximize, Settings, Cpu, HardDrive, Info,
   Plus, Layers, Search, User, Scaling, Zap, Activity, ChevronRight,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
-  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit,
+  Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit, Music,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
   Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut
 } from 'lucide-react';
@@ -141,6 +141,16 @@ const _nodeTypes = {
   math_cos: N.MathNode,
   math_clamp: N.MathNode,
   math_distance: N.MathNode,
+  plugin_audio_input: N.AudioInputNode,
+  plugin_audio_playback: N.AudioPlaybackNode,
+  plugin_audio_waveform: N.AudioWaveformNode,
+  plugin_audio_to_spectrogram: N.AudioToSpectroNode,
+  plugin_spectrogram_to_audio: N.SpectroToAudioNode,
+  plugin_audio_freq_filter: N.AudioGenericNode,
+  plugin_audio_pitch_shift: N.AudioGenericNode,
+  plugin_audio_time_stretch: N.AudioGenericNode,
+  plugin_audio_info: N.AudioGenericNode,
+  plugin_audio_export: N.AudioExportNode,
   string_input: N.StringNode,
   string_concat: N.StringNode,
   string_split: N.StringNode,
@@ -257,6 +267,18 @@ const CATEGORIES = [
     { type: 'canvas_note', label: 'Note', description: 'Annotation text block. Double-click to edit. Drag & resize freely.' },
     { type: 'canvas_frame', label: 'Frame', description: 'Wraps and labels a group of nodes. Drag to encapsulate nodes.' },
     { type: 'canvas_reroute', label: 'Reroute', description: 'Pass-through node to organize wires.' }
+  ] },
+  { id: 'audio', label: 'Audio Processing', icon: Music, nodes: [
+    { type: 'plugin_audio_input',         label: 'Audio File',     description: 'Loads an audio file (.wav, .mp3, .flac…).' },
+    { type: 'plugin_audio_waveform',      label: 'Waveform View',  description: 'Renders the audio waveform as an image.' },
+    { type: 'plugin_audio_to_spectrogram',label: 'Audio to Spectro',description: 'Converts audio into a log-mel spectrogram image.' },
+    { type: 'plugin_spectrogram_to_audio',label: 'Spectro to Audio',description: 'Reconstructs audio from a spectrogram via Griffin-Lim.' },
+    { type: 'plugin_audio_freq_filter',   label: 'Freq Filter',    description: 'Low-pass / High-pass / Band-pass / Band-stop IIR filter.' },
+    { type: 'plugin_audio_pitch_shift',   label: 'Pitch Shift',    description: 'Shifts pitch by N semitones without changing duration.' },
+    { type: 'plugin_audio_time_stretch',  label: 'Time Stretch',   description: 'Stretches or compresses duration without changing pitch.' },
+    { type: 'plugin_audio_info',          label: 'Audio Info',     description: 'Computes RMS, peak amplitude, zero-crossing rate.' },
+    { type: 'plugin_audio_export',        label: 'Audio Export',   description: 'Saves audio to a .wav file on disk.' },
+    { type: 'plugin_audio_playback',      label: 'Speaker Out',    description: 'Plays audio through system speakers (sounddevice).' }
   ] }
 ];
 
@@ -1296,6 +1318,12 @@ function App() {
           if (cmd.node_type === 'input_image') label = "Captured Frame";
           if (cmd.node_type === 'input_movie') label = "Recorded Video";
           addNodeRef.current?.(cmd.node_type, label, null, cmd.params);
+        } else if (cmd.type === 'set_param') {
+          setViewNodes(nds => nds.map(n =>
+            n.id === cmd.node_id
+              ? { ...n, data: { ...n.data, params: { ...n.data.params, ...cmd.params } } }
+              : n
+          ));
         }
       });
     }
@@ -1523,6 +1551,9 @@ function App() {
               </button>
             ))}
           </div>
+
+          <div className="w-[1px] h-4 bg-white/10 mx-1" />
+
            <div className="relative">
               <button
                 onClick={() => setIsPaletteSelectOpen(!isPaletteSelectOpen)}
@@ -1700,7 +1731,7 @@ function App() {
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
           >
-            <Background color="rgba(255, 255, 255, 0.08)" variant={BackgroundVariant.Lines} gap={40} size={1} />
+            <Background color="rgba(255, 255, 255, 0.04)" variant={BackgroundVariant.Lines} gap={40} size={1} />
             <Controls className="bg-[#3d4452] border-[#4f5b6b] fill-white" />
             <Panel position="top-left">
               <div className="flex flex-col gap-2">
