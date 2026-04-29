@@ -211,7 +211,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
     'geom_resize', 'geom_flip', 'filter_color_mask', 'filter_morphology',
     'analysis_face_mp', 'analysis_hand_mp', 'analysis_flow',
     'data_list_selector', 'list_region_select', 'output_display',
-    'geo_spectral_index', 'geo_band_calc', 'filter_float_threshold'
+    'geo_spectral_index', 'geo_band_calc', 'filter_float_threshold',
+    // Audio nodes
+    'plugin_audio_input', 'plugin_audio_to_spectrogram', 'plugin_audio_waveform',
+    'plugin_audio_freq_filter', 'plugin_audio_pitch_shift', 'plugin_audio_time_stretch',
+    'plugin_spectrogram_to_audio', 'plugin_audio_export', 'plugin_audio_info',
   ]);
 
   return (
@@ -598,6 +602,139 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           </>
         );
       })()}
+
+      {/* ── Audio nodes ───────────────────────────────────────────────────── */}
+
+      {/* plugin_audio_input */}
+      {node.type === 'plugin_audio_input' && (() => {
+        const isPlaying = !!(p.playing);
+        const duration  = Number(liveData?.duration ?? p.duration ?? 0);
+        const position  = Number(liveData?.position ?? 0);
+        const progress  = duration > 0 ? Math.min(position / duration, 1) : 0;
+        return (
+          <>
+            <TextInput label="File Path" val={p.path || ''} onChange={v => up({ path: v })} />
+            <ToggleInput label="Force Mono" val={!!(p.mono ?? true)} onChange={v => up({ mono: v })} />
+
+            {/* Transport */}
+            {p.path && (
+              <div className="space-y-3 pt-2">
+                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Playback</label>
+
+                {/* Progress bar */}
+                <div>
+                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden cursor-pointer"
+                    onClick={e => {
+                      const rect = (e.target as HTMLElement).getBoundingClientRect();
+                      const ratio = (e.clientX - rect.left) / rect.width;
+                      up({ _seek: ratio * duration, playing: false });
+                    }}>
+                    <div className="h-full bg-indigo-500/80 rounded-full transition-all duration-100"
+                      style={{ width: `${progress * 100}%` }} />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[8px] text-gray-500 font-mono">{position.toFixed(1)}s</span>
+                    <span className="text-[8px] text-gray-500 font-mono">{duration.toFixed(1)}s</span>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-2">
+                  <button onClick={() => up({ playing: false, _seek: 0 })}
+                    className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-indigo-500/20 border border-white/10 text-gray-400 hover:text-indigo-300 text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                    ⏮ Rewind
+                  </button>
+                  <button onClick={() => up({ playing: !isPlaying })}
+                    className={`flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                      isPlaying
+                        ? 'bg-indigo-500/30 border-indigo-400/50 text-indigo-200 hover:bg-red-500/20 hover:border-red-400/40'
+                        : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/40'
+                    }`}>
+                    {isPlaying ? '⏸ Stop' : '▶ Play'}
+                  </button>
+                  <button onClick={() => up({ loop: !p.loop })}
+                    className={`px-3 py-2 rounded-xl border text-[9px] font-black transition-all ${
+                      p.loop ? 'bg-indigo-500/30 border-indigo-400/50 text-indigo-200' : 'bg-white/5 border-white/10 text-gray-500 hover:text-gray-300'
+                    }`} title="Loop">
+                    🔁
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
+
+      {/* plugin_audio_to_spectrogram */}
+      {node.type === 'plugin_audio_to_spectrogram' && (
+        <>
+          <ToggleInput label="Full File" val={!!p.full_file} onChange={v => up({ full_file: v })} />
+          {!p.full_file && <Slider label="Window (s)" val={p.window_sec ?? 5} min={0.5} max={60} step={0.5} onChange={v => up({ window_sec: v })} />}
+          <Slider label="N-FFT"      val={p.n_fft      ?? 2048} min={256}  max={8192} step={256}  onChange={v => up({ n_fft: v })} />
+          <Slider label="Hop Length" val={p.hop_length ?? 512}  min={64}   max={2048} step={64}   onChange={v => up({ hop_length: v })} />
+          <Slider label="Mel Bands"  val={p.n_mels     ?? 128}  min={32}   max={256}  step={16}   onChange={v => up({ n_mels: v })} />
+          <SelectInput label="Colormap" val={Number(p.colormap ?? 0)} options={['Magma','Viridis','Inferno','Hot','Jet']} onChange={v => up({ colormap: v })} />
+        </>
+      )}
+
+      {/* plugin_audio_waveform */}
+      {node.type === 'plugin_audio_waveform' && (
+        <>
+          <Slider label="Width"  val={p.width  ?? 640} min={128} max={2048} step={32} onChange={v => up({ width: v })} />
+          <Slider label="Height" val={p.height ?? 200} min={64}  max={1024} step={16} onChange={v => up({ height: v })} />
+          <Slider label="R" val={p.r ?? 99}  min={0} max={255} onChange={v => up({ r: v })} />
+          <Slider label="G" val={p.g ?? 102} min={0} max={255} onChange={v => up({ g: v })} />
+          <Slider label="B" val={p.b ?? 241} min={0} max={255} onChange={v => up({ b: v })} />
+        </>
+      )}
+
+      {/* plugin_audio_freq_filter */}
+      {node.type === 'plugin_audio_freq_filter' && (
+        <>
+          <SelectInput label="Filter Type" val={Number(p.filter_type ?? 0)} options={['Low-pass','High-pass','Band-pass','Band-stop']} onChange={v => up({ filter_type: v })} />
+          <Slider label="Low Cut (Hz)"  val={p.low_hz  ?? 100}  min={1} max={20000} step={10} onChange={v => up({ low_hz: v })} />
+          <Slider label="High Cut (Hz)" val={p.high_hz ?? 4000} min={1} max={20000} step={10} onChange={v => up({ high_hz: v })} />
+          <Slider label="Filter Order"  val={p.order   ?? 5}    min={1} max={10}    step={1}  onChange={v => up({ order: v })} />
+        </>
+      )}
+
+      {/* plugin_audio_pitch_shift */}
+      {node.type === 'plugin_audio_pitch_shift' && (
+        <Slider label="Semitones" val={p.semitones ?? 0} min={-24} max={24} step={0.5} onChange={v => up({ semitones: v })} />
+      )}
+
+      {/* plugin_audio_time_stretch */}
+      {node.type === 'plugin_audio_time_stretch' && (
+        <Slider label="Speed Rate" val={p.rate ?? 1.0} min={0.1} max={4.0} step={0.05} onChange={v => up({ rate: v })} />
+      )}
+
+      {/* plugin_spectrogram_to_audio */}
+      {node.type === 'plugin_spectrogram_to_audio' && (
+        <>
+          <Slider label="Sample Rate"    val={p.sr         ?? 22050} min={8000}  max={48000} step={100} onChange={v => up({ sr: v })} />
+          <Slider label="N-FFT"          val={p.n_fft      ?? 2048}  min={256}   max={8192}  step={256} onChange={v => up({ n_fft: v })} />
+          <Slider label="Hop Length"     val={p.hop_length ?? 512}   min={64}    max={2048}  step={64}  onChange={v => up({ hop_length: v })} />
+          <Slider label="GL Iterations"  val={p.iterations ?? 32}    min={4}     max={128}   step={4}   onChange={v => up({ iterations: v })} />
+        </>
+      )}
+
+      {/* plugin_audio_export */}
+      {node.type === 'plugin_audio_export' && (
+        <>
+          <TextInput label="Output Path" val={p.path || 'output.wav'} onChange={v => up({ path: v })} />
+          <div className="space-y-4 group">
+            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Save Now</label>
+            <button
+              onClick={() => { up({ save_now: 1 }); setTimeout(() => up({ save_now: 0 }), 400); }}
+              className="w-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black py-4 rounded-3xl hover:bg-indigo-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2 active:scale-95"
+            >
+              <Save size={14} /> Save Audio File
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* plugin_audio_info  — outputs only, no params */}
 
       {/* Node note — always visible, displayed under the node when non-empty */}
       {node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (
