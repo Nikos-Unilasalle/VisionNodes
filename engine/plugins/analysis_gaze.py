@@ -5,9 +5,10 @@ import os
 import threading
 import urllib.request
 
-# Absolute path to the gaze/ folder (two levels up from this plugin file)
+# Absolute path to the gaze/ folder (three levels up from this plugin file)
 _PLUGIN_DIR  = os.path.dirname(os.path.abspath(__file__))
-_PROJECT_DIR = os.path.dirname(os.path.dirname(_PLUGIN_DIR))   # engine/plugins → engine → project root
+_ENGINE_DIR  = os.path.dirname(_PLUGIN_DIR)
+_PROJECT_DIR = os.path.dirname(_ENGINE_DIR)   # engine/plugins → engine → project root
 _DEFAULT_CKPT = os.path.join(_PROJECT_DIR, 'gaze', 'epoch_24_ckpt.pth.tar')
 
 # ── ETH-XGaze face model: 3-D reference points (mm) ─────────────────────────

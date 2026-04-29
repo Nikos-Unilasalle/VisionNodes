@@ -1310,13 +1310,33 @@ class VisionEngine:
             self.fallback_img = cv2.imread(img_path)
 
     def switch_camera(self, idx):
-        if self.cap: self.cap.release()
-        # Primary attempt
-        self.cap = cv2.VideoCapture(idx, CAP_BACKEND)
-        # Fallback for Linux V4L2 specific indices
+        target_idx = str(idx)
+        current_idx = str(getattr(self, 'current_cap_index', -1))
+        
+        # If we are already on this index, don't try again (even if it's closed/failed)
+        if current_idx == target_idx and self.cap is not None:
+            return
+            
+        print(f"[Engine] Camera Switch Request: {current_idx} -> {target_idx}")
+        
+        if self.cap: 
+            self.cap.release()
+            self.cap = None
+            
+        # Try primary backend
+        print(f"[Engine] Attempting to open cam {target_idx} (CAP_ANY)...")
+        cap = cv2.VideoCapture(int(idx), CAP_BACKEND)
+        
+        if not cap.isOpened():
+            print(f"[Engine] Fallback to CAP_V4L2 for cam {target_idx}...")
+            cap = cv2.VideoCapture(int(idx), cv2.CAP_V4L2)
+            
+        self.cap = cap
+        self.current_cap_index = int(idx)
+        print(f"[Engine] Camera {target_idx} opened: {self.cap.isOpened()}")
+        
         if not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(idx, cv2.CAP_V4L2)
-        self.current_cap_index = idx
+            print(f"[Engine] CRITICAL: Camera {target_idx} failed to open. Stopping retry loop.")
 
     def update_graph(self, g):
         raw_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
