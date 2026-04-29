@@ -1266,6 +1266,8 @@ export const PALETTES = [
   }
 ];
 
+const _noteHash = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; return Math.abs(h); };
+
 export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -1276,6 +1278,9 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#ffd4b8');
   const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#3a2010');
 
+  // Deterministic tilt from node id — fixed per note, never changes
+  const rotation = ((_noteHash(data.id || '') % 9) - 4) * 0.35; // -1.4° to +1.4°
+
   React.useEffect(() => {
     if (editing) textareaRef.current?.focus();
   }, [editing]);
@@ -1285,15 +1290,38 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
     setEditing(true);
   };
 
-  const resizerColor = `${bgColor}99`;
-  const placeholder = textColor + '55';
-
   return (
     <div
-      className={`w-full h-full rounded-lg overflow-hidden group/note transition-all duration-200 ${selected ? 'shadow-xl ring-2 ring-black/20' : 'shadow-md'}`}
-      style={{ background: bgColor, border: `1px solid ${resizerColor}` }}
+      className="w-full h-full overflow-hidden transition-all duration-200"
+      style={{
+        background: bgColor,
+        borderRadius: '5px 5px 0 0',
+        transform: `rotate(${rotation}deg)`,
+        boxShadow: selected
+          ? `5px 8px 24px rgba(0,0,0,0.38), 2px 3px 8px rgba(0,0,0,0.22), 0 0 0 2px rgba(0,0,0,0.25)`
+          : `4px 6px 18px rgba(0,0,0,0.28), 2px 3px 6px rgba(0,0,0,0.16)`,
+      }}
       onDoubleClick={handleDoubleClick}
     >
+      {/* Header — chapeau style + macOS square button */}
+      <div
+        className="flex items-center gap-1.5 px-2 py-1 nodrag select-none"
+        style={{ background: 'rgba(0,0,0,0.13)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}
+      >
+        {/* Old macOS square window button */}
+        <div
+          className="w-2.5 h-2.5 rounded-[2px] flex-shrink-0"
+          style={{ background: 'rgba(255,255,255,0.30)', border: '1px solid rgba(0,0,0,0.18)' }}
+        />
+        <span
+          className="text-[8px] font-black uppercase tracking-[0.18em] truncate flex-1"
+          style={{ color: `${textColor}88` }}
+        >
+          Note
+        </span>
+      </div>
+
+      {/* Body */}
       {editing ? (
         <textarea
           ref={textareaRef}
@@ -1304,22 +1332,22 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
             if (e.key === 'Escape') setEditing(false);
             e.stopPropagation();
           }}
-          className="nodrag nopan w-full h-full bg-transparent border-none outline-none resize-none p-4 leading-relaxed"
-          style={{ color: textColor, fontSize: 13, fontFamily: 'Roboto, sans-serif', fontWeight: 400, caretColor: textColor }}
+          className="nodrag nopan w-full bg-transparent border-none outline-none resize-none px-3 py-2 leading-relaxed"
+          style={{ color: textColor, fontSize: 13, fontFamily: 'inherit', fontWeight: 400, caretColor: textColor, height: 'calc(100% - 26px)' }}
           placeholder="Write your note here..."
         />
       ) : (
         <div
-          className="p-4 w-full h-full overflow-hidden select-none cursor-text"
+          className="px-3 py-2 overflow-hidden select-none cursor-text"
           style={{
-            color: text ? textColor : placeholder,
+            color: text ? textColor : `${textColor}55`,
             fontSize: 13,
-            fontFamily: 'Roboto, sans-serif',
             fontWeight: 400,
             lineHeight: '1.65',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
             fontStyle: text ? 'normal' : 'italic',
+            height: 'calc(100% - 26px)',
           }}
         >
           {text || 'Double-click to edit…'}
