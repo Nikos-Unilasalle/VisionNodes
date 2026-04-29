@@ -403,6 +403,7 @@ class EarthEngineSourceNode(NodeProcessor):
                     '_location':   location,
                     '_dates':      f'{date_start} → {date_end}',
                     '_cache_path': cache_path,
+                    '_gcp_project': gcp_project,
                 }
 
             if tmp_dir:
