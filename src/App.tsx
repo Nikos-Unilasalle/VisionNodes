@@ -110,6 +110,7 @@ const _nodeTypes = {
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_monitor: N.AnalysisMonitorNode,
   geo_statistics: N.GeoStatisticsNode,
+  geo_land_cover: N.GenericCustomNode,
   util_roi_polygon: N.ROIPolygonNode,
   draw_overlay: N.DrawOverlayNode,
   draw_point: N.GenericCustomNode,
@@ -1634,7 +1635,11 @@ function App() {
               e.preventDefault();
               setMenu(null);
               const selectedCount = nodes.filter(n => n.selected).length;
-              if (selectedCount > 1) setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY });
+              if (selectedCount > 1) {
+                setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY });
+              } else {
+                setIsAddMenuOpen(true);
+              }
             }}
             panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}

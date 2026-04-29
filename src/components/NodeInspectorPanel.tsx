@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown } from 'lucide-react';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 
@@ -65,18 +65,27 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
   );
 };
 
-interface SelectInputProps { label: string; val: number; options: string[]; onChange: (v: number) => void; }
+interface SelectInputProps { label: string; val: any; options: (string | { label: string; value: any })[]; onChange: (v: any) => void; }
 export const SelectInput = ({ label, val, options, onChange }: SelectInputProps) => (
   <div className="space-y-4 group">
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <select
-      value={val} onChange={(e) => onChange(parseInt(e.target.value))}
-      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer"
-    >
-      {options.map((opt: string, i: number) => (
-        <option key={i} value={i} className="bg-[#3d4452]">{opt}</option>
-      ))}
-    </select>
+    <div className="relative">
+      <select
+        value={val} onChange={(e) => {
+          const v = e.target.value;
+          onChange(isNaN(Number(v)) ? v : Number(v));
+        }}
+        className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer font-bold"
+      >
+        {options.map((opt: any, i: number) => {
+          const isObj = typeof opt === 'object';
+          const l = isObj ? opt.label : opt;
+          const v = isObj ? opt.value : i;
+          return <option key={i} value={v} className="bg-[#3d4452]">{l}</option>;
+        })}
+      </select>
+      <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+    </div>
   </div>
 );
 

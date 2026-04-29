@@ -1510,6 +1510,23 @@ const GeoBandInfoNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const GeoLandCoverNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const schema = data.schema;
+  const IconCmp = getIcon('Layers', Box);
+
+  return (
+    <BaseNode title="Geo Land Cover" icon={IconCmp} selected={selected} data={data} color="green" inputs={schema?.inputs} outputs={schema?.outputs}>
+      {nd?.meta && (
+        <div className="mt-2 px-2 py-1 bg-black/20 rounded border border-white/5 text-[8px] font-mono text-gray-400 truncate">
+          {nd.meta}
+        </div>
+      )}
+    </BaseNode>
+  );
+});
+
 export const GenericCustomNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Box);
@@ -1521,6 +1538,7 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
   if (schema.type === 'geo_geotiff_reader') return <GeoTIFFReaderNode selected={selected} data={data} />;
   if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode selected={selected} data={data} />;
   if (schema.type === 'geo_band_info') return <GeoBandInfoNode selected={selected} data={data} />;
+  if (schema.type === 'geo_land_cover') return <GeoLandCoverNode selected={selected} data={data} />;
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
