@@ -85,13 +85,15 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
     return `${45 + index * 32}px`;
   };
 
+  const nodeNote = data?.params?.node_note;
+
   return (
-    <div 
-        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-52`}
-        style={{ 
-          minHeight, 
+    <div className="relative" style={width ? { width: typeof width === 'number' ? `${width}px` : width } : { width: '13rem' }}>
+    <div
+        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full`}
+        style={{
+          minHeight,
           ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
-          ...(width ? { width: typeof width === 'number' ? `${width}px` : width } : {}) 
         }}
     >
       {/* Inputs with Labels */}
@@ -143,6 +145,12 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
           </div>
         );
       })}
+    </div>
+    {nodeNote && (
+      <div className="absolute left-0 right-0 top-full mt-1 text-center text-[9px] text-gray-400/80 truncate px-2 pointer-events-none select-none">
+        {nodeNote}
+      </div>
+    )}
     </div>
   );
 };
