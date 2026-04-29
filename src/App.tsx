@@ -26,7 +26,9 @@ import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, r
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-const initialNodes: Node[] = [];
+const initialNodes: Node[] = [
+  { id: 'note-welcome', type: 'note', position: { x: 100, y: 100 }, data: { label: 'Welcome', params: { text: 'Start by adding nodes from the + Add Node menu.' } } }
+];
 const initialEdges: Edge[] = [];
 
 const withNodeResizer = (
@@ -107,6 +109,7 @@ const _nodeTypes = {
   analysis_flow: N.AnalysisFlowNode,
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_monitor: N.AnalysisMonitorNode,
+  geo_statistics: N.GeoStatisticsNode,
   util_roi_polygon: N.ROIPolygonNode,
   draw_overlay: N.DrawOverlayNode,
   draw_point: N.GenericCustomNode,
@@ -124,6 +127,7 @@ const _nodeTypes = {
   canvas_note: withNodeResizer(N.CanvasNoteNode, 120, 60, getNoteColor),
   canvas_reroute: N.CanvasRerouteNode,
   output_movie: N.OutputMovieNode,
+  geo_raster_stats: N.RasterStatsNode,
   math_add: N.MathNode,
   math_sub: N.MathNode,
   math_mul: N.MathNode,

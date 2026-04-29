@@ -13,8 +13,8 @@ import numpy as np
         {'id': 'count', 'color': 'scalar'},
     ],
     params=[
-        {'id': 'low',    'label': 'Min Value', 'type': 'float', 'default': -1.0},
-        {'id': 'high',   'label': 'Max Value', 'type': 'float', 'default':  0.0},
+        {'id': 'low',    'label': 'Min Value', 'type': 'float', 'default':  0.3, 'min': -1.0, 'max': 1.0, 'step': 0.01},
+        {'id': 'high',   'label': 'Max Value', 'type': 'float', 'default':  1.0, 'min': -1.0, 'max': 1.0, 'step': 0.01},
         {'id': 'invert', 'label': 'Invert',    'type': 'boolean', 'default': False},
     ],
     colorable=True,
@@ -22,21 +22,31 @@ import numpy as np
 class FloatThresholdNode(NodeProcessor):
     def process(self, inputs, params):
         raw = inputs.get('raw')
-        if raw is None or not isinstance(raw, np.ndarray):
+        if raw is None:
             return {'mask': None, 'count': 0}
 
-        data = raw.astype(np.float32)
-        if data.ndim == 3:
-            data = data[:, :, 0]
+        # Handle GeoTIFF dictionary or raw numpy array
+        if isinstance(raw, dict) and 'bands' in raw:
+            data = raw['bands'][0].astype(np.float32)
+        elif isinstance(raw, np.ndarray):
+            data = raw.astype(np.float32)
+            if data.ndim == 3:
+                data = data[:, :, 0]
+        else:
+            return {'mask': None, 'count': 0}
 
         low  = float(params.get('low',  -1.0))
         high = float(params.get('high',  0.0))
 
+        # Create binary mask
         mask = np.zeros(data.shape, dtype=np.uint8)
-        mask[(data >= low) & (data <= high)] = 255
+        valid_mask = (data >= low) & (data <= high)
+        mask[valid_mask] = 255
 
         if params.get('invert', False):
             mask = 255 - mask
 
+        # VisionNodes display nodes often expect 3 channels for mask visualization
+        # We return a single channel but ensure it's clean
         count = int(np.count_nonzero(mask))
         return {'mask': mask, 'count': count}
