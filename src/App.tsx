@@ -788,6 +788,24 @@ function App() {
     setViewEdges(eds => [...eds, ...newEdges]);
   }, [setViewNodes, setViewEdges]);
 
+  const duplicateNodes = useCallback(() => {
+    const selected = nodes.filter(n => n.selected);
+    if (selected.length === 0) return;
+    pushSnapshot();
+    const idMap: Record<string, string> = {};
+    const newNodes = selected.map(n => {
+      const newId = `node-${Date.now()}-${Math.random()}`;
+      idMap[n.id] = newId;
+      return { ...n, id: newId, selected: true, position: { x: n.position.x + 40, y: n.position.y + 40 } };
+    });
+    const selectedIds = new Set(selected.map(n => n.id));
+    const newEdges = edges
+      .filter(e => selectedIds.has(e.source) && selectedIds.has(e.target))
+      .map(e => ({ ...e, id: `e-${Date.now()}-${Math.random()}`, source: idMap[e.source], target: idMap[e.target] }));
+    setViewNodes(nds => [...nds.map(n => ({ ...n, selected: false })), ...newNodes]);
+    setViewEdges(eds => [...eds, ...newEdges]);
+  }, [nodes, edges, pushSnapshot, setViewNodes, setViewEdges]);
+
   const refreshWorkDir = useCallback(async (dir: string) => {
     try {
       const entries = await readDir(dir);
@@ -998,20 +1016,33 @@ function App() {
 
     const inputPorts: { id: string; color: string; label: string }[] = [];
     const outputPorts: { id: string; color: string; label: string }[] = [];
-    const seenIn = new Set<string>();
-    const seenOut = new Set<string>();
 
+    // Dedup by (target::targetHandle) so multiple inner nodes receiving the same type each get their own port
+    const inPortIdMap = new Map<string, string>();
+    const usedInIds = new Set<string>();
     for (const e of incomingEdges) {
       const th = e.targetHandle || 'any__in';
-      if (seenIn.has(th)) continue;
-      seenIn.add(th);
-      inputPorts.push({ id: th, color: th.split('__')[0] || 'any', label: `in${inputPorts.length}` });
+      const key = `${e.target}::${th}`;
+      if (inPortIdMap.has(key)) continue;
+      let portId = th;
+      if (usedInIds.has(portId)) portId = `${th.split('__')[0] || 'any'}__in${inputPorts.length}`;
+      usedInIds.add(portId);
+      inPortIdMap.set(key, portId);
+      inputPorts.push({ id: portId, color: portId.split('__')[0] || 'any', label: `in${inputPorts.length}` });
     }
+
+    // Dedup by (source::sourceHandle) so multiple inner nodes outputting the same type each get their own port
+    const outPortIdMap = new Map<string, string>();
+    const usedOutIds = new Set<string>();
     for (const e of outgoingEdges) {
       const sh = e.sourceHandle || 'any__out';
-      if (seenOut.has(sh)) continue;
-      seenOut.add(sh);
-      outputPorts.push({ id: sh, color: sh.split('__')[0] || 'any', label: `out${outputPorts.length}` });
+      const key = `${e.source}::${sh}`;
+      if (outPortIdMap.has(key)) continue;
+      let portId = sh;
+      if (usedOutIds.has(portId)) portId = `${sh.split('__')[0] || 'any'}__out${outputPorts.length}`;
+      usedOutIds.add(portId);
+      outPortIdMap.set(key, portId);
+      outputPorts.push({ id: portId, color: portId.split('__')[0] || 'any', label: `out${outputPorts.length}` });
     }
 
     const ts = Date.now();
@@ -1034,18 +1065,24 @@ function App() {
       data: { label: 'Group OUT', params: {}, ports: outputPorts }
     };
 
+    const seenGinKeys = new Set<string>();
+    const seenGoutKeys = new Set<string>();
     const subEdges: Edge[] = [
       ...innerEdges,
-      ...incomingEdges.map(e => ({
-        id: `sg-${ts}-${Math.random()}`,
-        source: ginId, sourceHandle: e.targetHandle,
-        target: e.target, targetHandle: e.targetHandle,
-      })),
-      ...outgoingEdges.map(e => ({
-        id: `sg-${ts}-${Math.random()}`,
-        source: e.source, sourceHandle: e.sourceHandle,
-        target: goutId, targetHandle: e.sourceHandle,
-      })),
+      ...incomingEdges.flatMap(e => {
+        const key = `${e.target}::${e.targetHandle || 'any__in'}`;
+        if (seenGinKeys.has(key)) return [];
+        seenGinKeys.add(key);
+        const portId = inPortIdMap.get(key) ?? e.targetHandle;
+        return [{ id: `sg-${ts}-${Math.random()}`, source: ginId, sourceHandle: portId, target: e.target, targetHandle: e.targetHandle }];
+      }),
+      ...outgoingEdges.flatMap(e => {
+        const key = `${e.source}::${e.sourceHandle || 'any__out'}`;
+        if (seenGoutKeys.has(key)) return [];
+        seenGoutKeys.add(key);
+        const portId = outPortIdMap.get(key) ?? e.sourceHandle;
+        return [{ id: `sg-${ts}-${Math.random()}`, source: e.source, sourceHandle: e.sourceHandle, target: goutId, targetHandle: portId }];
+      }),
     ];
 
     const groupNode: Node = {
@@ -1062,17 +1099,27 @@ function App() {
       }
     };
 
+    const seenOuterInPorts = new Set<string>();
     const outerEdges = allEdges
       .filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target))
       .concat(
         incomingEdges
-          .filter((e, i, arr) => arr.findIndex(x => x.targetHandle === e.targetHandle) === i)
-          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, target: groupId }))
+          .filter(e => {
+            const portId = inPortIdMap.get(`${e.target}::${e.targetHandle || 'any__in'}`);
+            if (!portId || seenOuterInPorts.has(portId)) return false;
+            seenOuterInPorts.add(portId);
+            return true;
+          })
+          .map(e => {
+            const portId = inPortIdMap.get(`${e.target}::${e.targetHandle || 'any__in'}`) ?? e.targetHandle;
+            return { ...e, id: `oe-${ts}-${Math.random()}`, target: groupId, targetHandle: portId };
+          })
       )
       .concat(
-        outgoingEdges
-          .filter((e, i, arr) => arr.findIndex(x => x.sourceHandle === e.sourceHandle) === i)
-          .map(e => ({ ...e, id: `oe-${ts}-${Math.random()}`, source: groupId }))
+        outgoingEdges.map(e => {
+          const portId = outPortIdMap.get(`${e.source}::${e.sourceHandle || 'any__out'}`) ?? e.sourceHandle;
+          return { ...e, id: `oe-${ts}-${Math.random()}`, source: groupId, sourceHandle: portId };
+        })
       );
 
     setViewNodes(nds => [...nds.filter(n => !selectedIds.has(n.id)), groupNode]);
@@ -1133,7 +1180,10 @@ function App() {
       if (cmdKey && e.key === 'v') pasteNodes();
       if (cmdKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
       if (cmdKey && e.shiftKey && e.key === 'z') { e.preventDefault(); handleRedo(); }
-      
+      if (cmdKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        duplicateNodes();
+      }
       if (cmdKey && e.key.toLowerCase() === 'm') { e.preventDefault(); setIsAddMenuOpen(prev => !prev); }
       if (cmdKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
@@ -1151,7 +1201,12 @@ function App() {
       }
       if (cmdKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
-        instance?.fitView();
+        const selectedIds = nodesRef.current.filter(n => n.selected).map(n => ({ id: n.id }));
+        if (selectedIds.length > 0) {
+          instance?.fitView({ nodes: selectedIds, duration: 350, padding: 0.15 });
+        } else {
+          instance?.fitView({ duration: 350 });
+        }
       }
 
       if (e.key === 'Escape') {
@@ -1165,7 +1220,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     pushSnapshot();
@@ -1626,6 +1681,7 @@ function App() {
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
             onPaneClick={() => { setSelectedNodeId(null); setMenu(null); setPaneMenu(null); }}
+            onDoubleClick={(e) => { if ((e.target as HTMLElement).classList.contains('react-flow__pane')) { instance?.fitView({ duration: 400 }); setTimeout(() => instance?.zoomOut({ duration: 300 }), 420); } }}
             onNodeContextMenu={(e, node) => {
               e.preventDefault();
               setPaneMenu(null);
@@ -1641,7 +1697,7 @@ function App() {
                 setIsAddMenuOpen(true);
               }
             }}
-            panOnDrag={[1, 2]} panOnScroll={true} selectionOnDrag={true}
+            panOnDrag={[1, 2]} panOnScroll={false} zoomOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
@@ -1799,28 +1855,34 @@ function App() {
               </button>
               <div className="h-px bg-white/5 my-1 mx-2" />
               
-              <div className="px-3 py-2 flex items-center justify-center gap-1.5 flex-wrap">
-                 {N.PALETTES[activePaletteIndex].colors.map((c: any, i: number) => (
-                    <button 
-                      key={i} 
+              {(() => {
+                const isMultiSel = nodes.find(n => n.id === menu.id)?.selected && nodes.filter(n => n.selected).length > 1;
+                const colorTargetIds = isMultiSel ? new Set(nodes.filter(n => n.selected).map(n => n.id)) : new Set([menu.id]);
+                return (
+                  <div className="px-3 py-2 flex items-center justify-center gap-1.5 flex-wrap">
+                    {N.PALETTES[activePaletteIndex].colors.map((c: any, i: number) => (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewNodes(nds => nds.map(n => colorTargetIds.has(n.id) ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
+                        }}
+                        className="w-4 h-4 rounded-full border border-black/20 shadow-sm hover:scale-125 transition-transform"
+                        style={{ backgroundColor: c.bg }}
+                      />
+                    ))}
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: i, bg_color: undefined, text_color: undefined } } } : n));
+                        setViewNodes(nds => nds.map(n => colorTargetIds.has(n.id) ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
                       }}
-                      className="w-4 h-4 rounded-full border border-black/20 shadow-sm hover:scale-125 transition-transform" 
-                      style={{ backgroundColor: c.bg }} 
-                    />
-                 ))}
-                 <button 
-                    onClick={(e) => {
-                       e.stopPropagation();
-                       setViewNodes(nds => nds.map(n => n.id === menu.id ? { ...n, data: { ...n.data, params: { ...n.data.params, color_index: undefined, bg_color: undefined, text_color: undefined } } } : n));
-                    }} 
-                    className="w-4 h-4 rounded-full border border-white/20 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center text-[10px] text-gray-500 bg-transparent shrink-0"
-                 >
-                    ×
-                 </button>
-              </div>
+                      className="w-4 h-4 rounded-full border border-white/20 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center text-[10px] text-gray-500 bg-transparent shrink-0"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })()}
               <div className="h-px bg-white/5 my-1 mx-2" />
 
               {/* Group / Enter Group / Ungroup */}
