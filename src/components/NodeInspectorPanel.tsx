@@ -599,6 +599,20 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         );
       })()}
 
+      {/* Node note — always visible, displayed under the node when non-empty */}
+      {node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (
+        <div className="space-y-2 group pt-2 border-t border-white/5">
+          <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note</label>
+          <input
+            type="text"
+            value={p.node_note || ''}
+            onChange={e => up({ node_note: e.target.value || undefined })}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-gray-300 outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+            placeholder="Annotation visible sous la node…"
+          />
+        </div>
+      )}
+
       {/* Schema-driven dynamic params (plugins) */}
       {!MANUAL_TYPES.has(node.type) && node.data.schema?.params?.map((sp: ParamSpec) => {
         const isEnum   = sp.type === 'enum' || sp.options;

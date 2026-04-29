@@ -26,9 +26,7 @@ import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, r
 // Examples loaded dynamically from public/examples/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-const initialNodes: Node[] = [
-  { id: 'note-welcome', type: 'note', position: { x: 100, y: 100 }, data: { label: 'Welcome', params: { text: 'Start by adding nodes from the + Add Node menu.' } } }
-];
+const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
 const withNodeResizer = (
@@ -385,7 +383,7 @@ function App() {
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [workDir, setWorkDir] = useState<string | null>(() => localStorage.getItem('vn-work-dir'));
   const [workDirFiles, setWorkDirFiles] = useState<string[]>([]);
-  const [snapEnabled, setSnapEnabled] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
   const isResizing = useRef(false);
   const isResizingHeight = useRef(false);
   const nodesRef = useRef<any[]>([]);
