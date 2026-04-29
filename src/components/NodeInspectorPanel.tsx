@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Pause, Play, Pipette, Save, Activity } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator } from 'lucide-react';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 
@@ -35,15 +35,35 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
 );
 
 interface NumberInputProps { label: string; val: number; onChange: (v: number) => void; }
-export const NumberInput = ({ label, val, onChange }: NumberInputProps) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <input
-      type="number" step="any" value={val} onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
-    />
-  </div>
-);
+export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
+  const [tempVal, setTempVal] = React.useState(val.toString());
+  
+  // Sync local state when external value changes
+  React.useEffect(() => {
+    if (parseFloat(tempVal) !== val) {
+      setTempVal(val.toString());
+    }
+  }, [val]);
+
+  const handleChange = (s: string) => {
+    setTempVal(s);
+    const parsed = parseFloat(s);
+    if (!isNaN(parsed)) {
+      onChange(parsed);
+    }
+  };
+
+  return (
+    <div className="space-y-4 group">
+      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <input
+        type="text" value={tempVal} onChange={(e) => handleChange(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
+        className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
+      />
+    </div>
+  );
+};
 
 interface SelectInputProps { label: string; val: number; options: string[]; onChange: (v: number) => void; }
 export const SelectInput = ({ label, val, options, onChange }: SelectInputProps) => (
@@ -181,7 +201,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
     'input_solid_color', 'filter_canny', 'filter_blur', 'filter_threshold',
     'geom_resize', 'geom_flip', 'filter_color_mask', 'filter_morphology',
     'analysis_face_mp', 'analysis_hand_mp', 'analysis_flow',
-    'data_list_selector', 'list_region_select', 'output_display'
+    'data_list_selector', 'list_region_select', 'output_display',
+    'geo_spectral_index', 'geo_band_calc', 'filter_float_threshold'
   ]);
 
   return (
@@ -420,6 +441,132 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           <Slider label="Pyr Scale" val={p.pyr_scale || 0.5} min={0.1} max={0.9} step={0.1} onChange={v => up({ pyr_scale: v })} />
           <Slider label="Levels"    val={p.levels    || 3}   min={1}   max={10}            onChange={v => up({ levels: v })} />
         </>
+      )}
+
+      {/* geo_spectral_index */}
+      {node.type === 'geo_spectral_index' && (() => {
+        const getIdx = (val: any, options: string[]) => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') {
+            const i = options.indexOf(val);
+            return i !== -1 ? i : 0;
+          }
+          return 0;
+        };
+        return (
+          <div className="space-y-6">
+            <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-6">
+              <div className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 flex justify-between">
+                <span>Band Configuration</span>
+              </div>
+              <Slider label="NIR Band"   val={p.nir_band   ?? 4} min={1} max={20} onChange={v => up({ nir_band: v })} />
+              <Slider label="Red Band"   val={p.red_band   ?? 1} min={1} max={20} onChange={v => up({ red_band: v })} />
+              <Slider label="Green Band" val={p.green_band ?? 2} min={1} max={20} onChange={v => up({ green_band: v })} />
+              <Slider label="Blue Band"  val={p.blue_band  ?? 3} min={1} max={20} onChange={v => up({ blue_band: v })} />
+              <Slider label="SWIR Band"  val={p.swir_band  ?? 5} min={1} max={20} onChange={v => up({ swir_band: v })} />
+            </div>
+
+            <SelectInput
+              label="Colormap"
+              val={getIdx(p.colormap, ['viridis', 'plasma', 'turbo', 'jet', 'hot'])}
+              options={['viridis', 'plasma', 'turbo', 'jet', 'hot']}
+              onChange={v => up({ colormap: v })}
+            />
+          </div>
+        );
+      })()}
+
+      {/* geo_band_calc */}
+      {node.type === 'geo_band_calc' && (() => {
+        const sensorOptions = ['Manual', 'S2/L8 (RGB+NIR)', 'S2 (All Bands)', 'L8 (All Bands)'];
+        const indexOptions  = ['None', 'NDVI (Vegetation)', 'NDWI (Water)', 'NBR (Burn)', 'EVI (Enhanced Vegetation)'];
+        
+        const sensorIdx = p.sensor ?? 0;
+        const indexIdx  = p.preset ?? 0;
+
+        const presets: Record<number, any> = {
+          1: { nir: 4, red: 1, green: 2, blue: 3, swir: 5 }, // RGB+NIR
+          2: { nir: 8, red: 4, green: 3, blue: 2, swir: 11 }, // S2 All
+          3: { nir: 5, red: 4, green: 3, blue: 2, swir: 6 },  // L8 All
+        };
+
+        const updateExpr = (sIdx: number, iIdx: number) => {
+          if (iIdx === 0) return; // None
+          const b = presets[sIdx] || presets[1]; // Fallback to RGB+NIR
+          let expr = "";
+          const eps = "1e-10";
+          
+          if (iIdx === 1) expr = `(B${b.nir} - B${b.red}) / (B${b.nir} + B${b.red} + ${eps})`;
+          if (iIdx === 2) expr = `(B${b.green} - B${b.nir}) / (B${b.green} + B${b.nir} + ${eps})`;
+          if (iIdx === 3) expr = `(B${b.nir} - B${b.swir}) / (B${b.nir} + B${b.swir} + ${eps})`;
+          if (iIdx === 4) expr = `2.5 * (B${b.nir} - B${b.red}) / (B${b.nir} + 6.0 * B${b.red} - 7.5 * B${b.blue} + 1.0 + ${eps})`;
+          
+          up({ expression: expr, sensor: sIdx, preset: iIdx });
+        };
+
+        return (
+          <div className="space-y-6">
+            <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10 space-y-4">
+              <div className="text-[8px] font-black text-accent uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                <Calculator size={10} /> Preset Generator
+              </div>
+              <SelectInput label="Sensor" val={sensorIdx} options={sensorOptions} onChange={v => updateExpr(v, indexIdx)} />
+              <SelectInput label="Preset" val={indexIdx}  options={indexOptions}  onChange={v => updateExpr(sensorIdx, v)} />
+            </div>
+
+            <CodeInput label="Expression" val={p.expression ?? ""} onChange={v => up({ expression: v, preset: 0 })} />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <NumberInput label="Clamp Min" val={p.clamp_min ?? -1} onChange={v => up({ clamp_min: v })} />
+              <NumberInput label="Clamp Max" val={p.clamp_max ?? 1}  onChange={v => up({ clamp_max: v })} />
+            </div>
+
+            <SelectInput
+              label="Colormap"
+              val={typeof p.colormap === 'number' ? p.colormap : 0}
+              options={['viridis', 'plasma', 'turbo', 'jet', 'hot', 'gray']}
+              onChange={v => up({ colormap: v })}
+            />
+          </div>
+        );
+      })()}
+
+      {/* geo_float_threshold */}
+      {node.type === 'filter_float_threshold' && (
+        <div className="space-y-6">
+          <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-8">
+            <div className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 flex justify-between">
+              <span>Precision Thresholding</span>
+            </div>
+            
+            <Slider 
+              label="Min Value" 
+              val={p.low ?? 0.3} 
+              min={-1} max={1} step={0.001} 
+              onChange={v => up({ low: v })} 
+            />
+            
+            <Slider 
+              label="Max Value" 
+              val={p.high ?? 1.0} 
+              min={-1} max={1} step={0.001} 
+              onChange={v => up({ high: v })} 
+            />
+
+            <div className="pt-2 border-t border-white/5">
+              <ToggleInput label="Invert Mask" val={p.invert ?? false} onChange={v => up({ invert: v })} />
+            </div>
+          </div>
+
+          <div className="px-4 py-3 bg-accent/5 rounded-xl border border-accent/10">
+            <div className="text-[9px] text-accent font-bold uppercase tracking-widest mb-1">Quick Presets</div>
+            <div className="flex flex-wrap gap-2">
+                <button onClick={() => up({ low: 0.3, high: 1.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Vegetation (NDVI)</button>
+                <button onClick={() => up({ low: 0.1, high: 1.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Water (NDWI)</button>
+                <button onClick={() => up({ low: -1.0, high: 0.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Negative Values</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* data_list_selector */}

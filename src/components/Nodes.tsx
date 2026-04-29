@@ -6,7 +6,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -474,6 +474,130 @@ export const AnalysisMonitorNode = memo(({ selected, data }: any) => {
             className="h-full transition-all duration-300"
             style={{ width: `${Math.min(100, Math.max(2, progress))}%`, backgroundColor: themeColor, boxShadow: `0 0 6px ${themeColor}80` }}
           />
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const GeoStatisticsNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const area = nd?.area_ha ?? 0;
+  const pixels = nd?.pixels ?? 0;
+  const mean = nd?.mean_val ?? 0;
+  const min = nd?.min_val ?? 0;
+  const max = nd?.max_val ?? 0;
+
+  return (
+    <BaseNode
+      title="Geo Statistics"
+      icon={BarChart2}
+      selected={selected}
+      data={data}
+      color="green"
+      inputs={[
+        {id: 'geotiff', color: 'geotiff'},
+        {id: 'mask',    color: 'mask'}
+      ]}
+      outputs={[
+        {id: 'area_ha',  color: 'scalar'},
+        {id: 'pixels',   color: 'scalar'},
+        {id: 'mean_val', color: 'scalar'}
+      ]}
+    >
+      <div className="flex flex-col gap-3 p-1">
+        <div className="flex items-center justify-between bg-white/5 border border-white/5 rounded-xl px-3 py-2.5 shadow-inner group hover:bg-white/10 transition-colors relative overflow-hidden">
+          <div className="flex flex-col z-10">
+            <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest">Detected Area</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-black text-emerald-400 font-mono tracking-tighter tabular-nums">{area.toFixed(area < 0.1 ? 4 : 2)}</span>
+              <span className="text-[8px] font-bold text-emerald-500/60 uppercase">ha</span>
+            </div>
+          </div>
+          <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20 z-10">
+            <Maximize size={14} className="text-emerald-500" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-black/20 border border-white/5 rounded-xl p-2.5 flex flex-col gap-0.5 shadow-inner">
+            <span className="text-[7px] font-black text-gray-600 uppercase tracking-tighter">Pixels</span>
+            <span className="text-[11px] font-bold text-white/80 font-mono tabular-nums">{pixels.toLocaleString()}</span>
+          </div>
+          <div className="bg-black/20 border border-white/5 rounded-xl p-2.5 flex flex-col gap-0.5 border-l-2 border-l-accent/40 shadow-inner">
+            <span className="text-[7px] font-black text-gray-600 uppercase tracking-tighter">Mean Index</span>
+            <span className="text-[11px] font-bold text-accent font-mono tabular-nums">{mean.toFixed(3)}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between px-3 py-2 bg-white/5 rounded-xl border border-white/5 text-[9px] font-mono">
+            <div className="flex flex-col">
+                <span className="text-[6px] text-gray-500 uppercase">Min</span>
+                <span className="text-white/60">{min.toFixed(3)}</span>
+            </div>
+            <div className="h-4 w-[1px] bg-white/10" />
+            <div className="flex flex-col text-right">
+                <span className="text-[6px] text-gray-500 uppercase">Max</span>
+                <span className="text-white/60">{max.toFixed(3)}</span>
+            </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const RasterStatsNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const mean = nd?.mean ?? 0;
+  const min = nd?.min ?? 0;
+  const max = nd?.max ?? 0;
+  const std = nd?.std ?? 0;
+  const band = data.params?.band ?? 1;
+
+  return (
+    <BaseNode
+      title="Raster Stats"
+      icon={Activity}
+      selected={selected}
+      data={data}
+      color="blue"
+      inputs={[{id: 'geotiff', color: 'geotiff'}]}
+      outputs={[
+        {id: 'geotiff', color: 'geotiff'},
+        {id: 'min',     color: 'scalar'},
+        {id: 'max',     color: 'scalar'},
+        {id: 'mean',    color: 'scalar'}
+      ]}
+    >
+      <div className="flex flex-col gap-3 p-1">
+        <div className="text-[7px] font-black text-blue-400 uppercase tracking-[0.2em] px-1 flex justify-between">
+            <span>Global Band Analysis</span>
+            <span>Band {band}</span>
+        </div>
+        
+        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden">
+            <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest z-10">Mean Value</span>
+            <span className="text-3xl font-black text-blue-400 font-mono tracking-tighter z-10 drop-shadow-md">
+                {mean.toFixed(4)}
+            </span>
+            <Activity size={48} className="absolute -right-4 -bottom-4 text-blue-500/5" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
+                <span className="text-[6px] text-gray-600 uppercase font-black">Min</span>
+                <span className="text-[10px] font-bold text-white/60 font-mono">{min.toFixed(2)}</span>
+            </div>
+            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
+                <span className="text-[6px] text-gray-600 uppercase font-black">Max</span>
+                <span className="text-[10px] font-bold text-white/60 font-mono">{max.toFixed(2)}</span>
+            </div>
+            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
+                <span className="text-[6px] text-gray-600 uppercase font-black">Std</span>
+                <span className="text-[10px] font-bold text-blue-400/60 font-mono">{std.toFixed(2)}</span>
+            </div>
         </div>
       </div>
     </BaseNode>

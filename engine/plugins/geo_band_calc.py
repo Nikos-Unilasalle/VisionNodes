@@ -70,8 +70,16 @@ class BandCalcNode(NodeProcessor):
         raw_geo = {**geo, 'bands': result[np.newaxis], 'count': 1, 'band_names': ['result']}
 
         span       = clamp_max - clamp_min if clamp_max != clamp_min else 1.0
-        normalized = ((result - clamp_min) / span * 255).astype(np.uint8)
-        cmap       = _CV2_COLORMAPS.get(params.get('colormap', 'viridis'), cv2.COLORMAP_VIRIDIS)
+        normalized = ((result - clamp_min) / span * 255.0).astype(np.uint8)
+
+        cmap_val = params.get('colormap', 'viridis')
+        if isinstance(cmap_val, int):
+            cmap_keys = list(_CV2_COLORMAPS.keys())
+            cmap_name = cmap_keys[cmap_val] if cmap_val < len(cmap_keys) else 'viridis'
+        else:
+            cmap_name = cmap_val
+
+        cmap = _CV2_COLORMAPS.get(cmap_name, cv2.COLORMAP_VIRIDIS)
         colored    = cv2.applyColorMap(normalized, cmap)
 
         h, w = colored.shape[:2]
