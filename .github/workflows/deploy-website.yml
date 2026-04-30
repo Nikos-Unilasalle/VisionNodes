@@ -8,6 +8,9 @@ on:
       - 'website/**'
       - '.github/workflows/deploy-website.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
