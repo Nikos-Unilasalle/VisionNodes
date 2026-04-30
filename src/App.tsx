@@ -175,7 +175,8 @@ const CATEGORIES = [
     { type: 'input_webcam', label: 'Webcam', description: 'Captures live video feed from your system camera.' },
     { type: 'input_image', label: 'Image File', description: 'Loads a static image from your local drive.' },
     { type: 'input_movie', label: 'Movie File', description: 'Plays a video file with playback and scrubbing controls.' },
-    { type: 'input_solid_color', label: 'Solid Color', description: 'Generates an image of a custom solid color.' }
+    { type: 'input_solid_color', label: 'Solid Color', description: 'Generates an image of a custom solid color.' },
+    { type: 'plugin_audio_input', label: 'Audio File', description: 'Loads an audio file (.wav, .mp3, .flac…).' }
   ]},
   { id: 'cv', label: 'Filters', icon: Waves, nodes: [
     { type: 'filter_canny', label: 'Canny Edge', description: 'Detects edges using the Canny algorithm (line drawing effect).' },
