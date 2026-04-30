@@ -172,7 +172,7 @@ _AUDIO_OUTPUTS = [
 @vision_node(
     type_id='plugin_audio_input',
     label='Audio File',
-    category='audio',
+    category=['audio', 'src'],
     icon='Music',
     description='Loads an audio file and plays it via system audio (sounddevice).',
     inputs=[],
