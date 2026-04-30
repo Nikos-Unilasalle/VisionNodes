@@ -10,7 +10,7 @@ import {
   BarChart2, Database, Scissors, Grid, Palette, Eye, RefreshCw,
   PlusCircle, Sparkles, MousePointer2
 } from 'lucide-react';
-import nodesData from './data/nodes.json';
+import nodesData from '../data/nodes.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -87,7 +87,7 @@ function getPortColor(type: string): string {
 }
 
 function getLucideIcon(name: string, size = 18, color = 'currentColor') {
-  const Icon = (LucideIcons as Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>>)[name];
+  const Icon = (LucideIcons as any)[name];
   if (!Icon) return <Box size={size} color={color} strokeWidth={1.5} />;
   return <Icon size={size} color={color} strokeWidth={1.5} />;
 }
