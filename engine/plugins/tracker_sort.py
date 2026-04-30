@@ -275,7 +275,7 @@ class SORTTracker:
 @vision_node(
     type_id='tracker_sort',
     label='SORT Tracker',
-    category='track',
+    category='detect',
     icon='Crosshair',
     description="Suivi multi-objets en temps réel avec SORT (Kalman Filter + Hungarian). Connecter la sortie 'objects_list' d'un détecteur YOLO ou MediaPipe.",
     inputs=[

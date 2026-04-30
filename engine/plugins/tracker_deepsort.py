@@ -26,7 +26,7 @@ _EMBEDDER_NAMES = {
 @vision_node(
     type_id='tracker_deepsort',
     label='DeepSORT Tracker',
-    category='track',
+    category='detect',
     icon='ScanSearch',
     description="Suivi multi-objets avec DeepSORT : Kalman Filter + embeddings CNN pour une ré-identification robuste et moins de changements d'ID.",
     inputs=[

@@ -13,7 +13,7 @@ _RIGHT_IRIS  = 473   # right iris center
 @vision_node(
     type_id='transform_eye_crop',
     label='Eye Crop',
-    category='track',
+    category='detect',
     icon='Eye',
     description="Crops and optionally aligns left and right eye regions from MediaPipe Face Tracker landmarks. Reusable for any eye-based classifier.",
     inputs=[

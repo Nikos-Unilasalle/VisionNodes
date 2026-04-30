@@ -4,7 +4,7 @@ import cv2
 @vision_node(
     type_id='plugin_invert',
     label='Invert Color',
-    category='filter',
+    category='cv',
     icon='Palette',
     description="Inverts all colors in the image (negative effect).",
     inputs=[{'id': 'image', 'color': 'image'}],

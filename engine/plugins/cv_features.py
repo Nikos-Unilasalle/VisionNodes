@@ -117,7 +117,7 @@ class ContourInfoNode(NodeProcessor):
 @vision_node(
     type_id="feat_clahe",
     label="CLAHE (Contrast)",
-    category="filter",
+    category="cv",
     icon="Maximize",
     description="Adaptively improves local image contrast (CLAHE algorithm).",
     inputs=[{"id": "image", "color": "image"}],
@@ -149,7 +149,7 @@ class ClaheNode(NodeProcessor):
 @vision_node(
     type_id="feat_bilateral",
     label="Bilateral Filter",
-    category="filter",
+    category="cv",
     icon="Wind",
     description="Smoothes the image while preserving edge sharpness and textures.",
     inputs=[{"id": "image", "color": "image"}],

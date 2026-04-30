@@ -50,16 +50,20 @@ class PoseDetectionNode(NodeProcessor):
                 return
 
         try:
-            base_options = python.BaseOptions(model_asset_path=self.model_path)
+            base_options = python.BaseOptions(
+                model_asset_path=self.model_path,
+                delegate=python.BaseOptions.Delegate.CPU # Force CPU for stability on Mac
+            )
             options = vision.PoseLandmarkerOptions(
                 base_options=base_options,
-                running_mode=vision.RunningMode.IMAGE,
+                running_mode=vision.RunningMode.VIDEO, # Better for live streams
                 num_poses=1,
                 min_pose_detection_confidence=0.5,
                 min_pose_presence_confidence=0.5,
                 min_tracking_confidence=0.5
             )
             self.detector = vision.PoseLandmarker.create_from_options(options)
+            self.timestamp_ms = 0
         except Exception as e:
             print(f"[Pose] Init error: {e}")
         self._init_done = True
@@ -73,8 +77,14 @@ class PoseDetectionNode(NodeProcessor):
             return {"main": image, "pose_list": [], "data": {}}
 
         # Convert to RGB for MediaPipe
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        results = self.detector.detect(mp_image)
+        try:
+            rgb_data = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_data)
+            self.timestamp_ms += 33 # Assume ~30fps
+            results = self.detector.detect_for_video(mp_image, self.timestamp_ms)
+        except Exception as e:
+            print(f"[Pose] Detection error: {e}")
+            return {"main": image, "pose_list": [], "data": {}}
         
         pose_list = []
         main_pose = {}
