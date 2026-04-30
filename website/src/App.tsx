@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+const BASE = import.meta.env.BASE_URL;
 import { AnimatePresence } from 'framer-motion';
 import { GlobalNav, SubNav, HomePage } from './components/Layout';
 import WikiPage from './components/WikiPage';
@@ -83,7 +84,7 @@ const Footer = ({ setActiveTab }: { setActiveTab: (t: Tab) => void }) => (
 
       <div className="border-t border-[var(--border)] pt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[11px] text-[var(--text-xdim)]">
         <div className="flex items-center gap-3">
-          <img src="logo.svg" alt="VN" className="w-4 h-4 opacity-50" />
+          <img src={`${BASE}logo.svg`} alt="VN" className="w-4 h-4 opacity-50" />
           <span>© 2026 VisionNodes Studio — An Apex · UniLaSalle initiative.</span>
         </div>
         <span>Free and open source software.</span>
