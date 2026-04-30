@@ -1290,22 +1290,25 @@ def flatten_groups(node_list, edge_list, prefix=''):
     return flat_nodes, flat_edges
 
 
+REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input'}
+
+
 class VisionEngine:
     def __init__(self):
         self.current_cap_index = 0
-        # Initialize with flexible backend detection
-        self.cap = cv2.VideoCapture(self.current_cap_index, CAP_BACKEND)
-        if not self.cap.isOpened():
-            self.cap = cv2.VideoCapture(self.current_cap_index, cv2.CAP_V4L2)
+        self.cap = None
+        self.has_webcam_node = False
+        self.has_realtime_node = False
         self.graph = {"nodes": [], "edges": []}
         self.sorted_nodes = []
         self.connected_clients = set()
         self.node_instances = {}
+        self._node_cache = {}  # {nid: {'params': str, 'output': dict}}
         self.registry = {}
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
         self.preview_node_id = None
-        
+
         self.fallback_img = None
         img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "img", "fallback.jpg")
         if os.path.exists(img_path):
@@ -1354,6 +1357,20 @@ class VisionEngine:
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
+        self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid in active_nids}
+        node_types = {n.get('type') for n in flat_nodes}
+        needs_camera = 'input_webcam' in node_types
+        if needs_camera and (self.cap is None or not self.cap.isOpened()):
+            self.cap = cv2.VideoCapture(self.current_cap_index, CAP_BACKEND)
+            if not self.cap.isOpened():
+                self.cap = cv2.VideoCapture(self.current_cap_index, cv2.CAP_V4L2)
+            print(f"[Engine] Camera {self.current_cap_index} opened (webcam node added)")
+        elif not needs_camera and self.cap is not None:
+            self.cap.release()
+            self.cap = None
+            print("[Engine] Camera released (no webcam node in graph)")
+        self.has_webcam_node = needs_camera
+        self.has_realtime_node = bool(node_types & REALTIME_NODE_TYPES)
         if self._should_run():
             self._run_event.set()
         else:
@@ -1377,10 +1394,12 @@ class VisionEngine:
             if not self._run_event.is_set():
                 await self._run_event.wait()
                 continue
-            ret, frame = self.cap.read()
-            if not ret:
-                frame = None   # ← allow non-camera nodes (audio, geo…) to run anyway
-                await asyncio.sleep(0.05)
+            frame = None
+            if self.cap is not None and self.has_webcam_node:
+                ret, frame = self.cap.read()
+                if not ret:
+                    frame = None
+                    await asyncio.sleep(0.05)
             results, node_datas, final_img, commands = {}, {}, None, []
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
@@ -1416,7 +1435,16 @@ class VisionEngine:
                 proc = self.node_instances.get(nid)
                 if proc:
                     try:
-                        out = await asyncio.to_thread(proc.process, inputs, node.get('data', {}).get('params', {}))
+                        params = node.get('data', {}).get('params', {})
+                        has_array_input = any(isinstance(v, np.ndarray) for v in inputs.values())
+                        cache = self._node_cache.get(nid)
+                        params_sig = str(sorted(params.items()))
+                        if not has_array_input and cache and cache['params'] == params_sig:
+                            out = cache['output']
+                        else:
+                            out = await asyncio.to_thread(proc.process, inputs, params)
+                            if not has_array_input:
+                                self._node_cache[nid] = {'params': params_sig, 'output': out}
                         results[nid] = out
                         
                         # Handle On-Demand Capture
@@ -1454,7 +1482,7 @@ class VisionEngine:
                 final_img = getattr(self, 'fallback_img', None)
                 if final_img is None:
                     final_img = np.zeros((480, 640, 3), dtype=np.uint8)
-            if final_img is not None:
+            if final_img is not None and self.connected_clients:
                 try:
                     if len(final_img.shape) == 2: final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
                     elif len(final_img.shape) == 3 and final_img.shape[2] == 2:
@@ -1472,7 +1500,7 @@ class VisionEngine:
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
 
-            await asyncio.sleep(1/30)
+            await asyncio.sleep(1/30 if self.has_realtime_node else 0.5)
 
     async def hdl(self, ws):
         self.connected_clients.add(ws)
