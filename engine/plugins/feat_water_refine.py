@@ -5,7 +5,7 @@ from __main__ import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_water_refine",
     label="Water Mask Refine",
-    category="features",
+    category=["geo", "mask"],
     icon="Waves",
     description="Refines a water binary mask: morphological closing to fill gaps, opening to remove noise, area filter to keep only significant water bodies.",
     inputs=[{"id": "mask", "color": "mask"}],

@@ -17,7 +17,7 @@ _MODEL_3D = np.array([
 @vision_node(
     type_id='analysis_head_pose',
     label='Head Pose',
-    category='track',
+    category='detect',
     icon='Crosshair',
     description="Estimates 3D head orientation (yaw, pitch, roll) via solvePnP on facial landmarks. Connect Face Tracker output.",
     inputs=[

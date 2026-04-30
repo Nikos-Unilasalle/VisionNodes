@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_sobel',
     label='Sobel Edge filter',
-    category='cv',
+    category='filter',
     icon='Activity',
     description="Detects horizontal and vertical gradients using the Sobel operator.",
     inputs=[{'id': 'image', 'color': 'image'}],

@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='filter_noise_gaussian',
     label='Gaussian Noise',
-    category='noise',
+    category='filter',
     icon='Ghost',
     description="Adds Gaussian noise to simulate film grain or a noisy sensor.",
     inputs=[{'id': 'image', 'color': 'image'}],

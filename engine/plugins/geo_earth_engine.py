@@ -62,7 +62,7 @@ COLLECTIONS = {
 @vision_node(
     type_id='geo_earth_engine',
     label='Earth Engine',
-    category='src',
+    category=['src', 'geo'],
     icon='Map',
     description="Download satellite imagery from Google Earth Engine. Sentinel-2, Landsat-8, MODIS. Automatic local cache.",
     inputs=[],

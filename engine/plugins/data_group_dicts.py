@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id="data_group_dicts",
     label="Group Dicts",
-    category="util",
+    category="data",
     icon="Layers",
     description="Groups multiple dictionaries (e.g. data outputs) into a single list of dictionaries.",
     inputs=[

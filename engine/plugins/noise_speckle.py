@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='filter_noise_speckle',
     label='Speckle Noise',
-    category='noise',
+    category='filter',
     icon='Ghost',
     description="Adds multiplicative noise to simulate complex interference.",
     inputs=[{'id': 'image', 'color': 'image'}],

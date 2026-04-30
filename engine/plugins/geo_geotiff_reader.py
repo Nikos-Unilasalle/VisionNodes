@@ -14,7 +14,7 @@ except ImportError:
 @vision_node(
     type_id='geo_geotiff_reader',
     label='GeoTIFF Reader',
-    category='src',
+    category=['src', 'geo'],
     icon='Globe',
     description="Read a local GeoTIFF file. Supports multispectral imagery (Sentinel-2, Landsat, etc.)",
     inputs=[],

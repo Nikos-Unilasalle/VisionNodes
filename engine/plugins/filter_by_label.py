@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='util_filter_label',
     label='Label Filter',
-    category='util',
+    category='data',
     icon='Search',
     description="Filters a list of detections to keep only specific labels (e.g., 'person').",
     inputs=[{'id': 'list_in', 'color': 'list'}],

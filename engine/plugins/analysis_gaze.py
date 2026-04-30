@@ -88,7 +88,7 @@ def _normalize_face(img, landmarks_2d, rvec, tvec, cam_matrix):
 @vision_node(
     type_id='analysis_gaze',
     label='Gaze Estimator',
-    category='track',
+    category='detect',
     icon='Eye',
     description="ETH-XGaze gaze estimation (pitch/yaw). Loads epoch_24_ckpt.pth.tar. Requires torch + torchvision.",
     inputs=[{'id': 'image', 'color': 'image'}],

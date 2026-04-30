@@ -1266,7 +1266,7 @@ export const PALETTES = [
   }
 ];
 
-const _noteHash = (s: string) => { let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; return Math.abs(h); };
+const _noteHash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) | 0; } return Math.abs(h); };
 
 export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
@@ -1279,7 +1279,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#3a2010');
 
   // Deterministic tilt from node id — fixed per note, never changes
-  const rotation = ((_noteHash(data.id || '') % 9) - 4) * 0.35; // -1.4° to +1.4°
+  const rotation = ((_noteHash(data.id || '') % 7) - 3) * 0.18; // -0.54° to +0.54°
 
   React.useEffect(() => {
     if (editing) textareaRef.current?.focus();

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 
@@ -186,6 +186,15 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
 
 // ── Main panel ─────────────────────────────────────────────────────────────
 
+export interface ExposedParam {
+  nodeId: string;
+  nodeLabel: string;
+  paramId: string;
+  paramSpec: ParamSpec;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  currentValue: any;
+}
+
 interface NodeInspectorPanelProps {
   node: VNNode;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,24 +204,26 @@ interface NodeInspectorPanelProps {
   onUpdateParams: (id: string, params: Record<string, unknown>) => void;
   onPickColorToggle: (id: string | null) => void;
   onRequestCapture: (id: string) => void;
+  isInsideGroup?: boolean;
+  onToggleExposed?: (nodeId: string, paramId: string) => void;
+  exposedGroupParams?: ExposedParam[];
+  onUpdateGroupChildParams?: (childNodeId: string, params: Record<string, unknown>) => void;
 }
 
 export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   node, liveData, activePaletteIndex,
   pickColorNodeId, onUpdateParams, onPickColorToggle, onRequestCapture,
+  isInsideGroup, onToggleExposed, exposedGroupParams, onUpdateGroupChildParams,
 }) => {
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
 
   // Skip manual types to avoid duplication with schema-driven loop below
   const MANUAL_TYPES = new Set([
-    'canvas_note', 'canvas_frame', 'input_webcam', 'input_image', 'input_movie',
-    'input_solid_color', 'filter_canny', 'filter_blur', 'filter_threshold',
-    'geom_resize', 'geom_flip', 'filter_color_mask', 'filter_morphology',
-    'analysis_face_mp', 'analysis_hand_mp', 'analysis_flow',
-    'data_list_selector', 'list_region_select', 'output_display',
-    'geo_spectral_index', 'geo_band_calc', 'filter_float_threshold',
-    // Audio nodes
+    'canvas_note', 'canvas_frame',
+    'input_webcam', 'input_movie',
+    'output_display',
+    'geo_spectral_index', 'geo_band_calc',
     'plugin_audio_input', 'plugin_audio_to_spectrogram', 'plugin_audio_waveform',
     'plugin_audio_freq_filter', 'plugin_audio_pitch_shift', 'plugin_audio_time_stretch',
     'plugin_spectrogram_to_audio', 'plugin_audio_export', 'plugin_audio_info',
@@ -220,6 +231,48 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
   return (
     <div className="space-y-8 pb-32">
+
+      {/* group_node — exposed params from child nodes */}
+      {node.type === 'group_node' && (
+        <div className="space-y-6">
+          {(!exposedGroupParams || exposedGroupParams.length === 0) ? (
+            <div className="text-center py-12 space-y-3 opacity-40">
+              <EyeOff size={28} className="mx-auto text-gray-500" />
+              <p className="text-[11px] text-gray-400 font-bold">Aucun paramètre exposé</p>
+              <p className="text-[9px] text-gray-600 leading-relaxed">Entrez dans le groupe et cliquez sur<br/>l'icône œil d'un paramètre</p>
+            </div>
+          ) : (() => {
+            const byNode: Record<string, { label: string; params: ExposedParam[] }> = {};
+            for (const ep of exposedGroupParams) {
+              if (!byNode[ep.nodeId]) byNode[ep.nodeId] = { label: ep.nodeLabel, params: [] };
+              byNode[ep.nodeId].params.push(ep);
+            }
+            return Object.entries(byNode).map(([nid, { label, params }]) => (
+              <div key={nid} className="space-y-5">
+                <div className="flex items-center gap-2 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                  <span className="w-2 h-2 rounded-full bg-accent/60 shrink-0" />
+                  {label}
+                </div>
+                {params.map(ep => {
+                  const sp = ep.paramSpec;
+                  const val = ep.currentValue;
+                  const up2 = (v: unknown) => onUpdateGroupChildParams?.(ep.nodeId, { [sp.id]: v });
+                  const lbl = sp.label || sp.id;
+                  const isE2 = sp.type === 'enum' || sp.options;
+                  const isS2 = sp.type === 'string' || typeof (val ?? sp.default) === 'string';
+                  const isN2 = sp.type === 'number' || sp.type === 'float';
+                  const isB2 = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (val ?? sp.default) === 'boolean';
+                  if (isE2) return <SelectInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
+                  if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
+                  if (isN2) return <NumberInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} onChange={up2} />;
+                  if (isB2) return <ToggleInput key={sp.id} label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
+                  return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={up2} />;
+                })}
+              </div>
+            ));
+          })()}
+        </div>
+      )}
 
       {/* canvas_note / canvas_frame */}
       {(node.type === 'canvas_note' || node.type === 'canvas_frame') && (() => {
@@ -301,11 +354,6 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         </>
       )}
 
-      {/* input_image */}
-      {node.type === 'input_image' && (
-        <TextInput label="Image Path" val={p.path || ''} onChange={(v: string) => up({ path: v })} />
-      )}
-
       {/* input_movie */}
       {node.type === 'input_movie' && (
         <div className="space-y-6">
@@ -335,125 +383,6 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             />
           </div>
         </div>
-      )}
-
-      {/* input_solid_color */}
-      {node.type === 'input_solid_color' && (
-        <>
-          <Slider label="Red"    val={p.r ?? 255} min={0}   max={255}  onChange={v => up({ r: v })} />
-          <Slider label="Green"  val={p.g ?? 0}   min={0}   max={255}  onChange={v => up({ g: v })} />
-          <Slider label="Blue"   val={p.b ?? 0}   min={0}   max={255}  onChange={v => up({ b: v })} />
-          <Slider label="Width"  val={p.width  ?? 640} min={100} max={1920} onChange={v => up({ width: v })} />
-          <Slider label="Height" val={p.height ?? 480} min={100} max={1080} onChange={v => up({ height: v })} />
-        </>
-      )}
-
-      {/* filter_canny */}
-      {node.type === 'filter_canny' && (
-        <>
-          <Slider label="Threshold Low"  val={p.low  || 100} min={1} max={500} onChange={v => up({ low: v })} />
-          <Slider label="Threshold High" val={p.high || 200} min={1} max={500} onChange={v => up({ high: v })} />
-        </>
-      )}
-
-      {/* filter_blur */}
-      {node.type === 'filter_blur' && (
-        <Slider label="Blur Kernel" val={p.size || 5} min={1} max={51} step={2} onChange={v => up({ size: v })} />
-      )}
-
-      {/* filter_threshold */}
-      {node.type === 'filter_threshold' && (
-        <Slider label="Threshold Value" val={p.threshold || 127} min={0} max={255} onChange={v => up({ threshold: v })} />
-      )}
-
-      {/* geom_resize */}
-      {node.type === 'geom_resize' && (() => {
-        const mode = p.mode ?? 0;
-        return (
-          <>
-            <SelectInput label="Mode" val={mode} options={['Scale Factor', 'Fixed Size']} onChange={(v: number) => up({ mode: v })} />
-            {mode === 0 ? (
-              <Slider label="Scale Factor" val={p.scale ?? 1} min={0.05} max={4} step={0.05} onChange={v => up({ scale: v })} />
-            ) : (
-              <>
-                <Slider label="Target Width (px)"  val={p.target_width  ?? 640} min={1} max={3840} step={1} onChange={v => up({ target_width: v })} />
-                <Slider label="Target Height (px)" val={p.target_height ?? 480} min={1} max={2160} step={1} onChange={v => up({ target_height: v })} />
-              </>
-            )}
-            <SelectInput label="Interpolation" val={p.interpolation ?? 1} options={['Nearest', 'Linear', 'Cubic', 'Lanczos']} onChange={(v: number) => up({ interpolation: v })} />
-          </>
-        );
-      })()}
-
-      {/* geom_flip */}
-      {node.type === 'geom_flip' && (
-        <Slider label="Flip Code (0,1,-1)" val={p.flip_mode || 1} min={-1} max={1} step={1} onChange={v => up({ flip_mode: v })} />
-      )}
-
-      {/* filter_color_mask */}
-      {node.type === 'filter_color_mask' && (() => {
-        const mode = p.mode ?? 0;
-        const r = p.r ?? 128; const g = p.g ?? 128; const b = p.b ?? 128;
-        return (
-          <>
-            <SelectInput label="Mode" val={mode} options={['HSV Range', 'RGB + Threshold']} onChange={(v: number) => up({ mode: v })} />
-            {mode === 0 ? (
-              <>
-                <Slider label="Hue Min"   val={p.h_min ?? 0}   min={0} max={179} onChange={v => up({ h_min: v })} />
-                <Slider label="Hue Max"   val={p.h_max ?? 179} min={0} max={179} onChange={v => up({ h_max: v })} />
-                <Slider label="Sat Min"   val={p.s_min ?? 0}   min={0} max={255} onChange={v => up({ s_min: v })} />
-                <Slider label="Value Min" val={p.v_min ?? 0}   min={0} max={255} onChange={v => up({ v_min: v })} />
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">Target Color</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded border border-[#333]" style={{ backgroundColor: `rgb(${r},${g},${b})` }} />
-                      <button
-                        className={`flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors ${pickColorNodeId === node.id ? 'bg-accent text-black border-accent' : 'border-[#333] text-gray-300 hover:border-accent/50'}`}
-                        onClick={() => onPickColorToggle(pickColorNodeId === node.id ? null : node.id)}
-                      >
-                        <Pipette size={11} /> Pick
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <Slider label="R"         val={r}                 min={0} max={255} onChange={v => up({ r: v })} />
-                <Slider label="G"         val={g}                 min={0} max={255} onChange={v => up({ g: v })} />
-                <Slider label="B"         val={b}                 min={0} max={255} onChange={v => up({ b: v })} />
-                <Slider label="Threshold" val={p.threshold ?? 30} min={1} max={200} onChange={v => up({ threshold: v })} />
-              </>
-            )}
-          </>
-        );
-      })()}
-
-      {/* filter_morphology */}
-      {node.type === 'filter_morphology' && (
-        <>
-          <Slider label="Operation (0=Dilate, 1=Erode)" val={p.operation || 0} min={0} max={1} step={1} onChange={v => up({ operation: v })} />
-          <Slider label="Kernel Size" val={p.size || 5} min={3} max={21} step={2} onChange={v => up({ size: v })} />
-        </>
-      )}
-
-      {/* analysis_face_mp */}
-      {node.type === 'analysis_face_mp' && (
-        <Slider label="Track Count" val={p.max_faces || 3} min={1} max={10} onChange={v => up({ max_faces: v })} />
-      )}
-
-      {/* analysis_hand_mp */}
-      {node.type === 'analysis_hand_mp' && (
-        <Slider label="Hand Count" val={p.max_hands || 2} min={1} max={4} onChange={v => up({ max_hands: v })} />
-      )}
-
-      {/* analysis_flow */}
-      {node.type === 'analysis_flow' && (
-        <>
-          <Slider label="Pyr Scale" val={p.pyr_scale || 0.5} min={0.1} max={0.9} step={0.1} onChange={v => up({ pyr_scale: v })} />
-          <Slider label="Levels"    val={p.levels    || 3}   min={1}   max={10}            onChange={v => up({ levels: v })} />
-        </>
       )}
 
       {/* geo_spectral_index */}
@@ -541,65 +470,6 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               onChange={v => up({ colormap: v })}
             />
           </div>
-        );
-      })()}
-
-      {/* geo_float_threshold */}
-      {node.type === 'filter_float_threshold' && (
-        <div className="space-y-6">
-          <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-8">
-            <div className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 flex justify-between">
-              <span>Precision Thresholding</span>
-            </div>
-            
-            <Slider 
-              label="Min Value" 
-              val={p.low ?? 0.3} 
-              min={-1} max={1} step={0.001} 
-              onChange={v => up({ low: v })} 
-            />
-            
-            <Slider 
-              label="Max Value" 
-              val={p.high ?? 1.0} 
-              min={-1} max={1} step={0.001} 
-              onChange={v => up({ high: v })} 
-            />
-
-            <div className="pt-2 border-t border-white/5">
-              <ToggleInput label="Invert Mask" val={p.invert ?? false} onChange={v => up({ invert: v })} />
-            </div>
-          </div>
-
-          <div className="px-4 py-3 bg-accent/5 rounded-xl border border-accent/10">
-            <div className="text-[9px] text-accent font-bold uppercase tracking-widest mb-1">Quick Presets</div>
-            <div className="flex flex-wrap gap-2">
-                <button onClick={() => up({ low: 0.3, high: 1.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Vegetation (NDVI)</button>
-                <button onClick={() => up({ low: 0.1, high: 1.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Water (NDWI)</button>
-                <button onClick={() => up({ low: -1.0, high: 0.0 })} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded text-[8px] text-white/60 transition-colors border border-white/5">Negative Values</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* data_list_selector */}
-      {node.type === 'data_list_selector' && (
-        <Slider label="List Index" val={p.index || 0} min={0} max={10} onChange={v => up({ index: v })} />
-      )}
-
-      {/* list_region_select */}
-      {node.type === 'list_region_select' && (() => {
-        const sortBy = p.sort_by ?? 1;
-        const byIndex = sortBy === 0;
-        return (
-          <>
-            <SelectInput label="Sort By" val={sortBy} options={['Index', 'Largest area', 'Smallest area', 'Best confidence']} onChange={(v: number) => up({ sort_by: v })} />
-            <div style={{ opacity: byIndex ? 1 : 0.35, pointerEvents: byIndex ? 'auto' : 'none' }}>
-              <Slider label="Index" val={p.index ?? 0} min={0} max={100} step={1} onChange={v => up({ index: v })} />
-            </div>
-            <Slider label="Min Area (0–1)" val={p.min_area ?? 0} min={0} max={1} step={0.001} onChange={v => up({ min_area: v })} />
-            <ToggleInput label="Require 4 pts" val={!!(p.require_pts ?? true)} onChange={v => up({ require_pts: v })} />
-          </>
         );
       })()}
 
@@ -752,41 +622,55 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* Schema-driven dynamic params (plugins) */}
       {!MANUAL_TYPES.has(node.type) && node.data.schema?.params?.map((sp: ParamSpec) => {
-        const isEnum   = sp.type === 'enum' || sp.options;
-        const isString = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
-        const isNumber = sp.type === 'number' || sp.type === 'float';
-        const isBool   = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
+        const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
+        const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
+        const isEnum    = sp.type === 'enum' || sp.options;
+        const isString  = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
+        const isNumber  = sp.type === 'number' || sp.type === 'float';
+        const isBool    = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
+        let inner: React.ReactNode;
         if (sp.type === 'trigger') {
           const isSnapshotSave = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
-          return (
-            <div key={sp.id} className="space-y-4 group">
+          inner = (
+            <div className="space-y-4 group">
               <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
               <button
-                onClick={() => {
-                  if (isSnapshotSave) {
-                    onRequestCapture(node.id);
-                  } else {
-                    up({ [sp.id]: 1 });
-                    setTimeout(() => up({ [sp.id]: 0 }), 400);
-                  }
-                }}
+                onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
                 className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
               >
                 <Save size={14} /> {sp.label || 'Execute'}
               </button>
             </div>
           );
+        } else if (isEnum) {
+          inner = <SelectInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
+        } else if (isString) {
+          inner = sp.id === 'code'
+            ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
+            : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+        } else if (isNumber) {
+          inner = <NumberInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
+        } else if (isBool) {
+          inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
+        } else {
+          inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
         }
 
-        if (isEnum)   return <SelectInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isString) return sp.id === 'code'
-          ? <CodeInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
-          : <TextInput  key={sp.id} label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isNumber) return <NumberInput key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
-        if (isBool)   return <ToggleInput key={sp.id} label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
-
-        return <Slider key={sp.id} label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
+        return (
+          <div key={sp.id} className={showEye ? 'relative group/param' : undefined}>
+            {inner}
+            {showEye && (
+              <button
+                className={`absolute top-0 right-0 p-1 rounded transition-all duration-150 ${isExposed ? 'text-accent' : 'text-gray-600 opacity-0 group-hover/param:opacity-100'}`}
+                onClick={(e) => { e.stopPropagation(); onToggleExposed!(node.id, sp.id); }}
+                title={isExposed ? 'Retirer du groupe' : 'Exposer dans le groupe'}
+              >
+                {isExposed ? <Eye size={10} /> : <EyeOff size={10} />}
+              </button>
+            )}
+          </div>
+        );
       })}
 
     </div>

@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_pixelate',
     label='Pixelate Filter',
-    category='cv',
+    category='fx',
     icon='Hash',
     description="Reduces the apparent resolution of the image to create a pixelated effect.",
     inputs=[{'id': 'image', 'color': 'image'}],

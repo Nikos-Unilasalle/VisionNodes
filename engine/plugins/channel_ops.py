@@ -11,7 +11,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='plugin_channel_split',
     label='Channel Split',
-    category='cv',
+    category='filter',
     icon='Layers',
     description="Splits an image into individual R, G, B (and A) channel grayscale images.",
     inputs=[{'id': 'image', 'color': 'image'}],
@@ -53,7 +53,7 @@ class ChannelSplitNode(NodeProcessor):
 @vision_node(
     type_id='plugin_channel_merge',
     label='Channel Merge',
-    category='cv',
+    category='filter',
     icon='Layers',
     description="Merges R, G, B (and optional A) channel images into a single composite image.",
     inputs=[

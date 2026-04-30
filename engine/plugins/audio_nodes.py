@@ -755,7 +755,7 @@ class SpectrogramToAudioNode(NodeProcessor):
 @vision_node(
     type_id='plugin_audio_playback',
     label='Speaker Out',
-    category='audio',
+    category=['audio', 'out'],
     icon='Volume2',
     description='Receives processed audio and streams it to the browser via Web Audio API.',
     inputs=[

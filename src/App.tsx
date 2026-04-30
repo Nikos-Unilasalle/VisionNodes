@@ -18,6 +18,7 @@ import { useVisionEngine } from './hooks/useVisionEngine';
 import { useHistory } from './hooks/useHistory';
 import { NodesDataContext } from './context/NodesDataContext';
 import { NodeInspectorPanel, AnalysisDataPanel } from './components/NodeInspectorPanel';
+import type { ExposedParam } from './components/NodeInspectorPanel';
 import logo from './assets/logo.svg';
 import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
@@ -516,17 +517,20 @@ function App() {
     const staticTypes = new Set(CATEGORIES.flatMap(c => c.nodes.map(n => n.type)));
     (pluginSchemas || []).forEach(schema => {
       if (staticTypes.has(schema.type)) return; // skip already registered
-      let targetCat = cats.find((c: any) => c.id === schema.category);
-      if (!targetCat) {
-         targetCat = {
-            id: schema.category,
-            label: schema.category.charAt(0).toUpperCase() + schema.category.slice(1),
+      const catIds = Array.isArray(schema.category) ? schema.category : [schema.category];
+      catIds.forEach(catId => {
+        let targetCat = cats.find((c: any) => c.id === catId);
+        if (!targetCat) {
+          targetCat = {
+            id: catId,
+            label: catId.charAt(0).toUpperCase() + catId.slice(1),
             icon: Layers,
             nodes: []
-         } as any;
-         cats.splice(cats.length - 1, 0, targetCat as any);
-      }
-      targetCat!.nodes.push({ type: schema.type, label: schema.label, schema: schema } as any);
+          } as any;
+          cats.splice(cats.length - 1, 0, targetCat as any);
+        }
+        targetCat!.nodes.push({ type: schema.type, label: schema.label, schema: schema } as any);
+      });
     });
     return cats.sort((a, b) => a.label.localeCompare(b.label));
   }, [pluginSchemas]);
@@ -636,6 +640,29 @@ function App() {
       ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]]))
       : (nodesData[selectedNodeId] ?? {});
   }, [selectedNodeId, nodesData]);
+
+  const exposedGroupParams = useMemo((): ExposedParam[] => {
+    if (selectedNode?.type !== 'group_node') return [];
+    const subNodes: any[] = (selectedNode.data as any).subGraph?.nodes ?? [];
+    const result: ExposedParam[] = [];
+    for (const child of subNodes) {
+      const exposed: string[] = child.data?.exposedParams ?? [];
+      if (exposed.length === 0) continue;
+      const schema = (pluginSchemas || []).find((s: any) => s.type === child.type);
+      for (const paramId of exposed) {
+        const paramSpec = schema?.params?.find((ps: any) => ps.id === paramId);
+        if (!paramSpec) continue;
+        result.push({
+          nodeId: child.id,
+          nodeLabel: child.data?.label || child.type,
+          paramId,
+          paramSpec,
+          currentValue: child.data?.params?.[paramId] ?? paramSpec.default,
+        });
+      }
+    }
+    return result;
+  }, [selectedNode, pluginSchemas]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
@@ -753,6 +780,41 @@ function App() {
         return node;
     }));
   };
+
+  const toggleExposedParam = useCallback((nodeId: string, paramId: string) => {
+    setViewNodes(nds => nds.map(n => {
+      if (n.id !== nodeId) return n;
+      const cur = (n.data.exposedParams as string[] | undefined) ?? [];
+      const next = cur.includes(paramId) ? cur.filter(id => id !== paramId) : [...cur, paramId];
+      return { ...n, data: { ...n.data, exposedParams: next } };
+    }));
+  }, [setViewNodes]);
+
+  const updateGroupChildParams = useCallback((groupNodeId: string, childNodeId: string, params: Record<string, unknown>) => {
+    const now = Date.now();
+    if (now - lastParamPushRef.current > 500) {
+      pushSnapshot();
+      lastParamPushRef.current = now;
+    }
+    setViewNodes(nds => nds.map(n => {
+      if (n.id !== groupNodeId) return n;
+      const sub = (n.data as any)?.subGraph ?? { nodes: [], edges: [] };
+      return {
+        ...n,
+        data: {
+          ...n.data,
+          subGraph: {
+            ...sub,
+            nodes: sub.nodes.map((cn: any) =>
+              cn.id === childNodeId
+                ? { ...cn, data: { ...cn.data, params: { ...cn.data.params, ...params } } }
+                : cn
+            )
+          }
+        }
+      };
+    }));
+  }, [setViewNodes, pushSnapshot]);
 
   const handleUndo = useCallback(() => {
     const prev = histUndo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
@@ -2181,6 +2243,12 @@ function App() {
                       onUpdateParams={updateNodeParams}
                       onPickColorToggle={setPickColorNodeId}
                       onRequestCapture={requestCapture}
+                      isInsideGroup={groupStack.length > 0}
+                      onToggleExposed={toggleExposedParam}
+                      exposedGroupParams={exposedGroupParams}
+                      onUpdateGroupChildParams={selectedNode?.type === 'group_node'
+                        ? (childNodeId, params) => updateGroupChildParams(selectedNode.id, childNodeId, params)
+                        : undefined}
                     />
                   </div>
                 ) : (

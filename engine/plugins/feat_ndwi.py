@@ -5,7 +5,7 @@ from __main__ import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_ndwi",
     label="NDWI Water Index",
-    category="features",
+    category=["geo", "features"],
     icon="Droplets",
     description="Normalized Difference Water Index. Standard formula: (Green−NIR)/(Green+NIR) — connect a NIR band to the second input (Sentinel-2 B8, Landsat B5). RGB Approx. mode uses (B−G)/(B+G) for standard RGB images only. Water threshold: >0.2.",
     inputs=[

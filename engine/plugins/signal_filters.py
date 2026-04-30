@@ -13,7 +13,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='plugin_filter_ma',
     label='Moving Average',
-    category='analysis',
+    category='signal',
     icon='TrendingUp',
     description="Sliding-window mean. Reduces noise but introduces latency (window/2 frames).",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -36,7 +36,7 @@ class MovingAverageNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_ema',
     label='Exp. Smoothing (EMA)',
-    category='analysis',
+    category='signal',
     icon='TrendingUp',
     description="Exponential moving average. alpha=1 = no smoothing, alpha→0 = heavy smoothing.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -59,7 +59,7 @@ class EMANode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_kalman',
     label='Kalman Filter',
-    category='analysis',
+    category='signal',
     icon='Activity',
     description="1D Kalman filter. Q = process noise (dynamics), R = measurement noise.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -92,7 +92,7 @@ class KalmanFilterNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_median',
     label='Median Filter',
-    category='analysis',
+    category='signal',
     icon='Minus',
     description="Sliding-window median. Excellent spike/outlier rejection.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -116,7 +116,7 @@ class MedianFilterNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_savgol',
     label='Savitzky-Golay',
-    category='analysis',
+    category='signal',
     icon='Spline',
     description="Polynomial least-squares smoothing. Preserves peak shapes. window must be > polyorder.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -165,7 +165,7 @@ class SavitzkyGolayNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_lowpass',
     label='Low-pass Filter',
-    category='analysis',
+    category='signal',
     icon='WavesLadder',
     description="1st-order IIR low-pass. cutoff in mHz, fps in Hz. Attenuates frequencies above cutoff.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -198,7 +198,7 @@ class LowpassFilterNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_holt',
     label='Holt-Winters',
-    category='analysis',
+    category='signal',
     icon='TrendingUp',
     description="Double exponential smoothing. Tracks level AND trend. alpha=smoothing, beta=trend.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -230,7 +230,7 @@ class HoltWintersNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_gaussian',
     label='Gaussian Smooth',
-    category='analysis',
+    category='signal',
     icon='Bell',
     description="Convolves signal buffer with a Gaussian kernel. sigma controls spread.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -274,7 +274,7 @@ class GaussianSmoothNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_loess',
     label='LOESS / LOWESS',
-    category='analysis',
+    category='signal',
     icon='Spline',
     description="Local regression smoother. span = fraction of points used for each estimate.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
@@ -324,7 +324,7 @@ class LOESSNode(NodeProcessor):
 @vision_node(
     type_id='plugin_filter_particle',
     label='Particle Filter',
-    category='analysis',
+    category='signal',
     icon='Sparkles',
     description="Sequential Monte Carlo estimator. particles = N hypotheses about the true state.",
     inputs=[{'id': 'value', 'color': 'scalar'}],
