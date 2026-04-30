@@ -21,6 +21,7 @@ const CommunityPage = () => {
   const [author, setAuthor] = useState('');
   const [description, setDescription] = useState('');
   const [domains, setDomains] = useState<string[]>([]);
+  const [fileContent, setFileContent] = useState('');
   const [dragging, setDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -31,12 +32,29 @@ const CommunityPage = () => {
   const handleFile = (f: File | null) => {
     if (!f) return;
     setFileName(f.name);
+    
+    // Read file content to include in GitHub Issue body
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setFileContent(content);
+    };
+    reader.readAsText(f);
+
     if (f.name.endsWith('.py')) setFileType('py');
     else if (f.name.endsWith('.vn')) setFileType('vn');
   };
 
   const buildIssueURL = () => {
     const meta = FILE_TYPES[fileType];
+    
+    // Format content block
+    let contentBlock = '';
+    if (fileContent) {
+      const lang = fileType === 'py' ? 'python' : 'json';
+      contentBlock = `\n\n**File Content:**\n\`\`\`${lang}\n${fileContent}\n\`\`\``;
+    }
+
     const body = [
       `**Title:** ${title}`,
       `**Author:** ${author}`,
@@ -46,8 +64,10 @@ const CommunityPage = () => {
       '',
       '**Description:**',
       description,
+      contentBlock,
       '',
-      '> Attach your file to this issue.',
+      '---',
+      '> [IMPORTANT] If the code above is incomplete or if you have assets (images/models), please attach them to this issue below.',
     ].join('\n');
 
     const params = new URLSearchParams({
