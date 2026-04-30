@@ -1368,6 +1368,22 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const CanvasRerouteNode = memo(({ selected }: any) => (
+  <div
+    style={{
+      width: 16, height: 16,
+      borderRadius: '50%',
+      background: selected ? '#ffffff' : '#555',
+      border: selected ? '2px solid #fff' : '2px solid #888',
+      boxShadow: selected ? '0 0 0 2px #3b82f6' : '0 2px 6px rgba(0,0,0,0.5)',
+      position: 'relative',
+    }}
+  >
+    <StyledHandle type="target" position={Position.Left} id="in" color="any" top="50%" />
+    <StyledHandle type="source" position={Position.Right} id="out" color="any" top="50%" />
+  </div>
+));
+
 export const OutputMovieNode = memo(({ selected, data }: any) => {
   const nd = useNodeData(useNodeId());
   const mode = data.params?.mode ?? 0;

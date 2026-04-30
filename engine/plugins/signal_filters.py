@@ -7,6 +7,23 @@ Numpy-only, no scipy dependency.
 import numpy as np
 from registry import vision_node, NodeProcessor
 
+
+def _to_scalar(v, default=0.0):
+    """Safely extract a Python float from any upstream value (numpy array, scalar, dict…)."""
+    if v is None:
+        return default
+    if isinstance(v, np.ndarray):
+        return float(v.flat[0]) if v.size > 0 else default
+    if isinstance(v, dict):
+        for key in ('value', 'scalar', 'result', 'filtered', 'raw'):
+            if key in v:
+                return _to_scalar(v[key], default)
+        return default
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
 # ---------------------------------------------------------------------------
 # 1. Moving Average
 # ---------------------------------------------------------------------------
@@ -24,7 +41,7 @@ class MovingAverageNode(NodeProcessor):
     def __init__(self):
         self.buf = []
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         w = max(2, int(params.get('window', 15)))
         self.buf.append(v)
         if len(self.buf) > w: self.buf = self.buf[-w:]
@@ -47,7 +64,7 @@ class EMANode(NodeProcessor):
     def __init__(self):
         self.state = None
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         a = float(params.get('alpha', 20)) / 100.0
         if self.state is None: self.state = v
         self.state = a * v + (1.0 - a) * self.state
@@ -74,7 +91,7 @@ class KalmanFilterNode(NodeProcessor):
         self.x = None  # state estimate
         self.P = 1.0   # estimate covariance
     def process(self, inputs, params):
-        z = float(inputs.get('value', 0.0))
+        z = _to_scalar(inputs.get('value'))
         Q = float(params.get('q', 1))   / 1000.0
         R = float(params.get('r', 100)) / 100.0
         if self.x is None: self.x = z
@@ -103,7 +120,7 @@ class MedianFilterNode(NodeProcessor):
     def __init__(self):
         self.buf = []
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         w = max(3, int(params.get('window', 11)))
         if w % 2 == 0: w += 1
         self.buf.append(v)
@@ -144,7 +161,7 @@ class SavitzkyGolayNode(NodeProcessor):
         return coeffs
 
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         w = int(params.get('window', 11))
         if w % 2 == 0: w += 1
         w = max(5, w)
@@ -181,7 +198,7 @@ class LowpassFilterNode(NodeProcessor):
         self._sig = None
         self._r = None
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         cut_hz = float(params.get('cutoff', 1000)) / 1000.0
         fps    = max(1.0, float(params.get('fps', 30)))
         sig = (cut_hz, fps)
@@ -254,7 +271,7 @@ class GaussianSmoothNode(NodeProcessor):
         return k / k.sum()
 
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         w = int(params.get('window', 15))
         if w % 2 == 0: w += 1
         s = float(params.get('sigma', 5))
@@ -291,7 +308,7 @@ class LOESSNode(NodeProcessor):
         return (1.0 - u ** 3) ** 3
 
     def process(self, inputs, params):
-        v = float(inputs.get('value', 0.0))
+        v = _to_scalar(inputs.get('value'))
         span = max(5, int(params.get('span', 30)))
         self.buf.append(v)
         if len(self.buf) > span * 2: self.buf = self.buf[-span * 2:]
