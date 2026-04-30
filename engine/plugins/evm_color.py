@@ -9,7 +9,7 @@ _INT_W, _INT_H = 160, 120
 @vision_node(
     type_id='plugin_evm_color',
     label='EVM Color',
-    category='fx',
+    category='detect',
     icon='Activity',
     description=(
         "Eulerian Video Magnification — color amplification (Wu et al. 2012). "

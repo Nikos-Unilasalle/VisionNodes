@@ -16,6 +16,7 @@ from registry import NodeProcessor, vision_node
         {"id": "v4", "color": "any"},
     ],
     outputs=[
+        {"id": "main", "color": "image"},
         {"id": "v0", "color": "any"},
         {"id": "v1", "color": "any"},
         {"id": "v2", "color": "any"},
@@ -23,18 +24,113 @@ from registry import NodeProcessor, vision_node
         {"id": "v4", "color": "any"},
     ],
     params=[
-        {"id": "buffer_size", "label": "History Size", "type": "scalar", "min": 10, "max": 500, "default": 100},
-        {"id": "min_y", "label": "Y-Axis Min", "type": "float", "min": -1000, "max": 1000, "default": 0},
-        {"id": "max_y", "label": "Y-Axis Max", "type": "float", "min": -1000, "max": 1000, "default": 1},
+        {"id": "buffer_size", "label": "History Size", "type": "scalar", "min": 10, "max": 1000, "default": 200},
+        {"id": "min_y", "label": "Y-Axis Min", "type": "float", "default": 0},
+        {"id": "max_y", "label": "Y-Axis Max", "type": "float", "default": 100},
+        {"id": "auto_scale", "label": "Auto-Scale", "type": "boolean", "default": True},
+        {"id": "width", "label": "Image Width", "type": "scalar", "min": 100, "max": 1920, "default": 640},
+        {"id": "height", "label": "Image Height", "type": "scalar", "min": 100, "max": 1080, "default": 360}
     ]
 )
 class PlotterNode(NodeProcessor):
+    def __init__(self):
+        super().__init__()
+        self.history = {f'v{i}': [] for i in range(5)}
+        self.colors = [
+            (255, 100, 100), (100, 255, 100), (100, 100, 255),
+            (255, 255, 100), (255, 100, 255)
+        ]
+
+    def _to_float(self, v):
+        if v is None: return None
+        if isinstance(v, (int, float, np.number)): return float(v)
+        if isinstance(v, (list, np.ndarray)):
+            if len(v) == 0: return 0.0
+            # If list of dicts (detections), try to find a value
+            if isinstance(v[0], dict):
+                # Try common keys: 'area', 'scalar', 'value'
+                for key in ['area', 'scalar', 'value', 'confidence']:
+                    if key in v[0]: return float(np.mean([item.get(key, 0) for item in v]))
+                return float(len(v)) # Fallback to count
+            try:
+                return float(np.mean(v))
+            except:
+                return 0.0
+        if isinstance(v, dict):
+            for key in ['area', 'scalar', 'value', 'confidence']:
+                if key in v: return float(v[key])
+            return 1.0
+        return 0.0
+
     def process(self, inputs, params):
+        if not hasattr(self, 'history') or self.history is None:
+            self.history = {f'v{i}': [] for i in range(5)}
+            self.colors = [
+                (255, 100, 100), (100, 255, 100), (100, 100, 255),
+                (255, 255, 100), (255, 100, 255)
+            ]
+
+        buffer_size = int(params.get('buffer_size', 200))
+        min_y = float(params.get('min_y', 0))
+        max_y = float(params.get('max_y', 100))
+        auto_scale = bool(params.get('auto_scale', True))
+        w = int(params.get('width', 640))
+        h = int(params.get('height', 360))
+
+        # 1. Update history
         out = {}
-        for k in ('v0', 'v1', 'v2', 'v3', 'v4'):
+        for k in self.history.keys():
             v = inputs.get(k)
             if v is not None:
+                val = self._to_float(v)
+                if val is not None:
+                    self.history[k].append(val)
+                    if len(self.history[k]) > buffer_size:
+                        self.history[k] = self.history[k][-buffer_size:]
                 out[k] = v
+            else:
+                # Fill with last value or None to keep alignment? 
+                # Better to just not update if missing
+                pass
+
+        # 2. Draw graph
+        img = np.zeros((h, w, 3), dtype=np.uint8) + 20 # Dark background
+        
+        # Draw grid
+        for i in range(1, 4):
+            y_line = int(h * i / 4)
+            cv2.line(img, (0, y_line), (w, y_line), (40, 40, 40), 1)
+
+        # Calculate global min/max for auto-scale if enabled
+        if auto_scale:
+            all_vals = [v for hist in self.history.values() for v in hist]
+            if all_vals:
+                min_y = min(all_vals)
+                max_y = max(all_vals)
+                if max_y == min_y: max_y += 1.0
+
+        y_range = max_y - min_y
+        if y_range == 0: y_range = 1.0
+
+        for i, (k, hist) in enumerate(self.history.items()):
+            if len(hist) < 2: continue
+            
+            pts = []
+            for j, val in enumerate(hist):
+                x_px = int(j * w / (buffer_size - 1)) if buffer_size > 1 else 0
+                y_px = int(h - ((val - min_y) / y_range * h))
+                y_px = np.clip(y_px, 0, h - 1)
+                pts.append([x_px, y_px])
+            
+            pts = np.array(pts, np.int32)
+            cv2.polylines(img, [pts], False, self.colors[i], 2, cv2.LINE_AA)
+            
+            # Label
+            if inputs.get(k) is not None:
+                cv2.putText(img, f"{k}: {hist[-1]:.2f}", (10, 20 + i*20), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.colors[i], 1, cv2.LINE_AA)
+
+        out['main'] = img
         return out
 
 @vision_node(

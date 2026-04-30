@@ -59,7 +59,7 @@ class AdvancedThresholdNode(NodeProcessor):
     icon="Wind",
     description="Advanced morphological operations like Opening, Closing, and Gradient.",
     inputs=[{"id": "mask", "color": "any"}],
-    outputs=[{"id": "mask", "color": "mask"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}],
     params=[
         {"id": "operation", "label": "Operation", "type": "enum", "options": ["Opening", "Closing", "Gradient", "Top Hat", "Black Hat"], "default": 0},
         {"id": "shape", "label": "Kernel Shape", "type": "enum", "options": ["Rect", "Cross", "Ellipse"], "default": 0},
@@ -69,8 +69,8 @@ class AdvancedThresholdNode(NodeProcessor):
 )
 class AdvancedMorphologyNode(NodeProcessor):
     def process(self, inputs, params):
-        mask = inputs.get('mask')
-        if mask is None: return {"mask": None}
+        mask = inputs.get('mask') if inputs.get('mask') is not None else (inputs.get('image') if inputs.get('image') is not None else inputs.get('main'))
+        if mask is None: return {"main": None, "mask": None}
         
         # Ensure grayscale uint8
         if len(mask.shape) == 3:
@@ -92,7 +92,7 @@ class AdvancedMorphologyNode(NodeProcessor):
         iters = int(params.get('iterations', 1))
         
         res = cv2.morphologyEx(mask, op, kernel, iterations=iters)
-        return {"mask": res}
+        return {"main": res, "mask": res}
 
 @vision_node(
     type_id="feat_distance_transform",

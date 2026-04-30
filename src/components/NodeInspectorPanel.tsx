@@ -227,6 +227,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
     'plugin_audio_input', 'plugin_audio_to_spectrogram', 'plugin_audio_waveform',
     'plugin_audio_freq_filter', 'plugin_audio_pitch_shift', 'plugin_audio_time_stretch',
     'plugin_spectrogram_to_audio', 'plugin_audio_export', 'plugin_audio_info',
+    'util_landmark_selector',
   ]);
 
   return (
@@ -605,6 +606,26 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       )}
 
       {/* plugin_audio_info  — outputs only, no params */}
+
+      {/* util_landmark_selector */}
+      {node.type === 'util_landmark_selector' && (
+        <div className="space-y-4">
+          <TextInput 
+            label="Landmark Indices" 
+            val={p.indices || "11,12,24,23"} 
+            onChange={v => up({ indices: v })} 
+          />
+          <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-2">
+            <div className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Aide Mémoire (Pose)</div>
+            <div className="text-[9px] text-gray-500 leading-relaxed font-mono">
+              11, 12 : Épaules (L, R)<br/>
+              23, 24 : Hanches (L, R)<br/>
+              13, 14 : Coudes (L, R)<br/>
+              15, 16 : Poignets (L, R)
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Node note — always visible, displayed under the node when non-empty */}
       {node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (

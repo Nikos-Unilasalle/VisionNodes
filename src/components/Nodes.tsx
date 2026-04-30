@@ -917,6 +917,10 @@ export const UtilCoordToMaskNode = memo(({ selected, data }: any) => (
   <BaseNode title="Coord To Mask" icon={Layers} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}, {id: 'data', color: 'dict'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
+export const UtilLandmarkSelectorNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Landmark Selector" icon={Target} selected={selected} data={data} color="accent" inputs={[{id: 'data', color: 'dict'}]} outputs={[{id: 'data', color: 'dict'}]} />
+));
+
 export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
   <BaseNode title="Mask Blend" icon={Layers} selected={selected} data={data} color="accent" inputs={[
     {id: 'image_a', color: 'image'},
@@ -1023,7 +1027,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   }, [histories]);
 
   const activeSeries = KEYS.filter(k => (histories[k]?.length ?? 0) > 0);
-  const PORT_TOPS = ['20%', '35%', '50%', '65%', '80%'];
+  const PORT_TOPS = ['30%', '42%', '54%', '66%', '78%'];
   const minY = data.params?.min_y;
   const maxY = data.params?.max_y;
   const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
@@ -1039,6 +1043,13 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
             <StyledHandle type="target" position={Position.Left} id={k} color="any" top="50%" />
           </div>
         ))}
+        {/* Main image output - Positioned at 15% to clear V0 */}
+        <div className="absolute right-0 flex items-center justify-end pointer-events-none"
+             style={{ top: '15%', transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">Main</span>
+          <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+        </div>
+
         {KEYS.map((k, i) => (
           <div key={`out-${k}`} className="absolute right-0 flex items-center justify-end pointer-events-none"
                style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>

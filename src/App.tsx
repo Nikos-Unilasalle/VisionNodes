@@ -111,6 +111,7 @@ const _nodeTypes = {
   geo_statistics: N.GeoStatisticsNode,
   geo_land_cover: N.GenericCustomNode,
   util_roi_polygon: N.ROIPolygonNode,
+  util_landmark_selector: N.UtilLandmarkSelectorNode,
   draw_overlay: N.DrawOverlayNode,
   draw_point: N.GenericCustomNode,
   draw_line: N.GenericCustomNode,
@@ -198,7 +199,7 @@ const CATEGORIES = [
     { type: 'geom_perspective', label: 'Perspective Warp', description: 'Straightens a distorted area into a flat rectangle via 4 points.' },
     { type: 'util_manual_points', label: 'Manual 4 Points', description: 'Manually defines 4 reference points for geometric calculations.' }
   ]},
-  { id: 'track', label: 'Tracking', icon: User, nodes: [
+  { id: 'detect', label: 'Detect', icon: Target, nodes: [
     { type: 'analysis_face_mp', label: 'Face Tracker', description: 'Detects and tracks faces and facial landmarks (MediaPipe).' },
     { type: 'analysis_hand_mp', label: 'Hand Tracker', description: 'Detects and tracks hands and joints (MediaPipe).' },
     { type: 'analysis_pose_mp', label: 'Pose Tracker', description: 'Analyzes and tracks human body posture (33 keypoints) via MediaPipe.' },
@@ -220,7 +221,7 @@ const CATEGORIES = [
     { type: 'data_inspector', label: 'Inspect Unit', description: 'Displays the raw data content flowing through a link.' },
     { type: 'analysis_monitor', label: 'Universal Monitor', description: 'Ultra-polyvalent measurement tool (Flux, Areas, Brightness, Counting).' },
     { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' },
-    { type: 'sci_plotter', label: 'Plotter', description: 'Multi-series real-time graph. Connect up to 5 scalar or list inputs. Resizable.' },
+    { type: 'sci_plotter', label: 'Plotter', description: 'Multi-series real-time graph. Outputs both raw data and a live rendered image (main).' },
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
     { type: 'draw_overlay', label: 'Visual Overlay', description: 'Draws shapes and text over the main video stream.' }
@@ -229,7 +230,8 @@ const CATEGORIES = [
     { type: 'data_list_selector', label: 'List Selector', description: 'Extracts a specific item from a list of detections.' },
     { type: 'list_region_select', label: 'Region Selector', description: 'Filters, sorts and selects a detection region. Outputs canonical 4 corner pts (TL→TR→BR→BL) ready for perspective warp.' },
     { type: 'data_coord_splitter', label: 'Coord Splitter', description: 'Splits a coordinate dictionary into 4 scalar values.' },
-    { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' }
+    { type: 'data_coord_combine', label: 'Coord Combine', description: 'Combines 4 scalar values into a coordinate dictionary.' },
+    { type: 'util_landmark_selector', label: 'Landmark Selector', description: 'Extracts specific points from a landmark list (e.g. torso from pose).' }
   ]},
   { id: 'math', label: 'Math', icon: Hash, nodes: [
     { type: 'math_vec_to_screen', label: 'Vec → Screen', description: 'Maps a yaw/pitch direction vector to normalized screen coordinates (x, y). Smoothing + calibration.' },
@@ -1395,7 +1397,9 @@ function App() {
   const filteredNodes = useMemo(() => {
     if (!searchQuery) return activeCategory.nodes;
     const all = dynamicCategories.flatMap(c => c.nodes);
-    return all.filter(n => n.label.toLowerCase().includes(searchQuery.toLowerCase()));
+    // Remove duplicates based on type
+    const unique = Array.from(new Map(all.map(n => [n.type, n])).values());
+    return unique.filter(n => n.label.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [searchQuery, activeCategory, dynamicCategories]);
 
   useEffect(() => {
@@ -2031,7 +2035,7 @@ function App() {
                 className="bg-[#3d4452] border border-[#4f5b6b] w-full max-w-[700px] h-[85vh] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
               >
-                <div className="w-56 bg-[#1e2530] border-r border-[#4f5b6b] p-6 flex flex-col gap-2">
+                <div className="w-56 bg-[#1e2530] border-r border-[#4f5b6b] p-6 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                   {dynamicCategories.map(cat => (
                     <button 
                       key={cat.id} onClick={() => setActiveCategoryId(cat.id)}

@@ -6,7 +6,7 @@ import random
 @vision_node(
     type_id='filter_glitch',
     label='Glitch FX',
-    category='fx',
+    category='cv',
     icon='Zap',
     description="Applies random digital distortions for a 'glitch' effect.",
     inputs=[{'id': 'image', 'color': 'image'}],

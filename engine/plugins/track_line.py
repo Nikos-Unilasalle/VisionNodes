@@ -4,7 +4,7 @@ import math
 @vision_node(
     type_id='geom_track_line',
     label='Track Line',
-    category='track',
+    category='detect',
     icon='Maximize',
     description="Calculates the distance in pixels between two tracked landmarks.",
     inputs=[

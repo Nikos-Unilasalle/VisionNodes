@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='filter_bg_subtraction',
     label='BG Removal',
-    category='filter',
+    category='cv',
     icon='Ghost',
     description="Subtracts the static background to isolate only moving objects.",
     inputs=[{'id': 'image', 'color': 'image'}],
