@@ -7391,6 +7391,200 @@
     ]
   },
   {
+    "id": "ocr",
+    "label": "Ocr",
+    "nodes": [
+      {
+        "type": "ocr_easyocr",
+        "label": "OCR (EasyOCR)",
+        "category": "ocr",
+        "icon": "ScanText",
+        "description": "End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Annotated"
+          },
+          {
+            "id": "text_regions",
+            "color": "list",
+            "label": "Regions"
+          },
+          {
+            "id": "texts",
+            "color": "list",
+            "label": "Text List"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "min_confidence",
+            "label": "Min Conf",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "gpu",
+            "label": "GPU",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "id": "draw_text",
+            "label": "Draw Text",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "ocr_tesseract",
+        "label": "OCR (Tesseract)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "box",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text",
+            "color": "any"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "options": [
+              "eng",
+              "fra"
+            ],
+            "default": 0
+          },
+          {
+            "id": "psm",
+            "label": "PSM Mode",
+            "type": "enum",
+            "options": [
+              "3 \u2013 Auto",
+              "6 \u2013 Uniform block",
+              "7 \u2013 Single line",
+              "8 \u2013 Single word",
+              "11 \u2013 Sparse text"
+            ],
+            "default": 1
+          },
+          {
+            "id": "padding",
+            "label": "Padding px",
+            "type": "scalar",
+            "min": 0,
+            "max": 40,
+            "default": 4
+          },
+          {
+            "id": "upscale",
+            "label": "Upscale \u00d7",
+            "type": "scalar",
+            "min": 1,
+            "max": 8,
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "ocr_east_detect",
+        "label": "Text Detector (EAST)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text_regions",
+            "color": "list"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_confidence",
+            "label": "Min Confidence",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.3
+          },
+          {
+            "id": "nms_threshold",
+            "label": "NMS Threshold",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "width",
+            "label": "Input W (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
+          },
+          {
+            "id": "height",
+            "label": "Input H (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "geo",
     "label": "Geo",
     "nodes": [
@@ -8423,200 +8617,6 @@
             "max": 6,
             "step": 1,
             "default": 2
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "ocr",
-    "label": "Ocr",
-    "nodes": [
-      {
-        "type": "ocr_easyocr",
-        "label": "OCR (EasyOCR)",
-        "category": "ocr",
-        "icon": "ScanText",
-        "description": "End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "main",
-            "color": "image",
-            "label": "Annotated"
-          },
-          {
-            "id": "text_regions",
-            "color": "list",
-            "label": "Regions"
-          },
-          {
-            "id": "texts",
-            "color": "list",
-            "label": "Text List"
-          }
-        ],
-        "params": [
-          {
-            "id": "lang",
-            "label": "Language",
-            "type": "enum",
-            "default": 0
-          },
-          {
-            "id": "min_confidence",
-            "label": "Min Conf",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.4
-          },
-          {
-            "id": "gpu",
-            "label": "GPU",
-            "type": "boolean",
-            "default": false
-          },
-          {
-            "id": "draw_text",
-            "label": "Draw Text",
-            "type": "boolean",
-            "default": true
-          }
-        ]
-      },
-      {
-        "type": "ocr_tesseract",
-        "label": "OCR (Tesseract)",
-        "category": "ocr",
-        "icon": "Type",
-        "description": "Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          },
-          {
-            "id": "box",
-            "color": "dict"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "text",
-            "color": "any"
-          },
-          {
-            "id": "main",
-            "color": "image"
-          }
-        ],
-        "params": [
-          {
-            "id": "lang",
-            "label": "Language",
-            "type": "enum",
-            "options": [
-              "eng",
-              "fra"
-            ],
-            "default": 0
-          },
-          {
-            "id": "psm",
-            "label": "PSM Mode",
-            "type": "enum",
-            "options": [
-              "3 \u2013 Auto",
-              "6 \u2013 Uniform block",
-              "7 \u2013 Single line",
-              "8 \u2013 Single word",
-              "11 \u2013 Sparse text"
-            ],
-            "default": 1
-          },
-          {
-            "id": "padding",
-            "label": "Padding px",
-            "type": "scalar",
-            "min": 0,
-            "max": 40,
-            "default": 4
-          },
-          {
-            "id": "upscale",
-            "label": "Upscale \u00d7",
-            "type": "scalar",
-            "min": 1,
-            "max": 8,
-            "default": 2
-          }
-        ]
-      },
-      {
-        "type": "ocr_east_detect",
-        "label": "Text Detector (EAST)",
-        "category": "ocr",
-        "icon": "Type",
-        "description": "Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "text_regions",
-            "color": "list"
-          },
-          {
-            "id": "main",
-            "color": "image"
-          }
-        ],
-        "params": [
-          {
-            "id": "min_confidence",
-            "label": "Min Confidence",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.3
-          },
-          {
-            "id": "nms_threshold",
-            "label": "NMS Threshold",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.4
-          },
-          {
-            "id": "width",
-            "label": "Input W (\u00d732)",
-            "type": "scalar",
-            "min": 32,
-            "max": 1280,
-            "step": 32,
-            "default": 640
-          },
-          {
-            "id": "height",
-            "label": "Input H (\u00d732)",
-            "type": "scalar",
-            "min": 32,
-            "max": 1280,
-            "step": 32,
-            "default": 640
           }
         ]
       }

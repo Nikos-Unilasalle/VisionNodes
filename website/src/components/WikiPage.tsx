@@ -18,8 +18,8 @@ const WikiPage = ({ onCommunity }: { onCommunity: () => void }) => {
     .map(c => ({
       ...c,
       nodes: c.nodes.filter((n: NodeDef) =>
-        n.label.toLowerCase().includes(search.toLowerCase()) ||
-        n.description.toLowerCase().includes(search.toLowerCase())
+        (n.label || '').toLowerCase().includes(search.toLowerCase()) ||
+        (n.description || '').toLowerCase().includes(search.toLowerCase())
       ),
     }))
     .filter(c => c.nodes.length > 0);

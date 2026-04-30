@@ -54,11 +54,11 @@ class YoloDetectionNode(NodeProcessor):
         name = models[int(size_idx)]
 
         if name != self.current_model_name:
-            self._loading = True
             send_notification(f'YOLO: loading {name}…', progress=0.1, notif_id='yolo_load')
             try:
-                self.model = YOLO(name)
-                self.model.to(self.device)
+                model = YOLO(name)
+                model.to(self.device)
+                self.model = model
                 self.current_model_name = name
                 send_notification(f'YOLO: ready ({name})', progress=1.0, notif_id='yolo_load')
             except Exception as e:
@@ -75,6 +75,7 @@ class YoloDetectionNode(NodeProcessor):
         size_idx = int(params.get('model_size', 0))
 
         if self.model is None and not getattr(self, '_loading', False):
+            self._loading = True
             threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
         elif self.model is not None:
             try:
@@ -92,9 +93,18 @@ class YoloDetectionNode(NodeProcessor):
         if img_hash == self._cache_hash and params_key == self._cache_params and self._cache_result is not None:
             return self._cache_result
 
-        # Inference
+        # Inference — don't pass device= to predict: model is already on device,
+        # and re-passing it forces ultralytics to rebuild self.predictor each call.
         self.report_progress(0.2, 'YOLO: detecting…')
-        results = self.model.predict(image, conf=conf, verbose=False, device=self.device)
+        try:
+            results = self.model.predict(image, conf=conf, verbose=False)
+        except Exception as e:
+            # Predictor in bad state — reset so next frame retries cleanly
+            self.model = None
+            self.current_model_name = ""
+            self._cache_result = None
+            send_notification(f'YOLO error (will retry): {e}', level='error', notif_id='yolo_load')
+            return {"main": image, "objects_list": []}
         self.report_progress(1.0, 'YOLO: done')
         
         objects_list = []

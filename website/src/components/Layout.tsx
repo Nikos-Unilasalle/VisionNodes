@@ -280,6 +280,60 @@ const NodeCard = ({ node }: { node: NodeDef }) => {
   );
 };
 
+// ─── Slideshow ───────────────────────────────────────────────────────────────
+
+const SLIDES = [
+  { src: '/slides/slide1.png', alt: 'Face Detection Pipeline' },
+  { src: '/slides/slide2.png', alt: 'Geospatial Analysis' },
+  { src: '/slides/slide3.png', alt: 'Object Tracking' },
+  { src: '/slides/slide4.png', alt: 'Complex Graph Logic' },
+  { src: '/slides/slide5.png', alt: 'Real-time Camera Processing' },
+];
+
+const Slideshow = () => {
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % SLIDES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="relative group">
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={current}
+          src={SLIDES[current].src}
+          alt={SLIDES[current].alt}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className="w-full h-full object-cover"
+        />
+      </AnimatePresence>
+
+      {/* Manual Navigation Dots */}
+      <div className="absolute bottom-4 left-6 flex gap-2 z-20">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              current === i 
+                ? 'bg-[var(--accent)] w-6' 
+                : 'bg-white/30 hover:bg-white/60'
+            }`}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 
 const HeroSection = ({ onDownload }: { onDownload: () => void }) => (
@@ -320,13 +374,10 @@ const HeroSection = ({ onDownload }: { onDownload: () => void }) => (
           </a>
         </div>
 
-        {/* Cover screenshot */}
+        {/* Cover slideshow */}
         <div className="relative max-w-5xl mx-auto">
-          <MacOsWindow className="relative z-10">
-            <img
-              src="/cover.png"
-              alt="VisionNodes Studio interface"
-            />
+          <MacOsWindow className="relative z-10 overflow-hidden">
+            <Slideshow />
           </MacOsWindow>
         </div>
       </motion.div>
