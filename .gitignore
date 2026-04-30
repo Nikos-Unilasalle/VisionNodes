@@ -32,6 +32,8 @@ public/snapshots/
 gaze/epoch_24_ckpt.pth.tar
 src-tauri/*.csv
 src-tauri/exports/
+output.wav
+*.wav
 
 # GEE cache (GeoTIFF — large files, Tauri watcher must not see them)
 gee_cache/

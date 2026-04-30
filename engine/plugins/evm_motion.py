@@ -7,7 +7,7 @@ _INT_W, _INT_H = 320, 240  # fixed internal resolution for motion EVM
 @vision_node(
     type_id='plugin_evm_motion',
     label='EVM Motion',
-    category='cv',
+    category='fx',
     icon='Waves',
     description=(
         "Eulerian Video Magnification — motion amplification (Wu et al. 2012). "

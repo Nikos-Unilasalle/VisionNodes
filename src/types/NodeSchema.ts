@@ -23,7 +23,7 @@ export interface PortSpec {
 export interface NodeSchema {
   type: string;
   label: string;
-  category: string;
+  category: string | string[];
   icon: string;
   description?: string;
   inputs: PortSpec[];
@@ -41,6 +41,7 @@ export interface NodeData {
   params: Record<string, any>;
   schema?: NodeSchema;
   description?: string;
+  exposedParams?: string[];
 }
 
 export type VNNode = Node<NodeData>;

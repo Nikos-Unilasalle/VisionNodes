@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='util_on_each',
     label='On Each',
-    category='util',
+    category='data',
     icon='Layers',
     description="Applies a graphic template to every item in a coordinates list.",
     inputs=[

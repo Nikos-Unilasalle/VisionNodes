@@ -14,7 +14,7 @@ except ImportError:
 @vision_node(
     type_id='object_detection_yolo',
     label='YOLO Detector',
-    category='track',
+    category='detect',
     icon='Zap',
     description="High-performance object detection (80 classes) using the YOLOv11 model.",
     inputs=[{'id': 'image', 'color': 'image'}],

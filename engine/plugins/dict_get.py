@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='plugin_dict_get',
     label='Dict Get',
-    category='util',
+    category='data',
     icon='Key',
     description="Extracts 1 to 3 values from a dictionary by key name. val_1/2/3 outputs accept any downstream type; scalar_1 coerces val_1 to float.",
     inputs=[{'id': 'dict_in', 'color': 'any'}],

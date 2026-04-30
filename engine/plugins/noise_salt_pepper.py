@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='filter_noise_salt_pepper',
     label='Salt & Pepper Noise',
-    category='noise',
+    category='filter',
     icon='Ghost',
     description="Adds random white and black pixels (impulse noise).",
     inputs=[{'id': 'image', 'color': 'image'}],

@@ -8,7 +8,7 @@ _PRESETS = ["Custom", "NDWI proxy (B−G)", "NDVI proxy (G−R)", "NDSI proxy (B
 @vision_node(
     type_id="feat_spectral_index",
     label="Spectral Index",
-    category="features",
+    category=["geo", "features"],
     icon="Activity",
     description="Generic normalized difference index (A−B)/(A+B). Presets: NDWI, NDVI, NDSI. Custom: pick channels freely. Connect image_b for two-image mode (e.g. separate NIR band).",
     inputs=[

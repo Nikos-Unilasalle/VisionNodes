@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_brightness_contrast',
     label='Bright & Contrast',
-    category='cv',
+    category='filter',
     icon='Zap',
     description="Adjusts the brightness and contrast of the image.",
     inputs=[{'id': 'image', 'color': 'image'}],

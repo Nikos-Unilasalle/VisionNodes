@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='util_coord_center',
     label='Coord Center',
-    category='util',
+    category='data',
     icon='Target',
     description="Calculates the center point of a coordinate dictionary (bounding box).",
     inputs=[{'id': 'data', 'color': 'dict'}],

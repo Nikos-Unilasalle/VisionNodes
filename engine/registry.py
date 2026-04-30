@@ -29,7 +29,7 @@ class PortSpec(TypedDict, total=False):
 class NodeSchema(TypedDict, total=False):
     type: Required[str]
     label: Required[str]
-    category: Required[str]
+    category: Required[str | list[str]]
     icon: Required[str]
     description: str
     inputs: Required[list[PortSpec]]
@@ -57,7 +57,7 @@ def send_notification(message, progress=None, level='info', notif_id=None):
 
 
 def vision_node(
-    type_id: str, label: str, category: str = "custom", icon: str = "PenTool",
+    type_id: str, label: str, category: str | list[str] = "custom", icon: str = "PenTool",
     inputs: Optional[list[PortSpec]] = None,
     outputs: Optional[list[PortSpec]] = None,
     params: Optional[list[ParamSpec]] = None,

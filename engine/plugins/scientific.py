@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_plotter",
     label="Plotter",
-    category="visualize",
+    category=["visualize", "analysis"],
     icon="Activity",
     description="Multi-series real-time graph. Connect up to 5 scalar or list inputs (v0–v4). Resizable.",
     inputs=[

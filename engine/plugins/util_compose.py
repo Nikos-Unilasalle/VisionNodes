@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="util_compose",
     label="Compose",
-    category="features",
+    category="data",
     icon="Layout",
     description="Combines two images: side-by-side, split view, blend, difference, or checkerboard.",
     inputs=[{"id": "image_a", "color": "image"}, {"id": "image_b", "color": "image"}],

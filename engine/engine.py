@@ -396,7 +396,7 @@ class SolidColorNode(NodeProcessor):
 @vision_node(
     type_id="filter_canny",
     label="Canny Edge",
-    category="cv",
+    category="filter",
     icon="Waves",
     description="Detects edges using the Canny algorithm.",
     inputs=[{"id": "image", "color": "image"}],
@@ -416,7 +416,7 @@ class CannyFilter(NodeProcessor):
 @vision_node(
     type_id="filter_blur",
     label="Gaussian Blur",
-    category="cv",
+    category="filter",
     icon="Waves",
     description="Applies a Gaussian blur to smooth the image.",
     inputs=[{"id": "image", "color": "image"}],
@@ -436,7 +436,7 @@ class BlurFilter(NodeProcessor):
 @vision_node(
     type_id="filter_gray",
     label="Grayscale",
-    category="cv",
+    category="filter",
     icon="Waves",
     description="Converts the image to grayscale.",
     inputs=[{"id": "image", "color": "image"}],
@@ -452,7 +452,7 @@ class GrayFilter(NodeProcessor):
 @vision_node(
     type_id="filter_threshold",
     label="Threshold",
-    category="cv",
+    category="filter",
     icon="Waves",
     description="Separates the image into black and white based on intensity.",
     inputs=[{"id": "image", "color": "image"}],
@@ -481,7 +481,7 @@ class ThresholdFilter(NodeProcessor):
     inputs=[{"id": "image", "color": "image"}],
     outputs=[{"id": "main", "color": "image"}],
     params=[
-        {"id": "flip_mode", "label": "Mode", "type": "enum", "options": ["Vertical", "Horizontal", "Both"], "default": 1}
+        {"id": "flip_mode", "label": "Flip (-1=Both, 0=Vertical, 1=Horizontal)", "type": "int", "default": 1, "min": -1, "max": 1, "step": 1}
     ]
 )
 class FlipNode(NodeProcessor):
@@ -550,7 +550,7 @@ class ResizeNode(NodeProcessor):
 @vision_node(
     type_id="analysis_flow",
     label="Optical Flow",
-    category="track",
+    category=["track", "signal"],
     icon="Wind",
     description="Analyzes movement between frames using Farneback algorithm.",
     inputs=[{"id": "image", "color": "image"}],
@@ -716,7 +716,7 @@ class UniversalMonitorNode(NodeProcessor):
 @vision_node(
     type_id="analysis_face_mp",
     label="Face Tracker",
-    category="track",
+    category="detect",
     icon="User",
     description="Detects and tracks faces and facial landmarks (MediaPipe).",
     inputs=[{"id": "image", "color": "image"}],
@@ -775,7 +775,7 @@ class FaceDetectionNode(NodeProcessor):
 @vision_node(
     type_id="analysis_hand_mp",
     label="Hand Tracker",
-    category="track",
+    category="detect",
     icon="Zap",
     description="Detects and tracks hands and joints (MediaPipe).",
     inputs=[{"id": "image", "color": "image"}],
@@ -972,7 +972,7 @@ class OverlayNode(NodeProcessor):
 @vision_node(
     type_id="data_list_selector",
     label="List Selector",
-    category="util",
+    category="data",
     icon="Box",
     description="Extracts a specific item from a list of detections.",
     inputs=[{"id": "list_in", "color": "list"}],
@@ -991,7 +991,7 @@ class ListSelectorNode(NodeProcessor):
 @vision_node(
     type_id="data_coord_splitter",
     label="Coord Splitter",
-    category="util",
+    category="data",
     icon="Box",
     description="Splits a coordinate dictionary into 4 scalar values.",
     inputs=[{"id": "data", "color": "any"}],
@@ -1011,7 +1011,7 @@ class CoordSplitterNode(NodeProcessor):
 @vision_node(
     type_id="data_coord_combine",
     label="Coord Combine",
-    category="util",
+    category="data",
     icon="Box",
     description="Combines 4 scalar values into a coordinate dictionary.",
     inputs=[
@@ -1311,6 +1311,8 @@ class VisionEngine:
         if os.path.exists(img_path):
             self.fallback_img = cv2.imread(img_path)
 
+        self._run_event = asyncio.Event()  # set only when a live source is active
+
     def switch_camera(self, idx):
         target_idx = str(idx)
         current_idx = str(getattr(self, 'current_cap_index', -1))
@@ -1340,6 +1342,9 @@ class VisionEngine:
         if not self.cap.isOpened():
             print(f"[Engine] CRITICAL: Camera {target_idx} failed to open. Stopping retry loop.")
 
+    def _should_run(self):
+        return len(self.sorted_nodes) > 0
+
     def update_graph(self, g):
         raw_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
         flat_nodes, flat_edges = flatten_groups(g.get('nodes', []), raw_edges)
@@ -1349,6 +1354,10 @@ class VisionEngine:
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
+        if self._should_run():
+            self._run_event.set()
+        else:
+            self._run_event.clear()
 
     async def _drain_notifs_loop(self):
         """Background task: flush notification queue to clients every 50 ms."""
@@ -1365,6 +1374,9 @@ class VisionEngine:
 
     async def run(self):
         while True:
+            if not self._run_event.is_set():
+                await self._run_event.wait()
+                continue
             ret, frame = self.cap.read()
             if not ret:
                 frame = None   # ← allow non-camera nodes (audio, geo…) to run anyway
