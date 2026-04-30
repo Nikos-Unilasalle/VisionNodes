@@ -283,11 +283,11 @@ const NodeCard = ({ node }: { node: NodeDef }) => {
 // ─── Slideshow ───────────────────────────────────────────────────────────────
 
 const SLIDES = [
-  { src: '/slides/slide1.png', alt: 'Face Detection Pipeline' },
-  { src: '/slides/slide2.png', alt: 'Geospatial Analysis' },
-  { src: '/slides/slide3.png', alt: 'Object Tracking' },
-  { src: '/slides/slide4.png', alt: 'Complex Graph Logic' },
-  { src: '/slides/slide5.png', alt: 'Real-time Camera Processing' },
+  { src: '/slides/slide1.jpg', alt: 'Face Detection Pipeline' },
+  { src: '/slides/slide2.jpg', alt: 'Geospatial Analysis' },
+  { src: '/slides/slide3.jpg', alt: 'Object Tracking' },
+  { src: '/slides/slide4.jpg', alt: 'Complex Graph Logic' },
+  { src: '/slides/slide5.jpg', alt: 'Real-time Camera Processing' },
 ];
 
 const Slideshow = () => {
