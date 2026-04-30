@@ -30,6 +30,8 @@ def parse_vision_node_decorator(decorator):
                         elif isinstance(k, ast.Constant) and isinstance(v, ast.List):
                              dict_val[k.value] = [e.value for e in v.elts if isinstance(e, ast.Constant)]
                     items.append(dict_val)
+                elif isinstance(elt, ast.Constant):
+                    items.append(elt.value)
             metadata[key] = items
     
     return metadata
@@ -75,6 +77,7 @@ def group_by_category(nodes):
         ("track", "Tracking"),
         ("features", "Features"),
         ("analysis", "Analysis"),
+        ("audio", "Audio"),
         ("visualize", "Visualizers"),
         ("draw", "Drawing"),
         ("util", "Utilities"),
@@ -89,7 +92,12 @@ def group_by_category(nodes):
     cat_map = {id: label for id, label in CAT_ORDER}
     
     for node in nodes:
-        cat_id = node.get("category", "custom")
+        cat_data = node.get("category", "custom")
+        # Handle list of categories by taking the first one
+        cat_id = cat_data[0] if isinstance(cat_data, list) and cat_data else cat_data
+        if isinstance(cat_id, list): # Safety for nested lists if any
+            cat_id = "custom"
+            
         if cat_id not in categories:
             categories[cat_id] = {
                 "id": cat_id,
