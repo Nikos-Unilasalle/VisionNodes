@@ -302,17 +302,17 @@ const Slideshow = () => {
   }, []);
 
   return (
-    <div className="relative group">
-      <AnimatePresence mode="wait">
+    <div className="relative aspect-video overflow-hidden">
+      <AnimatePresence initial={false}>
         <motion.img
           key={current}
           src={SLIDES[current].src}
           alt={SLIDES[current].alt}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="w-full h-full object-cover"
+          initial={{ x: '100%' }}
+          animate={{ x: 0 }}
+          exit={{ x: '-100%' }}
+          transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </AnimatePresence>
 
