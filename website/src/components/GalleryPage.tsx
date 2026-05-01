@@ -143,13 +143,20 @@ const GalleryPage = () => {
                           </div>
                           <span className="text-[13px] font-medium text-[var(--text-dim)]">{item.author}</span>
                         </div>
-                        <a 
-                          href={item.fileUrl} 
-                          download
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-alt)] border border-[var(--border)] text-[13px] font-bold text-[var(--text-main)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all active:scale-95"
-                        >
-                          <Download size={14} /> Download
-                        </a>
+                        {/* @ts-ignore */}
+                        {item.integrated ? (
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-alt)] border border-[var(--border)] text-[13px] font-bold text-[var(--accent)] opacity-80 cursor-default">
+                            <Box size={14} /> Integrated
+                          </div>
+                        ) : (
+                          <a 
+                            href={item.fileUrl} 
+                            download
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-alt)] border border-[var(--border)] text-[13px] font-bold text-[var(--text-main)] hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all active:scale-95"
+                          >
+                            <Download size={14} /> Download
+                          </a>
+                        )}
                       </div>
                     </div>
                   </motion.div>

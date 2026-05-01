@@ -743,6 +743,67 @@
         ]
       },
       {
+        "type": "cv_levels",
+        "label": "Image Levels",
+        "category": "cv",
+        "icon": "Sliders",
+        "description": "Adjusts image intensity levels: black point, white point, gamma (midtones), and output range.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "in_black",
+            "label": "In Black",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 0
+          },
+          {
+            "id": "in_white",
+            "label": "In White",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 255
+          },
+          {
+            "id": "gamma",
+            "label": "Gamma",
+            "type": "scalar",
+            "min": 0.1,
+            "max": 5.0,
+            "default": 1.0
+          },
+          {
+            "id": "out_black",
+            "label": "Out Black",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 0
+          },
+          {
+            "id": "out_white",
+            "label": "Out White",
+            "type": "scalar",
+            "min": 0,
+            "max": 255,
+            "default": 255
+          }
+        ]
+      },
+      {
         "type": "plugin_invert",
         "label": "Invert Color",
         "category": "cv",
@@ -915,6 +976,52 @@
             "max": 100,
             "step": 1,
             "default": 5
+          }
+        ]
+      },
+      {
+        "type": "cv_shadow_highlight",
+        "label": "Shadow removal",
+        "category": "cv",
+        "icon": "Sun",
+        "description": "Selectively brightens shadows and darkens highlights while preserving midtones, similar to professional photo editors.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "shadows",
+            "label": "Shadows (Boost)",
+            "type": "scalar",
+            "min": 0,
+            "max": 100,
+            "default": 30
+          },
+          {
+            "id": "highlights",
+            "label": "Highlights (Reduce)",
+            "type": "scalar",
+            "min": 0,
+            "max": 100,
+            "default": 0
+          },
+          {
+            "id": "radius",
+            "label": "Mask Radius",
+            "type": "scalar",
+            "min": 1,
+            "max": 251,
+            "step": 2,
+            "default": 41
           }
         ]
       },
@@ -2900,16 +3007,8 @@
           {
             "id": "boundary_color",
             "label": "Boundary Color",
-            "type": "enum",
-            "options": [
-              "Red",
-              "Green",
-              "Blue",
-              "White",
-              "Black",
-              "Yellow"
-            ],
-            "default": 0
+            "type": "color",
+            "default": "#FF0000"
           },
           {
             "id": "boundary_thickness",
@@ -2935,6 +3034,278 @@
     "id": "analysis",
     "label": "Analysis",
     "nodes": [
+      {
+        "type": "sci_connected_components",
+        "label": "Connected Components",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Layers",
+        "description": "Label and count connected regions (particles, cells, blobs). Measures area and centroid of each object.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Labeled Image"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Object Count"
+          },
+          {
+            "id": "areas",
+            "color": "data",
+            "label": "Areas (px\u00b2)"
+          },
+          {
+            "id": "centroids",
+            "color": "data",
+            "label": "Centroids"
+          }
+        ],
+        "params": [
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "int",
+            "default": 128,
+            "min": 0,
+            "max": 255
+          },
+          {
+            "id": "min_area",
+            "label": "Min Area (px\u00b2)",
+            "type": "int",
+            "default": 50,
+            "min": 1
+          },
+          {
+            "id": "max_area",
+            "label": "Max Area (px\u00b2)",
+            "type": "int",
+            "default": 500000,
+            "min": 1
+          },
+          {
+            "id": "connectivity",
+            "label": "Connectivity",
+            "type": "enum",
+            "options": [
+              "8-connected",
+              "4-connected"
+            ],
+            "default": 0
+          },
+          {
+            "id": "colorize",
+            "label": "Colorize Labels",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "show_cross",
+            "label": "Show Centroids",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_fft",
+        "label": "FFT Analysis",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Activity",
+        "description": "Advanced 2D FFT Analysis with full color support. Treats BGR channels independently to preserve spectral information. Outputs magnitude, phase, and filtered reconstruction.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Filtered"
+          },
+          {
+            "id": "magnitude",
+            "color": "image",
+            "label": "Magnitude"
+          },
+          {
+            "id": "phase",
+            "color": "image",
+            "label": "Phase"
+          },
+          {
+            "id": "complex_data",
+            "color": "data"
+          },
+          {
+            "id": "magnitude_raw",
+            "color": "data",
+            "label": "Magnitude (raw)"
+          }
+        ],
+        "params": [
+          {
+            "id": "log_scale",
+            "label": "Log Intensity",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "preserve_dynamic_range",
+            "label": "Scientific Range",
+            "type": "bool",
+            "default": false,
+            "description": "Keeps relative intensities instead of normalizing 0-255"
+          },
+          {
+            "id": "filter_type",
+            "label": "Filter Type",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "None",
+              "Low-pass",
+              "High-pass",
+              "Band-pass",
+              "Band-stop"
+            ]
+          },
+          {
+            "id": "low_cutoff",
+            "label": "Min Freq %",
+            "type": "int",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 0
+          },
+          {
+            "id": "high_cutoff",
+            "label": "Max Freq %",
+            "type": "int",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 10
+          }
+        ]
+      },
+      {
+        "type": "sci_focus_metric",
+        "label": "Focus Metric",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Eye",
+        "description": "Measure image sharpness / focus quality. Higher score = sharper. Use for autofocus, Z-stack selection, QC.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Pass-through"
+          },
+          {
+            "id": "score",
+            "color": "scalar",
+            "label": "Focus Score"
+          }
+        ],
+        "params": [
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "roi_margin",
+            "label": "ROI Margin (%)",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 40.0
+          },
+          {
+            "id": "show_score",
+            "label": "Show Score",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_frame_accumulator",
+        "label": "Frame Accumulator",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Film",
+        "description": "Accumulate frames over time: mean (noise reduction), std (motion map), temporal diff, running max/min.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Result"
+          },
+          {
+            "id": "frame_count",
+            "color": "scalar",
+            "label": "Buffer Size"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "window",
+            "label": "Window (frames)",
+            "type": "int",
+            "default": 16,
+            "min": 2,
+            "max": 128
+          },
+          {
+            "id": "reset",
+            "label": "Reset Buffer",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
       {
         "type": "sci_heatmap",
         "label": "Heatmap",
@@ -3023,6 +3394,220 @@
         ]
       },
       {
+        "type": "sci_normalizer",
+        "label": "Image Normalizer",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Sliders",
+        "description": "Normalize image or data array. Min-Max, Z-Score, or percentile stretch. Essential preprocessing for scientific imaging.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Normalized (uint8)"
+          },
+          {
+            "id": "data",
+            "color": "data",
+            "label": "Normalized (float 0-1)"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "p_low",
+            "label": "Low %tile",
+            "type": "float",
+            "default": 2.0,
+            "min": 0.0,
+            "max": 49.9
+          },
+          {
+            "id": "p_high",
+            "label": "High %tile",
+            "type": "float",
+            "default": 98.0,
+            "min": 50.1,
+            "max": 100.0
+          }
+        ]
+      },
+      {
+        "type": "sci_ifft",
+        "label": "Inverse FFT",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "RotateCcw",
+        "description": "Reconstructs an image from spectral data. Perfect reconstruction from Complex Data or Magnitude Raw + Phase. Magnitude image input is approximate (visualization data).",
+        "inputs": [
+          {
+            "id": "complex_data",
+            "color": "data",
+            "optional": true
+          },
+          {
+            "id": "magnitude_raw",
+            "color": "data",
+            "optional": true
+          },
+          {
+            "id": "magnitude",
+            "color": "image",
+            "optional": true
+          },
+          {
+            "id": "phase",
+            "color": "image",
+            "optional": true
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Input Mode",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "auto",
+              "complex_data",
+              "magnitude_phase"
+            ]
+          },
+          {
+            "id": "inv_log",
+            "label": "Inverse Log",
+            "type": "bool",
+            "default": false,
+            "description": "Undo log(x+1) on magnitude image input. Not needed for magnitude_raw."
+          },
+          {
+            "id": "preserve_dynamic_range",
+            "label": "Scientific Range",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_line_profile",
+        "label": "Line Profile",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Activity",
+        "description": "Extract intensity profile along a line segment. Fundamental in microscopy, spectroscopy, and materials analysis.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Image + Line"
+          },
+          {
+            "id": "chart",
+            "color": "image",
+            "label": "Profile Chart"
+          },
+          {
+            "id": "profile",
+            "color": "data",
+            "label": "Profile Values"
+          }
+        ],
+        "params": [
+          {
+            "id": "x1",
+            "label": "X1 (%)",
+            "type": "float",
+            "default": 10.0,
+            "min": 0.0,
+            "max": 100.0
+          },
+          {
+            "id": "y1",
+            "label": "Y1 (%)",
+            "type": "float",
+            "default": 50.0,
+            "min": 0.0,
+            "max": 100.0
+          },
+          {
+            "id": "x2",
+            "label": "X2 (%)",
+            "type": "float",
+            "default": 90.0,
+            "min": 0.0,
+            "max": 100.0
+          },
+          {
+            "id": "y2",
+            "label": "Y2 (%)",
+            "type": "float",
+            "default": 50.0,
+            "min": 0.0,
+            "max": 100.0
+          },
+          {
+            "id": "samples",
+            "label": "Samples",
+            "type": "int",
+            "default": 256,
+            "min": 16,
+            "max": 1024
+          },
+          {
+            "id": "line_width",
+            "label": "Avg Width (px)",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 21
+          },
+          {
+            "id": "channel",
+            "label": "Channel",
+            "type": "enum",
+            "options": [
+              "Luminance",
+              "Red",
+              "Green",
+              "Blue"
+            ],
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 250,
+        "min_height": 150
+      },
+      {
         "type": "sci_marker_analysis",
         "label": "Marker Analysis",
         "category": "analysis",
@@ -3102,16 +3687,8 @@
           {
             "id": "text_color",
             "label": "Text Color",
-            "type": "enum",
-            "options": [
-              "Green",
-              "Red",
-              "Blue",
-              "White",
-              "Black",
-              "Yellow"
-            ],
-            "default": 0
+            "type": "color",
+            "default": "#00FF00"
           }
         ]
       },
@@ -3157,6 +3734,183 @@
         ]
       },
       {
+        "type": "sci_roi_stats",
+        "label": "ROI Statistics",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Crosshair",
+        "description": "Measure pixel statistics (mean, std, min, max) inside a rectangular region of interest.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Image + ROI"
+          },
+          {
+            "id": "mean",
+            "color": "scalar"
+          },
+          {
+            "id": "std",
+            "color": "scalar"
+          },
+          {
+            "id": "min",
+            "color": "scalar"
+          },
+          {
+            "id": "max",
+            "color": "scalar"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Pixel Count"
+          }
+        ],
+        "params": [
+          {
+            "id": "x",
+            "label": "X (%)",
+            "type": "float",
+            "default": 25.0,
+            "min": 0.0,
+            "max": 99.0
+          },
+          {
+            "id": "y",
+            "label": "Y (%)",
+            "type": "float",
+            "default": 25.0,
+            "min": 0.0,
+            "max": 99.0
+          },
+          {
+            "id": "w",
+            "label": "Width (%)",
+            "type": "float",
+            "default": 50.0,
+            "min": 1.0,
+            "max": 100.0
+          },
+          {
+            "id": "h",
+            "label": "Height (%)",
+            "type": "float",
+            "default": 50.0,
+            "min": 1.0,
+            "max": 100.0
+          },
+          {
+            "id": "channel",
+            "label": "Channel",
+            "type": "enum",
+            "options": [
+              "Luminance",
+              "Red",
+              "Green",
+              "Blue"
+            ],
+            "default": 0
+          },
+          {
+            "id": "color",
+            "label": "Overlay Color",
+            "type": "color",
+            "default": "#00FFA0"
+          },
+          {
+            "id": "show_stats",
+            "label": "Show Stats",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_spectral_gain",
+        "label": "Spectral Gain",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Sliders",
+        "description": "3-band frequency equalizer on raw spectral magnitude. Boost or cut low/mid/high spatial frequencies. Connect FFT.magnitude_raw \u2192 SpectralGain \u2192 IFFT.magnitude_raw.",
+        "inputs": [
+          {
+            "id": "magnitude_raw",
+            "color": "data"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "magnitude_raw",
+            "color": "data",
+            "label": "Magnitude (raw)"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Spectrum Preview"
+          }
+        ],
+        "params": [
+          {
+            "id": "low_gain",
+            "label": "Low Freq %",
+            "type": "int",
+            "min": 0,
+            "max": 400,
+            "step": 1,
+            "default": 100
+          },
+          {
+            "id": "mid_gain",
+            "label": "Mid Freq %",
+            "type": "int",
+            "min": 0,
+            "max": 400,
+            "step": 1,
+            "default": 100
+          },
+          {
+            "id": "high_gain",
+            "label": "High Freq %",
+            "type": "int",
+            "min": 0,
+            "max": 400,
+            "step": 1,
+            "default": 100
+          },
+          {
+            "id": "low_mid_split",
+            "label": "Low/Mid split %",
+            "type": "int",
+            "min": 1,
+            "max": 98,
+            "step": 1,
+            "default": 15
+          },
+          {
+            "id": "mid_high_split",
+            "label": "Mid/High split %",
+            "type": "int",
+            "min": 2,
+            "max": 99,
+            "step": 1,
+            "default": 50
+          }
+        ]
+      },
+      {
         "type": "sci_stats",
         "label": "Statistics",
         "category": "analysis",
@@ -3188,6 +3942,52 @@
           {
             "id": "max",
             "color": "scalar"
+          }
+        ]
+      },
+      {
+        "type": "sci_calibration",
+        "label": "Unit Calibration",
+        "category": [
+          "analysis",
+          "math"
+        ],
+        "icon": "Scaling",
+        "description": "Converts pixel measurements (length or area) into real-world units based on a calibration factor.",
+        "inputs": [
+          {
+            "id": "input",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "output",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "factor",
+            "label": "Pixels per Unit",
+            "type": "float",
+            "default": 100.0
+          },
+          {
+            "id": "dimension",
+            "label": "Dimension",
+            "type": "string",
+            "default": "Area",
+            "options": [
+              "Length",
+              "Area"
+            ]
+          },
+          {
+            "id": "unit_name",
+            "label": "Unit Name",
+            "type": "string",
+            "default": "cm"
           }
         ]
       },
@@ -3727,6 +4527,64 @@
     "label": "Visualizers",
     "nodes": [
       {
+        "type": "sci_colormap",
+        "label": "Colormap / LUT",
+        "category": [
+          "visualize",
+          "scientific"
+        ],
+        "icon": "Palette",
+        "description": "Apply scientific colormap (LUT) to grayscale image. Converts intensity to false color for visualization.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "auto_range",
+            "label": "Auto Range",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "in_min",
+            "label": "Input Min",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 65535.0
+          },
+          {
+            "id": "in_max",
+            "label": "Input Max",
+            "type": "float",
+            "default": 255.0,
+            "min": 0.0,
+            "max": 65535.0
+          },
+          {
+            "id": "invert",
+            "label": "Invert LUT",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
         "type": "analysis_flow_viz",
         "label": "Flow Viz",
         "category": "visualize",
@@ -3744,6 +4602,63 @@
             "color": "image"
           }
         ]
+      },
+      {
+        "type": "sci_histogram",
+        "label": "Histogram Analysis",
+        "category": [
+          "visualize",
+          "analysis"
+        ],
+        "icon": "BarChart2",
+        "description": "Statistical distribution of pixel intensities. Performs radiometric analysis of input data across spectral channels for scientific validation.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Spectral Mode",
+            "type": "enum",
+            "options": [
+              "Overlay (RGB)",
+              "Monochrome (Luma)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "bins",
+            "label": "Quantization (Bins)",
+            "type": "scalar",
+            "min": 16,
+            "max": 256,
+            "default": 256
+          },
+          {
+            "id": "log_scale",
+            "label": "Logarithmic Scale",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "id": "show_stats",
+            "label": "Display Statistics",
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 250,
+        "min_height": 180
       },
       {
         "type": "data_inspector",
@@ -3871,6 +4786,78 @@
             "min": 100,
             "max": 1080,
             "default": 360
+          }
+        ]
+      },
+      {
+        "type": "sci_scale_bar",
+        "label": "Scale Bar",
+        "category": [
+          "visualize",
+          "scientific"
+        ],
+        "icon": "Ruler",
+        "description": "Overlay calibrated scale bar on image. Set Pixels/Unit to match your Unit Calibration node.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "pixels_per_unit",
+            "label": "Pixels / Unit",
+            "type": "float",
+            "default": 100.0,
+            "min": 0.1
+          },
+          {
+            "id": "bar_length",
+            "label": "Bar Length (units)",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.01
+          },
+          {
+            "id": "unit_name",
+            "label": "Unit Name",
+            "type": "string",
+            "default": "mm"
+          },
+          {
+            "id": "position",
+            "label": "Position",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#FFFFFF"
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness (px)",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 10
+          },
+          {
+            "id": "margin",
+            "label": "Margin (px)",
+            "type": "int",
+            "default": 20,
+            "min": 5,
+            "max": 120
           }
         ]
       }
@@ -7394,200 +8381,6 @@
     ]
   },
   {
-    "id": "ocr",
-    "label": "Ocr",
-    "nodes": [
-      {
-        "type": "ocr_easyocr",
-        "label": "OCR (EasyOCR)",
-        "category": "ocr",
-        "icon": "ScanText",
-        "description": "End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "main",
-            "color": "image",
-            "label": "Annotated"
-          },
-          {
-            "id": "text_regions",
-            "color": "list",
-            "label": "Regions"
-          },
-          {
-            "id": "texts",
-            "color": "list",
-            "label": "Text List"
-          }
-        ],
-        "params": [
-          {
-            "id": "lang",
-            "label": "Language",
-            "type": "enum",
-            "default": 0
-          },
-          {
-            "id": "min_confidence",
-            "label": "Min Conf",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.4
-          },
-          {
-            "id": "gpu",
-            "label": "GPU",
-            "type": "boolean",
-            "default": false
-          },
-          {
-            "id": "draw_text",
-            "label": "Draw Text",
-            "type": "boolean",
-            "default": true
-          }
-        ]
-      },
-      {
-        "type": "ocr_tesseract",
-        "label": "OCR (Tesseract)",
-        "category": "ocr",
-        "icon": "Type",
-        "description": "Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          },
-          {
-            "id": "box",
-            "color": "dict"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "text",
-            "color": "any"
-          },
-          {
-            "id": "main",
-            "color": "image"
-          }
-        ],
-        "params": [
-          {
-            "id": "lang",
-            "label": "Language",
-            "type": "enum",
-            "options": [
-              "eng",
-              "fra"
-            ],
-            "default": 0
-          },
-          {
-            "id": "psm",
-            "label": "PSM Mode",
-            "type": "enum",
-            "options": [
-              "3 \u2013 Auto",
-              "6 \u2013 Uniform block",
-              "7 \u2013 Single line",
-              "8 \u2013 Single word",
-              "11 \u2013 Sparse text"
-            ],
-            "default": 1
-          },
-          {
-            "id": "padding",
-            "label": "Padding px",
-            "type": "scalar",
-            "min": 0,
-            "max": 40,
-            "default": 4
-          },
-          {
-            "id": "upscale",
-            "label": "Upscale \u00d7",
-            "type": "scalar",
-            "min": 1,
-            "max": 8,
-            "default": 2
-          }
-        ]
-      },
-      {
-        "type": "ocr_east_detect",
-        "label": "Text Detector (EAST)",
-        "category": "ocr",
-        "icon": "Type",
-        "description": "Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "text_regions",
-            "color": "list"
-          },
-          {
-            "id": "main",
-            "color": "image"
-          }
-        ],
-        "params": [
-          {
-            "id": "min_confidence",
-            "label": "Min Confidence",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.3
-          },
-          {
-            "id": "nms_threshold",
-            "label": "NMS Threshold",
-            "type": "scalar",
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.01,
-            "default": 0.4
-          },
-          {
-            "id": "width",
-            "label": "Input W (\u00d732)",
-            "type": "scalar",
-            "min": 32,
-            "max": 1280,
-            "step": 32,
-            "default": 640
-          },
-          {
-            "id": "height",
-            "label": "Input H (\u00d732)",
-            "type": "scalar",
-            "min": 32,
-            "max": 1280,
-            "step": 32,
-            "default": 640
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "geo",
     "label": "Geo",
     "nodes": [
@@ -8620,6 +9413,200 @@
             "max": 6,
             "step": 1,
             "default": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ocr",
+    "label": "Ocr",
+    "nodes": [
+      {
+        "type": "ocr_easyocr",
+        "label": "OCR (EasyOCR)",
+        "category": "ocr",
+        "icon": "ScanText",
+        "description": "End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Annotated"
+          },
+          {
+            "id": "text_regions",
+            "color": "list",
+            "label": "Regions"
+          },
+          {
+            "id": "texts",
+            "color": "list",
+            "label": "Text List"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "min_confidence",
+            "label": "Min Conf",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "gpu",
+            "label": "GPU",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "id": "draw_text",
+            "label": "Draw Text",
+            "type": "boolean",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "ocr_tesseract",
+        "label": "OCR (Tesseract)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "box",
+            "color": "dict"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text",
+            "color": "any"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "lang",
+            "label": "Language",
+            "type": "enum",
+            "options": [
+              "eng",
+              "fra"
+            ],
+            "default": 0
+          },
+          {
+            "id": "psm",
+            "label": "PSM Mode",
+            "type": "enum",
+            "options": [
+              "3 \u2013 Auto",
+              "6 \u2013 Uniform block",
+              "7 \u2013 Single line",
+              "8 \u2013 Single word",
+              "11 \u2013 Sparse text"
+            ],
+            "default": 1
+          },
+          {
+            "id": "padding",
+            "label": "Padding px",
+            "type": "scalar",
+            "min": 0,
+            "max": 40,
+            "default": 4
+          },
+          {
+            "id": "upscale",
+            "label": "Upscale \u00d7",
+            "type": "scalar",
+            "min": 1,
+            "max": 8,
+            "default": 2
+          }
+        ]
+      },
+      {
+        "type": "ocr_east_detect",
+        "label": "Text Detector (EAST)",
+        "category": "ocr",
+        "icon": "Type",
+        "description": "Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "text_regions",
+            "color": "list"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_confidence",
+            "label": "Min Confidence",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.3
+          },
+          {
+            "id": "nms_threshold",
+            "label": "NMS Threshold",
+            "type": "scalar",
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.4
+          },
+          {
+            "id": "width",
+            "label": "Input W (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
+          },
+          {
+            "id": "height",
+            "label": "Input H (\u00d732)",
+            "type": "scalar",
+            "min": 32,
+            "max": 1280,
+            "step": 32,
+            "default": 640
           }
         ]
       }

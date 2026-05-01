@@ -19,7 +19,8 @@
     "domains": ["Data Science & Analytics", "Research & Education", "Satellite & Earth Observation"],
     "image": "slides/levels_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/cv_levels.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "3",
@@ -41,7 +42,8 @@
     "domains": ["Robotics & Autonomous Systems", "Medical & Health Sciences", "Research & Education"],
     "image": "slides/shadow_highlight_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/cv_shadow_highlight.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "5",
@@ -52,7 +54,8 @@
     "domains": ["Research & Education", "Satellite & Earth Observation", "Medical & Health Sciences"],
     "image": "slides/histogram_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_histogram.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "6",
@@ -63,7 +66,8 @@
     "domains": ["Research & Education", "Industrial Inspection & QC", "Medical & Health Sciences"],
     "image": "slides/calibration_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_calibration.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "7",
@@ -74,7 +78,8 @@
     "domains": ["Research & Education", "Material Sciences & Microscopy", "Data Science & Analytics"],
     "image": "slides/fft_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_fft.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "8",
@@ -85,7 +90,8 @@
     "domains": ["Research & Education", "Physics & Signal Processing"],
     "image": "slides/ifft_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_ifft.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   },
   {
     "id": "9",
@@ -96,6 +102,7 @@
     "domains": ["Research & Education", "Physics & Signal Processing", "Data Science & Analytics"],
     "image": "slides/spectral_gain_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_spectral_gain.py",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-01",
+    "integrated": true
   }
 ]
