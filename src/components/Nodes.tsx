@@ -65,17 +65,24 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
   const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
                       color === 'green' ? 'border-green-500 shadow-green-500/20' :
-                      color === 'blue' ? 'border-blue-500 shadow-blue-500/20' :
-                      color === 'red' ? 'border-red-500 shadow-red-500/20' :
-                      color === 'indigo' ? 'border-indigo-500 shadow-indigo-500/20' :
-                      'border-gray-500 shadow-gray-500/20';
-                      
-  const borderClass = customBg ? '' : (selected ? accentColor : 'border-[#4f5b6b]');
-
-  const totalInputs = inputs.length + var_count;
+export const BaseNode = ({ 
+  title, 
+  icon: Icon, 
+  selected, 
+  data, 
+  color = 'blue', 
+  inputs = [], 
+  outputs = [], 
+  children, 
+  width, 
+  height,
+  headerExtra, 
+  className = "" 
+}: any) => {
+  const { customBg } = useNodeColor();
+  const totalInputs = inputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
-  
   const startOffset = 45;
   const spacing = 32;
   const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 35) : 90;
@@ -83,17 +90,21 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
 
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';
-    return `${45 + index * 32}px`;
+    return `${startOffset + index * spacing}px`;
   };
 
   const nodeNote = data?.params?.node_note;
+  const borderClass = selected ? (color === 'accent' ? 'border-accent' : `border-${color}-500`) : 'border-[#4f5b6b]';
 
   return (
-    <div className="relative" style={width ? { width: typeof width === 'number' ? `${width}px` : width } : { width: '13rem' }}>
+    <div className={`relative ${className}`} style={{ 
+        width: width || '13rem', 
+        height: height || 'auto' 
+    }}>
     <div
-        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full`}
+        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full h-full flex flex-col overflow-hidden`}
         style={{
-          minHeight,
+          minHeight: height ? undefined : minHeight,
           ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
         }}
     >
@@ -101,7 +112,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
       {inputs.map((inp: any, i: number) => {
         const top = getPortTop(i, totalInputs);
         return (
-          <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+          <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" />
             <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>
           </div>
@@ -109,18 +120,18 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
       })}
       
       {/* Dynamic Variables with Labels */}
-      {Array.from({ length: var_count }).map((_, i) => {
+      {Array.from({ length: (data?.params?.var_count || 0) }).map((_, i) => {
         const char = String.fromCharCode(97 + i);
         const top = getPortTop(inputs.length + i, totalInputs);
         return (
-          <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+          <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" />
             <span className="ml-[12px] text-[8px] font-medium text-accent uppercase tracking-widest">{char}</span>
           </div>
         );
       })}
-
-      <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between border-b border-[#4f5b6b] rounded-t-[10px] overflow-hidden group/header"
+      
+      <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between border-b border-[#4f5b6b] rounded-t-[10px] overflow-hidden group/header shrink-0"
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <div className="flex items-center gap-3 truncate">
           <Icon size={14} className="shrink-0 transition-colors" style={customBg ? { color: customBg } : {}} />
@@ -132,7 +143,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
         </div>
       </div>
       
-      <div className="p-2 text-[10px] text-gray-400 flex flex-col gap-2">
+      <div className="flex-1 p-2 text-[10px] text-gray-400 flex flex-col min-h-0 overflow-hidden">
         {children}
       </div>
 
@@ -140,7 +151,7 @@ const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent
       {outputs.map((out: any, i: number) => {
         const top = getPortTop(i, totalOutputs);
         return (
-          <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top, transform: 'translateY(-50%)' }}>
+          <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
             <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>
             <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" />
           </div>
@@ -1130,7 +1141,9 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
         color="blue" 
         inputs={[{id: 'image', color: 'any', label: 'Image'}]} 
         outputs={[{id: 'main', color: 'image', label: 'Main'}]}
-        className="h-full flex flex-col"
+        width="100%"
+        height="100%"
+        className="w-full h-full"
     >
       <div className="flex-1 min-h-0 w-full flex flex-col p-1">
           <div className="flex-1 min-h-0 w-full">
