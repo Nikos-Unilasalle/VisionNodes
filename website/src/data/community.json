@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1",
+    "type": "vn",
+    "title": "Face Mesh Tracker",
+    "author": "@nikos",
+    "description": "A high-performance pipeline for real-time 478-point face mesh estimation using MediaPipe. Ideal for AR and facial expression analysis.",
+    "domains": ["HCI", "Medical & Health Sciences"],
+    "image": "slides/slide1.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/website/public/examples/smile_detector.vn",
+    "createdAt": "2026-05-01"
+  },
+  {
+    "id": "2",
+    "type": "py",
+    "title": "Custom YOLOv8 Node",
+    "author": "@researcher_x",
+    "description": "An optimized node to run YOLOv8 object detection with support for custom ONNX weights and real-time visualization.",
+    "domains": ["Robotics & Autonomous Systems", "Industrial Inspection & QC"],
+    "image": "slides/slide3.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/object_detection_yolo.py",
+    "createdAt": "2026-05-01"
+  }
+]
