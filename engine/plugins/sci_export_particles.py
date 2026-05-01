@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import time
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, send_notification
 
 @vision_node(
     type_id='sci_export_particles',
@@ -16,7 +16,7 @@ from registry import vision_node, NodeProcessor
     ],
     outputs=[],
     params=[
-        {'id': 'export_trigger', 'label': 'Export Now', 'type': 'toggle', 'default': False},
+        {'id': 'export_trigger', 'label': 'Export Now', 'type': 'trigger', 'default': 0},
         {'id': 'out_dir', 'label': 'Output Folder', 'type': 'string', 'default': 'exports/particles'},
         {'id': 'prefix', 'label': 'Prefix', 'type': 'string', 'default': 'stone'},
         {'id': 'pad', 'label': 'Padding (px)', 'type': 'int', 'default': 5, 'min': 0, 'max': 100}
@@ -25,14 +25,13 @@ from registry import vision_node, NodeProcessor
 class ExportParticlesNode(NodeProcessor):
     def __init__(self):
         super().__init__()
-        self.last_trigger = False
+        self.is_exporting = False
 
     def process(self, inputs, params):
-        trigger = params.get('export_trigger', False)
+        trigger = int(params.get('export_trigger', 0)) == 1
         
-        # Detect rising edge of the toggle
-        if trigger and not self.last_trigger:
-            self.last_trigger = True
+        if trigger and not self.is_exporting:
+            self.is_exporting = True
             
             img = inputs.get('image')
             labels = inputs.get('labels_map')
@@ -41,6 +40,9 @@ class ExportParticlesNode(NodeProcessor):
                 out_dir = params.get('out_dir', 'exports/particles')
                 prefix = params.get('prefix', 'stone')
                 pad = int(params.get('pad', 5))
+                notif_id = f"export_{int(time.time())}"
+                
+                send_notification("Starting Export...", progress=0, level="info", notif_id=notif_id)
                 
                 # Ensure output directory exists
                 if not os.path.exists(out_dir):
@@ -63,9 +65,15 @@ class ExportParticlesNode(NodeProcessor):
                 valid_labels = valid_labels[valid_labels > 0] # exclude background
                 
                 timestamp = int(time.time())
-                
+                total = len(valid_labels)
                 exported = 0
-                for idx in valid_labels:
+                
+                for i, idx in enumerate(valid_labels):
+                    # Update progress every few items or if it's the last one
+                    if i % 5 == 0 or i == total - 1:
+                        prog = int((i / max(1, total)) * 100)
+                        send_notification(f"Exporting {prefix} {i+1}/{total}...", progress=prog, level="info", notif_id=notif_id)
+
                     # Create binary mask for the current particle
                     mask = (labels == idx).astype(np.uint8)
                     
@@ -93,9 +101,12 @@ class ExportParticlesNode(NodeProcessor):
                     except Exception as e:
                         print(f"Failed to write {filename}: {e}")
                         
+                send_notification(f"Success: {exported} particles saved to {out_dir}", progress=100, level="success", notif_id=notif_id)
                 print(f"Exported {exported} particles to {out_dir}")
+            else:
+                send_notification("Export failed: Missing Image or Label Map inputs", level="error")
                 
         elif not trigger:
-            self.last_trigger = False
+            self.is_exporting = False
             
         return {}
