@@ -18,6 +18,13 @@ import numpy as np
 class CalibrationNode(NodeProcessor):
     def process(self, inputs, params):
         val = inputs.get('input')
+        
+        # Fallback for stale connections or mismatched IDs
+        if val is None:
+            relevant_inputs = [v for k, v in inputs.items() if k not in ['raw_frame', 'image']]
+            if relevant_inputs:
+                val = relevant_inputs[0]
+
         if val is None:
             return {'output': None, 'display_value': "---"}
             
