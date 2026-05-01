@@ -21,8 +21,8 @@ import numpy as np
          'description': 'If enabled, keeps relative intensities instead of normalizing 0-255'},
         {'id': 'filter_type', 'label': 'Filter Type',  'type': 'string', 'default': 'None', 
          'options': ['None', 'Low-pass', 'High-pass', 'Band-pass', 'Band-stop']},
-        {'id': 'low_cutoff',  'label': 'Min Cutoff',   'type': 'scalar', 'min': 0, 'max': 500, 'default': 0},
-        {'id': 'high_cutoff', 'label': 'Max Cutoff',   'type': 'scalar', 'min': 0, 'max': 500, 'default': 50},
+        {'id': 'low_cutoff',  'label': 'Min Freq',     'type': 'scalar', 'min': 0, 'max': 1, 'default': 0},
+        {'id': 'high_cutoff', 'label': 'Max Freq',     'type': 'scalar', 'min': 0, 'max': 1, 'default': 0.1},
     ]
 )
 class FFTNode(NodeProcessor):
@@ -31,35 +31,40 @@ class FFTNode(NodeProcessor):
         if img is None:
             return {'main': None, 'magnitude': None, 'phase': None, 'complex_data': None}
             
-        # 1. Prepare data (float64 for precision)
+        # 1. Prepare data
         img_f = img.astype(np.float64)
         is_color = len(img_f.shape) == 3 and img_f.shape[2] == 3
-        
-        # Split channels (BGR)
         channels = [img_f[:, :, i] for i in range(3)] if is_color else [img_f]
         
         rows, cols = img_f.shape[:2]
         crow, ccol = rows // 2, cols // 2
+        diag = np.sqrt(rows**2 + cols**2) / 2.0 # Max radius
         
         f_type = params.get('filter_type', 'None')
-        low = float(params.get('low_cutoff', 0))
-        high = float(params.get('high_cutoff', 50))
+        low_norm = float(params.get('low_cutoff', 0))
+        high_norm = float(params.get('high_cutoff', 0.1))
         log_scale = params.get('log_scale', True)
         preserve = params.get('preserve_dynamic_range', False)
         
-        # 2. Build Filter Mask
+        # 2. Build Filter Mask using cv2 for precision
         mask = np.ones((rows, cols), np.float64)
         if f_type != 'None':
-            y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
-            dist_sq = x*x + y*y
+            mask = np.zeros((rows, cols), np.float64)
+            r_inner = int(low_norm * diag)
+            r_outer = int(high_norm * diag)
+            
             if f_type == 'Low-pass':
-                mask = np.where(dist_sq <= high*high, 1, 0)
+                cv2.circle(mask, (ccol, crow), r_outer, 1, -1)
             elif f_type == 'High-pass':
-                mask = np.where(dist_sq >= low*low, 1, 0)
+                mask[:] = 1.0
+                cv2.circle(mask, (ccol, crow), r_inner, 0, -1)
             elif f_type == 'Band-pass':
-                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 1, 0)
+                cv2.circle(mask, (ccol, crow), r_outer, 1, -1)
+                cv2.circle(mask, (ccol, crow), r_inner, 0, -1)
             elif f_type == 'Band-stop':
-                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 0, 1)
+                mask[:] = 1.0
+                cv2.circle(mask, (ccol, crow), r_outer, 0, -1)
+                cv2.circle(mask, (ccol, crow), r_inner, 1, -1)
 
         magnitudes = []
         phases = []
