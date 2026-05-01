@@ -190,12 +190,18 @@ export const ColorInput = ({ label, val, onChange }: ColorInputProps) => (
     <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <div className="flex items-center gap-3">
       <div className="text-[10px] font-mono text-gray-500">{val}</div>
-      <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg cursor-pointer hover:scale-110 transition-all">
+      <div 
+        className="relative w-8 h-8 rounded-lg border border-white/20 shadow-lg cursor-pointer hover:scale-110 transition-all overflow-hidden"
+        style={{ backgroundColor: val }}
+      >
         <input
           type="color"
           value={val}
-          onChange={(e) => onChange(e.target.value)}
-          className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
+          onChange={(e) => {
+            const hex = e.target.value.toUpperCase();
+            onChange(hex);
+          }}
+          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer scale-150"
         />
       </div>
     </div>
@@ -286,10 +292,18 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} />;
                   if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   if (isN2) {
-                    if (sp.min !== undefined && sp.max !== undefined) {
-                      return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min} max={sp.max} step={sp.step || 1} onChange={up2} />;
-                    }
-                    return <NumberInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} onChange={up2} />;
+                    const v2 = Number(val ?? sp.default ?? 0);
+                    const min2 = sp.min ?? (v2 < 0 ? v2 * 2 : 0);
+                    const max2 = sp.max ?? (v2 > 100 ? v2 * 2 : 100);
+                    return <Slider 
+                      key={sp.id} 
+                      label={lbl} 
+                      val={v2} 
+                      min={min2} 
+                      max={max2} 
+                      step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
+                      onChange={up2} 
+                    />;
                   }
                   if (isB2) return <ToggleInput key={sp.id} label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
                   return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={up2} />;
@@ -697,11 +711,17 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
             : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isNumber) {
-          if (sp.min !== undefined && sp.max !== undefined) {
-             inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min} max={sp.max} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
-          } else {
-             inner = <NumberInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
-          }
+          const val = Number(p[sp.id] ?? sp.default ?? 0);
+          const min = sp.min ?? (val < 0 ? val * 2 : 0);
+          const max = sp.max ?? (val > 100 ? val * 2 : 100);
+          inner = <Slider 
+            label={sp.label || sp.id} 
+            val={val} 
+            min={min} 
+            max={max} 
+            step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
+            onChange={(v) => up({ [sp.id]: v })} 
+          />;
         } else if (isBool) {
           inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
         } else {
