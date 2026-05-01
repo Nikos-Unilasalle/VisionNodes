@@ -1057,45 +1057,6 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
             <StyledHandle type="source" position={Position.Right} id={k} color="any" top="50%" />
           </div>
         ))}
-    </div>
-  );
-});
-
-export const ScientificHistogramNode = memo(({ selected, data }: any) => {
-  const nd = useNodeData(useNodeId());
-  const preview = nd?.preview;
-  const w = data.params?.width || 250;
-  const h = data.params?.height || 180;
-
-  return (
-    <BaseNode 
-        title="Histogram Analysis" 
-        icon={BarChart2} 
-        selected={selected} 
-        data={data} 
-        color="blue" 
-        inputs={[{id: 'image', color: 'any'}]} 
-        outputs={[{id: 'main', color: 'image'}]}
-        width={w}
-    >
-      {preview ? (
-        <div className="px-1 pb-1 nodrag">
-          <img 
-            src={`data:image/jpeg;base64,${preview}`} 
-            alt="Histogram" 
-            className="w-full h-auto rounded-lg border border-white/5 shadow-inner" 
-            style={{ maxHeight: h }}
-          />
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-32 bg-black/10 rounded-lg border border-dashed border-white/5 opacity-40 gap-2">
-           <BarChart2 size={24} className="text-gray-500 animate-pulse" />
-           <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
-        </div>
-      )}
-    </BaseNode>
-  );
-});
         <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
              style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
           <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
@@ -1134,6 +1095,42 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
           }
         </div>
       </div>
+  );
+});
+
+export const ScientificHistogramNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const preview = nd?.preview;
+  const w = data.params?.width || 250;
+  const h = data.params?.height || 180;
+
+  return (
+    <BaseNode 
+        title="Histogram Analysis" 
+        icon={BarChart2} 
+        selected={selected} 
+        data={data} 
+        color="blue" 
+        inputs={[{id: 'image', color: 'any'}]} 
+        outputs={[{id: 'main', color: 'image'}]}
+        width={w}
+    >
+      {preview ? (
+        <div className="px-1 pb-1 nodrag">
+          <img 
+            src={`data:image/jpeg;base64,${preview}`} 
+            alt="Histogram" 
+            className="w-full h-auto rounded-lg border border-white/5 shadow-inner" 
+            style={{ maxHeight: h }}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-32 bg-black/10 rounded-lg border border-dashed border-white/5 opacity-40 gap-2">
+           <BarChart2 size={24} className="text-gray-500 animate-pulse" />
+           <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
+        </div>
+      )}
+    </BaseNode>
   );
 });
 
