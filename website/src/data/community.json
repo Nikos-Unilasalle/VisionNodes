@@ -42,5 +42,16 @@
     "image": "slides/shadow_highlight_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/cv_shadow_highlight.py",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "5",
+    "type": "py",
+    "title": "Scientific Histogram Analysis",
+    "author": "@nikos",
+    "description": "Perform radiometric analysis of image data. This node visualizes the statistical distribution of pixel intensities across spectral channels, providing key metrics like mean and standard deviation for scientific validation.",
+    "domains": ["Research & Education", "Satellite & Earth Observation", "Medical & Health Sciences"],
+    "image": "slides/histogram_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_histogram.py",
+    "createdAt": "2026-05-01"
   }
 ]
