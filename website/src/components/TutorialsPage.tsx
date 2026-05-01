@@ -158,124 +158,153 @@ const TutorialDetail = ({ tut, onBack }: { tut: typeof TUTORIALS[0]; onBack: () 
 // ─── Custom Node Guide ────────────────────────────────────────────────────────
 
 const CustomNodeGuide = ({ onBack }: { onBack: () => void }) => (
-  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl pb-20">
-    <button onClick={onBack} className="flex items-center gap-2 text-[13px] text-[var(--text-dim)] hover:text-[var(--text-main)] mb-8 transition-colors">
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-4xl pb-32">
+    <button onClick={onBack} className="flex items-center gap-2 text-[13px] text-[var(--text-dim)] hover:text-[var(--text-main)] mb-10 transition-colors">
       <ArrowLeft size={14} /> Back to Tutorials
     </button>
 
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-12 h-12 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
-        <Code2 size={24} strokeWidth={1.5} />
+    <div className="flex items-center gap-4 mb-12">
+      <div className="w-14 h-14 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+        <Code2 size={28} strokeWidth={1.5} />
       </div>
       <div>
-        <h1 className="text-[36px] text-[var(--text-main)] leading-none">Create Your Own Node</h1>
-        <p className="text-[14px] text-[var(--accent)] font-medium mt-1">Python Plugin API — Version 2.0</p>
+        <h1 className="text-[40px] text-[var(--text-main)] leading-none tracking-tight">Node Development Masterclass</h1>
+        <p className="text-[15px] text-[var(--accent)] font-medium mt-2">From "Hello World" to Scientific Grade Plugins</p>
       </div>
     </div>
 
-    <p className="text-[16px] text-[var(--text-dim)] mb-10 leading-relaxed">
-      VisionNodes is designed for extreme extensibility. Any Python class can become a production-grade node by using our
-      <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">@vision_node</code> decorator.
-      Drop a <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">.py</code> file in 
-      <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">engine/plugins/</code> and the app hot-reloads instantly.
-    </p>
-
-    {/* Section 1: Standard Structure */}
-    <div className="mb-12">
-      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
-        <CheckCircle2 size={18} className="text-[var(--accent)]" /> 1. Standard Node Structure
-      </h3>
-      <div className="vn-card p-6">
-        <p className="text-[14px] text-[var(--text-dim)] mb-4 leading-relaxed">
-          The basic template for any node. The <code className="text-[var(--accent)]">process</code> method receives two dictionaries: 
-          <code className="text-[var(--text-main)] ml-1">inputs</code> (connected data) and <code className="text-[var(--text-main)] ml-1">params</code> (user-defined settings).
+    {/* PHASE 1: SIMPLE */}
+    <section className="mb-20">
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-[11px] font-bold bg-[var(--text-dim)]/10 text-[var(--text-dim)] px-2 py-1 rounded">PHASE 01</span>
+        <h2 className="text-[22px] text-[var(--text-main)]">The Fundamentals</h2>
+      </div>
+      <div className="vn-card p-8">
+        <p className="text-[15px] text-[var(--text-dim)] mb-6 leading-relaxed">
+          Every node starts with a <code className="text-[var(--accent)]">.py</code> file in <code className="text-[var(--text-main)]">engine/plugins/</code>. 
+          The engine uses hot-reloading: your changes appear in the UI the moment you save.
         </p>
-        <div className="code-block text-[12px] leading-6">
+        <div className="code-block text-[13px] leading-6 mb-6">
           <span className="tok-kw">from</span> registry <span className="tok-kw">import</span> vision_node, NodeProcessor{'\n'}
-          <span className="tok-kw">import</span> cv2, numpy <span className="tok-kw">as</span> np{'\n'}{'\n'}
+          <span className="tok-kw">import</span> cv2{'\n'}{'\n'}
           <span className="tok-dec">@vision_node</span>({'\n'}
-          {'  '}type_id=<span className="tok-str">"my_custom_node"</span>,{'\n'}
-          {'  '}label=<span className="tok-str">"My Custom Node"</span>,{'\n'}
-          {'  '}icon=<span className="tok-str">"Zap"</span>,{' '}
-          <span className="tok-comment"># Lucide-react icon name</span>{'\n'}
+          {'  '}type_id=<span className="tok-str">"simple_invert"</span>,{'\n'}
+          {'  '}label=<span className="tok-str">"Invert Colors"</span>,{'\n'}
+          {'  '}icon=<span className="tok-str">"RefreshCw"</span>,{'\n'}
           {'  '}category=[<span className="tok-str">"util"</span>],{'\n'}
           {'  '}inputs=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"image"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'}],{'\n'}
-          {'  '}outputs=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"main"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'}],{'\n'}
-          {'  '}params=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"gain"</span>, <span className="tok-str">"type"</span>:<span className="tok-str">"float"</span>, <span className="tok-str">"default"</span>:<span className="tok-num">1.0</span>{'}'}]{'\n'}
+          {'  '}outputs=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"main"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'}]{'\n'}
           ){'\n'}
-          <span className="tok-kw">class</span> <span className="tok-def">MyNode</span>(NodeProcessor):{'\n'}
+          <span className="tok-kw">class</span> <span className="tok-def">InvertNode</span>(NodeProcessor):{'\n'}
           {'  '}<span className="tok-kw">def</span> <span className="tok-def">process</span>(<span className="tok-num">self</span>, inputs, params):{'\n'}
           {'    '}img = inputs.get(<span className="tok-str">'image'</span>){'\n'}
           {'    '}<span className="tok-kw">if</span> img <span className="tok-kw">is</span> <span className="tok-kw">None</span>: <span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: <span className="tok-kw">None</span>{'}'}{'\n'}
-          {'    '}gain = <span className="tok-num">float</span>(params.get(<span className="tok-str">'gain'</span>, <span className="tok-num">1.0</span>)){'\n'}
-          {'    '}<span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: (img * gain).astype(np.uint8){'}'}
+          {'    '}<span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: <span className="tok-num">255</span> - img{'}'}
+        </div>
+        <div className="flex items-start gap-3 text-[13px] text-[var(--text-dim)] bg-[var(--bg-alt)]/50 p-4 rounded-lg border border-[var(--border-main)]">
+          <Terminal size={16} className="mt-0.5 text-[var(--accent)]" />
+          <p>The <code className="text-[var(--text-main)]">inputs</code> dict contains numpy arrays for image ports and raw values for others. Always return a dict mapping output IDs to data.</p>
         </div>
       </div>
-    </div>
+    </section>
 
-    {/* Section 2: Scientific Best Practices */}
-    <div className="mb-12">
-      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
-        <Sparkles size={18} className="text-[var(--accent)]" /> 2. Scientific Best Practices
-      </h3>
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="vn-card p-5">
-          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-2 uppercase tracking-wide">Multi-Channel Precision</h4>
+    {/* PHASE 2: COMPLEX */}
+    <section className="mb-20">
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-[11px] font-bold bg-[var(--accent)]/10 text-[var(--accent)] px-2 py-1 rounded">PHASE 02</span>
+        <h2 className="text-[22px] text-[var(--text-main)]">Scientific Complexity</h2>
+      </div>
+      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+        <div className="vn-card p-6">
+          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-3 uppercase tracking-wider flex items-center gap-2">
+            <Sparkles size={16} className="text-[var(--accent)]" /> Multi-Channel Logic
+          </h4>
           <p className="text-[13px] text-[var(--text-dim)] leading-relaxed mb-4">
-            Process BGR channels independently to avoid artifacts. Convert to <code className="text-[var(--accent)]">float64</code> for complex math (FFT, Filtering) before clipping back to uint8.
+            For advanced signal processing (like FFT or custom filters), avoid artifacts by splitting BGR channels, 
+            converting to <code className="text-[var(--accent)]">float64</code>, and stacking them back.
           </p>
           <div className="code-block text-[11px] leading-5">
-            <span className="tok-comment"># Process channels separately</span>{'\n'}
-            channels = [img[:,:,i] <span className="tok-kw">for</span> i <span className="tok-kw">in</span> <span className="tok-num">range</span>(<span className="tok-num">3</span>)]{'\n'}
-            results = [my_func(ch) <span className="tok-kw">for</span> ch <span className="tok-kw">in</span> channels]{'\n'}
-            final = np.stack(results, axis=<span className="tok-num">2</span>)
+            <span className="tok-comment"># The "Scientific" Pattern</span>{'\n'}
+            channels = [img[:,:,i].astype(np.float64) <span className="tok-kw">for</span> i <span className="tok-kw">in</span> <span className="tok-num">range</span>(<span className="tok-num">3</span>)]{'\n'}
+            processed = [apply_filter(ch) <span className="tok-kw">for</span> ch <span className="tok-kw">in</span> channels]{'\n'}
+            out = np.stack(processed, axis=<span className="tok-num">2</span>).clip(<span className="tok-num">0</span>, <span className="tok-num">255</span>)
           </div>
         </div>
-        <div className="vn-card p-5">
-          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-2 uppercase tracking-wide">High-Precision Data Ports</h4>
+        <div className="vn-card p-6">
+          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-3 uppercase tracking-wider flex items-center gap-2">
+            <Eye size={16} className="text-[var(--accent)]" /> Visualization vs. Data
+          </h4>
           <p className="text-[13px] text-[var(--text-dim)] leading-relaxed mb-4">
-            Use the <code className="text-[var(--accent)]">data</code> port type (orange) to pass raw numpy arrays or complex dictionaries between nodes without precision loss from image normalization.
+            Nodes can have dual outputs: a <code className="text-[var(--accent)]">uint8</code> image for UI preview and a 
+            <code className="text-[var(--accent)]">data</code> port (orange) for high-precision downstream calculations.
           </p>
           <div className="code-block text-[11px] leading-5">
-            <span className="tok-comment"># Return raw data for downstream</span>{'\n'}
-            <span className="tok-kw">return</span> {'{'}{'\n'}
-            {'  '}<span className="tok-str">'main'</span>: vis_img,{' '}
-            <span className="tok-comment"># UI Preview</span>{'\n'}
-            {'  '}<span className="tok-str">'raw_data'</span>: {'{'}
-            <span className="tok-str">'mag'</span>: mag_float
-            {'}'}{'\n'}
-            {'}'}
+            <span className="tok-str">outputs</span>=[{'\n'}
+            {'  '}{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"preview"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'},{'\n'}
+            {'  '}{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"raw_data"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"data"</span>{'}'}{'\n'}
+            ]
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    {/* Section 3: Input Fallbacks */}
-    <div className="mb-12">
-      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
-        <Zap size={18} className="text-[var(--accent)]" /> 3. Robust Input Fallbacks
-      </h3>
-      <div className="vn-card p-6">
-        <p className="text-[14px] text-[var(--text-dim)] mb-4 leading-relaxed">
-          Ensure your node stays functional even if graph connections change. If your primary input ID isn't found, try to auto-detect any compatible data in the <code className="text-[var(--accent)]">inputs</code> dict.
+    {/* PHASE 3: ROBUSTNESS */}
+    <section className="mb-20">
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-[11px] font-bold bg-[var(--accent)] text-white px-2 py-1 rounded">PHASE 03</span>
+        <h2 className="text-[22px] text-[var(--text-main)]">Production Robustness</h2>
+      </div>
+      <div className="vn-card p-8 border-l-4 border-[var(--accent)]">
+        <h3 className="text-[18px] text-[var(--text-main)] mb-4">The "Smart Input" Pattern</h3>
+        <p className="text-[14px] text-[var(--text-dim)] mb-6 leading-relaxed">
+          Professional nodes shouldn't break when ports are renamed. Use this fallback logic to make your 
+          nodes work even with partial or varied connections.
         </p>
-        <div className="code-block text-[12px] leading-6">
+        <div className="code-block text-[12px] leading-6 mb-6">
           <span className="tok-kw">def</span> <span className="tok-def">process</span>(<span className="tok-num">self</span>, inputs, params):{'\n'}
-          {'  '}data = inputs.get(<span className="tok-str">'scalar'</span>){'\n'}
-          {'  '}<span className="tok-kw">if</span> data <span className="tok-kw">is</span> <span className="tok-kw">None</span>:{'\n'}
-          {'    '}<span className="tok-comment"># Fallback: grab any numeric input available</span>{'\n'}
+          {'  '}<span className="tok-comment"># 1. Try primary ID</span>{'\n'}
+          {'  '}val = inputs.get(<span className="tok-str">'scalar'</span>){'\n'}{'\n'}
+          {'  '}<span className="tok-kw">if</span> val <span className="tok-kw">is</span> <span className="tok-kw">None</span>:{'\n'}
+          {'    '}<span className="tok-comment"># 2. Fallback: find ANY numeric data in inputs</span>{'\n'}
           {'    '}numeric = [v <span className="tok-kw">for</span> k, v <span className="tok-kw">in</span> inputs.items() <span className="tok-kw">if</span> <span className="tok-num">isinstance</span>(v, (<span className="tok-num">int</span>, <span className="tok-num">float</span>))]{'\n'}
-          {'    '}data = numeric[<span className="tok-num">0</span>] <span className="tok-kw">if</span> numeric <span className="tok-kw">else</span> <span className="tok-kw">None</span>
+          {'    '}val = numeric[<span className="tok-num">0</span>] <span className="tok-kw">if</span> numeric <span className="tok-kw">else</span> <span className="tok-kw">None</span>{'\n'}{'\n'}
+          {'  '}<span className="tok-kw">if</span> val <span className="tok-kw">is</span> <span className="tok-kw">None</span>: <span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: <span className="tok-kw">None</span>{'}'}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mt-10 border-t border-[var(--border-main)] pt-8">
+          <div>
+            <h4 className="text-[13px] font-bold text-[var(--text-main)] mb-3 uppercase">Port Color Standards</h4>
+            <div className="space-y-2">
+              {[
+                { t: 'image', c: '#a3d154', d: 'Standard 8-bit visual stream' },
+                { t: 'data', c: '#fb923c', d: 'High-precision float/dict arrays' },
+                { t: 'scalar', c: '#f87171', d: 'Numeric values (int/float)' },
+                { t: 'boolean', c: '#facc15', d: 'True/False triggers' },
+              ].map(p => (
+                <div key={p.t} className="flex items-center gap-3">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.c }} />
+                  <span className="text-[11px] font-mono text-[var(--text-main)] w-16">{p.t}</span>
+                  <span className="text-[11px] text-[var(--text-dim)]">{p.d}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-[13px] font-bold text-[var(--text-main)] mb-3 uppercase">The "Main" Rule</h4>
+            <p className="text-[12px] text-[var(--text-dim)] leading-relaxed">
+              Always name your primary output <code className="text-[var(--accent)] font-bold">main</code>. 
+              The VisionNodes engine uses this ID to automatically populate the Global Graph, 
+              the Inspector preview, and the telemetry dashboard.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div className="vn-card-flat p-6 bg-[var(--accent)]/[0.04] border-[var(--accent)]/20 flex items-start gap-4">
-      <CheckCircle2 size={18} className="text-[var(--accent)] shrink-0 mt-0.5" strokeWidth={1.5} />
-      <div className="text-[13px] text-[var(--text-dim)] leading-relaxed">
-        <p className="font-bold text-[var(--text-main)] mb-1">Standard Output Convention</p>
-        Always name your primary data output <code className="text-[var(--accent)] font-bold">main</code>. This ensures automatic compatibility with the Inspector, the Global Graph, and the export utilities.
-      </div>
+    <div className="flex justify-center mt-12">
+       <button onClick={onBack} className="vn-button-primary px-8 py-3 rounded-full text-[14px]">
+          I'm ready to build my first node
+       </button>
     </div>
   </motion.div>
 );
