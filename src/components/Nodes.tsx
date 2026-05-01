@@ -1101,7 +1101,6 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
 export const ScientificHistogramNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
-  const { customBg } = useNodeColor();
 
   const chartData = useMemo(() => {
     const h0 = nd?.hist_0 || [];
@@ -1123,25 +1122,19 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
   const mode = nd?.mode;
 
   return (
-    <div
-      className={`w-full h-full rounded-xl bg-[#2c333f] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
-      style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
+    <BaseNode 
+        title="Histogram Analysis" 
+        icon={BarChart2} 
+        selected={selected} 
+        data={data} 
+        color="blue" 
+        inputs={[{id: 'image', color: 'any', label: 'Image'}]} 
+        outputs={[{id: 'main', color: 'image', label: 'Main'}]}
+        className="h-full flex flex-col"
     >
-        {/* Handles */}
-        <StyledHandle type="target" position={Position.Left} id="image" color="any" top="50%" />
-        <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
-
-        {/* Header */}
-        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
-             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-          <BarChart2 size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#3b82f6' }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Histogram Analysis</span>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-h-0 w-full p-2 flex flex-col gap-2">
-            <div className="flex-1 min-h-0">
-                {chartData.length > 0 ? (
+      <div className="flex-1 min-h-0 w-full flex flex-col p-1">
+          <div className="flex-1 min-h-0 w-full">
+            {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <defs>
@@ -1178,28 +1171,28 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
                     )}
                     </AreaChart>
                 </ResponsiveContainer>
-                ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center opacity-40 gap-2">
+            ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center opacity-40 gap-2 min-h-[100px]">
                     <BarChart2 size={24} className="text-gray-500 animate-pulse" />
                     <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
                 </div>
-                )}
-            </div>
-
-            {nd?.avg_0 !== undefined && (
-                <div className="grid grid-cols-2 gap-1 border-t border-white/5 pt-2 shrink-0">
-                    <div className="flex flex-col">
-                        <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Average</span>
-                        <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.avg_0.toFixed(1)}</span>
-                    </div>
-                    <div className="flex flex-col text-right">
-                        <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Std Dev</span>
-                        <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.std_0.toFixed(1)}</span>
-                    </div>
-                </div>
             )}
-        </div>
-    </div>
+          </div>
+
+          {nd?.avg_0 !== undefined && (
+            <div className="grid grid-cols-2 gap-1 border-t border-white/5 pt-2 mt-1 shrink-0 px-2 pb-1">
+                <div className="flex flex-col">
+                    <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Average</span>
+                    <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.avg_0.toFixed(1)}</span>
+                </div>
+                <div className="flex flex-col text-right">
+                    <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Std Dev</span>
+                    <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.std_0.toFixed(1)}</span>
+                </div>
+            </div>
+          )}
+      </div>
+    </BaseNode>
   );
 });
 
