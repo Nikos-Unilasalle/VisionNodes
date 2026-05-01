@@ -1,6 +1,7 @@
-from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
+import base64
+from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id='sci_histogram',
@@ -108,4 +109,11 @@ class HistogramNode(NodeProcessor):
         # Border
         cv2.rectangle(out, (0, 0), (w-1, h-1), (80, 80, 80), 1)
         
-        return {'main': out}
+        # Generate base64 preview for the UI
+        try:
+            _, buf = cv2.imencode('.jpg', out, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            preview_b64 = base64.encodebytes(buf).decode('utf-8')
+        except:
+            preview_b64 = None
+
+        return {'main': out, 'preview': preview_b64}
