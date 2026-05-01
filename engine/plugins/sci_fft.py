@@ -7,18 +7,18 @@ import numpy as np
     label='FFT Analysis',
     category=['analysis', 'scientific'],
     icon='Activity',
-    description="Computes the 2D Fast Fourier Transform (FFT) to visualize the frequency spectrum of the image. Outputs magnitude, phase, and complex data for scientific analysis and perfect reconstruction via IFFT.",
+    description="Advanced 2D FFT Analysis with full color support. Treats BGR channels independently to preserve spectral information. Outputs magnitude, phase, and filtered reconstruction.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
-        {'id': 'main', 'color': 'image'},
-        {'id': 'magnitude', 'color': 'image'},
-        {'id': 'phase', 'color': 'image'},
+        {'id': 'main', 'color': 'image', 'label': 'Filtered'},
+        {'id': 'magnitude', 'color': 'image', 'label': 'Magnitude'},
+        {'id': 'phase', 'color': 'image', 'label': 'Phase'},
         {'id': 'complex_data', 'color': 'data'}
     ],
     params=[
         {'id': 'log_scale',   'label': 'Log Intensity', 'type': 'boolean', 'default': True},
-        {'id': 'preserve_dynamic_range', 'label': 'Preserve Dynamic Range', 'type': 'boolean', 'default': False,
-         'description': 'When enabled, avoids normalization to preserve absolute values for scientific accuracy'},
+        {'id': 'preserve_dynamic_range', 'label': 'Scientific Range', 'type': 'boolean', 'default': False,
+         'description': 'If enabled, keeps relative intensities instead of normalizing 0-255'},
         {'id': 'filter_type', 'label': 'Filter Type',  'type': 'string', 'default': 'None', 
          'options': ['None', 'Low-pass', 'High-pass', 'Band-pass', 'Band-stop']},
         {'id': 'low_cutoff',  'label': 'Min Cutoff',   'type': 'scalar', 'min': 0, 'max': 500, 'default': 0},
@@ -31,104 +31,102 @@ class FFTNode(NodeProcessor):
         if img is None:
             return {'main': None, 'magnitude': None, 'phase': None, 'complex_data': None}
             
-        # Store original dtype for reconstruction
-        original_dtype = img.dtype
+        # 1. Prepare data (float64 for precision)
+        img_f = img.astype(np.float64)
+        is_color = len(img_f.shape) == 3 and img_f.shape[2] == 3
         
-        if len(img.shape) == 3:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = img.copy()
-            
-        rows, cols = gray.shape
+        # Split channels (BGR)
+        channels = [img_f[:, :, i] for i in range(3)] if is_color else [img_f]
+        
+        rows, cols = img_f.shape[:2]
         crow, ccol = rows // 2, cols // 2
-            
-        # Compute FFT with float64 for precision
-        dft = np.fft.fft2(gray.astype(np.float64))
-        dft_shift = np.fft.fftshift(dft)
-        
-        # Extract magnitude and phase BEFORE filtering
-        mag_original = np.abs(dft_shift)
-        phase_original = np.angle(dft_shift)
         
         f_type = params.get('filter_type', 'None')
         low = float(params.get('low_cutoff', 0))
         high = float(params.get('high_cutoff', 50))
+        log_scale = params.get('log_scale', True)
+        preserve = params.get('preserve_dynamic_range', False)
         
-        # Ensure high >= low for logic safety
-        if high < low: high = low
-        
+        # 2. Build Filter Mask
         mask = np.ones((rows, cols), np.float64)
         if f_type != 'None':
             y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
             dist_sq = x*x + y*y
-            
             if f_type == 'Low-pass':
-                mask = np.where(dist_sq <= high*high, 1, 0).astype(np.float64)
+                mask = np.where(dist_sq <= high*high, 1, 0)
             elif f_type == 'High-pass':
-                mask = np.where(dist_sq >= low*low, 1, 0).astype(np.float64)
+                mask = np.where(dist_sq >= low*low, 1, 0)
             elif f_type == 'Band-pass':
-                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 1, 0).astype(np.float64)
+                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 1, 0)
             elif f_type == 'Band-stop':
-                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 0, 1).astype(np.float64)
-                
-            dft_shift = dft_shift * mask
-            # Update magnitude and phase after filtering
-            mag_original = np.abs(dft_shift)
-            phase_original = np.angle(dft_shift)
+                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 0, 1)
+
+        magnitudes = []
+        phases = []
+        filtered_imgs = []
+        complex_results = []
+
+        # 3. Process each channel
+        for ch in channels:
+            # FFT
+            f_transform = np.fft.fft2(ch)
+            f_shift = np.fft.fftshift(f_transform)
             
-        preserve = params.get('preserve_dynamic_range', False)
-        
-        # Prepare magnitude visualization
-        mag = mag_original.copy()
-        if params.get('log_scale', True):
-            mag = 20 * np.log(mag + 1)
+            # Save original phase and magnitude
+            phase = np.angle(f_shift)
+            magnitude = np.abs(f_shift)
             
-        if not preserve:
-            cv2.normalize(mag, mag, 0, 255, cv2.NORM_MINMAX)
-            mag_out = mag.astype(np.uint8)
-        else:
-            # Scale to uint8 range but keep info for data output
-            mag_min, mag_max = mag.min(), mag.max()
-            if mag_max > mag_min:
-                mag_out = ((mag - mag_min) / (mag_max - mag_min) * 255).astype(np.uint8)
-            else:
-                mag_out = np.zeros_like(mag, dtype=np.uint8)
-        
-        color_mag = cv2.applyColorMap(mag_out, cv2.COLORMAP_INFERNO)
-        
-        # Prepare phase visualization
-        phase_vis = phase_original.copy()
-        # Phase is in [-pi, pi], normalize to [0, 255]
-        phase_normalized = (phase_vis + np.pi) / (2 * np.pi) * 255
-        phase_out = phase_normalized.astype(np.uint8)
-        color_phase = cv2.applyColorMap(phase_out, cv2.COLORMAP_TWILIGHT)
-        
-        # Reconstruct image if filter applied
-        if f_type != 'None':
-            f_ishift = np.fft.ifftshift(dft_shift)
-            img_back = np.fft.ifft2(f_ishift)
-            img_back = np.abs(img_back)
+            # Apply frequency filtering
+            f_shift_filtered = f_shift * mask
             
-            if preserve:
-                # Keep original dynamic range
-                img_back = np.clip(img_back, 0, 255)
-            else:
+            # Inverse FFT for the 'main' output
+            f_ishift = np.fft.ifftshift(f_shift_filtered)
+            img_back = np.abs(np.fft.ifft2(f_ishift))
+            
+            # Visualization
+            mag_vis = np.log(magnitude + 1) if log_scale else magnitude.copy()
+            
+            if not preserve:
+                cv2.normalize(mag_vis, mag_vis, 0, 255, cv2.NORM_MINMAX)
                 cv2.normalize(img_back, img_back, 0, 255, cv2.NORM_MINMAX)
+            else:
+                m_max = np.max(mag_vis)
+                if m_max > 0: mag_vis = (mag_vis / m_max) * 255
+                b_max = np.max(img_back)
+                if b_max > 0: img_back = (img_back / b_max) * 255
+
+            magnitudes.append(mag_vis.astype(np.uint8))
+            # Phase [-pi, pi] -> [0, 255]
+            phases.append(((phase + np.pi) / (2 * np.pi) * 255).astype(np.uint8))
+            filtered_imgs.append(img_back.astype(np.uint8))
             
-            result = img_back.astype(np.uint8)
-            if len(img.shape) == 3:
-                result = cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
+            # Keep raw complex data for IFFT node
+            complex_results.append(f_shift_filtered)
+
+        # 4. Final Stacking
+        def stack(l):
+            if is_color: return np.stack(l, axis=2)
+            return l[0]
+
+        out_filtered = stack(filtered_imgs)
+        out_phase = stack(phases)
+        
+        # Magnitude visualization with colormap
+        mag_stacked = stack(magnitudes)
+        if is_color:
+            # Convert to gray for consistent colormapping
+            mag_gray = cv2.cvtColor(mag_stacked, cv2.COLOR_BGR2GRAY)
+            out_mag = cv2.applyColorMap(mag_gray, cv2.COLORMAP_INFERNO)
         else:
-            result = img
-            
+            out_mag = cv2.applyColorMap(mag_stacked, cv2.COLORMAP_INFERNO)
+
         return {
-            'main': result,
-            'magnitude': color_mag,
-            'phase': color_phase,
+            'main': out_filtered,
+            'magnitude': out_mag,
+            'phase': out_phase,
             'complex_data': {
-                'real': dft_shift.real.tolist(),
-                'imag': dft_shift.imag.tolist(),
-                'shape': list(dft_shift.shape),
-                'dtype': 'complex64'
+                'channels': complex_results,
+                'is_color': is_color,
+                'shape': img.shape
             }
         }
