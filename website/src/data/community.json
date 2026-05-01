@@ -31,5 +31,16 @@
     "image": "slides/optical_granulometry.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/website/public/examples/optical_granulometry.vn",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "4",
+    "type": "py",
+    "title": "Shadow & Highlight Recovery",
+    "author": "@nikos",
+    "description": "An essential node for recovering details from deep shadows and protecting overexposed highlights. Perfect for surveillance, outdoor robotics, and low-light photography.",
+    "domains": ["Robotics & Autonomous Systems", "Medical & Health Sciences", "Research & Education"],
+    "image": "slides/shadow_highlight_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/cv_shadow_highlight.py",
+    "createdAt": "2026-05-01"
   }
 ]
