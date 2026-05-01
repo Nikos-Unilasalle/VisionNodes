@@ -78,42 +78,22 @@ class HistogramNode(NodeProcessor):
                 hist = np.log10(hist + 1)
             hist_data.append(hist)
             
-        # Normalize based on global max to maintain relative scale
-        max_val = max([h.max() for h in hist_data]) if hist_data else 1.0
-        if max_val <= 0: max_val = 1.0
-        
-        # Render curves
-        for i, hist in enumerate(hist_data):
-            pts = []
-            for j in range(bins):
-                val = float(hist[j][0]) # Ensure we get the scalar value
-                x_px = int(j * (w - 1) / (bins - 1)) if bins > 1 else 0
-                y_px = int((h - 1) - (val / max_val * (h - 1)))
-                y_px = np.clip(y_px, 0, h - 1)
-                pts.append([x_px, y_px])
+        hist_output = {}
+        for i, h_data in enumerate(hist_data):
+            # Convert numpy array to flat list for JSON serialization
+            key = f"hist_{i}"
+            hist_output[key] = h_data.flatten().tolist()
             
-            pts = np.array(pts, np.int32)
-            cv2.polylines(out, [pts], False, colors[i], 2, cv2.LINE_AA)
-            
-            # Metadata Overlay
             if show_stats:
                 try:
                     chan_data = img_proc[:,:,i] if len(img_proc.shape)==3 else img_proc
-                    mean_val = np.mean(chan_data)
-                    std_val = np.std(chan_data)
-                    stat_text = f"{chan_names[i]}: avg={mean_val:.1f} std={std_val:.1f}"
-                    cv2.putText(out, stat_text, (12, 22 + i*20), cv2.FONT_HERSHEY_SIMPLEX, 0.45, colors[i], 1, cv2.LINE_AA)
-                except:
-                    pass
+                    hist_output[f"avg_{i}"] = float(np.mean(chan_data))
+                    hist_output[f"std_{i}"] = float(np.std(chan_data))
+                except: pass
 
-        # Border
-        cv2.rectangle(out, (0, 0), (w-1, h-1), (80, 80, 80), 1)
-        
-        # Generate base64 preview for the UI
-        try:
-            _, buf = cv2.imencode('.jpg', out, [cv2.IMWRITE_JPEG_QUALITY, 70])
-            preview_b64 = base64.encodebytes(buf).decode('utf-8')
-        except:
-            preview_b64 = None
-
-        return {'main': out, 'preview': preview_b64}
+        return {
+            'main': img, # Pass through the image
+            **hist_output,
+            'is_color': is_color,
+            'mode': mode
+        }
