@@ -17,7 +17,10 @@ import numpy as np
         {'id': 'show_stats', 'label': 'Display Statistics', 'type': 'boolean', 'default': True},
         {'id': 'width',     'label': 'Plot Width',          'type': 'scalar', 'min': 200, 'max': 1200, 'default': 512},
         {'id': 'height',    'label': 'Plot Height',         'type': 'scalar', 'min': 150, 'max': 800, 'default': 300},
-    ]
+    ],
+    resizable=True,
+    min_width=250,
+    min_height=180
 )
 class HistogramNode(NodeProcessor):
     def process(self, inputs, params):
