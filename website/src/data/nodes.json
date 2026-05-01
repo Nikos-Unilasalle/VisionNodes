@@ -3069,6 +3069,21 @@
             "id": "centroids",
             "color": "data",
             "label": "Centroids"
+          },
+          {
+            "id": "labels_map",
+            "color": "any",
+            "label": "Label Map"
+          },
+          {
+            "id": "mask_out",
+            "color": "image",
+            "label": "Binary Mask"
+          },
+          {
+            "id": "contour_out",
+            "color": "image",
+            "label": "Contours Mask"
           }
         ],
         "params": [
@@ -6582,6 +6597,57 @@
           {
             "id": "main",
             "color": "image"
+          }
+        ]
+      },
+      {
+        "type": "sci_export_particles",
+        "label": "Export Particles",
+        "category": [
+          "out",
+          "scientific"
+        ],
+        "icon": "DownloadCloud",
+        "description": "Exports each detected particle as an individual PNG image with a transparent background.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Source Image"
+          },
+          {
+            "id": "labels_map",
+            "color": "any",
+            "label": "Label Map"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "export_trigger",
+            "label": "Export Now",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "out_dir",
+            "label": "Output Folder",
+            "type": "string",
+            "default": "exports/particles"
+          },
+          {
+            "id": "prefix",
+            "label": "Prefix",
+            "type": "string",
+            "default": "stone"
+          },
+          {
+            "id": "pad",
+            "label": "Padding (px)",
+            "type": "int",
+            "default": 5,
+            "min": 0,
+            "max": 100
           }
         ]
       },
