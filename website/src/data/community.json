@@ -75,5 +75,16 @@
     "image": "slides/fft_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_fft.py",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "8",
+    "type": "py",
+    "title": "Inverse FFT (IFFT)",
+    "author": "@nikos",
+    "description": "The counterpart to the FFT node. Reconstructs an image from a frequency spectrum. Combined with the FFT node and image painting tools, it allows for manual frequency-domain filtering.",
+    "domains": ["Research & Education", "Physics & Signal Processing"],
+    "image": "slides/ifft_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_ifft.py",
+    "createdAt": "2026-05-01"
   }
 ]
