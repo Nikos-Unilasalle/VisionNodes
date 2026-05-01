@@ -158,116 +158,124 @@ const TutorialDetail = ({ tut, onBack }: { tut: typeof TUTORIALS[0]; onBack: () 
 // ─── Custom Node Guide ────────────────────────────────────────────────────────
 
 const CustomNodeGuide = ({ onBack }: { onBack: () => void }) => (
-  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl">
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="max-w-3xl pb-20">
     <button onClick={onBack} className="flex items-center gap-2 text-[13px] text-[var(--text-dim)] hover:text-[var(--text-main)] mb-8 transition-colors">
       <ArrowLeft size={14} /> Back to Tutorials
     </button>
 
-    <h1 className="text-[36px] text-[var(--text-main)] mb-3">Create Your Own Node</h1>
-    <p className="text-[16px] text-[var(--text-dim)] mb-10 leading-relaxed">
-      VisionNodes nodes are standard Python classes decorated with <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px]">@vision_node</code>.
-      Drop a new <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px]">.py</code> file in the{' '}
-      <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px]">engine/plugins/</code> directory — the app hot-reloads without a restart.
-    </p>
-
-    {/* Method A */}
-    <div className="mb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
-          <Sparkles size={18} strokeWidth={1.5} />
-        </div>
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--accent)]">Method A — AI-Assisted</p>
-          <h3 className="text-[18px] text-[var(--text-main)]">Generate with an AI agent</h3>
-        </div>
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-12 h-12 rounded-2xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+        <Code2 size={24} strokeWidth={1.5} />
       </div>
-      <div className="vn-card p-6 space-y-3 text-[14px] text-[var(--text-dim)] leading-relaxed">
-        <p>1. Open your AI assistant (Claude, Gemini, GPT…) and paste this prompt:</p>
-        <div className="code-block text-[12px] border border-[var(--accent)]/20">
-          <span className="tok-comment"># Prompt template</span>{'\n'}
-          Create a VisionNodes Studio node that [describe what it does].{'\n'}
-          It must use the @vision_node decorator with icon, category, inputs, outputs and params.{'\n'}
-          Follow the plugin API from engine/plugins/object_detection_yolo.py as a reference.
-        </div>
-        <p>2. Save the generated file to <code className="text-[var(--accent)]">engine/plugins/my_node.py</code>.</p>
-        <p>3. The app detects the new file automatically. The node appears in the menu.</p>
+      <div>
+        <h1 className="text-[36px] text-[var(--text-main)] leading-none">Create Your Own Node</h1>
+        <p className="text-[14px] text-[var(--accent)] font-medium mt-1">Python Plugin API — Version 2.0</p>
       </div>
     </div>
 
-    {/* Method B */}
-    <div className="mb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-9 h-9 rounded-xl bg-[var(--bg-alt)] flex items-center justify-center text-[var(--text-dim)]">
-          <Terminal size={18} strokeWidth={1.5} />
-        </div>
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-xdim)]">Method B — Manual</p>
-          <h3 className="text-[18px] text-[var(--text-main)]">Write it from scratch</h3>
+    <p className="text-[16px] text-[var(--text-dim)] mb-10 leading-relaxed">
+      VisionNodes is designed for extreme extensibility. Any Python class can become a production-grade node by using our
+      <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">@vision_node</code> decorator.
+      Drop a <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">.py</code> file in 
+      <code className="bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[var(--accent)] text-[14px] mx-1">engine/plugins/</code> and the app hot-reloads instantly.
+    </p>
+
+    {/* Section 1: Standard Structure */}
+    <div className="mb-12">
+      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
+        <CheckCircle2 size={18} className="text-[var(--accent)]" /> 1. Standard Node Structure
+      </h3>
+      <div className="vn-card p-6">
+        <p className="text-[14px] text-[var(--text-dim)] mb-4 leading-relaxed">
+          The basic template for any node. The <code className="text-[var(--accent)]">process</code> method receives two dictionaries: 
+          <code className="text-[var(--text-main)] ml-1">inputs</code> (connected data) and <code className="text-[var(--text-main)] ml-1">params</code> (user-defined settings).
+        </p>
+        <div className="code-block text-[12px] leading-6">
+          <span className="tok-kw">from</span> registry <span className="tok-kw">import</span> vision_node, NodeProcessor{'\n'}
+          <span className="tok-kw">import</span> cv2, numpy <span className="tok-kw">as</span> np{'\n'}{'\n'}
+          <span className="tok-dec">@vision_node</span>({'\n'}
+          {'  '}type_id=<span className="tok-str">"my_custom_node"</span>,{'\n'}
+          {'  '}label=<span className="tok-str">"My Custom Node"</span>,{'\n'}
+          {'  '}icon=<span className="tok-str">"Zap"</span>,{' '}
+          <span className="tok-comment"># Lucide-react icon name</span>{'\n'}
+          {'  '}category=[<span className="tok-str">"util"</span>],{'\n'}
+          {'  '}inputs=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"image"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'}],{'\n'}
+          {'  '}outputs=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"main"</span>, <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>{'}'}],{'\n'}
+          {'  '}params=[{'{'}<span className="tok-str">"id"</span>:<span className="tok-str">"gain"</span>, <span className="tok-str">"type"</span>:<span className="tok-str">"float"</span>, <span className="tok-str">"default"</span>:<span className="tok-num">1.0</span>{'}'}]{'\n'}
+          ){'\n'}
+          <span className="tok-kw">class</span> <span className="tok-def">MyNode</span>(NodeProcessor):{'\n'}
+          {'  '}<span className="tok-kw">def</span> <span className="tok-def">process</span>(<span className="tok-num">self</span>, inputs, params):{'\n'}
+          {'    '}img = inputs.get(<span className="tok-str">'image'</span>){'\n'}
+          {'    '}<span className="tok-kw">if</span> img <span className="tok-kw">is</span> <span className="tok-kw">None</span>: <span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: <span className="tok-kw">None</span>{'}'}{'\n'}
+          {'    '}gain = <span className="tok-num">float</span>(params.get(<span className="tok-str">'gain'</span>, <span className="tok-num">1.0</span>)){'\n'}
+          {'    '}<span className="tok-kw">return</span> {'{'}<span className="tok-str">'main'</span>: (img * gain).astype(np.uint8){'}'}
         </div>
       </div>
-      <div className="vn-card p-6 space-y-5">
+    </div>
 
-        <div>
-          <p className="text-[13px] font-semibold text-[var(--text-main)] mb-2">1. File structure</p>
-          <div className="code-block text-[12px]">
-            <span className="tok-comment"># engine/plugins/my_node.py</span>{'\n'}
-            <span className="tok-kw">from</span> engine.node_base <span className="tok-kw">import</span> vision_node, NodeBase{'\n'}
-            <span className="tok-kw">import</span> numpy <span className="tok-kw">as</span> np
+    {/* Section 2: Scientific Best Practices */}
+    <div className="mb-12">
+      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
+        <Sparkles size={18} className="text-[var(--accent)]" /> 2. Scientific Best Practices
+      </h3>
+      <div className="grid md:grid-cols-2 gap-5">
+        <div className="vn-card p-5">
+          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-2 uppercase tracking-wide">Multi-Channel Precision</h4>
+          <p className="text-[13px] text-[var(--text-dim)] leading-relaxed mb-4">
+            Process BGR channels independently to avoid artifacts. Convert to <code className="text-[var(--accent)]">float64</code> for complex math (FFT, Filtering) before clipping back to uint8.
+          </p>
+          <div className="code-block text-[11px] leading-5">
+            <span className="tok-comment"># Process channels separately</span>{'\n'}
+            channels = [img[:,:,i] <span className="tok-kw">for</span> i <span className="tok-kw">in</span> <span className="tok-num">range</span>(<span className="tok-num">3</span>)]{'\n'}
+            results = [my_func(ch) <span className="tok-kw">for</span> ch <span className="tok-kw">in</span> channels]{'\n'}
+            final = np.stack(results, axis=<span className="tok-num">2</span>)
           </div>
         </div>
-
-        <div>
-          <p className="text-[13px] font-semibold text-[var(--text-main)] mb-2">2. Decorator definition</p>
-          <div className="code-block text-[12px]">
-            <span className="tok-dec">@vision_node</span>({'\n'}
-            {'  '}<span className="tok-str">label</span>=<span className="tok-str">"My Node"</span>,{'\n'}
-            {'  '}<span className="tok-str">icon</span>=<span className="tok-str">"Zap"</span>,{' '}
-            <span className="tok-comment"># Any Lucide icon name</span>{'\n'}
-            {'  '}<span className="tok-str">category</span>=<span className="tok-str">"util"</span>,{'\n'}
-            {'  '}<span className="tok-str">inputs</span>=[{'{'}
-            <span className="tok-str">"id"</span>:<span className="tok-str">"main"</span>,
-            <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>
-            {'}'}],{'\n'}
-            {'  '}<span className="tok-str">outputs</span>=[{'{'}
-            <span className="tok-str">"id"</span>:<span className="tok-str">"result"</span>,
-            <span className="tok-str">"color"</span>:<span className="tok-str">"image"</span>
-            {'}'}],{'\n'}
-            {'  '}<span className="tok-str">params</span>=[{'{'}
-            <span className="tok-str">"id"</span>:<span className="tok-str">"strength"</span>,
-            <span className="tok-str">"label"</span>:<span className="tok-str">"Strength"</span>,
-            <span className="tok-str">"type"</span>:<span className="tok-str">"float"</span>,
-            <span className="tok-str">"default"</span>:<span className="tok-num">0.5</span>
-            {'}'}]{'\n'}
-            ){'\n'}
-            <span className="tok-kw">class</span> <span className="tok-def">MyNode</span>(NodeBase):{'\n'}
-            {'  '}<span className="tok-kw">def</span> <span className="tok-def">process</span>(<span className="tok-num">self</span>, main, strength):{'\n'}
-            {'    '}<span className="tok-kw">return</span> {'{'}
-            <span className="tok-str">"result"</span>: main * strength
+        <div className="vn-card p-5">
+          <h4 className="text-[14px] font-bold text-[var(--text-main)] mb-2 uppercase tracking-wide">High-Precision Data Ports</h4>
+          <p className="text-[13px] text-[var(--text-dim)] leading-relaxed mb-4">
+            Use the <code className="text-[var(--accent)]">data</code> port type (orange) to pass raw numpy arrays or complex dictionaries between nodes without precision loss from image normalization.
+          </p>
+          <div className="code-block text-[11px] leading-5">
+            <span className="tok-comment"># Return raw data for downstream</span>{'\n'}
+            <span className="tok-kw">return</span> {'{'}{'\n'}
+            {'  '}<span className="tok-str">'main'</span>: vis_img,{' '}
+            <span className="tok-comment"># UI Preview</span>{'\n'}
+            {'  '}<span className="tok-str">'raw_data'</span>: {'{'}
+            <span className="tok-str">'mag'</span>: mag_float
+            {'}'}{'\n'}
             {'}'}
           </div>
         </div>
+      </div>
+    </div>
 
-        <div>
-          <p className="text-[13px] font-semibold text-[var(--text-main)] mb-2">3. Port color types</p>
-          <div className="flex flex-wrap gap-2">
-            {[['image','#a3d154'],['scalar','#f87171'],['vector','#60a5fa'],['boolean','#facc15'],['string','#c084fc'],['dict','#fb923c'],['any','#9ca3af']].map(([t,c]) => (
-              <span key={t} className="flex items-center gap-1.5 text-[12px] font-mono px-2 py-1 rounded"
-                    style={{ backgroundColor: c + '22', color: c }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c }} />{t}
-              </span>
-            ))}
-          </div>
+    {/* Section 3: Input Fallbacks */}
+    <div className="mb-12">
+      <h3 className="text-[18px] text-[var(--text-main)] mb-4 flex items-center gap-2">
+        <Zap size={18} className="text-[var(--accent)]" /> 3. Robust Input Fallbacks
+      </h3>
+      <div className="vn-card p-6">
+        <p className="text-[14px] text-[var(--text-dim)] mb-4 leading-relaxed">
+          Ensure your node stays functional even if graph connections change. If your primary input ID isn't found, try to auto-detect any compatible data in the <code className="text-[var(--accent)]">inputs</code> dict.
+        </p>
+        <div className="code-block text-[12px] leading-6">
+          <span className="tok-kw">def</span> <span className="tok-def">process</span>(<span className="tok-num">self</span>, inputs, params):{'\n'}
+          {'  '}data = inputs.get(<span className="tok-str">'scalar'</span>){'\n'}
+          {'  '}<span className="tok-kw">if</span> data <span className="tok-kw">is</span> <span className="tok-kw">None</span>:{'\n'}
+          {'    '}<span className="tok-comment"># Fallback: grab any numeric input available</span>{'\n'}
+          {'    '}numeric = [v <span className="tok-kw">for</span> k, v <span className="tok-kw">in</span> inputs.items() <span className="tok-kw">if</span> <span className="tok-num">isinstance</span>(v, (<span className="tok-num">int</span>, <span className="tok-num">float</span>))]{'\n'}
+          {'    '}data = numeric[<span className="tok-num">0</span>] <span className="tok-kw">if</span> numeric <span className="tok-kw">else</span> <span className="tok-kw">None</span>
         </div>
       </div>
     </div>
 
-    <div className="vn-card-flat p-5 bg-[var(--accent)]/[0.04] border-[var(--accent)]/20 flex items-start gap-4">
+    <div className="vn-card-flat p-6 bg-[var(--accent)]/[0.04] border-[var(--accent)]/20 flex items-start gap-4">
       <CheckCircle2 size={18} className="text-[var(--accent)] shrink-0 mt-0.5" strokeWidth={1.5} />
-      <p className="text-[13px] text-[var(--text-dim)] leading-relaxed">
-        Once your node works, share it with the community via the{' '}
-        <a href="#" className="text-[var(--accent)] font-semibold hover:underline">Share page</a>.
-        Submissions are reviewed as GitHub Issues and can be merged into the core library.
-      </p>
+      <div className="text-[13px] text-[var(--text-dim)] leading-relaxed">
+        <p className="font-bold text-[var(--text-main)] mb-1">Standard Output Convention</p>
+        Always name your primary data output <code className="text-[var(--accent)] font-bold">main</code>. This ensures automatic compatibility with the Inspector, the Global Graph, and the export utilities.
+      </div>
     </div>
   </motion.div>
 );
