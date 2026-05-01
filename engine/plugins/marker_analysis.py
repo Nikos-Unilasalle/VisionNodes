@@ -16,7 +16,7 @@ from registry import NodeProcessor, vision_node
         {"id": "font_scale", "label": "Font Scale", "type": "scalar", "min": 0.1, "max": 2.0, "default": 0.6},
         {"id": "thickness", "label": "Thickness", "type": "scalar", "min": 1, "max": 5, "default": 1},
         {"id": "coord_type", "label": "Coordinates", "type": "enum", "options": ["Relative (0-1)", "Pixels"], "default": 0},
-        {"id": "text_color", "label": "Text Color", "type": "enum", "options": ["Green", "Red", "Blue", "White", "Black", "Yellow"], "default": 0}
+        {"id": "text_color", "label": "Text Color", "type": "color", "default": "#00FF00"}
     ]
 )
 class MarkerAnalysisNode(NodeProcessor):
@@ -47,11 +47,18 @@ class MarkerAnalysisNode(NodeProcessor):
         thickness = int(params.get('thickness', 1))
         is_relative = int(params.get('coord_type', 0)) == 0
         
-        color_idx = int(params.get('text_color', 0))
-        bgr_colors = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (255, 255, 255), (0, 0, 0), (0, 255, 255)]
-        hex_colors = ["#00ff00", "#ff0000", "#0000ff", "#ffffff", "#000000", "#ffff00"]
-        color = bgr_colors[min(color_idx, len(bgr_colors)-1)]
-        color_hex = hex_colors[min(color_idx, len(hex_colors)-1)]
+        color_hex = str(params.get('text_color') or '#00FF00').strip()
+        if not color_hex.startswith('#'): color_hex = '#' + color_hex
+        try:
+            if len(color_hex) == 7:
+                r, g, b = int(color_hex[1:3], 16), int(color_hex[3:5], 16), int(color_hex[5:7], 16)
+            elif len(color_hex) == 4:
+                r, g, b = int(color_hex[1]*2, 16), int(color_hex[2]*2, 16), int(color_hex[3]*2, 16)
+            else: raise ValueError()
+            color = (b, g, r)
+        except: 
+            color = (0, 255, 0)
+            color_hex = "#00FF00"
         
         # Efficiently extract stats
         # Watershed markers: -1 is boundary, 1, 2, 3... are labels.
