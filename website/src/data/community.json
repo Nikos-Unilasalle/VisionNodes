@@ -86,5 +86,16 @@
     "image": "slides/ifft_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_ifft.py",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "9",
+    "type": "py",
+    "title": "Spectral Gain (EQ)",
+    "author": "@nikos",
+    "description": "A 3-band spatial frequency equalizer. Boost or cut low, mid, and high frequencies on raw spectral magnitude data. Perfect for texture enhancement or noise reduction.",
+    "domains": ["Research & Education", "Physics & Signal Processing", "Data Science & Analytics"],
+    "image": "slides/spectral_gain_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_spectral_gain.py",
+    "createdAt": "2026-05-01"
   }
 ]
