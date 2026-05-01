@@ -21,8 +21,8 @@ import numpy as np
          'description': 'If enabled, keeps relative intensities instead of normalizing 0-255'},
         {'id': 'filter_type', 'label': 'Filter Type',  'type': 'string', 'default': 'None', 
          'options': ['None', 'Low-pass', 'High-pass', 'Band-pass', 'Band-stop']},
-        {'id': 'low_cutoff',  'label': 'Min Freq',     'type': 'scalar', 'min': 0, 'max': 1, 'default': 0},
-        {'id': 'high_cutoff', 'label': 'Max Freq',     'type': 'scalar', 'min': 0, 'max': 1, 'default': 0.1},
+        {'id': 'low_cutoff',  'label': 'Min Freq',     'type': 'float', 'min': 0, 'max': 1, 'step': 0.01, 'default': 0},
+        {'id': 'high_cutoff', 'label': 'Max Freq',     'type': 'float', 'min': 0, 'max': 1, 'step': 0.01, 'default': 0.1},
     ]
 )
 class FFTNode(NodeProcessor):
