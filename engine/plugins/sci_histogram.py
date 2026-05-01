@@ -16,8 +16,6 @@ from registry import NodeProcessor, vision_node
         {'id': 'bins',      'label': 'Quantization (Bins)', 'type': 'scalar', 'min': 16, 'max': 256, 'default': 256},
         {'id': 'log_scale', 'label': 'Logarithmic Scale',   'type': 'boolean', 'default': False},
         {'id': 'show_stats', 'label': 'Display Statistics', 'type': 'boolean', 'default': True},
-        {'id': 'width',     'label': 'Plot Width',          'type': 'scalar', 'min': 200, 'max': 1200, 'default': 512},
-        {'id': 'height',    'label': 'Plot Height',         'type': 'scalar', 'min': 150, 'max': 800, 'default': 300},
     ],
     resizable=True,
     min_width=250,

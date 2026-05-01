@@ -1101,9 +1101,8 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
 export const ScientificHistogramNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
-  const w = data.params?.width || 250;
-  const h = data.params?.height || 180;
-  
+  const { customBg } = useNodeColor();
+
   const chartData = useMemo(() => {
     const h0 = nd?.hist_0 || [];
     const h1 = nd?.hist_1 || [];
@@ -1124,74 +1123,83 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
   const mode = nd?.mode;
 
   return (
-    <BaseNode 
-        title="Histogram Analysis" 
-        icon={BarChart2} 
-        selected={selected} 
-        data={data} 
-        color="blue" 
-        inputs={[{id: 'image', color: 'any'}]} 
-        outputs={[{id: 'main', color: 'image'}]}
-        width={w}
+    <div
+      className={`w-full h-full rounded-xl bg-[#2c333f] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
+      style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
     >
-      <div className="px-1 pb-1 nodrag" style={{ height: h }}>
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <defs>
-                <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="gradG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="gradR" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="gradV" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '10px' }}
-                itemStyle={{ padding: '0 2px' }}
-                labelStyle={{ display: 'none' }}
-              />
-              {mode === 0 && isColor ? (
-                <>
-                  <Area type="monotone" dataKey="b" stroke="#3b82f6" fillOpacity={1} fill="url(#gradB)" isAnimationActive={false} />
-                  <Area type="monotone" dataKey="g" stroke="#22c55e" fillOpacity={1} fill="url(#gradG)" isAnimationActive={false} />
-                  <Area type="monotone" dataKey="r" stroke="#ef4444" fillOpacity={1} fill="url(#gradR)" isAnimationActive={false} />
-                </>
-              ) : (
-                <Area type="monotone" dataKey="v" stroke="#94a3b8" fillOpacity={1} fill="url(#gradV)" isAnimationActive={false} />
-              )}
-            </AreaChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center opacity-40 gap-2">
-            <BarChart2 size={24} className="text-gray-500 animate-pulse" />
-            <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
-          </div>
-        )}
-      </div>
-      {nd?.avg_0 !== undefined && (
-        <div className="px-3 pb-2 grid grid-cols-2 gap-1 border-t border-white/5 pt-2 mx-1">
-             <div className="flex flex-col">
-                <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Average</span>
-                <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.avg_0.toFixed(1)}</span>
-             </div>
-             <div className="flex flex-col text-right">
-                <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Std Dev</span>
-                <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.std_0.toFixed(1)}</span>
-             </div>
+        {/* Handles */}
+        <StyledHandle type="target" position={Position.Left} id="image" color="any" top="50%" />
+        <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+
+        {/* Header */}
+        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+          <BarChart2 size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#3b82f6' }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Histogram Analysis</span>
         </div>
-      )}
-    </BaseNode>
+
+        {/* Content */}
+        <div className="flex-1 min-h-0 w-full p-2 flex flex-col gap-2">
+            <div className="flex-1 min-h-0">
+                {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <defs>
+                        <linearGradient id="gradB" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="gradG" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="gradR" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="gradV" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
+                        </linearGradient>
+                    </defs>
+                    <Tooltip 
+                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '10px' }}
+                        itemStyle={{ padding: '0 2px' }}
+                        labelStyle={{ display: 'none' }}
+                    />
+                    {mode === 0 && isColor ? (
+                        <>
+                        <Area type="monotone" dataKey="b" stroke="#3b82f6" fillOpacity={1} fill="url(#gradB)" isAnimationActive={false} />
+                        <Area type="monotone" dataKey="g" stroke="#22c55e" fillOpacity={1} fill="url(#gradG)" isAnimationActive={false} />
+                        <Area type="monotone" dataKey="r" stroke="#ef4444" fillOpacity={1} fill="url(#gradR)" isAnimationActive={false} />
+                        </>
+                    ) : (
+                        <Area type="monotone" dataKey="v" stroke="#94a3b8" fillOpacity={1} fill="url(#gradV)" isAnimationActive={false} />
+                    )}
+                    </AreaChart>
+                </ResponsiveContainer>
+                ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center opacity-40 gap-2">
+                    <BarChart2 size={24} className="text-gray-500 animate-pulse" />
+                    <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
+                </div>
+                )}
+            </div>
+
+            {nd?.avg_0 !== undefined && (
+                <div className="grid grid-cols-2 gap-1 border-t border-white/5 pt-2 shrink-0">
+                    <div className="flex flex-col">
+                        <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Average</span>
+                        <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.avg_0.toFixed(1)}</span>
+                    </div>
+                    <div className="flex flex-col text-right">
+                        <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">Std Dev</span>
+                        <span className="text-[10px] font-mono text-white/80 tabular-nums">{nd.std_0.toFixed(1)}</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    </div>
   );
 });
 
