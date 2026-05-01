@@ -168,7 +168,7 @@ class ConnectedComponentsNode(NodeProcessor):
     outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "visualization", "label": "Visualization", "type": "enum", "options": ["Original + Boundaries", "Colorized Regions", "Regions + Boundaries", "Original"], "default": 0},
-        {"id": "boundary_color", "label": "Boundary Color", "type": "enum", "options": ["Red", "Green", "Blue", "White", "Black", "Yellow"], "default": 0},
+        {"id": "boundary_color", "label": "Boundary Color", "type": "color", "default": "#FF0000"},
         {"id": "boundary_thickness", "label": "Boundary Thickness", "type": "scalar", "min": 1, "max": 5, "default": 1},
         {"id": "region_alpha", "label": "Region Alpha", "type": "scalar", "min": 0.0, "max": 1.0, "default": 0.5}
     ]
@@ -189,16 +189,18 @@ class WatershedNode(NodeProcessor):
         markers_copy = markers.copy().astype(np.int32)
         res_markers = cv2.watershed(img, markers_copy)
 
-        BOUNDARY_COLORS = [
-            (0, 0, 255),    # Red
-            (0, 255, 0),    # Green
-            (255, 0, 0),    # Blue
-            (255, 255, 255),# White
-            (0, 0, 0),      # Black
-            (0, 255, 255),  # Yellow
-        ]
         viz_mode = int(params.get('visualization', 0))
-        b_color = BOUNDARY_COLORS[min(int(params.get('boundary_color', 0)), len(BOUNDARY_COLORS)-1)]
+        
+        c_hex = str(params.get('boundary_color') or '#FF0000').strip()
+        if not c_hex.startswith('#'): c_hex = '#' + c_hex
+        try:
+            if len(c_hex) == 7:
+                r, g, b = int(c_hex[1:3], 16), int(c_hex[3:5], 16), int(c_hex[5:7], 16)
+            elif len(c_hex) == 4:
+                r, g, b = int(c_hex[1]*2, 16), int(c_hex[2]*2, 16), int(c_hex[3]*2, 16)
+            else: raise ValueError()
+            b_color = (b, g, r)
+        except: b_color = (0, 0, 255)
         b_thick = int(params.get('boundary_thickness', 1))
         alpha = float(params.get('region_alpha', 0.5))
 
