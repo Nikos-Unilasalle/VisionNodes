@@ -35,7 +35,7 @@
   {
     "id": "4",
     "type": "py",
-    "title": "Shadow & Highlight Recovery",
+    "title": "De-shadowing node",
     "author": "@nikos",
     "description": "An essential node for recovering details from deep shadows and protecting overexposed highlights. Perfect for surveillance, outdoor robotics, and low-light photography.",
     "domains": ["Robotics & Autonomous Systems", "Medical & Health Sciences", "Research & Education"],
