@@ -4,7 +4,7 @@ import numpy as np
 
 @vision_node(
     type_id='cv_shadow_highlight',
-    label='Shadows & Highlights',
+    label='Shadow removal',
     category='cv',
     icon='Sun',
     description="Selectively brightens shadows and darkens highlights while preserving midtones, similar to professional photo editors.",
