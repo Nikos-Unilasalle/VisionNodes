@@ -185,28 +185,35 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
 };
 
 interface ColorInputProps { label: string; val: string; onChange: (v: string) => void; }
-export const ColorInput = ({ label, val, onChange }: ColorInputProps) => (
-  <div className="flex items-center justify-between py-2 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-    <div className="flex items-center gap-3">
-      <div className="text-[10px] font-mono text-gray-500">{val}</div>
-      <div 
-        className="relative w-8 h-8 rounded-lg border border-white/20 shadow-lg cursor-pointer hover:scale-110 transition-all overflow-hidden"
-        style={{ backgroundColor: val }}
-      >
-        <input
-          type="color"
-          value={val}
-          onChange={(e) => {
-            const hex = e.target.value.toUpperCase();
-            onChange(hex);
-          }}
-          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer scale-150"
-        />
+export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
+  const currentVal = (val || '#ffffff').toLowerCase();
+  return (
+    <div className="flex items-center justify-between py-2 group">
+      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="text-[10px] font-mono text-gray-500 uppercase">{currentVal}</div>
+        <div 
+          className="relative w-10 h-6 rounded-md border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
+          style={{ backgroundColor: currentVal }}
+        >
+          <input
+            type="color"
+            value={currentVal}
+            onInput={(e) => {
+              const hex = (e.target as HTMLInputElement).value.toUpperCase();
+              onChange(hex);
+            }}
+            onChange={(e) => {
+              const hex = (e.target as HTMLInputElement).value.toUpperCase();
+              onChange(hex);
+            }}
+            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer scale-[2]"
+          />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Main panel ─────────────────────────────────────────────────────────────
 
