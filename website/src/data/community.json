@@ -53,5 +53,27 @@
     "image": "slides/histogram_preview.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_histogram.py",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "6",
+    "type": "py",
+    "title": "Unit Calibration",
+    "author": "@nikos",
+    "description": "Convert pixel measurements into physical units (mm, cm, m). Supports both length and area scaling, essential for precise scientific metrology and particle sizing.",
+    "domains": ["Research & Education", "Industrial Inspection & QC", "Medical & Health Sciences"],
+    "image": "slides/calibration_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_calibration.py",
+    "createdAt": "2026-05-01"
+  },
+  {
+    "id": "7",
+    "type": "py",
+    "title": "FFT Spectrum Analysis",
+    "author": "@nikos",
+    "description": "Visualize the frequency content of an image using the Fast Fourier Transform. Analyze periodic patterns, noise, and texture characteristics in the frequency domain.",
+    "domains": ["Research & Education", "Material Sciences & Microscopy", "Data Science & Analytics"],
+    "image": "slides/fft_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_fft.py",
+    "createdAt": "2026-05-01"
   }
 ]
