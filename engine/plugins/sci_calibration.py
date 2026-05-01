@@ -53,6 +53,7 @@ class CalibrationNode(NodeProcessor):
                 display = f"{res:.3f} {unit}"
 
             return {
+                'main': res.tolist() if is_list else float(res),
                 'output': res.tolist() if is_list else float(res),
                 'display_value': display,
                 'unit': unit
