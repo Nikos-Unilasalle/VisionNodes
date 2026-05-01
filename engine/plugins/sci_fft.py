@@ -80,5 +80,6 @@ class FFTNode(NodeProcessor):
             
         return {
             'main': result,
-            'magnitude': color_mag
+            'magnitude': color_mag,
+            'data': dft_shift.tolist() if isinstance(dft_shift, np.ndarray) else None # Send for IFFT node
         }
