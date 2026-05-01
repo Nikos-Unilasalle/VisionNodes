@@ -8,6 +8,8 @@ import CommunityPage from './components/CommunityPage';
 import DownloadPage from './components/DownloadPage';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
+import GalleryPage from './components/GalleryPage';
+import AdminPage from './components/AdminPage';
 import type { Tab } from './components/Layout';
 
 // ─── Footer ──────────────────────────────────────────────────────────────────
@@ -115,6 +117,8 @@ export default function App() {
           {activeTab === 'wiki'      && <WikiPage      key="wiki"      onCommunity={() => goTo('community')} />}
           {activeTab === 'tutorials' && <TutorialsPage key="tutorials" />}
           {activeTab === 'community' && <CommunityPage key="community" />}
+          {activeTab === 'gallery'   && <GalleryPage   key="gallery"   />}
+          {activeTab === 'admin'     && <AdminPage     key="admin"     />}
           {activeTab === 'download'  && <DownloadPage  key="download"  />}
           {activeTab === 'privacy'   && <PrivacyPage   key="privacy"   />}
         </AnimatePresence>
