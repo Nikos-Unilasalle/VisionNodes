@@ -12,8 +12,10 @@ import numpy as np
     outputs=[{'id': 'main', 'color': 'image'}, {'id': 'magnitude', 'color': 'image'}],
     params=[
         {'id': 'log_scale',   'label': 'Log Intensity', 'type': 'boolean', 'default': True},
-        {'id': 'filter_type', 'label': 'Filter Type',  'type': 'string', 'default': 'None', 'options': ['None', 'Low-pass', 'High-pass']},
-        {'id': 'cutoff',      'label': 'Cutoff Radius', 'type': 'scalar', 'min': 1, 'max': 500, 'default': 30},
+        {'id': 'filter_type', 'label': 'Filter Type',  'type': 'string', 'default': 'None', 
+         'options': ['None', 'Low-pass', 'High-pass', 'Band-pass', 'Band-stop']},
+        {'id': 'low_cutoff',  'label': 'Min Cutoff',   'type': 'scalar', 'min': 0, 'max': 500, 'default': 0},
+        {'id': 'high_cutoff', 'label': 'Max Cutoff',   'type': 'scalar', 'min': 0, 'max': 500, 'default': 50},
     ]
 )
 class FFTNode(NodeProcessor):
@@ -22,7 +24,6 @@ class FFTNode(NodeProcessor):
         if img is None:
             return {'main': None, 'magnitude': None}
             
-        # Convert to gray for FFT
         if len(img.shape) == 3:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         else:
@@ -31,31 +32,32 @@ class FFTNode(NodeProcessor):
         rows, cols = gray.shape
         crow, ccol = rows // 2, cols // 2
             
-        # Compute FFT
         dft = np.fft.fft2(gray.astype(np.float32))
         dft_shift = np.fft.fftshift(dft)
         
-        # --- FILTERING ---
         f_type = params.get('filter_type', 'None')
-        cutoff = float(params.get('cutoff', 30))
+        low = float(params.get('low_cutoff', 0))
+        high = float(params.get('high_cutoff', 50))
         
-        mask = np.ones((rows, cols), np.uint8)
+        # Ensure high >= low for logic safety
+        if high < low: high = low
+        
+        mask = np.ones((rows, cols), np.float32)
         if f_type != 'None':
-            # Create circular mask
             y, x = np.ogrid[-crow:rows-crow, -ccol:cols-ccol]
-            mask_area = x*x + y*y <= cutoff*cutoff
+            dist_sq = x*x + y*y
             
             if f_type == 'Low-pass':
-                mask = np.zeros((rows, cols), np.uint8)
-                mask[mask_area] = 1
+                mask = np.where(dist_sq <= high*high, 1, 0).astype(np.float32)
             elif f_type == 'High-pass':
-                mask = np.ones((rows, cols), np.uint8)
-                mask[mask_area] = 0
+                mask = np.where(dist_sq >= low*low, 1, 0).astype(np.float32)
+            elif f_type == 'Band-pass':
+                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 1, 0).astype(np.float32)
+            elif f_type == 'Band-stop':
+                mask = np.where((dist_sq >= low*low) & (dist_sq <= high*high), 0, 1).astype(np.float32)
                 
-            # Apply mask to complex DFT
             dft_shift = dft_shift * mask
             
-        # --- MAGNITUDE SPECTRUM (Visualization) ---
         mag = np.abs(dft_shift)
         if params.get('log_scale', True):
             mag = 20 * np.log(mag + 1)
@@ -64,22 +66,19 @@ class FFTNode(NodeProcessor):
         mag_out = mag.astype(np.uint8)
         color_mag = cv2.applyColorMap(mag_out, cv2.COLORMAP_INFERNO)
         
-        # --- INVERSE FFT (Reconstruction) ---
         if f_type != 'None':
             f_ishift = np.fft.ifftshift(dft_shift)
             img_back = np.fft.ifft2(f_ishift)
             img_back = np.abs(img_back)
             cv2.normalize(img_back, img_back, 0, 255, cv2.NORM_MINMAX)
             result = img_back.astype(np.uint8)
-            # If original was color, this only returns gray. 
-            # (Filtering color channels independently is also possible but more expensive)
             if len(img.shape) == 3:
                 result = cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
         else:
-            result = img # No filter, pass through original
+            result = img
             
         return {
             'main': result,
             'magnitude': color_mag,
-            'data': dft_shift.tolist() if isinstance(dft_shift, np.ndarray) else None # Send for IFFT node
+            'data': dft_shift.tolist() if isinstance(dft_shift, np.ndarray) else None
         }
