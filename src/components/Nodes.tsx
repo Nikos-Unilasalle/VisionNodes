@@ -54,17 +54,8 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
   );
 };
 
-const BaseNode = ({ title, icon: Icon, children, selected, data, color = 'accent', inputs = [], outputs = [], var_count = 0, width, headerExtra }: any) => {
-  const { customBg: ctxBg, customText: ctxText } = useNodeColor();
-  const palIdx = data?.activePaletteIndex ?? 6;
-  const cIdx = data?.params?.color_index;
-  const computedBg = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : data?.params?.bg_color;
-  const computedText = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : data?.params?.text_color;
-  const customBg = ctxBg ?? computedBg;
-  const customText = ctxText ?? computedText;
 
-  const accentColor = color === 'accent' ? 'border-accent shadow-accent/20' : 
-                      color === 'green' ? 'border-green-500 shadow-green-500/20' :
+
 export const BaseNode = ({ 
   title, 
   icon: Icon, 
