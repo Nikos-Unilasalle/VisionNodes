@@ -1100,6 +1100,30 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const ScientificCalibrationNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+
+  return (
+    <BaseNode 
+        title="Unit Calibration" 
+        icon={Scaling} 
+        selected={selected} 
+        data={data} 
+        color="indigo" 
+        inputs={[{id: 'input', color: 'any', label: 'Pixels'}]} 
+        outputs={[{id: 'output', color: 'any', label: 'Physical'}]}
+    >
+      <div className="flex flex-col items-center justify-center py-4 px-2 bg-black/20 rounded-lg border border-white/5 mt-1">
+        <span className="text-[8px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Calibrated Value</span>
+        <div className="text-xl font-mono text-white tabular-nums tracking-tighter">
+            {nd?.display_value || "---"}
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const ScientificHistogramNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
