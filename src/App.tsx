@@ -161,6 +161,7 @@ const _nodeTypes = {
   string_replace: N.StringNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
+  sci_histogram: withNodeResizer(N.ScientificHistogramNode, 250, 180),
   group_node: N.GroupNode,
   group_input: N.GroupInputNode,
   group_output: N.GroupOutputNode,
