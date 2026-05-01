@@ -20,5 +20,16 @@
     "image": "slides/slide3.jpg",
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/object_detection_yolo.py",
     "createdAt": "2026-05-01"
+  },
+  {
+    "id": "3",
+    "type": "vn",
+    "title": "Optical Granulometry",
+    "author": "@nikos",
+    "description": "Complete pipeline for quantitative particle analysis using Watershed segmentation. Features automatic counting, average area measurement, and size distribution analysis.",
+    "domains": ["Material Sciences & Microscopy", "Industrial Inspection & QC", "Environmental & Marine Sciences"],
+    "image": "slides/optical_granulometry.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/website/public/examples/optical_granulometry.vn",
+    "createdAt": "2026-05-01"
   }
 ]
