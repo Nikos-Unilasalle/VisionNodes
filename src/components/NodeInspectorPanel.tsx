@@ -38,10 +38,10 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
 
 interface NumberInputProps { label: string; val: number; onChange: (v: number) => void; }
 export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
-  const [tempVal, setTempVal] = React.useState(val.toString());
+  const [tempVal, setTempVal] = useState(val.toString());
   
   // Sync local state when external value changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (parseFloat(tempVal) !== val) {
       setTempVal(val.toString());
     }
@@ -188,11 +188,11 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
 
 interface ColorInputProps { label: string; val: string; onChange: (v: string) => void; }
 export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const currentVal = (val || '#ffffff').toUpperCase();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -215,29 +215,22 @@ export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
           style={{ backgroundColor: currentVal }}
         />
         
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              className="absolute right-0 top-full mt-2 z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3"
-            >
-              <div className="custom-color-wheel">
-                <HexColorWheel color={currentVal} onChange={onChange} />
-              </div>
-              <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                <div className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: currentVal }} />
-                <input 
-                  type="text" 
-                  value={currentVal} 
-                  onChange={(e) => onChange(e.target.value.toUpperCase())}
-                  className="bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-gray-300 w-20 outline-none focus:border-accent/50"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3">
+            <div className="custom-color-wheel">
+              <HexColorWheel color={currentVal} onChange={onChange} />
+            </div>
+            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+              <div className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: currentVal }} />
+              <input 
+                type="text" 
+                value={currentVal} 
+                onChange={(e) => onChange(e.target.value.toUpperCase())}
+                className="bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-gray-300 w-20 outline-none focus:border-accent/50"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
