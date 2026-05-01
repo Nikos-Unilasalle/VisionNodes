@@ -13,12 +13,12 @@
   {
     "id": "2",
     "type": "py",
-    "title": "Custom YOLOv8 Node",
-    "author": "@researcher_x",
-    "description": "An optimized node to run YOLOv8 object detection with support for custom ONNX weights and real-time visualization.",
-    "domains": ["Robotics & Autonomous Systems", "Industrial Inspection & QC"],
-    "image": "slides/slide3.jpg",
-    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/object_detection_yolo.py",
+    "title": "Advanced Image Levels",
+    "author": "@nikos",
+    "description": "A professional-grade node for fine-tuning image intensity. Control black/white points, midtone gamma, and output range to perfect your dataset's dynamic range.",
+    "domains": ["Data Science & Analytics", "Research & Education", "Satellite & Earth Observation"],
+    "image": "slides/levels_preview.jpg",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/cv_levels.py",
     "createdAt": "2026-05-01"
   },
   {
