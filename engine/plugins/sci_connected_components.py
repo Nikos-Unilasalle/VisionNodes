@@ -49,6 +49,11 @@ class ConnectedComponentsNode(NodeProcessor):
         areas = [int(stats[i, cv2.CC_STAT_AREA]) for i in valid]
         cents = [(float(centroids[i][0]), float(centroids[i][1])) for i in valid]
 
+        lut_filter = np.zeros(n_labels, dtype=np.int32)
+        for i in valid:
+            lut_filter[i] = i
+        filtered_labels = lut_filter[labels]
+
         if bool(params.get('colorize', True)):
             rng = np.random.default_rng(42)
             lut = np.zeros((n_labels, 3), dtype=np.uint8)
@@ -65,4 +70,4 @@ class ConnectedComponentsNode(NodeProcessor):
 
         cv2.putText(out, f"n={len(valid)}", (6, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
 
-        return {'main': out, 'count': len(valid), 'areas': areas, 'centroids': cents, 'labels_map': labels}
+        return {'main': out, 'count': len(valid), 'areas': areas, 'centroids': cents, 'labels_map': filtered_labels}
