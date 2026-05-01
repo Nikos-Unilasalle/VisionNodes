@@ -66,9 +66,15 @@ class ROIStatsNode(NodeProcessor):
         max_v  = float(np.max(data))
         count  = int(data.size)
 
-        color_hex = str(params.get('color', '#00FFA0'))
+        color_hex = str(params.get('color') or '#00FFA0').strip()
+        if not color_hex.startswith('#'): color_hex = '#' + color_hex
         try:
-            r, g, b = int(color_hex[1:3], 16), int(color_hex[3:5], 16), int(color_hex[5:7], 16)
+            if len(color_hex) == 7:
+                r, g, b = int(color_hex[1:3], 16), int(color_hex[3:5], 16), int(color_hex[5:7], 16)
+            elif len(color_hex) == 4:
+                r, g, b = int(color_hex[1]*2, 16), int(color_hex[2]*2, 16), int(color_hex[3]*2, 16)
+            else:
+                raise ValueError("Invalid hex")
             color_bgr = (b, g, r)
         except Exception:
             color_bgr = (0, 255, 160)
