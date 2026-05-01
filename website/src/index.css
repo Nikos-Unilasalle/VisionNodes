@@ -364,6 +364,7 @@
   line-height: 1.7;
   overflow-x: auto;
   color: #d4d4d4;
+  white-space: pre-wrap;
 }
 
 .tok-kw     { color: #c084fc; }
