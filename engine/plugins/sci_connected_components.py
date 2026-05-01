@@ -15,6 +15,8 @@ from registry import vision_node, NodeProcessor
         {'id': 'areas',     'color': 'data',   'label': 'Areas (px²)'},
         {'id': 'centroids', 'color': 'data',   'label': 'Centroids'},
         {'id': 'labels_map','color': 'any',    'label': 'Label Map'},
+        {'id': 'mask_out',  'color': 'image',  'label': 'Binary Mask'},
+        {'id': 'contour_out','color': 'image', 'label': 'Contours Mask'},
     ],
     params=[
         {'id': 'threshold',    'label': 'Threshold',       'type': 'int',  'default': 128,    'min': 0,   'max': 255},
@@ -70,4 +72,17 @@ class ConnectedComponentsNode(NodeProcessor):
 
         cv2.putText(out, f"n={len(valid)}", (6, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
 
-        return {'main': out, 'count': len(valid), 'areas': areas, 'centroids': cents, 'labels_map': filtered_labels}
+        solid_mask = (filtered_labels > 0).astype(np.uint8) * 255
+        contours_mask = np.zeros_like(solid_mask)
+        cnts, _ = cv2.findContours(solid_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(contours_mask, cnts, -1, 255, 1)
+
+        return {
+            'main': out, 
+            'count': len(valid), 
+            'areas': areas, 
+            'centroids': cents, 
+            'labels_map': filtered_labels,
+            'mask_out': solid_mask,
+            'contour_out': contours_mask
+        }
