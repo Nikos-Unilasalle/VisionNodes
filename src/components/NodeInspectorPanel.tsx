@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
+import { HexColorPicker } from 'react-colorful';
 
 // ── Form primitives ────────────────────────────────────────────────────────
 
@@ -186,30 +187,49 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
 
 interface ColorInputProps { label: string; val: string; onChange: (v: string) => void; }
 export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
-  const currentVal = (val || '#ffffff').toLowerCase();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentVal = (val || '#ffffff').toUpperCase();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
   return (
-    <div className="flex items-center justify-between py-2 group">
+    <div className="flex items-center justify-between py-2 group" ref={containerRef}>
       <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <div className="flex items-center gap-3">
-        <div className="text-[10px] font-mono text-gray-500 uppercase">{currentVal}</div>
-        <div 
+      <div className="flex items-center gap-3 relative">
+        <div className="text-[10px] font-mono text-gray-500">{currentVal}</div>
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
           className="relative w-10 h-6 rounded-md border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
           style={{ backgroundColor: currentVal }}
-        >
-          <input
-            type="color"
-            value={currentVal}
-            onInput={(e) => {
-              const hex = (e.target as HTMLInputElement).value.toUpperCase();
-              onChange(hex);
-            }}
-            onChange={(e) => {
-              const hex = (e.target as HTMLInputElement).value.toUpperCase();
-              onChange(hex);
-            }}
-            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer scale-[2]"
-          />
-        </div>
+        />
+        
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3">
+            <div className="custom-color-wheel">
+              <HexColorPicker color={currentVal} onChange={(newColor) => onChange(newColor.toUpperCase())} />
+            </div>
+            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+              <div className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: currentVal }} />
+              <input 
+                type="text" 
+                value={currentVal} 
+                onChange={(e) => onChange(e.target.value.toUpperCase())}
+                className="bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-gray-300 w-20 outline-none focus:border-accent/50"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
