@@ -184,6 +184,24 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
   );
 };
 
+interface ColorInputProps { label: string; val: string; onChange: (v: string) => void; }
+export const ColorInput = ({ label, val, onChange }: ColorInputProps) => (
+  <div className="flex items-center justify-between py-2 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <div className="flex items-center gap-3">
+      <div className="text-[10px] font-mono text-gray-500">{val}</div>
+      <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg cursor-pointer hover:scale-110 transition-all">
+        <input
+          type="color"
+          value={val}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4 cursor-pointer"
+        />
+      </div>
+    </div>
+  </div>
+);
+
 // ── Main panel ─────────────────────────────────────────────────────────────
 
 export interface ExposedParam {
@@ -260,12 +278,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   const up2 = (v: unknown) => onUpdateGroupChildParams?.(ep.nodeId, { [sp.id]: v });
                   const lbl = sp.label || sp.id;
                   const isE2 = sp.type === 'enum' || sp.options;
+                  const isColor2 = sp.type === 'color';
                   const isS2 = sp.type === 'string' || typeof (val ?? sp.default) === 'string';
                   const isN2 = sp.type === 'number' || sp.type === 'float';
                   const isB2 = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (val ?? sp.default) === 'boolean';
                   if (isE2) return <SelectInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
+                  if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} />;
                   if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
-                  if (isN2) return <NumberInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} onChange={up2} />;
+                  if (isN2) {
+                    if (sp.min !== undefined && sp.max !== undefined) {
+                      return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min} max={sp.max} step={sp.step || 1} onChange={up2} />;
+                    }
+                    return <NumberInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} onChange={up2} />;
+                  }
                   if (isB2) return <ToggleInput key={sp.id} label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
                   return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={up2} />;
                 })}
@@ -553,9 +578,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         <>
           <Slider label="Width"  val={p.width  ?? 640} min={128} max={2048} step={32} onChange={v => up({ width: v })} />
           <Slider label="Height" val={p.height ?? 200} min={64}  max={1024} step={16} onChange={v => up({ height: v })} />
-          <Slider label="R" val={p.r ?? 99}  min={0} max={255} onChange={v => up({ r: v })} />
-          <Slider label="G" val={p.g ?? 102} min={0} max={255} onChange={v => up({ g: v })} />
-          <Slider label="B" val={p.b ?? 241} min={0} max={255} onChange={v => up({ b: v })} />
+          <ColorInput label="Color" val={p.color ?? '#6366f1'} onChange={v => up({ color: v })} />
         </>
       )}
 
@@ -597,7 +620,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Save Now</label>
             <button
               onClick={() => { up({ save_now: 1 }); setTimeout(() => up({ save_now: 0 }), 400); }}
-              className="w-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black py-4 rounded-3xl hover:bg-indigo-500 hover:text-white transition-all duration-300 flex items-center justify-center gap-2 active:scale-95"
+              className="w-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black py-4 rounded-3xl hover:bg-indigo-500 hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
             >
               <Save size={14} /> Save Audio File
             </button>
@@ -646,8 +669,9 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
         const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
         const isEnum    = sp.type === 'enum' || sp.options;
+        const isColor   = sp.type === 'color';
         const isString  = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
-        const isNumber  = sp.type === 'number' || sp.type === 'float';
+        const isNumber  = sp.type === 'number' || sp.type === 'float' || typeof (p[sp.id] ?? sp.default) === 'number';
         const isBool    = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
         let inner: React.ReactNode;
@@ -665,13 +689,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             </div>
           );
         } else if (isEnum) {
-          inner = <SelectInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
+          inner = <SelectInput label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
+        } else if (isColor) {
+          inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isString) {
           inner = sp.id === 'code'
             ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
             : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isNumber) {
-          inner = <NumberInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
+          if (sp.min !== undefined && sp.max !== undefined) {
+             inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min} max={sp.max} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
+          } else {
+             inner = <NumberInput label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} onChange={(v) => up({ [sp.id]: v })} />;
+          }
         } else if (isBool) {
           inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
         } else {

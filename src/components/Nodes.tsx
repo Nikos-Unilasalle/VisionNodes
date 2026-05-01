@@ -85,20 +85,31 @@ export const BaseNode = ({
   };
 
   const nodeNote = data?.params?.node_note;
-  const borderClass = selected ? (color === 'accent' ? 'border-accent' : `border-${color}-500`) : 'border-[#4f5b6b]';
+  const isLockedOut = !!(data as any)?.lockedOut;
+  const borderClass = isLockedOut
+    ? 'border-red-500'
+    : selected ? (color === 'accent' ? 'border-accent' : `border-${color}-500`) : 'border-[#4f5b6b]';
 
   return (
-    <div className={`relative ${className}`} style={{ 
-        width: width || '13rem', 
-        height: height || 'auto' 
+    <div className={`relative ${className}`} style={{
+        width: width || '13rem',
+        height: height || 'auto'
     }}>
     <div
-        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full h-full flex flex-col overflow-hidden`}
+        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full h-full flex flex-col`}
         style={{
           minHeight: height ? undefined : minHeight,
-          ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
+          ...(isLockedOut
+            ? { boxShadow: '0 0 24px rgba(239,68,68,0.45), 0 0 8px rgba(239,68,68,0.25)' }
+            : customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
         }}
     >
+      {isLockedOut && (
+        <div className="absolute top-0 right-0 z-20 flex items-center gap-1 bg-red-500 text-white text-[7px] font-black px-2 py-1 rounded-bl-lg rounded-tr-[10px] uppercase tracking-widest shadow-lg select-none pointer-events-none">
+          <Lock size={7} strokeWidth={3} />
+          <span>LOCK OUT</span>
+        </div>
+      )}
       {/* Inputs with Labels */}
       {inputs.map((inp: any, i: number) => {
         const top = getPortTop(i, totalInputs);
@@ -134,7 +145,7 @@ export const BaseNode = ({
         </div>
       </div>
       
-      <div className="flex-1 p-2 text-[10px] text-gray-400 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 p-2 text-[10px] text-gray-400 flex flex-col min-h-0 overflow-hidden rounded-b-[10px]">
         {children}
       </div>
 
