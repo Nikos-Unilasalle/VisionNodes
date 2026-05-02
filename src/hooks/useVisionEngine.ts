@@ -17,6 +17,7 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
   const [notifications, setNotifications] = useState<EngineNotification[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const dismissTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const exportPyResolve = useRef<((result: { code?: string; error?: string }) => void) | null>(null);
 
   useEffect(() => {
     let retryDelay = 1000;
@@ -42,6 +43,9 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
             setPluginSchemas(msg.nodes);
           } else if (msg.type === 'node_capture') {
             onCapture?.(msg.node_id, msg.image);
+          } else if (msg.type === 'export_py_code') {
+            exportPyResolve.current?.({ code: msg.code, error: msg.error });
+            exportPyResolve.current = null;
           } else if (msg.type === 'notification') {
             const n: EngineNotification = {
               id: msg.id, message: msg.message,
@@ -110,6 +114,30 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
+  const requestPyExport = useCallback((nodes: any[], edges: any[], exportNodeId: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (ws.current?.readyState !== WebSocket.OPEN) {
+        reject(new Error('Engine not connected'));
+        return;
+      }
+      const timer = setTimeout(() => {
+        exportPyResolve.current = null;
+        reject(new Error('Export timed out'));
+      }, 15000);
+      exportPyResolve.current = ({ code, error }) => {
+        clearTimeout(timer);
+        if (error) reject(new Error(error));
+        else resolve(code ?? '');
+      };
+      ws.current.send(JSON.stringify({
+        type: 'export_py',
+        nodes: nodes.map(n => ({ id: n.id, type: n.type, data: n.data })),
+        edges,
+        export_node_id: exportNodeId,
+      }));
+    });
+  }, []);
+
   const dismissNotification = (id: string) => {
     clearTimeout(dismissTimers.current[id]);
     delete dismissTimers.current[id];
@@ -127,5 +155,5 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification };
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport };
 }
