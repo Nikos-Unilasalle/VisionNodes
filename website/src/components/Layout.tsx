@@ -440,12 +440,17 @@ const FEATURES = [
     title: 'Native Extensibility',
     text: 'Extend the library with a single Python decorator. The plugin API exposes typed inputs/outputs, parameter definitions, and lifecycle hooks — no build step, no restart required.',
   },
+  {
+    icon: <Terminal size={22} strokeWidth={1.5} />,
+    title: 'Python Export',
+    text: 'Export visual pipelines into standalone Python scripts. VisionNodes automatically resolves dependencies and generates the necessary code, bridging the gap between prototyping and deployment.',
+  },
 ];
 
 const FeaturesSection = () => (
   <section className="section-full">
     <div className="container-lg">
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {FEATURES.map((f, i) => (
           <motion.div
             key={i}
