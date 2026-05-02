@@ -40,59 +40,26 @@ def _port_id(handle: str) -> str:
     return handle.split('__', 1)[-1] if '__' in handle else handle
 
 
-def _import_root(imp_seg: str) -> str:
-    """Extract root module name from import statement."""
-    # 'import cv2' → 'cv2'
-    # 'from mediapipe.tasks import python' → 'mediapipe'
-    # 'import numpy as np' → 'numpy'
-    seg = imp_seg.strip()
-    if seg.startswith('from '):
-        mod = seg[5:].split()[0]
-    elif seg.startswith('import '):
-        mod = seg[7:].split()[0].split('.')[0]
-    else:
-        return ''
-    return mod.split('.')[0]
-
-
 def _is_engine_file(fpath: str) -> bool:
     import os
     return os.path.basename(fpath) == 'engine.py'
 
 
-def _targeted_classes(cls: type, source: str) -> dict[str, str]:
-    """Extract cls + its local base classes only. Skip NodeProcessor/ABC."""
+def _get_source_file(cls: type) -> str | None:
+    """Get plugin source file. Falls back to method co_filename when torch
+    patches inspect.getfile and raises TypeError for dynamically-loaded classes."""
     try:
-        tree = ast.parse(source)
-    except SyntaxError:
-        return {}
-
-    all_defs: dict[str, str] = {}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef):
-            seg = ast.get_source_segment(source, node)
-            if seg:
-                all_defs[node.name] = seg
-
-    skip = {'NodeProcessor', 'ABC', 'object'}
-    needed: dict[str, str] = {}
-    queue = [cls.__name__]
-    visited: set[str] = set()
-
-    while queue:
-        name = queue.pop(0)
-        if name in visited or name in skip or name not in all_defs:
+        return inspect.getfile(cls)
+    except TypeError:
+        pass
+    for attr in ('process', '__init__', '_load_model', 'calc'):
+        meth = getattr(cls, attr, None)
+        if meth is None:
             continue
-        visited.add(name)
-        needed[name] = all_defs[name]
-        for node in ast.walk(ast.parse(source)):
-            if isinstance(node, ast.ClassDef) and node.name == name:
-                for base in node.bases:
-                    base_name = base.id if isinstance(base, ast.Name) else None
-                    if base_name and base_name in all_defs and base_name not in skip:
-                        queue.append(base_name)
-
-    return needed
+        code = getattr(getattr(meth, '__func__', meth), '__code__', None)
+        if code:
+            return code.co_filename
+    return None
 
 
 def _file_imports(source: str, engine_file: bool = False) -> list[str]:
@@ -118,9 +85,48 @@ def _file_imports(source: str, engine_file: bool = False) -> list[str]:
     return result
 
 
-def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_id: str) -> str:
-    schema_map = {s['type']: s for s in NODE_SCHEMAS}
+def _extract_file_content(
+    source: str,
+    needed_names: set[str],
+    registered_names: set[str],
+    engine_file: bool = False,
+) -> str:
+    """Extract top-level content from a plugin file.
 
+    engine.py  — only the needed class bodies (no helpers, no imports).
+    plugin file — all top-level defs: functions, constants, helper classes,
+                  plus needed registered node classes.
+                  Registered node classes NOT in this pipeline are skipped.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return ''
+
+    if engine_file:
+        blocks = []
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name in needed_names:
+                seg = ast.get_source_segment(source, node)
+                if seg:
+                    blocks.append(seg)
+        return '\n\n'.join(blocks)
+
+    blocks = []
+    for node in tree.body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue  # collected separately via _file_imports
+        if isinstance(node, ast.ClassDef):
+            # Registered node class not needed in this pipeline → skip
+            if node.name in registered_names and node.name not in needed_names:
+                continue
+        seg = ast.get_source_segment(source, node)
+        if seg:
+            blocks.append(seg)
+    return '\n\n'.join(blocks)
+
+
+def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_id: str) -> str:
     # Split nodes: pipeline vs skip
     pipeline_nodes = [
         n for n in nodes
@@ -134,7 +140,7 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
         and e.get('source') in pipeline_ids
         and e.get('target') in pipeline_ids
     ]
-    export_edges   = [e for e in edges if e.get('target') == export_node_id]
+    export_edges = [e for e in edges if e.get('target') == export_node_id]
 
     # Topological execution order
     order    = topological_sort(pipeline_nodes, internal_edges)
@@ -142,7 +148,6 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
     ordered  = [node_map[nid] for nid in order if nid in node_map]
 
     # Edge lookup: (target_id, target_port) → (source_id, source_port, target_color)
-    # target_color used for fallback color-based matching (engine uses same logic)
     edge_lookup: dict[tuple[str, str], tuple[str, str, str]] = {}
     for e in internal_edges:
         src_id     = e.get('source', '')
@@ -159,10 +164,14 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
     if export_node:
         export_ports = (export_node.get('data') or {}).get('ports') or []
 
-    # Collect imports and class bodies from all used plugin files
-    all_imports: list[str] = []
-    all_classes: dict[str, str] = {}
-    seen_files: set[str] = set()
+    # All registered node class names — used to distinguish node classes from helpers
+    registered_names: set[str] = {cls.__name__ for cls in NODE_CLASS_REGISTRY.values()}
+
+    # First pass: collect file paths and which class names are needed per file
+    file_cache: dict[str, str] = {}
+    file_needed_names: dict[str, set[str]] = {}
+    file_is_engine: dict[str, bool] = {}
+    fpath_order: list[str] = []  # preserve first-seen order
 
     for node in ordered:
         ntype = node.get('type', '')
@@ -171,25 +180,36 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
         cls = NODE_CLASS_REGISTRY.get(ntype)
         if cls is None:
             continue
-        try:
-            fpath = inspect.getfile(cls)
-        except TypeError:
+        fpath = _get_source_file(cls)
+        if fpath is None:
             continue
-        if fpath in seen_files:
-            continue
-        seen_files.add(fpath)
-        try:
-            with open(fpath, encoding='utf-8') as f:
-                src = f.read()
-        except OSError:
-            continue
-        is_engine = _is_engine_file(fpath)
+        if fpath not in file_cache:
+            try:
+                with open(fpath, encoding='utf-8') as f:
+                    file_cache[fpath] = f.read()
+            except OSError:
+                continue
+            file_is_engine[fpath] = _is_engine_file(fpath)
+            file_needed_names[fpath] = set()
+            fpath_order.append(fpath)
+        file_needed_names[fpath].add(cls.__name__)
+
+    # Second pass: extract imports and content per file
+    all_imports: list[str] = []
+    all_content_blocks: list[str] = []
+
+    for fpath in fpath_order:
+        src       = file_cache[fpath]
+        is_engine = file_is_engine[fpath]
+        needed    = file_needed_names[fpath]
+
         for imp in _file_imports(src, engine_file=is_engine):
             if imp not in all_imports:
                 all_imports.append(imp)
-        for name, body in _targeted_classes(cls, src).items():
-            if name not in all_classes:
-                all_classes[name] = body
+
+        block = _extract_file_content(src, needed, registered_names, engine_file=is_engine)
+        if block:
+            all_content_blocks.append(block)
 
     # ── Script assembly ───────────────────────────────────────────────────────
     L: list[str] = []
@@ -201,8 +221,8 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
             L.append(imp)
     L += ['', '', 'class NodeProcessor:', '    def process(self, inputs, params): raise NotImplementedError', '', '']
 
-    for cls_body in all_classes.values():
-        L.append(cls_body)
+    for block in all_content_blocks:
+        L.append(block)
         L += ['', '']
 
     # Module-level node instances (handles __init__ with model loading)
@@ -219,9 +239,9 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
     L.append('def run_pipeline(frame):')
 
     for node in ordered:
-        nid   = node['id']
-        ntype = node.get('type', '')
-        label = (node.get('data') or {}).get('label') or ntype
+        nid    = node['id']
+        ntype  = node.get('type', '')
+        label  = (node.get('data') or {}).get('label') or ntype
         params = (node.get('data') or {}).get('params') or {}
 
         L.append(f'    # {label}')
@@ -238,9 +258,8 @@ def generate_pipeline_script(nodes: list[dict], edges: list[dict], export_node_i
             L.append('')
             continue
 
-        # Mirror engine input resolution: tgt_port = handle.split('__')[-1]
-        # 'main'/'image' tgt_port also writes inputs['image'] (engine special case)
-        inp_dict: dict[str, str] = {}  # port_name → code_expr
+        # Mirror engine input resolution: tgt_port also sets inputs['image'] when main/image
+        inp_dict: dict[str, str] = {}
         for (tid, tport), (sid, sport, _) in edge_lookup.items():
             if tid != nid or not tport:
                 continue
