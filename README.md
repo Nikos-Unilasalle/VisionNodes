@@ -12,13 +12,13 @@
 
 ---
 
-## 🌐 Official Website
+## Official Website
 
 **[Visit the VisionNodes Studio Website](https://nikos-unilasalle.github.io/VisionNodes/)** for the complete Node Wiki, Community Gallery, tutorials, and pre-compiled binaries for your operating system.
 
 ---
 
-## 🎯 What is VisionNodes?
+## What is VisionNodes?
 
 VisionNodes abstracts the complexity of computer vision pipelines into atomic, composable units. It is designed to accelerate the hypothesis-to-result cycle in scientific research and engineering workflows:
 
@@ -28,7 +28,7 @@ VisionNodes abstracts the complexity of computer vision pipelines into atomic, c
 
 ---
 
-## 💻 Manual Installation (Developer Guide)
+## Manual Installation (Developer Guide)
 
 VisionNodes Studio is built on a modern stack: **React / Vite / Tailwind** (Frontend), **Tauri / Rust** (Desktop Shell), and **Python / OpenCV / PyTorch** (Backend Engine).
 
@@ -69,7 +69,7 @@ You will need the following dependencies installed on your system:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 VisionNodes is open-source and welcomes contributions. To contribute:
 1. Fork the repository.
@@ -78,6 +78,6 @@ VisionNodes is open-source and welcomes contributions. To contribute:
 
 ---
 
-## 📄 License
+## License
 
 MIT License. Free to use for educational and research purposes.
