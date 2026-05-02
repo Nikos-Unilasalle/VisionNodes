@@ -28,4 +28,4 @@ output.wav
 
 # Cache
 gee_cache/
-engine/plugins/gee_cache/
+engine/plugins/gee_cache/package-lock.json
