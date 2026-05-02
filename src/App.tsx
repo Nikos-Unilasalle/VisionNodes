@@ -11,7 +11,7 @@ import {
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit, Music,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
-  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight
+  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight, FileCode
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -166,6 +166,7 @@ const _nodeTypes = {
   group_node: N.GroupNode,
   group_input: N.GroupInputNode,
   group_output: N.GroupOutputNode,
+  export_py: N.ExportPyNode,
 };
 
 const nodeTypes = Object.fromEntries(
@@ -505,7 +506,27 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport } = useVisionEngine(handleCapture);
+
+  const handleExportPy = useCallback(async (nodeId: string) => {
+    try {
+      pushNotification('Generating script…');
+      const code = await requestPyExport(
+        canvasNodesRef.current,
+        canvasEdgesRef.current,
+        nodeId,
+      );
+      const path = await save({
+        filters: [{ name: 'Python', extensions: ['py'] }],
+        defaultPath: 'pipeline.py',
+      });
+      if (!path) return;
+      await writeTextFile(path, code);
+      pushNotification('Script saved');
+    } catch (err: any) {
+      pushNotification(`Export failed: ${err?.message ?? err}`, 'error');
+    }
+  }, [requestPyExport, pushNotification]);
 
   const handleSaveAsImage = useCallback((nodeId: string) => {
     const nodeType = nodes.find(n => n.id === nodeId)?.type;
@@ -614,11 +635,12 @@ function App() {
             : undefined,
           onChangeParams: (p: any) => {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
-          }
+          },
+          onExportPy: node.type === 'export_py' ? () => handleExportPy(node.id) : undefined,
         }
       };
     });
-  }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex]);
+  }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex, handleExportPy]);
 
   const canVisualize = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -724,6 +746,17 @@ function App() {
           )
         } : c));
       }
+      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
+      return;
+    }
+    // Dynamic export_py port creation
+    if (targetNode?.type === 'export_py' && params.targetHandle === 'any__new' && params.sourceHandle) {
+      const sh = params.sourceHandle;
+      const color = sh.split('__')[0] || 'any';
+      const newPort = { id: sh, color, label: `in${(targetNode.data as any)?.ports?.length ?? 0}` };
+      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+        ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+        : n));
       setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
       return;
     }
@@ -1602,26 +1635,38 @@ function App() {
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
           <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
-            <button 
+            <button
               onClick={() => addNode('canvas_note', 'Note')}
               title="Add Note Node"
               className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
             >
               <Type size={14} />
             </button>
-            <button 
+            <button
               onClick={() => addNode('canvas_frame', 'Frame')}
               title="Add Frame Node"
               className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
             >
               <Layout size={14} />
             </button>
-            <button 
+            <button
               onClick={() => addNode('canvas_reroute', 'Reroute')}
               title="Add Reroute Node"
               className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
             >
               <GitCommit size={14} />
+            </button>
+          </div>
+
+          <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+          <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
+            <button
+              onClick={() => addNode('export_py', 'Export .py')}
+              title="Export as Python script"
+              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+            >
+              <FileCode size={14} />
             </button>
           </div>
         </div>

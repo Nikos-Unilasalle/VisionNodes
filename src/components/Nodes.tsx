@@ -6,7 +6,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -2072,6 +2072,32 @@ export const GroupOutputNode = memo(({ selected, data }: any) => {
   );
 });
 
+
+export const ExportPyNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
+    }),
+    { id: 'new', color: 'any' },
+  ];
+  return (
+    <BaseNode title="Export .py" icon={FileCode} selected={selected} data={data} inputs={inputs} outputs={[]}>
+      {ports.length === 0 && (
+        <div className="text-[8px] text-gray-600 italic text-center pb-1">connect outputs →</div>
+      )}
+      <div className="mx-2 mb-2 nodrag">
+        <button
+          onClick={() => data.onExportPy?.()}
+          className="w-full text-[9px] bg-white/5 hover:bg-white/10 text-gray-300 rounded px-2 py-1 border border-white/10 transition-colors"
+        >
+          Save as…
+        </button>
+      </div>
+    </BaseNode>
+  );
+});
 
 export const AudioPlaybackNode = memo(({ selected, data }: any) => {
   const nd        = useNodeData(useNodeId());
