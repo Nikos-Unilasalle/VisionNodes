@@ -1539,6 +1539,17 @@ class VisionEngine:
                         self.pending_capture = d.get('node_id')
                     elif d.get('type') == 'set_preview_node':
                         self.preview_node_id = d.get('node_id')
+                    elif d.get('type') == 'export_py':
+                        try:
+                            from code_generator import generate_pipeline_script
+                            code = generate_pipeline_script(
+                                d.get('nodes', []),
+                                d.get('edges', []),
+                                d.get('export_node_id', ''),
+                            )
+                            await ws.send(json.dumps({'type': 'export_py_code', 'code': code}))
+                        except Exception as gen_err:
+                            await ws.send(json.dumps({'type': 'export_py_code', 'error': str(gen_err)}))
                 except Exception as e:
                     print(f"[Engine] Message handler error: {e}")
         except Exception as e:
