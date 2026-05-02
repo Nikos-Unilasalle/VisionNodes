@@ -1,0 +1,930 @@
+{
+  "nodes": [
+    {
+      "id": "n-img",
+      "type": "input_image",
+      "position": {
+        "x": -260,
+        "y": 120
+      },
+      "data": {
+        "label": "Billes (billes.jpg)",
+        "params": {
+          "path": "samples/billes.jpg",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -260,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 60,
+        "y": 0
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 60,
+        "y": 0
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-thresh",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 300,
+        "y": 0
+      },
+      "data": {
+        "label": "Otsu Threshold",
+        "params": {
+          "mode": 0,
+          "threshold": 146,
+          "color_index": 3
+        },
+        "lockedOut": false
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 300,
+        "y": 0
+      }
+    },
+    {
+      "id": "n-morph",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 300,
+        "y": 140
+      },
+      "data": {
+        "label": "Opening (Remove Noise)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 7,
+          "iterations": 2,
+          "color_index": 3
+        },
+        "lockedOut": false
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n-cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 680,
+        "y": 40
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 177,
+          "min_area": 1,
+          "max_area": 500000,
+          "connectivity": 0,
+          "colorize": true,
+          "show_cross": true,
+          "color_index": 2
+        },
+        "lockedOut": false
+      },
+      "width": 208,
+      "height": 272,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 680,
+        "y": 40
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-props",
+      "type": "sci_region_props",
+      "position": {
+        "x": 1260,
+        "y": 80
+      },
+      "data": {
+        "label": "Region Props",
+        "params": {
+          "intensity": true,
+          "show_ids": true,
+          "show_ellipse": false,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-prev",
+      "type": "output_display",
+      "position": {
+        "x": 1620,
+        "y": 80
+      },
+      "data": {
+        "label": "Preview",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1620,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-heat-area",
+      "type": "sci_cluster_heatmap",
+      "position": {
+        "x": 1260,
+        "y": 300
+      },
+      "data": {
+        "label": "Heatmap: Area",
+        "params": {
+          "feature": 0,
+          "colormap": 0,
+          "alpha": 0.85,
+          "bg_alpha": 0.3,
+          "show_values": true,
+          "colorbar": true,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 300
+      }
+    },
+    {
+      "id": "n-disp-area",
+      "type": "output_display",
+      "position": {
+        "x": 1620,
+        "y": 300
+      },
+      "data": {
+        "label": "Area Heatmap View",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1620,
+        "y": 300
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-heat-circ",
+      "type": "sci_cluster_heatmap",
+      "position": {
+        "x": 1260,
+        "y": 520
+      },
+      "data": {
+        "label": "Heatmap: Circularity",
+        "params": {
+          "feature": 1,
+          "colormap": 1,
+          "alpha": 0.85,
+          "bg_alpha": 0.3,
+          "show_values": false,
+          "colorbar": true,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-circ",
+      "type": "output_display",
+      "position": {
+        "x": 1620,
+        "y": 520
+      },
+      "data": {
+        "label": "Circularity Heatmap View",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1620,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-count-insp",
+      "type": "data_inspector",
+      "position": {
+        "x": 700,
+        "y": 340
+      },
+      "data": {
+        "label": "Object Count",
+        "params": {
+          "color_index": 2
+        }
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-csv",
+      "type": "util_csv_export",
+      "position": {
+        "x": 2520,
+        "y": 260
+      },
+      "data": {
+        "label": "Export Regions → CSV",
+        "params": {
+          "record": false,
+          "filename": "region_analysis",
+          "path": "exports",
+          "auto_timestamp": true,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 304,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2520,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777703332998",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": 60,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "ROI Polygon",
+        "params": {
+          "points": "[{\"x\":0.835,\"y\":0.10694444444444444},{\"x\":0.915,\"y\":0.9166666666666666},{\"x\":0.06375,\"y\":0.9652777777777778},{\"x\":0.05125,\"y\":0.1375}]",
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 245,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 60,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705118775",
+      "type": "sci_scale_bar",
+      "position": {
+        "x": 1620,
+        "y": 700
+      },
+      "style": {},
+      "data": {
+        "label": "Scale Bar",
+        "params": {
+          "bar_length": 10,
+          "pixels_per_unit": 15,
+          "thickness": 5,
+          "margin": 50,
+          "color": "#D3C71B",
+          "color_index": 1
+        },
+        "schema": {
+          "type": "sci_scale_bar",
+          "label": "Scale Bar",
+          "category": [
+            "visualize",
+            "scientific"
+          ],
+          "icon": "Ruler",
+          "description": "Overlay calibrated scale bar on image. Set Pixels/Unit to match your Unit Calibration node.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "any"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            }
+          ],
+          "params": [
+            {
+              "id": "pixels_per_unit",
+              "label": "Pixels / Unit",
+              "type": "float",
+              "default": 100,
+              "min": 0.1
+            },
+            {
+              "id": "bar_length",
+              "label": "Bar Length (units)",
+              "type": "float",
+              "default": 1,
+              "min": 0.01
+            },
+            {
+              "id": "unit_name",
+              "label": "Unit Name",
+              "type": "string",
+              "default": "mm"
+            },
+            {
+              "id": "position",
+              "label": "Position",
+              "type": "enum",
+              "options": [
+                "Bottom Right",
+                "Bottom Left",
+                "Top Right",
+                "Top Left"
+              ],
+              "default": 0
+            },
+            {
+              "id": "color",
+              "label": "Color",
+              "type": "color",
+              "default": "#FFFFFF"
+            },
+            {
+              "id": "thickness",
+              "label": "Thickness (px)",
+              "type": "int",
+              "default": 3,
+              "min": 1,
+              "max": 10
+            },
+            {
+              "id": "margin",
+              "label": "Margin (px)",
+              "type": "int",
+              "default": 20,
+              "min": 5,
+              "max": 120
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1620,
+        "y": 700
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705416792",
+      "type": "util_compose",
+      "position": {
+        "x": 1880,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Compose",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1880,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705431344-0.20377974693201328",
+      "type": "util_compose",
+      "position": {
+        "x": 2160,
+        "y": 220
+      },
+      "style": {},
+      "data": {
+        "label": "Compose",
+        "params": {
+          "mode": 1,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2160,
+        "y": 220
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705438735-0.718566100678316",
+      "type": "util_compose",
+      "position": {
+        "x": 1880,
+        "y": 400
+      },
+      "style": {},
+      "data": {
+        "label": "Compose",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1880,
+        "y": 400
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705514396",
+      "type": "canvas_frame",
+      "position": {
+        "x": -300,
+        "y": -140
+      },
+      "style": {
+        "width": 880,
+        "height": 580,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Pré-traitement image",
+          "color_index": 0
+        }
+      },
+      "width": 880,
+      "height": 580,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -860,
+        "y": -160
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777705571387",
+      "type": "canvas_frame",
+      "position": {
+        "x": 600,
+        "y": -140
+      },
+      "style": {
+        "width": 940,
+        "height": 1080,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Segemntation et analyse",
+          "color_index": 1
+        }
+      },
+      "width": 940,
+      "height": 1080,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 600,
+        "y": -140
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777705659314",
+      "type": "canvas_frame",
+      "position": {
+        "x": 920,
+        "y": -20
+      },
+      "style": {
+        "width": 580,
+        "height": 920,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Clustering",
+          "color_index": 4
+        }
+      },
+      "width": 580,
+      "height": 920,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 920,
+        "y": -20
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777705703333",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1560,
+        "y": -140
+      },
+      "style": {
+        "width": 860,
+        "height": 1080,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Affichage",
+          "color_index": 2
+        }
+      },
+      "width": 860,
+      "height": 1080,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1560,
+        "y": -140
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777705737049",
+      "type": "canvas_note",
+      "position": {
+        "x": 2480,
+        "y": 40
+      },
+      "style": {
+        "width": 300,
+        "height": 180
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Export des données en .CSV",
+          "color_index": 3
+        }
+      },
+      "width": 300,
+      "height": 180,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2480,
+        "y": 40
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777705887721-0.4682038825892927",
+      "type": "canvas_note",
+      "position": {
+        "x": 940,
+        "y": 720
+      },
+      "style": {
+        "width": 540,
+        "height": 160
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Segementation peu convaincante. Essayez Watershed ou un combo des deux méthodes",
+          "color_index": 1
+        }
+      },
+      "width": 540,
+      "height": 160,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 940,
+        "y": 700
+      },
+      "dragging": false,
+      "resizing": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-gray-thresh",
+      "source": "n-gray",
+      "sourceHandle": "image__main",
+      "target": "n-thresh",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-thresh-morph",
+      "source": "n-thresh",
+      "sourceHandle": "mask__mask",
+      "target": "n-morph",
+      "targetHandle": "any__mask",
+      "selected": false
+    },
+    {
+      "id": "e-morph-cc",
+      "source": "n-morph",
+      "sourceHandle": "mask__mask",
+      "target": "n-cc",
+      "targetHandle": "any__image",
+      "selected": false
+    },
+    {
+      "id": "e-cc-props-lbl",
+      "source": "n-cc",
+      "sourceHandle": "any__labels_map",
+      "target": "n-props",
+      "targetHandle": "any__labels_map",
+      "selected": false
+    },
+    {
+      "id": "e-props-prev",
+      "source": "n-props",
+      "sourceHandle": "image__main",
+      "target": "n-disp-prev",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-cc-heat-area",
+      "source": "n-cc",
+      "sourceHandle": "any__labels_map",
+      "target": "n-heat-area",
+      "targetHandle": "any__labels_map",
+      "selected": false
+    },
+    {
+      "id": "e-props-heat-area",
+      "source": "n-props",
+      "sourceHandle": "list__regions",
+      "target": "n-heat-area",
+      "targetHandle": "list__regions",
+      "selected": false
+    },
+    {
+      "id": "e-heat-area-disp",
+      "source": "n-heat-area",
+      "sourceHandle": "image__main",
+      "target": "n-disp-area",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-cc-heat-circ",
+      "source": "n-cc",
+      "sourceHandle": "any__labels_map",
+      "target": "n-heat-circ",
+      "targetHandle": "any__labels_map",
+      "selected": false
+    },
+    {
+      "id": "e-props-heat-circ",
+      "source": "n-props",
+      "sourceHandle": "list__regions",
+      "target": "n-heat-circ",
+      "targetHandle": "list__regions",
+      "selected": false
+    },
+    {
+      "id": "e-cc-count",
+      "source": "n-cc",
+      "sourceHandle": "scalar__count",
+      "target": "n-count-insp",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e-props-csv",
+      "source": "n-props",
+      "sourceHandle": "list__regions",
+      "target": "n-csv",
+      "targetHandle": "any__val_1",
+      "selected": false
+    },
+    {
+      "source": "n-img",
+      "sourceHandle": "image__main",
+      "target": "node-1777703332998",
+      "targetHandle": "image__image",
+      "id": "e-1777703368606",
+      "selected": false
+    },
+    {
+      "source": "node-1777703332998",
+      "sourceHandle": "image__masked",
+      "target": "n-heat-circ",
+      "targetHandle": "image__image",
+      "id": "e-1777703424423",
+      "selected": false
+    },
+    {
+      "id": "e-1777703512150-2",
+      "source": "n-thresh",
+      "target": "n-heat-area",
+      "sourceHandle": "main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "source": "node-1777703332998",
+      "sourceHandle": "image__masked",
+      "target": "n-gray",
+      "targetHandle": "image__image",
+      "id": "e-1777703660091",
+      "selected": false
+    },
+    {
+      "id": "e-1777704322607-2",
+      "source": "n-cc",
+      "target": "n-props",
+      "sourceHandle": "main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "source": "n-heat-circ",
+      "sourceHandle": "image__main",
+      "target": "node-1777705118775",
+      "targetHandle": "any__image",
+      "id": "e-1777705241565",
+      "selected": false
+    },
+    {
+      "source": "node-1777705118775",
+      "sourceHandle": "image__main",
+      "target": "n-disp-circ",
+      "targetHandle": "image__main",
+      "id": "e-1777705244425",
+      "selected": false
+    },
+    {
+      "source": "n-props",
+      "sourceHandle": "image__main",
+      "target": "node-1777705416792",
+      "targetHandle": "image__image_b",
+      "id": "e-1777705429610",
+      "selected": false
+    },
+    {
+      "source": "node-1777705416792",
+      "sourceHandle": "image__main",
+      "target": "node-1777705431344-0.20377974693201328",
+      "targetHandle": "image__image_a",
+      "id": "e-1777705436698",
+      "selected": false
+    },
+    {
+      "source": "n-heat-area",
+      "sourceHandle": "image__main",
+      "target": "node-1777705438735-0.718566100678316",
+      "targetHandle": "image__image_a",
+      "id": "e-1777705443243",
+      "selected": false
+    },
+    {
+      "source": "node-1777705438735-0.718566100678316",
+      "sourceHandle": "image__main",
+      "target": "node-1777705431344-0.20377974693201328",
+      "targetHandle": "image__image_b",
+      "id": "e-1777705455771",
+      "selected": false
+    },
+    {
+      "source": "node-1777705118775",
+      "sourceHandle": "image__main",
+      "target": "node-1777705438735-0.718566100678316",
+      "targetHandle": "image__image_b",
+      "id": "e-1777705483068",
+      "selected": false
+    },
+    {
+      "id": "e-1777705830866-2",
+      "source": "n-disp-prev",
+      "target": "node-1777705416792",
+      "sourceHandle": "main",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "id": "e-1777705983765-1",
+      "source": "n-img",
+      "target": "node-1777703332998",
+      "sourceHandle": "image__main",
+      "targetHandle": "main"
+    },
+    {
+      "id": "e-1777706061332-1",
+      "source": "node-1777703332998",
+      "target": "n-props",
+      "sourceHandle": "main",
+      "targetHandle": "main"
+    },
+    {
+      "id": "e-1777706061332-2",
+      "source": "n-props",
+      "target": "n-disp-prev",
+      "sourceHandle": "main",
+      "targetHandle": "main"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 753,
+      "h": 677
+    },
+    "previewPos": {
+      "x": -0.59765625,
+      "y": 10.0625
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "node-1777705431344-0.20377974693201328"
+  }
+}

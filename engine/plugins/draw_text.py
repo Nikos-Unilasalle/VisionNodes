@@ -83,7 +83,7 @@ class DrawTextNode(NodeProcessor):
         if img is not None:
             # Direct drawing fallback
             img = img.copy()
-            if len(img.shape) == 2: img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            if len(img.shape) == 2 or (len(img.shape) == 3 and img.shape[2] == 1): img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
             h, w = img.shape[:2]
             scaled_x, scaled_y = int(x * w), int(y * h)
             # Use BGR for OpenCV drawing

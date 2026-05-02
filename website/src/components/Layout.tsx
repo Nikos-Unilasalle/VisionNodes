@@ -349,7 +349,7 @@ const HeroSection = ({ onDownload }: { onDownload: () => void }) => (
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[11px] font-bold uppercase tracking-widest mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-          Open Source Beta
+          Version alpha 0.8
         </div>
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-4">
@@ -428,7 +428,7 @@ const FEATURES = [
   {
     icon: <Layers size={22} strokeWidth={1.5} />,
     title: 'Modular Orchestration',
-    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 150+ production-ready nodes spanning CV, ML inference, signal processing, and data utilities.',
+    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 200+ production-ready nodes spanning CV, ML inference, signal processing, and data utilities.',
   },
   {
     icon: <Zap size={22} strokeWidth={1.5} />,

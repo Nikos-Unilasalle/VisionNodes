@@ -86,8 +86,11 @@ export const BaseNode = ({
 
   const nodeNote = data?.params?.node_note;
   const isLockedOut = !!(data as any)?.lockedOut;
+  const isBypassed = !!(data as any)?.bypassed;
   const borderClass = isLockedOut
     ? 'border-red-500'
+    : isBypassed
+    ? 'border-gray-500'
     : selected ? (color === 'accent' ? 'border-accent' : `border-${color}-500`) : 'border-[#4f5b6b]';
 
   return (
@@ -96,11 +99,13 @@ export const BaseNode = ({
         height: height || 'auto'
     }}>
     <div
-        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full h-full flex flex-col`}
+        className={`rounded-xl bg-[#2c333f] border-2 transition-all duration-300 ${borderClass} ${selected ? 'shadow-lg scale-105' : ''} shadow-2xl relative w-full h-full flex flex-col${isBypassed ? ' opacity-50 grayscale' : ''}`}
         style={{
           minHeight: height ? undefined : minHeight,
           ...(isLockedOut
             ? { boxShadow: '0 0 24px rgba(239,68,68,0.45), 0 0 8px rgba(239,68,68,0.25)' }
+            : isBypassed
+            ? { boxShadow: '0 0 12px rgba(107,114,128,0.3)' }
             : customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}),
         }}
     >
@@ -108,6 +113,11 @@ export const BaseNode = ({
         <div className="absolute top-0 right-0 z-20 flex items-center gap-1 bg-red-500 text-white text-[7px] font-black px-2 py-1 rounded-bl-lg rounded-tr-[10px] uppercase tracking-widest shadow-lg select-none pointer-events-none">
           <Lock size={7} strokeWidth={3} />
           <span>LOCK OUT</span>
+        </div>
+      )}
+      {isBypassed && (
+        <div className="absolute top-0 right-0 z-20 flex items-center gap-1 bg-gray-600 text-white text-[7px] font-black px-2 py-1 rounded-bl-lg rounded-tr-[10px] uppercase tracking-widest shadow-lg select-none pointer-events-none">
+          <span>BYPASS</span>
         </div>
       )}
       {/* Inputs with Labels */}

@@ -3062,12 +3062,12 @@
           },
           {
             "id": "areas",
-            "color": "data",
+            "color": "list",
             "label": "Areas (px\u00b2)"
           },
           {
             "id": "centroids",
-            "color": "data",
+            "color": "list",
             "label": "Centroids"
           },
           {
@@ -3077,12 +3077,12 @@
           },
           {
             "id": "mask_out",
-            "color": "image",
+            "color": "mask",
             "label": "Binary Mask"
           },
           {
             "id": "contour_out",
-            "color": "image",
+            "color": "mask",
             "label": "Contours Mask"
           }
         ],
@@ -3100,14 +3100,16 @@
             "label": "Min Area (px\u00b2)",
             "type": "int",
             "default": 50,
-            "min": 1
+            "min": 1,
+            "max": 1000000
           },
           {
             "id": "max_area",
             "label": "Max Area (px\u00b2)",
             "type": "int",
             "default": 500000,
-            "min": 1
+            "min": 1,
+            "max": 10000000
           },
           {
             "id": "connectivity",
@@ -3851,6 +3853,65 @@
         ]
       },
       {
+        "type": "sci_region_props",
+        "label": "Region Props",
+        "category": [
+          "analysis",
+          "scientific"
+        ],
+        "icon": "Database",
+        "description": "Extract shape and intensity features from a labeled region map (from Connected Components). Outputs a list of dicts: area, perimeter, circularity, aspect_ratio, solidity, eccentricity, equivalent_diameter, orientation, centroid_x/y, bbox. Connects image input for mean/max/std intensity per region.",
+        "inputs": [
+          {
+            "id": "labels_map",
+            "color": "any",
+            "label": "Label Map"
+          },
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image (intensity, optional)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "regions",
+            "color": "list",
+            "label": "Regions"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Count"
+          },
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Preview"
+          }
+        ],
+        "params": [
+          {
+            "id": "intensity",
+            "label": "Intensity Features",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "show_ids",
+            "label": "Show IDs",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "show_ellipse",
+            "label": "Show Ellipses",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
         "type": "sci_spectral_gain",
         "label": "Spectral Gain",
         "category": [
@@ -4541,6 +4602,82 @@
     "id": "visualize",
     "label": "Visualizers",
     "nodes": [
+      {
+        "type": "sci_cluster_heatmap",
+        "label": "Cluster Heatmap",
+        "category": [
+          "visualize",
+          "scientific"
+        ],
+        "icon": "Palette",
+        "description": "False-color each labeled region by a feature value (area, circularity, intensity\u2026). Requires a label map and the regions list from Region Props. Includes a colorbar legend with min/max values.",
+        "inputs": [
+          {
+            "id": "labels_map",
+            "color": "any",
+            "label": "Label Map"
+          },
+          {
+            "id": "regions",
+            "color": "list",
+            "label": "Regions"
+          },
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Background (optional)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Heatmap"
+          }
+        ],
+        "params": [
+          {
+            "id": "feature",
+            "label": "Feature",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "alpha",
+            "label": "Heatmap Alpha",
+            "type": "float",
+            "default": 0.85,
+            "min": 0.0,
+            "max": 1.0
+          },
+          {
+            "id": "bg_alpha",
+            "label": "BG Alpha",
+            "type": "float",
+            "default": 0.25,
+            "min": 0.0,
+            "max": 1.0
+          },
+          {
+            "id": "show_values",
+            "label": "Show Values",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "colorbar",
+            "label": "Show Colorbar",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
       {
         "type": "sci_colormap",
         "label": "Colormap / LUT",
