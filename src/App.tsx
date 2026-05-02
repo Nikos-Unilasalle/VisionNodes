@@ -11,7 +11,7 @@ import {
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit, Music,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
-  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut
+  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -629,6 +629,28 @@ function App() {
     if (schema?.outputs?.some((o: any) => o.color === 'image' || o.color === 'mask')) return true;
     return false;
   }, [nodes, pluginSchemas, STATIC_IMAGE_PRODUCERS]);
+
+  const canSaveAsImage = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return false;
+    const schema = (pluginSchemas || []).find(s => s.type === node.type);
+    return !!(schema?.inputs?.some((p: any) => p.color === 'image' || p.color === 'mask') ||
+              schema?.outputs?.some((p: any) => p.color === 'image' || p.color === 'mask'));
+  }, [nodes, pluginSchemas]);
+
+  const canBypass = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return false;
+    if (['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(node.type || '')) return false;
+    const inTypes = new Set(
+      edges.filter(e => e.target === nodeId).map(e => e.targetHandle?.split('__')[0]).filter(Boolean)
+    );
+    const outTypes = new Set(
+      edges.filter(e => e.source === nodeId).map(e => e.sourceHandle?.split('__')[0]).filter(Boolean)
+    );
+    for (const t of inTypes) { if (outTypes.has(t)) return true; }
+    return false;
+  }, [nodes, edges]);
 
   const handleVisualize = useCallback((nodeId: string) => {
     const newId = visualizedNodeId === nodeId ? null : nodeId;
@@ -1944,15 +1966,64 @@ function App() {
                   <div className="h-px bg-white/5 my-1 mx-2" />
                 </>
               )}
-              <button
-                onClick={() => handleSaveAsImage(menu.id)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
-              >
-                <Save size={16} className="text-accent group-hover:text-white" />
-                <span>Save as Image...</span>
-              </button>
+              {canSaveAsImage(menu.id) && (
+                <button
+                  onClick={() => handleSaveAsImage(menu.id)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent rounded-xl text-white text-[11px] font-bold transition-all group"
+                >
+                  <Save size={16} className="text-accent group-hover:text-white" />
+                  <span>Save as Image...</span>
+                </button>
+              )}
+              {(() => {
+                const menuNode = nodes.find(n => n.id === menu.id);
+                const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(menuNode?.type || '');
+                if (isUiNode) return null;
+                const isLocked = !!(menuNode?.data as any)?.lockedOut;
+                const isBypassed = !!(menuNode?.data as any)?.bypassed;
+                return (
+                  <>
+                    <div className="h-px bg-white/5 my-1 mx-2" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        pushSnapshot();
+                        setViewNodes(nds => nds.map(n => n.id === menu.id
+                          ? { ...n, data: { ...n.data, lockedOut: !isLocked } }
+                          : n
+                        ));
+                        setMenu(null);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${isLocked ? 'bg-red-500/20 hover:bg-red-500/80' : 'hover:bg-red-500/80'}`}
+                    >
+                      {isLocked
+                        ? <LockOpen size={16} className="text-red-400 group-hover:text-white" />
+                        : <Lock    size={16} className="text-red-400 group-hover:text-white" />}
+                      <span>{isLocked ? 'Unlock Output' : 'Lock Out'}</span>
+                    </button>
+                    {canBypass(menu.id) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          pushSnapshot();
+                          setViewNodes(nds => nds.map(n => n.id === menu.id
+                            ? { ...n, data: { ...n.data, bypassed: !isBypassed } }
+                            : n
+                          ));
+                          setMenu(null);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${isBypassed ? 'bg-gray-500/30 hover:bg-gray-500/60' : 'hover:bg-gray-500/60'}`}
+                      >
+                        <ChevronsRight size={16} className="text-gray-400 group-hover:text-white" />
+                        <span>{isBypassed ? 'Remove Bypass' : 'Bypass'}</span>
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
+
               <div className="h-px bg-white/5 my-1 mx-2" />
-              
+
               {(() => {
                 const isMultiSel = nodes.find(n => n.id === menu.id)?.selected && nodes.filter(n => n.selected).length > 1;
                 const colorTargetIds = isMultiSel ? new Set(nodes.filter(n => n.selected).map(n => n.id)) : new Set([menu.id]);

@@ -21,7 +21,7 @@ class AdvancedThresholdNode(NodeProcessor):
         if img is None: return {"main": None, "mask": None}
         
         # Convert to gray if needed
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if (len(img.shape) == 3 and img.shape[2] >= 3) else img
         
         mode = int(params.get('mode', 0))
         val = int(params.get('threshold', 127))
@@ -73,7 +73,7 @@ class AdvancedMorphologyNode(NodeProcessor):
         if mask is None: return {"main": None, "mask": None}
         
         # Ensure grayscale uint8
-        if len(mask.shape) == 3:
+        if len(mask.shape) == 3 and mask.shape[2] >= 3:
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = mask.astype(np.uint8)
             
@@ -112,7 +112,7 @@ class DistanceTransformNode(NodeProcessor):
         mask = inputs.get('mask')
         if mask is None: return {"main": None, "dist_map": None}
         
-        if len(mask.shape) == 3:
+        if len(mask.shape) == 3 and mask.shape[2] >= 3:
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = mask.astype(np.uint8)
             
@@ -144,7 +144,7 @@ class ConnectedComponentsNode(NodeProcessor):
         mask = inputs.get('mask')
         if mask is None: return {"main": None, "markers": None, "count": 0}
         
-        if len(mask.shape) == 3:
+        if len(mask.shape) == 3 and mask.shape[2] >= 3:
             mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = mask.astype(np.uint8)
             
@@ -179,7 +179,7 @@ class WatershedNode(NodeProcessor):
         markers = inputs.get('markers')
         if img is None or markers is None: return {"main": img, "markers_out": markers, "count": 0}
 
-        if len(img.shape) == 2:
+        if len(img.shape) == 2 or (len(img.shape) == 3 and img.shape[2] == 1):
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
         h, w = img.shape[:2]
@@ -299,7 +299,7 @@ class MarkerFilterNode(NodeProcessor):
 
         if img is not None:
             base = img.copy()
-            if len(base.shape) == 2:
+            if len(base.shape) == 2 or (len(base.shape) == 3 and base.shape[2] == 1):
                 base = cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
             out_img = cv2.addWeighted(base, 0.5, colored, 0.5, 0)
         else:

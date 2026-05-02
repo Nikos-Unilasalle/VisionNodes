@@ -1,0 +1,182 @@
+{
+  "nodes": [
+    {
+      "id": "f-src",
+      "type": "canvas_frame",
+      "position": { "x": 40, "y": 80 },
+      "data": { "label": "Frame", "params": { "title": "SOURCE", "color_index": 0 } },
+      "width": 280, "height": 380,
+      "style": { "zIndex": -1, "width": 280, "height": 380 }
+    },
+    {
+      "id": "f-fft",
+      "type": "canvas_frame",
+      "position": { "x": 370, "y": 80 },
+      "data": { "label": "Frame", "params": { "title": "ANALYSE FFT", "color_index": 1 } },
+      "width": 280, "height": 380,
+      "style": { "zIndex": -1, "width": 280, "height": 380 }
+    },
+    {
+      "id": "f-gain",
+      "type": "canvas_frame",
+      "position": { "x": 700, "y": 80 },
+      "data": { "label": "Frame", "params": { "title": "GAIN SPECTRAL", "color_index": 2 } },
+      "width": 280, "height": 380,
+      "style": { "zIndex": -1, "width": 280, "height": 380 }
+    },
+    {
+      "id": "f-ifft",
+      "type": "canvas_frame",
+      "position": { "x": 1030, "y": 80 },
+      "data": { "label": "Frame", "params": { "title": "RECONSTRUCTION", "color_index": 3 } },
+      "width": 280, "height": 380,
+      "style": { "zIndex": -1, "width": 280, "height": 380 }
+    },
+    {
+      "id": "f-res",
+      "type": "canvas_frame",
+      "position": { "x": 1360, "y": 80 },
+      "data": { "label": "Frame", "params": { "title": "RÉSULTATS", "color_index": 4 } },
+      "width": 280, "height": 560,
+      "style": { "zIndex": -1, "width": 280, "height": 560 }
+    },
+    {
+      "id": "note-title",
+      "type": "canvas_note",
+      "position": { "x": 370, "y": -180 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "NETTETÉ ADAPTATIVE PAR FFT\n\nBoost des hautes fréquences spatiales dans le domaine de Fourier.\nPlus précis qu'un Unsharp Mask classique : contrôle indépendant par bande.\n\nHigh Freq % > 100 → renforce les contours. Low Freq % < 100 → réduit le voile."
+        }
+      },
+      "width": 620, "height": 145,
+      "style": { "width": 620, "height": 145 }
+    },
+    {
+      "id": "note-gain",
+      "type": "canvas_note",
+      "position": { "x": 700, "y": 490 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Réglages par défaut : netteté douce.\nPour plus d'effet : High Freq % → 350+\nPour effet HDR : Low=60, Mid=120, High=300",
+          "color_index": 2
+        }
+      },
+      "width": 270, "height": 90,
+      "style": { "width": 270, "height": 90 }
+    },
+    {
+      "id": "webcam-1",
+      "type": "input_webcam",
+      "position": { "x": 80, "y": 180 },
+      "data": {
+        "label": "Webcam",
+        "params": { "device_index": 0, "width": 0, "height": 0, "fps": 0, "color_index": 0 }
+      },
+      "width": 208, "height": 144
+    },
+    {
+      "id": "fft-1",
+      "type": "sci_fft",
+      "position": { "x": 410, "y": 180 },
+      "data": {
+        "label": "FFT Analysis",
+        "params": {
+          "log_scale": true,
+          "preserve_dynamic_range": false,
+          "filter_type": 0,
+          "low_cutoff": 0,
+          "high_cutoff": 10,
+          "color_index": 1
+        }
+      },
+      "width": 208, "height": 160
+    },
+    {
+      "id": "gain-1",
+      "type": "sci_spectral_gain",
+      "position": { "x": 740, "y": 180 },
+      "data": {
+        "label": "Boost Hautes Fréquences",
+        "params": {
+          "low_gain": 80,
+          "mid_gain": 100,
+          "high_gain": 250,
+          "low_mid_split": 15,
+          "mid_high_split": 50,
+          "color_index": 2
+        }
+      },
+      "width": 208, "height": 160
+    },
+    {
+      "id": "ifft-1",
+      "type": "sci_ifft",
+      "position": { "x": 1070, "y": 180 },
+      "data": {
+        "label": "Inverse FFT",
+        "params": {
+          "mode": 0,
+          "inv_log": false,
+          "preserve_dynamic_range": true,
+          "color_index": 3
+        }
+      },
+      "width": 208, "height": 130
+    },
+    {
+      "id": "disp-result",
+      "type": "output_display",
+      "position": { "x": 1400, "y": 180 },
+      "data": { "label": "Image Nette", "params": { "color_index": 4 } },
+      "width": 208, "height": 144
+    },
+    {
+      "id": "disp-spectrum",
+      "type": "output_display",
+      "position": { "x": 1400, "y": 380 },
+      "data": { "label": "Spectre Modifié", "params": { "color_index": 4 } },
+      "width": 208, "height": 144
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-cam-fft",
+      "source": "webcam-1", "sourceHandle": "image__main",
+      "target": "fft-1",   "targetHandle": "image__image"
+    },
+    {
+      "id": "e-fft-gain",
+      "source": "fft-1",  "sourceHandle": "data__magnitude_raw",
+      "target": "gain-1", "targetHandle": "data__magnitude_raw"
+    },
+    {
+      "id": "e-fft-phase",
+      "source": "fft-1",   "sourceHandle": "image__phase",
+      "target": "ifft-1",  "targetHandle": "image__phase"
+    },
+    {
+      "id": "e-gain-ifft",
+      "source": "gain-1",  "sourceHandle": "data__magnitude_raw",
+      "target": "ifft-1",  "targetHandle": "data__magnitude_raw"
+    },
+    {
+      "id": "e-ifft-disp",
+      "source": "ifft-1",      "sourceHandle": "image__main",
+      "target": "disp-result", "targetHandle": "image__main"
+    },
+    {
+      "id": "e-gain-spec",
+      "source": "gain-1",        "sourceHandle": "image__preview",
+      "target": "disp-spectrum", "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "previewSize": { "w": 1280, "h": 560 },
+    "previewPos": { "x": 80, "y": -60 },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": "disp-result"
+  }
+}

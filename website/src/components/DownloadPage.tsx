@@ -53,6 +53,15 @@ const DownloadPage = () => (
     {/* Platform cards */}
     <section className="section-full" style={{ paddingTop: '2.5rem' }}>
       <div className="container-lg">
+        {/* Coming soon banner */}
+        <div className="vn-card-flat max-w-md mx-auto mb-12 p-6 text-center border-dashed border-2 border-[var(--accent)]/30 bg-[var(--accent)]/[0.03] rounded-2xl">
+          <div className="text-[32px] mb-2">✨🦦</div>
+          <h3 className="text-[18px] font-semibold text-[var(--text-main)] mb-1">Coming Soon!</h3>
+          <p className="text-[14px] text-[var(--text-dim)]">
+            We are putting the final touches on our standalone executables.<br/> Check back very soon!
+          </p>
+        </div>
+        
         <div className="grid md:grid-cols-3 gap-5 mb-12">
           {PLATFORMS.map((p, i) => (
             <motion.a

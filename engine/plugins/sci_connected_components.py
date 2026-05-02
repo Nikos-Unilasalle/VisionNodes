@@ -10,18 +10,18 @@ from registry import vision_node, NodeProcessor
     description="Label and count connected regions (particles, cells, blobs). Measures area and centroid of each object.",
     inputs=[{'id': 'image', 'color': 'any'}],
     outputs=[
-        {'id': 'main',      'color': 'image',  'label': 'Labeled Image'},
-        {'id': 'count',     'color': 'scalar', 'label': 'Object Count'},
-        {'id': 'areas',     'color': 'data',   'label': 'Areas (px²)'},
-        {'id': 'centroids', 'color': 'data',   'label': 'Centroids'},
-        {'id': 'labels_map','color': 'any',    'label': 'Label Map'},
-        {'id': 'mask_out',  'color': 'image',  'label': 'Binary Mask'},
-        {'id': 'contour_out','color': 'image', 'label': 'Contours Mask'},
+        {'id': 'main',       'color': 'image',  'label': 'Labeled Image'},
+        {'id': 'count',      'color': 'scalar', 'label': 'Object Count'},
+        {'id': 'areas',      'color': 'list',   'label': 'Areas (px²)'},
+        {'id': 'centroids',  'color': 'list',   'label': 'Centroids'},
+        {'id': 'labels_map', 'color': 'any',    'label': 'Label Map'},
+        {'id': 'mask_out',   'color': 'mask',   'label': 'Binary Mask'},
+        {'id': 'contour_out','color': 'mask',   'label': 'Contours Mask'},
     ],
     params=[
-        {'id': 'threshold',    'label': 'Threshold',       'type': 'int',  'default': 128,    'min': 0,   'max': 255},
-        {'id': 'min_area',     'label': 'Min Area (px²)',  'type': 'int',  'default': 50,     'min': 1},
-        {'id': 'max_area',     'label': 'Max Area (px²)',  'type': 'int',  'default': 500000, 'min': 1},
+        {'id': 'threshold',    'label': 'Threshold',       'type': 'int',  'default': 128,    'min': 0,    'max': 255},
+        {'id': 'min_area',     'label': 'Min Area (px²)',  'type': 'int',  'default': 50,     'min': 1,    'max': 1000000},
+        {'id': 'max_area',     'label': 'Max Area (px²)',  'type': 'int',  'default': 500000, 'min': 1,    'max': 10000000},
         {'id': 'connectivity', 'label': 'Connectivity',    'type': 'enum', 'options': ['8-connected', '4-connected'], 'default': 0},
         {'id': 'colorize',     'label': 'Colorize Labels', 'type': 'bool', 'default': True},
         {'id': 'show_cross',   'label': 'Show Centroids',  'type': 'bool', 'default': True},
@@ -31,7 +31,8 @@ class ConnectedComponentsNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
         if img is None:
-            return {'main': None, 'count': 0, 'areas': [], 'centroids': []}
+            return {'main': None, 'count': 0, 'areas': [], 'centroids': [],
+                    'labels_map': None, 'mask_out': None, 'contour_out': None}
 
         if img.dtype != np.uint8:
             img = (img * 255).clip(0, 255).astype(np.uint8) if img.max() <= 1.1 else img.clip(0, 255).astype(np.uint8)
@@ -63,7 +64,12 @@ class ConnectedComponentsNode(NodeProcessor):
                 lut[i] = rng.integers(40, 255, 3)
             out = lut[labels]
         else:
-            out = img.copy() if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            # Draw region outlines on original image for colorize=False
+            base = img.copy() if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            out = base
+            solid = (filtered_labels > 0).astype(np.uint8) * 255
+            cnts_draw, _ = cv2.findContours(solid, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(out, cnts_draw, -1, (0, 255, 120), 1)
 
         if bool(params.get('show_cross', True)):
             for i in valid:
@@ -78,11 +84,11 @@ class ConnectedComponentsNode(NodeProcessor):
         cv2.drawContours(contours_mask, cnts, -1, 255, 1)
 
         return {
-            'main': out, 
-            'count': len(valid), 
-            'areas': areas, 
-            'centroids': cents, 
-            'labels_map': filtered_labels,
-            'mask_out': solid_mask,
-            'contour_out': contours_mask
+            'main':        out,
+            'count':       len(valid),
+            'areas':       areas,
+            'centroids':   cents,
+            'labels_map':  filtered_labels,
+            'mask_out':    solid_mask,
+            'contour_out': contours_mask,
         }

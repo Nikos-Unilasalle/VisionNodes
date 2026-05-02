@@ -1,15 +1,696 @@
 {
   "nodes": [
-    { "id": "src-1",  "type": "input_webcam",     "position": { "x": 50,  "y": 200 }, "data": { "label": "Webcam",           "params": { "device_index": 0 } } },
-    { "id": "mog-1",  "type": "bg_sub_mog2",      "position": { "x": 300, "y": 200 }, "data": { "label": "MOG2 Subtractor",  "params": { "history": 500, "threshold": 16 } } },
-    { "id": "gray-1", "type": "filter_gray",      "position": { "x": 300, "y": 350 }, "data": { "label": "Grayscale",        "params": {} } },
-    { "id": "cont-1", "type": "feat_find_contours","position": { "x": 550, "y": 200 }, "data": { "label": "Find Contours",   "params": {} } },
-    { "id": "disp-1", "type": "output_display",   "position": { "x": 800, "y": 200 }, "data": { "label": "Movement Mask",   "params": {} } }
+    {
+      "id": "mog-1",
+      "type": "bg_sub_mog2",
+      "position": {
+        "x": 220,
+        "y": 220
+      },
+      "data": {
+        "label": "MOG2 Subtractor",
+        "params": {
+          "history": 1,
+          "threshold": 16,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 220
+      },
+      "dragging": false
+    },
+    {
+      "id": "gray-1",
+      "type": "filter_gray",
+      "position": {
+        "x": -120,
+        "y": 280
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -120,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777698650520",
+      "type": "input_webcam",
+      "position": {
+        "x": -380,
+        "y": 280
+      },
+      "style": {},
+      "data": {
+        "label": "Webcam",
+        "params": {
+          "device_index": 1,
+          "height": 1920,
+          "fps": 1080,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -380,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777699059588",
+      "type": "bg_sub_knn",
+      "position": {
+        "x": 220,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "KNN Subtractor",
+        "params": {
+          "color_index": 4
+        },
+        "schema": {
+          "type": "bg_sub_knn",
+          "label": "KNN Subtractor",
+          "category": [
+            "cv",
+            "analysis"
+          ],
+          "icon": "Layers",
+          "description": "Separates moving foreground objects using K-Nearest Neighbors approach.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            },
+            {
+              "id": "mask",
+              "color": "mask"
+            }
+          ],
+          "params": [
+            {
+              "id": "history",
+              "label": "History",
+              "type": "scalar",
+              "min": 1,
+              "max": 1000,
+              "default": 500
+            },
+            {
+              "id": "threshold",
+              "label": "Dist Thresh",
+              "type": "scalar",
+              "min": 0,
+              "max": 1000,
+              "default": 400
+            },
+            {
+              "id": "detect_shadows",
+              "label": "Shadows",
+              "type": "boolean",
+              "default": true
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777699888938",
+      "type": "util_compose",
+      "position": {
+        "x": 900,
+        "y": 280
+      },
+      "style": {},
+      "data": {
+        "label": "Compose",
+        "params": {
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 900,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "group-1777699945275",
+      "type": "group_node",
+      "position": {
+        "x": 560,
+        "y": 220
+      },
+      "data": {
+        "label": "Group",
+        "params": {
+          "label": "Find contours",
+          "color_index": 1
+        },
+        "inputs": [
+          {
+            "id": "any__mask",
+            "color": "any",
+            "label": "in0"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image__main",
+            "color": "image",
+            "label": "out0"
+          }
+        ],
+        "subGraph": {
+          "nodes": [
+            {
+              "id": "cont-1",
+              "type": "feat_find_contours",
+              "position": {
+                "x": 600,
+                "y": 120
+              },
+              "data": {
+                "label": "Find Contours",
+                "params": {}
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 600,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777699548985",
+              "type": "feat_filter_contours",
+              "position": {
+                "x": 840,
+                "y": 120
+              },
+              "style": {},
+              "data": {
+                "label": "Filter Contours",
+                "params": {}
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 840,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777699559805",
+              "type": "feat_fill_contours",
+              "position": {
+                "x": 1080,
+                "y": 120
+              },
+              "style": {},
+              "data": {
+                "label": "Fill Contours",
+                "params": {
+                  "width": 1920,
+                  "height": 1080
+                }
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1080,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "gin-1777699945273",
+              "type": "group_input",
+              "position": {
+                "x": 360,
+                "y": 120
+              },
+              "data": {
+                "label": "Group IN",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "any__mask",
+                    "color": "any",
+                    "label": "in0"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "gout-1777699945274",
+              "type": "group_output",
+              "position": {
+                "x": 1340,
+                "y": 120
+              },
+              "data": {
+                "label": "Group OUT",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "image__main",
+                    "color": "image",
+                    "label": "out0"
+                  }
+                ]
+              }
+            }
+          ],
+          "edges": [
+            {
+              "source": "cont-1",
+              "sourceHandle": "list__contours_list",
+              "target": "node-1777699548985",
+              "targetHandle": "list__contours",
+              "id": "e-1777699554111",
+              "selected": true
+            },
+            {
+              "source": "node-1777699548985",
+              "sourceHandle": "list__contours_list",
+              "target": "node-1777699559805",
+              "targetHandle": "list__contours",
+              "id": "e-1777699565338",
+              "selected": true
+            },
+            {
+              "id": "sg-1777699945273-0.12074161950148443",
+              "source": "gin-1777699945273",
+              "sourceHandle": "any__mask",
+              "target": "cont-1",
+              "targetHandle": "any__mask"
+            },
+            {
+              "id": "sg-1777699945273-0.6679008162232735",
+              "source": "node-1777699559805",
+              "sourceHandle": "image__main",
+              "target": "gout-1777699945274",
+              "targetHandle": "image__main"
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 220
+      }
+    },
+    {
+      "id": "node-1777699953596-0.4248453748668606",
+      "type": "group_node",
+      "position": {
+        "x": 560,
+        "y": 380
+      },
+      "data": {
+        "label": "Group",
+        "params": {
+          "label": "Find contours",
+          "color_index": 1
+        },
+        "inputs": [
+          {
+            "id": "any__mask",
+            "color": "any",
+            "label": "in0"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image__main",
+            "color": "image",
+            "label": "out0"
+          }
+        ],
+        "subGraph": {
+          "nodes": [
+            {
+              "id": "cont-1",
+              "type": "feat_find_contours",
+              "position": {
+                "x": 600,
+                "y": 120
+              },
+              "data": {
+                "label": "Find Contours",
+                "params": {}
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 600,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777699548985",
+              "type": "feat_filter_contours",
+              "position": {
+                "x": 840,
+                "y": 120
+              },
+              "style": {},
+              "data": {
+                "label": "Filter Contours",
+                "params": {}
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 840,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777699559805",
+              "type": "feat_fill_contours",
+              "position": {
+                "x": 1080,
+                "y": 120
+              },
+              "style": {},
+              "data": {
+                "label": "Fill Contours",
+                "params": {
+                  "width": 1920,
+                  "height": 1080
+                }
+              },
+              "width": 208,
+              "height": 112,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1080,
+                "y": 120
+              },
+              "dragging": false
+            },
+            {
+              "id": "gin-1777699945273",
+              "type": "group_input",
+              "position": {
+                "x": 360,
+                "y": 120
+              },
+              "data": {
+                "label": "Group IN",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "any__mask",
+                    "color": "any",
+                    "label": "in0"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "gout-1777699945274",
+              "type": "group_output",
+              "position": {
+                "x": 1340,
+                "y": 120
+              },
+              "data": {
+                "label": "Group OUT",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "image__main",
+                    "color": "image",
+                    "label": "out0"
+                  }
+                ]
+              }
+            }
+          ],
+          "edges": [
+            {
+              "source": "cont-1",
+              "sourceHandle": "list__contours_list",
+              "target": "node-1777699548985",
+              "targetHandle": "list__contours",
+              "id": "e-1777699554111",
+              "selected": true
+            },
+            {
+              "source": "node-1777699548985",
+              "sourceHandle": "list__contours_list",
+              "target": "node-1777699559805",
+              "targetHandle": "list__contours",
+              "id": "e-1777699565338",
+              "selected": true
+            },
+            {
+              "id": "sg-1777699945273-0.12074161950148443",
+              "source": "gin-1777699945273",
+              "sourceHandle": "any__mask",
+              "target": "cont-1",
+              "targetHandle": "any__mask"
+            },
+            {
+              "id": "sg-1777699945273-0.6679008162232735",
+              "source": "node-1777699559805",
+              "sourceHandle": "image__main",
+              "target": "gout-1777699945274",
+              "targetHandle": "image__main"
+            }
+          ]
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 380
+      }
+    },
+    {
+      "id": "node-1777700034354",
+      "type": "canvas_frame",
+      "position": {
+        "x": 520,
+        "y": 140
+      },
+      "style": {
+        "width": 300,
+        "height": 400,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 1,
+          "title": "These are groups of nodes"
+        }
+      },
+      "width": 300,
+      "height": 400,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 140
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777700093941-0.8411670214531017",
+      "type": "canvas_frame",
+      "position": {
+        "x": 860,
+        "y": 140
+      },
+      "style": {
+        "width": 340,
+        "height": 400,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 0,
+          "title": "Compare two images side by side"
+        }
+      },
+      "width": 340,
+      "height": 400,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 860,
+        "y": 140
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777700167292-0.47566549940480995",
+      "type": "canvas_frame",
+      "position": {
+        "x": 180,
+        "y": 140
+      },
+      "style": {
+        "width": 300,
+        "height": 400,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 2,
+          "title": "Two FG/BG separation nodes"
+        }
+      },
+      "width": 300,
+      "height": 400,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 180,
+        "y": 140
+      },
+      "dragging": false,
+      "resizing": false
+    }
   ],
   "edges": [
-    { "id": "e1", "source": "src-1", "target": "mog-1",  "sourceHandle": "image__main", "targetHandle": "image__image" },
-    { "id": "e2", "source": "src-1", "target": "gray-1", "sourceHandle": "image__main", "targetHandle": "image__image" },
-    { "id": "e3", "source": "mog-1", "target": "cont-1", "sourceHandle": "mask__mask",  "targetHandle": "image__main" },
-    { "id": "e4", "source": "mog-1", "target": "disp-1", "sourceHandle": "mask__mask",  "targetHandle": "image__main" }
-  ]
+    {
+      "source": "node-1777698650520",
+      "sourceHandle": "image__main",
+      "target": "gray-1",
+      "targetHandle": "image__image",
+      "id": "e-1777698718073",
+      "selected": false
+    },
+    {
+      "source": "gray-1",
+      "sourceHandle": "image__main",
+      "target": "mog-1",
+      "targetHandle": "image__image",
+      "id": "e-1777698719914",
+      "selected": false
+    },
+    {
+      "source": "gray-1",
+      "sourceHandle": "image__main",
+      "target": "node-1777699059588",
+      "targetHandle": "image__image",
+      "id": "e-1777699770125",
+      "selected": false
+    },
+    {
+      "sourceHandle": "list__contours_list",
+      "targetHandle": "list__contours",
+      "id": "e-1777699787381-0.44859221207066624",
+      "selected": false
+    },
+    {
+      "sourceHandle": "list__contours_list",
+      "targetHandle": "list__contours",
+      "id": "e-1777699787381-0.8626734432218736",
+      "selected": false
+    },
+    {
+      "source": "mog-1",
+      "sourceHandle": "mask__mask",
+      "target": "group-1777699945275",
+      "targetHandle": "any__mask",
+      "id": "oe-1777699945273-0.7151261376565438",
+      "selected": false
+    },
+    {
+      "source": "group-1777699945275",
+      "sourceHandle": "image__main",
+      "target": "node-1777699888938",
+      "targetHandle": "image__image_a",
+      "id": "oe-1777699945273-0.1681598971363969",
+      "selected": false
+    },
+    {
+      "source": "node-1777699059588",
+      "sourceHandle": "mask__mask",
+      "target": "node-1777699953596-0.4248453748668606",
+      "targetHandle": "any__mask",
+      "id": "e-1777699958152",
+      "selected": false
+    },
+    {
+      "source": "node-1777699953596-0.4248453748668606",
+      "sourceHandle": "image__main",
+      "target": "node-1777699888938",
+      "targetHandle": "image__image_b",
+      "id": "e-1777699961951"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 929,
+      "h": 261
+    },
+    "previewPos": {
+      "x": 464.05859375,
+      "y": -51.41796875
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1777699888938"
+  }
 }

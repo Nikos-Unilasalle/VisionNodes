@@ -1,11 +1,466 @@
 {
   "nodes": [
-    { "id": "src-1",    "type": "input_image",   "position": { "x": 50,  "y": 200 }, "data": { "label": "Sample Image",    "params": {} } },
-    { "id": "harris-1", "type": "feat_harris",   "position": { "x": 300, "y": 200 }, "data": { "label": "Harris Corners", "params": { "threshold": 0.01 } } },
-    { "id": "disp-1",   "type": "output_display","position": { "x": 600, "y": 200 }, "data": { "label": "Corners Display","params": {} } }
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": {
+        "x": -220,
+        "y": 120
+      },
+      "data": {
+        "label": "Sample Image",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/stonewall.jpg"
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -220,
+        "y": 120
+      }
+    },
+    {
+      "id": "harris-1",
+      "type": "feat_harris",
+      "position": {
+        "x": 560,
+        "y": 80
+      },
+      "data": {
+        "label": "Harris Corners",
+        "params": {
+          "threshold": 0.01,
+          "block_size": 7,
+          "ksize": 4,
+          "k": 0.1
+        },
+        "bypassed": false
+      },
+      "width": 208,
+      "height": 208,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "disp-1",
+      "type": "output_display",
+      "position": {
+        "x": 1360,
+        "y": 120
+      },
+      "data": {
+        "label": "Corners Display",
+        "params": {}
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1360,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777700510121",
+      "type": "cv_shadow_highlight",
+      "position": {
+        "x": 20,
+        "y": 200
+      },
+      "style": {},
+      "data": {
+        "label": "Shadow removal",
+        "params": {
+          "shadows": 100,
+          "highlights": 0,
+          "radius": 69
+        },
+        "schema": {
+          "type": "cv_shadow_highlight",
+          "label": "Shadow removal",
+          "category": "cv",
+          "icon": "Sun",
+          "description": "Selectively brightens shadows and darkens highlights while preserving midtones, similar to professional photo editors.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image"
+            }
+          ],
+          "params": [
+            {
+              "id": "shadows",
+              "label": "Shadows (Boost)",
+              "type": "scalar",
+              "min": 0,
+              "max": 100,
+              "default": 30
+            },
+            {
+              "id": "highlights",
+              "label": "Highlights (Reduce)",
+              "type": "scalar",
+              "min": 0,
+              "max": 100,
+              "default": 0
+            },
+            {
+              "id": "radius",
+              "label": "Mask Radius",
+              "type": "scalar",
+              "min": 1,
+              "max": 251,
+              "step": 2,
+              "default": 41
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true
+        },
+        "bypassed": false
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 20,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777700609526",
+      "type": "filter_gray",
+      "position": {
+        "x": 260,
+        "y": 200
+      },
+      "style": {},
+      "data": {
+        "label": "Grayscale",
+        "params": {},
+        "bypassed": false
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 260,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777701008169",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 800,
+        "y": 100
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 55
+        },
+        "schema": {
+          "type": "filter_blob_filter",
+          "label": "Blob Filter",
+          "category": "mask",
+          "icon": "Filter",
+          "description": "Removes blobs outside an area range from a binary mask using connected components. Eliminates isolated noise pixels while preserving large regions.",
+          "inputs": [
+            {
+              "id": "mask",
+              "color": "mask"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "mask",
+              "color": "mask"
+            },
+            {
+              "id": "count",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "min_area",
+              "type": "int",
+              "default": 100,
+              "label": "Min Area (px²)"
+            },
+            {
+              "id": "max_area",
+              "type": "int",
+              "default": 0,
+              "label": "Max Area (0 = off)"
+            },
+            {
+              "id": "connectivity",
+              "type": "int",
+              "default": 8,
+              "label": "Connectivity (4 or 8)"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true
+        },
+        "bypassed": false
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 800,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777701145494",
+      "type": "util_mask_blend",
+      "position": {
+        "x": 1100,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Mask Blend",
+        "params": {}
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1100,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777701187924",
+      "type": "input_solid_color",
+      "position": {
+        "x": 1100,
+        "y": 280
+      },
+      "style": {},
+      "data": {
+        "label": "Solid Color",
+        "params": {
+          "g": 255,
+          "b": 255
+        }
+      },
+      "width": 208,
+      "height": 100,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1100,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777701648765",
+      "type": "canvas_frame",
+      "position": {
+        "x": -260,
+        "y": 0
+      },
+      "style": {
+        "width": 760,
+        "height": 440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Image preparation",
+          "color_index": 0
+        }
+      },
+      "width": 760,
+      "height": 440,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -260,
+        "y": 0
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777701681550-0.5434659765204657",
+      "type": "canvas_frame",
+      "position": {
+        "x": 520,
+        "y": 0
+      },
+      "style": {
+        "width": 520,
+        "height": 440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Detect & filter",
+          "color_index": 2
+        }
+      },
+      "width": 520,
+      "height": 440,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 0
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1777701820474-0.015038980970911386",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1060,
+        "y": 0
+      },
+      "style": {
+        "width": 540,
+        "height": 440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Display",
+          "color_index": 4
+        }
+      },
+      "width": 540,
+      "height": 440,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1060,
+        "y": 0
+      },
+      "dragging": false,
+      "resizing": false
+    }
   ],
   "edges": [
-    { "id": "e1", "source": "src-1",    "target": "harris-1", "sourceHandle": "image__main", "targetHandle": "image__image" },
-    { "id": "e2", "source": "harris-1", "target": "disp-1",   "sourceHandle": "image__main", "targetHandle": "image__main" }
-  ]
+    {
+      "id": "e-1777700511938-1",
+      "source": "src-1",
+      "target": "node-1777700510121",
+      "sourceHandle": "image__main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777700611729-1",
+      "source": "node-1777700510121",
+      "target": "node-1777700609526",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777700611729-2",
+      "source": "node-1777700609526",
+      "target": "harris-1",
+      "sourceHandle": "main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "source": "harris-1",
+      "sourceHandle": "mask__mask",
+      "target": "node-1777701008169",
+      "targetHandle": "mask__mask",
+      "id": "e-1777701076509"
+    },
+    {
+      "source": "node-1777701008169",
+      "sourceHandle": "mask__mask",
+      "target": "node-1777701145494",
+      "targetHandle": "mask__mask",
+      "id": "e-1777701153744",
+      "selected": false
+    },
+    {
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "node-1777701145494",
+      "targetHandle": "image__image_a",
+      "id": "e-1777701173748",
+      "selected": false
+    },
+    {
+      "source": "node-1777701187924",
+      "sourceHandle": "image__main",
+      "target": "node-1777701145494",
+      "targetHandle": "image__image_b",
+      "id": "e-1777701190757",
+      "selected": false
+    },
+    {
+      "source": "node-1777701145494",
+      "sourceHandle": "image__main",
+      "target": "disp-1",
+      "targetHandle": "image__main",
+      "id": "e-1777701630004",
+      "selected": false
+    },
+    {
+      "id": "e-1777701710994-1",
+      "source": "node-1777701008169",
+      "target": "node-1777701145494",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777701710994-2",
+      "source": "node-1777701145494",
+      "target": "disp-1",
+      "sourceHandle": "main",
+      "targetHandle": "mask__mask_in",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 539,
+      "h": 359
+    },
+    "previewPos": {
+      "x": 224.6171875,
+      "y": -66.875
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "disp-1"
+  }
 }

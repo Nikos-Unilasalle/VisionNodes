@@ -1357,7 +1357,7 @@ class VisionEngine:
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
-        self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid in active_nids}
+        self._node_cache = {}
         node_types = {n.get('type') for n in flat_nodes}
         needs_camera = 'input_webcam' in node_types
         if needs_camera and (self.cap is None or not self.cap.isOpened()):
@@ -1401,10 +1401,15 @@ class VisionEngine:
                     frame = None
                     await asyncio.sleep(0.05)
             results, node_datas, final_img, commands = {}, {}, None, []
+            locked_out_nids = {n['id'] for n in self.sorted_nodes if n.get('data', {}).get('lockedOut', False)}
+            bypassed_nids = {n['id'] for n in self.sorted_nodes if n.get('data', {}).get('bypassed', False)}
+            schema_by_type = {s['type']: s for s in NODE_SCHEMAS}
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
                 inputs = {"raw_frame": frame}
                 for e in self.graph.get('edges', []):
+                    if e['source'] in locked_out_nids:
+                        continue
                     if e['target'] == nid and e['source'] in results:
                         source_res = results[e['source']]
                         sh, th = e.get('sourceHandle', 'main').split('__')[-1], e.get('targetHandle', '').split('__')[-1]
@@ -1420,6 +1425,21 @@ class VisionEngine:
                             else:
                                 if isinstance(val, np.ndarray): inputs['image'] = val
                                 else: inputs['data'] = val
+                # Bypass: pass matching-type inputs directly to outputs
+                if nid in bypassed_nids:
+                    schema = schema_by_type.get(ntype, {})
+                    bypass_result = {}
+                    for out_spec in schema.get('outputs', []):
+                        out_color, out_id = out_spec.get('color'), out_spec.get('id')
+                        for in_spec in schema.get('inputs', []):
+                            if in_spec.get('color') == out_color:
+                                val = inputs.get(in_spec.get('id'))
+                                if val is not None:
+                                    bypass_result[out_id] = val
+                                break
+                    results[nid] = bypass_result
+                    continue
+
                 # Get or create instance for this specific node
                 if nid not in self.node_instances:
                     cls = self.registry.get(ntype)

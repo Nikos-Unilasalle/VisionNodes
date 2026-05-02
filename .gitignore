@@ -1,1 +1,31 @@
-Nothing should be ignored since only Python source files (.py) were modified and no build artifacts, dependencies, or temporary files are present in the changes.
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Tauri/Rust
+src-tauri/target/
+
+# OS
+.DS_Store
+
+# Models
+*.pt
+*.tflite
+*.task
+*.pb
+*.tar
+
+# IDE
+.vscode/
+
+# Media & Outputs
+output.wav
+
+# Cache
+gee_cache/
+engine/plugins/gee_cache/
