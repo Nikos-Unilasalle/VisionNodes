@@ -823,14 +823,10 @@ function App() {
 
   const isValidConnection = useCallback((connection: Connection) => {
     if (!connection.sourceHandle || !connection.targetHandle) return false;
-
-    // Always allow connections to dynamic nodes — onConnect will handle the logic
-    const targetNode = nodesRef.current.find(n => n.id === connection.target);
-    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display']);
-    if (targetNode && DYNAMIC_TYPES.has(targetNode.type || '')) return true;
-
     const sourceType = connection.sourceHandle.split('__')[0];
     const targetType = connection.targetHandle.split('__')[0];
+
+
 
     if (targetType === 'any' || sourceType === 'any') return true;
 
