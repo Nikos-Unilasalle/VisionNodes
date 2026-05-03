@@ -1073,14 +1073,18 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
 
   // Pixel-based handle positions — avoids ReactFlow percentage-height measurement issue
-  // (percentage tops resolve incorrectly during the same render that mounts the handle)
   const HANDLE_TOP_START = 45;
   const HANDLE_SPACING = 32;
   const getHandleTop = (i: number) => `${HANDLE_TOP_START + i * HANDLE_SPACING}px`;
 
+  // Dynamic height based on ports count (same pattern as BaseNode)
+  const totalHandles = ports.length + 1; // +1 for factory
+  const portsHeight = HANDLE_TOP_START + (totalHandles - 1) * HANDLE_SPACING + 35;
+
   return (
+    <div className="relative w-full h-full" style={{ minHeight: Math.max(portsHeight, 150) }}>
     <div
-      className={`w-full h-full rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
+      className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
       style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
     >
       {/* Dynamic input ports — pixel positions, same strategy as BaseNode */}
@@ -1089,7 +1093,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
         const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
         const color = idx >= 0 ? p.id.slice(0, idx) : 'scalar';
         return (
-          <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center"
+          <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center z-10"
                style={{ top: getHandleTop(i), transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
             <button
@@ -1101,13 +1105,13 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
         );
       })}
       {/* "new" slot — always last */}
-      <div className="absolute left-0 pointer-events-none flex items-center"
+      <div className="absolute left-0 pointer-events-none flex items-center z-10"
            style={{ top: getHandleTop(ports.length), transform: 'translateY(-50%)' }}>
         <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
       </div>
 
       {/* Main output */}
-      <div className="absolute right-0 flex items-center justify-end pointer-events-none"
+      <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
            style={{ top: '22px', transform: 'translateY(-50%)' }}>
         <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
         <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
@@ -1136,7 +1140,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
       </div>
 
       {/* Chart */}
-      <div className="flex-1 min-h-0 w-full px-1 py-1">
+      <div className="flex-1 min-h-0 w-full px-1 py-1 overflow-hidden">
         {chartData.length === 0
           ? <div className="w-full h-full flex items-center justify-center">
               <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
@@ -1153,6 +1157,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
             </ResponsiveContainer>
         }
       </div>
+    </div>
     </div>
   );
 });
