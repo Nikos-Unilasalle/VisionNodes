@@ -94,6 +94,44 @@ npm test                      # Vitest: nodesDataContext, project-serialization
 npm run studio   # kills ports 8765/1420, installs if needed, launches tauri dev
 ```
 
+## Dynamic-input nodes
+
+Three node types use dynamic ports — ports that appear on connection and grow one by one:
+
+| Node | Handle color | "new" slot handle id | Port id strategy |
+|---|---|---|---|
+| `sci_plotter` | scalar (yellow) | `scalar__new` | sequential: `scalar__p0`, `scalar__p1`, … |
+| `export_py` | any (white) | `any__new` | uses sourceHandle as port id (e.g. `scalar__brightness`) |
+| `output_display` | image (blue) | `image__new` | sequential: `image_0`, `image_1`, … |
+| `group_output` | any (white) | `any__new` | uses sourceHandle as port id |
+
+### How it works (frontend)
+
+**`StyledHandle`** prepends color to id: `handleId = '${color}__${id}'`. So a handle with `id="new"` and `color="scalar"` registers as `scalar__new` in ReactFlow.
+
+**`onConnect`** (App.tsx): for each dynamic node type, when `params.targetHandle === '{color}__new'`:
+1. Reads `ports.length` from `nodesRef.current` to get next index
+2. Creates `newPort = { id, color, label }` and pushes to node's `data.ports` via `setViewNodes`
+3. Creates edge with the specific new `targetHandle` (e.g. `scalar__p0`) via `setViewEdges`
+4. Both `setState` calls are React 18-batched → handle and edge render together
+
+**`isValidConnection`** (App.tsx): blocks connection to occupied plotter ports (any `targetHandle !== 'scalar__new'` that is already wired). Ensures only the "new" slot accepts new connections.
+
+**Engine side**: `th = e.get('targetHandle','').split('__')[-1]` strips color prefix. `sci_plotter` reads all `inputs` keys as series names.
+
+### Handle position: always pixels, never percentages
+
+ReactFlow measures handle positions via `getBoundingClientRect()` in a `useLayoutEffect`. When a new handle is mounted in the same React render batch that adds the edge targeting it, the percentage `top` (e.g. `55%`) may resolve to 0 if the parent height is not yet committed. This makes ReactFlow register the new handle at the same pixel position as the first handle → both wires point to port p0 visually.
+
+**Fix**: use pixel positions (`45px + i * 32px`) like `BaseNode` does. Pixels are always resolved correctly at mount time, independent of parent height.
+
+### Rules when modifying dynamic nodes
+
+- "new" slot color = the port type the node accepts (scalar for plotter, image for display, any for export_py / group_output)
+- `onConnect` condition must match: `params.targetHandle === '${color}__new'`
+- `isValidConnection` exclusion must match: `connection.targetHandle !== '${color}__new'`
+- Keep these three in sync or connections break silently
+
 ## Recent major work (April 2026)
 
 - Phase 1: NodesDataContext perf fix, exponential WS backoff, CSV persistent handle, async ML model loading
