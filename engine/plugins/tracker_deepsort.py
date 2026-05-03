@@ -6,8 +6,9 @@ Utilise la bibliothèque 'deep-sort-realtime' (pip install deep-sort-realtime).
 Combining Kalman filtering + a CNN appearance descriptor to dramatically
 reduce identity switches compared to plain SORT.
 """
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, send_notification
 import numpy as np
+import cv2
 
 try:
     from deep_sort_realtime.deepsort_tracker import DeepSort
@@ -82,8 +83,21 @@ class DeepSORTTrackerNode(NodeProcessor):
                     bgr=True,           # OpenCV frames sont BGR
                 )
             except Exception as e:
-                print(f"[DeepSORT] Tracker init failed: {e}")
-                self._tracker = None
+                print(f"[DeepSORT] Tracker init failed for {embedder_name}: {e}")
+                if embedder_name != 'mobilenet':
+                    send_notification(f"DeepSORT: {embedder_name} failed. Falling back to mobilenet.", level='warning')
+                    try:
+                        self._tracker = DeepSort(
+                            max_age=max_age, n_init=n_init,
+                            max_cosine_distance=max_cosine_dist,
+                            embedder='mobilenet', bgr=True
+                        )
+                    except Exception as e2:
+                        print(f"[DeepSORT] Fallback failed: {e2}")
+                        self._tracker = None
+                else:
+                    self._tracker = None
+            
             self._last_params = {
                 'max_age': max_age, 'n_init': n_init,
                 'embedder': embedder_idx, 'max_cosine_dist': max_cosine_dist
@@ -100,19 +114,24 @@ class DeepSORTTrackerNode(NodeProcessor):
             **{f'track_{i}': None for i in range(5)}
         }
 
-        if not DEEPSORT_AVAILABLE:
-            return empty_out
-
-        if image is None:
+        if not DEEPSORT_AVAILABLE or image is None:
             return empty_out
 
         tracker = self._get_tracker(params)
         if tracker is None:
             return empty_out
 
-        h, w = image.shape[:2]
+        # Ensure 3-channel BGR for DeepSORT embedders
+        if len(image.shape) == 2:
+            image_bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        elif image.shape[2] == 4:
+            image_bgr = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        else:
+            image_bgr = image
 
-        # Convertir les détections au format attendu par deep-sort-realtime :
+        h, w = image_bgr.shape[:2]
+
+        # Convert detections to deep-sort-realtime format:
         # list of ([left, top, width, height], confidence, class_name)
         ds_dets = []
         for det in (detections or []):
@@ -124,7 +143,8 @@ class DeepSORTTrackerNode(NodeProcessor):
             bh    = det.get('height', 0)
             label = det.get('label', '')
             score = float(det.get('score', 0.0))
-            # Coordonnées absolues pixels
+            
+            # Absolute pixel coordinates
             left  = int(xmin * w)
             top   = int(ymin * h)
             pw    = int(bw * w)
@@ -133,7 +153,8 @@ class DeepSORTTrackerNode(NodeProcessor):
                 ds_dets.append(([left, top, pw, ph], score, label))
 
         try:
-            raw_tracks = tracker.update_tracks(ds_dets, frame=image)
+            # Note: frame must be BGR
+            raw_tracks = tracker.update_tracks(ds_dets, frame=image_bgr)
         except Exception as e:
             print(f"[DeepSORT] update_tracks error: {e}")
             return empty_out
@@ -142,31 +163,46 @@ class DeepSORTTrackerNode(NodeProcessor):
         for trk in raw_tracks:
             if not trk.is_confirmed():
                 continue
-            ltrb = trk.to_ltrb()  # [left, top, right, bottom]
-            x1, y1, x2, y2 = ltrb[0] / w, ltrb[1] / h, ltrb[2] / w, ltrb[3] / h
-            x1, y1 = max(0.0, x1), max(0.0, y1)
-            x2, y2 = min(1.0, x2), min(1.0, y2)
-            tid   = trk.track_id
-            label = trk.get_det_class() or ''
-            score = float(trk.get_det_conf() or 0.0)
+            
+            try:
+                ltrb = trk.to_ltrb()  # [left, top, right, bottom]
+                x1, y1, x2, y2 = ltrb[0] / w, ltrb[1] / h, ltrb[2] / w, ltrb[3] / h
+                x1, y1 = max(0.0, x1), max(0.0, y1)
+                x2, y2 = min(1.0, x2), min(1.0, y2)
+                
+                # IMPORTANT: deep-sort-realtime returns track_id as a string.
+                # We cast to int for compatibility with color math and standard VNStudio logic.
+                raw_tid = trk.track_id
+                try:
+                    tid = int(raw_tid)
+                except ValueError:
+                    # If ID is not numeric (unlikely for DeepSORT), use a hash-based int
+                    tid = hash(raw_tid) % 10000
+                
+                label = trk.get_det_class() or ''
+                score = float(trk.get_det_conf() or 0.0)
 
-            track_dict = {
-                'track_id': tid,
-                'label':    f"#{tid} {label}",
-                'score':    score,
-                'xmin':     x1, 'ymin': y1,
-                'width':    x2 - x1, 'height': y2 - y1,
-                '_type':    'graphics', 'shape': 'rect',
-                'pts':      [[x1, y1], [x2, y2]],
-                'thickness': 2,
-                'r': int(abs(np.sin(tid * 0.9)) * 255),
-                'g': int(abs(np.sin(tid * 0.9 + 2.1)) * 255),
-                'b': int(abs(np.sin(tid * 0.9 + 4.2)) * 255),
-            }
-            tracks_out.append(track_dict)
+                track_dict = {
+                    'track_id': tid,
+                    'label':    f"#{tid} {label}",
+                    'score':    score,
+                    'xmin':     x1, 'ymin': y1,
+                    'width':    x2 - x1, 'height': y2 - y1,
+                    '_type':    'graphics', 'shape': 'rect',
+                    'pts':      [[x1, y1], [x2, y2]],
+                    'thickness': 2,
+                    # Stable color based on numeric ID
+                    'r': int(abs(np.sin(tid * 0.9)) * 255),
+                    'g': int(abs(np.sin(tid * 0.9 + 2.1)) * 255),
+                    'b': int(abs(np.sin(tid * 0.9 + 4.2)) * 255),
+                }
+                tracks_out.append(track_dict)
+            except Exception as trk_err:
+                print(f"[DeepSORT] Error processing track {trk.track_id}: {trk_err}")
+                continue
 
         out = {
-            'main':   image,
+            'main':   image, # Return original image (potentially 1-channel or 4-channel)
             'tracks': tracks_out,
             'count':  float(len(tracks_out)),
         }

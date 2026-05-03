@@ -1049,6 +1049,24 @@ function App() {
     }
   };
 
+  const saveProjectAs = async () => {
+    try {
+      const path = await save({
+        defaultPath: activeFilePath ? activeFilePath.split(/[\\/]/).pop()! : 'project.vn',
+        filters: [{ name: 'VisionNodes Project', extensions: ['vn'] }]
+      });
+      if (path) {
+        await writeTextFile(path, buildProjectContent());
+        setActiveFilePath(path);
+        pushNotification(`Saved As → ${path.split(/[\\/]/).pop()}`, 'info');
+        if (workDir && path.startsWith(workDir)) refreshWorkDir(workDir);
+      }
+    } catch (err) {
+      console.error('Failed to save project as:', err);
+      pushNotification('Save As failed — see console', 'error');
+    }
+  };
+
   const saveProjectIncremental = async () => {
     try {
       let basePath: string | null = activeFilePath;
@@ -1590,6 +1608,14 @@ function App() {
                 className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
               >
                 +
+              </button>
+              <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+              <button
+                onClick={saveProjectAs}
+                title="Save As…"
+                className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
+              >
+                <Save size={12} />
               </button>
             </>)}
           </div>
