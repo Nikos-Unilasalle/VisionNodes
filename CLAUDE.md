@@ -115,7 +115,7 @@ Three node types use dynamic ports — ports that appear on connection and grow 
 3. Creates edge with the specific `targetHandle: portId` via `setViewEdges`.
 4. If an user connects to an **occupied** handle, the system automatically treats it as a connection to the factory and creates a new port instead of replacing the existing one.
 
-**`isValidConnection`** (App.tsx): previously blocked occupied ports, now just checks for color compatibility. `onConnect` handles the "create vs replace" logic.
+**`isValidConnection`** (App.tsx): now always returns `true` for dynamic nodes to ensure `onConnect` is triggered even for occupied handles. For other nodes, it checks for color compatibility.
 
 **Engine side**: `th = e.get('targetHandle','').split('__')[-1]` strips color prefix. `sci_plotter` reads all `inputs` keys as series names.
 
