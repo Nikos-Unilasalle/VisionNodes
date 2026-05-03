@@ -98,39 +98,38 @@ npm run studio   # kills ports 8765/1420, installs if needed, launches tauri dev
 
 Three node types use dynamic ports — ports that appear on connection and grow one by one:
 
-| Node | Handle color | "new" slot handle id | Port id strategy |
+| Node | Handle color | "factory" handle id | Port id strategy |
 |---|---|---|---|
-| `sci_plotter` | scalar (yellow) | `scalar__new` | sequential: `scalar__p0`, `scalar__p1`, … |
-| `export_py` | any (white) | `any__new` | uses sourceHandle as port id (e.g. `scalar__brightness`) |
-| `output_display` | image (blue) | `image__new` | sequential: `image_0`, `image_1`, … |
-| `group_output` | any (white) | `any__new` | uses sourceHandle as port id |
+| `sci_plotter` | any (white) | `any__DYNAMIC_NEW_HANDLE` | unique: `${color}__${idx}_${random}` |
+| `export_py` | any (white) | `any__DYNAMIC_NEW_HANDLE` | unique: `${color}__${idx}_${random}` |
+| `output_display` | image (blue) | `image__DYNAMIC_NEW_HANDLE` | unique: `image_${idx}_${random}` |
+| `group_output` | any (white) | `any__DYNAMIC_NEW_HANDLE` | unique: `${color}__${idx}_${random}` |
 
 ### How it works (frontend)
 
-**`StyledHandle`** prepends color to id: `handleId = '${color}__${id}'`. So a handle with `id="new"` and `color="scalar"` registers as `scalar__new` in ReactFlow.
+**`StyledHandle`** prepends color to id: `handleId = '${color}__${id}'`. A handle with `id="DYNAMIC_NEW_HANDLE"` and `color="any"` registers as `any__DYNAMIC_NEW_HANDLE`.
 
-**`onConnect`** (App.tsx): for each dynamic node type, when `params.targetHandle === '{color}__new'`:
-1. Reads `ports.length` from `nodesRef.current` to get next index
-2. Creates `newPort = { id, color, label }` and pushes to node's `data.ports` via `setViewNodes`
-3. Creates edge with the specific new `targetHandle` (e.g. `scalar__p0`) via `setViewEdges`
-4. Both `setState` calls are React 18-batched → handle and edge render together
+**`onConnect`** (App.tsx): for each dynamic node type, when `params.targetHandle.endsWith('__DYNAMIC_NEW_HANDLE')`:
+1. Generates a unique `portId` using `${color}__${idx}_${randomString}`.
+2. Creates `newPort = { id: portId, color, label }` and pushes to node's `data.ports` via `setViewNodes`.
+3. Creates edge with the specific `targetHandle: portId` via `setViewEdges`.
+4. If an user connects to an **occupied** handle, the system automatically treats it as a connection to the factory and creates a new port instead of replacing the existing one.
 
-**`isValidConnection`** (App.tsx): blocks connection to occupied plotter ports (any `targetHandle !== 'scalar__new'` that is already wired). Ensures only the "new" slot accepts new connections.
+**`isValidConnection`** (App.tsx): previously blocked occupied ports, now just checks for color compatibility. `onConnect` handles the "create vs replace" logic.
 
 **Engine side**: `th = e.get('targetHandle','').split('__')[-1]` strips color prefix. `sci_plotter` reads all `inputs` keys as series names.
 
 ### Handle position: always pixels, never percentages
 
-ReactFlow measures handle positions via `getBoundingClientRect()` in a `useLayoutEffect`. When a new handle is mounted in the same React render batch that adds the edge targeting it, the percentage `top` (e.g. `55%`) may resolve to 0 if the parent height is not yet committed. This makes ReactFlow register the new handle at the same pixel position as the first handle → both wires point to port p0 visually.
+ReactFlow measures handle positions via `getBoundingClientRect()`. Percentage `top` (e.g. `55%`) can resolve to 0 if parent height isn't committed.
 
-**Fix**: use pixel positions (`45px + i * 32px`) like `BaseNode` does. Pixels are always resolved correctly at mount time, independent of parent height.
+**Fix**: use pixel positions (`45px + i * 32px`).
 
 ### Rules when modifying dynamic nodes
 
-- "new" slot color = the port type the node accepts (scalar for plotter, image for display, any for export_py / group_output)
-- `onConnect` condition must match: `params.targetHandle === '${color}__new'`
-- `isValidConnection` exclusion must match: `connection.targetHandle !== '${color}__new'`
-- Keep these three in sync or connections break silently
+- "factory" handle id = `DYNAMIC_NEW_HANDLE`.
+- `onConnect` must check `params.targetHandle.endsWith('__DYNAMIC_NEW_HANDLE')` or handle occupancy.
+- Keep `Nodes.tsx` and `App.tsx` in sync regarding these IDs.
 
 ## Recent major work (April 2026)
 
