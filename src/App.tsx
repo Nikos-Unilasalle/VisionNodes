@@ -722,15 +722,59 @@ function App() {
     return result;
   }, [selectedNode, pluginSchemas]);
 
+  const handleEdgesDeletion = useCallback((deletedEdges: Edge[]) => {
+    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display']);
+    
+    deletedEdges.forEach(edge => {
+      const targetNodeId = edge.target;
+      const targetHandleId = edge.targetHandle;
+      if (!targetNodeId || !targetHandleId) return;
+      if (targetHandleId.endsWith('__DYNAMIC_NEW_HANDLE')) return;
+
+      const targetNode = nodesRef.current.find(n => n.id === targetNodeId);
+      if (!targetNode || !DYNAMIC_TYPES.has(targetNode.type || '')) return;
+
+      // Check if any OTHER edge still uses this handle (unlikely with unique randomized IDs, but safe)
+      const otherEdges = edgesRef.current.filter(e => e.id !== edge.id && e.target === targetNodeId && e.targetHandle === targetHandleId);
+      if (otherEdges.length > 0) return;
+
+      // Remove the port from data.ports
+      setViewNodes(nds => nds.map(n => {
+        if (n.id !== targetNodeId) return n;
+        const ports = (n.data as any)?.ports || [];
+        const newPorts = ports.filter((p: any) => p.id !== targetHandleId);
+        return { ...n, data: { ...n.data, ports: newPorts } };
+      }));
+
+      // Group Output special case: update parent group
+      if (targetNode.type === 'group_output' && groupStackRef.current.length > 0) {
+        const parentGroupId = groupStackRef.current[groupStackRef.current.length - 1].groupNodeId;
+        const parentStack = groupStackRef.current.slice(0, -1);
+        setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? {
+          ...c,
+          nodes: (parentStack.length > 0
+            ? updateNestedSubGraph(c.nodes, parentStack, 'nodes', (nds: Node[]) => nds.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: ((n.data as any)?.outputs || []).filter((p: any) => p.id !== targetHandleId) } }))
+            : c.nodes.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: ((n.data as any)?.outputs || []).filter((p: any) => p.id !== targetHandleId) } })
+          )
+        } : c));
+      }
+    });
+  }, [setViewNodes, setCanvases]);
+
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
     setViewNodes((nds) => applyNodeChanges(changes, nds));
   }, [pushSnapshot, setViewNodes]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    if (changes.some(c => c.type === 'remove')) pushSnapshot();
+    const removals = changes.filter(c => c.type === 'remove') as { id: string; type: 'remove' }[];
+    if (removals.length > 0) {
+      pushSnapshot();
+      const deletedEdges = removals.map(r => edgesRef.current.find(e => e.id === r.id)).filter(Boolean) as Edge[];
+      handleEdgesDeletion(deletedEdges);
+    }
     setViewEdges((eds) => applyEdgeChanges(changes, eds));
-  }, [pushSnapshot, setViewEdges]);
+  }, [pushSnapshot, setViewEdges, handleEdgesDeletion]);
 
   const onConnect = useCallback((params: Connection) => {
     pushSnapshot();
@@ -1880,7 +1924,7 @@ function App() {
             onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
-            onEdgeClick={(_, edge) => { pushSnapshot(); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
+            onEdgeClick={(_, edge) => { pushSnapshot(); handleEdgesDeletion([edge]); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
             nodeTypes={dynamicNodeTypes}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
