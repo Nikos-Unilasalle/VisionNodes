@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
-import { Handle, Position, useNodeId, useEdges } from 'reactflow';
+import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals } from 'reactflow';
 import { useNodeData } from '../context/NodesDataContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import {
@@ -953,7 +953,13 @@ export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
 ));
 
 export const OutputDisplayNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  // Force ReactFlow to recalculate handle positions when ports change
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
   const inputs = [
     { id: 'main', color: 'image' },
     ...ports.map(p => {
@@ -1015,12 +1021,17 @@ export const PythonNode = memo(({ selected, data }: any) => {
 
 export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
   const palIdx = data?.activePaletteIndex ?? 6;
   const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
-  const nd = useNodeData(useNodeId());
+  const nd = useNodeData(nodeId);
   const bufSize = Number(data.params?.buffer_size ?? 100);
   const frozen = !!data.params?.freeze;
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  // Force ReactFlow to recalculate handle positions when ports change
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
   // Extract Python key (last segment after __) from each port id
   const portKeys = React.useMemo(() =>
@@ -2098,7 +2109,13 @@ export const GroupInputNode = memo(({ selected, data }: any) => {
 });
 
 export const GroupOutputNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  // Force ReactFlow to recalculate handle positions when ports change
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
   const inputs = [
     ...ports.map(p => {
       const idx = p.id.indexOf('__');
@@ -2115,7 +2132,13 @@ export const GroupOutputNode = memo(({ selected, data }: any) => {
 
 
 export const ExportPyNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  // Force ReactFlow to recalculate handle positions when ports change
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
   const inputs = [
     ...ports.map(p => {
       const idx = p.id.indexOf('__');
