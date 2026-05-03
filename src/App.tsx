@@ -508,6 +508,14 @@ function App() {
 
   const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport } = useVisionEngine(handleCapture);
 
+  const handleRemovePlotterPort = useCallback((nodeId: string, portId: string) => {
+    pushSnapshot();
+    setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === nodeId
+      ? { ...n, data: { ...n.data, ports: ((n.data as any)?.ports ?? []).filter((p: any) => p.id !== portId) } }
+      : n));
+    setViewEdges((eds: Edge[]) => eds.filter(e => !(e.target === nodeId && e.targetHandle === portId)));
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
+
   const handleExportPy = useCallback(async (nodeId: string) => {
     try {
       pushNotification('Generating script…');
@@ -637,10 +645,11 @@ function App() {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           },
           onExportPy: node.type === 'export_py' ? () => handleExportPy(node.id) : undefined,
+          onRemovePort: node.type === 'sci_plotter' ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
         }
       };
     });
-  }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex, handleExportPy]);
+  }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex, handleExportPy, handleRemovePlotterPort]);
 
   const canVisualize = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -725,41 +734,67 @@ function App() {
 
   const onConnect = useCallback((params: Connection) => {
     pushSnapshot();
-    // Dynamic group_output port creation
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
-    if (targetNode?.type === 'group_output' && params.targetHandle === 'any__new' && params.sourceHandle) {
-      const sh = params.sourceHandle;
-      const color = sh.split('__')[0] || 'any';
-      const newPort = { id: sh, color, label: `out${(targetNode.data as any)?.ports?.length ?? 0}` };
+    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display']);
+    const isDynamic = targetNode && DYNAMIC_TYPES.has(targetNode.type || '');
+
+    // Helper: create a new dynamic port and edge
+    const createDynamicPort = (color: string, labelPrefix: string) => {
+      const idx = (targetNode!.data as any)?.ports?.length ?? 0;
+      const portId = `${color}__${idx}_${Math.random().toString(36).substr(2, 6)}`;
+      const sh = params.sourceHandle!;
+      const label = labelPrefix === 'img'
+        ? `${labelPrefix}${idx}`
+        : (sh.split('__').pop() || `${labelPrefix}${idx}`);
+      const newPort = { id: portId, color, label };
       setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
         ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
         : n));
-      // Also update parent group node's outputs list
-      if (groupStackRef.current.length > 0) {
-        const parentGroupId = groupStackRef.current[groupStackRef.current.length - 1].groupNodeId;
-        const parentStack = groupStackRef.current.slice(0, -1);
-        setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? {
-          ...c,
-          nodes: (parentStack.length > 0
-            ? updateNestedSubGraph(c.nodes, parentStack, 'nodes', (nds: Node[]) => nds.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } }))
-            : c.nodes.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } })
-          )
-        } : c));
+      return { portId, newPort };
+    };
+
+    // --- DYNAMIC NODE: always create a new port if factory handle OR occupied handle ---
+    if (isDynamic && params.sourceHandle) {
+      const isFactory = params.targetHandle?.endsWith('__DYNAMIC_NEW_HANDLE');
+      const isOccupied = !isFactory && edgesRef.current.some(
+        (e: Edge) => e.target === params.target && e.targetHandle === params.targetHandle
+      );
+
+      if (isFactory || isOccupied) {
+        // Create a brand-new port
+        const sh = params.sourceHandle;
+        const color = sh.split('__')[0] || 'any';
+
+        if (targetNode!.type === 'output_display') {
+          const { portId } = createDynamicPort('image', 'img');
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: `image__${portId.split('__').slice(1).join('__')}` }, eds));
+        } else {
+          const labelPrefix = targetNode!.type === 'group_output' ? 'out' : 'in';
+          const { portId, newPort } = createDynamicPort(color, labelPrefix);
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
+
+          // For group_output, also update parent group node's outputs list
+          if (targetNode!.type === 'group_output' && groupStackRef.current.length > 0) {
+            const parentGroupId = groupStackRef.current[groupStackRef.current.length - 1].groupNodeId;
+            const parentStack = groupStackRef.current.slice(0, -1);
+            setCanvases(prev => prev.map(c => c.id === activeCanvasIdRef.current ? {
+              ...c,
+              nodes: (parentStack.length > 0
+                ? updateNestedSubGraph(c.nodes, parentStack, 'nodes', (nds: Node[]) => nds.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } }))
+                : c.nodes.map((n: Node) => n.id !== parentGroupId ? n : { ...n, data: { ...n.data, outputs: [...((n.data as any)?.outputs ?? []), newPort] } })
+              )
+            } : c));
+          }
+        }
+        return;
+      } else {
+        // Connecting to existing unoccupied port — replace previous edge on that handle
+        setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}` },
+          eds.filter(e => !(e.target === params.target && e.targetHandle === params.targetHandle))));
+        return;
       }
-      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
-      return;
     }
-    // Dynamic export_py port creation
-    if (targetNode?.type === 'export_py' && params.targetHandle === 'any__new' && params.sourceHandle) {
-      const sh = params.sourceHandle;
-      const color = sh.split('__')[0] || 'any';
-      const newPort = { id: sh, color, label: `in${(targetNode.data as any)?.ports?.length ?? 0}` };
-      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
-        ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
-        : n));
-      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: sh }, eds));
-      return;
-    }
+
     setViewEdges((eds) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
   }, [pushSnapshot, setViewNodes, setViewEdges]);
 
@@ -790,12 +825,14 @@ function App() {
     if (!connection.sourceHandle || !connection.targetHandle) return false;
     const sourceType = connection.sourceHandle.split('__')[0];
     const targetType = connection.targetHandle.split('__')[0];
-    
+
+
+
     if (targetType === 'any' || sourceType === 'any') return true;
-    
+
     const sourceColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || sourceType;
     const targetColor = N.HANDLE_COLORS[targetType as keyof typeof N.HANDLE_COLORS] || targetType;
-    
+
     return sourceColor === targetColor;
   }, []);
 
@@ -1660,13 +1697,15 @@ function App() {
 
           <div className="h-4 w-[1px] bg-[#222] mx-1" />
 
-          <div className="flex items-center gap-1 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
+
+          <div className="flex items-center bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button
               onClick={() => addNode('export_py', 'Export .py')}
               title="Export as Python script"
-              className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded transition-colors"
+              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
             >
-              <FileCode size={14} />
+              <FileCode size={14} className="text-yellow-400" />
+              Export as .py
             </button>
           </div>
         </div>

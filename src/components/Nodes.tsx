@@ -952,13 +952,24 @@ export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
   ]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
-export const OutputDisplayNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={[
-    {id: 'main', color: 'image'},
-    {id: 'mask_in', color: 'mask'},
-    {id: 'flow_in', color: 'flow'}
-  ]} />
-));
+export const OutputDisplayNode = memo(({ selected, data }: any) => {
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const inputs = [
+    { id: 'main', color: 'image' },
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      const color = idx >= 0 ? p.id.slice(0, idx) : (shortId.startsWith('image') ? 'image' : 'any');
+      return { id: shortId, color };
+    }),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'image' },
+    { id: 'mask_in', color: 'mask' },
+    { id: 'flow_in', color: 'flow' }
+  ];
+  return (
+    <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]} />
+  );
+});
 
 // --- LOGIC & MATH ---
 
@@ -1006,118 +1017,143 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
   const palIdx = data?.activePaletteIndex ?? 6;
   const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
-  const KEYS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   const nd = useNodeData(useNodeId());
   const bufSize = Number(data.params?.buffer_size ?? 100);
   const frozen = !!data.params?.freeze;
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  // Extract Python key (last segment after __) from each port id
+  const portKeys = React.useMemo(() =>
+    ports.map(p => p.id.split('__').pop() ?? p.id),
+    [ports]
+  );
 
   const [histories, setHistories] = React.useState<Record<string, number[]>>({});
 
   React.useEffect(() => {
     if (frozen) return;
     setHistories(prev => {
-      const next: Record<string, number[]> = { ...prev };
+      const next: Record<string, number[]> = {};
       let changed = false;
-      for (const k of KEYS) {
+      for (const k of portKeys) {
         const v = (nd as any)[k];
-        if (v === undefined || v === null) continue;
+        const cur = prev[k] ?? [];
+        if (v === undefined || v === null) { next[k] = cur; continue; }
         if (typeof v === 'number') {
-          const cur = prev[k] ?? [];
           if (cur.length === 0 || cur[cur.length - 1] !== v) {
             next[k] = [...cur, v].slice(-bufSize);
             changed = true;
-          }
+          } else { next[k] = cur; }
         } else if (Array.isArray(v)) {
           next[k] = (v as any[]).map(Number).filter((n: number) => !isNaN(n)).slice(-bufSize);
           changed = true;
-        }
+        } else { next[k] = cur; }
       }
-      return changed ? next : prev;
+      const prevKeys = Object.keys(prev);
+      return (changed || prevKeys.length !== portKeys.length || prevKeys.some(k => !portKeys.includes(k))) ? next : prev;
     });
-  }, [nd.v0, nd.v1, nd.v2, nd.v3, nd.v4, bufSize, frozen]);
+  }, [nd, bufSize, frozen, portKeys]);
 
   const chartData = React.useMemo(() => {
-    const maxLen = Math.max(0, ...KEYS.map(k => histories[k]?.length ?? 0));
+    const maxLen = Math.max(0, ...portKeys.map(k => histories[k]?.length ?? 0));
     if (maxLen === 0) return [];
     return Array.from({ length: maxLen }, (_, i) => {
       const pt: any = { t: i };
-      for (const k of KEYS) {
+      for (const k of portKeys) {
         const arr = histories[k];
         if (arr && i < arr.length) pt[k] = arr[i];
       }
       return pt;
     });
-  }, [histories]);
+  }, [histories, portKeys]);
 
-  const activeSeries = KEYS.filter(k => (histories[k]?.length ?? 0) > 0);
-  const PORT_TOPS = ['30%', '42%', '54%', '66%', '78%'];
+  const activeSeries = portKeys.filter(k => (histories[k]?.length ?? 0) > 0);
   const minY = data.params?.min_y;
   const maxY = data.params?.max_y;
   const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
+
+  // Pixel-based handle positions — avoids ReactFlow percentage-height measurement issue
+  // (percentage tops resolve incorrectly during the same render that mounts the handle)
+  const HANDLE_TOP_START = 45;
+  const HANDLE_SPACING = 32;
+  const getHandleTop = (i: number) => `${HANDLE_TOP_START + i * HANDLE_SPACING}px`;
 
   return (
     <div
       className={`w-full h-full rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
       style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
     >
-        {KEYS.map((k, i) => (
-          <div key={`in-${k}`} className="absolute left-0 pointer-events-none"
-               style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
-            <StyledHandle type="target" position={Position.Left} id={k} color="any" top="50%" />
-          </div>
-        ))}
-        {/* Main image output - Positioned at 15% to clear V0 */}
-        <div className="absolute right-0 flex items-center justify-end pointer-events-none"
-             style={{ top: '15%', transform: 'translateY(-50%)' }}>
-          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">Main</span>
-          <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
-        </div>
-
-        {KEYS.map((k, i) => (
-          <div key={`out-${k}`} className="absolute right-0 flex items-center justify-end pointer-events-none"
-               style={{ top: PORT_TOPS[i], transform: 'translateY(-50%)' }}>
-            <span className="mr-[12px] text-[7px] font-bold uppercase" style={{ color: SERIES_COLORS[i] }}>{k}</span>
-            <StyledHandle type="source" position={Position.Right} id={k} color="any" top="50%" />
-          </div>
-        ))}
-        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
-             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-          <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter</span>
-          <div className="ml-auto flex items-center gap-2">
-            {activeSeries.map(k => (
-              <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
-                   style={{ backgroundColor: SERIES_COLORS[KEYS.indexOf(k)] }} />
-            ))}
+      {/* Dynamic input ports — pixel positions, same strategy as BaseNode */}
+      {ports.map((p, i) => {
+        const idx = p.id.indexOf('__');
+        const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+        const color = idx >= 0 ? p.id.slice(0, idx) : 'scalar';
+        return (
+          <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center"
+               style={{ top: getHandleTop(i), transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
             <button
-              className="nodrag pointer-events-auto ml-1 transition-opacity hover:opacity-100"
-              style={{ opacity: frozen ? 1 : 0.4 }}
-              onClick={e => { e.stopPropagation(); data.onChangeParams?.({ freeze: !frozen }); }}
-            >
-              {frozen
-                ? <Lock size={10} className="text-yellow-400" />
-                : <LockOpen size={10} className="text-gray-400" />}
-            </button>
+              className="nodrag pointer-events-auto ml-4 text-[8px] text-gray-600 hover:text-red-400 transition-colors leading-none"
+              onClick={e => { e.stopPropagation(); data.onRemovePort?.(p.id); }}
+              title="Remove"
+            >×</button>
           </div>
-        </div>
-        <div className="flex-1 min-h-0 w-full px-1 py-1">
-          {chartData.length === 0
-            ? <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
-              </div>
-            : <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 2, right: 18, bottom: 0, left: 0 }}>
-                  <YAxis hide domain={yDomain} />
-                  {activeSeries.map(k => (
-                    <Line key={k} type="monotone" dataKey={k}
-                      stroke={SERIES_COLORS[KEYS.indexOf(k)]} strokeWidth={1.5}
-                      dot={false} isAnimationActive={false} />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-          }
+        );
+      })}
+      {/* "new" slot — always last */}
+      <div className="absolute left-0 pointer-events-none flex items-center"
+           style={{ top: getHandleTop(ports.length), transform: 'translateY(-50%)' }}>
+        <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
+      </div>
+
+      {/* Main output */}
+      <div className="absolute right-0 flex items-center justify-end pointer-events-none"
+           style={{ top: '22px', transform: 'translateY(-50%)' }}>
+        <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
+        <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+      </div>
+
+      {/* Header */}
+      <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+           style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+        <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter</span>
+        <div className="ml-auto flex items-center gap-2">
+          {activeSeries.map(k => (
+            <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
+                 style={{ backgroundColor: SERIES_COLORS[portKeys.indexOf(k) % SERIES_COLORS.length] }} />
+          ))}
+          <button
+            className="nodrag pointer-events-auto ml-1 transition-opacity hover:opacity-100"
+            style={{ opacity: frozen ? 1 : 0.4 }}
+            onClick={e => { e.stopPropagation(); data.onChangeParams?.({ freeze: !frozen }); }}
+          >
+            {frozen
+              ? <Lock size={10} className="text-yellow-400" />
+              : <LockOpen size={10} className="text-gray-400" />}
+          </button>
         </div>
       </div>
+
+      {/* Chart */}
+      <div className="flex-1 min-h-0 w-full px-1 py-1">
+        {chartData.length === 0
+          ? <div className="w-full h-full flex items-center justify-center">
+              <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
+            </div>
+          : <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 2, right: 18, bottom: 0, left: 0 }}>
+                <YAxis hide domain={yDomain} />
+                {activeSeries.map(k => (
+                  <Line key={k} type="monotone" dataKey={k}
+                    stroke={SERIES_COLORS[portKeys.indexOf(k) % SERIES_COLORS.length]} strokeWidth={1.5}
+                    dot={false} isAnimationActive={false} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+        }
+      </div>
+    </div>
   );
 });
 
@@ -2063,7 +2099,7 @@ export const GroupOutputNode = memo(({ selected, data }: any) => {
       const idx = p.id.indexOf('__');
       return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
     }),
-    { id: 'new', color: 'any' },
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
   ];
   return (
     <BaseNode title="Group OUT" icon={LogOut} selected={selected} data={data} inputs={inputs} outputs={[]}>
@@ -2080,7 +2116,7 @@ export const ExportPyNode = memo(({ selected, data }: any) => {
       const idx = p.id.indexOf('__');
       return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
     }),
-    { id: 'new', color: 'any' },
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
   ];
   return (
     <BaseNode title="Export .py" icon={FileCode} selected={selected} data={data} inputs={inputs} outputs={[]}>
