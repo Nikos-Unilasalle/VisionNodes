@@ -161,6 +161,7 @@ const _nodeTypes = {
   string_replace: N.StringNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
+  plotter_pro: withNodeResizer(N.PlotterProNode, 240, 180),
   sci_histogram: withNodeResizer(N.ScientificHistogramNode, 250, 180),
   sci_calibration: N.ScientificCalibrationNode,
   group_node: N.GroupNode,
@@ -226,6 +227,7 @@ const CATEGORIES = [
     { type: 'analysis_monitor', label: 'Universal Monitor', description: 'Ultra-polyvalent measurement tool (Flux, Areas, Brightness, Counting).' },
     { type: 'analysis_flow_viz', label: 'Flow Viz', description: 'Colorized visualization of motion direction and strength.' },
     { type: 'sci_plotter', label: 'Plotter', description: 'Multi-series real-time graph. Outputs both raw data and a live rendered image (main).' },
+    { type: 'plotter_pro', label: 'Plotter Pro', description: 'Dual-series graph with filtering, thresholding, normalization, and peak detection.' },
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
     { type: 'draw_overlay', label: 'Visual Overlay', description: 'Draws shapes and text over the main video stream.' }
@@ -1430,6 +1432,7 @@ function App() {
       canvas_reroute: { width: 16, height: 16 },
       canvas_frame: { width: 500, height: 400, zIndex: -1 },
       sci_plotter: { width: 320, height: 220 },
+      plotter_pro: { width: 320, height: 220 },
     };
     const nodeStyle = defaultStyle[type] || {};
     setViewNodes((nds) => {

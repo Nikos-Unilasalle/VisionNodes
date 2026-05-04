@@ -22,21 +22,33 @@ fn main() {
             #[cfg(not(debug_assertions))]
             {
                 use tauri_plugin_shell::ShellExt;
-                let status = app
-                    .shell()
-                    .sidecar("engine-bin")
-                    .expect("failed to create sidecar command")
-                    .spawn();
-
-                match status {
-                    Ok((_rx, child)) => {
-                        app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Sidecar(
-                            child,
-                        )))));
+                let sidecar_cmd = app.shell().sidecar("engine-bin");
+                
+                let mut launched = false;
+                if let Ok(cmd) = sidecar_cmd {
+                    if let Ok((_rx, child)) = cmd.spawn() {
+                        app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Sidecar(child)))));
                         println!("Sidecar engine launched.");
+                        launched = true;
                     }
-                    Err(e) => {
-                        panic!("Failed to launch sidecar engine: {}", e);
+                }
+
+                if !launched {
+                    println!("Sidecar 'engine-bin' not found or failed to launch. Trying local venv fallback...");
+                    // Fallback to local venv if available (useful for portable source builds)
+                    let mut root = std::env::current_dir().unwrap();
+                    // If we are inside the .app bundle, we might need to look elsewhere, 
+                    // but for a simple build folder, this works.
+                    let venv_path = root.join(".venv/bin/python3");
+                    let engine_path = root.join("engine/engine.py");
+
+                    if venv_path.exists() && engine_path.exists() {
+                        if let Ok(child) = std::process::Command::new(venv_path).arg(engine_path).spawn() {
+                            app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Std(child)))));
+                            println!("Local fallback engine launched.");
+                        }
+                    } else {
+                        println!("Warning: No engine found (sidecar or local venv). The app will start but nodes won't work.");
                     }
                 }
             }

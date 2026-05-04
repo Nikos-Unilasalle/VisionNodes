@@ -17,7 +17,7 @@ const getIcon = (name: string, fallback = Box) => {
 };
 import {
   AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip,
-  BarChart, Bar, Cell, LineChart, Line
+  BarChart, Bar, Cell, LineChart, Line, CartesianGrid, ReferenceLine
 } from 'recharts';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8' };
@@ -1169,6 +1169,192 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
         }
       </div>
     </div>
+    </div>
+  );
+});
+
+export const PlotterProNode = memo(({ selected, data }: any) => {
+  const { customBg } = useNodeColor();
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const nd = useNodeData(nodeId);
+  const bufSize = Number(data.params?.buffer_size ?? 300);
+
+  const colorA = data.params?.color_a || '#ff6464';
+  const colorB = data.params?.color_b || '#64ff64';
+  const showPeaks = !!data.params?.show_peaks;
+  const showGrid = data.params?.show_grid !== false;
+  const peakWindow = Number(data.params?.peak_window ?? 5);
+  const showThresholds = !!data.params?.show_thresholds;
+  const thMin = Number(data.params?.threshold_min ?? 0);
+  const thMax = Number(data.params?.threshold_max ?? 255);
+
+  const minY = data.params?.min_y;
+  const maxY = data.params?.max_y;
+  const autoScale = !!(data.params?.auto_scale ?? true);
+  const lineWidth = Number(data.params?.line_width ?? 2);
+  const yDomain: [any, any] = autoScale ? ['auto', 'auto'] : ((minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : [0, 100]);
+
+  const [histories, setHistories] = useState<Record<string, {v: number, m?: boolean, n?: boolean}[]>>({});
+  const prevReset = React.useRef(0);
+
+  useEffect(() => {
+    const r = data.params?.reset ?? 0;
+    if (r === 1 && prevReset.current === 0) setHistories({});
+    prevReset.current = r;
+  }, [data.params?.reset]);
+
+  const lastProcessedRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    if (nd === lastProcessedRef.current) return;
+    lastProcessedRef.current = nd;
+
+    setHistories(prev => {
+      const next: Record<string, {v: number, m?: boolean, n?: boolean}[]> = {};
+      let changed = false;
+      for (const k of ['a', 'b']) {
+        const val = (nd as any)?.[k];
+        const peaks = (nd as any)?.[`peaks_${k}`];
+        // Immutable copy of the series
+        let cur = prev[k] ? prev[k].map(item => ({ ...item })) : [];
+        let seriesChanged = false;
+        
+        if (typeof val === 'number') {
+          cur.push({ v: val });
+          if (cur.length > bufSize) cur = cur.slice(-bufSize);
+          seriesChanged = true;
+        }
+
+        if (peaks && cur.length > 0) {
+          // Reset peaks and re-apply from backend indices
+          cur.forEach(item => { item.m = false; item.n = false; });
+          peaks.max?.forEach((idx: number) => { if (cur[idx]) cur[idx].m = true; });
+          peaks.min?.forEach((idx: number) => { if (cur[idx]) cur[idx].n = true; });
+          seriesChanged = true;
+        }
+        
+        next[k] = cur;
+        if (seriesChanged) changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [nd, bufSize]);
+
+
+  const chartData = useMemo(() => {
+    const a = histories['a'] ?? [];
+    const b = histories['b'] ?? [];
+    const maxLen = Math.max(a.length, b.length);
+    if (maxLen === 0) return [];
+    return Array.from({ length: maxLen }, (_, i) => ({
+      t: i,
+      a: i < a.length ? a[i].v : undefined,
+      b: i < b.length ? b[i].v : undefined,
+      _amax: (i < a.length && a[i].m) ? a[i].v : undefined,
+      _amin: (i < a.length && a[i].n) ? a[i].v : undefined,
+      _bmax: (i < b.length && b[i].m) ? b[i].v : undefined,
+      _bmin: (i < b.length && b[i].n) ? b[i].v : undefined,
+    }));
+  }, [histories]);
+
+  const hasData = chartData.length > 0;
+  const lastA = histories['a']?.[(histories['a']?.length ?? 0) - 1]?.v;
+  const lastB = histories['b']?.[(histories['b']?.length ?? 0) - 1]?.v;
+
+  return (
+    <div className="relative w-full h-full" style={{ minHeight: 180 }}>
+      <div
+        className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
+        style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
+      >
+        {/* Input A */}
+        <div className="absolute left-0 pointer-events-none flex items-center z-10" style={{ top: '40px', transform: 'translateY(-50%)' }}>
+          <StyledHandle type="target" position={Position.Left} id="series_a" color="scalar" top="50%" />
+          <span className="ml-4 text-[7px] text-gray-500 font-mono">A</span>
+        </div>
+        {/* Input B */}
+        <div className="absolute left-0 pointer-events-none flex items-center z-10" style={{ top: '72px', transform: 'translateY(-50%)' }}>
+          <StyledHandle type="target" position={Position.Left} id="series_b" color="scalar" top="50%" />
+          <span className="ml-4 text-[7px] text-gray-500 font-mono">B</span>
+        </div>
+
+        {/* Output main */}
+        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '36px', transform: 'translateY(-50%)' }}>
+          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
+          <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+        </div>
+        {/* Output a */}
+        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '64px', transform: 'translateY(-50%)' }}>
+          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">a</span>
+          <StyledHandle type="source" position={Position.Right} id="a" color="scalar" top="50%" />
+        </div>
+        {/* Output b */}
+        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '92px', transform: 'translateY(-50%)' }}>
+          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">b</span>
+          <StyledHandle type="source" position={Position.Right} id="b" color="scalar" top="50%" />
+        </div>
+
+        {/* Header */}
+        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+          <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#a78bfa' }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
+          <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorA }} />
+              <span className="text-[7px] text-gray-500 font-mono">{lastA !== undefined ? lastA.toFixed(1) : '--'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorB }} />
+              <span className="text-[7px] text-gray-500 font-mono">{lastB !== undefined ? lastB.toFixed(1) : '--'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="flex-1 min-h-0 w-full px-1 py-1 overflow-hidden">
+          {!hasData
+            ? <div className="w-full h-full flex items-center justify-center">
+                <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
+              </div>
+            : <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 10, right: 35, bottom: 0, left: 0 }}>
+                  {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
+                  <XAxis dataKey="t" hide />
+                  <YAxis hide domain={yDomain} />
+                  
+                  {showThresholds && (
+                    <ReferenceLine 
+                      y={thMin} 
+                      stroke="#facc15" 
+                      strokeDasharray="6 3" 
+                      strokeWidth={2} 
+                      label={{ position: 'insideRight', value: `min: ${thMin.toFixed(1)}`, fill: '#facc15', fontSize: 8, fontWeight: 'bold' }} 
+                    />
+                  )}
+                  {showThresholds && (
+                    <ReferenceLine 
+                      y={thMax} 
+                      stroke="#facc15" 
+                      strokeDasharray="6 3" 
+                      strokeWidth={2} 
+                      label={{ position: 'insideRight', value: `max: ${thMax.toFixed(1)}`, fill: '#facc15', fontSize: 8, fontWeight: 'bold' }} 
+                    />
+                  )}
+
+                  <Line key="a" type="monotone" dataKey="a" stroke={colorA} strokeWidth={lineWidth} dot={false} isAnimationActive={false} connectNulls={false} />
+                  <Line key="b" type="monotone" dataKey="b" stroke={colorB} strokeWidth={lineWidth} dot={false} isAnimationActive={false} connectNulls={false} />
+                  
+                  {showPeaks && <Line key="aMax" type="monotone" dataKey="_amax" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: colorA, stroke: '#fff', strokeWidth: 1.5 }} isAnimationActive={false} connectNulls={false} />}
+                  {showPeaks && <Line key="aMin" type="monotone" dataKey="_amin" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: 'none', stroke: colorA, strokeWidth: 2 }} isAnimationActive={false} connectNulls={false} />}
+                  {showPeaks && <Line key="bMax" type="monotone" dataKey="_bmax" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: colorB, stroke: '#fff', strokeWidth: 1.5 }} isAnimationActive={false} connectNulls={false} />}
+                  {showPeaks && <Line key="bMin" type="monotone" dataKey="_bmin" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: 'none', stroke: colorB, strokeWidth: 2 }} isAnimationActive={false} connectNulls={false} />}
+                </LineChart>
+              </ResponsiveContainer>
+          }
+        </div>
+      </div>
     </div>
   );
 });

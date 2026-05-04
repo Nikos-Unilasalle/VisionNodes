@@ -320,7 +320,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
-                    const min2 = sp.min ?? (v2 < 0 ? v2 * 2 : 0);
+                    const min2 = sp.min ?? -10;
                     const max2 = sp.max ?? (v2 > 100 ? v2 * 2 : 100);
                     return <Slider 
                       key={sp.id} 
@@ -739,8 +739,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isNumber) {
           const val = Number(p[sp.id] ?? sp.default ?? 0);
-          const min = sp.min ?? (val < 0 ? val * 2 : 0);
-          const max = sp.max ?? (val > 100 ? val * 2 : 100);
+          const min = sp.min ?? -10;
+          const max = sp.max ?? 100;
           inner = <Slider 
             label={sp.label || sp.id} 
             val={val} 
