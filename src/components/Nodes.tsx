@@ -26,7 +26,7 @@ const NodeColorContext = React.createContext<{ customBg?: string; customText?: s
 export const useNodeColor = () => React.useContext(NodeColorContext);
 export const NodeColorProvider = NodeColorContext.Provider;
 
-const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any) => {
+const StyledHandle = ({ type, position, id, color = 'image', top = '50%', noBorder = false }: any) => {
   const nodeId = useNodeId();
   const handleId = `${color}__${id}`;
   const isLeft = position === Position.Left;
@@ -38,9 +38,10 @@ const StyledHandle = ({ type, position, id, color = 'image', top = '50%' }: any)
       id={handleId}
       style={{ 
         background: HANDLE_COLORS[color as keyof typeof HANDLE_COLORS] || color, 
-        width: 10, 
-        height: 10, 
-        border: '2px solid #111', 
+        width: noBorder ? 5 : 10, 
+        height: noBorder ? 5 : 10, 
+        borderRadius: noBorder ? 0 : '50%', 
+        border: noBorder ? 'none' : '2px solid #111', 
         top: top,
         [isLeft ? 'left' : 'right']: -5,
         zIndex: 50,
@@ -74,10 +75,6 @@ export const BaseNode = ({
   const totalInputs = inputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
-  const startOffset = 45;
-  const spacing = 32;
-  const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 35) : 90;
-  const minHeight = Math.max(portsHeight, 90);
 
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';
@@ -87,6 +84,12 @@ export const BaseNode = ({
   const nodeNote = data?.params?.node_note;
   const isLockedOut = !!(data as any)?.lockedOut;
   const isBypassed = !!(data as any)?.bypassed;
+  const isMinified = !!(data as any)?.minified;
+  const startOffset = isMinified ? 10 : 45;
+  const spacing = isMinified ? 5 : 32;
+  const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 12) : 24;
+  const minHeight = Math.max(portsHeight, isMinified ? 18 : 90);
+
   const borderClass = isLockedOut
     ? 'border-red-500'
     : isBypassed
@@ -125,8 +128,8 @@ export const BaseNode = ({
         const top = getPortTop(i, totalInputs);
         return (
           <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-            <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" />
-            <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>
+            <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
+            {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>}
           </div>
         );
       })}
@@ -137,12 +140,13 @@ export const BaseNode = ({
         const top = getPortTop(inputs.length + i, totalInputs);
         return (
           <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-            <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" />
-            <span className="ml-[12px] text-[8px] font-medium text-accent uppercase tracking-widest">{char}</span>
+            <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" noBorder={isMinified} />
+            {!isMinified && <span className="ml-[12px] text-[8px] font-medium text-accent uppercase tracking-widest">{char}</span>}
           </div>
         );
       })}
       
+      {!isMinified && (
       <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between border-b border-[#4f5b6b] rounded-t-[10px] overflow-hidden group/header shrink-0"
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <div className="flex items-center gap-3 truncate">
@@ -154,18 +158,27 @@ export const BaseNode = ({
           {headerExtra}
         </div>
       </div>
+      )}
       
+      {isMinified && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <span className="text-[8px] font-bold uppercase tracking-wider truncate max-w-[90%]" style={customBg ? { color: customBg } : { color: '#6b7280' }}>{title}</span>
+        </div>
+      )}
+      
+      {!isMinified && (
       <div className="flex-1 p-2 text-[10px] text-gray-400 flex flex-col min-h-0 overflow-hidden rounded-b-[10px]">
         {children}
       </div>
+      )}
 
       {/* Outputs with Labels */}
       {outputs.map((out: any, i: number) => {
         const top = getPortTop(i, totalOutputs);
         return (
           <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-            <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>
-            <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" />
+            {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>}
+            <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
           </div>
         );
       })}
