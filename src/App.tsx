@@ -1408,18 +1408,51 @@ function App() {
         }
       }
 
-      if (e.key === 'Escape') {
-        if (groupStackRef.current.length > 0) {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        const selectedNode = nodes.find(n => n.selected);
+        if (selectedNode) {
+          if (cmdKey) {
+            const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(selectedNode.type || '');
+            if (!isUiNode) {
+              const isLocked = !!(selectedNode.data as any)?.lockedOut;
+              pushSnapshot();
+              setViewNodes(nds => nds.map(n => n.id === selectedNode.id
+                ? { ...n, data: { ...n.data, lockedOut: !isLocked } }
+                : n
+              ));
+            }
+          } else {
+            const isMinified = !!(selectedNode.data as any)?.minified;
+            pushSnapshot();
+            setViewNodes(nds => nds.map(n => n.id === selectedNode.id
+              ? { ...n, data: { ...n.data, minified: !isMinified } }
+              : n
+            ));
+          }
+        } else if (groupStackRef.current.length > 0) {
           exitGroup();
         } else {
           setIsAddMenuOpen(false);
           setPendingConnection(null);
         }
       }
+      if (e.key === 'b' && cmdKey) {
+        e.preventDefault();
+        const selectedNode = nodes.find(n => n.selected);
+        if (selectedNode && canBypass(selectedNode.id)) {
+          const isBypassed = !!(selectedNode.data as any)?.bypassed;
+          pushSnapshot();
+          setViewNodes(nds => nds.map(n => n.id === selectedNode.id
+            ? { ...n, data: { ...n.data, bypassed: !isBypassed } }
+            : n
+          ));
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, nodes, pushSnapshot, setViewNodes, canBypass]);
 
   const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
     pushSnapshot();
@@ -2094,6 +2127,7 @@ function App() {
                 if (isUiNode) return null;
                 const isLocked = !!(menuNode?.data as any)?.lockedOut;
                 const isBypassed = !!(menuNode?.data as any)?.bypassed;
+                const isMinified = !!(menuNode?.data as any)?.minified;
                 return (
                   <>
                     <div className="h-px bg-white/5 my-1 mx-2" />
@@ -2131,6 +2165,21 @@ function App() {
                         <span>{isBypassed ? 'Remove Bypass' : 'Bypass'}</span>
                       </button>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        pushSnapshot();
+                        setViewNodes(nds => nds.map(n => n.id === menu.id
+                          ? { ...n, data: { ...n.data, minified: !isMinified } }
+                          : n
+                        ));
+                        setMenu(null);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${isMinified ? 'bg-purple-500/30 hover:bg-purple-500/60' : 'hover:bg-purple-500/60'}`}
+                    >
+                      <Layers size={16} className="text-purple-400 group-hover:text-white" />
+                      <span>{isMinified ? 'Expand Node' : 'Mininode'}</span>
+                    </button>
                   </>
                 );
               })()}
