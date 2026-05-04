@@ -935,7 +935,7 @@ export const RegionSelectorNode = memo(({ selected, data }: any) => (
 
 export const DataCoordSplitterNode = memo(({ selected, data }: any) => (
   <BaseNode title="Coord Splitter" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'dict_in', color: 'dict'}]} outputs={[
-    {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'w', color: 'scalar'}, {id: 'h', color: 'scalar'}
+    {id: 'a', color: 'scalar'}, {id: 'b', color: 'scalar'}
   ]} />
 ));
 
@@ -1027,6 +1027,14 @@ export const PythonNode = memo(({ selected, data }: any) => {
     </BaseNode>
   );
 });
+
+
+
+export const MaskPointQueryNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Mask Point Query" icon={Crosshair} selected={selected} data={data} color="accent"
+    inputs={[{id: 'mask', color: 'mask'}, {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}]}
+    outputs={[{id: 'inside', color: 'boolean'}]} />
+));
 
 
 

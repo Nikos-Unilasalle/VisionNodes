@@ -54,3 +54,27 @@ class LandmarkSelectorNode(NodeProcessor):
         except Exception as e:
             print(f"[LandmarkSelector] Error: {e}")
             return {"data": {}}
+
+@vision_node(
+    type_id="data_coord_splitter",
+    label="Coord Splitter",
+    category="data",
+    icon="Database",
+    description="Extracts the first two numeric values from a dictionary (e.g., x, y).",
+    inputs=[{"id": "dict_in", "color": "dict"}],
+    outputs=[
+        {"id": "a", "color": "scalar"},
+        {"id": "b", "color": "scalar"}
+    ]
+)
+class CoordSplitterNode(NodeProcessor):
+    def process(self, inputs, params):
+        d = inputs.get('dict_in')
+        if not d or not isinstance(d, dict):
+            return {"a": 0, "b": 0}
+
+        nums = [v for v in d.values() if isinstance(v, (int, float))]
+        return {
+            "a": nums[0] if len(nums) > 0 else 0,
+            "b": nums[1] if len(nums) > 1 else 0
+        }
