@@ -13,7 +13,8 @@ _INT_W, _INT_H = 320, 240  # fixed internal resolution for motion EVM
         "Eulerian Video Magnification — motion amplification (Wu et al. 2012). "
         "Amplifies subtle spatial motions via Laplacian pyramid + IIR bandpass per level. "
         "Optional mask input: restricts both analysis and amplification to masked pixels. "
-        "lambda_c attenuates fine spatial scales (paper: 80px for motion). "
+        "lambda_c attenuates fine spatial scales (paper: 16px for micromotion). "
+        "attenuation clamps filtered signal before alpha multiply (guards against transients). "
         "motion_mag output = mean absolute motion amplitude per frame."
     ),
     inputs=[
@@ -26,12 +27,13 @@ _INT_W, _INT_H = 320, 240  # fixed internal resolution for motion EVM
         {'id': 'motion_vis', 'color': 'image'},
     ],
     params=[
-        {'id': 'alpha',       'min': 0,    'max': 200,  'step': 1, 'default': 20},
-        {'id': 'low_cutoff',  'min': 0,    'max': 5000, 'step': 1, 'default': 40},
-        {'id': 'high_cutoff', 'min': 0,    'max': 5000, 'step': 1, 'default': 300},
+        {'id': 'alpha',       'min': 0,    'max': 200,  'step': 1, 'default': 30},
+        {'id': 'low_cutoff',  'min': 0,    'max': 5000, 'step': 1, 'default': 400},
+        {'id': 'high_cutoff', 'min': 0,    'max': 5000, 'step': 1, 'default': 3000},
         {'id': 'fps',         'min': 10,   'max': 120,  'step': 1, 'default': 30},
-        {'id': 'levels',      'min': 1,    'max': 6,    'step': 1, 'default': 4},
-        {'id': 'lambda_c',   'min': 1,    'max': 1000, 'step': 1, 'default': 80},
+        {'id': 'levels',      'min': 1,    'max': 6,    'step': 1, 'default': 6},
+        {'id': 'lambda_c',   'min': 1,    'max': 1000, 'step': 1, 'default': 16},
+        {'id': 'attenuation','min': 1,    'max': 100,  'step': 1, 'default': 10},
     ]
 )
 class EVMMotionNode(NodeProcessor):
@@ -39,6 +41,8 @@ class EVMMotionNode(NodeProcessor):
     low_cutoff / high_cutoff: mHz.
     lambda_c: spatial wavelength cutoff (px). Level l has wavelength 2^(l+1)px.
               Levels below lambda_c get attenuated proportionally.
+    attenuation: max |filtered| as % of [0,1] range before alpha multiply.
+                 Guards against motion transients. 10% default (= 0.1 in paper).
 
     Mask workflow (when mask connected):
       1. Bounding-box crop → Laplacian pyramid + IIR on small patch only  (compute saving)
@@ -83,12 +87,13 @@ class EVMMotionNode(NodeProcessor):
         if img is None:
             return {'main': None, 'motion_mag': 0.0, 'motion_vis': None}
 
-        alpha    = float(params.get('alpha', 20))
-        low_hz   = float(params.get('low_cutoff',  40))  / 1000.0
-        high_hz  = float(params.get('high_cutoff', 300)) / 1000.0
+        alpha    = float(params.get('alpha', 30))
+        low_hz   = float(params.get('low_cutoff',  400)) / 1000.0
+        high_hz  = float(params.get('high_cutoff', 3000))/ 1000.0
         fps      = max(1.0, float(params.get('fps', 30)))
-        levels   = int(params.get('levels', 4))
-        lambda_c = max(1.0, float(params.get('lambda_c', 80)))
+        levels   = int(params.get('levels', 6))
+        lambda_c = max(1.0, float(params.get('lambda_c', 16)))
+        att      = float(params.get('attenuation', 10)) / 100.0
 
         sig = (low_hz, high_hz, fps, levels, lambda_c)
         if sig != self._sig:
@@ -137,6 +142,9 @@ class EVMMotionNode(NodeProcessor):
             self.low1[l] = (1.0 - r_high) * self.low1[l] + r_high * lv
             self.low2[l] = (1.0 - r_low)  * self.low2[l] + r_low  * lv
             filtered = self.low1[l] - self.low2[l]
+
+            # Clamp before alpha multiply (attenuation = A in paper)
+            filtered = np.clip(filtered, -att, att)
 
             # Signal: masked pixels only if mask available (Strategy 2)
             if has_mask:
