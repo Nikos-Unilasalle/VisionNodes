@@ -125,6 +125,7 @@ const _nodeTypes = {
   data_inspector: withNodeResizer(N.DataInspectorNode, 180, 120),
   output_display: N.OutputDisplayNode,
   logic_python: N.PythonNode,
+  mask_point_query: N.MaskPointQueryNode,
   canvas_note: withNodeResizer(N.CanvasNoteNode, 120, 60, getNoteColor),
   canvas_reroute: N.CanvasRerouteNode,
   output_movie: N.OutputMovieNode,
@@ -265,7 +266,8 @@ const CATEGORIES = [
     { type: 'string_case', label: 'Case Change', description: 'Converts to Upper or Lower case.' }
   ] },
   { id: 'logic', label: 'Logic', icon: Zap, nodes: [
-    { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' }
+    { type: 'logic_python', label: 'Python Node', description: 'Run custom Python scripts with dynamic inputs.' },
+    { type: 'mask_point_query', label: 'Mask Point Query', description: 'Checks if a point (x, y) falls within a mask. Returns true or false.' }
   ] },
   { id: 'out', label: 'Output', icon: Maximize, nodes: [
     { type: 'output_display', label: 'Display', description: 'The output terminal displaying the final video stream.' },
