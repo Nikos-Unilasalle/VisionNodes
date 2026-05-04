@@ -29,11 +29,11 @@ _INT_W, _INT_H = 160, 120
         {'id': 'filtered_vis', 'color': 'image'},
     ],
     params=[
-        {'id': 'alpha',       'min': 0,   'max': 250, 'step': 1, 'default': 120},
+        {'id': 'alpha',       'min': 0,   'max': 250, 'step': 1, 'default': 50},
         {'id': 'low_cutoff',  'min': 0,   'max': 5000,'step': 1, 'default': 830},
         {'id': 'high_cutoff', 'min': 0,   'max': 5000,'step': 1, 'default': 1000},
         {'id': 'fps',         'min': 10,  'max': 120, 'step': 1, 'default': 30},
-        {'id': 'levels',      'min': 1,   'max': 5,   'step': 1, 'default': 3},
+        {'id': 'levels',      'min': 1,   'max': 5,   'step': 1, 'default': 4},
         {'id': 'attenuation', 'min': 1,   'max': 100, 'step': 1, 'default': 3},
     ]
 )
@@ -42,7 +42,7 @@ class EVMColorNode(NodeProcessor):
     low_cutoff / high_cutoff: mHz (830 = 0.83 Hz ≈ 50 BPM, 1000 = 1.0 Hz ≈ 60 BPM).
     attenuation: max |filtered| as % of [0,1] range before alpha multiply.
                  Guards against motion transients. 3% default.
-    alpha: 120 matches Wu et al. 2012 Table 1 (face pulse).
+    alpha: 50 matches Wu et al. 2012 Table 1 (face pulse).
 
     Mask workflow (when mask connected):
       1. Bounding-box crop → pyramid + IIR run on small patch only        (compute saving)
@@ -67,11 +67,11 @@ class EVMColorNode(NodeProcessor):
         if img is None:
             return {'main': None, 'signal': 0.0, 'signal_cb': 0.0, 'filtered_vis': None}
 
-        alpha   = float(params.get('alpha', 120))
+        alpha   = float(params.get('alpha', 50))
         low_hz  = float(params.get('low_cutoff',  830))  / 1000.0
         high_hz = float(params.get('high_cutoff', 1000)) / 1000.0
         fps     = max(1.0, float(params.get('fps', 30)))
-        levels  = int(params.get('levels', 3))
+        levels  = int(params.get('levels', 4))
         att     = float(params.get('attenuation', 3)) / 100.0
 
         sig = (low_hz, high_hz, fps, levels)

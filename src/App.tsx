@@ -449,6 +449,9 @@ function App() {
   const previewResizing = useRef(false);
   const previewResizeStart = useRef({ x: 0, y: 0, w: 400, h: 225 });
   const previewAspect = useRef(16 / 9);
+  const previewSizeRef = useRef(previewSize);
+  previewSizeRef.current = previewSize;
+  const previewResizeRef = useRef<HTMLDivElement>(null);
   const [instance, setInstance] = useState<any>(null);
   
   const handleCapture = useCallback(async (nodeId: string, base64: string) => {
@@ -603,6 +606,31 @@ function App() {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
+  }, []);
+
+  useEffect(() => {
+    const el = previewResizeRef.current;
+    if (!el) return;
+    const onDown = (e: PointerEvent) => {
+      e.stopPropagation();
+      previewResizing.current = true;
+      previewResizeStart.current = { x: e.clientX, y: e.clientY, w: previewSizeRef.current.w, h: previewSizeRef.current.h };
+      const onMove = (ev: PointerEvent) => {
+        if (!previewResizing.current) return;
+        const dw = ev.clientX - previewResizeStart.current.x;
+        const newW = Math.max(160, previewResizeStart.current.w + dw);
+        setPreviewSize({ w: newW, h: Math.round(newW / previewAspect.current) });
+      };
+      const onUp = () => {
+        previewResizing.current = false;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    };
+    el.addEventListener('pointerdown', onDown);
+    return () => el.removeEventListener('pointerdown', onDown);
   }, []);
 
   useEffect(() => {
@@ -2416,25 +2444,8 @@ function App() {
               />
             )}
             <div
+              ref={previewResizeRef}
               className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-10 flex items-end justify-end pb-1 pr-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                previewResizing.current = true;
-                previewResizeStart.current = { x: e.clientX, y: e.clientY, w: previewSize.w, h: previewSize.h };
-                const onMove = (ev: MouseEvent) => {
-                  if (!previewResizing.current) return;
-                  const dw = ev.clientX - previewResizeStart.current.x;
-                  const newW = Math.max(160, previewResizeStart.current.w + dw);
-                  setPreviewSize({ w: newW, h: Math.round(newW / previewAspect.current) });
-                };
-                const onUp = () => {
-                  previewResizing.current = false;
-                  window.removeEventListener('mousemove', onMove);
-                  window.removeEventListener('mouseup', onUp);
-                };
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('mouseup', onUp);
-              }}
             >
               <svg width="8" height="8" viewBox="0 0 8 8" className="text-white/30">
                 <path d="M8 0 L8 8 L0 8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
