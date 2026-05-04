@@ -1363,7 +1363,7 @@ def flatten_groups(node_list, edge_list, prefix=''):
     return flat_nodes, flat_edges
 
 
-REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input'}
+REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input', 'signal_generator', 'signal_clock', 'serial_reader'}
 
 
 class VisionEngine:
@@ -1530,14 +1530,18 @@ class VisionEngine:
                     try:
                         params = node.get('data', {}).get('params', {})
                         has_array_input = any(isinstance(v, np.ndarray) for v in inputs.values())
+                        is_cacheable = ntype not in REALTIME_NODE_TYPES and not has_array_input
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
-                        if not has_array_input and cache and cache['params'] == params_sig:
+                        # Include non-array inputs in cache key so scalar-driven nodes invalidate correctly
+                        scalar_inputs_sig = str({k: v for k, v in inputs.items() if not isinstance(v, np.ndarray) and k != 'raw_frame'})
+                        cache_sig = params_sig + scalar_inputs_sig
+                        if is_cacheable and cache and cache['sig'] == cache_sig:
                             out = cache['output']
                         else:
                             out = await asyncio.to_thread(proc.process, inputs, params)
-                            if not has_array_input:
-                                self._node_cache[nid] = {'params': params_sig, 'output': out}
+                            if is_cacheable:
+                                self._node_cache[nid] = {'sig': cache_sig, 'output': out}
                         results[nid] = out
                         
                         # Handle On-Demand Capture
