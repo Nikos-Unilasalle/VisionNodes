@@ -601,49 +601,124 @@ export const RasterStatsNode = memo(({ selected, data }: any) => {
   const std = nd?.std ?? 0;
   const band = data.params?.band ?? 1;
 
+  const statsDict = (nd?.stats || {}) as any;
+  const bandName = `B${band}`;
+  const bandStats = (statsDict[bandName] || Object.values(statsDict)[0] || {}) as any;
+  const entries = [
+    { label: 'Mean',   v: bandStats.mean ?? mean, color: 'text-cyan-400' },
+    { label: 'Median', v: bandStats.median ?? 0, color: 'text-blue-400' },
+    { label: 'Std Dev', v: bandStats.std ?? std, color: 'text-purple-400' },
+    { label: 'Range',  v: (bandStats.max ?? max) - (bandStats.min ?? min), color: 'text-emerald-400' },
+  ];
+
   return (
     <BaseNode
-      title="Raster Stats"
+      title="Band Statistics"
       icon={Activity}
       selected={selected}
       data={data}
       color="blue"
-      inputs={[{id: 'geotiff', color: 'geotiff'}]}
+      inputs={[
+        {id: 'geotiff', color: 'geotiff'},
+        {id: 'data',    color: 'any'}
+      ]}
       outputs={[
         {id: 'geotiff', color: 'geotiff'},
         {id: 'min',     color: 'scalar'},
         {id: 'max',     color: 'scalar'},
-        {id: 'mean',    color: 'scalar'}
+        {id: 'mean',    color: 'scalar'},
+        {id: 'std',     color: 'scalar'},
       ]}
     >
-      <div className="flex flex-col gap-3 p-1">
-        <div className="text-[7px] font-black text-blue-400 uppercase tracking-[0.2em] px-1 flex justify-between">
-            <span>Global Band Analysis</span>
-            <span>Band {band}</span>
+      <div className="flex flex-col gap-2 p-1">
+        <div className="text-[7px] font-black text-blue-400 uppercase tracking-[0.2em] px-1">
+            Band {band}
         </div>
-        
-        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-inner relative overflow-hidden">
-            <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest z-10">Mean Value</span>
-            <span className="text-3xl font-black text-blue-400 font-mono tracking-tighter z-10 drop-shadow-md">
-                {mean.toFixed(4)}
-            </span>
-            <Activity size={48} className="absolute -right-4 -bottom-4 text-blue-500/5" />
+        <div className="grid grid-cols-2 gap-2">
+          {entries.map(e => (
+            <div key={e.label} className="bg-black/10 p-2 rounded-lg border border-white/5">
+               <div className="text-[7px] text-gray-500 uppercase font-black">{e.label}</div>
+               <div className={`text-[9px] font-mono ${e.color} font-bold`}>{typeof e.v === 'number' ? e.v.toFixed(4) : '---'}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const MatrixDistNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const hist = nd?.hist_0 || [];
+  const stats = nd?.stats || {};
+
+  const chartData = useMemo(() => {
+    return hist.map((v: number, i: number) => ({ x: i, v }));
+  }, [hist]);
+
+  const entries = [
+    { label: 'Mean',   v: (stats as any).mean,  color: 'text-cyan-400' },
+    { label: 'Std Dev', v: (stats as any).std,   color: 'text-purple-400' },
+    { label: 'Min',    v: (stats as any).min,   color: 'text-blue-400' },
+    { label: 'Max',    v: (stats as any).max,   color: 'text-emerald-400' },
+  ];
+
+  return (
+    <BaseNode
+      title="Matrix Distribution"
+      icon={BarChart2}
+      selected={selected}
+      data={data}
+      color="accent"
+      inputs={[{id: 'data', color: 'any'}]}
+      outputs={[
+        {id: 'main',   color: 'image'},
+        {id: 'bins',   color: 'any'},
+        {id: 'counts', color: 'any'},
+        {id: 'stats',  color: 'any'},
+      ]}
+      width="100%"
+      height="100%"
+      className="w-full h-full"
+    >
+      <div className="flex-1 min-h-0 w-full flex flex-col p-1">
+        <div className="flex-1 min-h-0 w-full">
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="distGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00d4aa" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#00d4aa" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '10px' }}
+                  labelStyle={{ display: 'none' }}
+                  formatter={(value: any) => [Number(value).toFixed(1), 'Count']}
+                />
+                <Bar dataKey="v" fill="url(#distGrad)" stroke="#00d4aa" strokeWidth={1} isAnimationActive={false} minPointSize={1} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center opacity-40 gap-2 min-h-[80px]">
+              <BarChart2 size={20} className="text-gray-500 animate-pulse" />
+              <span className="text-[7px] font-black uppercase tracking-widest text-gray-600">Waiting for Data...</span>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
-                <span className="text-[6px] text-gray-600 uppercase font-black">Min</span>
-                <span className="text-[10px] font-bold text-white/60 font-mono">{min.toFixed(2)}</span>
-            </div>
-            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
-                <span className="text-[6px] text-gray-600 uppercase font-black">Max</span>
-                <span className="text-[10px] font-bold text-white/60 font-mono">{max.toFixed(2)}</span>
-            </div>
-            <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col items-center shadow-inner">
-                <span className="text-[6px] text-gray-600 uppercase font-black">Std</span>
-                <span className="text-[10px] font-bold text-blue-400/60 font-mono">{std.toFixed(2)}</span>
-            </div>
-        </div>
+        {(stats as any).mean !== undefined && (
+          <div className="grid grid-cols-2 gap-1 border-t border-white/5 pt-2 mt-1 shrink-0 px-2 pb-1">
+            {entries.map(e => (
+              <div key={e.label} className="flex flex-col">
+                <span className="text-[7px] text-gray-500 uppercase font-bold tracking-tighter">{e.label}</span>
+                <span className={`text-[10px] font-mono ${e.color} tabular-nums`}>{typeof e.v === 'number' ? e.v.toFixed(3) : '---'}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </BaseNode>
   );
@@ -1997,6 +2072,83 @@ export const GeoLandCoverNode = memo(({ selected, data }: any) => {
   );
 });
 
+const GeoSedimentLoaderNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const preview = nd?.preview;
+  const schema = data.schema;
+  const IconCmp = getIcon(schema?.icon, Layers);
+
+  const handleBrowse = async () => {
+    try {
+      const selectedFile = await open({
+        multiple: false,
+        filters: [{
+          name: 'CSV Data',
+          extensions: ['csv', 'txt']
+        }]
+      });
+      if (selectedFile && typeof selectedFile === 'string') {
+        data.onChangeParams?.({ path: selectedFile });
+      }
+    } catch (err) {
+      console.error('Failed to open dialog:', err);
+    }
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      data.onChangeParams?.({ path: (file as any).path || file.name });
+    }
+  };
+
+  return (
+    <BaseNode title="Sediment Layers" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={schema?.outputs}>
+      <div 
+        className="relative group mb-1" 
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+      >
+        {preview ? (
+          <img 
+            src={`data:image/jpeg;base64,${preview}`} 
+            alt="Heatmap Preview" 
+            className="w-full h-32 object-contain rounded-lg border border-[#4f5b6b] bg-black/20" 
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#4f5b6b] rounded-lg p-4 opacity-40 h-32">
+            <Search size={20} className="text-gray-500 mb-2" />
+            <div className="text-[7px] text-gray-500 uppercase font-black text-center italic">Drop CSV or Click Browse</div>
+          </div>
+        )}
+        
+        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-green-500/50"
+             onClick={handleBrowse}>
+          <Search size={20} className="text-white mb-1" />
+          <div className="text-[7px] text-white uppercase font-black">Change CSV</div>
+        </div>
+      </div>
+      {data.params?.path && (
+        <div className="px-1 text-[7px] text-gray-500 truncate italic">
+          {data.params.path.split(/[/\\]/).pop()}
+        </div>
+      )}
+    </BaseNode>
+  );
+});
+
+const GeoIndexNode = memo(({ selected, data }: any) => {
+  const schema = data.schema;
+  const IconCmp = getIcon(schema?.icon, Divide);
+
+  return (
+    <BaseNode title="Geophysics Index" icon={IconCmp} selected={selected} data={data} color="red" 
+              inputs={schema?.inputs} outputs={schema?.outputs}>
+    </BaseNode>
+  );
+});
+
 
 export const AudioInputNode = memo(({ selected, data }: any) => {
   const nd       = useNodeData(useNodeId());
@@ -2219,6 +2371,9 @@ export const GenericCustomNode = memo(({ selected, data }: any) => {
   if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode selected={selected} data={data} />;
   if (schema.type === 'geo_band_info') return <GeoBandInfoNode selected={selected} data={data} />;
   if (schema.type === 'geo_land_cover') return <GeoLandCoverNode selected={selected} data={data} />;
+  if (schema.type === 'sci_matrix_dist') return <MatrixDistNode selected={selected} data={data} />;
+  if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode selected={selected} data={data} />;
+  if (schema.type === 'geo_index') return <GeoIndexNode selected={selected} data={data} />;
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
