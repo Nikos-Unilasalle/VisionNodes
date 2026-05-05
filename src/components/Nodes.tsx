@@ -664,6 +664,8 @@ export const MatrixDistNode = memo(({ selected, data }: any) => {
     { label: 'Max',    v: (stats as any).max,   color: 'text-emerald-400' },
   ];
 
+  const isMinified = !!(data as any)?.minified;
+
   return (
     <BaseNode
       title="Matrix Distribution"
@@ -679,7 +681,7 @@ export const MatrixDistNode = memo(({ selected, data }: any) => {
         {id: 'stats',  color: 'any'},
       ]}
       width="100%"
-      height="100%"
+      height={isMinified ? undefined : "100%"}
       className="w-full h-full"
     >
       <div className="flex-1 min-h-0 w-full flex flex-col p-1">
@@ -1782,25 +1784,26 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
     setEditing(true);
   };
 
+  const isMinified = !!(data as any)?.minified;
+
   return (
     <div
-      className="w-full h-full overflow-hidden transition-all duration-200"
+      className="w-full overflow-hidden transition-all duration-200"
       style={{
         background: bgColor,
         borderRadius: '5px 5px 0 0',
         transform: `rotate(${rotation}deg)`,
+        height: isMinified ? 22 : undefined,
         boxShadow: selected
           ? `5px 8px 24px rgba(0,0,0,0.38), 2px 3px 8px rgba(0,0,0,0.22), 0 0 0 2px rgba(0,0,0,0.25)`
           : `4px 6px 18px rgba(0,0,0,0.28), 2px 3px 6px rgba(0,0,0,0.16)`,
       }}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Header — chapeau style + macOS square button */}
       <div
         className="flex items-center gap-1.5 px-2 py-1 nodrag select-none"
-        style={{ background: 'rgba(0,0,0,0.13)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}
+        style={{ background: 'rgba(0,0,0,0.13)', borderBottom: isMinified ? 'none' : '1px solid rgba(0,0,0,0.10)' }}
       >
-        {/* Old macOS square window button */}
         <div
           className="w-2.5 h-2.5 rounded-[2px] flex-shrink-0"
           style={{ background: 'rgba(255,255,255,0.30)', border: '1px solid rgba(0,0,0,0.18)' }}
@@ -1813,37 +1816,38 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
         </span>
       </div>
 
-      {/* Body */}
-      {editing ? (
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={e => data.onChangeParams?.({ text: e.target.value })}
-          onBlur={() => setEditing(false)}
-          onKeyDown={e => {
-            if (e.key === 'Escape') setEditing(false);
-            e.stopPropagation();
-          }}
-          className="nodrag nopan w-full bg-transparent border-none outline-none resize-none px-3 py-2 leading-relaxed"
-          style={{ color: textColor, fontSize: 13, fontFamily: 'inherit', fontWeight: 400, caretColor: textColor, height: 'calc(100% - 26px)' }}
-          placeholder="Write your note here..."
-        />
-      ) : (
-        <div
-          className="px-3 py-2 overflow-hidden select-none cursor-text"
-          style={{
-            color: text ? textColor : `${textColor}55`,
-            fontSize: 13,
-            fontWeight: 400,
-            lineHeight: '1.65',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            fontStyle: text ? 'normal' : 'italic',
-            height: 'calc(100% - 26px)',
-          }}
-        >
-          {text || 'Double-click to edit…'}
-        </div>
+      {!isMinified && (
+        editing ? (
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => data.onChangeParams?.({ text: e.target.value })}
+            onBlur={() => setEditing(false)}
+            onKeyDown={e => {
+              if (e.key === 'Escape') setEditing(false);
+              e.stopPropagation();
+            }}
+            className="nodrag nopan w-full bg-transparent border-none outline-none resize-none px-3 py-2 leading-relaxed"
+            style={{ color: textColor, fontSize: 13, fontFamily: 'inherit', fontWeight: 400, caretColor: textColor, height: 'calc(100% - 26px)' }}
+            placeholder="Write your note here..."
+          />
+        ) : (
+          <div
+            className="px-3 py-2 overflow-hidden select-none cursor-text"
+            style={{
+              color: text ? textColor : `${textColor}55`,
+              fontSize: 13,
+              fontWeight: 400,
+              lineHeight: '1.65',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              fontStyle: text ? 'normal' : 'italic',
+              height: 'calc(100% - 26px)',
+            }}
+          >
+            {text || 'Double-click to edit…'}
+          </div>
+        )
       )}
     </div>
   );

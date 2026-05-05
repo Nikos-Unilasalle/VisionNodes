@@ -11,7 +11,8 @@ import {
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Move, Palette, Box, Image, Film,
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit, Music,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
-  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight, FileCode
+  Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight, FileCode,
+  FilePlus, SaveAll
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -37,10 +38,11 @@ const withNodeResizer = (
   getColor?: (data: any) => string
 ) => memo(({ selected, data, ...props }: any) => {
   const color = getColor ? getColor(data) : 'var(--accent, #7c3aed)';
+  const isMinified = !!(data as any)?.minified;
   return (
-    <div className="w-full h-full" style={{ minWidth, minHeight, position: 'relative' }}>
+    <div className="w-full" style={{ minWidth: isMinified ? undefined : minWidth, minHeight: isMinified ? undefined : minHeight, height: isMinified ? 22 : undefined, position: 'relative' }}>
       <NodeResizer
-        isVisible={selected}
+        isVisible={selected && !isMinified}
         minWidth={minWidth}
         minHeight={minHeight}
         color={color}
@@ -445,6 +447,8 @@ function App() {
   const [previewZoom, setPreviewZoom] = useState(1);
   const previewZoomRef = useRef(1);
   const [previewPan, setPreviewPan] = useState({ x: 0, y: 0 });
+
+  const [showAbout, setShowAbout] = useState(false);
   const isPanning = useRef(false);
   const panStart = useRef({ mx: 0, my: 0, px: 0, py: 0 });
   const previewResizing = useRef(false);
@@ -1441,25 +1445,25 @@ function App() {
 
       if (e.key === 'Tab' && !e.shiftKey) {
         e.preventDefault();
-        const selectedNode = nodes.find(n => n.selected);
-        if (selectedNode) {
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length > 0) {
           if (cmdKey) {
-            const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(selectedNode.type || '');
-            if (!isUiNode) {
-              const isLocked = !!(selectedNode.data as any)?.lockedOut;
-              pushSnapshot();
-              setViewNodes(nds => nds.map(n => n.id === selectedNode.id
-                ? { ...n, data: { ...n.data, lockedOut: !isLocked } }
-                : n
-              ));
-            }
-          } else {
-            const isMinified = !!(selectedNode.data as any)?.minified;
             pushSnapshot();
-            setViewNodes(nds => nds.map(n => n.id === selectedNode.id
-              ? { ...n, data: { ...n.data, minified: !isMinified } }
-              : n
-            ));
+            setViewNodes(nds => nds.map(n => {
+              if (!n.selected) return n;
+              const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(n.type || '');
+              if (isUiNode) return n;
+              const isLocked = !!(n.data as any)?.lockedOut;
+              return { ...n, data: { ...n.data, lockedOut: !isLocked } };
+            }));
+          } else {
+            pushSnapshot();
+            setViewNodes(nds => nds.map(n => {
+              if (!n.selected) return n;
+              if (n.type === 'canvas_frame') return n;
+              const isMinified = !!(n.data as any)?.minified;
+              return { ...n, data: { ...n.data, minified: !isMinified } };
+            }));
           }
         } else if (groupStackRef.current.length > 0) {
           exitGroup();
@@ -1635,7 +1639,10 @@ function App() {
             <div className="h-8 flex items-center justify-center transition-transform hover:scale-110">
               <img src={logo} className="h-6 w-6" alt="VN Logo" />
             </div>
-            <h1 className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1">VNStudio</h1>
+            <h1
+              className="text-[11px] font-black tracking-[0.3em] text-white uppercase ml-1 cursor-pointer hover:text-accent/80 transition-colors"
+              onClick={() => setShowAbout(true)}
+            >VNStudio</h1>
           </div>
           <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${isConnected ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border border-current opacity-60`}>
             {isConnected ? 'RUNTIME_CONNECTED' : 'WAITING_FOR_WS'}
@@ -1645,44 +1652,46 @@ function App() {
           <div className="flex items-center bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
             <button
               onClick={async () => { await confirmUnsaved(); pushSnapshot(); const n: any[] = []; const e: any[] = []; setGroupStack([]); groupStackRef.current = []; setNodes(n); setEdges(e); setActiveFilePath(null); updateGraph(n, e); }}
-              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all"
+              title="New"
             >
-              <Plus size={14} /> New
+              <FilePlus size={14} />
             </button>
             <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
             <button
               onClick={loadProject}
-              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all"
+              title="Open"
             >
-              <FolderOpen size={14} /> Open
+              <FolderOpen size={14} />
             </button>
             <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
             <button
               onClick={saveProject}
-              className="flex items-center gap-2 px-3 py-1 bg-accent/10 hover:bg-accent/20 rounded-md text-[10px] font-bold text-accent transition-all"
+              className="p-1.5 bg-accent/10 hover:bg-accent/20 rounded-md text-accent transition-all"
               title={activeFilePath ? `Save → ${activeFilePath.split(/[\\/]/).pop()}` : 'Save As…'}
             >
               <Save size={14} />
-              {activeFilePath
-                ? activeFilePath.split(/[\\/]/).pop()?.replace(/\.vn$/i, '') ?? 'Save'
-                : 'Save .vn'}
+            </button>
+            <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
+            <button
+              onClick={saveProjectAs}
+              title="Save As…"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all"
+            >
+              <SaveAll size={14} />
             </button>
             {activeFilePath && (<>
               <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
               <button
                 onClick={saveProjectIncremental}
                 title="Save incremental version (+01, +02…)"
-                className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
+                className="p-1.5 hover:bg-accent/20 rounded-md text-accent transition-all"
               >
-                +
-              </button>
-              <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
-              <button
-                onClick={saveProjectAs}
-                title="Save As…"
-                className="flex items-center justify-center w-7 h-7 hover:bg-accent/20 rounded-md text-[11px] font-black text-accent transition-all"
-              >
-                <Save size={12} />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/>
+                  <path d="M12 5v14"/>
+                </svg>
               </button>
             </>)}
           </div>
@@ -1694,18 +1703,18 @@ function App() {
               onClick={handleUndo}
               disabled={!canUndo(activeCanvasId)}
               title="Undo (⌘Z)"
-              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
             >
-              <Undo2 size={13} /> Undo
+              <Undo2 size={14} />
             </button>
             <div className="w-[1px] h-3 bg-[#333] mx-0.5" />
             <button
               onClick={handleRedo}
               disabled={!canRedo(activeCanvasId)}
               title="Redo (⌘⇧Z)"
-              className="flex items-center gap-1.5 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
             >
-              <Redo2 size={13} /> Redo
+              <Redo2 size={14} />
             </button>
           </div>
 
@@ -1795,17 +1804,16 @@ function App() {
             <button
               onClick={() => addNode('export_py', 'Export .py')}
               title="Export as Python script"
-              className="flex items-center gap-2 px-3 py-1 hover:bg-white/10 rounded-md text-[10px] font-bold text-gray-400 transition-all"
+              className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all"
             >
               <FileCode size={14} className="text-yellow-400" />
-              Export as .py
             </button>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
-            {canvases.map(c => (
+            {canvases.map((c, i) => (
               <button
                 key={c.id}
                 onClick={() => setActiveCanvasId(c.id)}
@@ -1815,7 +1823,7 @@ function App() {
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                 }`}
               >
-                {c.name}
+                {i + 1}
               </button>
             ))}
           </div>
@@ -1823,11 +1831,12 @@ function App() {
           <div className="w-[1px] h-4 bg-white/10 mx-1" />
 
            <div className="relative">
-              <button
+            <button
                 onClick={() => setIsPaletteSelectOpen(!isPaletteSelectOpen)}
-                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-all border border-white/5"
+                title="Palette"
               >
-                <Palette size={14} /> Palette
+                <Palette size={14} />
               </button>
               <AnimatePresence>
                 {isPaletteSelectOpen && (
@@ -1863,9 +1872,10 @@ function App() {
            <div className="relative">
               <button
                 onClick={() => setIsProjectsOpen(!isProjectsOpen)}
-                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-all border border-white/5"
+                title="My Projects"
               >
-                <FolderSearch size={14} /> My Projects
+                <FolderSearch size={14} />
               </button>
               <AnimatePresence>
                 {isProjectsOpen && (
@@ -1931,9 +1941,10 @@ function App() {
            <div className="relative">
               <button
                 onClick={() => setIsExamplesOpen(!isExamplesOpen)}
-                className="flex items-center gap-2 px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all border border-white/5"
+                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-all border border-white/5"
+                title="Examples"
               >
-                <BookOpen size={14} /> Examples
+                <BookOpen size={14} />
               </button>
               <AnimatePresence>
                 {isExamplesOpen && (
@@ -2200,16 +2211,18 @@ function App() {
                       onClick={(e) => {
                         e.stopPropagation();
                         pushSnapshot();
-                        setViewNodes(nds => nds.map(n => n.id === menu.id
-                          ? { ...n, data: { ...n.data, minified: !isMinified } }
-                          : n
-                        ));
+                        setViewNodes(nds => nds.map(n => {
+                          if (!n.selected && n.id !== menu.id) return n;
+                          if (n.type === 'canvas_frame') return n;
+                          const isMinified = !!(n.data as any)?.minified;
+                          return { ...n, data: { ...n.data, minified: !isMinified } };
+                        }));
                         setMenu(null);
                       }}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${isMinified ? 'bg-purple-500/30 hover:bg-purple-500/60' : 'hover:bg-purple-500/60'}`}
                     >
                       <Layers size={16} className="text-purple-400 group-hover:text-white" />
-                      <span>{isMinified ? 'Expand Node' : 'Mininode'}</span>
+                      <span>{isMinified ? 'Expand Nodes' : 'Mininode'}</span>
                     </button>
                   </>
                 );
@@ -2519,6 +2532,37 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* About Modal */}
+      {showAbout && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center" onClick={() => setShowAbout(false)}>
+          <div className="bg-[#2c333f] border border-[#4f5b6b] rounded-2xl shadow-2xl w-[340px] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#3d4452] px-5 py-3 flex items-center justify-between border-b border-[#4f5b6b]">
+              <div className="flex items-center gap-3">
+                <img src={logo} className="h-5 w-5" alt="Logo" />
+                <span className="text-[11px] font-black tracking-[0.2em] text-white uppercase">VNStudio</span>
+              </div>
+              <button onClick={() => setShowAbout(false)} className="text-gray-400 hover:text-white transition-colors">
+                ×
+              </button>
+            </div>
+            <div className="p-6 flex flex-col items-center gap-3">
+              <div className="text-[18px] font-black text-white tracking-wider">VNStudio</div>
+              <div className="text-[10px] font-bold text-accent uppercase tracking-widest">Alpha 0.8</div>
+              <div className="text-[11px] text-gray-400 font-medium">Apex — UniLaSalle</div>
+              <div className="h-px w-16 bg-[#4f5b6b] my-2" />
+              <a
+                href="https://nikos-unilasalle.github.io/VisionNodes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-accent hover:text-accent/80 underline underline-offset-2 transition-colors"
+              >
+                https://nikos-unilasalle.github.io/VisionNodes
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

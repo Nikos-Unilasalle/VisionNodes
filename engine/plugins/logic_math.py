@@ -147,9 +147,14 @@ class MathDistanceNode(NodeProcessor):
 @vision_node(type_id='scalar_input', label='Number', category='math', icon='Hash',
              inputs=[],
              outputs=[{'id': 'value', 'color': 'scalar'}],
-             params=[{'id': 'value', 'label': 'Value', 'type': 'number', 'default': 0}])
+             params=[
+                 {'id': 'format', 'label': 'Format', 'type': 'enum', 'options': ['Integer', 'Float'], 'default': 1},
+                 {'id': 'value', 'label': 'Value', 'type': 'float', 'default': 0.0}
+             ])
 class ScalarInputNode(NodeProcessor):
     def process(self, inputs, params):
-        return {'value': float(params.get('value', 0))}
+        fmt = params.get('format', 1)
+        val = params.get('value', 0.0)
+        return {'value': int(val) if fmt == 0 else float(val)}
 
 
