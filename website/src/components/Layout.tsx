@@ -147,9 +147,9 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'wiki',      label: 'Node Wiki' },
   { id: 'gallery',   label: 'Gallery'   },
   { id: 'tutorials', label: 'Tutorials' },
-  { id: 'marketplace', label: 'Marketplace' },
   { id: 'community', label: 'Share'     },
   { id: 'download',  label: 'Download'  },
+  { id: 'marketplace', label: 'Marketplace' },
 ];
 
 const SubNav = ({ activeTab, setActiveTab }: { activeTab: Tab; setActiveTab: (t: Tab) => void }) => {
