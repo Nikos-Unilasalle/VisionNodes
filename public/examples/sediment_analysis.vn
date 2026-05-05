@@ -1,0 +1,739 @@
+{
+  "nodes": [
+    {
+      "id": "node-1777961556351",
+      "type": "geo_sediment_loader",
+      "position": {
+        "x": -60,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Sediment Layers",
+        "params": {
+          "path": "sediment_layers.csv",
+          "norm_mode": 0,
+          "layer_index": 1,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 194
+    },
+    {
+      "id": "node-1777961570368",
+      "type": "output_display",
+      "position": {
+        "x": 1620,
+        "y": 360
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 3
+        },
+        "ports": [
+          {
+            "id": "image__0_ibfyco",
+            "color": "image",
+            "label": "img0"
+          },
+          {
+            "id": "image__1_csfiuy",
+            "color": "image",
+            "label": "img1"
+          },
+          {
+            "id": "image__2_x0hj8b",
+            "color": "image",
+            "label": "img2"
+          }
+        ],
+        "minified": false
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "node-1777961578691-0.995832528724656",
+      "type": "geo_sediment_loader",
+      "position": {
+        "x": -60,
+        "y": 340
+      },
+      "style": {},
+      "data": {
+        "label": "Sediment Layers",
+        "params": {
+          "path": "sediment_layers.csv",
+          "layer_index": 2,
+          "norm_mode": 0,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 194
+    },
+    {
+      "id": "node-1777961579650-0.7878061995988618",
+      "type": "geo_sediment_loader",
+      "position": {
+        "x": -60,
+        "y": 560
+      },
+      "style": {},
+      "data": {
+        "label": "Sediment Layers",
+        "params": {
+          "path": "sediment_layers.csv",
+          "layer_index": 3,
+          "norm_mode": 0,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 194
+    },
+    {
+      "id": "node-1777962733449",
+      "type": "geo_band_stats",
+      "position": {
+        "x": 480,
+        "y": -300
+      },
+      "style": {},
+      "data": {
+        "label": "Band Statistics",
+        "params": {
+          "band": 1,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "node-1777962816553",
+      "type": "sci_matrix_dist",
+      "position": {
+        "x": 1380,
+        "y": -60
+      },
+      "style": {
+        "width": 360,
+        "height": 280
+      },
+      "data": {
+        "label": "Matrix Distribution",
+        "params": {
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "width": 360,
+      "height": 280
+    },
+    {
+      "id": "node-1777963043984-0.24631044608599983",
+      "type": "sci_matrix_dist",
+      "position": {
+        "x": 380,
+        "y": -80
+      },
+      "style": {
+        "width": 360,
+        "height": 280
+      },
+      "data": {
+        "label": "Matrix Distribution",
+        "params": {
+          "color_index": 2
+        },
+        "minified": false
+      },
+      "width": 360,
+      "height": 280
+    },
+    {
+      "id": "node-1777963046355-0.8809110217293898",
+      "type": "sci_matrix_dist",
+      "position": {
+        "x": 840,
+        "y": -80
+      },
+      "style": {
+        "width": 420,
+        "height": 520
+      },
+      "data": {
+        "label": "Matrix Distribution",
+        "params": {
+          "color_index": 1
+        },
+        "minified": false
+      },
+      "width": 420,
+      "height": 520
+    },
+    {
+      "id": "node-1777963415517-0.6881988008749703",
+      "type": "geo_band_stats",
+      "position": {
+        "x": 940,
+        "y": -300
+      },
+      "style": {},
+      "data": {
+        "label": "Band Statistics",
+        "params": {
+          "band": 1,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "node-1777963435851-0.8707781497928572",
+      "type": "geo_band_stats",
+      "position": {
+        "x": 1460,
+        "y": -280
+      },
+      "style": {},
+      "data": {
+        "label": "Band Statistics",
+        "params": {
+          "band": 1,
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "group-1777963737633",
+      "type": "group_node",
+      "position": {
+        "x": 820,
+        "y": 520
+      },
+      "data": {
+        "label": "Group",
+        "params": {},
+        "inputs": [
+          {
+            "id": "image__image_b",
+            "color": "image",
+            "label": "in0"
+          },
+          {
+            "id": "image__image_a",
+            "color": "image",
+            "label": "in1"
+          },
+          {
+            "id": "image__in2",
+            "color": "image",
+            "label": "in2"
+          },
+          {
+            "id": "any__layer_b",
+            "color": "any",
+            "label": "in3"
+          },
+          {
+            "id": "any__layer_a",
+            "color": "any",
+            "label": "in4"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image__main",
+            "color": "image",
+            "label": "out0"
+          },
+          {
+            "id": "image__out1",
+            "color": "image",
+            "label": "out1"
+          }
+        ],
+        "subGraph": {
+          "nodes": [
+            {
+              "id": "node-1777963184362",
+              "type": "util_compose",
+              "position": {
+                "x": 860,
+                "y": 600
+              },
+              "style": {},
+              "data": {
+                "label": "Compose",
+                "params": {},
+                "minified": true
+              },
+              "width": 208,
+              "height": 27,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 860,
+                "y": 600
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777963235744-0.7242508078041682",
+              "type": "util_compose",
+              "position": {
+                "x": 860,
+                "y": 640
+              },
+              "style": {},
+              "data": {
+                "label": "Compose",
+                "params": {
+                  "mode": 1
+                },
+                "minified": true
+              },
+              "width": 208,
+              "height": 27,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 860,
+                "y": 640
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1777963590948",
+              "type": "geo_index",
+              "position": {
+                "x": 1660,
+                "y": 780
+              },
+              "style": {},
+              "data": {
+                "label": "Geophysics Index",
+                "params": {
+                  "mode": 2,
+                  "colormap": 2
+                },
+                "schema": {
+                  "type": "geo_index",
+                  "label": "Geophysics Index",
+                  "category": [
+                    "geo",
+                    "analysis"
+                  ],
+                  "icon": "Divide",
+                  "description": "Compute an index between two layers: normalized diff, ratio, sum, etc.",
+                  "inputs": [
+                    {
+                      "id": "layer_a",
+                      "color": "any",
+                      "label": "Layer A"
+                    },
+                    {
+                      "id": "layer_b",
+                      "color": "any",
+                      "label": "Layer B"
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "main",
+                      "color": "image",
+                      "label": "Heatmap"
+                    },
+                    {
+                      "id": "data",
+                      "color": "any",
+                      "label": "Matrix"
+                    }
+                  ],
+                  "params": [
+                    {
+                      "id": "mode",
+                      "label": "Formula",
+                      "type": "enum",
+                      "options": [
+                        "Normalized Diff (A-B)/(A+B)",
+                        "Difference (A-B)",
+                        "Ratio A/B",
+                        "Normalized Sum (A+B)/max"
+                      ],
+                      "default": 0
+                    },
+                    {
+                      "id": "colormap",
+                      "label": "Colormap",
+                      "type": "enum",
+                      "options": [
+                        "RdYlGn (reco.)",
+                        "Jet",
+                        "Magma",
+                        "Viridis",
+                        "Inferno"
+                      ],
+                      "default": 0
+                    }
+                  ],
+                  "resizable": false,
+                  "min_width": 200,
+                  "min_height": 150,
+                  "colorable": true
+                }
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1660,
+                "y": 780
+              },
+              "dragging": false
+            },
+            {
+              "id": "gin-1777963737631",
+              "type": "group_input",
+              "position": {
+                "x": 620,
+                "y": 600
+              },
+              "data": {
+                "label": "Group IN",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "image__image_b",
+                    "color": "image",
+                    "label": "in0"
+                  },
+                  {
+                    "id": "image__image_a",
+                    "color": "image",
+                    "label": "in1"
+                  },
+                  {
+                    "id": "image__in2",
+                    "color": "image",
+                    "label": "in2"
+                  },
+                  {
+                    "id": "any__layer_b",
+                    "color": "any",
+                    "label": "in3"
+                  },
+                  {
+                    "id": "any__layer_a",
+                    "color": "any",
+                    "label": "in4"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "gout-1777963737632",
+              "type": "group_output",
+              "position": {
+                "x": 1920,
+                "y": 600
+              },
+              "data": {
+                "label": "Group OUT",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "image__main",
+                    "color": "image",
+                    "label": "out0"
+                  },
+                  {
+                    "id": "image__out1",
+                    "color": "image",
+                    "label": "out1"
+                  }
+                ]
+              }
+            }
+          ],
+          "edges": [
+            {
+              "source": "node-1777963184362",
+              "sourceHandle": "image__main",
+              "target": "node-1777963235744-0.7242508078041682",
+              "targetHandle": "image__image_b",
+              "id": "e-1777963240765",
+              "selected": true
+            },
+            {
+              "id": "sg-1777963737631-0.1182049333178673",
+              "source": "gin-1777963737631",
+              "sourceHandle": "image__image_b",
+              "target": "node-1777963184362",
+              "targetHandle": "image__image_b"
+            },
+            {
+              "id": "sg-1777963737631-0.796765388310461",
+              "source": "gin-1777963737631",
+              "sourceHandle": "image__image_a",
+              "target": "node-1777963235744-0.7242508078041682",
+              "targetHandle": "image__image_a"
+            },
+            {
+              "id": "sg-1777963737631-0.5865526705086067",
+              "source": "gin-1777963737631",
+              "sourceHandle": "image__in2",
+              "target": "node-1777963184362",
+              "targetHandle": "image__image_a"
+            },
+            {
+              "id": "sg-1777963737631-0.2794573560750676",
+              "source": "gin-1777963737631",
+              "sourceHandle": "any__layer_b",
+              "target": "node-1777963590948",
+              "targetHandle": "any__layer_b"
+            },
+            {
+              "id": "sg-1777963737631-0.7493895633704384",
+              "source": "gin-1777963737631",
+              "sourceHandle": "any__layer_a",
+              "target": "node-1777963590948",
+              "targetHandle": "any__layer_a"
+            },
+            {
+              "id": "sg-1777963737631-0.7503761744349058",
+              "source": "node-1777963235744-0.7242508078041682",
+              "sourceHandle": "image__main",
+              "target": "gout-1777963737632",
+              "targetHandle": "image__main"
+            },
+            {
+              "id": "sg-1777963737631-0.7145878600931685",
+              "source": "node-1777963590948",
+              "sourceHandle": "image__main",
+              "target": "gout-1777963737632",
+              "targetHandle": "image__out1"
+            }
+          ]
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 42
+    },
+    {
+      "id": "node-1777963837762",
+      "type": "canvas_frame",
+      "position": {
+        "x": -100,
+        "y": 40
+      },
+      "style": {
+        "width": 300,
+        "height": 760,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 4,
+          "title": "Importation"
+        }
+      },
+      "width": 300,
+      "height": 760
+    },
+    {
+      "id": "node-1777963897910",
+      "type": "canvas_note",
+      "position": {
+        "x": -80,
+        "y": 820
+      },
+      "style": {
+        "width": 280,
+        "height": 60
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 4,
+          "text": "S\u00e9lection de 3 couches"
+        }
+      },
+      "width": 280,
+      "height": 60
+    }
+  ],
+  "edges": [
+    {
+      "source": "node-1777961556351",
+      "sourceHandle": "any__data",
+      "target": "node-1777962733449",
+      "targetHandle": "any__data",
+      "id": "e-1777962759285",
+      "selected": false
+    },
+    {
+      "source": "node-1777961578691-0.995832528724656",
+      "sourceHandle": "any__data",
+      "target": "node-1777963046355-0.8809110217293898",
+      "targetHandle": "any__data",
+      "id": "e-1777963070137",
+      "selected": false
+    },
+    {
+      "id": "e-1777963203353-1",
+      "source": "node-1777962816553",
+      "target": "node-1777963046355-0.8809110217293898",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777963203353-2",
+      "source": "node-1777963046355-0.8809110217293898",
+      "target": "node-1777963043984-0.24631044608599983",
+      "sourceHandle": "main",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "source": "node-1777961579650-0.7878061995988618",
+      "sourceHandle": "any__data",
+      "target": "node-1777962816553",
+      "targetHandle": "any__data",
+      "id": "e-1777963328731",
+      "selected": false
+    },
+    {
+      "source": "node-1777961579650-0.7878061995988618",
+      "sourceHandle": "any__data",
+      "target": "node-1777963435851-0.8707781497928572",
+      "targetHandle": "any__data",
+      "id": "e-1777963443309",
+      "selected": false
+    },
+    {
+      "id": "e-1777963530479-1",
+      "source": "node-1777961578691-0.995832528724656",
+      "target": "node-1777962733449",
+      "sourceHandle": "any__data",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777963530479-2",
+      "source": "node-1777962733449",
+      "target": "node-1777963415517-0.6881988008749703",
+      "sourceHandle": "main",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "source": "node-1777963046355-0.8809110217293898",
+      "sourceHandle": "image__main",
+      "target": "group-1777963737633",
+      "targetHandle": "image__image_b",
+      "id": "oe-1777963737631-0.06941814749349018",
+      "selected": false
+    },
+    {
+      "source": "node-1777963043984-0.24631044608599983",
+      "sourceHandle": "image__main",
+      "target": "group-1777963737633",
+      "targetHandle": "image__image_a",
+      "id": "oe-1777963737631-0.05103142142082284",
+      "selected": false
+    },
+    {
+      "source": "node-1777961579650-0.7878061995988618",
+      "sourceHandle": "any__data",
+      "target": "group-1777963737633",
+      "targetHandle": "any__layer_b",
+      "id": "oe-1777963737631-0.8972895440048649",
+      "selected": false
+    },
+    {
+      "source": "node-1777961556351",
+      "sourceHandle": "any__data",
+      "target": "group-1777963737633",
+      "targetHandle": "any__layer_a",
+      "id": "oe-1777963737631-0.7972577161321727",
+      "selected": false
+    },
+    {
+      "source": "group-1777963737633",
+      "sourceHandle": "image__main",
+      "target": "node-1777961570368",
+      "targetHandle": "image__2_x0hj8b",
+      "id": "oe-1777963737631-0.651765531438105",
+      "selected": false
+    },
+    {
+      "source": "group-1777963737633",
+      "sourceHandle": "image__out1",
+      "target": "node-1777961570368",
+      "targetHandle": "image__1_csfiuy",
+      "id": "oe-1777963737631-0.15282627306670638",
+      "selected": false
+    },
+    {
+      "id": "e-1777963782450-1",
+      "source": "node-1777962816553",
+      "target": "node-1777963046355-0.8809110217293898",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777963782450-2",
+      "source": "node-1777963046355-0.8809110217293898",
+      "target": "node-1777963043984-0.24631044608599983",
+      "sourceHandle": "main",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "node-1777961556351",
+      "sourceHandle": "any__data",
+      "target": "node-1777963043984-0.24631044608599983",
+      "targetHandle": "any__data",
+      "id": "e-1777963799780",
+      "selected": false
+    },
+    {
+      "id": "e-1777963818150-1",
+      "source": "node-1777962816553",
+      "target": "node-1777963046355-0.8809110217293898",
+      "sourceHandle": "image__main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1777963818150-2",
+      "source": "node-1777963046355-0.8809110217293898",
+      "target": "group-1777963737633",
+      "sourceHandle": "main",
+      "targetHandle": "image__in2"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 860.5703125,
+      "h": 368
+    },
+    "previewPos": {
+      "x": 407.8125,
+      "y": -160.8125
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1777961570368"
+  }
+}
