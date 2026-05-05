@@ -495,7 +495,7 @@ class FlipNode(NodeProcessor):
     label="Resize",
     category="geom",
     icon="Scaling",
-    description="Changes the image resolution or scaling.",
+    description="Réduit la résolution de l'image pour accélérer les traitements en aval.",
     inputs=[{"id": "image", "color": "image"}],
     outputs=[
         {"id": "main", "color": "image"},
@@ -503,50 +503,56 @@ class FlipNode(NodeProcessor):
         {"id": "height", "color": "scalar"}
     ],
     params=[
-        {"id": "mode", "label": "Resize Mode", "type": "enum", "options": ["Scale", "Absolute"], "default": 0},
-        {"id": "scale", "label": "Scale Factor", "type": "float", "default": 1.0, "min": 0.01, "max": 10.0},
-        {"id": "target_width", "label": "Width (px)", "type": "int", "default": 640},
-        {"id": "target_height", "label": "Height (px)", "type": "int", "default": 480},
-        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Nearest", "Linear", "Cubic", "Lanczos"], "default": 1}
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Échelle (%)", "Largeur", "Hauteur", "Exact"], "default": 0},
+        {"id": "scale", "label": "Échelle", "type": "float", "default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01},
+        {"id": "width", "label": "Largeur (px)", "type": "int", "default": 640, "min": 1, "max": 7680},
+        {"id": "height", "label": "Hauteur (px)", "type": "int", "default": 480, "min": 1, "max": 7680},
+        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Auto (reco.)", "Nearest", "Linear", "Cubic", "Lanczos", "Area"], "default": 0}
     ]
 )
 class ResizeNode(NodeProcessor):
-    INTERP = [cv2.INTER_LINEAR, cv2.INTER_NEAREST, cv2.INTER_LINEAR,
-              cv2.INTER_CUBIC, cv2.INTER_LANCZOS4, cv2.INTER_AREA]
+    INTERP_MAP = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR,
+                  cv2.INTER_CUBIC, cv2.INTER_LANCZOS4, cv2.INTER_AREA]
 
     def process(self, inputs, params):
         img = inputs.get('image') or inputs.get('main')
         if img is None: return {"main": None}
 
         ih, iw = img.shape[:2]
-        mode    = int(params.get('mode', 0))
-        interp_idx = int(params.get('interp', 0))
+        mode = int(params.get('mode', 0))
 
-        if interp_idx == 0:  # Auto: AREA for downscale, LINEAR for upscale
-            auto_interp = None
-        else:
-            auto_interp = self.INTERP[min(interp_idx, len(self.INTERP) - 1)]
-
-        if mode == 0:  # Scale
-            sc = max(0.01, float(params.get('scale', 1.0)))
-            ow, oh = max(1, int(iw * sc)), max(1, int(ih * sc))
-        elif mode == 1:  # Fit Width
-            ow = max(1, int(params.get('width', iw)))
+        if mode == 0:  # Échelle (%)
+            sc = float(params.get('scale', 0.5))
+            ow = max(1, int(iw * sc))
+            oh = max(1, int(ih * sc))
+        elif mode == 1:  # Largeur fixe
+            ow = max(1, int(params.get('width', 640)))
             oh = max(1, int(ih * ow / iw))
-        elif mode == 2:  # Fit Height
-            oh = max(1, int(params.get('height', ih)))
+        elif mode == 2:  # Hauteur fixe
+            oh = max(1, int(params.get('height', 480)))
             ow = max(1, int(iw * oh / ih))
-        else:  # Exact W×H
-            ow = max(1, int(params.get('width', iw)))
-            oh = max(1, int(params.get('height', ih)))
+        else:  # Exact
+            ow = max(1, int(params.get('width', 640)))
+            oh = max(1, int(params.get('height', 480)))
 
-        if auto_interp is None:
-            auto_interp = cv2.INTER_AREA if (ow * oh < iw * ih) else cv2.INTER_LINEAR
+        interp_idx = int(params.get('interpolation', 0))
+        interp = self.INTERP_MAP[interp_idx] if 0 <= interp_idx < len(self.INTERP_MAP) else None
+        if interp is None:
+            interp = cv2.INTER_AREA if (ow * oh < iw * ih) else cv2.INTER_LINEAR
 
-        out = cv2.resize(img, (ow, oh), interpolation=auto_interp)
+        out = cv2.resize(img, (ow, oh), interpolation=interp)
         return {"main": out, "width": ow, "height": oh}
 
 # --- ANALYSIS & FLOW ---
+
+_FLOW_PRESETS = [
+    {'pyr_scale': 0.5, 'levels': 3, 'winsize': 15, 'iterations': 3, 'poly_n': 5, 'poly_sigma': 1.2},   # 0: Standard
+    {'pyr_scale': 0.5, 'levels': 5, 'winsize': 31, 'iterations': 7, 'poly_n': 7, 'poly_sigma': 1.5},   # 1: Précis / Lent
+    {'pyr_scale': 0.5, 'levels': 2, 'winsize': 7, 'iterations': 3, 'poly_n': 5, 'poly_sigma': 1.1},    # 2: Rapide
+    {'pyr_scale': 0.5, 'levels': 5, 'winsize': 25, 'iterations': 5, 'poly_n': 7, 'poly_sigma': 1.5},   # 3: Haute qualité
+    {'pyr_scale': 0.5, 'levels': 2, 'winsize': 10, 'iterations': 2, 'poly_n': 5, 'poly_sigma': 1.1},   # 4: Performance
+]
+
 @vision_node(
     type_id="analysis_flow",
     label="Optical Flow",
@@ -559,6 +565,7 @@ class ResizeNode(NodeProcessor):
         {"id": "data", "color": "any"}
     ],
     params=[
+        {"id": "preset", "label": "Preset", "type": "enum", "options": ['Standard', 'Précis / Lent', 'Rapide', 'Haute qualité', 'Performance', 'Personnalisé'], "default": 0},
         {"id": "pyr_scale", "label": "Pyramid Scale", "type": "float", "default": 0.5},
         {"id": "levels", "label": "Levels", "type": "int", "default": 3},
         {"id": "winsize", "label": "Win Size", "type": "int", "default": 15},
@@ -573,13 +580,27 @@ class OpticalFlowNode(NodeProcessor):
         img = inputs.get('image')
         if img is None: return {"main": None}
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
+        preset_idx = int(params.get('preset', 0))
+        if preset_idx < len(_FLOW_PRESETS):
+            pv = _FLOW_PRESETS[preset_idx]
+            pyr_scale = pv['pyr_scale']
+            levels = pv['levels']
+            winsize = pv['winsize']
+            iterations = pv['iterations']
+            poly_n = pv['poly_n']
+            poly_sigma = pv['poly_sigma']
+        else:
+            pyr_scale = float(params.get('pyr_scale', 0.5))
+            levels = int(params.get('levels', 3))
+            winsize = int(params.get('winsize', 15))
+            iterations = int(params.get('iterations', 3))
+            poly_n = int(params.get('poly_n', 5))
+            poly_sigma = float(params.get('poly_sigma', 1.2))
         flow = None
         if self.prev is not None and self.prev.shape == gray.shape:
             flow = cv2.calcOpticalFlowFarneback(
-                self.prev, gray, None, 
-                float(params.get('pyr_scale', 0.5)), int(params.get('levels', 3)), 
-                int(params.get('winsize', 15)), int(params.get('iterations', 3)), 
-                int(params.get('poly_n', 5)), float(params.get('poly_sigma', 1.2)), 0
+                self.prev, gray, None,
+                pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, 0
             )
         self.prev = gray
         return {"main": img, "data": flow}

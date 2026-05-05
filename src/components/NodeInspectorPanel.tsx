@@ -4,6 +4,14 @@ import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 import { HexColorPicker } from 'react-colorful';
 
+const FLOW_PRESETS: Record<number, Record<string, number>> = {
+  0: { pyr_scale: 0.5, levels: 3, winsize: 15, iterations: 3, poly_n: 5, poly_sigma: 1.2 },
+  1: { pyr_scale: 0.5, levels: 5, winsize: 31, iterations: 7, poly_n: 7, poly_sigma: 1.5 },
+  2: { pyr_scale: 0.5, levels: 2, winsize: 7, iterations: 3, poly_n: 5, poly_sigma: 1.1 },
+  3: { pyr_scale: 0.5, levels: 5, winsize: 25, iterations: 5, poly_n: 7, poly_sigma: 1.5 },
+  4: { pyr_scale: 0.5, levels: 2, winsize: 10, iterations: 2, poly_n: 5, poly_sigma: 1.1 },
+};
+
 // ── Form primitives ────────────────────────────────────────────────────────
 
 interface SliderProps { label: string; val: number; min: number; max: number; step?: number; onChange: (v: number) => void; }
@@ -707,6 +715,12 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* Schema-driven dynamic params (plugins) */}
       {!MANUAL_TYPES.has(node.type) && node.data.schema?.params?.map((sp: ParamSpec) => {
+        if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
+          const mode = Number(p.mode ?? 0);
+          if (sp.id === 'scale'  && mode !== 0) return null;
+          if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
+          if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
+        }
         const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
         const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
         const isEnum    = sp.type === 'enum' || sp.options;
@@ -730,7 +744,16 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             </div>
           );
         } else if (isEnum) {
-          inner = <SelectInput label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v) => up({ [sp.id]: v })} />;
+          const isFlowPreset = node.type === 'analysis_flow' && sp.id === 'preset';
+          inner = <SelectInput label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v) => {
+            if (isFlowPreset) {
+              const idx = Number(v);
+              const pv = FLOW_PRESETS[idx];
+              up(pv ? { preset: idx, ...pv } : { preset: idx });
+            } else {
+              up({ [sp.id]: v });
+            }
+          }} />;
         } else if (isColor) {
           inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isString) {
