@@ -15,7 +15,7 @@ import nodesData from '../data/nodes.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy';
+type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace';
 
 interface Port {
   id: string;
@@ -147,6 +147,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'wiki',      label: 'Node Wiki' },
   { id: 'gallery',   label: 'Gallery'   },
   { id: 'tutorials', label: 'Tutorials' },
+  { id: 'marketplace', label: 'Marketplace' },
   { id: 'community', label: 'Share'     },
   { id: 'download',  label: 'Download'  },
 ];
