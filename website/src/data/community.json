@@ -104,5 +104,16 @@
     "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/engine/plugins/sci_spectral_gain.py",
     "createdAt": "2026-05-01",
     "integrated": true
+  },
+  {
+    "id": "10",
+    "type": "vn",
+    "title": "Sediment Conductivity Analysis",
+    "author": "@nikos",
+    "description": "A specialized geophysical pipeline for analyzing soil conductivity across multiple sediment layers. Includes 3D-to-2D layer slicing, global normalization for inter-layer comparison, and automated spectral index calculation between strata.",
+    "domains": ["Environmental & Marine Sciences", "Data Science & Analytics", "Satellite & Earth Observation"],
+    "image": "slides/sediment_preview.png",
+    "fileUrl": "https://github.com/Nikos-Unilasalle/VisionNodes/raw/main/website/public/examples/sediment_analysis.vn",
+    "createdAt": "2026-05-05"
   }
 ]
