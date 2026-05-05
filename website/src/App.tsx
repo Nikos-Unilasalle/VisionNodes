@@ -9,6 +9,7 @@ import DownloadPage from './components/DownloadPage';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
 import GalleryPage from './components/GalleryPage';
+import MarketplacePage from './components/MarketplacePage';
 import AdminPage from './components/AdminPage';
 import type { Tab } from './components/Layout';
 
@@ -22,11 +23,12 @@ const Footer = ({ setActiveTab }: { setActiveTab: (t: Tab) => void }) => (
         <div className="space-y-3">
           <p className="font-bold text-[var(--text-main)] uppercase tracking-widest text-[10px]">Product</p>
           {[
-            { label: 'Overview',  tab: 'home'      as Tab },
-            { label: 'About',     tab: 'about'     as Tab },
-            { label: 'Node Wiki', tab: 'wiki'      as Tab },
-            { label: 'Tutorials', tab: 'tutorials' as Tab },
-            { label: 'Download',  tab: 'download'  as Tab },
+            { label: 'Overview',    tab: 'home'        as Tab },
+            { label: 'About',       tab: 'about'       as Tab },
+            { label: 'Node Wiki',   tab: 'wiki'        as Tab },
+            { label: 'Tutorials',   tab: 'tutorials'   as Tab },
+            { label: 'Marketplace', tab: 'marketplace' as Tab },
+            { label: 'Download',    tab: 'download'    as Tab },
           ].map(l => (
             <button key={l.label} onClick={() => setActiveTab(l.tab)}
                     className="block text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">
@@ -118,6 +120,7 @@ export default function App() {
           {activeTab === 'tutorials' && <TutorialsPage key="tutorials" />}
           {activeTab === 'community' && <CommunityPage key="community" />}
           {activeTab === 'gallery'   && <GalleryPage   key="gallery"   />}
+          {activeTab === 'marketplace' && <MarketplacePage key="marketplace" />}
           {activeTab === 'admin'     && <AdminPage     key="admin"     />}
           {activeTab === 'download'  && <DownloadPage  key="download"  />}
           {activeTab === 'privacy'   && <PrivacyPage   key="privacy"   />}

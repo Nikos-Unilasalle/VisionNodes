@@ -1,0 +1,1 @@
+src/App.tsx(129,21): error TS2551: Property 'CanvasRerouteNode' does not exist on type 'typeof import("/home/colonel/Bureau/VNStudio/src/components/Nodes")'. Did you mean 'CanvasNoteNode'?

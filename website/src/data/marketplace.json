@@ -1,0 +1,68 @@
+[
+  {
+    "id": "vet-cow-posture",
+    "title": "Bovine Posture Analysis",
+    "description": "High-precision model for detecting cow lameness and posture anomalies in real-time. Specifically tuned for stable environments.",
+    "type": "py",
+    "domains": ["Veterinary", "Agroscience"],
+    "author": "UniLaSalle Vet",
+    "price": "490€",
+    "image": "marketplace/vet_cow.png",
+    "features": ["30 FPS Inference", "Anomaly Alert", "Historical Tracking"]
+  },
+  {
+    "id": "agro-wheat-disease",
+    "title": "Wheat Foliar Disease Detector",
+    "description": "Multispectral analysis model for early detection of Septoria and Rust in wheat crops using drone imagery.",
+    "type": "py",
+    "domains": ["Agroscience"],
+    "author": "AGHYLE",
+    "price": "850€",
+    "image": "marketplace/agro_wheat.png",
+    "features": ["Multispectral Support", "GIS Integration", "Batch Processing"]
+  },
+  {
+    "id": "geo-rock-classifier",
+    "title": "Lithological Rock Classifier",
+    "description": "Automated identification of sedimentary and igneous rock types from high-resolution macro photography.",
+    "type": "py",
+    "domains": ["Geology"],
+    "author": "B2R",
+    "price": "299€",
+    "image": "marketplace/geo_rocks.png",
+    "features": ["Macro Focus", "Texture Analysis", "Chemical Composition Est."]
+  },
+  {
+    "id": "health-skin-lesion",
+    "title": "Dermatological Screening AI",
+    "description": "Pre-diagnostic screening for common skin lesions. Intended for medical research and student training.",
+    "type": "py",
+    "domains": ["Health", "Nutrition"],
+    "author": "CYCLANN",
+    "price": "1200€",
+    "image": "marketplace/health_skin.png",
+    "features": ["Privacy Compliant", "High Recall", "Edge Processing"]
+  },
+  {
+    "id": "sec-industrial-safety",
+    "title": "PPE Compliance Guard",
+    "description": "Real-time detection of helmets, vests, and safety glasses in industrial environments. Custom-trained on site specific data.",
+    "type": "py",
+    "domains": ["Security", "Electronics"],
+    "author": "GeNuMer",
+    "price": "1500€",
+    "image": "marketplace/sec_ppe.png",
+    "features": ["Low Latency", "Multi-camera support", "API Integration"]
+  },
+  {
+    "id": "nutri-food-portion",
+    "title": "Nutritional Portion Estimator",
+    "description": "Estimates food volume and nutritional values from a single image. Optimized for cafeteria and hospital settings.",
+    "type": "py",
+    "domains": ["Nutrition", "Health"],
+    "author": "INTERACT",
+    "price": "600€",
+    "image": "marketplace/nutri_food.png",
+    "features": ["Volume Estimation", "Nutrient Database", "Calorie Tracking"]
+  }
+]
