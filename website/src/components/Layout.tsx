@@ -15,7 +15,7 @@ import nodesData from '../data/nodes.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace';
+type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace' | 'agro-root-anatomy';
 
 interface Port {
   id: string;
