@@ -92,11 +92,12 @@ const _nodeTypes = {
   input_movie: N.InputMovieNode,
   input_solid_color: N.SolidColorNode,
   filter_canny: N.FilterCannyNode,
+  filter_color_mask: N.FilterColorMaskNode,
+  mask_operations: N.MaskOperationsNode,
   filter_blur: N.FilterBlurNode,
   filter_gray: N.FilterGrayNode,
   filter_threshold: N.FilterThresholdNode,
   filter_morphology: N.FilterMorphologyNode,
-  filter_color_mask: N.FilterColorMaskNode,
   geom_flip: N.GeomFlipNode,
   geom_resize: N.GeomResizeNode,
   geom_crop_rect: N.CropRectNode,
@@ -2452,7 +2453,8 @@ function App() {
                   const scaleX = imgEl.naturalWidth / rect.width;
                   const scaleY = imgEl.naturalHeight / rect.height;
                   const [r, g, b] = ctx.getImageData(Math.floor(px * scaleX), Math.floor(py * scaleY), 1, 1).data;
-                  updateNodeParams(pickColorNodeId, { r, g, b });
+                  const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+                  updateNodeParams(pickColorNodeId, { color: hex, r, g, b });
                   setPickColorNodeId(null);
                 }}
               />

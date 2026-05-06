@@ -862,16 +862,11 @@ class HandDetectionNode(NodeProcessor):
     outputs=[{"id": "mask", "color": "mask"}],
     params=[
         {"id": "mode", "label": "Mode", "type": "enum", "options": ["HSV Range", "RGB Distance"], "default": 0},
-        {"id": "h_min", "label": "H Min", "type": "int", "default": 0, "min": 0, "max": 179},
-        {"id": "h_max", "label": "H Max", "type": "int", "default": 179, "min": 0, "max": 179},
-        {"id": "s_min", "label": "S Min", "type": "int", "default": 0, "min": 0, "max": 255},
-        {"id": "s_max", "label": "S Max", "type": "int", "default": 255, "min": 0, "max": 255},
-        {"id": "v_min", "label": "V Min", "type": "int", "default": 0, "min": 0, "max": 255},
-        {"id": "v_max", "label": "V Max", "type": "int", "default": 255, "min": 0, "max": 255},
-        {"id": "r", "label": "Target R", "type": "int", "default": 128},
-        {"id": "g", "label": "Target G", "type": "int", "default": 128},
-        {"id": "b", "label": "Target B", "type": "int", "default": 128},
-        {"id": "threshold", "label": "RGB Threshold", "type": "int", "default": 30}
+        {"id": "color", "label": "Target Color", "type": "color", "default": "#FF0000"},
+        {"id": "h_tol", "label": "H Tolerance", "type": "int", "default": 10, "min": 0, "max": 90},
+        {"id": "s_tol", "label": "S Tolerance", "type": "int", "default": 40, "min": 0, "max": 255},
+        {"id": "v_tol", "label": "V Tolerance", "type": "int", "default": 40, "min": 0, "max": 255},
+        {"id": "threshold", "label": "RGB Threshold", "type": "int", "default": 30, "min": 0, "max": 441}
     ]
 )
 class ColorMaskNode(NodeProcessor):
@@ -879,22 +874,43 @@ class ColorMaskNode(NodeProcessor):
         image = inputs.get('image')
         if image is None: return {"mask": None}
         if len(image.shape) == 2 or image.shape[2] == 1: image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        
         mode = int(params.get('mode', 0))
-        if mode == 1:
-            r = int(params.get('r', 128))
-            g = int(params.get('g', 128))
-            b = int(params.get('b', 128))
+        color_hex = str(params.get('color', '#FF0000')).strip().lstrip('#')
+        if len(color_hex) == 3: color_hex = ''.join([c*2 for c in color_hex])
+        if len(color_hex) != 6: color_hex = "FF0000"
+        
+        r = int(color_hex[0:2], 16)
+        g = int(color_hex[2:4], 16)
+        b = int(color_hex[4:6], 16)
+        
+        if mode == 1: # RGB Distance
             thresh = int(params.get('threshold', 30))
             target = np.array([b, g, r], dtype=np.float32)
             diff = image.astype(np.float32) - target
             dist = np.sqrt(np.sum(diff ** 2, axis=2))
             mask = (dist <= thresh).astype(np.uint8) * 255
-        else:
-            h_min, h_max = params.get('h_min', 0), params.get('h_max', 179)
-            s_min, s_max = params.get('s_min', 0), params.get('s_max', 255)
-            v_min, v_max = params.get('v_min', 0), params.get('v_max', 255)
+        else: # HSV Range
+            h_tol = int(params.get('h_tol', 10))
+            s_tol = int(params.get('s_tol', 40))
+            v_tol = int(params.get('v_tol', 40))
+            
+            # Convert target RGB to HSV
+            target_hsv = cv2.cvtColor(np.uint8([[[b, g, r]]]), cv2.COLOR_BGR2HSV)[0][0]
+            th, ts, tv = target_hsv
+            
+            h_min, h_max = (th - h_tol) % 180, (th + h_tol) % 180
+            s_min, s_max = max(0, ts - s_tol), min(255, ts + s_tol)
+            v_min, v_max = max(0, tv - v_tol), min(255, tv + v_tol)
+            
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-            mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
+            if h_min < h_max:
+                mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
+            else:
+                # Handle hue wrap-around
+                mask1 = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, s_max, v_max]))
+                mask2 = cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, s_max, v_max]))
+                mask = cv2.bitwise_or(mask1, mask2)
         return {"mask": mask}
 
 @vision_node(

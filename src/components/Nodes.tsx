@@ -385,9 +385,29 @@ export const FilterThresholdNode = memo(({ selected, data }: any) => (
   <BaseNode title="Threshold" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} />
 ));
 
-export const FilterColorMaskNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Color Mask" icon={Palette} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
-));
+export const FilterColorMaskNode = memo(({ selected, data }: any) => {
+  const color = data.params?.color || '#FF0000';
+  const mode = data.params?.mode === 1 ? 'RGB' : 'HSV';
+  
+  return (
+    <BaseNode title="Color Mask" icon={Layers} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]}>
+      <div className="px-3 py-2 space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-5 h-5 rounded-full border border-white/20 shadow-inner" 
+              style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}44` }} 
+            />
+            <span className="text-[10px] font-mono font-bold text-gray-400">{color}</span>
+          </div>
+          <div className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-black text-accent uppercase tracking-tighter">
+            {mode}
+          </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
 
 export const FilterGrayNode = memo(({ selected, data }: any) => (
   <BaseNode title="Grayscale" icon={Eye} selected={selected} data={data} color="accent" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
@@ -1040,6 +1060,12 @@ export const UtilMaskBlendNode = memo(({ selected, data }: any) => (
     {id: 'image_b', color: 'image'},
     {id: 'mask', color: 'mask'}
   ]} outputs={[{id: 'main', color: 'image'}]} />
+));
+
+export const MaskOperationsNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Mask Operations" icon={Layers} selected={selected} data={data} color="accent"
+    inputs={[{id: 'mask_a', color: 'mask'}, {id: 'mask_b', color: 'mask'}]}
+    outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
 export const OutputDisplayNode = memo(({ selected, data }: any) => {

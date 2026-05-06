@@ -193,8 +193,15 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
   );
 };
 
-interface ColorInputProps { label: string; val: string; onChange: (v: string) => void; }
-export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
+interface ColorInputProps { 
+  label: string; 
+  val: string; 
+  onChange: (v: string) => void; 
+  nodeId?: string;
+  onPickColorToggle?: (id: string | null) => void;
+  isPicking?: boolean;
+}
+export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, isPicking }: ColorInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const currentVal = (val || '#ffffff').toUpperCase();
@@ -216,6 +223,15 @@ export const ColorInput = ({ label, val, onChange }: ColorInputProps) => {
       <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
       <div className="flex items-center gap-3 relative">
         <div className="text-[10px] font-mono text-gray-500">{currentVal}</div>
+        {onPickColorToggle && nodeId && (
+          <button
+            onClick={() => onPickColorToggle(isPicking ? null : nodeId)}
+            className={`p-1.5 rounded-md transition-all ${isPicking ? 'bg-accent text-white shadow-[0_0_10px_rgba(var(--color-accent),0.5)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+            title="Pick color from preview"
+          >
+            <Pipette size={14} />
+          </button>
+        )}
         <button 
           onClick={() => setIsOpen(!isOpen)}
           className="relative w-10 h-6 rounded-md border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
@@ -324,7 +340,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   const isN2 = sp.type === 'number' || sp.type === 'float';
                   const isB2 = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (val ?? sp.default) === 'boolean';
                   if (isE2) return <SelectInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
-                  if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} />;
+                  if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
                   if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
@@ -627,7 +643,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         <>
           <Slider label="Width"  val={p.width  ?? 640} min={128} max={2048} step={32} onChange={v => up({ width: v })} />
           <Slider label="Height" val={p.height ?? 200} min={64}  max={1024} step={16} onChange={v => up({ height: v })} />
-          <ColorInput label="Color" val={p.color ?? '#6366f1'} onChange={v => up({ color: v })} />
+          <ColorInput label="Color" val={p.color ?? '#6366f1'} onChange={v => up({ color: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />
         </>
       )}
 
@@ -721,6 +737,14 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
           if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
         }
+        if (node.type === 'filter_color_mask') {
+          const mode = Number(p.mode ?? 0);
+          if (mode === 0) { // HSV
+            if (sp.id === 'threshold') return null;
+          } else { // RGB
+            if (['h_tol', 's_tol', 'v_tol'].includes(sp.id)) return null;
+          }
+        }
         const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
         const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
         const isEnum    = sp.type === 'enum' || sp.options;
@@ -755,7 +779,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             }
           }} />;
         } else if (isColor) {
-          inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} />;
+          inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
         } else if (isString) {
           inner = sp.id === 'code'
             ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
