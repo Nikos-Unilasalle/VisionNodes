@@ -1,0 +1,181 @@
+{
+  "nodes": [
+    {
+      "id": "frame-1",
+      "type": "canvas_frame",
+      "position": { "x": -150, "y": -50 },
+      "style": { "width": 550, "height": 420, "zIndex": -1 },
+      "data": { "label": "Step 1: Input & Calibration", "params": { "title": "Step 1: Input & Calibration", "color_index": 0 } }
+    },
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": { "x": -100, "y": 100 },
+      "data": { "label": "Root Section", "params": { "path": "samples/root_section.png" } }
+    },
+    {
+      "id": "src-2",
+      "type": "input_image",
+      "position": { "x": -100, "y": 260 },
+      "data": { "label": "With Lateral Roots (ref)", "params": { "path": "samples/root_section_lateral.png" } }
+    },
+    {
+      "id": "cal-1",
+      "type": "root_calibrate",
+      "position": { "x": 180, "y": 100 },
+      "data": { "label": "Calibration", "params": { "px_per_mm": 204.0, "node_note": "204 px/mm = 2.8× Diaphot + XC-77 (Burton 2012). Adjust to your setup." } }
+    },
+
+    {
+      "id": "frame-2",
+      "type": "canvas_frame",
+      "position": { "x": 420, "y": -50 },
+      "style": { "width": 620, "height": 420, "zIndex": -1 },
+      "data": { "label": "Step 2: Isolation & Lateral Exclusion", "params": { "title": "Step 2: Isolation & Lateral Exclusion", "color_index": 1 } }
+    },
+    {
+      "id": "iso-1",
+      "type": "root_isolate_section",
+      "position": { "x": 460, "y": 100 },
+      "data": { "label": "Isolate Section", "params": { "invert": true, "blur": 5, "dilation": 2, "node_note": "invert=true pour image positive (fond clair, coupe sombre). false si image déjà inversée." } }
+    },
+    {
+      "id": "msk-1",
+      "type": "util_roi_polygon",
+      "position": { "x": 460, "y": 260 },
+      "data": { "label": "Lateral Root Polygon", "params": { "node_note": "Draw polygon around lateral roots to exclude them. Skip if none." } }
+    },
+    {
+      "id": "excl-1",
+      "type": "root_exclude_lateral",
+      "position": { "x": 730, "y": 170 },
+      "data": { "label": "Exclude Lateral", "params": {} }
+    },
+
+    {
+      "id": "frame-3",
+      "type": "canvas_frame",
+      "position": { "x": 1080, "y": -50 },
+      "style": { "width": 520, "height": 420, "zIndex": -1 },
+      "data": { "label": "Step 3: Tissue Segmentation", "params": { "title": "Step 3: Tissue Segmentation", "color_index": 2 } }
+    },
+    {
+      "id": "ste-1",
+      "type": "root_segment_stele",
+      "position": { "x": 1110, "y": 100 },
+      "data": { "label": "Stele Segmentation", "params": { "window_size": 20, "radial_weight": 2.0, "auto_invert": true, "node_note": "Auto-invert logic handles dark-stele images. Increase radial_weight if cortex bleeds into stele mask." } }
+    },
+    {
+      "id": "ctx-1",
+      "type": "root_cortex_areas",
+      "position": { "x": 1370, "y": 100 },
+      "data": { "label": "Cortex Mapping", "params": {} }
+    },
+
+    {
+      "id": "frame-4",
+      "type": "canvas_frame",
+      "position": { "x": 1640, "y": -50 },
+      "style": { "width": 1160, "height": 420, "zIndex": -1 },
+      "data": { "label": "Step 4: Anatomical Features", "params": { "title": "Step 4: Anatomical Features", "color_index": 3 } }
+    },
+    {
+      "id": "lay-1",
+      "type": "root_layers",
+      "position": { "x": 1670, "y": 100 },
+      "data": { "label": "Endo/Exodermis", "params": { "layer_width": 15, "node_note": "Adjust layer_width to match ~1 cell thickness in your images." } }
+    },
+    {
+      "id": "aer-1",
+      "type": "root_aerenchyma_detect",
+      "position": { "x": 1920, "y": 100 },
+      "data": { "label": "Aerenchyma Detect", "params": { "min_area": 100, "sd_multiplier": 1.0, "node_note": "sd_multiplier: lower = more lacunae detected. 1–2 recommended." } }
+    },
+    {
+      "id": "cel-1",
+      "type": "root_cortical_cells",
+      "position": { "x": 2170, "y": 100 },
+      "data": { "label": "Cell Counting", "params": { "min_cell_area": 20, "max_cell_area": 1000 } }
+    },
+    {
+      "id": "xyl-1",
+      "type": "root_xylem_detect",
+      "position": { "x": 2420, "y": 100 },
+      "data": { "label": "Metaxylem Detect", "params": { "min_jump_ratio": 2.0, "node_note": "Increase min_jump_ratio to suppress false positives in noisy stele." } }
+    },
+    {
+      "id": "proto-1",
+      "type": "root_protoxylem_detect",
+      "position": { "x": 2670, "y": 100 },
+      "data": { "label": "Protoxylem Detect", "params": { "min_area": 10, "max_area": 300, "node_note": "Adjust max_area below the smallest metaxylem vessel in your images." } }
+    },
+
+    {
+      "id": "frame-5",
+      "type": "canvas_frame",
+      "position": { "x": 2940, "y": -50 },
+      "style": { "width": 620, "height": 420, "zIndex": -1 },
+      "data": { "label": "Step 5: Viz & Report", "params": { "title": "Step 5: Viz & Report", "color_index": 4 } }
+    },
+    {
+      "id": "ovl-1",
+      "type": "root_anatomy_overlay",
+      "position": { "x": 2970, "y": 100 },
+      "data": {
+        "label": "Anatomy Overlay",
+        "params": {
+          "opacity": 0.45,
+          "show_outlines": true,
+          "thickness": 2,
+          "color_outline": "#ffffff",
+          "color_section": "#ff8c00",
+          "color_stele": "#00ff00",
+          "color_aerenchyma": "#ff0000",
+          "color_xylem": "#ffff00",
+          "color_protoxylem": "#ffa500",
+          "color_endodermis": "#00ffff",
+          "color_exodermis": "#ff00ff"
+        }
+      }
+    },
+    {
+      "id": "rep-1",
+      "type": "root_anatomy_report",
+      "position": { "x": 3230, "y": 100 },
+      "data": { "label": "Full Report", "params": { "order": "paper" } }
+    },
+    {
+      "id": "csv-1",
+      "type": "util_csv_export",
+      "position": { "x": 3230, "y": 240 },
+      "data": { "label": "CSV Export", "params": { "filename": "root_analysis", "path": "exports" } }
+    },
+    {
+      "id": "qs-1",
+      "type": "root_quality_score",
+      "position": { "x": 3230, "y": 360 },
+      "data": { "label": "Quality Score", "params": { "score": 5, "focus": 5 } }
+    }
+  ],
+  "edges": [
+    { "id": "e1",    "source": "src-1",   "target": "cal-1",   "sourceHandle": "image__main",       "targetHandle": "any__image" },
+    { "id": "e2",    "source": "cal-1",   "target": "iso-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e3",    "source": "src-1",   "target": "msk-1",   "sourceHandle": "image__main",       "targetHandle": "image__image" },
+    { "id": "e4",    "source": "iso-1",   "target": "excl-1",  "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e5",    "source": "msk-1",   "target": "excl-1",  "sourceHandle": "mask__mask",        "targetHandle": "mask__mask" },
+    { "id": "e6",    "source": "excl-1",  "target": "ste-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e7",    "source": "ste-1",   "target": "ctx-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e8",    "source": "ctx-1",   "target": "lay-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e9",    "source": "lay-1",   "target": "aer-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e10",   "source": "aer-1",   "target": "cel-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e11",   "source": "cel-1",   "target": "xyl-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e12",   "source": "xyl-1",   "target": "proto-1", "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e13",   "source": "proto-1", "target": "ovl-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e14",   "source": "ovl-1",   "target": "rep-1",   "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" },
+    { "id": "e15",   "source": "rep-1",   "target": "csv-1",   "sourceHandle": "dict__report",      "targetHandle": "any__val_1" },
+    { "id": "e16",   "source": "proto-1", "target": "qs-1",    "sourceHandle": "root_data__data",   "targetHandle": "root_data__data" }
+  ],
+  "ui": {
+    "visualizedNodeId": "ovl-1"
+  }
+}
