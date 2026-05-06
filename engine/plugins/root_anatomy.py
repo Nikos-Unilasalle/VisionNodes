@@ -69,6 +69,22 @@ def _state(data):
     return None
 
 
+def _encode_preview(img, quality=50):
+    """Encodes a numpy BGR image to base64 JPEG string for UI thumbnails."""
+    if img is None:
+        return None
+    try:
+        # Resize for thumbnail if too large
+        h, w = img.shape[:2]
+        if h > 180:
+            sc = 180 / h
+            img = cv2.resize(img, (int(w * sc), 180))
+        _, buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, quality])
+        return base64.b64encode(buf).decode('utf-8')
+    except Exception:
+        return None
+
+
 def _otsu_masked(gray: np.ndarray, mask: np.ndarray):
     """Otsu threshold on masked pixels only.
     Computes threshold via numpy histogram to avoid cv2.threshold requiring
@@ -209,7 +225,7 @@ class RootIsolateNode(NodeProcessor):
 
         st.sync(data)
         preview = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-        return {"data": data, "preview": preview}
+        return {"data": data, "preview": preview, "preview_b64": _encode_preview(preview)}
 
 
 @vision_node(
@@ -221,11 +237,13 @@ class RootIsolateNode(NodeProcessor):
     inputs=[{"id": "data", "color": "root_data"}],
     outputs=[
         {"id": "data", "color": "root_data"},
-        {"id": "preview", "color": "image", "label": "Stele Mask"}
+        {"id": "preview", "color": "image", "label": "Stele Mask"},
+        {"id": "density", "color": "image", "label": "Density Map (Debug)"}
     ],
     params=[
-        {"id": "window_size", "label": "Density Window", "type": "int", "default": 20, "min": 5, "max": 50},
+        {"id": "window_size", "label": "Density Window", "type": "int", "default": 20, "min": 5, "max": 100},
         {"id": "radial_weight", "label": "Radial Attenuation", "type": "float", "default": 2.0, "min": 0.0, "max": 10.0},
+        {"id": "threshold_adj", "label": "Threshold Adj.", "type": "float", "default": 1.0, "min": 0.5, "max": 1.5},
         {"id": "invert", "label": "Invert (force)", "type": "bool", "default": False},
         {"id": "auto_invert", "label": "Auto-Polarity", "type": "bool", "default": True},
     ]
@@ -235,47 +253,51 @@ class RootSegmentSteleNode(NodeProcessor):
         data = inputs.get('data')
         st = _state(data)
         if st is None:
-            return {"data": None, "preview": None}
+            return {"data": None, "preview": None, "density": None}
 
         section_mask = st.masks['section']
         if section_mask is None:
-            return {"data": data, "preview": None}
+            return {"data": data, "preview": None, "density": None}
 
         img = st.original
         h, w = img.shape[:2]
-        centroid = st.stats.get('centroid', (h // 2, w // 2))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
         
-        # Auto-polarity: root should be bright for weighting to work (paper Fig. 2c uses negative)
+        # Auto-polarity: root should be bright for weighting to work
         do_invert = params.get('invert', False)
         if params.get('auto_invert', True):
-            # Sample center of section vs periphery
-            dt = cv2.distanceTransform(section_mask, cv2.DIST_L2, 5)
-            dt_norm = cv2.normalize(dt, None, 0, 1.0, cv2.NORM_MINMAX)
-            m_inner = np.mean(gray[dt_norm > 0.8]) if np.any(dt_norm > 0.8) else 0
-            m_outer = np.mean(gray[(dt_norm < 0.3) & (section_mask > 0)]) if np.any((dt_norm < 0.3) & (section_mask > 0)) else 255
-            if m_inner < m_outer: # Center is darker than edge of root -> positive image, need negative
+            dt_ap = cv2.distanceTransform(section_mask, cv2.DIST_L2, 5)
+            dt_norm_ap = cv2.normalize(dt_ap, None, 0, 1.0, cv2.NORM_MINMAX)
+            m_inner = np.mean(gray[dt_norm_ap > 0.8]) if np.any(dt_norm_ap > 0.8) else 0
+            m_outer = np.mean(gray[(dt_norm_ap < 0.3) & (section_mask > 0)]) if np.any((dt_norm_ap < 0.3) & (section_mask > 0)) else 255
+            if m_inner < m_outer: # Stele is darker than cortex
                 do_invert = not do_invert
 
         if do_invert:
             gray = cv2.bitwise_not(gray)
 
-        # Radial spatial weighting via distance transform (paper Fig. 2b)
+        # Radial spatial weighting via distance transform
         dt = cv2.distanceTransform(section_mask, cv2.DIST_L2, 5)
         dt_norm = cv2.normalize(dt, None, 0, 1.0, cv2.NORM_MINMAX)
         radial_weight = params.get('radial_weight', 2.0)
         weight_matrix = np.power(dt_norm, radial_weight)
         
-        # Normalize weighted image to full 0-255 range to help Otsu (robustness fix)
         weighted_float = gray.astype(float) * weight_matrix
-        weighted = cv2.normalize(weighted_float, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        if np.max(weighted_float) > 0:
+            weighted = cv2.normalize(weighted_float, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        else:
+            weighted = np.zeros_like(gray)
 
-        # Local density map (paper Fig. 2c)
+        # Local density map
         win = params.get('window_size', 20)
         density_map = cv2.GaussianBlur(weighted, (win | 1, win | 1), 0)
         density_map = cv2.bitwise_and(density_map, density_map, mask=section_mask)
 
-        _, stele_mask = _otsu_masked(density_map, section_mask)
+        # Threshold with manual adjustment
+        thresh, _ = _otsu_masked(density_map, section_mask)
+        adj = params.get('threshold_adj', 1.0)
+        _, stele_mask = cv2.threshold(density_map, int(thresh * adj), 255, cv2.THRESH_BINARY)
+        stele_mask = cv2.bitwise_and(stele_mask, stele_mask, mask=section_mask)
 
         kernel = np.ones((5, 5), np.uint8)
         stele_mask = cv2.morphologyEx(stele_mask, cv2.MORPH_CLOSE, kernel)
@@ -289,23 +311,26 @@ class RootSegmentSteleNode(NodeProcessor):
         labels = measure.label(stele_mask)
         props = measure.regionprops(labels)
         if props:
-            # The stele is the largest central feature in the weighted density map
             largest = max(props, key=lambda x: x.area)
             stele_mask = (labels == largest.label).astype(np.uint8) * 255
-
-            px_per_mm = st.px_per_mm
-            st.stats['TSA'] = round(largest.area / (px_per_mm ** 2), 4)
+            st.stats['TSA'] = round(largest.area / (st.px_per_mm ** 2), 4)
 
             # SCWA: Otsu on stele pixels only
             stele_gray = cv2.bitwise_and(gray, gray, mask=stele_mask)
             _, scwa_mask = _otsu_masked(stele_gray, stele_mask)
-            st.stats['SCWA'] = round(float(np.sum(scwa_mask > 0)) / (px_per_mm ** 2), 4)
-
+            st.stats['SCWA'] = round(float(np.sum(scwa_mask > 0)) / (st.px_per_mm ** 2), 4)
             st.masks['stele'] = stele_mask
 
         st.sync(data)
         preview = cv2.cvtColor(stele_mask, cv2.COLOR_GRAY2BGR)
-        return {"data": data, "preview": preview}
+        density_preview = cv2.applyColorMap(density_map, cv2.COLORMAP_VIRIDIS)
+        return {
+            "data": data, 
+            "preview": preview, 
+            "preview_b64": _encode_preview(preview),
+            "density": density_preview,
+            "density_b64": _encode_preview(density_preview)
+        }
 
 
 @vision_node(
@@ -357,7 +382,8 @@ class RootCortexAreasNode(NodeProcessor):
         # CCA and %CCA computed in RootAerenchymaNode (CCA = TCA - AA, Table 1)
 
         st.sync(data)
-        return {"data": data, "preview": cv2.cvtColor(cortex_mask, cv2.COLOR_GRAY2BGR)}
+        preview = cv2.cvtColor(cortex_mask, cv2.COLOR_GRAY2BGR)
+        return {"data": data, "preview": preview, "preview_b64": _encode_preview(preview)}
 
 
 @vision_node(
@@ -490,7 +516,8 @@ class RootAerenchymaNode(NodeProcessor):
             st.stats['%CCA'] = round((cca_mm2 / rxsa) * 100, 2)
 
         st.sync(data)
-        return {"data": data, "preview": cv2.cvtColor(aerenchyma_mask, cv2.COLOR_GRAY2BGR)}
+        preview = cv2.cvtColor(aerenchyma_mask, cv2.COLOR_GRAY2BGR)
+        return {"data": data, "preview": preview, "preview_b64": _encode_preview(preview)}
 
 
 @vision_node(
@@ -640,7 +667,8 @@ class RootXylemNode(NodeProcessor):
         st.stats['XVA'] = round(total_xva_px / (st.px_per_mm ** 2), 4)
 
         st.sync(data)
-        return {"data": data, "preview": cv2.cvtColor(xylem_mask, cv2.COLOR_GRAY2BGR)}
+        preview = cv2.cvtColor(xylem_mask, cv2.COLOR_GRAY2BGR)
+        return {"data": data, "preview": preview, "preview_b64": _encode_preview(preview)}
 
 
 @vision_node(
@@ -673,8 +701,15 @@ class RootProtoxylemNode(NodeProcessor):
         img = st.original
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
 
+        # Detect outer periphery to avoid pith (central cells)
+        dt_root = cv2.distanceTransform(st.masks['section'], cv2.DIST_L2, 5)
+        # Average distance of stele to root edge. Anything further is likely pith in monocots.
+        dist_avg = np.mean(dt_root[stele_mask > 0]) if np.any(stele_mask > 0) else 0
+        outer_mask = (dt_root <= dist_avg) & (stele_mask > 0)
+
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        vessels_raw = cv2.bitwise_and(cv2.bitwise_not(binary), cv2.bitwise_not(binary), mask=stele_mask)
+        # Identify small vessels in the outer zone
+        vessels_raw = cv2.bitwise_and(cv2.bitwise_not(binary), cv2.bitwise_not(binary), mask=outer_mask.astype(np.uint8)*255)
 
         # Exclude already-classified metaxylem
         xylem_mask = st.masks.get('xylem')
@@ -684,8 +719,8 @@ class RootProtoxylemNode(NodeProcessor):
         labels = measure.label(vessels_raw)
         props = measure.regionprops(labels)
 
-        min_area = params.get('min_area', 10)
-        max_area = params.get('max_area', 300)
+        min_area = params.get('min_area', 5)
+        max_area = params.get('max_area', 400)
 
         proto_mask = np.zeros_like(stele_mask)
         total_px = 0
@@ -701,7 +736,8 @@ class RootProtoxylemNode(NodeProcessor):
         st.stats['PXA'] = round(total_px / (st.px_per_mm ** 2), 4)
 
         st.sync(data)
-        return {"data": data, "preview": cv2.cvtColor(proto_mask, cv2.COLOR_GRAY2BGR)}
+        preview = cv2.cvtColor(proto_mask, cv2.COLOR_GRAY2BGR)
+        return {"data": data, "preview": preview, "preview_b64": _encode_preview(preview)}
 
 
 @vision_node(
@@ -849,7 +885,7 @@ class RootAnatomyOverlayNode(NodeProcessor):
                 contours = cnts[-2]
                 cv2.drawContours(overlay, contours, -1, outline_color, thickness)
 
-        return {"image": overlay, "data": data}
+        return {"image": overlay, "data": data, "preview_b64": _encode_preview(overlay)}
 
 
 _REPORT_ORDER = [

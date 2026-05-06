@@ -6,7 +6,7 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode, ZapOff
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -2362,32 +2362,51 @@ export const AudioWaveformNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const GenericCustomNode = memo(({ selected, data }: any) => {
+export const GenericCustomNode = memo((props: any) => {
+  const { data } = props;
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
-  const IconCmp = getIcon(schema.icon, Box);
 
-  if (schema.type === 'sci_plotter') return <ScientificPlotterNode selected={selected} data={data} />;
-  if (schema.type === 'sci_histogram') return <ScientificHistogramNode selected={selected} data={data} />;
-  if (schema.type === 'sci_stats') return <ScientificStatsNode selected={selected} data={data} />;
-  if (schema.type === 'draw_text') return <DrawTextNode selected={selected} data={data} />;
-  if (schema.type === 'util_csv_export') return <UtilCSVExportNode selected={selected} data={data} />;
-  if (schema.type === 'geo_geotiff_reader') return <GeoTIFFReaderNode selected={selected} data={data} />;
-  if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode selected={selected} data={data} />;
-  if (schema.type === 'geo_band_info') return <GeoBandInfoNode selected={selected} data={data} />;
-  if (schema.type === 'geo_land_cover') return <GeoLandCoverNode selected={selected} data={data} />;
-  if (schema.type === 'sci_matrix_dist') return <MatrixDistNode selected={selected} data={data} />;
-  if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode selected={selected} data={data} />;
-  if (schema.type === 'geo_index') return <GeoIndexNode selected={selected} data={data} />;
+  if (schema.type === 'sci_plotter') return <ScientificPlotterNode {...props} />;
+  if (schema.type === 'sci_histogram') return <ScientificHistogramNode {...props} />;
+  if (schema.type === 'sci_stats') return <ScientificStatsNode {...props} />;
+  if (schema.type === 'draw_text') return <DrawTextNode {...props} />;
+  if (schema.type === 'util_csv_export') return <UtilCSVExportNode {...props} />;
+  if (schema.type === 'geo_geotiff_reader') return <GeoTIFFReaderNode {...props} />;
+  if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode {...props} />;
+  if (schema.type === 'geo_band_info') return <GeoBandInfoNode {...props} />;
+  if (schema.type === 'geo_land_cover') return <GeoLandCoverNode {...props} />;
+  if (schema.type === 'sci_matrix_dist') return <MatrixDistNode {...props} />;
+  if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
+  if (schema.type === 'geo_index') return <GeoIndexNode {...props} />;
+
+  return <GenericCustomNodeInternal {...props} schema={schema} />;
+});
+
+const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const IconCmp = getIcon(schema.icon, Box);
 
   const outputs = data.dynamicColor 
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
     : schema.outputs;
 
+  const preview = nd?.preview_b64 || (typeof nd?.preview === 'string' ? nd.preview : null);
+
   return (
     <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
+      {preview && (
+        <div className="px-2 pb-2">
+          <img 
+            src={`data:image/jpeg;base64,${preview}`} 
+            alt="Node Preview" 
+            className="w-full h-auto max-h-32 object-cover rounded-lg border border-white/10" 
+          />
+        </div>
+      )}
     </BaseNode>
   );
-});
+};
 
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
