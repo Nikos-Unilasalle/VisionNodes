@@ -12,7 +12,7 @@ import {
   Pause, Play, Save, FolderOpen, BookOpen, Type, Pipette, GitCommit, Music,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3, Crop,
   Undo2, Redo2, FolderSearch, RefreshCw, Package, LogIn, LogOut, Lock, LockOpen, ChevronsRight, FileCode,
-  FilePlus, SaveAll
+  FilePlus, SaveAll, ZapOff
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
