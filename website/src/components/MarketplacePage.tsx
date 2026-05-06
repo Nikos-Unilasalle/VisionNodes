@@ -10,7 +10,7 @@ const DOMAINS = [
   'Veterinary', 'Agroscience', 'Geology', 'Health', 'Nutrition', 'Security', 'Electronics'
 ];
 
-const MarketplacePage = () => {
+const MarketplacePage = ({ onProductClick }: { onProductClick: (link: string) => void }) => {
   const [filterDomain, setFilterDomain] = useState('All Domains');
   const [search, setSearch] = useState('');
 
@@ -79,7 +79,7 @@ const MarketplacePage = () => {
                     className={`px-4 py-1.5 rounded-xl text-[13px] font-semibold transition-all border ${
                       filterDomain === d 
                         ? 'bg-[var(--accent)] text-white border-[var(--accent)] shadow-lg shadow-[var(--accent)]/20' 
-                        : 'bg-[var(--bg-alt)] text-[var(--text-dim)] border-[var(--border)] hover:text-[var(--text-main)] hover:border-[var(--text-dim)]'
+                        : 'bg-[var(--bg-alt)] text-[var(--text-dim)] border-[var(--border)] hover:text-[var(--text-main)] hover:border(--text-dim)]'
                     }`}
                   >
                     {d}
@@ -116,7 +116,8 @@ const MarketplacePage = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="group bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl overflow-hidden hover:border-[var(--accent)] transition-all hover:shadow-2xl hover:shadow-[var(--accent)]/10 flex flex-col"
+                    onClick={() => item.link && onProductClick(item.link)}
+                    className={`group bg-[var(--bg-card)] border border-[var(--border)] rounded-3xl overflow-hidden hover:border-[var(--accent)] transition-all hover:shadow-2xl hover:shadow-[var(--accent)]/10 flex flex-col ${item.link ? 'cursor-pointer' : ''}`}
                   >
                     {/* Image Area */}
                     <div className="relative aspect-[16/10] overflow-hidden bg-[var(--bg-alt)]">
@@ -171,12 +172,17 @@ const MarketplacePage = () => {
                           <span className="text-[12px] font-semibold text-[var(--text-dim)] truncate" title={item.author}>{item.author}</span>
                         </div>
                         
-                        <button className="relative group/btn flex items-center justify-center px-5 py-2.5 rounded-xl bg-[var(--bg-alt)] border border-[var(--border)] text-[var(--text-xdim)] text-[14px] font-bold transition-all overflow-hidden cursor-not-allowed grayscale">
-                          <span className="group-hover/btn:opacity-0 transition-opacity duration-200">Acquire</span>
-                          <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 text-[var(--accent)]">
-                            Coming soon!
-                          </span>
-                        </button>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); }}
+                            className="relative group/btn flex items-center justify-center px-5 py-2.5 rounded-xl bg-[var(--bg-alt)] border border-[var(--border)] text-[var(--text-xdim)] text-[14px] font-bold transition-all overflow-hidden cursor-not-allowed grayscale"
+                          >
+                            <span className="group-hover/btn:opacity-0 transition-opacity duration-200">Acquire</span>
+                            <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 text-[var(--accent)]">
+                              Coming soon!
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

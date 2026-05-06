@@ -2378,9 +2378,89 @@ export const GenericCustomNode = memo((props: any) => {
   if (schema.type === 'sci_matrix_dist') return <MatrixDistNode {...props} />;
   if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
   if (schema.type === 'geo_index') return <GeoIndexNode {...props} />;
+  if (schema.type === 'root_anatomy_report') return <RootAnatomyReportNodeUI {...props} />;
 
   return <GenericCustomNodeInternal {...props} schema={schema} />;
 });
+
+const RootAnatomyReportNodeUI = ({ data, selected }: { data: any, selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const [expanded, setExpanded] = React.useState(false);
+  
+  const stats = nd?.report || {};
+  const hasData = Object.keys(stats).length > 0 && !stats.id; // basic check to see if we have real keys
+
+  const categories = [
+    { label: 'Root & Stele', keys: ['RXSA', 'TSA', 'TSA:RXSA', 'TSA:TCA'], bg: 'bg-blue-500/5', color: 'text-blue-400' },
+    { label: 'Vascular', keys: ['XVA', '#PX', 'PXA', 'SCWA'], bg: 'bg-emerald-500/5', color: 'text-emerald-400' },
+    { label: 'Cortex', keys: ['TCA', 'AA', '#Lac', '%A'], bg: 'bg-purple-500/5', color: 'text-purple-400' },
+  ];
+
+  const extendedCategories = [
+    { label: 'Morphometry', keys: ['RXSA', 'TSA', 'TCA', 'EA', 'ExA'], bg: 'bg-blue-500/5', color: 'text-blue-400' },
+    { label: 'Vascular System', keys: ['XVA', 'XSCWA', 'PXA', '#PX', 'SCWA'], bg: 'bg-emerald-500/5', color: 'text-emerald-400' },
+    { label: 'Cortex & Lacunae', keys: ['TCA', 'AA', '%A', '#Lac', 'CCA', '%CCA'], bg: 'bg-purple-500/5', color: 'text-purple-400' },
+    { label: 'Phénotypage Ratios', keys: ['TSA:RXSA', 'TSA:TCA', 'quality_score', 'focus_score'], bg: 'bg-amber-500/5', color: 'text-amber-400' },
+  ];
+
+  const formatKey = (key: string) => key.toUpperCase();
+  const formatVal = (v: any) => typeof v === 'number' ? (v > 100 ? Math.round(v) : v.toFixed(3)) : v || '—';
+
+  return (
+    <BaseNode title="Anatomy Report" icon={BarChart2} selected={selected} data={data} color="accent" inputs={[{id: 'data', color: 'root_data'}]} outputs={[{id: 'report', color: 'dict'}]} width={expanded ? "45rem" : "20rem"}>
+       <div className="flex flex-col gap-3 mt-2 w-full">
+          {!expanded ? (
+            <div className="flex flex-col gap-2">
+              {categories.map(cat => (
+                 <div key={cat.label} className={`p-2 rounded-xl border border-white/5 ${cat.bg}`}>
+                    <div className="text-[7px] text-gray-500 uppercase font-black mb-2 tracking-widest flex justify-between">
+                       <span>{cat.label}</span>
+                       <div className={`w-1 h-1 rounded-full ${cat.color.replace('text', 'bg')}`} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                       {cat.keys.map(k => (
+                          <div key={k} className="flex flex-col">
+                             <span className="text-[8px] text-gray-400 truncate">{formatKey(k)}</span>
+                             <span className={`text-[11px] font-bold ${cat.color}`}>{formatVal(stats[k])}</span>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+               {extendedCategories.map(cat => (
+                 <div key={cat.label} className={`p-3 rounded-xl border border-white/5 ${cat.bg}`}>
+                    <h5 className={`text-[9px] font-black uppercase tracking-wider ${cat.color} mb-3 border-b border-white/10 pb-1 flex justify-between items-center`}>
+                        {cat.label}
+                        <div className={`w-1.5 h-1.5 rounded-full ${cat.color.replace('text', 'bg')} opacity-50`} />
+                    </h5>
+                    <div className="space-y-1.5">
+                       {cat.keys.map(k => (
+                          <div key={k} className="flex justify-between items-center text-[10px]">
+                             <span className="text-gray-400">{formatKey(k)}</span>
+                             <span className={`font-mono font-bold ${cat.color} bg-black/20 px-1.5 py-0.5 rounded border border-white/5`}>{formatVal(stats[k])}</span>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+               ))}
+            </div>
+          )}
+
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            className="w-full py-2 mt-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2"
+          >
+             {expanded ? 'Collapse View' : 'Precision Report'}
+             <BarChart2 size={10} />
+          </button>
+       </div>
+    </BaseNode>
+  );
+};
 
 const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
   const nodeId = useNodeId();

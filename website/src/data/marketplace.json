@@ -64,5 +64,17 @@
     "price": "600€",
     "image": "marketplace/nutri_food.png",
     "features": ["Volume Estimation", "Nutrient Database", "Calorie Tracking"]
+  },
+  {
+    "id": "agro-root-anatomy",
+    "title": "Root Anatomy Suite",
+    "description": "Comprehensive pipeline for high-throughput root phenotyping. Automated segmentation of stele, xylem vessels, cortical cells, and lacunae.",
+    "type": "vn",
+    "domains": ["Agroscience"],
+    "author": "AGHYLE",
+    "price": "249€",
+    "image": "marketplace/root_anatomy_hero.png",
+    "features": ["13 Specialized Nodes", "Stele & Xylem Detect", "Pith Filtering", "Automated CSV Report"],
+    "link": "/marketplace/agro-root-anatomy"
   }
 ]

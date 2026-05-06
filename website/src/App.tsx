@@ -10,6 +10,7 @@ import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
 import GalleryPage from './components/GalleryPage';
 import MarketplacePage from './components/MarketplacePage';
+import RootAnatomyInfoPage from './components/RootAnatomyInfoPage';
 import AdminPage from './components/AdminPage';
 import type { Tab } from './components/Layout';
 
@@ -120,7 +121,8 @@ export default function App() {
           {activeTab === 'tutorials' && <TutorialsPage key="tutorials" />}
           {activeTab === 'community' && <CommunityPage key="community" />}
           {activeTab === 'gallery'   && <GalleryPage   key="gallery"   />}
-          {activeTab === 'marketplace' && <MarketplacePage key="marketplace" />}
+          {activeTab === 'marketplace' && <MarketplacePage key="marketplace" onProductClick={(link) => goTo(link.replace('/marketplace/', '') as any)} />}
+          {activeTab === 'agro-root-anatomy' && <RootAnatomyInfoPage key="anatomy" onBack={() => goTo('marketplace')} />}
           {activeTab === 'admin'     && <AdminPage     key="admin"     />}
           {activeTab === 'download'  && <DownloadPage  key="download"  />}
           {activeTab === 'privacy'   && <PrivacyPage   key="privacy"   />}
