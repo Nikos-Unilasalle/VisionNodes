@@ -653,6 +653,17 @@ function App() {
     document.title = "Vision Nodes Studio";
   }, []);
 
+  // Migrate legacy reroute nodes (width:16 circle) → thin strip (width:8, height:48)
+  useEffect(() => {
+    setCanvases(prev => prev.map(c => ({
+      ...c,
+      nodes: c.nodes.map(n => n.type === 'canvas_reroute'
+        ? { ...n, style: { ...n.style, width: 8, height: (typeof n.style?.height === 'number' && n.style.height >= 24) ? n.style.height : 48 } }
+        : n
+      )
+    })));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const STATIC_IMAGE_PRODUCERS = useMemo(() => new Set([
     'input_webcam', 'input_image', 'input_movie', 'input_solid_color',
     'filter_canny', 'filter_blur', 'filter_gray', 'filter_threshold',
@@ -788,8 +799,25 @@ function App() {
   const onConnect = useCallback((params: Connection) => {
     connectionMadeRef.current = true;
     pushSnapshot();
+
+    // SOURCE-dynamic: canvas_reroute factory output handle
+    const sourceNode = nodesRef.current.find((n: Node) => n.id === params.source);
+    if (sourceNode?.type === 'canvas_reroute' && params.sourceHandle?.endsWith('__DYNAMIC_NEW_HANDLE')) {
+      const idx = (sourceNode.data as any)?.ports?.length ?? 0;
+      const portId = `any__out_${idx}_${Math.random().toString(36).substr(2, 6)}`;
+      const newPort = { id: portId, color: 'any', label: `out_${idx}` };
+      const newHeight = Math.max(48, 14 + (idx + 1) * 20 + 20);
+      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.source ? {
+        ...n,
+        style: { ...n.style, height: Math.max((n.style?.height as number) || 48, newHeight) },
+        data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] },
+      } : n));
+      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, sourceHandle: portId }, eds));
+      return;
+    }
+
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
-    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display']);
+    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display', 'util_csv_export']);
     const isDynamic = targetNode && DYNAMIC_TYPES.has(targetNode.type || '');
 
     // Helper: create a new dynamic port and edge
@@ -822,6 +850,15 @@ function App() {
         if (targetNode!.type === 'output_display') {
           const { portId } = createDynamicPort('image', 'img');
           setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: `image__${portId.split('__').slice(1).join('__')}` }, eds));
+        } else if (targetNode!.type === 'util_csv_export') {
+          const idx = (targetNode!.data as any)?.ports?.length ?? 0;
+          const sourceLabel = (params.sourceHandle || '').split('__').pop() || `col${idx}`;
+          const portId = `${color}__${sourceLabel}_${idx}`;
+          const newPort = { id: portId, color, label: sourceLabel };
+          setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+            ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+            : n));
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
         } else {
           const labelPrefix = targetNode!.type === 'group_output' ? 'out' : 'in';
           const { portId, newPort } = createDynamicPort(color, labelPrefix);
@@ -1171,7 +1208,10 @@ function App() {
   const loadProjectFromPath = async (filePath: string) => {
     try {
       const content = await readTextFile(filePath);
-      const { nodes: newNodes, edges: newEdges, ui } = JSON.parse(content);
+      const { nodes: rawNodes, edges: newEdges, ui } = JSON.parse(content);
+      const newNodes = rawNodes.map((n: any) =>
+        n.type === 'canvas_reroute' ? { ...n, style: { ...n.style, width: 8, height: (typeof n.style?.height === 'number' && n.style.height >= 24) ? n.style.height : 48 } } : n
+      );
       setGroupStack([]); groupStackRef.current = [];
       setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
       if (ui) {
@@ -1517,8 +1557,9 @@ function App() {
     const defaultStyle: Record<string, any> = {
       data_inspector: { width: 220, height: 200 },
       canvas_note: { width: 300, height: 180 },
-      canvas_reroute: { width: 16, height: 16 },
+      canvas_reroute: { width: 8, height: 48 },
       canvas_frame: { width: 500, height: 400, zIndex: -1 },
+      util_csv_export: { width: 240 },
       sci_plotter: { width: 320, height: 220 },
       plotter_pro: { width: 320, height: 220 },
     };
@@ -1676,24 +1717,33 @@ function App() {
       const flowPos = instance.screenToFlowPosition({ x: mx, y: my });
 
       const rerouteId = `reroute-${Date.now()}`;
-      const rerouteNode: Node = {
-        id: rerouteId, type: 'canvas_reroute',
-        position: { x: flowPos.x - 8, y: flowPos.y - 8 },
-        data: { label: 'Reroute', params: {} },
-        width: 16, height: 16,
-      };
-
       const t = Date.now();
       const newEdges: Edge[] = [];
+      const initialPorts: { id: string; color: string; label: string }[] = [];
+
+      const mkPort = (i: number) => {
+        const portId = `any__out_${i}_${Math.random().toString(36).substr(2, 6)}`;
+        initialPorts.push({ id: portId, color: 'any', label: `out_${i}` });
+        return portId;
+      };
+
       if (handleType === 'source') {
         newEdges.push({ id: `rr-in-${t}`, source: capturedEdges[0].source, sourceHandle: capturedEdges[0].sourceHandle, target: rerouteId, targetHandle: 'any__in' });
         capturedEdges.forEach((edge, i) => {
-          newEdges.push({ id: `rr-out-${t}-${i}`, source: rerouteId, sourceHandle: 'any__out', target: edge.target, targetHandle: edge.targetHandle });
+          newEdges.push({ id: `rr-out-${t}-${i}`, source: rerouteId, sourceHandle: mkPort(i), target: edge.target, targetHandle: edge.targetHandle });
         });
       } else {
         newEdges.push({ id: `rr-in-${t}`, source: capturedEdges[0].source, sourceHandle: capturedEdges[0].sourceHandle, target: rerouteId, targetHandle: 'any__in' });
-        newEdges.push({ id: `rr-out-${t}`, source: rerouteId, sourceHandle: 'any__out', target: capturedEdges[0].target, targetHandle: capturedEdges[0].targetHandle });
+        newEdges.push({ id: `rr-out-${t}`, source: rerouteId, sourceHandle: mkPort(0), target: capturedEdges[0].target, targetHandle: capturedEdges[0].targetHandle });
       }
+
+      const height = Math.max(48, 14 + initialPorts.length * 20 + 20);
+      const rerouteNode: Node = {
+        id: rerouteId, type: 'canvas_reroute',
+        position: { x: flowPos.x - 4, y: flowPos.y - height / 2 },
+        data: { label: 'Reroute', params: {}, ports: initialPorts },
+        style: { width: 8, height },
+      };
 
       pushSnapshot();
       setViewNodes(nds => [...nds, rerouteNode]);
@@ -2098,7 +2148,29 @@ function App() {
             onConnectStart={onConnectStart} onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
-            onEdgeClick={(_, edge) => { pushSnapshot(); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
+            onEdgeClick={(event, edge) => {
+              if (event.shiftKey && instance) {
+                pushSnapshot();
+                const flowPos = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+                const rerouteId = `reroute-${Date.now()}`;
+                const portId = `any__out_0_${Math.random().toString(36).substr(2, 6)}`;
+                const t = Date.now();
+                setViewNodes(nds => [...nds, {
+                  id: rerouteId, type: 'canvas_reroute',
+                  position: { x: flowPos.x - 4, y: flowPos.y - 24 },
+                  data: { label: 'Reroute', params: {}, ports: [{ id: portId, color: 'any', label: 'out_0' }] },
+                  style: { width: 8, height: 48 },
+                }]);
+                setViewEdges(eds => [
+                  ...eds.filter(e => e.id !== edge.id),
+                  { id: `rr-in-${t}`, source: edge.source, sourceHandle: edge.sourceHandle, target: rerouteId, targetHandle: 'any__in' },
+                  { id: `rr-out-${t}`, source: rerouteId, sourceHandle: portId, target: edge.target, targetHandle: edge.targetHandle },
+                ]);
+              } else {
+                pushSnapshot();
+                setViewEdges(eds => eds.filter(e => e.id !== edge.id));
+              }
+            }}
             nodeTypes={dynamicNodeTypes}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
