@@ -1190,19 +1190,19 @@ class FrameNode(NodeProcessor):
     inputs=[{"id": "in", "color": "any"}],
     outputs=[{"id": "out", "color": "any"}]
 )
+class _PassThrough(dict):
+    """Returns the single pass-through value for any key — supports dynamic fan-out outputs."""
+    def __init__(self, val):
+        self._val = val
+        super().__init__({'out': val, 'main': val, 'image': val, 'data': val})
+    def get(self, key, default=None): return self._val
+    def __getitem__(self, key): return self._val
+    def __contains__(self, key): return True
+
 class RerouteNode(NodeProcessor):
     def process(self, inputs, params):
-        out = {}
-        for k, v in inputs.items():
-            if k != 'raw_frame':
-                out[k] = v
-        # Ensure 'main', 'image', 'data' exist if any other exist, since we don't know the intent
-        first_val = next(iter(out.values()), None) if out else None
-        if 'main' not in out: out['main'] = first_val
-        if 'image' not in out: out['image'] = first_val
-        if 'data' not in out: out['data'] = first_val
-        if 'out' not in out: out['out'] = first_val
-        return out
+        val = next((v for k, v in inputs.items() if k not in ('raw_frame',)), None)
+        return _PassThrough(val)
 
 @vision_node(
     type_id="output_display",

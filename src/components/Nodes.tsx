@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
-import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals } from 'reactflow';
+import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals, NodeResizer, useStore } from 'reactflow';
 import { useNodeData } from '../context/NodesDataContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import {
@@ -1658,56 +1658,76 @@ export const DrawTextNode = memo(({ selected, data }: any) => {
 });
 
 export const UtilCSVExportNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      return { id: shortId, color: p.color, label: p.label };
+    }),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
+  ];
+
   const handleBrowse = async () => {
     try {
-      const selected = await save({
-        filters: [{ name: 'CSV', extensions: ['csv'] }]
-      });
-      if (selected && typeof selected === 'string') {
-        const lastSlash = Math.max(selected.lastIndexOf('/'), selected.lastIndexOf('\\'));
-        const path = selected.substring(0, lastSlash);
-        let filename = selected.substring(lastSlash + 1);
-        if (filename.toLowerCase().endsWith('.csv')) {
-          filename = filename.substring(0, filename.length - 4);
-        }
+      const result = await save({ filters: [{ name: 'CSV', extensions: ['csv'] }] });
+      if (result && typeof result === 'string') {
+        const lastSlash = Math.max(result.lastIndexOf('/'), result.lastIndexOf('\\'));
+        const path = result.substring(0, lastSlash);
+        let filename = result.substring(lastSlash + 1);
+        if (filename.toLowerCase().endsWith('.csv')) filename = filename.slice(0, -4);
         data.onChangeParams?.({ path, filename });
       }
-    } catch (err) {
-      console.error('Failed to open dialog:', err);
-    }
+    } catch (err) { console.error('Failed to open dialog:', err); }
   };
 
-  const statusDot = (
-    <div className={`w-2.5 h-2.5 rounded-full ${data.params?.record ? 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-gray-600'}`} />
+  const handleSnapshot = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    data.onChangeParams?.({ snapshot: 1 });
+    setTimeout(() => data.onChangeParams?.({ snapshot: 0 }), 400);
+  };
+
+  const isRecording = !!data.params?.record;
+
+  const headerExtra = (
+    <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-gray-600'}`} />
   );
 
   return (
-    <BaseNode 
-      title="CSV Export" 
-      icon={Database} 
-      selected={selected} 
+    <BaseNode
+      title="CSV Export"
+      icon={Database}
+      selected={selected}
       data={data}
-      color="accent" 
-      inputs={data.schema?.inputs || []}
-      headerExtra={statusDot}
+      color="accent"
+      inputs={inputs}
+      headerExtra={headerExtra}
     >
-      <div className="p-3 space-y-3 mx-6">
-        <button 
+      <div className="p-3 space-y-2 mx-2">
+        <button
           onClick={handleBrowse}
-          className="w-full py-4 bg-accent/10 hover:bg-accent/20 border border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group"
+          className="w-full py-3 bg-accent/10 hover:bg-accent/20 border border-dashed border-accent/30 rounded-2xl flex items-center justify-center gap-2 transition-all group"
         >
-          <FolderOpen size={20} className="text-accent group-hover:scale-110 transition-transform" />
-          <div className="text-[10px] font-black text-accent uppercase tracking-widest text-center">Select Export Path</div>
+          <FolderOpen size={14} className="text-accent group-hover:scale-110 transition-transform" />
+          <span className="text-[10px] font-black text-accent uppercase tracking-widest">Select Path</span>
         </button>
-        
-        <div className="space-y-4">
-          <div className="px-3 py-2.5 bg-black/10 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
-            <div className="text-[9px] font-mono text-gray-400 truncate">{data.params?.path || "Not selected"}</div>
-          </div>
-          <div className="px-3 py-2.5 bg-black/10 rounded-xl border border-white/5 flex flex-col gap-1 shadow-inner">
-            <div className="text-[9px] font-mono text-white/70 truncate">{data.params?.filename || "capture"}.csv</div>
-          </div>
+
+        <div className="px-3 py-2 bg-black/10 rounded-xl border border-white/5 shadow-inner">
+          <div className="text-[9px] font-mono text-gray-400 truncate">{data.params?.path || "No folder"} / <span className="text-white/70">{data.params?.filename || "capture"}.csv</span></div>
         </div>
+
+        <button
+          onClick={handleSnapshot}
+          className="w-full py-2.5 bg-white/5 hover:bg-accent/15 border border-white/10 hover:border-accent/30 rounded-xl flex items-center justify-center gap-2 transition-all group active:scale-95"
+        >
+          <Download size={12} className="text-gray-400 group-hover:text-accent transition-colors" />
+          <span className="text-[10px] font-black text-gray-400 group-hover:text-accent uppercase tracking-widest transition-colors">Snapshot</span>
+        </button>
       </div>
     </BaseNode>
   );
@@ -1879,21 +1899,58 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   );
 });
 
-export const CanvasRerouteNode = memo(({ selected }: any) => (
-  <div
-    style={{
-      width: 16, height: 16,
-      borderRadius: '50%',
-      background: selected ? '#ffffff' : '#555',
-      border: selected ? '2px solid #fff' : '2px solid #888',
-      boxShadow: selected ? '0 0 0 2px #3b82f6' : '0 2px 6px rgba(0,0,0,0.5)',
-      position: 'relative',
-    }}
-  >
-    <StyledHandle type="target" position={Position.Left} id="in" color="any" top="50%" />
-    <StyledHandle type="source" position={Position.Right} id="out" color="any" top="50%" />
-  </div>
-));
+export const CanvasRerouteNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const nodeHeight = useStore((s: any) => s.nodeInternals.get(nodeId)?.height ?? 48);
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [nodeHeight, ports.length, nodeId, updateNodeInternals]);
+
+  // Evenly distribute output handles (ports + factory) across the full height, pixels only
+  const total = ports.length + 1; // dynamic ports + factory
+  const outTop = (i: number) => Math.round((i + 1) / (total + 1) * nodeHeight);
+
+  return (
+    <div
+      style={{
+        width: 8,
+        height: '100%',
+        minHeight: 48,
+        borderRadius: 4,
+        background: selected ? '#888' : '#444',
+        border: selected ? '1px solid #aaa' : '1px solid #666',
+        boxShadow: selected ? '0 0 0 2px #3b82f6' : '0 2px 6px rgba(0,0,0,0.5)',
+        position: 'relative',
+      }}
+    >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={8}
+        maxWidth={8}
+        minHeight={24}
+        onResize={() => updateNodeInternals(nodeId)}
+        handleStyle={{ width: 6, height: 6 }}
+        lineStyle={{ borderColor: '#3b82f6' }}
+      />
+      {/* Input fixed near top */}
+      <StyledHandle type="target" position={Position.Left} id="in" color="any" top="10px" />
+      {/* Dynamic outputs spread evenly */}
+      {ports.map((p, i) => (
+        <StyledHandle
+          key={p.id}
+          type="source"
+          position={Position.Right}
+          id={p.id.split('__').slice(1).join('__')}
+          color={p.color}
+          top={`${outTop(i)}px`}
+        />
+      ))}
+      {/* Factory handle always at bottom of distribution */}
+      <StyledHandle type="source" position={Position.Right} id="DYNAMIC_NEW_HANDLE" color="any" top={`${outTop(ports.length)}px`} />
+    </div>
+  );
+});
 
 export const OutputMovieNode = memo(({ selected, data }: any) => {
   const nd = useNodeData(useNodeId());
