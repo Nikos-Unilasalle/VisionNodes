@@ -10,11 +10,12 @@ import numpy as np
     description="Segments mineral grains from thin section images using PPL+XPL gradient fusion and watershed.",
     inputs=[
         {'id': 'xpl', 'color': 'image', 'label': 'XPL'},
-        {'id': 'ppl', 'color': 'image', 'label': 'PPL'},
+        {'id': 'ppl', 'color': 'image', 'label': 'PPL (optional)'},
     ],
     outputs=[
         {'id': 'overlay',    'color': 'image', 'label': 'Overlay'},
         {'id': 'labels',     'color': 'image', 'label': 'Labels'},
+        {'id': 'markers',    'color': 'any',   'label': 'Markers (int32)'},
         {'id': 'boundaries', 'color': 'image', 'label': 'Boundaries'},
         {'id': 'opaques',    'color': 'image', 'label': 'Opaques'},
     ],
@@ -55,7 +56,6 @@ class GeoGrainSegment(NodeProcessor):
         opaque_min   = int(params.get('opaque_min_px', 300))
         min_px       = int(params.get('min_grain_px', 500))
         fill_r       = int(params.get('fill_radius', 5))
-        seed_t       = int(params.get('seed_thresh', 40))   # kept for compat
         ppl_w        = float(params.get('ppl_weight', 0.4))
 
         ksize = blur_r * 2 + 1
@@ -169,6 +169,7 @@ class GeoGrainSegment(NodeProcessor):
         return {
             'overlay':    overlay,
             'labels':     labels_img,
+            'markers':    markers_ws,
             'boundaries': boundary_viz,
             'opaques':    opaque_viz,
         }

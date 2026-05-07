@@ -25,7 +25,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, mkdir, exists, BaseDirectory, writeFile, rename, readDir } from '@tauri-apps/plugin-fs';
 // Removed documentDir and join to avoid Path plugin dependency
-// Examples loaded dynamically from public/examples/
+// Templates loaded dynamically from public/templates/
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const initialNodes: Node[] = [];
@@ -415,8 +415,8 @@ function App() {
   const [pendingConnection, setPendingConnection] = useState<any>(null);
   const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[1].id);
   const [rightPanelWidth, setRightPanelWidth] = useState(480);
-  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
-  const [examples, setExamples] = useState<{name: string, description: string, file: string}[]>([]);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [templates, setTemplates] = useState<{name: string, description: string, file: string}[]>([]);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [workDir, setWorkDir] = useState<string | null>(() => localStorage.getItem('vn-work-dir'));
   const [workDirFiles, setWorkDirFiles] = useState<string[]>([]);
@@ -459,7 +459,17 @@ function App() {
   previewSizeRef.current = previewSize;
   const previewResizeRef = useRef<HTMLDivElement>(null);
   const [instance, setInstance] = useState<any>(null);
-  
+  const [isRerouting, setIsRerouting] = useState(false);
+  const [reroutePos, setReroutePos] = useState({ x: 0, y: 0 });
+  const reroutePosRef = useRef({ x: 0, y: 0 });
+  const connectingRef = useRef<{ nodeId: string; handleId: string; handleType: string } | null>(null);
+  const connectionMadeRef = useRef(false);
+  const rerouteDragRef = useRef<{
+    capturedEdges: Edge[];
+    handleType: 'source' | 'target';
+    freeEndpoints: { x: number; y: number }[];
+  } | null>(null);
+
   const handleCapture = useCallback(async (nodeId: string, base64: string) => {
     try {
       const path = await save({
@@ -770,7 +780,13 @@ function App() {
     setViewEdges((eds) => applyEdgeChanges(changes, eds));
   }, [pushSnapshot, setViewEdges]);
 
+  const onConnectStart = useCallback((_: any, { nodeId, handleId, handleType }: any) => {
+    connectingRef.current = { nodeId, handleId, handleType };
+    connectionMadeRef.current = false;
+  }, []);
+
   const onConnect = useCallback((params: Connection) => {
+    connectionMadeRef.current = true;
     pushSnapshot();
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
     const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'export_py', 'output_display']);
@@ -844,19 +860,21 @@ function App() {
     return () => clearTimeout(timer);
   }, [canvasNodes, canvasEdges, isConnected, updateGraph]);
 
-  const onConnectEnd = useCallback((event: any, connectionState?: any) => {
-    if (connectionState && connectionState.isValid === false) {
+  const onConnectEnd = useCallback((event: any) => {
+    if (!connectionMadeRef.current && connectingRef.current) {
       const containerBounds = document.querySelector('.react-flow')?.getBoundingClientRect();
       const x = event.clientX - (containerBounds?.left || 0);
       const y = event.clientY - (containerBounds?.top || 0);
       setPendingConnection({
-        sourceNode: connectionState.fromNode?.id,
-        sourceHandle: connectionState.fromHandle?.id,
-        type: connectionState.fromHandle?.type,
-        x, y
+        sourceNode: connectingRef.current.nodeId,
+        sourceHandle: connectingRef.current.handleId,
+        type: connectingRef.current.handleType,
+        x, y,
       });
       setIsAddMenuOpen(true);
     }
+    connectingRef.current = null;
+    connectionMadeRef.current = false;
   }, []);
 
   const isValidConnection = useCallback((connection: Connection) => {
@@ -874,7 +892,8 @@ function App() {
     return sourceColor === targetColor;
   }, []);
 
-  const onNodeDragStop = useCallback((_: any, node: Node) => {
+  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+    if (!event.shiftKey) return;
     const distToSq = (p: any, v: any, w: any) => {
       const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
       if (l2 === 0) return Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2);
@@ -1183,7 +1202,7 @@ function App() {
     }
   };
 
-  const applyExampleData = (data: any) => {
+  const applyTemplateData = (data: any) => {
     const nodes = data.nodes || [];
     const edges = data.edges || [];
     setGroupStack([]); groupStackRef.current = [];
@@ -1199,23 +1218,23 @@ function App() {
         }
     }
     updateGraph(nodes, edges);
-    setIsExamplesOpen(false);
+    setIsTemplatesOpen(false);
   };
 
-  const loadExample = async (file: string) => {
+  const loadTemplate = async (file: string) => {
     try {
-      const data = await fetch(`/examples/${file}`).then(r => r.json());
-      applyExampleData(data);
+      const data = await fetch(`/templates/${file}`).then(r => r.json());
+      applyTemplateData(data);
     } catch(e) {
-      console.error('Failed to load example:', file, e);
+      console.error('Failed to load template:', file, e);
     }
   };
 
   useEffect(() => {
-    fetch('/examples/manifest.json')
+    fetch('/templates/manifest.json')
       .then(r => r.json())
-      .then(setExamples)
-      .catch(e => console.error('Failed to load examples manifest:', e));
+      .then(setTemplates)
+      .catch(e => console.error('Failed to load templates manifest:', e));
   }, []);
 
   // ─── Group Navigation ────────────────────────────────────────────────────────
@@ -1602,6 +1621,98 @@ function App() {
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
   }, [setViewEdges]);
 
+  // Shift+drag on a handle → reroute all its edges through a new reroute node
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (!e.shiftKey) return;
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains('react-flow__handle')) return;
+      const handleId = target.dataset.handleid;
+      const nodeId = target.dataset.nodeid;
+      if (!handleId || !nodeId) return;
+
+      const sourceEdges = edgesRef.current.filter(e => e.source === nodeId && e.sourceHandle === handleId);
+      const targetEdges = edgesRef.current.filter(e => e.target === nodeId && e.targetHandle === handleId);
+      const handleType: 'source' | 'target' = sourceEdges.length > 0 ? 'source' : 'target';
+      const connectedEdges = sourceEdges.length > 0 ? sourceEdges : targetEdges;
+      if (connectedEdges.length === 0) return;
+
+      e.stopImmediatePropagation();
+      e.preventDefault();
+
+      const freeEndpoints = connectedEdges.map(edge => {
+        const freeNodeId = handleType === 'source' ? edge.target : edge.source;
+        const freeHandleId = handleType === 'source' ? edge.targetHandle : edge.sourceHandle;
+        const el = freeHandleId
+          ? document.querySelector(`[data-nodeid="${freeNodeId}"][data-handleid="${freeHandleId}"]`) as HTMLElement | null
+          : null;
+        const rect = el?.getBoundingClientRect();
+        return { x: rect ? rect.left + rect.width / 2 : e.clientX, y: rect ? rect.top + rect.height / 2 : e.clientY };
+      });
+
+      rerouteDragRef.current = { capturedEdges: connectedEdges, handleType, freeEndpoints };
+      reroutePosRef.current = { x: e.clientX, y: e.clientY };
+      setReroutePos({ x: e.clientX, y: e.clientY });
+      setIsRerouting(true);
+    };
+    document.addEventListener('mousedown', onMouseDown, { capture: true });
+    return () => document.removeEventListener('mousedown', onMouseDown, { capture: true });
+  }, []);
+
+  useEffect(() => {
+    if (!isRerouting) return;
+
+    const onMove = (e: MouseEvent) => {
+      reroutePosRef.current = { x: e.clientX, y: e.clientY };
+      setReroutePos({ x: e.clientX, y: e.clientY });
+    };
+
+    const onUp = () => {
+      const drag = rerouteDragRef.current;
+      if (!drag || !instance) { setIsRerouting(false); return; }
+
+      const { capturedEdges, handleType } = drag;
+      const { x: mx, y: my } = reroutePosRef.current;
+      const flowPos = instance.screenToFlowPosition({ x: mx, y: my });
+
+      const rerouteId = `reroute-${Date.now()}`;
+      const rerouteNode: Node = {
+        id: rerouteId, type: 'canvas_reroute',
+        position: { x: flowPos.x - 8, y: flowPos.y - 8 },
+        data: { label: 'Reroute', params: {} },
+        width: 16, height: 16,
+      };
+
+      const t = Date.now();
+      const newEdges: Edge[] = [];
+      if (handleType === 'source') {
+        newEdges.push({ id: `rr-in-${t}`, source: capturedEdges[0].source, sourceHandle: capturedEdges[0].sourceHandle, target: rerouteId, targetHandle: 'any__in' });
+        capturedEdges.forEach((edge, i) => {
+          newEdges.push({ id: `rr-out-${t}-${i}`, source: rerouteId, sourceHandle: 'any__out', target: edge.target, targetHandle: edge.targetHandle });
+        });
+      } else {
+        newEdges.push({ id: `rr-in-${t}`, source: capturedEdges[0].source, sourceHandle: capturedEdges[0].sourceHandle, target: rerouteId, targetHandle: 'any__in' });
+        newEdges.push({ id: `rr-out-${t}`, source: rerouteId, sourceHandle: 'any__out', target: capturedEdges[0].target, targetHandle: capturedEdges[0].targetHandle });
+      }
+
+      pushSnapshot();
+      setViewNodes(nds => [...nds, rerouteNode]);
+      setViewEdges(eds => [...eds.filter(e => !capturedEdges.some(ce => ce.id === e.id)), ...newEdges]);
+      document.body.style.cursor = '';
+      rerouteDragRef.current = null;
+      setIsRerouting(false);
+    };
+
+    document.body.style.cursor = 'crosshair';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      document.body.style.cursor = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [isRerouting, instance, pushSnapshot, setViewNodes, setViewEdges]);
+
   const coloredEdges = useMemo(() => {
     const resolveColor = (edge: any, visited = new Set()): string => {
       if (!edge || visited.has(edge.id)) return '#555';
@@ -1622,15 +1733,17 @@ function App() {
       return '#555';
     };
 
-    return edges.map((edge: any) => ({
-      ...edge,
-      style: {
-        ...edge.style,
-        stroke: resolveColor(edge),
-        strokeWidth: 2,
-      }
-    }));
-  }, [edges, nodes]);
+    const hiddenIds = isRerouting && rerouteDragRef.current
+      ? new Set(rerouteDragRef.current.capturedEdges.map(e => e.id))
+      : null;
+
+    return edges
+      .filter(edge => !hiddenIds || !hiddenIds.has(edge.id))
+      .map((edge: any) => ({
+        ...edge,
+        style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: 2 },
+      }));
+  }, [edges, nodes, isRerouting]);
 
   return (
     <div className="w-full h-screen bg-[#2c333f] flex flex-col text-white font-sans overflow-hidden select-none">
@@ -1941,30 +2054,30 @@ function App() {
 
            <div className="relative">
               <button
-                onClick={() => setIsExamplesOpen(!isExamplesOpen)}
+                onClick={() => setIsTemplatesOpen(!isTemplatesOpen)}
                 className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-gray-400 transition-all border border-white/5"
-                title="Examples"
+                title="Templates"
               >
                 <BookOpen size={14} />
               </button>
               <AnimatePresence>
-                {isExamplesOpen && (
+                {isTemplatesOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsExamplesOpen(false)} />
-                    <motion.div 
+                    <div className="fixed inset-0 z-40" onClick={() => setIsTemplatesOpen(false)} />
+                    <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       className="absolute right-0 mt-2 w-64 bg-[#3d4452] border border-[#4f5b6b] rounded-xl shadow-2xl z-50 p-2 overflow-y-auto max-h-[70vh]"
                     >
-                      {examples.map((ex, i) => (
+                      {templates.map((t, i) => (
                         <button
                           key={i}
-                          onClick={() => loadExample(ex.file)}
+                          onClick={() => loadTemplate(t.file)}
                           className="w-full text-left p-3 hover:bg-accent/10 rounded-lg group transition-all"
                         >
-                          <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">{ex.name}</div>
-                          <div className="text-[8px] text-gray-500 mt-1 leading-tight">{ex.description}</div>
+                          <div className="text-[10px] font-bold text-gray-200 group-hover:text-accent uppercase tracking-tighter">{t.name}</div>
+                          <div className="text-[8px] text-gray-500 mt-1 leading-tight">{t.description}</div>
                         </button>
                       ))}
                     </motion.div>
@@ -1982,7 +2095,7 @@ function App() {
             nodes={nodesWithData} edges={coloredEdges}
             onInit={setInstance}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} 
-            onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
+            onConnectStart={onConnectStart} onConnect={onConnect} onConnectEnd={onConnectEnd} isValidConnection={isValidConnection}
             onNodeDragStart={() => pushSnapshot()}
             onNodeDragStop={onNodeDragStop}
             onEdgeClick={(_, edge) => { pushSnapshot(); setViewEdges(eds => eds.filter(e => e.id !== edge.id)); }}
@@ -2054,6 +2167,25 @@ function App() {
             </Panel>
           </ReactFlow>
           </NodesDataContext.Provider>
+
+          {/* Reroute drag overlay */}
+          {isRerouting && rerouteDragRef.current && (
+            <div className="fixed inset-0 z-[9999] pointer-events-none">
+              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+                {rerouteDragRef.current.freeEndpoints.map((ep, i) => (
+                  <line key={i} x1={ep.x} y1={ep.y} x2={reroutePos.x} y2={reroutePos.y}
+                    stroke="#ffffff" strokeWidth={2} strokeDasharray="6 4" strokeOpacity={0.5} />
+                ))}
+              </svg>
+              <div style={{
+                position: 'absolute',
+                left: reroutePos.x - 8, top: reroutePos.y - 8,
+                width: 16, height: 16, borderRadius: '50%',
+                background: '#ffffff', border: '2px solid #111',
+                boxShadow: '0 0 0 3px #3b82f6, 0 0 12px #3b82f699',
+              }} />
+            </div>
+          )}
 
           {/* Engine notification bar */}
           {notifications.length > 0 && (
