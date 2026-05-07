@@ -39,10 +39,11 @@ const withNodeResizer = (
 ) => memo(({ selected, data, ...props }: any) => {
   const color = getColor ? getColor(data) : 'var(--accent, #7c3aed)';
   const isMinified = !!(data as any)?.minified;
+  const isCollapsed = !!(data as any)?.params?.collapsed;
   return (
-    <div className="w-full" style={{ minWidth: isMinified ? undefined : minWidth, minHeight: isMinified ? undefined : minHeight, height: isMinified ? 22 : undefined, position: 'relative' }}>
+    <div className="w-full" style={{ minWidth: (isMinified || isCollapsed) ? undefined : minWidth, minHeight: (isMinified || isCollapsed) ? undefined : minHeight, height: isMinified ? 22 : '100%', position: 'relative' }}>
       <NodeResizer
-        isVisible={selected && !isMinified}
+        isVisible={selected && !isMinified && !(data as any)?.params?.collapsed}
         minWidth={minWidth}
         minHeight={minHeight}
         color={color}
@@ -746,6 +747,18 @@ function App() {
           },
           onExportPy: node.type === 'export_py' ? () => handleExportPy(node.id) : undefined,
           onRemovePort: node.type === 'sci_plotter' ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
+          onToggleCollapse: node.type === 'canvas_frame' ? () => {
+            pushSnapshot();
+            setViewNodes(nds => nds.map(n => {
+              if (n.id !== node.id) return n;
+              const collapsed = !!(n.data?.params?.collapsed);
+              if (!collapsed) {
+                return { ...n, style: { ...n.style, height: 34 }, data: { ...n.data, params: { ...n.data.params, collapsed: true, savedHeight: (n.style?.height as number) ?? 400 } } };
+              } else {
+                return { ...n, style: { ...n.style, height: (n.data?.params?.savedHeight as number) ?? 400 }, data: { ...n.data, params: { ...n.data.params, collapsed: false } } };
+              }
+            }));
+          } : undefined,
         }
       };
     });
@@ -1561,7 +1574,14 @@ function App() {
             pushSnapshot();
             setViewNodes(nds => nds.map(n => {
               if (!n.selected) return n;
-              if (n.type === 'canvas_frame') return n;
+              if (n.type === 'canvas_frame') {
+                const collapsed = !!(n.data?.params?.collapsed);
+                if (!collapsed) {
+                  return { ...n, style: { ...n.style, height: 34 }, data: { ...n.data, params: { ...n.data.params, collapsed: true, savedHeight: (n.style?.height as number) ?? 400 } } };
+                } else {
+                  return { ...n, style: { ...n.style, height: (n.data?.params?.savedHeight as number) ?? 400 }, data: { ...n.data, params: { ...n.data.params, collapsed: false } } };
+                }
+              }
               const isMinified = !!(n.data as any)?.minified;
               return { ...n, data: { ...n.data, minified: !isMinified } };
             }));
@@ -2411,7 +2431,37 @@ function App() {
               )}
               {(() => {
                 const menuNode = nodes.find(n => n.id === menu.id);
-                const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(menuNode?.type || '');
+                if (menuNode?.type === 'canvas_frame') {
+                  const isCollapsed = !!(menuNode?.data?.params?.collapsed);
+                  return (
+                    <>
+                      <div className="h-px bg-white/5 my-1 mx-2" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          pushSnapshot();
+                          setViewNodes(nds => nds.map(n => {
+                            if (n.id !== menu.id) return n;
+                            const collapsed = !!(n.data?.params?.collapsed);
+                            if (!collapsed) {
+                              return { ...n, style: { ...n.style, height: 34 }, data: { ...n.data, params: { ...n.data.params, collapsed: true, savedHeight: (n.style?.height as number) ?? 400 } } };
+                            } else {
+                              return { ...n, style: { ...n.style, height: (n.data?.params?.savedHeight as number) ?? 400 }, data: { ...n.data, params: { ...n.data.params, collapsed: false } } };
+                            }
+                          }));
+                          setMenu(null);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group hover:bg-white/10"
+                      >
+                        {isCollapsed
+                          ? <Maximize size={16} className="text-accent group-hover:text-white" />
+                          : <Minimize2 size={16} className="text-accent group-hover:text-white" />}
+                        <span>{isCollapsed ? 'Déplier' : 'Replier'}</span>
+                      </button>
+                    </>
+                  );
+                }
+                const isUiNode = ['canvas_note', 'canvas_reroute'].includes(menuNode?.type || '');
                 if (isUiNode) return null;
                 const isLocked = !!(menuNode?.data as any)?.lockedOut;
                 const isBypassed = !!(menuNode?.data as any)?.bypassed;
