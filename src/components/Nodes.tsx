@@ -2574,6 +2574,7 @@ const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const title = data.params?.title ?? 'Frame Layer';
+  const isCollapsed = !!(data.params?.collapsed);
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
   const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
@@ -2581,32 +2582,41 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
 
   return (
     <div
-      className="w-full h-full rounded-xl border-2 group/frame transition-all flex flex-col overflow-hidden"
-      style={{ borderColor: bgColor, backgroundColor: `${bgColor}15` }}
+      className="w-full rounded-xl border-2 group/frame transition-all flex flex-col overflow-hidden"
+      style={{ borderColor: bgColor, backgroundColor: isCollapsed ? bgColor : `${bgColor}15`, height: '100%' }}
     >
       <div
-        className="px-4 py-2 font-black text-xs uppercase tracking-widest truncate cursor-text select-none"
+        className="px-3 py-2 font-black text-xs uppercase tracking-widest cursor-text select-none flex items-center gap-2 shrink-0"
         style={{ backgroundColor: bgColor, color: textColor }}
-        onDoubleClick={(e) => { e.stopPropagation(); setEditing(true); }}
+        onDoubleClick={(e) => { e.stopPropagation(); if (!isCollapsed) setEditing(true); }}
       >
-        {editing ? (
-          <input
-            autoFocus
-            className="bg-black/10 w-full outline-none px-1 py-0.5 rounded"
-            style={{ color: textColor }}
-            value={title}
-            onChange={e => data.onChangeParams?.({ title: e.target.value })}
-            onBlur={() => setEditing(false)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === 'Escape') setEditing(false);
-              e.stopPropagation();
-            }}
-          />
-        ) : (
-          title
-        )}
+        <span className="truncate flex-1 min-w-0">
+          {editing ? (
+            <input
+              autoFocus
+              className="bg-black/10 w-full outline-none px-1 py-0.5 rounded"
+              style={{ color: textColor }}
+              value={title}
+              onChange={e => data.onChangeParams?.({ title: e.target.value })}
+              onBlur={() => setEditing(false)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === 'Escape') setEditing(false);
+                e.stopPropagation();
+              }}
+            />
+          ) : title}
+        </span>
+        <button
+          className="shrink-0 opacity-0 group-hover/frame:opacity-60 hover:!opacity-100 transition-opacity"
+          title={isCollapsed ? 'Déplier' : 'Replier'}
+          onPointerDown={e => e.stopPropagation()}
+          onDoubleClick={e => e.stopPropagation()}
+          onClick={e => { e.stopPropagation(); data.onToggleCollapse?.(); }}
+        >
+          <ChevronDown size={12} style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.15s' }} />
+        </button>
       </div>
-      <div className="flex-1 pointer-events-none" />
+      {!isCollapsed && <div className="flex-1 pointer-events-none" />}
     </div>
   );
 });
