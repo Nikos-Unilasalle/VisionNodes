@@ -1181,15 +1181,6 @@ class NoteNode(NodeProcessor):
 class FrameNode(NodeProcessor):
     def process(self, inputs, params): return {}
 
-@vision_node(
-    type_id="canvas_reroute",
-    label="Reroute",
-    category="canvas",
-    icon="GitCommit",
-    description="Pass-through node to organize wires.",
-    inputs=[{"id": "in", "color": "any"}],
-    outputs=[{"id": "out", "color": "any"}]
-)
 class _PassThrough(dict):
     """Returns the single pass-through value for any key — supports dynamic fan-out outputs."""
     def __init__(self, val):
@@ -1199,10 +1190,18 @@ class _PassThrough(dict):
     def __getitem__(self, key): return self._val
     def __contains__(self, key): return True
 
+@vision_node(
+    type_id="canvas_reroute",
+    label="Reroute",
+    category="canvas",
+    icon="GitCommit",
+    description="Pass-through node to organize wires.",
+    inputs=[{"id": "in", "color": "any"}],
+    outputs=[{"id": "out", "color": "any"}]
+)
 class RerouteNode(NodeProcessor):
     def process(self, inputs, params):
-        val = next((v for k, v in inputs.items() if k not in ('raw_frame',)), None)
-        return _PassThrough(val)
+        return _PassThrough(inputs.get('in'))
 
 @vision_node(
     type_id="output_display",
