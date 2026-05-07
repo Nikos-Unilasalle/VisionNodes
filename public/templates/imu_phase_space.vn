@@ -1,0 +1,49 @@
+{
+  "nodes": [
+    {
+      "id": "serial-1",
+      "type": "serial_reader",
+      "position": { "x": 60, "y": 260 },
+      "data": {
+        "label": "M5StickC Plus2 — ⚙ configure port",
+        "params": {
+          "port": "/dev/tty.usbserial",
+          "baud": 8,
+          "parse": 0,
+          "delimiter": ","
+        }
+      }
+    },
+    {
+      "id": "imu-1",
+      "type": "imu_phase_dashboard",
+      "position": { "x": 420, "y": 80 },
+      "data": {
+        "label": "IMU Phase Dashboard",
+        "params": {
+          "trail_len": 300,
+          "cell_size": 260,
+          "title": "IMU Phase Space — M5StickC Plus2"
+        }
+      }
+    },
+    {
+      "id": "disp-1",
+      "type": "output_display",
+      "position": { "x": 820, "y": 80 },
+      "data": {
+        "label": "Phase Space View",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_0", "targetHandle": "scalar__ax" },
+    { "id": "e2", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_1", "targetHandle": "scalar__ay" },
+    { "id": "e3", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_2", "targetHandle": "scalar__az" },
+    { "id": "e4", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_3", "targetHandle": "scalar__gx" },
+    { "id": "e5", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_4", "targetHandle": "scalar__gy" },
+    { "id": "e6", "source": "serial-1", "target": "imu-1", "sourceHandle": "scalar__value_5", "targetHandle": "scalar__gz" },
+    { "id": "e7", "source": "imu-1",    "target": "disp-1", "sourceHandle": "image__main",    "targetHandle": "image__main" }
+  ]
+}
