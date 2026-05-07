@@ -204,7 +204,7 @@ class GeoGrainMarkers(NodeProcessor):
         # Preview: colorize markers
         max_id = max(1, count)
         vis = (np.clip(markers, 0, None).astype(np.float32) * (255.0 / (max_id + 1))).astype(np.uint8)
-        preview = cv2.applyColorMap(vis, cv2.COLORMAP_JET)
+        preview = cv2.applyColorMap(vis, cv2.COLORMAP_TURBO)
         preview[markers <= 1] = 0
         if boundary is not None:
             preview[bnd_bin == 255] = [64, 64, 64]
@@ -233,15 +233,18 @@ class GeoGrainMarkers(NodeProcessor):
         {'id': 'count',            'color': 'scalar', 'label': 'Grain Count'},
         {'id': 'mean_area',        'color': 'scalar', 'label': 'Mean Area (px²)'},
         {'id': 'median_area',      'color': 'scalar', 'label': 'Median Area (px²)'},
+        {'id': 'mean_area_um2',    'color': 'scalar', 'label': 'Mean Area (µm²)'},
+        {'id': 'mean_dia_um',      'color': 'scalar', 'label': 'Mean Diameter (µm)'},
         {'id': 'mean_circularity', 'color': 'scalar', 'label': 'Mean Circularity'},
         {'id': 'grain_fraction',   'color': 'scalar', 'label': 'Grain Fraction (%)'},
         {'id': 'opaque_fraction',  'color': 'scalar', 'label': 'Opaque Fraction (%)'},
         {'id': 'regions',          'color': 'list',   'label': 'Regions (list)'},
     ],
     params=[
-        {'id': 'min_area',   'label': 'Min Area (px)',  'type': 'int', 'default': 100,  'min': 1,    'max': 100000},
-        {'id': 'hist_bins',  'label': 'Histogram Bins', 'type': 'int', 'default': 30,   'min': 5,    'max': 100},
+        {'id': 'min_area',   'label': 'Min Area (px)',  'type': 'int',   'default': 100,  'min': 1,    'max': 100000},
+        {'id': 'hist_bins',  'label': 'Histogram Bins', 'type': 'int',   'default': 30,   'min': 5,    'max': 100},
         {'id': 'hist_color', 'label': 'Bar Color',      'type': 'color', 'default': '#4FC3F7'},
+        {'id': 'um_per_px',  'label': 'µm / pixel',     'type': 'float', 'default': 1.0,  'min': 0.01, 'max': 1000.0, 'step': 0.1},
     ]
 )
 class GeoGrainStats(NodeProcessor):
@@ -266,6 +269,7 @@ class GeoGrainStats(NodeProcessor):
         min_area  = int(params.get('min_area', 100))
         hist_bins = int(params.get('hist_bins', 30))
         bar_bgr   = self._parse_color(params.get('hist_color', '#4FC3F7'))
+        um_per_px = float(params.get('um_per_px', 1.0))
 
         h, w = markers.shape[:2]
         total_px = h * w
@@ -333,6 +337,7 @@ class GeoGrainStats(NodeProcessor):
                 'histogram': np.zeros((300, 500, 3), dtype=np.uint8),
                 'summary':   'No grains detected.',
                 'count': 0, 'mean_area': 0, 'median_area': 0,
+                'mean_area_um2': 0, 'mean_dia_um': 0,
                 'mean_circularity': 0, 'grain_fraction': 0,
                 'opaque_fraction': 0, 'regions': [],
             }
@@ -349,6 +354,10 @@ class GeoGrainStats(NodeProcessor):
         grain_px         = int(np.sum(areas))
         grain_fraction   = round(100.0 * grain_px / total_px, 2)
         opaque_fraction  = round(100.0 * opaque_px / total_px, 2)
+
+        um2_per_px2  = um_per_px ** 2
+        mean_area_um2 = round(mean_area * um2_per_px2, 2)
+        mean_dia_um   = round(2.0 * np.sqrt(mean_area * um2_per_px2 / np.pi), 2)
 
         # ── Histogram image ───────────────────────────────────────────────
         IW, IH = 600, 340
@@ -393,10 +402,13 @@ class GeoGrainStats(NodeProcessor):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.38, (200, 230, 200), 1)
 
         # ── Summary text ──────────────────────────────────────────────────
+        scale_note = f"  ({um_per_px} µm/px)" if um_per_px != 1.0 else "  (1 µm/px — set µm/pixel param to calibrate)"
         summary = (
             f"Grain count: {count}\n"
             f"Mean area: {mean_area:.0f} px² ± {std_area:.0f}\n"
             f"Median area: {median_area:.0f} px²\n"
+            f"Mean area: {mean_area_um2:.1f} µm²{scale_note}\n"
+            f"Mean diameter (equiv.): {mean_dia_um:.1f} µm\n"
             f"Mean circularity: {mean_circularity:.3f}  (1=perfect circle)\n"
             f"Mean aspect ratio: {mean_aspect:.2f}\n"
             f"Grain fraction: {grain_fraction:.1f}%\n"
@@ -410,6 +422,8 @@ class GeoGrainStats(NodeProcessor):
             'count':            count,
             'mean_area':        round(mean_area, 2),
             'median_area':      round(median_area, 2),
+            'mean_area_um2':    mean_area_um2,
+            'mean_dia_um':      mean_dia_um,
             'mean_circularity': round(mean_circularity, 4),
             'grain_fraction':   grain_fraction,
             'opaque_fraction':  opaque_fraction,

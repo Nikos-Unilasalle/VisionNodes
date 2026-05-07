@@ -211,7 +211,7 @@ class WatershedNode(NodeProcessor):
         def colorize(markers_map):
             n = max(1, count)
             vis = (np.clip(markers_map, 0, None).astype(np.float32) * (255.0 / n)).astype(np.uint8)
-            colored = cv2.applyColorMap(vis, cv2.COLORMAP_JET)
+            colored = cv2.applyColorMap(vis, cv2.COLORMAP_TURBO)
             colored[markers_map <= 0] = 0
             return colored
 
