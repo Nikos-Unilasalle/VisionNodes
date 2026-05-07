@@ -199,7 +199,8 @@ _IMU_PLOTS = [
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
         {'id': 'trail_len',  'label': 'Trail Length',     'type': 'int',    'default': 300, 'min': 10, 'max': 2000},
-        {'id': 'cell_size',  'label': 'Cell Size (px)',   'type': 'int',    'default': 280, 'min': 150, 'max': 500},
+        {'id': 'width',      'label': 'Width',            'type': 'int',    'default': 840, 'min': 450, 'max': 2400},
+        {'id': 'height',     'label': 'Height',           'type': 'int',    'default': 597, 'min': 300, 'max': 1600},
         {'id': 'title',      'label': 'Dashboard Title',  'type': 'string', 'default': 'IMU Phase Space — M5StickC Plus2'},
     ]
 )
@@ -209,8 +210,12 @@ class ImuPhaseDashboardNode(NodeProcessor):
 
     def process(self, inputs, params):
         trail_len = int(params.get('trail_len', 300))
-        cell = int(params.get('cell_size', 280))
+        W = int(params.get('width', 840))
+        H = int(params.get('height', 597))
         title = str(params.get('title', 'IMU Phase Space'))
+        hdr_h = 36
+        cell_w = W // 3
+        cell_h = max(1, (H - hdr_h - 1) // 2)  # 1px separator
 
         vals = {}
         for k in ('ax', 'ay', 'az', 'gx', 'gy', 'gz'):
@@ -230,15 +235,13 @@ class ImuPhaseDashboardNode(NodeProcessor):
         for plot in _IMU_PLOTS:
             xk, yk, ptitle, xl, yl, bgr = plot
             key = f"{xk}{yk}"
-            cells.append(_render_phase_cell(list(self._bufs[key]), cell, cell, bgr, ptitle, xl, yl))
+            cells.append(_render_phase_cell(list(self._bufs[key]), cell_w, cell_h, bgr, ptitle, xl, yl))
 
         # 2 × 3 grid
         row0 = np.hstack(cells[0:3])
         row1 = np.hstack(cells[3:6])
 
         # Header bar
-        W = cell * 3
-        hdr_h = 36
         hdr = np.zeros((hdr_h, W, 3), dtype=np.uint8)
         cv2.line(hdr, (0, hdr_h - 1), (W, hdr_h - 1), (42, 42, 42), 1)
 
