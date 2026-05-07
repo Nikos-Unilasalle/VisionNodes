@@ -80,6 +80,7 @@ fn main() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
+                if window.label() != "main" { return; }
                 // Kill the sidecar when closing
                 if let Some(state) = window.try_state::<EngineProcess>() {
                     if let Ok(mut lock) = state.0.lock() {
