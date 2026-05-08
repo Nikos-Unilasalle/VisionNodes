@@ -169,9 +169,10 @@ class UniversalMonitorNode(NodeProcessor):
         final_val = (val * scale) + offset
         res = img if img is not None else mask
         if res is not None and len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
+        txt = f"{final_val:.{precision}f} {unit}"
         if res is not None:
-            cv2.putText(res, f"{final_val:.{precision}f} {unit}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-        return {"main": res, "scalar": final_val}
+            cv2.putText(res, txt, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
+        return {"main": res, "scalar": final_val, "value": final_val, "display_text": txt}
 
 @vision_node(
     type_id="analysis_face_mp",

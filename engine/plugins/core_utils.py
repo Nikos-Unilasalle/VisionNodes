@@ -61,7 +61,8 @@ class MaskBlendNode(NodeProcessor):
 class InspectorNode(NodeProcessor):
     def process(self, inputs, params):
         d = inputs.get('data')
-        return {"text": str(d)[:500]}
+        txt = str(d)[:500]
+        return {"text": txt, "main": txt, "display_text": txt}
 
 @vision_node(
     type_id="util_overlay",
