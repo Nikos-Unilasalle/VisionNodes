@@ -172,7 +172,7 @@ class UniversalMonitorNode(NodeProcessor):
         txt = f"{final_val:.{precision}f} {unit}"
         if res is not None:
             cv2.putText(res, txt, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-        return {"main": res, "scalar": final_val, "value": final_val, "display_text": txt}
+        return {"main": res, "scalar": final_val, "value": final_val, "display_text": txt, "data_out": final_val}
 
 @vision_node(
     type_id="analysis_face_mp",
