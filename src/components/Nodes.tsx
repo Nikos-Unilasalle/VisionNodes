@@ -925,25 +925,6 @@ export const DrawOverlayNode = memo(({ selected, data }: any) => {
   return <BaseNode title="Draw Overlay" icon={PenTool} selected={selected} data={data} color="accent" inputs={inputs} outputs={[{id: 'main', color: 'image'}]} />;
 });
 
-export const VisualOverlayNode = memo(({ selected, data }: any) => {
-  const nodeId = useNodeId()!;
-  const updateNodeInternals = useUpdateNodeInternals();
-  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
-  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
-
-  const inputs = [
-    { id: 'image', color: 'image' },
-    ...ports.map(p => {
-      const idx = p.id.indexOf('__');
-      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
-      const color = idx >= 0 ? p.id.slice(0, idx) : 'any';
-      return { id: shortId, color, label: p.label };
-    }),
-    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' }
-  ];
-  return <BaseNode title="Visual Overlay" icon={Layout} selected={selected} data={data} color="indigo" inputs={inputs} outputs={[{id: 'main', color: 'image'}]} />;
-});
-
 // Recursive Component to render JSON with colors
 const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
   if (data === null || data === undefined) return <span className="text-gray-500 italic">null</span>;
