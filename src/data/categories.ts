@@ -77,7 +77,7 @@ export const CATEGORIES: Category[] = [
     { type: 'plotter_pro', label: 'Plotter Pro', description: 'Dual-series graph with filtering, thresholding, normalization, and peak detection.' },
   ]},
   { id: 'draw', label: 'Drawing', icon: PenTool, nodes: [
-    { type: 'draw_overlay', label: 'Visual Overlay', description: 'Draws shapes and text over the main video stream.' }
+    { type: 'draw_overlay', label: 'Draw Overlay', description: 'Draws shapes and text over the main video stream.' }
   ]},
   { id: 'util', label: 'Utilities', icon: Box, nodes: [
     { type: 'data_list_selector', label: 'List Selector', description: 'Extracts a specific item from a list of detections.' },

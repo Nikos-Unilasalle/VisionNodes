@@ -3,7 +3,7 @@ import numpy as np
 from registry import vision_node, NodeProcessor
 
 @vision_node(
-    type_id='util_visual_overlay',
+    type_id='visual_overlay',
     label='Visual Overlay',
     category='visualize',
     icon='Layout',
