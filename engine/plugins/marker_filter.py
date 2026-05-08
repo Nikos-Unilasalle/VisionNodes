@@ -5,7 +5,7 @@ from __main__ import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_marker_filter",
     label="Marker Filter (Area)",
-    category="analysis",
+    category='detect',
     icon="Scissors",
     description="Filters markers/labels based on their pixel area. Removes objects that are too small or too large.",
     inputs=[{"id": "markers", "color": "any"}],

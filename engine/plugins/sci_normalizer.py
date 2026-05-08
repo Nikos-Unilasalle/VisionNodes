@@ -7,7 +7,7 @@ _MODES = ['Min-Max → [0,255]', 'Min-Max → [0,1]', 'Z-Score (±3σ)', 'Percen
 @vision_node(
     type_id='sci_normalizer',
     label='Image Normalizer',
-    category=['analysis', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Sliders',
     description="Normalize image or data array. Min-Max, Z-Score, or percentile stretch. Essential preprocessing for scientific imaging.",
     inputs=[{'id': 'image', 'color': 'any'}],

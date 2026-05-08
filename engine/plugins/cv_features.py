@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_find_contours",
     label="Find Contours",
-    category="features",
+    category='features',
     icon="Target",
     description="Detects and extracts isolated shapes from a binary image (mask).",
     inputs=[{"id": "mask", "color": "any"}],
@@ -89,7 +89,7 @@ class FindContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_contour_props",
     label="Contour Properties",
-    category="features",
+    category='features',
     icon="Info",
     description="Calculates geometric metrics (area, center, perimeter) of an isolated shape.",
     inputs=[{"id": "contour", "color": "dict"}],
@@ -117,7 +117,7 @@ class ContourInfoNode(NodeProcessor):
 @vision_node(
     type_id="feat_clahe",
     label="CLAHE (Contrast)",
-    category="cv",
+    category='cv',
     icon="Maximize",
     description="Adaptively improves local image contrast (CLAHE algorithm).",
     inputs=[{"id": "image", "color": "image"}],
@@ -149,7 +149,7 @@ class ClaheNode(NodeProcessor):
 @vision_node(
     type_id="feat_bilateral",
     label="Bilateral Filter",
-    category="filters",
+    category='cv',
     icon="Wind",
     description="Smoothes the image while preserving edge sharpness and textures.",
     inputs=[{"id": "image", "color": "image"}],
@@ -174,7 +174,7 @@ class BilateralFilterNode(NodeProcessor):
 @vision_node(
     type_id="feat_hough_circles",
     label="Hough Circles",
-    category="features",
+    category='features',
     icon="Target",
     description="Identifies perfect circular shapes using mathematical circle transforms.",
     inputs=[{"id": "image", "color": "any"}],
@@ -225,7 +225,7 @@ class HoughCirclesNode(NodeProcessor):
 @vision_node(
     type_id="feat_filter_contours",
     label="Filter Contours",
-    category="features",
+    category='features',
     icon="Filter",
     description="Filters a contour list by elongation (long/short axis ratio) and/or area. Use min_elongation > 1 to keep only elongated shapes like rivers.",
     inputs=[{"id": "contours", "color": "list"}],
@@ -279,7 +279,7 @@ class FilterContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_fill_contours",
     label="Fill Contours",
-    category="features",
+    category='features',
     icon="Pentagon",
     description="Fills all contours from a list into a binary mask (union). Connect contours_list from Find Contours.",
     inputs=[
@@ -334,7 +334,7 @@ class FillContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_hough_lines",
     label="Hough Lines",
-    category="features",
+    category='features',
     icon="Maximize",
     description="Detects straight line segments in the image (walls, joints, etc.).",
     inputs=[{"id": "image", "color": "any"}],

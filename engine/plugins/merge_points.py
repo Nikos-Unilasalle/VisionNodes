@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='merge_points',
     label='Merge Points',
-    category='features',
+    category='detect',
     icon='Target',
     inputs=[{'id': 'points', 'color': 'list'}],
     outputs=[

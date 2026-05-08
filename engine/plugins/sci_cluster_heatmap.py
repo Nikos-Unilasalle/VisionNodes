@@ -26,7 +26,7 @@ _FEATURES = [
 @vision_node(
     type_id='sci_cluster_heatmap',
     label='Cluster Heatmap',
-    category=['visualize', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Palette',
     description=(
         "False-color each labeled region by a feature value (area, circularity, intensity…). "

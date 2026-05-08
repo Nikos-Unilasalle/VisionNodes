@@ -4,7 +4,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='geo_band_info',
     label='Band Info',
-    category='geo',
+    category='geography',
     icon='List',
     description="Display GeoTIFF metadata: bands, dimensions, CRS. Pass-through on geotiff port.",
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],

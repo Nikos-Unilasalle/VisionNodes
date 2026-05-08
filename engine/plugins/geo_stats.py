@@ -4,7 +4,7 @@ import numpy as np
 @vision_node(
     type_id='geo_statistics',
     label='Geo Statistics',
-    category='geo',
+    category='geography',
     icon='BarChart',
     description="Calculate area and value statistics from a GeoTIFF and a binary mask. Outputs area in pixels and hectares.",
     inputs=[

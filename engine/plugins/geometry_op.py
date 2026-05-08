@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="geom_perspective",
     label="Perspective Warp",
-    category="geom",
+    category='geom',
     icon="Maximize",
     description="Straightens a distorted area into a flat rectangle using 4 reference points.",
     inputs=[{"id": "image", "color": "image"}, {"id": "src_pts", "color": "list"}],
@@ -62,7 +62,7 @@ class PerspectiveWarpNode(NodeProcessor):
 @vision_node(
     type_id="util_manual_points",
     label="Manual 4 Points",
-    category="geom",
+    category='geom',
     icon="MousePointer",
     description="Allows manual definition of 4 reference points on the image for calculations.",
     inputs=[
@@ -113,7 +113,7 @@ class ManualPointsNode(NodeProcessor):
 @vision_node(
     type_id="util_roi_polygon",
     label="Mask Polygon",
-    category="geom",
+    category='geom',
     icon="Scaling",
     description="Interactive polygonal mask — draws a region of interest, optionally restricted by an input mask.",
     inputs=[{"id": "image", "color": "image"}, {"id": "mask_in", "color": "mask"}],

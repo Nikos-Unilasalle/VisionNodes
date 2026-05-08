@@ -65,7 +65,7 @@ _SED_COLORMAPS = [
 @vision_node(
     type_id="geo_sediment_loader",
     label="Sediment Layers",
-    category=["geo", "src"],
+    category=['geology', 'src'],
     icon="Layers",
     description="Loads a (x,y,z) CSV of sediment conductivity into a regular grid.",
     inputs=[],
@@ -163,7 +163,7 @@ _INDEX_CMAP = [
 @vision_node(
     type_id="geo_index",
     label="Geophysics Index",
-    category=["geo", "analysis"],
+    category=['geology', 'detect'],
     icon="Divide",
     description="Compute an index between two layers: normalized diff, ratio, sum, etc.",
     inputs=[

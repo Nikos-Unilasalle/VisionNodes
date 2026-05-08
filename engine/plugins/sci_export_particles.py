@@ -7,7 +7,7 @@ from registry import vision_node, NodeProcessor, send_notification
 @vision_node(
     type_id='sci_export_particles',
     label='Export Particles',
-    category=['out', 'scientific'],
+    category=['out', 'analytics'],
     icon='DownloadCloud',
     description="Exports each detected particle as an individual PNG image with a transparent background.",
     inputs=[

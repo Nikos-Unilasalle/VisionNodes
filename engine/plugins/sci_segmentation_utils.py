@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='feat_seeds_from_boundaries',
     label='Seeds from Boundaries',
-    category='features',
+    category='visualize',
     icon='Target',
     description="Generates seed markers for Watershed from a boundary/corner mask. Finds the centers of the 'empty' regions.",
     inputs=[{'id': 'mask', 'color': 'mask'}],
@@ -78,7 +78,7 @@ class SeedsFromBoundariesNode(NodeProcessor):
 @vision_node(
     type_id='sci_stone_segmenter',
     label='Stone Wall Segmenter',
-    category='scientific',
+    category='analytics',
     icon='Grid',
     description="Dedicated tool for segmenting individual stones in a wall. Combines contrast enhancement, seed detection, and watershed.",
     inputs=[{'id': 'image', 'color': 'image'}],
@@ -195,7 +195,7 @@ class StoneWallSegmenterNode(NodeProcessor):
 @vision_node(
     type_id='filter_linearity',
     label='Linear Feature Filter',
-    category='filters',
+    category='cv',
     icon='Slash',
     description="Filters out non-linear noise and keeps only straight segments at any angle.",
     inputs=[{'id': 'image', 'color': 'image'}],
@@ -250,7 +250,7 @@ class LinearFeatureFilterNode(NodeProcessor):
 @vision_node(
     type_id='mask_region_sealer',
     label='Region Sealer',
-    category='masks',
+    category='mask',
     icon='Maximize',
     description="Bridges gaps in boundary masks and fills closed regions to create solid blobs.",
     inputs=[{'id': 'mask', 'color': 'mask'}],
@@ -294,7 +294,7 @@ class RegionSealerNode(NodeProcessor):
 @vision_node(
     type_id='filter_linear_direction',
     label='Linear Direction Filter',
-    category='filters',
+    category='cv',
     icon='Compass',
     description="Suppresses or isolates linear elements based on their orientation (angle in degrees).",
     inputs=[{'id': 'image', 'color': 'any'}],
@@ -388,7 +388,7 @@ class LinearDirectionFilterNode(NodeProcessor):
 @vision_node(
     type_id='filter_directional_morphology',
     label='Directional Morphology',
-    category='filters',
+    category='cv',
     icon='StretchHorizontal',
     description="Performs morphological operations (Dilate, Close, etc.) along a specific axis (Horizontal or Vertical).",
     inputs=[{'id': 'mask', 'color': 'mask'}],

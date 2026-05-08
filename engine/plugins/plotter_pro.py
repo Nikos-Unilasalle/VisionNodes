@@ -142,7 +142,7 @@ def _smooth_pts(data, min_y, max_y, margin, plot_w, plot_h):
 @vision_node(
     type_id="plotter_pro",
     label="Plotter Pro",
-    category=["visualize", "analysis"],
+    category=['visualize', 'visualize'],
     icon="Activity",
     description="Advanced multi-series plotter with smooth curves, filtering, thresholding, normalization, and peak detection.",
     inputs=[],

@@ -7,7 +7,7 @@ _MODES = ['Running Mean', 'Running Max', 'Running Min', 'Running Std', 'Temporal
 @vision_node(
     type_id='sci_frame_accumulator',
     label='Frame Accumulator',
-    category=['analysis', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Film',
     description="Accumulate frames over time: mean (noise reduction), std (motion map), temporal diff, running max/min.",
     inputs=[{'id': 'image', 'color': 'any'}],

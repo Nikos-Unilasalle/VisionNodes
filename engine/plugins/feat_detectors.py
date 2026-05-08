@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_orb",
     label="ORB Detector",
-    category="features",
+    category='features',
     icon="Zap",
     description="Detects keypoints and computes ORB descriptors (fast and efficient).",
     inputs=[{"id": "image", "color": "image"}],
@@ -52,7 +52,7 @@ class OrbDetectorNode(NodeProcessor):
 @vision_node(
     type_id="feat_sift",
     label="SIFT Detector",
-    category="features",
+    category='features',
     icon="Zap",
     description="Detects high-quality scale-invariant keypoints (SIFT algorithm).",
     inputs=[{"id": "image", "color": "image"}],
@@ -96,7 +96,7 @@ class SiftDetectorNode(NodeProcessor):
 @vision_node(
     type_id="feat_fast",
     label="FAST Corners",
-    category="features",
+    category='features',
     icon="Zap",
     description="Rapid corner detection optimized for real-time performance.",
     inputs=[{"id": "image", "color": "image"}],
@@ -133,7 +133,7 @@ class FastDetectorNode(NodeProcessor):
 @vision_node(
     type_id="feat_harris",
     label="Harris Corners",
-    category="features",
+    category='features',
     icon="LayoutGrid",
     description="Detects corner points using the Harris mathematical operator.",
     inputs=[{"id": "image", "color": "image"}],

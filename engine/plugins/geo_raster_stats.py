@@ -13,7 +13,7 @@ def _extract_bands(val):
 @vision_node(
     type_id='geo_band_stats',
     label='Band Statistics',
-    category='geo',
+    category='geography',
     icon='BarChart',
     description="Per-band statistics (min, max, mean, std, median). Accepts matrix data or geotiff.",
     inputs=[

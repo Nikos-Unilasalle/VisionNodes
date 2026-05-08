@@ -6,7 +6,7 @@ import cv2
 @vision_node(
     type_id='geo_band_selector',
     label='Band Selector',
-    category='geo',
+    category='geography',
     icon='Layers',
     description="Select 3 bands from a GeoTIFF and produce an RGB image for standard CV pipelines.",
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],

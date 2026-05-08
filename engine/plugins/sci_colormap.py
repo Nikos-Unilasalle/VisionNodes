@@ -22,7 +22,7 @@ _IDS   = [i for _, i in _COLORMAPS]
 @vision_node(
     type_id='sci_colormap',
     label='Colormap / LUT',
-    category=['visualize', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Palette',
     description="Apply scientific colormap (LUT) to grayscale image. Converts intensity to false color for visualization.",
     inputs=[{'id': 'image', 'color': 'any'}],

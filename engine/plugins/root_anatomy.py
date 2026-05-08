@@ -136,7 +136,7 @@ def _to_gray(img):
 @vision_node(
     type_id="root_calibrate",
     label="Root Calibrate",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Scaling",
     description="Sets the calibration factor (µm/pixel or px/mm) for root anatomy measurements.",
     inputs=[{"id": "image", "color": "image"}],
@@ -166,7 +166,7 @@ class RootCalibrateNode(NodeProcessor):
 @vision_node(
     type_id="root_isolate_section",
     label="Isolate Section",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Target",
     description="Isolates the root cross-section from the background and calculates RXSA.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -244,7 +244,7 @@ class RootIsolateNode(NodeProcessor):
 @vision_node(
     type_id="root_segment_stele",
     label="Segment Stele",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Layers",
     description="Segments the stele using radial spatial weighting and local density analysis. Calculates TSA and SCWA.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -349,7 +349,7 @@ class RootSegmentSteleNode(NodeProcessor):
 @vision_node(
     type_id="root_cortex_areas",
     label="Cortex Analysis",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Box",
     description="Calculates cortical areas: TCA, CCWA, XSCWA.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -402,7 +402,7 @@ class RootCortexAreasNode(NodeProcessor):
 @vision_node(
     type_id="root_exclude_lateral",
     label="Exclude Lateral",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Scissors",
     description="Excludes lateral roots using a polygon mask. Calculates LA. Must run before stele segmentation.",
     inputs=[
@@ -440,7 +440,7 @@ class RootExcludeLateralNode(NodeProcessor):
 @vision_node(
     type_id="root_aerenchyma_detect",
     label="Aerenchyma Detect",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Wind",
     description="Detects aerenchyma lacunae (paper: major_axis > median + N×SD, excludes inner/outer 20% cortex). Computes AA, CCA, %CCA.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -535,7 +535,7 @@ class RootAerenchymaNode(NodeProcessor):
 @vision_node(
     type_id="root_cortical_cells",
     label="Cortical Cells",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Calculator",
     description="Counts cortical cells across 3 radial bands (inner/mid/outer). Computes #CC, #CF, CSic/mc/oc.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -618,7 +618,7 @@ class RootCorticalCellsNode(NodeProcessor):
 @vision_node(
     type_id="root_xylem_detect",
     label="Xylem Detect",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Zap",
     description="Detects metaxylem vessels using the Max Jump area algorithm (paper §Part V).",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -686,7 +686,7 @@ class RootXylemNode(NodeProcessor):
 @vision_node(
     type_id="root_protoxylem_detect",
     label="Protoxylem Detect",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="ZapOff",
     description="Detects protoxylem vessels (smaller than metaxylem) from remaining stele objects. Run after Xylem Detect.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -755,7 +755,7 @@ class RootProtoxylemNode(NodeProcessor):
 @vision_node(
     type_id="root_layers",
     label="Endo/Exodermis",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Layers",
     description="Segments endodermis (inner cortex layer) and exodermis (outer cortex layer). Run after Cortex Analysis.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -838,7 +838,7 @@ def hex_to_bgr(hex_color, default=(0, 255, 0)):
 @vision_node(
     type_id="root_anatomy_overlay",
     label="Anatomy Overlay",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Palette",
     description="Generates a colorized overlay of all anatomy layers.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -913,7 +913,7 @@ _REPORT_ORDER = [
 @vision_node(
     type_id="root_anatomy_report",
     label="Anatomy Report",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="BarChart2",
     description="Aggregates all anatomical variables. Output: flat dict of plain Python floats, ordered per RootScan Table 1.",
     inputs=[{"id": "data", "color": "root_data"}],
@@ -962,7 +962,7 @@ class RootAnatomyReportNode(NodeProcessor):
 @vision_node(
     type_id="root_quality_score",
     label="Quality Score",
-    category="root_anatomy",
+    category='root_anatomy',
     icon="Activity",
     description="Manual quality scoring interface for the analysis.",
     inputs=[{"id": "data", "color": "root_data"}],
