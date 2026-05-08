@@ -58,7 +58,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   analysis_flow: N.AnalysisFlowNode,
   analysis_flow_viz: N.AnalysisFlowVizNode,
   analysis_monitor: N.AnalysisMonitorNode,
-  visual_overlay: N.GenericCustomNode,
+  visual_overlay: N.VisualOverlayNode,
   geo_statistics: N.GeoStatisticsNode,
   geo_land_cover: N.GenericCustomNode,
   util_roi_polygon: N.ROIPolygonNode,

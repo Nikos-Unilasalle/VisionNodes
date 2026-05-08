@@ -36,7 +36,7 @@ export function useConnectionHandling({
     }
 
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
-    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'plotter_pro', 'export_py', 'output_display', 'util_csv_export']);
+    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'plotter_pro', 'export_py', 'output_display', 'util_csv_export', 'draw_overlay', 'visual_overlay']);
     const isDynamic = targetNode && DYNAMIC_TYPES.has(targetNode.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
@@ -63,9 +63,9 @@ export function useConnectionHandling({
         const sh = params.sourceHandle;
         const color = sh.split('__')[0] || 'any';
 
-        if (targetNode!.type === 'output_display') {
-          const { portId } = createDynamicPort('image', 'img');
-          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: `image__${portId.split('__').slice(1).join('__')}` }, eds));
+        if (targetNode!.type === 'output_display' || targetNode!.type === 'draw_overlay' || targetNode!.type === 'visual_overlay') {
+          const { portId } = createDynamicPort(color, color === 'image' ? 'img' : 'data');
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
         } else if (targetNode!.type === 'util_csv_export') {
           const idx = (targetNode!.data as any)?.ports?.length ?? 0;
           const sourceLabel = (params.sourceHandle || '').split('__').pop() || `col${idx}`;
