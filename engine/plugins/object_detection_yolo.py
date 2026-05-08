@@ -97,7 +97,8 @@ class YoloDetectionNode(NodeProcessor):
         # and re-passing it forces ultralytics to rebuild self.predictor each call.
         self.report_progress(0.2, 'YOLO: detecting…')
         try:
-            results = self.model.predict(image, conf=conf, verbose=False)
+            # Use a copy for inference to ensure the original 'image' remains pure
+            results = self.model.predict(image.copy(), conf=conf, verbose=False)
         except Exception as e:
             # Predictor in bad state — reset so next frame retries cleanly
             self.model = None
