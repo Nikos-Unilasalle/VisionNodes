@@ -26,26 +26,30 @@ const NodeColorContext = React.createContext<{ customBg?: string; customText?: s
 export const useNodeColor = () => React.useContext(NodeColorContext);
 export const NodeColorProvider = NodeColorContext.Provider;
 
-const StyledHandle = ({ type, position, id, color = 'image', top = '50%', noBorder = false }: any) => {
+const StyledHandle = ({ type, position, id, color = 'image', top = '50%', left, noBorder = false }: any) => {
   const nodeId = useNodeId();
   const handleId = `${color}__${id}`;
   const isLeft = position === Position.Left;
-  
+  const isHoriz = position === Position.Top || position === Position.Bottom;
+
+  const posStyle = isHoriz
+    ? { left: left || '50%', transform: 'translateX(-50%)', top: position === Position.Top ? -5 : undefined, bottom: position === Position.Bottom ? -5 : undefined }
+    : { top, [isLeft ? 'left' : 'right']: -5 };
+
   return (
     <Handle
       type={type}
       position={position}
       id={handleId}
-      style={{ 
-        background: HANDLE_COLORS[color as keyof typeof HANDLE_COLORS] || color, 
-        width: noBorder ? 5 : 10, 
-        height: noBorder ? 5 : 10, 
-        borderRadius: noBorder ? 0 : '50%', 
-        border: noBorder ? 'none' : '2px solid #111', 
-        top: top,
-        [isLeft ? 'left' : 'right']: -5,
+      style={{
+        background: HANDLE_COLORS[color as keyof typeof HANDLE_COLORS] || color,
+        width: noBorder ? 5 : 10,
+        height: noBorder ? 5 : 10,
+        borderRadius: noBorder ? 0 : '50%',
+        border: noBorder ? 'none' : '2px solid #111',
         zIndex: 50,
-        position: 'absolute'
+        position: 'absolute',
+        ...posStyle,
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -72,21 +76,34 @@ export const BaseNode = ({
   className = "" 
 }: any) => {
   const { customBg } = useNodeColor();
+  const nodeId = useNodeId();
+  const updateNodeInternals = useUpdateNodeInternals();
   const totalInputs = inputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
+
+  const nodeNote = data?.params?.node_note;
+  const isLockedOut = !!(data as any)?.lockedOut;
+  const isBypassed = !!(data as any)?.bypassed;
+  const isMinified = !!(data as any)?.minified;
+  const isRotated = !!(data as any)?.rotated;
+  const startOffset = isMinified ? 10 : 45;
+  const spacing = isMinified ? 5 : 32;
+
+  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isRotated, nodeId, updateNodeInternals]);
 
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';
     return `${startOffset + index * spacing}px`;
   };
 
-  const nodeNote = data?.params?.node_note;
-  const isLockedOut = !!(data as any)?.lockedOut;
-  const isBypassed = !!(data as any)?.bypassed;
-  const isMinified = !!(data as any)?.minified;
-  const startOffset = isMinified ? 10 : 45;
-  const spacing = isMinified ? 5 : 32;
+  const nodeWidth = typeof width === 'number' ? width : 208;
+  const getPortLeft = (index: number, total: number) => {
+    if (total <= 1) return `${nodeWidth / 2}px`;
+    const margin = 16;
+    const step = (nodeWidth - margin * 2) / (total - 1);
+    return `${margin + index * step}px`;
+  };
   const portsHeight = maxPorts > 0 ? (startOffset + (maxPorts - 1) * spacing + 12) : 24;
   const minHeight = Math.max(portsHeight, isMinified ? 18 : 90);
 
@@ -124,19 +141,39 @@ export const BaseNode = ({
         </div>
       )}
       {/* Inputs with Labels */}
-      {inputs.map((inp: any, i: number) => {
-        const top = getPortTop(i, totalInputs);
-        return (
-          <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-            <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
-            {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>}
-          </div>
-        );
-      })}
-      
+      {isRotated
+        ? inputs.map((inp: any, i: number) => {
+            const portLeft = getPortLeft(i, totalInputs);
+            return (
+              <React.Fragment key={inp.id}>
+                <StyledHandle type="target" position={Position.Top} id={inp.id} color={inp.color} left={portLeft} noBorder={isMinified} />
+                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{inp.id}</span>}
+              </React.Fragment>
+            );
+          })
+        : inputs.map((inp: any, i: number) => {
+            const top = getPortTop(i, totalInputs);
+            return (
+              <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
+                <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
+                {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>}
+              </div>
+            );
+          })
+      }
+
       {/* Dynamic Variables with Labels */}
       {Array.from({ length: (data?.params?.var_count || 0) }).map((_, i) => {
         const char = String.fromCharCode(97 + i);
+        if (isRotated) {
+          const portLeft = getPortLeft(inputs.length + i, totalInputs);
+          return (
+            <React.Fragment key={char}>
+              <StyledHandle type="target" position={Position.Top} id={char} color="scalar" left={portLeft} noBorder={isMinified} />
+              {!isMinified && <span className="absolute text-[8px] font-medium text-accent uppercase tracking-widest pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{char}</span>}
+            </React.Fragment>
+          );
+        }
         const top = getPortTop(inputs.length + i, totalInputs);
         return (
           <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
@@ -173,15 +210,26 @@ export const BaseNode = ({
       )}
 
       {/* Outputs with Labels */}
-      {outputs.map((out: any, i: number) => {
-        const top = getPortTop(i, totalOutputs);
-        return (
-          <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-            {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>}
-            <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
-          </div>
-        );
-      })}
+      {isRotated
+        ? outputs.map((out: any, i: number) => {
+            const portLeft = getPortLeft(i, totalOutputs);
+            return (
+              <React.Fragment key={out.id}>
+                <StyledHandle type="source" position={Position.Bottom} id={out.id} color={out.color} left={portLeft} noBorder={isMinified} />
+                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, bottom: 8, transform: 'translateX(-50%)' }}>{out.id}</span>}
+              </React.Fragment>
+            );
+          })
+        : outputs.map((out: any, i: number) => {
+            const top = getPortTop(i, totalOutputs);
+            return (
+              <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
+                {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>}
+                <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
+              </div>
+            );
+          })
+      }
     </div>
     {nodeNote && (
       <div className="absolute left-0 right-0 top-full mt-1 text-center text-[9px] text-gray-400/80 truncate px-2 pointer-events-none select-none">
@@ -1297,29 +1345,34 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   );
 });
 
+const PRO_COLORS = ['#ff6464', '#64ff64', '#ffb43c', '#64ffff', '#ff64ff', '#ffff64', '#c896ff', '#64c8ff'];
+
 export const PlotterProNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
   const nodeId = useNodeId()!;
   const updateNodeInternals = useUpdateNodeInternals();
   const nd = useNodeData(nodeId);
-  const bufSize = Number(data.params?.buffer_size ?? 300);
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
 
-  const colorA = data.params?.color_a || '#ff6464';
-  const colorB = data.params?.color_b || '#64ff64';
-  const showPeaks = !!data.params?.show_peaks;
+  const bufSize = Number(data.params?.buffer_size ?? 300);
   const showGrid = data.params?.show_grid !== false;
-  const peakWindow = Number(data.params?.peak_window ?? 5);
+  const lineWidth = Number(data.params?.line_width ?? 2);
   const showThresholds = !!data.params?.show_thresholds;
   const thMin = Number(data.params?.threshold_min ?? 0);
   const thMax = Number(data.params?.threshold_max ?? 255);
-
   const minY = data.params?.min_y;
   const maxY = data.params?.max_y;
   const autoScale = !!(data.params?.auto_scale ?? true);
-  const lineWidth = Number(data.params?.line_width ?? 2);
   const yDomain: [any, any] = autoScale ? ['auto', 'auto'] : ((minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : [0, 100]);
 
-  const [histories, setHistories] = useState<Record<string, {v: number, m?: boolean, n?: boolean}[]>>({});
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  const portKeys = React.useMemo(() =>
+    ports.map(p => p.id.split('__').pop() ?? p.id),
+    [ports]
+  );
+
+  const [histories, setHistories] = React.useState<Record<string, number[]>>({});
   const prevReset = React.useRef(0);
 
   useEffect(() => {
@@ -1328,95 +1381,77 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
     prevReset.current = r;
   }, [data.params?.reset]);
 
-  const lastProcessedRef = React.useRef<any>(null);
-
   useEffect(() => {
-    if (nd === lastProcessedRef.current) return;
-    lastProcessedRef.current = nd;
-
     setHistories(prev => {
-      const next: Record<string, {v: number, m?: boolean, n?: boolean}[]> = {};
+      const next: Record<string, number[]> = {};
       let changed = false;
-      for (const k of ['a', 'b']) {
-        const val = (nd as any)?.[k];
-        const peaks = (nd as any)?.[`peaks_${k}`];
-        // Immutable copy of the series
-        let cur = prev[k] ? prev[k].map(item => ({ ...item })) : [];
-        let seriesChanged = false;
-        
-        if (typeof val === 'number') {
-          cur.push({ v: val });
-          if (cur.length > bufSize) cur = cur.slice(-bufSize);
-          seriesChanged = true;
-        }
-
-        if (peaks && cur.length > 0) {
-          // Reset peaks and re-apply from backend indices
-          cur.forEach(item => { item.m = false; item.n = false; });
-          peaks.max?.forEach((idx: number) => { if (cur[idx]) cur[idx].m = true; });
-          peaks.min?.forEach((idx: number) => { if (cur[idx]) cur[idx].n = true; });
-          seriesChanged = true;
-        }
-        
-        next[k] = cur;
-        if (seriesChanged) changed = true;
+      for (const k of portKeys) {
+        const v = (nd as any)[k];
+        const cur = prev[k] ?? [];
+        if (v === undefined || v === null) { next[k] = cur; continue; }
+        if (typeof v === 'number') {
+          if (cur.length === 0 || cur[cur.length - 1] !== v) {
+            next[k] = [...cur, v].slice(-bufSize);
+            changed = true;
+          } else { next[k] = cur; }
+        } else if (Array.isArray(v)) {
+          next[k] = (v as any[]).map(Number).filter((n: number) => !isNaN(n)).slice(-bufSize);
+          changed = true;
+        } else { next[k] = cur; }
       }
-      return changed ? next : prev;
+      const prevKeys = Object.keys(prev);
+      return (changed || prevKeys.length !== portKeys.length || prevKeys.some(k => !portKeys.includes(k))) ? next : prev;
     });
-  }, [nd, bufSize]);
+  }, [nd, bufSize, portKeys]);
 
-
-  const chartData = useMemo(() => {
-    const a = histories['a'] ?? [];
-    const b = histories['b'] ?? [];
-    const maxLen = Math.max(a.length, b.length);
+  const chartData = React.useMemo(() => {
+    const maxLen = Math.max(0, ...portKeys.map(k => histories[k]?.length ?? 0));
     if (maxLen === 0) return [];
-    return Array.from({ length: maxLen }, (_, i) => ({
-      t: i,
-      a: i < a.length ? a[i].v : undefined,
-      b: i < b.length ? b[i].v : undefined,
-      _amax: (i < a.length && a[i].m) ? a[i].v : undefined,
-      _amin: (i < a.length && a[i].n) ? a[i].v : undefined,
-      _bmax: (i < b.length && b[i].m) ? b[i].v : undefined,
-      _bmin: (i < b.length && b[i].n) ? b[i].v : undefined,
-    }));
-  }, [histories]);
+    return Array.from({ length: maxLen }, (_, i) => {
+      const pt: any = { t: i };
+      for (const k of portKeys) { const arr = histories[k]; if (arr && i < arr.length) pt[k] = arr[i]; }
+      return pt;
+    });
+  }, [histories, portKeys]);
 
-  const hasData = chartData.length > 0;
-  const lastA = histories['a']?.[(histories['a']?.length ?? 0) - 1]?.v;
-  const lastB = histories['b']?.[(histories['b']?.length ?? 0) - 1]?.v;
+  const HANDLE_TOP_START = 45;
+  const HANDLE_SPACING = 32;
+  const portsHeight = HANDLE_TOP_START + ports.length * HANDLE_SPACING + 35;
 
   return (
-    <div className="relative w-full h-full" style={{ minHeight: 180 }}>
+    <div className="relative w-full h-full" style={{ minHeight: Math.max(portsHeight, 180) }}>
       <div
         className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
         style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
       >
-        {/* Input A */}
-        <div className="absolute left-0 pointer-events-none flex items-center z-10" style={{ top: '40px', transform: 'translateY(-50%)' }}>
-          <StyledHandle type="target" position={Position.Left} id="series_a" color="scalar" top="50%" />
-          <span className="ml-4 text-[7px] text-gray-500 font-mono">A</span>
-        </div>
-        {/* Input B */}
-        <div className="absolute left-0 pointer-events-none flex items-center z-10" style={{ top: '72px', transform: 'translateY(-50%)' }}>
-          <StyledHandle type="target" position={Position.Left} id="series_b" color="scalar" top="50%" />
-          <span className="ml-4 text-[7px] text-gray-500 font-mono">B</span>
+        {/* Dynamic input ports */}
+        {ports.map((p, i) => {
+          const idx = p.id.indexOf('__');
+          const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+          const color = idx >= 0 ? p.id.slice(0, idx) : 'any';
+          return (
+            <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center z-10"
+                 style={{ top: `${HANDLE_TOP_START + i * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
+              <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
+              <button
+                className="nodrag pointer-events-auto ml-4 text-[8px] text-gray-600 hover:text-red-400 transition-colors leading-none"
+                onClick={e => { e.stopPropagation(); data.onRemovePort?.(p.id); }}
+                title="Remove"
+              >×</button>
+            </div>
+          );
+        })}
+        {/* Factory handle */}
+        <div className="absolute left-0 pointer-events-none flex items-center z-10"
+             style={{ top: `${HANDLE_TOP_START + ports.length * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
+          <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
         </div>
 
         {/* Output main */}
-        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '36px', transform: 'translateY(-50%)' }}>
-          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
+        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
+             style={{ top: '22px', transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
           <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
-        </div>
-        {/* Output a */}
-        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '64px', transform: 'translateY(-50%)' }}>
-          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">a</span>
-          <StyledHandle type="source" position={Position.Right} id="a" color="scalar" top="50%" />
-        </div>
-        {/* Output b */}
-        <div className="absolute right-0 pointer-events-none flex items-center gap-1 z-10" style={{ top: '92px', transform: 'translateY(-50%)' }}>
-          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">b</span>
-          <StyledHandle type="source" position={Position.Right} id="b" color="scalar" top="50%" />
         </div>
 
         {/* Header */}
@@ -1424,56 +1459,33 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
              style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
           <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#a78bfa' }} />
           <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorA }} />
-              <span className="text-[7px] text-gray-500 font-mono">{lastA !== undefined ? lastA.toFixed(1) : '--'}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorB }} />
-              <span className="text-[7px] text-gray-500 font-mono">{lastB !== undefined ? lastB.toFixed(1) : '--'}</span>
-            </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            {portKeys.map((k, i) => (
+              <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
+                   style={{ backgroundColor: PRO_COLORS[i % PRO_COLORS.length] }} />
+            ))}
           </div>
         </div>
 
         {/* Chart */}
         <div className="flex-1 min-h-0 w-full px-1 py-1 overflow-hidden">
-          {!hasData
-            ? <div className="w-full h-full flex items-center justify-center">
-                <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
+          {chartData.length === 0
+            ? <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                <span className="text-[8px] text-gray-600 uppercase tracking-widest">
+                  {ports.length === 0 ? 'connect data' : `${ports.length} port${ports.length > 1 ? 's' : ''} — waiting`}
+                </span>
               </div>
             : <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 35, bottom: 0, left: 0 }}>
-                  {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
-                  <XAxis dataKey="t" hide />
+                <LineChart data={chartData} margin={{ top: 2, right: 35, bottom: 0, left: 0 }}>
                   <YAxis hide domain={yDomain} />
-                  
-                  {showThresholds && (
-                    <ReferenceLine 
-                      y={thMin} 
-                      stroke="#facc15" 
-                      strokeDasharray="6 3" 
-                      strokeWidth={2} 
-                      label={{ position: 'insideRight', value: `min: ${thMin.toFixed(1)}`, fill: '#facc15', fontSize: 8, fontWeight: 'bold' }} 
-                    />
-                  )}
-                  {showThresholds && (
-                    <ReferenceLine 
-                      y={thMax} 
-                      stroke="#facc15" 
-                      strokeDasharray="6 3" 
-                      strokeWidth={2} 
-                      label={{ position: 'insideRight', value: `max: ${thMax.toFixed(1)}`, fill: '#facc15', fontSize: 8, fontWeight: 'bold' }} 
-                    />
-                  )}
-
-                  <Line key="a" type="monotone" dataKey="a" stroke={colorA} strokeWidth={lineWidth} dot={false} isAnimationActive={false} connectNulls={false} />
-                  <Line key="b" type="monotone" dataKey="b" stroke={colorB} strokeWidth={lineWidth} dot={false} isAnimationActive={false} connectNulls={false} />
-                  
-                  {showPeaks && <Line key="aMax" type="monotone" dataKey="_amax" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: colorA, stroke: '#fff', strokeWidth: 1.5 }} isAnimationActive={false} connectNulls={false} />}
-                  {showPeaks && <Line key="aMin" type="monotone" dataKey="_amin" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: 'none', stroke: colorA, strokeWidth: 2 }} isAnimationActive={false} connectNulls={false} />}
-                  {showPeaks && <Line key="bMax" type="monotone" dataKey="_bmax" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: colorB, stroke: '#fff', strokeWidth: 1.5 }} isAnimationActive={false} connectNulls={false} />}
-                  {showPeaks && <Line key="bMin" type="monotone" dataKey="_bmin" stroke="transparent" strokeWidth={0} dot={{ r: 5, fill: 'none', stroke: colorB, strokeWidth: 2 }} isAnimationActive={false} connectNulls={false} />}
+                  {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
+                  {showThresholds && <ReferenceLine y={thMin} stroke="#facc15" strokeDasharray="6 3" strokeWidth={1.5} label={{ position: 'insideRight', value: `${thMin.toFixed(1)}`, fill: '#facc15', fontSize: 7 }} />}
+                  {showThresholds && <ReferenceLine y={thMax} stroke="#facc15" strokeDasharray="6 3" strokeWidth={1.5} label={{ position: 'insideRight', value: `${thMax.toFixed(1)}`, fill: '#facc15', fontSize: 7 }} />}
+                  {portKeys.map((k, i) => (
+                    <Line key={k} type="monotone" dataKey={k}
+                      stroke={PRO_COLORS[i % PRO_COLORS.length]} strokeWidth={lineWidth}
+                      dot={false} isAnimationActive={false} connectNulls />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
           }
@@ -2450,6 +2462,7 @@ export const GenericCustomNode = memo((props: any) => {
   const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
 
   if (schema.type === 'sci_plotter') return <ScientificPlotterNode {...props} />;
+  if (schema.type === 'plotter_pro') return <PlotterProNode {...props} />;
   if (schema.type === 'sci_histogram') return <ScientificHistogramNode {...props} />;
   if (schema.type === 'sci_stats') return <ScientificStatsNode {...props} />;
   if (schema.type === 'draw_text') return <DrawTextNode {...props} />;

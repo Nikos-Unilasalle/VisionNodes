@@ -1369,6 +1369,9 @@ def flatten_groups(node_list, edge_list, prefix=''):
         for outer_e in edge_list:
             if outer_e.get('target') != g_id or not gin_id:
                 continue
+            # Skip: source is also a group — handled by that group's output expansion
+            if outer_e.get('source') in group_ids:
+                continue
             th = outer_e.get('targetHandle', '')
             for inner_e in sub_edges:
                 if inner_e.get('source') != gin_id or inner_e.get('sourceHandle', '') != th:
@@ -1388,18 +1391,34 @@ def flatten_groups(node_list, edge_list, prefix=''):
             for inner_e in sub_edges:
                 if inner_e.get('target') != gout_id or inner_e.get('targetHandle', '') != sh:
                     continue
+                tgt_id = outer_e['target']
+                tgt_handle = outer_e.get('targetHandle', '')
+                tgt_prefix = prefix
+                # If target is also a group, resolve through its gin to get a flat target
+                if tgt_id in group_ids:
+                    tgt_node = next((n for n in node_list if n['id'] == tgt_id), None)
+                    if tgt_node:
+                        tgt_sub = tgt_node.get('data', {}).get('subGraph', {})
+                        tgt_gin = next((n for n in tgt_sub.get('nodes', []) if n.get('type') == 'group_input'), None)
+                        if tgt_gin:
+                            for tgt_ie in tgt_sub.get('edges', []):
+                                if tgt_ie.get('source') == tgt_gin['id'] and tgt_ie.get('sourceHandle', '') == tgt_handle:
+                                    tgt_prefix = prefix + tgt_id + '::'
+                                    tgt_id = tgt_ie['target']
+                                    tgt_handle = tgt_ie.get('targetHandle', '')
+                                    break
                 flat_edges.append({
                     'id': f"f_{inner_e.get('id','')}_{outer_e.get('id','')}",
                     'source': gprefix + inner_e['source'],
                     'sourceHandle': inner_e.get('sourceHandle', ''),
-                    'target': prefix + outer_e['target'],
-                    'targetHandle': outer_e.get('targetHandle', ''),
+                    'target': tgt_prefix + tgt_id,
+                    'targetHandle': tgt_handle,
                 })
 
     return flat_nodes, flat_edges
 
 
-REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input', 'signal_generator', 'signal_clock', 'serial_reader'}
+REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input', 'signal_generator', 'signal_clock', 'serial_reader', 'plotter_pro', 'sci_plotter'}
 
 
 class VisionEngine:
@@ -1581,7 +1600,7 @@ class VisionEngine:
                         results[nid] = out
                         
                         # Handle On-Demand Capture
-                        if self.pending_capture == nid and out.get('main') is not None:
+                        if self.pending_capture and (nid == self.pending_capture or nid.endswith('::' + self.pending_capture)) and out.get('main') is not None:
                             try:
                                 capture_img = out['main']
                                 if len(capture_img.shape) == 2: capture_img = cv2.cvtColor(capture_img, cv2.COLOR_GRAY2BGR)
@@ -1601,7 +1620,7 @@ class VisionEngine:
                                 commands.append(cmd)
                             elif k != "main" and not isinstance(v, np.ndarray) and _is_serializable(v):
                                 node_datas[f"{nid}:{k}"] = v
-                        if self.preview_node_id and nid == self.preview_node_id:
+                        if self.preview_node_id and (nid == self.preview_node_id or nid.endswith('::' + self.preview_node_id)):
                             preview_img = out.get('main')
                             if preview_img is None:
                                 for _v in out.values():

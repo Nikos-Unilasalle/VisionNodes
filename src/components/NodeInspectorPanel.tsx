@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen } from 'lucide-react';
+import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 import { HexColorPicker } from 'react-colorful';
@@ -42,6 +43,34 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
     />
   </div>
 );
+
+interface FilePathInputProps { label: string; val: string; onChange: (v: string) => void; filters?: { name: string; extensions: string[] }[]; }
+export const FilePathInput = ({ label, val, onChange, filters }: FilePathInputProps) => {
+  const browse = async () => {
+    const chosen = await tauriSaveDialog({ defaultPath: val || undefined, filters });
+    if (chosen) onChange(chosen);
+  };
+  return (
+    <div className="space-y-4 group">
+      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <div className="flex gap-2">
+        <input
+          type="text" value={val} onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="flex-1 bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
+          placeholder={`Enter ${label.toLowerCase()}...`}
+        />
+        <button
+          onClick={browse}
+          className="shrink-0 bg-black/20 border border-[#4f5b6b] hover:border-accent/60 hover:bg-accent/10 rounded-xl px-3 py-2 text-gray-400 hover:text-accent transition-all"
+          title="Browse…"
+        >
+          <FolderOpen size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface NumberInputProps { label: string; val: number; onChange: (v: number) => void; }
 export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
@@ -341,6 +370,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   const isB2 = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (val ?? sp.default) === 'boolean';
                   if (isE2) return <SelectInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
                   if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
+                  if (sp.type === 'file_path') return <FilePathInput key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} />;
                   if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
@@ -780,6 +810,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           }} />;
         } else if (isColor) {
           inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
+        } else if (sp.type === 'file_path') {
+          inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} />;
         } else if (isString) {
           inner = sp.id === 'code'
             ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
