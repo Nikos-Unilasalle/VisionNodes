@@ -4,7 +4,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="util_landmark_selector",
     label="Landmark Selector",
-    category="util",
+    category="utilities",
     icon="Target",
     description="Selects specific points from a landmark list (e.g., torso from pose).",
     inputs=[{"id": "data", "color": "dict"}],

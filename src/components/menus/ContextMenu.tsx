@@ -70,6 +70,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
               >
                 <Eye size={16} className={visualizedNodeId === menu.id ? "text-yellow-400 group-hover:text-white" : "text-accent group-hover:text-white"} />
                 <span>{visualizedNodeId === menu.id ? 'Stop Visualizing' : 'Visualize'}</span>
+                <span className="ml-auto text-[9px] text-gray-500 font-mono">↵</span>
               </button>
               <div className="h-px bg-white/5 my-1 mx-2" />
             </>
@@ -139,6 +140,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                     ? <LockOpen size={16} className="text-red-400 group-hover:text-white" />
                     : <Lock    size={16} className="text-red-400 group-hover:text-white" />}
                   <span>{isLocked ? 'Unlock Output' : 'Lock Out'}</span>
+                  <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘⇥</span>
                 </button>
                 {canBypass(menu.id) && (
                   <button
@@ -155,6 +157,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                   >
                     <ChevronsRight size={16} className="text-gray-400 group-hover:text-white" />
                     <span>{isBypassed ? 'Remove Bypass' : 'Bypass'}</span>
+                    <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘B</span>
                   </button>
                 )}
                 <button
@@ -173,6 +176,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 >
                   <Layers size={16} className="text-purple-400 group-hover:text-white" />
                   <span>{isMinified ? 'Expand Nodes' : 'Mininode'}</span>
+                  <span className="ml-auto text-[9px] text-gray-500 font-mono">⇥</span>
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRotate(menu.id); }}
@@ -261,7 +265,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500 rounded-xl text-white text-[11px] font-bold transition-all group"
           >
             <Plus size={16} className="text-red-500 group-hover:text-white rotate-45" />
-            <span>Delete Node</span>
+            <span>Delete</span>
+            <span className="ml-auto text-[9px] text-gray-500 font-mono">⌫</span>
           </button>
         </div>
       )}

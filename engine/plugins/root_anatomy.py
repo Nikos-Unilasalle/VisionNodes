@@ -118,6 +118,19 @@ def _otsu_masked(gray: np.ndarray, mask: np.ndarray):
     return thresh, result
 
 
+def _to_gray(img):
+    """Safely converts an image to grayscale, handling (H,W), (H,W,1), and (H,W,C)."""
+    if img is None:
+        return None
+    if len(img.shape) == 2:
+        return img.copy()
+    if len(img.shape) == 3:
+        if img.shape[2] >= 3:
+            return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return img[:, :, 0].copy()
+    return img.copy()
+
+
 # --- Nodes ---
 
 @vision_node(
@@ -175,7 +188,7 @@ class RootIsolateNode(NodeProcessor):
             return {"data": None, "preview": None}
 
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
         h, w = gray.shape[:2]
 
         if params.get('invert', False):
@@ -261,7 +274,7 @@ class RootSegmentSteleNode(NodeProcessor):
 
         img = st.original
         h, w = img.shape[:2]
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
         
         # Auto-polarity: root should be bright for weighting to work
         do_invert = params.get('invert', False)
@@ -363,7 +376,7 @@ class RootCortexAreasNode(NodeProcessor):
 
         px_per_mm = st.px_per_mm
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
 
         # TCA
         tca_mm2 = st.stats['RXSA'] - st.stats['TSA']
@@ -410,8 +423,7 @@ class RootExcludeLateralNode(NodeProcessor):
         if st.masks['section'] is not None and excl_mask is not None:
             if excl_mask.shape[:2] != st.masks['section'].shape[:2]:
                 excl_mask = cv2.resize(excl_mask, (st.masks['section'].shape[1], st.masks['section'].shape[0]))
-            if len(excl_mask.shape) == 3:
-                excl_mask = cv2.cvtColor(excl_mask, cv2.COLOR_BGR2GRAY)
+            excl_mask = _to_gray(excl_mask)
 
             la_px = float(np.sum(cv2.bitwise_and(excl_mask, excl_mask, mask=st.masks['section']) > 0))
             st.stats['LA'] = round(la_px / (st.px_per_mm ** 2), 4)
@@ -453,7 +465,7 @@ class RootAerenchymaNode(NodeProcessor):
             return {"data": data, "preview": None}
 
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
 
         cortex_gray = cv2.bitwise_and(gray, gray, mask=cortex_mask)
         _, binary = _otsu_masked(cortex_gray, cortex_mask)
@@ -549,7 +561,7 @@ class RootCorticalCellsNode(NodeProcessor):
             return {"data": data, "preview": None}
 
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
 
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         inv_in_cortex = cv2.bitwise_and(cv2.bitwise_not(binary), cv2.bitwise_not(binary), mask=cortex_mask)
@@ -630,7 +642,7 @@ class RootXylemNode(NodeProcessor):
             return {"data": data, "preview_b64": None, "stats": dict(st.stats)}
 
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
 
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         vessels_raw = cv2.bitwise_and(cv2.bitwise_not(binary), cv2.bitwise_not(binary), mask=stele_mask)
@@ -699,7 +711,7 @@ class RootProtoxylemNode(NodeProcessor):
             return {"data": data, "preview_b64": None, "stats": dict(st.stats)}
 
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
 
         # Detect outer periphery to avoid pith (central cells)
         dt_root = cv2.distanceTransform(st.masks['section'], cv2.DIST_L2, 5)
@@ -770,7 +782,7 @@ class RootLayersNode(NodeProcessor):
 
         px_per_mm = st.px_per_mm
         img = st.original
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img.copy()
+        gray = _to_gray(img)
         layer_w = params.get('layer_width', 15)
 
         # Endodermis: cortex cells within layer_w px of the stele boundary

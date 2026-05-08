@@ -149,7 +149,7 @@ class ClaheNode(NodeProcessor):
 @vision_node(
     type_id="feat_bilateral",
     label="Bilateral Filter",
-    category="cv",
+    category="filters",
     icon="Wind",
     description="Smoothes the image while preserving edge sharpness and textures.",
     inputs=[{"id": "image", "color": "image"}],

@@ -358,6 +358,7 @@ function App() {
     'analysis_face_mp', 'analysis_hand_mp', 'analysis_pose_mp',
     'analysis_flow', 'analysis_flow_viz', 'util_roi_polygon', 'draw_overlay',
     'util_coord_to_mask', 'util_mask_blend', 'logic_python', 'output_display',
+    'group_input', 'group_output',
   ]), []);
 
   const nodesWithData = useMemo(() => {
@@ -413,6 +414,11 @@ function App() {
     if (!node) return false;
     if (node.type === 'output_display') return true;
     if (STATIC_IMAGE_PRODUCERS.has(node.type || '')) return true;
+    // group_node: visualizable if it has any image/mask output port
+    if (node.type === 'group_node') {
+      const outs: {id:string;color:string}[] = (node.data as any)?.outputs ?? [];
+      if (outs.some(o => { const c = o.id.split('__')[0]; return c === 'image' || c === 'mask'; })) return true;
+    }
     const schema = (pluginSchemas || []).find(s => s.type === node.type);
     if (schema?.outputs?.some((o: any) => o.color === 'image' || o.color === 'mask')) return true;
     return false;
@@ -442,10 +448,34 @@ function App() {
 
   const handleVisualize = useCallback((nodeId: string) => {
     const newId = visualizedNodeId === nodeId ? null : nodeId;
+    let resolvedId = newId;
+    if (newId) {
+      const node = nodes.find(n => n.id === newId);
+      if (node?.type === 'group_node') {
+        // Resolve to the inner node that feeds group_output inside the subgraph.
+        // The engine sees it as groupId::innerNodeId in the flattened graph.
+        const sub = (node.data as any)?.subGraph;
+        if (sub) {
+          const gout = (sub.nodes as any[])?.find((n: any) => n.type === 'group_output');
+          if (gout) {
+            const feedEdge = (sub.edges as any[])?.find((e: any) => e.target === gout.id);
+            if (feedEdge) resolvedId = `${newId}::${feedEdge.source}`;
+          }
+        }
+      } else if (node?.type === 'group_output') {
+        // Inside a group: resolve to the node feeding this group_output
+        const feedEdge = edges.find(e => e.target === newId);
+        if (feedEdge) resolvedId = feedEdge.source;
+      } else if (node?.type === 'group_input') {
+        // Inside a group: resolve to the node receiving from this group_input
+        const feedEdge = edges.find(e => e.source === newId);
+        if (feedEdge) resolvedId = feedEdge.target;
+      }
+    }
     setVisualizedNodeId(newId);
-    setPreviewNode(newId);
+    setPreviewNode(resolvedId);
     setMenu(null);
-  }, [visualizedNodeId, setPreviewNode]);
+  }, [visualizedNodeId, setPreviewNode, nodes, edges]);
 
   const handleRotate = useCallback((nodeId?: string) => {
     pushSnapshot();
@@ -760,7 +790,7 @@ function App() {
   }, [instance]);
 
   const { groupSelectedNodes, ungroupNode } = useGroupOperations({
-    nodesRef, edgesRef, pushSnapshot, setViewNodes, setViewEdges,
+    nodesRef, edgesRef, pushSnapshot, setViewNodes, setViewEdges, instance,
   });
 
   useEffect(() => { if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current); }, [isConnected, updateGraph]);
@@ -868,6 +898,7 @@ function App() {
     pushSnapshot, setViewNodes, nodesRef, instance,
     groupSelectedNodes, exitGroup, groupStackRef, canBypass,
     setIsAddMenuOpen, saveProject, loadProject, setPendingConnection, handleRotate,
+    handleVisualize,
   });
 
   useEffect(() => {
