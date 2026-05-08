@@ -1,0 +1,351 @@
+{
+  "nodes": [
+    {
+      "id": "n-s2loader",
+      "type": "geo_s2_loader",
+      "position": { "x": 0, "y": 180 },
+      "style": {},
+      "data": {
+        "label": "Sentinel-2 Loader",
+        "params": {
+          "img_data_path": "",
+          "b3_path": "",
+          "b4_path": "",
+          "b8_path": "",
+          "b11_path": "",
+          "b2_path": ""
+        }
+      },
+      "width": 208,
+      "height": 260
+    },
+    {
+      "id": "n-dnnorm",
+      "type": "geo_dn_normalize",
+      "position": { "x": 320, "y": 230 },
+      "style": {},
+      "data": {
+        "label": "DN → Réflectance",
+        "params": {
+          "quantification": 10000,
+          "clamp": true
+        }
+      },
+      "width": 208,
+      "height": 120
+    },
+    {
+      "id": "n-bandsel",
+      "type": "geo_band_selector",
+      "position": { "x": 320, "y": 440 },
+      "style": {},
+      "data": {
+        "label": "Aperçu RGB (B4/B3/B2)",
+        "params": {
+          "r_band": 2,
+          "g_band": 1,
+          "b_band": 5,
+          "stretch": true,
+          "percentile": 2
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "n-watermask",
+      "type": "geo_water_mask_mndwi",
+      "position": { "x": 640, "y": 160 },
+      "style": {},
+      "data": {
+        "label": "Masque Eau (MNDWI)",
+        "params": {
+          "green_band": 1,
+          "swir_band": 4,
+          "threshold": 0.0,
+          "erode_size": 3,
+          "scl_band": 0
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-deglint",
+      "type": "geo_deglint",
+      "position": { "x": 1000, "y": 160 },
+      "style": {},
+      "data": {
+        "label": "Déglint (NIR)",
+        "params": {
+          "nir_band": 3,
+          "vis_bands": "1,2",
+          "mode": "Auto (regression)",
+          "k_fixed": 1.0,
+          "percentile": 10
+        }
+      },
+      "width": 208,
+      "height": 215
+    },
+    {
+      "id": "n-turbidity",
+      "type": "geo_turbidity_nechad",
+      "position": { "x": 1360, "y": 140 },
+      "style": {},
+      "data": {
+        "label": "Turbidité Nechad",
+        "params": {
+          "preset": "Nechad 2010 – Red (B4, 665nm)",
+          "red_band": 2,
+          "A": 228.1,
+          "B": 0.1641,
+          "C": 0.1724,
+          "max_ntu": 50.0,
+          "gaussian": 3
+        }
+      },
+      "width": 208,
+      "height": 275
+    },
+    {
+      "id": "n-writer",
+      "type": "geo_geotiff_writer",
+      "position": { "x": 1720, "y": 160 },
+      "style": {},
+      "data": {
+        "label": "Export GeoTIFF",
+        "params": {
+          "save": false,
+          "file_path": "turbidity_output.tif",
+          "compression": "lzw"
+        }
+      },
+      "width": 208,
+      "height": 135
+    },
+    {
+      "id": "n-turbstats",
+      "type": "geo_turbidity_stats",
+      "position": { "x": 1720, "y": 380 },
+      "style": {},
+      "data": {
+        "label": "Turbidity Statistics",
+        "params": {
+          "pixel_m": 10,
+          "max_ntu": 200.0,
+          "hist_max": 100.0
+        }
+      },
+      "width": 208,
+      "height": 180
+    },
+    {
+      "id": "n-display",
+      "type": "output_display",
+      "position": { "x": 1360, "y": 500 },
+      "style": {},
+      "data": {
+        "label": "Résultats",
+        "params": {},
+        "ports": [
+          { "id": "image__0_ntu001", "color": "image", "label": "NTU" },
+          { "id": "image__1_mndwi2", "color": "image", "label": "MNDWI" },
+          { "id": "image__2_rgb003", "color": "image", "label": "RGB" }
+        ],
+        "minified": false
+      },
+      "width": 360,
+      "height": 260
+    },
+    {
+      "id": "f-load",
+      "type": "canvas_frame",
+      "position": { "x": -20, "y": 100 },
+      "style": { "width": 580, "height": 620, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 2,
+          "title": "1 · Chargement & Normalisation"
+        }
+      },
+      "width": 580,
+      "height": 620
+    },
+    {
+      "id": "f-mask",
+      "type": "canvas_frame",
+      "position": { "x": 618, "y": 100 },
+      "style": { "width": 300, "height": 240, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 5,
+          "title": "2 · Masque Eau (MNDWI)"
+        }
+      },
+      "width": 300,
+      "height": 240
+    },
+    {
+      "id": "f-correction",
+      "type": "canvas_frame",
+      "position": { "x": 978, "y": 100 },
+      "style": { "width": 660, "height": 300, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 3,
+          "title": "3 · Déglint + Turbidité Nechad"
+        }
+      },
+      "width": 660,
+      "height": 300
+    },
+    {
+      "id": "f-export",
+      "type": "canvas_frame",
+      "position": { "x": 1700, "y": 100 },
+      "style": { "width": 260, "height": 240, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 4,
+          "title": "4 · Export GeoTIFF"
+        }
+      },
+      "width": 260,
+      "height": 240
+    },
+    {
+      "id": "note-s2",
+      "type": "canvas_note",
+      "position": { "x": -20, "y": 740 },
+      "style": { "width": 580, "height": 100 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 2,
+          "text": "Télécharger produit L2A (Copernicus Browser). Bandes nécessaires: B03 (10m), B04 (10m), B08 (10m), B11 (20m). Format JP2 ou GeoTIFF. B11 est rééchantillonné automatiquement à 10m par interpolation bilinéaire."
+        }
+      },
+      "width": 580,
+      "height": 100
+    },
+    {
+      "id": "note-nechad",
+      "type": "canvas_note",
+      "position": { "x": 978, "y": 420 },
+      "style": { "width": 660, "height": 60 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 3,
+          "text": "Formule Nechad 2010: T = (A × ρw) / (1 − ρw/C) + B. ρw = réflectance B4 (rouge, 665nm). Constantes A=228.1, B=0.1641, C=0.1724 — recalibrer si zone côtière spécifique."
+        }
+      },
+      "width": 660,
+      "height": 60
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-001",
+      "source": "n-s2loader",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-dnnorm",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-002",
+      "source": "n-s2loader",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-bandsel",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-003",
+      "source": "n-dnnorm",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-watermask",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-004",
+      "source": "n-dnnorm",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-deglint",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-005",
+      "source": "n-watermask",
+      "sourceHandle": "mask__mask",
+      "target": "n-deglint",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e-006",
+      "source": "n-deglint",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-turbidity",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-007",
+      "source": "n-watermask",
+      "sourceHandle": "mask__mask",
+      "target": "n-turbidity",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e-008",
+      "source": "n-turbidity",
+      "sourceHandle": "geotiff__turbidity",
+      "target": "n-writer",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-009",
+      "source": "n-turbidity",
+      "sourceHandle": "image__colormap",
+      "target": "n-display",
+      "targetHandle": "image__0_ntu001"
+    },
+    {
+      "id": "e-010",
+      "source": "n-watermask",
+      "sourceHandle": "image__mndwi",
+      "target": "n-display",
+      "targetHandle": "image__1_mndwi2"
+    },
+    {
+      "id": "e-011",
+      "source": "n-bandsel",
+      "sourceHandle": "image__image",
+      "target": "n-display",
+      "targetHandle": "image__2_rgb003"
+    },
+    {
+      "id": "e-012",
+      "source": "n-turbidity",
+      "sourceHandle": "geotiff__turbidity",
+      "target": "n-turbstats",
+      "targetHandle": "geotiff__turbidity"
+    },
+    {
+      "id": "e-013",
+      "source": "n-watermask",
+      "sourceHandle": "mask__mask",
+      "target": "n-turbstats",
+      "targetHandle": "mask__mask"
+    }
+  ],
+  "ui": {
+    "previewSize": { "w": 860, "h": 420 },
+    "previewPos": { "x": 400, "y": -80 },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "n-display"
+  }
+}
