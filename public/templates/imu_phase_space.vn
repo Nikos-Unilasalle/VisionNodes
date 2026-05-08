@@ -7,7 +7,7 @@
       "data": {
         "label": "M5StickC Plus2 — ⚙ configure port",
         "params": {
-          "port": "/dev/tty.usbserial",
+          "port": "/dev/cu.M5_IMU_DATA",
           "baud": 8,
           "parse": 0,
           "delimiter": ","
