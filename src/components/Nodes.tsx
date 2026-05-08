@@ -1147,63 +1147,18 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
     { id: 'flow_in', color: 'flow' }
   ];
 
-  // Build tabs: dynamic ports first, then 'main' as fallback
-  const tabs = React.useMemo(() => {
-    const result: { label: string; b64: string }[] = [];
-    
-    // Explicit specialized inputs
-    if (nd?._tab_mask) result.push({ label: 'Mask', b64: nd._tab_mask });
-    if (nd?._tab_flow) result.push({ label: 'Flow', b64: nd._tab_flow });
-
-    // Dynamic ports
-    for (const p of ports) {
-      const idx = p.id.indexOf('__');
-      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
-      const b64 = nd?.[`_tab_${shortId}`];
-      if (b64) result.push({ label: p.label || shortId, b64 });
-    }
-    // Fallback: main input
-    if (result.length === 0 && nd?._tab_main) {
-      result.push({ label: 'Main', b64: nd._tab_main });
-    } else if (result.length === 0 && nd?.main && typeof nd.main === 'string') {
-        // Fallback for direct main b64 if _tab_main is missing
-        result.push({ label: 'Main', b64: nd.main });
-    }
-    return result;
-  }, [nd, ports]);
-
-  const clampedTab = Math.min(activeTab, Math.max(0, tabs.length - 1));
-  const activeImg = tabs[clampedTab]?.b64 ?? null;
+  const activeImg = nd?._tab_main || (typeof nd?.main === 'string' ? nd.main : null);
 
   return (
     <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]}>
-      {tabs.length > 0 && (
-        <div className="flex flex-col gap-1 px-1 pb-1 w-full">
-          {tabs.length > 1 && (
-            <div className="flex gap-1">
-              {tabs.map((t, i) => (
-                <button
-                  key={t.label}
-                  onClick={() => setActiveTab(i)}
-                  className={`flex-1 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider transition-colors ${
-                    i === clampedTab
-                      ? 'bg-[var(--accent)] text-white'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          )}
-          {activeImg && (
-            <img
-              src={`data:image/jpeg;base64,${activeImg}`}
-              alt={tabs[clampedTab]?.label}
-              className="w-full h-auto rounded border border-white/10 object-cover"
-              style={{ maxHeight: 160 }}
-            />
-          )}
+      {activeImg && (
+        <div className="px-1 pb-1 w-full">
+          <img
+            src={`data:image/jpeg;base64,${activeImg}`}
+            alt="Output"
+            className="w-full h-auto rounded border border-white/10 object-cover"
+            style={{ maxHeight: 240 }}
+          />
         </div>
       )}
     </BaseNode>
