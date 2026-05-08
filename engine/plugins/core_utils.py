@@ -62,7 +62,7 @@ class InspectorNode(NodeProcessor):
     def process(self, inputs, params):
         d = inputs.get('data')
         txt = str(d)[:500]
-        return {"text": txt, "main": txt, "display_text": txt}
+        return {"text": txt, "main": txt, "display_text": txt, "data_out": d}
 
 @vision_node(
     type_id="util_overlay",

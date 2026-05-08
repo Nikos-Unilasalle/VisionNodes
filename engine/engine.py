@@ -205,7 +205,11 @@ def flatten_groups(node_list, edge_list, prefix=''):
     return flat_nodes, flat_edges
 
 
-REALTIME_NODE_TYPES = {'input_webcam', 'input_movie', 'plugin_audio_input', 'signal_generator', 'signal_clock', 'serial_reader', 'plotter_pro', 'sci_plotter'}
+REALTIME_NODE_TYPES = {
+    'input_webcam', 'input_movie', 'plugin_audio_input', 
+    'signal_generator', 'signal_clock', 'serial_reader', 
+    'plotter_pro', 'sci_plotter', 'analysis_monitor', 'util_inspector'
+}
 
 
 class VisionEngine:
