@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_marker_analysis",
     label="Marker Analysis",
-    category="analysis",
+    category='detect',
     icon="Hash",
     description="Extracts data (ID, coordinates, area) from a label map (markers) and overlays IDs.",
     inputs=[{"id": "markers", "color": "any"}, {"id": "image", "color": "image"}],

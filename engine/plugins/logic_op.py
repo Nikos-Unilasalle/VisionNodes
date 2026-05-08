@@ -3,7 +3,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="logic_compare",
     label="Data Compare",
-    category="logic",
+    category='logic',
     icon="Layers",
     description="Compares two numerical values using a selected operator (>, <, ==, etc.) and returns true or false.",
     inputs=[{"id": "in_a", "color": "scalar"}, {"id": "in_b", "color": "scalar"}],
@@ -43,7 +43,7 @@ class CompareNode(NodeProcessor):
 @vision_node(
     type_id="logic_presence",
     label="Presence Check",
-    category="logic",
+    category='logic',
     icon="User",
     description="Checks if a list is not empty or if a value is non-NULL. Useful for triggering events.",
     inputs=[{"id": "data", "color": "any"}],
@@ -69,7 +69,7 @@ class PresenceNode(NodeProcessor):
 @vision_node(
     type_id="logic_switch",
     label="Switch",
-    category="logic",
+    category='logic',
     icon="Zap",
     description="Toggles between two input streams based on a control signal (true/false).",
     inputs=[
@@ -94,7 +94,7 @@ class SwitchNode(NodeProcessor):
 @vision_node(
     type_id="logic_gate",
     label="Logic Gate",
-    category="logic",
+    category='logic',
     icon="Layers",
     description="Performs basic logical operations (AND, OR, XOR, NOT) on two signals.",
     inputs=[{"id": "in_a", "color": "boolean"}, {"id": "in_b", "color": "boolean"}],

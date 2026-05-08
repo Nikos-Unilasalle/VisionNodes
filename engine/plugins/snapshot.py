@@ -6,7 +6,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="util_snapshot",
     label="Snapshot",
-    category="out",
+    category='out',
     icon="Camera",
     description="Captures the current frame and saves it as a new image node in the workspace.",
     inputs=[{"id": "image", "color": "image"}],

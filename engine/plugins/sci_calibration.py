@@ -4,7 +4,7 @@ import numpy as np
 @vision_node(
     type_id='sci_calibration',
     label='Unit Calibration',
-    category=['analysis', 'math'],
+    category=['visualize', 'math'],
     icon='Scaling',
     description="Converts pixel measurements (length or area) into real-world units based on a calibration factor.",
     inputs=[{'id': 'input', 'color': 'any'}],

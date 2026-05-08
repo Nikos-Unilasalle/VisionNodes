@@ -30,7 +30,7 @@ def canonical_corners(pts_raw):
 @vision_node(
     type_id="list_region_select",
     label="Region Selector",
-    category="data",
+    category='util',
     icon="Filter",
     description="Filters and sorts a list of detection regions. Outputs the selected item and its canonical 4 corner pts (TL→TR→BR→BL) ready for perspective warp.",
     inputs=[{"id": "list_in", "color": "list"}],

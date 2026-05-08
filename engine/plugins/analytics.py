@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_plotter",
     label="Plotter",
-    category=["visualize", "analysis"],
+    category=['visualize', 'detect'],
     icon="Activity",
     description="Multi-series real-time graph. Connect any scalar/list inputs dynamically. Resizable.",
     inputs=[],
@@ -118,7 +118,7 @@ class PlotterNode(NodeProcessor):
 @vision_node(
     type_id="sci_stats",
     label="Statistics",
-    category="analysis",
+    category='detect',
     icon="Info",
     description="Calculates key statistical metrics (mean, median, standard deviation) from a list.",
     inputs=[{"id": "data_list", "color": "list"}],
@@ -157,7 +157,7 @@ class StatsNode(NodeProcessor):
 @vision_node(
     type_id="sci_heatmap",
     label="Heatmap",
-    category="analysis",
+    category='detect',
     icon="Wind",
     description="Generates a cumulative heatmap based on provided detection points.",
     inputs=[{"id": "image", "color": "image"}, {"id": "points", "color": "any"}],

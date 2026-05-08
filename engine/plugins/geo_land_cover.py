@@ -16,7 +16,7 @@ def ensure_ee():
 @vision_node(
     type_id='geo_land_cover',
     label='Geo Land Cover',
-    category='geo',
+    category='geography',
     icon='Layers',
     description="Fetch ESA WorldCover 10m classification for the input region. Returns a binary mask for the selected class.",
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],

@@ -12,7 +12,7 @@ except ImportError:
 @vision_node(
     type_id='geo_geotiff_writer',
     label='GeoTIFF Writer',
-    category='geo',
+    category='geography',
     icon='Save',
     description="Save a GeoTIFF stream to disk with geographic metadata (CRS, transform).",
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],

@@ -15,7 +15,7 @@ _CV2_COLORMAPS = {
 @vision_node(
     type_id='geo_spectral_index',
     label='Spectral Index',
-    category='geo',
+    category='geography',
     icon='BarChart2',
     description=(
         "Indices: \n"

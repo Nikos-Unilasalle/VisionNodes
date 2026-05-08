@@ -17,7 +17,7 @@ _CV2_COLORMAPS = {
 @vision_node(
     type_id='geo_band_calc',
     label='Band Calculator',
-    category='geo',
+    category='geography',
     icon='Calculator',
     description="Free expression on bands. Variables: B1, B2, … Bn. Example: (B4-B3)/(B4+B3+1e-10)",
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],

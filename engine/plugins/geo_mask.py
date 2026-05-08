@@ -4,7 +4,7 @@ import numpy as np
 @vision_node(
     type_id='geo_mask',
     label='Geo Mask',
-    category='geo',
+    category='geography',
     icon='Scissors',
     description="Apply a binary mask to a GeoTIFF. Pixels outside the mask are set to zero (nodata). Equivalent to Bitwise AND.",
     inputs=[

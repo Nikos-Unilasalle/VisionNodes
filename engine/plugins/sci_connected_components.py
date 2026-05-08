@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='sci_connected_components',
     label='Connected Components',
-    category=['analysis', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Layers',
     description="Label and count connected regions (particles, cells, blobs). Measures area and centroid of each object.",
     inputs=[{'id': 'image', 'color': 'any'}],

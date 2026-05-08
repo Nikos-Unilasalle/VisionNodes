@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_matcher",
     label="Feature Matcher",
-    category="features",
+    category='features',
     icon="Link",
     description="Matches features between two sets of descriptors using BF or FLANN and draws matching lines.",
     inputs=[

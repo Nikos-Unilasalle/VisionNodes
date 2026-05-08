@@ -7,7 +7,7 @@ _FILTER_TYPES = ['None', 'Low-pass', 'High-pass', 'Band-pass', 'Band-stop']
 @vision_node(
     type_id='sci_fft',
     label='FFT Analysis',
-    category=['analysis', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Activity',
     description="Advanced 2D FFT Analysis with full color support. Treats BGR channels independently to preserve spectral information. Outputs magnitude, phase, and filtered reconstruction.",
     inputs=[{'id': 'image', 'color': 'image'}],

@@ -12,7 +12,7 @@ except ImportError:
 @vision_node(
     type_id='sci_region_props',
     label='Region Props',
-    category=['analysis', 'scientific'],
+    category=['visualize', 'analytics'],
     icon='Database',
     description=(
         "Extract shape and intensity features from a labeled region map (from Connected Components). "

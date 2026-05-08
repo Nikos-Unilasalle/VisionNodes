@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_threshold_adv",
     label="Threshold (Advanced)",
-    category="features",
+    category='features',
     icon="Layers",
     description="Advanced thresholding including Otsu's method and relative percentage thresholds.",
     inputs=[{"id": "image", "color": "image"}],
@@ -55,7 +55,7 @@ class AdvancedThresholdNode(NodeProcessor):
 @vision_node(
     type_id="feat_morphology_adv",
     label="Morphology (Advanced)",
-    category="features",
+    category='features',
     icon="Wind",
     description="Advanced morphological operations like Opening, Closing, and Gradient.",
     inputs=[{"id": "mask", "color": "any"}],
@@ -97,7 +97,7 @@ class AdvancedMorphologyNode(NodeProcessor):
 @vision_node(
     type_id="feat_distance_transform",
     label="Distance Transform",
-    category="features",
+    category='features',
     icon="Maximize",
     description="Calculates the distance from each pixel to the nearest zero pixel (mask border).",
     inputs=[{"id": "mask", "color": "any"}],
@@ -132,7 +132,7 @@ class DistanceTransformNode(NodeProcessor):
 @vision_node(
     type_id="feat_connected_components",
     label="Markers (Connected)",
-    category="features",
+    category='features',
     icon="Database",
     description="Labels connected regions in a binary image. Each region gets a unique ID (Markers).",
     inputs=[{"id": "mask", "color": "any"}],
@@ -161,7 +161,7 @@ class ConnectedComponentsNode(NodeProcessor):
 @vision_node(
     type_id="feat_watershed",
     label="Watershed",
-    category="features",
+    category='features',
     icon="Target",
     description="Separates overlapping objects using marker-controlled watershed algorithm.",
     inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "any"}],
@@ -243,7 +243,7 @@ class WatershedNode(NodeProcessor):
 @vision_node(
     type_id="feat_marker_filter",
     label="Marker Filter",
-    category="features",
+    category='features',
     icon="Filter",
     description="Filters markers (label map) by area, removing regions outside the min/max range.",
     inputs=[{"id": "markers", "color": "any"}, {"id": "image", "color": "image"}],

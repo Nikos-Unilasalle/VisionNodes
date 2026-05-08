@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="util_fill_holes",
     label="Fill Holes",
-    category="mask",
+    category='mask',
     icon="ShieldCheck",
     description="Fills holes (black areas) inside white objects in a binary mask.",
     inputs=[{"id": "mask", "color": "any"}],
@@ -38,7 +38,7 @@ class FillHolesNode(NodeProcessor):
 @vision_node(
     type_id="util_colormap",
     label="Apply Colormap",
-    category="visualize",
+    category='visualize',
     icon="Palette",
     description="Applies a scientific colormap (Heatmap, Jet, Magma) to a grayscale image.",
     inputs=[{"id": "image", "color": "any"}],
@@ -76,7 +76,7 @@ class ApplyColormapNode(NodeProcessor):
 @vision_node(
     type_id="util_image_math",
     label="Image Math (Power)",
-    category="cv",
+    category='cv',
     icon="Zap",
     description="Applies mathematical power operation (gamma) to image pixels.",
     inputs=[{"id": "image", "color": "any"}],
@@ -99,7 +99,7 @@ class ImageMathNode(NodeProcessor):
 @vision_node(
     type_id="util_draw_contours",
     label="Draw Contours",
-    category="draw",
+    category='draw',
     icon="PenTool",
     description="Draws a list of contours onto an image or a new black background.",
     inputs=[{"id": "image", "color": "any"}, {"id": "contours", "color": "list"}],

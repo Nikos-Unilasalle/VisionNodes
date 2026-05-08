@@ -1,6 +1,6 @@
 import {
   Camera, Waves, Layers, Box, Move, Target, Eye, PenTool,
-  Hash, Type, Zap, Maximize, Music
+  Hash, Type, Zap, Maximize, Music, BarChart3, Globe, Mountain
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -19,6 +19,9 @@ interface Category {
 }
 
 export const CATEGORIES: Category[] = [
+  { id: 'analytics', label: 'Analytics', icon: BarChart3, nodes: [] },
+  { id: 'geography', label: 'Geography', icon: Globe, nodes: [] },
+  { id: 'geology', label: 'Geology', icon: Mountain, nodes: [] },
   { id: 'src', label: 'Sources', icon: Camera, nodes: [
     { type: 'input_webcam', label: 'Webcam', description: 'Captures live video feed from your system camera.' },
     { type: 'input_image', label: 'Image File', description: 'Loads a static image from your local drive.' },
