@@ -327,17 +327,35 @@ class VisionEngine:
                         continue
                     if e['target'] == nid and e['source'] in results:
                         source_res = results[e['source']]
-                        sh, th = e.get('sourceHandle', 'main').split('__')[-1], e.get('targetHandle', '').split('__')[-1]
-                        val = source_res.get(sh)
+                        sh_raw = e.get('sourceHandle', 'main')
+                        th_raw = e.get('targetHandle', '')
+                        sh = sh_raw.split('__')[-1].lower()
+                        th = th_raw.split('__')[-1].lower()
+                        
+                        # Try to get value from source results (case-insensitive keys)
+                        val = None
+                        source_res_lower = {k.lower(): v for k, v in source_res.items()}
+                        val = source_res_lower.get(sh)
+                        
+                        if val is None and sh == 'main':
+                            # Fallback: if 'main' requested but not found, take the first available output
+                            if source_res:
+                                val = next(iter(source_res.values()))
+
                         if val is not None:
                             if th:
                                 inputs[th] = val
+                                # Compatibility shims for common names
                                 if th in ['image', 'main'] and isinstance(val, np.ndarray):
                                     inputs['image'] = val
                                 elif th == 'image':
-                                    inputs.pop('image', None)  # val not ndarray — don't pollute image slot
-                                if th == 'data': inputs['data'] = val
+                                    inputs.pop('image', None)
+                                if th in ['data', 'in', 'value']:
+                                    inputs['data'] = val
+                                    inputs['in'] = val
+                                    inputs['value'] = val
                             else:
+                                # Default handle behavior
                                 if isinstance(val, np.ndarray): inputs['image'] = val
                                 else: inputs['data'] = val
                 # Bypass: pass matching-type inputs directly to outputs
