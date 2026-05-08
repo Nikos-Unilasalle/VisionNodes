@@ -50,56 +50,25 @@ class MaskBlendNode(NodeProcessor):
         return {"main": res}
 
 @vision_node(
-    type_id="util_inspector",
-    label="Inspector",
+    type_id="data_inspector",
+    label="Inspect Unit",
     category='visualize',
-    icon="Search",
-    description="Debug tool to see the raw values of any data stream.",
-    inputs=[{"id": "data", "color": "any"}],
-    outputs=[{"id": "text", "color": "string"}]
+    icon="Eye",
+    description="Displays the raw data content flowing through a link.",
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "data", "color": "any"}
+    ],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "data_out", "color": "any"}
+    ]
 )
 class InspectorNode(NodeProcessor):
     def process(self, inputs, params):
-        d = inputs.get('data')
-        txt = str(d)[:500]
-        return {"text": txt, "main": txt, "display_text": txt, "data_out": d}
+        return {
+            "main": inputs.get('image'),
+            "data_out": inputs.get('data')
+        }
 
-@vision_node(
-    type_id="util_overlay",
-    label="Visual Overlay",
-    category='draw',
-    icon="Layout",
-    description="Overlays graphics (rects, circles, paths) onto an image. Connect any graphics-output node.",
-    inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}]
-)
-class OverlayNode(NodeProcessor):
-    def process(self, inputs, params):
-        img = inputs.get('image')
-        if img is None: return {"main": None}
-        out = img.copy()
-        h, w = out.shape[:2]
-        for key, val in inputs.items():
-            if key == 'image': continue
-            items = val if isinstance(val, list) else [val]
-            for item in items:
-                if not isinstance(item, dict) or item.get('_type') != 'graphics': continue
-                color = item.get('color', '#00ff00').lstrip('#')
-                bgr = (int(color[4:6], 16), int(color[2:4], 16), int(color[0:2], 16))
-                shape = item.get('shape')
-                pts = item.get('pts', [])
-                if shape == 'rect' and len(pts) >= 2:
-                    p1 = (int(pts[0][0]*w), int(pts[0][1]*h))
-                    p2 = (int(pts[1][0]*w), int(pts[1][1]*h))
-                    cv2.rectangle(out, p1, p2, bgr, 2)
-                elif shape == 'circle' and len(pts) >= 1:
-                    p = (int(pts[0][0]*w), int(pts[0][1]*h))
-                    r = int(item.get('radius', 0.05) * w)
-                    cv2.circle(out, p, r, bgr, 2)
-                elif shape == 'polygon' and len(pts) > 0:
-                    px = np.array([[int(p[0]*w), int(p[1]*h)] for p in pts], dtype=np.int32)
-                    cv2.polylines(out, [px], True, bgr, 2)
-                label = item.get('label')
-                if label and len(pts) > 0:
-                    cv2.putText(out, label, (int(pts[0][0]*w), int(pts[0][1]*h)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1)
-        return {"main": out}
+

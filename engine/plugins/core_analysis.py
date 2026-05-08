@@ -111,7 +111,7 @@ class FlowVizNode(NodeProcessor):
         {"id": "scalar", "color": "scalar"}
     ],
     params=[
-        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Auto", "Flux (Motion)", "Area (Mask)", "Brightness", "Red Channel", "Green Channel", "Blue Channel", "Count (Elements)"], "default": 0},
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Auto", "Flux (Motion)", "Area (Mask)", "Brightness", "Red Channel", "Green Channel", "Blue Channel", "Count (Elements)", "Scalar Value"], "default": 0},
         {"id": "scale", "label": "Scale Factor", "type": "scalar", "min": 0, "max": 1000, "default": 1.0},
         {"id": "offset", "label": "Offset", "type": "scalar", "min": -1000, "max": 1000, "default": 0.0},
         {"id": "precision", "label": "Decimals", "type": "scalar", "min": 0, "max": 5, "default": 3}
@@ -120,7 +120,7 @@ class FlowVizNode(NodeProcessor):
 class UniversalMonitorNode(NodeProcessor):
     def process(self, inputs, params):
         data = inputs.get('data')
-        img = inputs.get('image')
+        img = inputs.get('image', inputs.get('main'))
         mask = inputs.get('mask')
         mode = int(params.get('mode', 0))
         scale = float(params.get('scale', 1.0))
@@ -134,6 +134,7 @@ class UniversalMonitorNode(NodeProcessor):
                     if len(data.shape) == 3 and data.shape[2] == 2: mode = 1
                     else: mode = 3
                 elif isinstance(data, (list, tuple)): mode = 7
+                elif isinstance(data, (int, float)): mode = 8
                 else: mode = 3
             elif mask is not None: mode = 2
             elif img is not None: mode = 3
@@ -165,14 +166,27 @@ class UniversalMonitorNode(NodeProcessor):
                 unit = "lvl"
         elif mode == 7:
             if isinstance(data, (list, tuple)): val = float(len(data))
+            elif isinstance(data, dict): val = 1.0
+            elif isinstance(data, (int, float)): val = float(data)
             unit = "items"
+        elif mode == 8:
+            if isinstance(data, (int, float)): val = float(data)
+            elif isinstance(data, str):
+                try: val = float(data)
+                except: val = 0.0
+            unit = ""
         final_val = (val * scale) + offset
+        txt = f"{final_val:.{precision}f} {unit}".strip()
         res = img if img is not None else mask
         if res is not None and len(res.shape) == 2: res = cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
-        txt = f"{final_val:.{precision}f} {unit}"
         if res is not None:
             cv2.putText(res, txt, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
-        return {"main": res, "scalar": final_val, "value": final_val, "display_text": txt, "data_out": final_val}
+        return {
+            "main": res, 
+            "scalar": final_val, 
+            "data_out": final_val,
+            "display_text": txt
+        }
 
 @vision_node(
     type_id="analysis_face_mp",
