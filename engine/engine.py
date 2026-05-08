@@ -38,6 +38,11 @@ def check_and_install_dependencies():
             print(f"\n❌ Auto-install failed: {e}")
             print("👉 Please run manually: npm run setup or pip install -r engine/requirements.txt\n")
 
+# Silencing OpenCV / FFMPEG startup warnings
+import os
+os.environ["OPENCV_LOG_LEVEL"] = "OFF"
+os.environ["OPENCV_VIDEOIO_PRIORITY_BACKEND"] = "AVFOUNDATION"
+
 # Run bootstrap before other imports
 check_and_install_dependencies()
 
