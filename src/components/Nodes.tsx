@@ -1128,9 +1128,10 @@ export const MaskOperationsNode = memo(({ selected, data }: any) => (
 export const OutputDisplayNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId()!;
   const updateNodeInternals = useUpdateNodeInternals();
+  const nd = useNodeData(nodeId) as any;
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const [activeTab, setActiveTab] = React.useState(0);
 
-  // Force ReactFlow to recalculate handle positions when ports change
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
   const inputs = [
@@ -1145,8 +1146,67 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
     { id: 'mask_in', color: 'mask' },
     { id: 'flow_in', color: 'flow' }
   ];
+
+  // Build tabs: dynamic ports first, then 'main' as fallback
+  const tabs = React.useMemo(() => {
+    const result: { label: string; b64: string }[] = [];
+    
+    // Explicit specialized inputs
+    if (nd?._tab_mask) result.push({ label: 'Mask', b64: nd._tab_mask });
+    if (nd?._tab_flow) result.push({ label: 'Flow', b64: nd._tab_flow });
+
+    // Dynamic ports
+    for (const p of ports) {
+      const idx = p.id.indexOf('__');
+      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      const b64 = nd?.[`_tab_${shortId}`];
+      if (b64) result.push({ label: p.label || shortId, b64 });
+    }
+    // Fallback: main input
+    if (result.length === 0 && nd?._tab_main) {
+      result.push({ label: 'Main', b64: nd._tab_main });
+    } else if (result.length === 0 && nd?.main && typeof nd.main === 'string') {
+        // Fallback for direct main b64 if _tab_main is missing
+        result.push({ label: 'Main', b64: nd.main });
+    }
+    return result;
+  }, [nd, ports]);
+
+  const clampedTab = Math.min(activeTab, Math.max(0, tabs.length - 1));
+  const activeImg = tabs[clampedTab]?.b64 ?? null;
+
   return (
-    <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]} />
+    <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]}>
+      {tabs.length > 0 && (
+        <div className="flex flex-col gap-1 px-1 pb-1 w-full">
+          {tabs.length > 1 && (
+            <div className="flex gap-1">
+              {tabs.map((t, i) => (
+                <button
+                  key={t.label}
+                  onClick={() => setActiveTab(i)}
+                  className={`flex-1 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider transition-colors ${
+                    i === clampedTab
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {activeImg && (
+            <img
+              src={`data:image/jpeg;base64,${activeImg}`}
+              alt={tabs[clampedTab]?.label}
+              className="w-full h-auto rounded border border-white/10 object-cover"
+              style={{ maxHeight: 160 }}
+            />
+          )}
+        </div>
+      )}
+    </BaseNode>
   );
 });
 
@@ -2484,6 +2544,7 @@ export const GenericCustomNode = memo((props: any) => {
   if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
   if (schema.type === 'geo_index') return <GeoIndexNode {...props} />;
   if (schema.type === 'root_anatomy_report') return <RootAnatomyReportNodeUI {...props} />;
+  if (schema.type === 'geo_turbidity_stats') return <TurbidityStatsNodeUI {...props} />;
 
   return <GenericCustomNodeInternal {...props} schema={schema} />;
 });
@@ -2563,6 +2624,163 @@ const RootAnatomyReportNodeUI = ({ data, selected }: { data: any, selected: bool
              <BarChart2 size={10} />
           </button>
        </div>
+    </BaseNode>
+  );
+};
+
+const TURB_CLASSES: { label: string; short: string; color: string; bg: string }[] = [
+  { label: 'Cristal (0–1)',          short: 'Cristal',   color: 'text-blue-300',   bg: 'bg-blue-500/5'   },
+  { label: 'Clair (1–5)',            short: 'Clair',     color: 'text-cyan-400',   bg: 'bg-cyan-500/5'   },
+  { label: 'Légèrement turbide',     short: 'Légt.',     color: 'text-green-400',  bg: 'bg-green-500/5'  },
+  { label: 'Turbide',                short: 'Turbide',   color: 'text-amber-400',  bg: 'bg-amber-500/5'  },
+  { label: 'Très turbide',           short: 'Très T.',   color: 'text-orange-400', bg: 'bg-orange-500/5' },
+  { label: 'Extrêmement turbide',    short: 'Extrême',   color: 'text-red-400',    bg: 'bg-red-500/5'    },
+];
+
+const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const [expanded, setExpanded] = React.useState(false);
+
+  const stats = (nd as any)?.stats || {};
+  const classes = stats.classes || {};
+  const hasData = typeof stats.mean === 'number';
+
+  const fmt = (v: any, dec = 2) =>
+    typeof v === 'number' ? (v >= 1000 ? Math.round(v).toString() : v.toFixed(dec)) : '—';
+
+  const metricsLeft = [
+    { label: 'Moyenne', key: 'mean',   color: 'text-cyan-400' },
+    { label: 'Médiane', key: 'median', color: 'text-cyan-400' },
+    { label: 'P90',     key: 'p90',    color: 'text-amber-400' },
+    { label: 'Max',     key: 'max',    color: 'text-red-400'  },
+  ];
+
+  return (
+    <BaseNode
+      title="Turbidity Stats"
+      icon={BarChart2}
+      selected={selected}
+      data={data}
+      color="accent"
+      inputs={[
+        { id: 'turbidity', color: 'geotiff' },
+        { id: 'mask',      color: 'mask'    },
+      ]}
+      outputs={[
+        { id: 'stats',     color: 'dict'   },
+        { id: 'histogram', color: 'image'  },
+        { id: 'class_map', color: 'image'  },
+        { id: 'mean_ntu',  color: 'scalar' },
+        { id: 'area_km2',  color: 'scalar' },
+      ]}
+      width={expanded ? '42rem' : '18rem'}
+    >
+      <div className="flex flex-col gap-3 mt-2 w-full">
+        {!expanded ? (
+          /* ── Compact view ──────────────────────────── */
+          <div className="flex flex-col gap-2">
+            {/* Metric pills */}
+            <div className="p-2 rounded-xl border border-white/5 bg-cyan-500/5">
+              <div className="text-[7px] text-cyan-500/70 uppercase font-black mb-2 tracking-widest">Métriques NTU</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                {metricsLeft.map(m => (
+                  <div key={m.key} className="flex flex-col">
+                    <span className="text-[8px] text-gray-500">{m.label}</span>
+                    <span className={`text-[11px] font-bold font-mono ${m.color}`}>{fmt(stats[m.key])} NTU</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 pt-1 border-t border-white/5 text-[8px] text-gray-400 flex justify-between">
+                <span>Surface eau</span>
+                <span className="text-emerald-400 font-mono font-bold">{fmt(stats.area_km2, 1)} km²</span>
+              </div>
+            </div>
+            {/* Class distribution mini */}
+            <div className="p-2 rounded-xl border border-white/5 bg-white/3">
+              <div className="text-[7px] text-gray-500 uppercase font-black mb-1.5 tracking-widest">Distribution WFD</div>
+              <div className="space-y-1">
+                {TURB_CLASSES.filter(tc => {
+                  const d = classes[tc.label];
+                  return d && d.pct > 0.5;
+                }).map(tc => {
+                  const d = classes[tc.label] || {};
+                  const pct = d.pct || 0;
+                  return (
+                    <div key={tc.label} className="flex items-center gap-2">
+                      <span className={`text-[8px] font-bold w-12 shrink-0 ${tc.color}`}>{tc.short}</span>
+                      <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${tc.color.replace('text', 'bg')} opacity-70`} style={{ width: `${Math.min(100, pct)}%` }} />
+                      </div>
+                      <span className="text-[8px] text-gray-400 font-mono w-9 text-right">{pct.toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+                {!hasData && <div className="text-[8px] text-gray-600 italic">En attente…</div>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ── Expanded view ─────────────────────────── */
+          <div className="grid grid-cols-2 gap-4">
+            {/* Metrics panel */}
+            <div className="p-3 rounded-xl border border-white/5 bg-cyan-500/5">
+              <h5 className="text-[9px] font-black uppercase tracking-wider text-cyan-400 mb-3 border-b border-white/10 pb-1 flex justify-between items-center">
+                Métriques NTU
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-50" />
+              </h5>
+              <div className="space-y-1.5">
+                {metricsLeft.map(m => (
+                  <div key={m.key} className="flex justify-between items-center text-[10px]">
+                    <span className="text-gray-400">{m.label}</span>
+                    <span className={`font-mono font-bold ${m.color} bg-black/20 px-1.5 py-0.5 rounded border border-white/5`}>{fmt(stats[m.key])} NTU</span>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center text-[10px] pt-1 border-t border-white/5 mt-1">
+                  <span className="text-gray-400">Surface eau</span>
+                  <span className="font-mono font-bold text-emerald-400 bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{fmt(stats.area_km2, 1)} km²</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-gray-400">Pixels eau</span>
+                  <span className="font-mono font-bold text-gray-300 bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{stats.count ? stats.count.toLocaleString() : '—'}</span>
+                </div>
+              </div>
+            </div>
+            {/* WFD classes panel */}
+            <div className="p-3 rounded-xl border border-white/5 bg-white/3">
+              <h5 className="text-[9px] font-black uppercase tracking-wider text-amber-400 mb-3 border-b border-white/10 pb-1 flex justify-between items-center">
+                Distribution WFD
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 opacity-50" />
+              </h5>
+              <div className="space-y-2">
+                {TURB_CLASSES.map(tc => {
+                  const d = classes[tc.label] || {};
+                  const pct = d.pct || 0;
+                  return (
+                    <div key={tc.label} className="flex flex-col gap-0.5">
+                      <div className="flex justify-between items-center text-[9px]">
+                        <span className={`font-bold ${tc.color}`}>{tc.label}</span>
+                        <span className="font-mono text-gray-300 bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{pct.toFixed(1)}%</span>
+                      </div>
+                      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${tc.color.replace('text', 'bg')} opacity-60`} style={{ width: `${Math.min(100, pct)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full py-2 mt-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2"
+        >
+          {expanded ? 'Collapse View' : 'Distribution WFD'}
+          <BarChart2 size={10} />
+        </button>
+      </div>
     </BaseNode>
   );
 };

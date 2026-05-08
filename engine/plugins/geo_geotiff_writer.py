@@ -63,11 +63,15 @@ class GeoTIFFWriterNode(NodeProcessor):
         if compress != 'none':
             profile['compress'] = compress
 
+        abs_path = os.path.abspath(path)
+        parent   = os.path.dirname(abs_path)
         try:
-            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-            with rasterio.open(path, 'w', **profile) as dst:
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            send_notification(f'GeoTIFF: écriture → {abs_path}…', progress=0.3, notif_id='geo_writer')
+            with rasterio.open(abs_path, 'w', **profile) as dst:
                 dst.write(bands.astype(np.float32))
-            send_notification(f'GeoTIFF saved: {os.path.basename(path)}', progress=1.0, notif_id='geo_writer')
+            send_notification(f'GeoTIFF sauvegardé: {abs_path}', progress=1.0, notif_id='geo_writer')
         except Exception as e:
             send_notification(f'GeoTIFF write error: {e}', level='error', notif_id='geo_writer')
 
