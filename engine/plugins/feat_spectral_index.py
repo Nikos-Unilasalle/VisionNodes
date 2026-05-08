@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from __main__ import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node
 
 _BANDS   = ["Blue (0)", "Green (1)", "Red (2)", "Luminance"]
 _PRESETS = ["Custom", "NDWI proxy (B−G)", "NDVI proxy (G−R)", "NDSI proxy (B−R)"]
