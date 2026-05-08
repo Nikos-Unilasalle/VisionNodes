@@ -9,11 +9,7 @@ from registry import vision_node, NodeProcessor
     icon='PenTool',
     description="Draws graphical elements (from Draw Text, trackers, etc.) over an image. Connect graphics to the 'data' inputs.",
     inputs=[
-        {'id': 'image', 'color': 'image'},
-        {'id': 'data', 'color': 'any'},
-        {'id': 'data_2', 'color': 'any'},
-        {'id': 'data_3', 'color': 'any'},
-        {'id': 'data_4', 'color': 'any'}
+        {'id': 'image', 'color': 'image'}
     ],
     outputs=[{'id': 'main', 'color': 'image'}]
 )

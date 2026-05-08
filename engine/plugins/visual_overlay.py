@@ -9,9 +9,7 @@ from registry import vision_node, NodeProcessor
     icon='Layout',
     description="Superimposes AI detections (YOLO, MediaPipe, etc.) over an image. Connect detection lists to the 'data' inputs.",
     inputs=[
-        {'id': 'image', 'color': 'image'},
-        {'id': 'data', 'color': 'any'},
-        {'id': 'data_2', 'color': 'any'}
+        {'id': 'image', 'color': 'image'}
     ],
     outputs=[{'id': 'main', 'color': 'image'}]
 )
