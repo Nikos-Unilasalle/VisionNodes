@@ -19,7 +19,10 @@ class FillHolesNode(NodeProcessor):
         
         # Ensure 8-bit grayscale
         if len(mask.shape) == 3:
-            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+            if mask.shape[2] >= 3:
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+            else:
+                mask = mask[:, :, 0]
         mask = mask.astype(np.uint8)
         
         # Fill holes using floodFill
@@ -51,7 +54,10 @@ class ApplyColormapNode(NodeProcessor):
         
         # Ensure 8-bit grayscale
         if len(img.shape) == 3:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            if img.shape[2] >= 3:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            else:
+                img = img[:, :, 0]
         
         # Normalize if needed
         if img.dtype != np.uint8 or img.max() <= 1.0:

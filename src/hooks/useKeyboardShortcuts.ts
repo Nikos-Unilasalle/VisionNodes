@@ -20,6 +20,7 @@ export function useKeyboardShortcuts({
   loadProject,
   setPendingConnection,
   handleRotate,
+  handleVisualize,
 }: any) {
 
   useEffect(() => {
@@ -100,6 +101,13 @@ export function useKeyboardShortcuts({
         e.preventDefault();
         handleRotate();
       }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const selectedNode = nodesRef.current.find((n: any) => n.selected);
+        if (selectedNode) {
+          handleVisualize(selectedNode.id);
+        }
+      }
       if (e.key === 'b' && cmdKey) {
         e.preventDefault();
         const selectedNode = nodesRef.current.find((n: any) => n.selected);
@@ -115,5 +123,5 @@ export function useKeyboardShortcuts({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize]);
 }

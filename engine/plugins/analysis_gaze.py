@@ -9,7 +9,7 @@ import urllib.request
 _PLUGIN_DIR  = os.path.dirname(os.path.abspath(__file__))
 _ENGINE_DIR  = os.path.dirname(_PLUGIN_DIR)
 _PROJECT_DIR = os.path.dirname(_ENGINE_DIR)   # engine/plugins → engine → project root
-_DEFAULT_CKPT = os.path.join(_PROJECT_DIR, 'gaze', 'epoch_24_ckpt.pth.tar')
+_DEFAULT_CKPT = os.path.join(_PROJECT_DIR, 'gaze_estimator.pth.tar')
 
 # ── ETH-XGaze face model: 3-D reference points (mm) ─────────────────────────
 # Extracted from face_model.txt rows [20, 23, 26, 29, 15, 19]
@@ -90,7 +90,7 @@ def _normalize_face(img, landmarks_2d, rvec, tvec, cam_matrix):
     label='Gaze Estimator',
     category='detect',
     icon='Eye',
-    description="ETH-XGaze gaze estimation (pitch/yaw). Loads epoch_24_ckpt.pth.tar. Requires torch + torchvision.",
+    description="ETH-XGaze gaze estimation (pitch/yaw). Loads gaze_estimator.pth.tar. Requires torch + torchvision.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main',  'color': 'image'},
@@ -98,13 +98,7 @@ def _normalize_face(img, landmarks_2d, rvec, tvec, cam_matrix):
         {'id': 'yaw',   'color': 'scalar'},
         {'id': 'pitch', 'color': 'scalar'}
     ],
-    params=[
-        {'id': 'weights',          'label': 'Checkpoint path',    'type': 'string', 'default': ''},
-        {'id': 'calibration',      'label': 'Camera calibration', 'type': 'enum',   'options': ['Auto (image-based)', 'Custom XML'], 'default': 0},
-        {'id': 'calibration_path', 'label': 'Calibration XML',    'type': 'string', 'default': ''},
-        {'id': 'pitch_offset',     'label': 'Pitch offset (°)',   'type': 'float',  'default': 0.0, 'min': -45.0, 'max': 45.0, 'step': 0.5},
-        {'id': 'yaw_offset',       'label': 'Yaw offset (°)',     'type': 'float',  'default': 0.0, 'min': -45.0, 'max': 45.0, 'step': 0.5},
-    ]
+    params=[]
 )
 class GazeEstimatorNode(NodeProcessor):
     def __init__(self):
@@ -115,7 +109,6 @@ class GazeEstimatorNode(NodeProcessor):
         self.loaded_weights = None
         self._loading       = False
         self._failed        = set()
-        self._calib_cache   = {}  # path → (base_cam, base_dist, orig_w, orig_h)
 
     def _load_in_thread(self, weights_path):
         try:
@@ -198,7 +191,7 @@ class GazeEstimatorNode(NodeProcessor):
         if image is None:
             return no_data
 
-        weights = params.get('weights', '') or _DEFAULT_CKPT
+        weights = _DEFAULT_CKPT
 
         if self.model is None and not self._loading and weights not in self._failed:
             if self.loaded_weights != weights:
@@ -228,37 +221,9 @@ class GazeEstimatorNode(NodeProcessor):
             dtype=np.float64
         ).reshape(6, 1, 2)
 
-        calib_mode = params.get('calibration', 0)
-        xml_path   = (params.get('calibration_path') or '').strip()
-
-        if calib_mode == 1 and xml_path:
-            if xml_path not in self._calib_cache:
-                if os.path.exists(xml_path):
-                    fs = cv2.FileStorage(xml_path, cv2.FILE_STORAGE_READ)
-                    base_cam  = fs.getNode('Camera_Matrix').mat()
-                    base_dist = fs.getNode('Distortion_Coefficients').mat()
-                    w_node, h_node = fs.getNode('image_Width'), fs.getNode('image_Height')
-                    orig_w = int(w_node.real()) if not w_node.empty() else 0
-                    orig_h = int(h_node.real()) if not h_node.empty() else 0
-                    fs.release()
-                    self._calib_cache[xml_path] = (base_cam, base_dist, orig_w, orig_h)
-                else:
-                    send_notification(f'Calibration XML not found: {xml_path}',
-                                      progress=None, level='error', notif_id=_NOTIF_ID)
-
-            if xml_path in self._calib_cache:
-                base_cam, base_dist, orig_w, orig_h = self._calib_cache[xml_path]
-                cam = base_cam.copy()
-                if orig_w > 0 and orig_h > 0:
-                    cam[0, 0] *= w / orig_w;  cam[0, 2] *= w / orig_w
-                    cam[1, 1] *= h / orig_h;  cam[1, 2] *= h / orig_h
-                dist = base_dist
-            else:
-                cam  = np.array([[float(w), 0, w/2], [0, float(w), h/2], [0, 0, 1]], dtype=np.float64)
-                dist = np.zeros((4, 1))
-        else:
-            cam  = np.array([[float(w), 0, w/2], [0, float(w), h/2], [0, 0, 1]], dtype=np.float64)
-            dist = np.zeros((4, 1))
+        # Default calibration (Auto)
+        cam  = np.array([[float(w), 0, w/2], [0, float(w), h/2], [0, 0, 1]], dtype=np.float64)
+        dist = np.zeros((4, 1))
 
         _, rvec, tvec = cv2.solvePnP(
             _FACE_MODEL_3D, pts_2d, cam, dist,
@@ -276,8 +241,8 @@ class GazeEstimatorNode(NodeProcessor):
         with torch.no_grad():
             pred = self.model(inp)[0].cpu().numpy()   # (pitch, yaw) in radians
 
-        pitch_rad = float(pred[0]) + np.radians(float(params.get('pitch_offset', 0.0)))
-        yaw_rad   = float(pred[1]) + np.radians(float(params.get('yaw_offset',   0.0)))
+        pitch_rad = float(pred[0])
+        yaw_rad   = float(pred[1])
 
         vec_x = -np.cos(yaw_rad) * np.sin(pitch_rad)
         vec_y = -np.sin(yaw_rad)

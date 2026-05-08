@@ -32,8 +32,12 @@ class MaskOperationsNode(NodeProcessor):
         if m2 is None: m2 = np.zeros((h, w), dtype=np.uint8)
         
         # Ensure 1-channel uint8
-        if len(m1.shape) == 3: m1 = cv2.cvtColor(m1, cv2.COLOR_BGR2GRAY)
-        if len(m2.shape) == 3: m2 = cv2.cvtColor(m2, cv2.COLOR_BGR2GRAY)
+        if len(m1.shape) == 3:
+            if m1.shape[2] >= 3: m1 = cv2.cvtColor(m1, cv2.COLOR_BGR2GRAY)
+            else: m1 = m1[:, :, 0]
+        if len(m2.shape) == 3:
+            if m2.shape[2] >= 3: m2 = cv2.cvtColor(m2, cv2.COLOR_BGR2GRAY)
+            else: m2 = m2[:, :, 0]
         m1 = m1.astype(np.uint8)
         m2 = m2.astype(np.uint8)
         
