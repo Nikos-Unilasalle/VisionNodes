@@ -1,10 +1,10 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::process::{Child, Command};
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager};
+use tauri::Manager;
 
+#[allow(dead_code)]
 enum ChildProcess {
     Std(std::process::Child),
     Sidecar(tauri_plugin_shell::process::CommandChild),
