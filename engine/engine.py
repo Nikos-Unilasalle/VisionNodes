@@ -106,6 +106,30 @@ def load_plugins():
             print(f"[Plugins] Failed to load {module_name}: {e}")
 
 
+from registry import vision_node, NodeProcessor
+
+class _PassThrough(dict):
+    """Returns the single pass-through value for any key — supports dynamic fan-out outputs."""
+    def __init__(self, val):
+        self._val = val
+        super().__init__({'out': val, 'main': val, 'image': val, 'data': val})
+    def get(self, key, default=None): return self._val
+    def __getitem__(self, key): return self._val
+    def __contains__(self, key): return True
+
+@vision_node(
+    type_id="canvas_reroute",
+    label="Reroute",
+    category="canvas",
+    icon="GitCommit",
+    description="Pass-through node to organize wires.",
+    inputs=[{"id": "in", "color": "any"}],
+    outputs=[{"id": "out", "color": "any"}]
+)
+class RerouteNode(NodeProcessor):
+    def process(self, inputs, params):
+        return _PassThrough(inputs.get('in'))
+
 # --- CORE ENGINE ---
 def _is_serializable(v):
     """Reject numpy arrays, rasterio Affine, and any container holding them."""
@@ -211,9 +235,10 @@ def flatten_groups(node_list, edge_list, prefix=''):
 
 
 REALTIME_NODE_TYPES = {
-    'input_webcam', 'input_movie', 'plugin_audio_input', 
-    'signal_generator', 'signal_clock', 'serial_reader', 
-    'plotter_pro', 'sci_plotter', 'analysis_monitor', 'util_inspector'
+    'input_webcam', 'input_movie', 'plugin_audio_input',
+    'signal_generator', 'signal_clock', 'serial_reader',
+    'plotter_pro', 'sci_plotter', 'analysis_monitor', 'util_inspector',
+    'logic_collect',
 }
 
 

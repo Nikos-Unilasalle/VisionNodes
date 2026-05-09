@@ -20,19 +20,47 @@ class FlipNode(NodeProcessor):
 @vision_node(
     type_id="geom_resize",
     label="Resize",
-    category='geom',
+    category="geom",
     icon="Scaling",
-    description="Changes the image dimensions.",
+    description="Réduit la résolution de l'image pour accélérer les traitements en aval.",
     inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "width", "color": "scalar"},
+        {"id": "height", "color": "scalar"}
+    ],
     params=[
-        {"id": "width", "label": "Width", "type": "int", "default": 640},
-        {"id": "height", "label": "Height", "type": "int", "default": 480}
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Échelle (%)", "Largeur", "Hauteur", "Exact"], "default": 0},
+        {"id": "scale", "label": "Échelle", "type": "float", "default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01},
+        {"id": "width", "label": "Largeur (px)", "type": "int", "default": 640, "min": 1, "max": 7680},
+        {"id": "height", "label": "Hauteur (px)", "type": "int", "default": 480, "min": 1, "max": 7680},
+        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Auto (reco.)", "Nearest", "Linear", "Cubic", "Lanczos", "Area"], "default": 0}
     ]
 )
 class ResizeNode(NodeProcessor):
+    INTERP_MAP = [None, cv2.INTER_NEAREST, cv2.INTER_LINEAR,
+                  cv2.INTER_CUBIC, cv2.INTER_LANCZOS4, cv2.INTER_AREA]
+
     def process(self, inputs, params):
-        img = inputs.get('image')
-        if img is None: return {"main": None}
-        w, h = int(params.get('width', 640)), int(params.get('height', 480))
-        return {"main": cv2.resize(img, (w, h))}
+        img = inputs.get('image') or inputs.get('main')
+        if img is None: return {"main": None, "width": 0, "height": 0}
+        ih, iw = img.shape[:2]
+        mode = int(params.get('mode', 0))
+        if mode == 0:
+            sc = float(params.get('scale', 0.5))
+            ow, oh = max(1, int(iw * sc)), max(1, int(ih * sc))
+        elif mode == 1:
+            ow = max(1, int(params.get('width', 640)))
+            oh = max(1, int(ih * ow / iw))
+        elif mode == 2:
+            oh = max(1, int(params.get('height', 480)))
+            ow = max(1, int(iw * oh / ih))
+        else:
+            ow = max(1, int(params.get('width', 640)))
+            oh = max(1, int(params.get('height', 480)))
+        interp_idx = int(params.get('interpolation', 0))
+        interp = self.INTERP_MAP[interp_idx] if 0 <= interp_idx < len(self.INTERP_MAP) else None
+        if interp is None:
+            interp = cv2.INTER_AREA if (ow * oh < iw * ih) else cv2.INTER_LINEAR
+        out = cv2.resize(img, (ow, oh), interpolation=interp)
+        return {"main": out, "width": ow, "height": oh}

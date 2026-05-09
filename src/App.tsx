@@ -549,6 +549,18 @@ function App() {
     return () => clearTimeout(timer);
   }, [canvasNodes, canvasEdges, isConnected, updateGraph]);
 
+  // Sync mainConnected flag on Display nodes from actual edges
+  useEffect(() => {
+    setViewNodes(nds => nds.map(n => {
+      if (n.type !== 'output_display') return n;
+      const hasMain = canvasEdges.some(e => e.target === n.id && e.targetHandle?.endsWith('__main'));
+      const cur = !!(n.data as any)?.mainConnected;
+      if (hasMain === cur) return n;
+      return { ...n, data: { ...n.data, mainConnected: hasMain } };
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasEdges]);
+
   const onConnectEnd = useCallback((event: any) => {
     if (!connectionMadeRef.current && connectingRef.current) {
       const target = event.target as HTMLElement;

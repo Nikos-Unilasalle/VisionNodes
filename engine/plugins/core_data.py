@@ -21,27 +21,42 @@ class ListSelectorNode(NodeProcessor):
 @vision_node(
     type_id="data_coord_splitter",
     label="Coord Splitter",
-    category='util',
-    icon="Scissors",
-    description="Splits an {x, y} coordinate dictionary into two separate values.",
-    inputs=[{"id": "coord", "color": "dict"}],
-    outputs=[{"id": "x", "color": "scalar"}, {"id": "y", "color": "scalar"}]
+    category="data",
+    icon="Box",
+    description="Splits a coordinate dictionary into 4 scalar values.",
+    inputs=[{"id": "data", "color": "any"}],
+    outputs=[
+        {"id": "x", "color": "scalar"},
+        {"id": "y", "color": "scalar"},
+        {"id": "w", "color": "scalar"},
+        {"id": "h", "color": "scalar"}
+    ]
 )
 class CoordSplitterNode(NodeProcessor):
     def process(self, inputs, params):
-        c = inputs.get('coord')
-        if not c or not isinstance(c, dict): return {"x": 0, "y": 0}
-        return {"x": c.get('x', 0), "y": c.get('y', 0)}
+        d = inputs.get('data')
+        if not isinstance(d, dict): return {"x": None, "y": None, "w": None, "h": None}
+        return {"x": d.get("xmin"), "y": d.get("ymin"), "w": d.get("width"), "h": d.get("height")}
 
 @vision_node(
     type_id="data_coord_combine",
     label="Coord Combine",
-    category='util',
-    icon="PlusSquare",
-    description="Combines two separate values into a single {x, y} coordinate dictionary.",
-    inputs=[{"id": "x", "color": "scalar"}, {"id": "y", "color": "scalar"}],
-    outputs=[{"id": "coord", "color": "dict"}]
+    category="data",
+    icon="Box",
+    description="Combines 4 scalar values into a coordinate dictionary.",
+    inputs=[
+        {"id": "x", "color": "scalar"},
+        {"id": "y", "color": "scalar"},
+        {"id": "w", "color": "scalar"},
+        {"id": "h", "color": "scalar"}
+    ],
+    outputs=[{"id": "dict_out", "color": "any"}]
 )
 class CoordCombineNode(NodeProcessor):
     def process(self, inputs, params):
-        return {"coord": {"x": inputs.get('x', 0), "y": inputs.get('y', 0)}}
+        return {"dict_out": {
+            "xmin": float(inputs.get("x") or 0.0),
+            "ymin": float(inputs.get("y") or 0.0),
+            "width": float(inputs.get("w") or 0.0),
+            "height": float(inputs.get("h") or 0.0),
+        }}
