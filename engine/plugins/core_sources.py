@@ -171,16 +171,20 @@ class MovieInput(NodeProcessor):
     inputs=[],
     outputs=[{"id": "main", "color": "image"}],
     params=[
-        {"id": "r", "label": "Red", "type": "int", "default": 255},
-        {"id": "g", "label": "Green", "type": "int", "default": 0},
-        {"id": "b", "label": "Blue", "type": "int", "default": 0},
+        {"id": "color", "label": "Color", "type": "color", "default": "#ff0000"},
         {"id": "width", "label": "Width", "type": "int", "default": 640},
         {"id": "height", "label": "Height", "type": "int", "default": 480}
     ]
 )
 class SolidColorNode(NodeProcessor):
     def process(self, inputs, params):
-        r, g, b = int(params.get('r', 255)), int(params.get('g', 0)), int(params.get('b', 0))
+        hex_color = str(params.get('color', '#ff0000')).lstrip('#')
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+        except (ValueError, IndexError):
+            r, g, b = 255, 0, 0
         w, h = int(params.get('width', 640)), int(params.get('height', 480))
         img = np.full((h, w, 3), (b, g, r), dtype=np.uint8)
         return {"main": img}

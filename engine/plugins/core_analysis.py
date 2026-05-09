@@ -237,11 +237,16 @@ class FaceDetectionNode(NodeProcessor):
                 x_max, y_max = max([lm.x for lm in face_landmarks]), max([lm.y for lm in face_landmarks])
                 lms = [{"x": lm.x, "y": lm.y, "z": lm.z} for lm in face_landmarks]
                 face_data = {
-                    "xmin": x_min, "ymin": y_min, "width": x_max - x_min, "height": y_max - y_min,
-                    "landmarks": lms, "label": "face", "_type": "graphics", "shape": "rect", "pts": [[x_min, y_min], [x_max, y_max]], "color": "#00ff00"
+                    "xmin": max(0, x_min), "ymin": max(0, y_min),
+                    "width": min(1 - x_min, x_max - x_min), "height": min(1 - y_min, y_max - y_min),
+                    "landmarks": lms, "label": "face", "_type": "graphics", "shape": "rect",
+                    "pts": [[max(0, x_min), max(0, y_min)], [min(1, x_max), min(1, y_max)]], "color": "#00ff00"
                 }
                 faces_list.append(face_data)
-        return {"faces_list": faces_list, "main": image}
+        out = {"faces_list": faces_list, "main": image}
+        for i, face in enumerate(faces_list):
+            out[f"face_{i}"] = face
+        return out
 
 @vision_node(
     type_id="analysis_hand_mp",

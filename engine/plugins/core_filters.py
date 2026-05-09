@@ -77,26 +77,56 @@ class ThresholdFilter(NodeProcessor):
 @vision_node(
     type_id="filter_color_mask",
     label="Color Mask",
-    category='mask',
+    category="mask",
     icon="Layers",
-    description="Creates a mask by isolating a range of colors.",
+    description="Creates a mask by isolating a range of colors (HSV or RGB distance).",
     inputs=[{"id": "image", "color": "image"}],
     outputs=[{"id": "mask", "color": "mask"}],
     params=[
-        {"id": "color", "label": "Target Color (Hex)", "type": "string", "default": "#FF0000"},
-        {"id": "tolerance", "label": "Tolerance", "type": "int", "default": 40}
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["HSV Range", "RGB Distance"], "default": 0},
+        {"id": "color", "label": "Target Color", "type": "color", "default": "#FF0000"},
+        {"id": "h_tol", "label": "H Tolerance", "type": "int", "default": 10, "min": 0, "max": 90},
+        {"id": "s_tol", "label": "S Tolerance", "type": "int", "default": 40, "min": 0, "max": 255},
+        {"id": "v_tol", "label": "V Tolerance", "type": "int", "default": 40, "min": 0, "max": 255},
+        {"id": "threshold", "label": "RGB Threshold", "type": "int", "default": 30, "min": 0, "max": 441}
     ]
 )
 class ColorMaskNode(NodeProcessor):
     def process(self, inputs, params):
-        img = inputs.get('image')
-        if img is None: return {"mask": None}
-        hex_c = str(params.get('color', '#FF0000')).lstrip('#')
-        bgr = np.array([int(hex_c[4:6], 16), int(hex_c[2:4], 16), int(hex_c[0:2], 16)], dtype=np.uint8)
-        tol = int(params.get('tolerance', 40))
-        lower = np.clip(bgr.astype(int) - tol, 0, 255).astype(np.uint8)
-        upper = np.clip(bgr.astype(int) + tol, 0, 255).astype(np.uint8)
-        mask = cv2.inRange(img, lower, upper)
+        image = inputs.get('image')
+        if image is None: return {"mask": None}
+        if len(image.shape) == 2 or image.shape[2] == 1:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+        mode = int(params.get('mode', 0))
+        color_hex = str(params.get('color', '#FF0000')).strip().lstrip('#')
+        if len(color_hex) == 3: color_hex = ''.join([c*2 for c in color_hex])
+        if len(color_hex) != 6: color_hex = "FF0000"
+        r = int(color_hex[0:2], 16)
+        g = int(color_hex[2:4], 16)
+        b = int(color_hex[4:6], 16)
+
+        if mode == 1:  # RGB Distance
+            thresh = int(params.get('threshold', 30))
+            target = np.array([b, g, r], dtype=np.float32)
+            dist = np.sqrt(np.sum((image.astype(np.float32) - target) ** 2, axis=2))
+            mask = (dist <= thresh).astype(np.uint8) * 255
+        else:  # HSV Range
+            h_tol = int(params.get('h_tol', 10))
+            s_tol = int(params.get('s_tol', 40))
+            v_tol = int(params.get('v_tol', 40))
+            target_hsv = cv2.cvtColor(np.uint8([[[b, g, r]]]), cv2.COLOR_BGR2HSV)[0][0]
+            th, ts, tv = target_hsv
+            h_min, h_max = (th - h_tol) % 180, (th + h_tol) % 180
+            s_min, s_max = max(0, ts - s_tol), min(255, ts + s_tol)
+            v_min, v_max = max(0, tv - v_tol), min(255, tv + v_tol)
+            hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            if h_min < h_max:
+                mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
+            else:
+                mask1 = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, s_max, v_max]))
+                mask2 = cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, s_max, v_max]))
+                mask = cv2.bitwise_or(mask1, mask2)
         return {"mask": mask}
 
 @vision_node(

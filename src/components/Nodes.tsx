@@ -1134,6 +1134,7 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
 
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
+  const showDynamic = !!data?.mainConnected || ports.length > 0;
   const inputs = [
     { id: 'main', color: 'image' },
     ...ports.map(p => {
@@ -1142,7 +1143,7 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
       const color = idx >= 0 ? p.id.slice(0, idx) : (shortId.startsWith('image') ? 'image' : 'any');
       return { id: shortId, color };
     }),
-    { id: 'DYNAMIC_NEW_HANDLE', color: 'image' },
+    ...(showDynamic ? [{ id: 'DYNAMIC_NEW_HANDLE', color: 'image' }] : []),
     { id: 'mask_in', color: 'mask' },
     { id: 'flow_in', color: 'flow' }
   ];
