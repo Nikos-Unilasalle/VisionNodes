@@ -1147,21 +1147,8 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
     { id: 'flow_in', color: 'flow' }
   ];
 
-  const activeImg = nd?._tab_main || (typeof nd?.main === 'string' ? nd.main : null);
-
   return (
-    <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]}>
-      {activeImg && (
-        <div className="px-1 pb-1 w-full">
-          <img
-            src={`data:image/jpeg;base64,${activeImg}`}
-            alt="Output"
-            className="w-full h-auto rounded border border-white/10 object-cover"
-            style={{ maxHeight: 240 }}
-          />
-        </div>
-      )}
-    </BaseNode>
+    <BaseNode title="Display" icon={Maximize} selected={selected} data={data} color="green" inputs={inputs} outputs={[{id: 'main', color: 'image'}]} />
   );
 });
 
