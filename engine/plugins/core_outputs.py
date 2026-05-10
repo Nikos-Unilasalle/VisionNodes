@@ -8,6 +8,7 @@ from registry import vision_node, NodeProcessor
     category="out",
     icon="Maximize",
     description="The output terminal displaying the final video stream.",
+    dynamic_inputs=True,
     inputs=[
         {"id": "main", "color": "image"},
         {"id": "mask_in", "color": "mask"},

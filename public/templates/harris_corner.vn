@@ -4,13 +4,14 @@
       "id": "src-1",
       "type": "input_image",
       "position": {
-        "x": -220,
+        "x": -260,
         "y": 120
       },
       "data": {
         "label": "Sample Image",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/stonewall.jpg"
+          "path": "/Users/nikos/Desktop/VNStudio/samples/stonewall.jpg",
+          "color_index": 0
         }
       },
       "width": 208,
@@ -18,7 +19,7 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": -220,
+        "x": -260,
         "y": 120
       }
     },
@@ -35,12 +36,13 @@
           "threshold": 0.01,
           "block_size": 7,
           "ksize": 4,
-          "k": 0.1
+          "k": 0.1,
+          "color_index": 2
         },
         "bypassed": false
       },
       "width": 208,
-      "height": 208,
+      "height": 185,
       "selected": false,
       "positionAbsolute": {
         "x": 560,
@@ -52,19 +54,22 @@
       "id": "disp-1",
       "type": "output_display",
       "position": {
-        "x": 1360,
-        "y": 120
+        "x": 1660,
+        "y": 100
       },
       "data": {
         "label": "Corners Display",
-        "params": {}
+        "params": {
+          "color_index": 3
+        },
+        "mainConnected": true
       },
       "width": 208,
-      "height": 144,
+      "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1360,
-        "y": 120
+        "x": 1660,
+        "y": 100
       },
       "dragging": false
     },
@@ -72,8 +77,8 @@
       "id": "node-1777700510121",
       "type": "cv_shadow_highlight",
       "position": {
-        "x": 20,
-        "y": 200
+        "x": 40,
+        "y": 120
       },
       "style": {},
       "data": {
@@ -81,7 +86,8 @@
         "params": {
           "shadows": 100,
           "highlights": 0,
-          "radius": 69
+          "radius": 69,
+          "color_index": 1
         },
         "schema": {
           "type": "cv_shadow_highlight",
@@ -139,101 +145,8 @@
       "height": 90,
       "selected": false,
       "positionAbsolute": {
-        "x": 20,
-        "y": 200
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1777700609526",
-      "type": "filter_gray",
-      "position": {
-        "x": 260,
-        "y": 200
-      },
-      "style": {},
-      "data": {
-        "label": "Grayscale",
-        "params": {},
-        "bypassed": false
-      },
-      "width": 208,
-      "height": 90,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 260,
-        "y": 200
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1777701008169",
-      "type": "filter_blob_filter",
-      "position": {
-        "x": 800,
-        "y": 100
-      },
-      "style": {},
-      "data": {
-        "label": "Blob Filter",
-        "params": {
-          "min_area": 55
-        },
-        "schema": {
-          "type": "filter_blob_filter",
-          "label": "Blob Filter",
-          "category": "mask",
-          "icon": "Filter",
-          "description": "Removes blobs outside an area range from a binary mask using connected components. Eliminates isolated noise pixels while preserving large regions.",
-          "inputs": [
-            {
-              "id": "mask",
-              "color": "mask"
-            }
-          ],
-          "outputs": [
-            {
-              "id": "mask",
-              "color": "mask"
-            },
-            {
-              "id": "count",
-              "color": "scalar"
-            }
-          ],
-          "params": [
-            {
-              "id": "min_area",
-              "type": "int",
-              "default": 100,
-              "label": "Min Area (px²)"
-            },
-            {
-              "id": "max_area",
-              "type": "int",
-              "default": 0,
-              "label": "Max Area (0 = off)"
-            },
-            {
-              "id": "connectivity",
-              "type": "int",
-              "default": 8,
-              "label": "Connectivity (4 or 8)"
-            }
-          ],
-          "resizable": false,
-          "min_width": 200,
-          "min_height": 150,
-          "colorable": true
-        },
-        "bypassed": false
-      },
-      "width": 208,
-      "height": 112,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 800,
-        "y": 100
+        "x": 40,
+        "y": 120
       },
       "dragging": false
     },
@@ -241,44 +154,22 @@
       "id": "node-1777701145494",
       "type": "util_mask_blend",
       "position": {
-        "x": 1100,
+        "x": 1400,
         "y": 120
       },
       "style": {},
       "data": {
         "label": "Mask Blend",
-        "params": {}
-      },
-      "width": 208,
-      "height": 144,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 1100,
-        "y": 120
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1777701187924",
-      "type": "input_solid_color",
-      "position": {
-        "x": 1100,
-        "y": 280
-      },
-      "style": {},
-      "data": {
-        "label": "Solid Color",
         "params": {
-          "g": 255,
-          "b": 255
+          "color_index": 4
         }
       },
       "width": 208,
-      "height": 100,
+      "height": 121,
       "selected": false,
       "positionAbsolute": {
-        "x": 1100,
-        "y": 280
+        "x": 1400,
+        "y": 120
       },
       "dragging": false
     },
@@ -291,18 +182,20 @@
       },
       "style": {
         "width": 760,
-        "height": 440,
+        "height": 34,
         "zIndex": -1
       },
       "data": {
         "label": "Frame",
         "params": {
           "title": "Image preparation",
-          "color_index": 0
+          "color_index": 0,
+          "collapsed": true,
+          "savedHeight": 440
         }
       },
       "width": 760,
-      "height": 440,
+      "height": 34,
       "selected": false,
       "positionAbsolute": {
         "x": -260,
@@ -319,19 +212,21 @@
         "y": 0
       },
       "style": {
-        "width": 520,
-        "height": 440,
+        "width": 800,
+        "height": 34,
         "zIndex": -1
       },
       "data": {
         "label": "Frame",
         "params": {
           "title": "Detect & filter",
-          "color_index": 2
+          "color_index": 2,
+          "collapsed": true,
+          "savedHeight": 440
         }
       },
-      "width": 520,
-      "height": 440,
+      "width": 800,
+      "height": 34,
       "selected": false,
       "positionAbsolute": {
         "x": 520,
@@ -344,123 +239,596 @@
       "id": "node-1777701820474-0.015038980970911386",
       "type": "canvas_frame",
       "position": {
-        "x": 1060,
+        "x": 1360,
         "y": 0
       },
       "style": {
         "width": 540,
-        "height": 440,
+        "height": 34,
         "zIndex": -1
       },
       "data": {
         "label": "Frame",
         "params": {
           "title": "Display",
-          "color_index": 4
+          "color_index": 4,
+          "collapsed": true,
+          "savedHeight": 440
         }
       },
       "width": 540,
-      "height": 440,
+      "height": 34,
       "selected": false,
       "positionAbsolute": {
-        "x": 1060,
+        "x": 1360,
         "y": 0
       },
       "dragging": false,
       "resizing": false
+    },
+    {
+      "id": "node-1778440519930",
+      "type": "merge_points",
+      "position": {
+        "x": 820,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "Merge Points",
+        "params": {
+          "threshold": 5,
+          "image_width": 800,
+          "image_height": 800,
+          "color_index": 2
+        },
+        "schema": {
+          "type": "merge_points",
+          "label": "Merge Points",
+          "category": "detect",
+          "icon": "Target",
+          "description": "",
+          "inputs": [
+            {
+              "id": "points",
+              "color": "list"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "points",
+              "color": "list"
+            },
+            {
+              "id": "keypoints",
+              "color": "list"
+            },
+            {
+              "id": "count",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "threshold",
+              "type": "number",
+              "default": 20,
+              "min": 1,
+              "max": 200,
+              "label": "Merge Radius (px)"
+            },
+            {
+              "id": "image_width",
+              "type": "number",
+              "default": 640,
+              "min": 1,
+              "max": 4000,
+              "label": "Image Width"
+            },
+            {
+              "id": "image_height",
+              "type": "number",
+              "default": 480,
+              "min": 1,
+              "max": 4000,
+              "label": "Image Height"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 820,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778440565401",
+      "type": "points_to_mask",
+      "position": {
+        "x": 1080,
+        "y": 100
+      },
+      "style": {},
+      "data": {
+        "label": "Points to Mask",
+        "params": {
+          "color_index": 2
+        },
+        "schema": {
+          "type": "points_to_mask",
+          "label": "Points to Mask",
+          "category": "mask",
+          "icon": "Target",
+          "description": "Convert a list of points into a binary mask. Each point is drawn as a filled circle.",
+          "inputs": [
+            {
+              "id": "points",
+              "color": "list"
+            },
+            {
+              "id": "reference",
+              "color": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "mask",
+              "color": "mask"
+            }
+          ],
+          "params": [
+            {
+              "id": "radius",
+              "label": "Point Radius (px)",
+              "type": "number",
+              "default": 5,
+              "min": 1,
+              "max": 500
+            },
+            {
+              "id": "width",
+              "label": "Width (if no ref)",
+              "type": "number",
+              "default": 640,
+              "min": 1,
+              "max": 8000
+            },
+            {
+              "id": "height",
+              "label": "Height (if no ref)",
+              "type": "number",
+              "default": 480,
+              "min": 1,
+              "max": 8000
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1080,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778440662199-0.05024654546085128",
+      "type": "data_inspector",
+      "position": {
+        "x": 820,
+        "y": 200
+      },
+      "style": {
+        "width": 220,
+        "height": 24
+      },
+      "data": {
+        "label": "Inspect Unit",
+        "params": {
+          "color_index": 2
+        },
+        "minified": true
+      },
+      "width": 220,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 820,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778440705998-0.9231312081891668",
+      "type": "data_inspector",
+      "position": {
+        "x": 560,
+        "y": 260
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspect Unit",
+        "params": {
+          "color_index": 2
+        },
+        "minified": true
+      },
+      "width": 220,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778440794753",
+      "type": "input_solid_color",
+      "position": {
+        "x": 1400,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Solid Color",
+        "params": {
+          "color": "#FFDE00",
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 100,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1400,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778441668252",
+      "type": "sci_normalizer",
+      "position": {
+        "x": 40,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Image Normalizer",
+        "params": {
+          "color_index": 1
+        },
+        "schema": {
+          "type": "sci_normalizer",
+          "label": "Image Normalizer",
+          "category": [
+            "visualize",
+            "analytics"
+          ],
+          "icon": "Sliders",
+          "description": "Normalize image or data array. Min-Max, Z-Score, or percentile stretch. Essential preprocessing for scientific imaging.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "any"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Normalized (uint8)"
+            },
+            {
+              "id": "data",
+              "color": "data",
+              "label": "Normalized (float 0-1)"
+            }
+          ],
+          "params": [
+            {
+              "id": "mode",
+              "label": "Mode",
+              "type": "enum",
+              "options": [
+                "Min-Max → [0,255]",
+                "Min-Max → [0,1]",
+                "Z-Score (±3σ)",
+                "Percentile Clip"
+              ],
+              "default": 0
+            },
+            {
+              "id": "p_low",
+              "label": "Low %tile",
+              "type": "float",
+              "default": 2,
+              "min": 0,
+              "max": 49.9
+            },
+            {
+              "id": "p_high",
+              "label": "High %tile",
+              "type": "float",
+              "default": 98,
+              "min": 50.1,
+              "max": 100
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778441680900",
+      "type": "output_display",
+      "position": {
+        "x": 260,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 3
+        },
+        "mainConnected": true,
+        "rotated": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 260,
+        "y": 380
+      }
+    },
+    {
+      "id": "reroute-1778442231027",
+      "type": "canvas_reroute",
+      "position": {
+        "x": -20,
+        "y": 160
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__out_0_i7pojn",
+            "color": "any",
+            "label": "out_0"
+          },
+          {
+            "id": "any__out_1_3gq9mk",
+            "color": "any",
+            "label": "out_1"
+          },
+          {
+            "id": "any__out_2_bl1z8s",
+            "color": "any",
+            "label": "out_2"
+          }
+        ]
+      },
+      "style": {
+        "width": 8,
+        "height": 194
+      },
+      "width": 8,
+      "height": 194,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -20,
+        "y": 160
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "reroute-1778442249413",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 1356,
+        "y": 113
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__out_0_p5t6a3",
+            "color": "any",
+            "label": "out_0"
+          },
+          {
+            "id": "any__out_1_qy5jey",
+            "color": "any",
+            "label": "out_1"
+          }
+        ]
+      },
+      "style": {
+        "width": 8,
+        "height": 74
+      },
+      "width": 8,
+      "height": 74
     }
   ],
   "edges": [
     {
-      "id": "e-1777700511938-1",
-      "source": "src-1",
-      "target": "node-1777700510121",
-      "sourceHandle": "image__main",
-      "targetHandle": "main",
+      "source": "harris-1",
+      "sourceHandle": "list__points",
+      "target": "node-1778440519930",
+      "targetHandle": "list__points",
+      "id": "e-1778440530750",
       "selected": false
     },
     {
-      "id": "e-1777700611729-1",
-      "source": "node-1777700510121",
-      "target": "node-1777700609526",
-      "sourceHandle": "main",
-      "targetHandle": "main",
+      "source": "node-1778440519930",
+      "sourceHandle": "list__points",
+      "target": "node-1778440565401",
+      "targetHandle": "list__points",
+      "id": "e-1778440568391",
       "selected": false
     },
     {
-      "id": "e-1777700611729-2",
-      "source": "node-1777700609526",
-      "target": "harris-1",
-      "sourceHandle": "main",
-      "targetHandle": "image__image",
+      "source": "node-1778440565401",
+      "sourceHandle": "mask__mask",
+      "target": "node-1777701145494",
+      "targetHandle": "mask__mask",
+      "id": "e-1778440571036",
+      "selected": false
+    },
+    {
+      "source": "node-1778440519930",
+      "sourceHandle": "scalar__count",
+      "target": "node-1778440662199-0.05024654546085128",
+      "targetHandle": "any__data",
+      "id": "e-1778440686941",
       "selected": false
     },
     {
       "source": "harris-1",
-      "sourceHandle": "mask__mask",
-      "target": "node-1777701008169",
-      "targetHandle": "mask__mask",
-      "id": "e-1777701076509"
-    },
-    {
-      "source": "node-1777701008169",
-      "sourceHandle": "mask__mask",
-      "target": "node-1777701145494",
-      "targetHandle": "mask__mask",
-      "id": "e-1777701153744",
+      "sourceHandle": "scalar__count",
+      "target": "node-1778440705998-0.9231312081891668",
+      "targetHandle": "any__data",
+      "id": "e-1778440711272",
       "selected": false
     },
     {
-      "source": "src-1",
-      "sourceHandle": "image__main",
-      "target": "node-1777701145494",
-      "targetHandle": "image__image_a",
-      "id": "e-1777701173748",
-      "selected": false
-    },
-    {
-      "source": "node-1777701187924",
+      "source": "node-1778440794753",
       "sourceHandle": "image__main",
       "target": "node-1777701145494",
       "targetHandle": "image__image_b",
-      "id": "e-1777701190757",
+      "id": "e-1778440800120",
       "selected": false
+    },
+    {
+      "source": "node-1777700510121",
+      "sourceHandle": "image__main",
+      "target": "node-1778441680900",
+      "targetHandle": "image__main",
+      "id": "e-1778441684650",
+      "selected": false
+    },
+    {
+      "source": "node-1778441668252",
+      "sourceHandle": "image__main",
+      "target": "node-1778441680900",
+      "targetHandle": "image__DYNAMIC_NEW_HANDLE",
+      "id": "e-1778441686949",
+      "selected": false
+    },
+    {
+      "source": "node-1778441668252",
+      "sourceHandle": "image__main",
+      "target": "harris-1",
+      "targetHandle": "image__image",
+      "id": "e-1778441710627",
+      "selected": false
+    },
+    {
+      "id": "rr-in-1778442231027",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "reroute-1778442231027",
+      "targetHandle": "any__in"
+    },
+    {
+      "id": "rr-out-1778442231027-0",
+      "source": "reroute-1778442231027",
+      "sourceHandle": "any__out_0_i7pojn",
+      "target": "node-1777700510121",
+      "targetHandle": "main"
+    },
+    {
+      "id": "rr-out-1778442231027-2",
+      "source": "reroute-1778442231027",
+      "sourceHandle": "any__out_2_bl1z8s",
+      "target": "node-1778441668252",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "rr-in-1778442249413",
+      "source": "reroute-1778442231027",
+      "sourceHandle": "any__out_1_3gq9mk",
+      "target": "reroute-1778442249413",
+      "targetHandle": "any__in"
+    },
+    {
+      "id": "rr-out-1778442249413",
+      "source": "reroute-1778442249413",
+      "sourceHandle": "any__out_0_p5t6a3",
+      "target": "node-1777701145494",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "source": "reroute-1778442249413",
+      "sourceHandle": "any__out_1_qy5jey",
+      "target": "disp-1",
+      "targetHandle": "image__main",
+      "id": "e-1778442266652"
     },
     {
       "source": "node-1777701145494",
       "sourceHandle": "image__main",
       "target": "disp-1",
-      "targetHandle": "image__main",
-      "id": "e-1777701630004",
-      "selected": false
-    },
-    {
-      "id": "e-1777701710994-1",
-      "source": "node-1777701008169",
-      "target": "node-1777701145494",
-      "sourceHandle": "main",
-      "targetHandle": "main",
-      "selected": false
-    },
-    {
-      "id": "e-1777701710994-2",
-      "source": "node-1777701145494",
-      "target": "disp-1",
-      "sourceHandle": "main",
-      "targetHandle": "mask__mask_in",
-      "selected": false
+      "targetHandle": "image__DYNAMIC_NEW_HANDLE",
+      "id": "e-1778442274227"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 539,
-      "h": 359
+      "w": 765.58203125,
+      "h": 382
     },
     "previewPos": {
-      "x": 224.6171875,
-      "y": -66.875
+      "x": 67.01171875,
+      "y": -47.10546875
     },
-    "activePaletteIndex": 6,
+    "activePaletteIndex": 5,
     "visualizedNodeId": "disp-1"
   }
 }

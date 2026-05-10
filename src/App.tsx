@@ -540,6 +540,7 @@ function App() {
   const { onConnect } = useConnectionHandling({
     setViewNodes, setViewEdges, pushSnapshot, nodesRef, edgesRef,
     groupStackRef, activeCanvasIdRef, setCanvases, connectionMadeRef,
+    pluginSchemas,
   });
 
   useEffect(() => {

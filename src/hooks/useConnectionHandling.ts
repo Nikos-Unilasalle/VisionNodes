@@ -13,6 +13,7 @@ export function useConnectionHandling({
   activeCanvasIdRef,
   setCanvases,
   connectionMadeRef,
+  pluginSchemas,
 }: any) {
 
   const onConnect = useCallback((params: Connection) => {
@@ -36,8 +37,10 @@ export function useConnectionHandling({
     }
 
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
-    const DYNAMIC_TYPES = new Set(['group_output', 'sci_plotter', 'plotter_pro', 'export_py', 'output_display', 'util_csv_export', 'draw_overlay']);
-    const isDynamic = targetNode && DYNAMIC_TYPES.has(targetNode.type || '');
+    const targetSchema = pluginSchemas?.find((s: any) => s.type === targetNode?.type);
+    
+    // Check if node is dynamic via schema flags
+    const isDynamic = !!targetSchema?.dynamic_inputs || !!targetSchema?.dynamic_outputs;
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
@@ -76,7 +79,7 @@ export function useConnectionHandling({
             : n));
           setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
         } else {
-          const labelPrefix = targetNode!.type === 'group_output' ? 'out' : 'in';
+          const labelPrefix = (targetNode!.type === 'group_output' || targetSchema?.dynamic_outputs) ? 'out' : 'in';
           const { portId, newPort } = createDynamicPort(color, labelPrefix);
           setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
 

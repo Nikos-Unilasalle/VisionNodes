@@ -8,6 +8,7 @@ from registry import vision_node, NodeProcessor
     category='draw',
     icon='Type',
     description="Draws text on an image or creates a graphic element. Connect text to the 'text' input and optionally an 'image'.",
+    variable_inputs=True,
     inputs=[
         {'id': 'text', 'color': 'string'},
         {'id': 'image', 'color': 'image'},

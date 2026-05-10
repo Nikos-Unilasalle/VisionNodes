@@ -11,6 +11,7 @@ _SCALAR = (int, float, str, bool, type(None))
     category='out',
     icon='Database',
     description="Exports data to CSV. Dynamic inputs — connect any value to add a column. Use Recording for live streams or Snapshot for single-frame capture.",
+    dynamic_inputs=True,
     inputs=[],
     outputs=[],
     params=[

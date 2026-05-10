@@ -29,3 +29,17 @@ output.wav
 # Cache
 gee_cache/
 engine/plugins/gee_cache/package-lock.json
+
+# AI Assistant Metadata
+.agents/
+.claude/
+.claude-plugin/
+.codex/
+.codex-plugin/
+.cursor/
+.gemini/
+.kiro/
+.trae/
+.opencode/
+.codebuddy/
+.claude-code/
