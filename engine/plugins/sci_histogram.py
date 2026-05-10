@@ -89,8 +89,45 @@ class HistogramNode(NodeProcessor):
                     hist_output[f"std_{i}"] = float(np.std(chan_data))
                 except: pass
 
+        # Drawing
+        max_val = 0
+        for h_data in hist_data:
+            m = np.max(h_data)
+            if m > max_val: max_val = m
+            
+        if max_val > 0:
+            for i, h_data in enumerate(hist_data):
+                color = colors[i]
+                name = chan_names[i]
+                pts = []
+                for b in range(bins):
+                    val = h_data[b][0]
+                    # Normalize y (leave 40px for labels and 20px bottom margin)
+                    norm_val = (val / max_val) * (h - 60) 
+                    px = int(b * w / (bins - 1)) if bins > 1 else 0
+                    py = int(h - 20 - norm_val)
+                    pts.append([px, py])
+                
+                pts = np.array(pts, np.int32)
+                
+                # Fill under the curve with low alpha
+                fill_pts = np.vstack([pts, [[w-1, h-21], [0, h-21]]])
+                overlay = out.copy()
+                cv2.fillPoly(overlay, [fill_pts], color)
+                cv2.addWeighted(overlay, 0.15, out, 0.85, 0, out)
+                
+                # Draw the line
+                cv2.polylines(out, [pts], False, color, 2, cv2.LINE_AA)
+                
+                if show_stats:
+                    avg = hist_output.get(f"avg_{i}", 0)
+                    std = hist_output.get(f"std_{i}", 0)
+                    stat_txt = f"{name}: Mean={avg:.1f} Std={std:.1f}"
+                    cv2.putText(out, stat_txt, (10, 25 + i * 20), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+
         return {
-            'main': img, # Pass through the image
+            'main': out, 
             **hist_output,
             'is_color': is_color,
             'mode': mode

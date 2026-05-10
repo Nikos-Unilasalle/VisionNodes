@@ -223,12 +223,15 @@ class HeatmapNode(NodeProcessor):
                     x, y = 0, 0
                     if isinstance(p, dict):
                         if 'center' in p: 
-                            x, y = p['center'].get('x', 0), p['center'].get('y', 0)
+                            x, y = p['center'].get('x'), p['center'].get('y')
                         elif 'x' in p and 'y' in p:
-                            x, y = p['x'], p['y']
+                            x, y = p.get('x'), p.get('y')
                         elif 'xmin' in p: # box
                             x, y = p['xmin'] + p.get('width', 0.0)/2, p['ymin'] + p.get('height', 0.0)/2
                     
+                    if x is None or y is None:
+                        continue
+
                     ix, iy = int(x * res), int(y * res)
                     if 0 <= ix < res and 0 <= iy < res:
                         self.buffer[iy, ix] += intensity

@@ -9816,103 +9816,92 @@
         "colorable": true
       },
       {
-        "type": "math_vec_to_screen",
-        "label": "Vec \u2192 Screen",
+        "type": "math_gaze_to_screen",
+        "label": "Gaze \u2192 Screen",
         "category": "math",
         "icon": "Monitor",
-        "description": "Maps yaw/pitch to normalized screen coordinates [0..1]. Connect image for tan()-based projection and visual calibration feedback.",
+        "description": "Maps gaze yaw/pitch to normalized screen coordinates [0..1]. Includes calibration for eye-tracking accuracy.",
         "inputs": [
           {
-            "id": "3Dvector",
-            "color": "dict"
+            "id": "3dvector",
+            "color": "dict",
+            "label": "Gaze (Yaw/Pitch)"
           },
           {
             "id": "image",
-            "color": "image"
+            "color": "image",
+            "label": "Visual Feedback"
           }
         ],
         "outputs": [
           {
             "id": "main",
-            "color": "image"
+            "color": "image",
+            "label": "Output Image"
           },
           {
             "id": "x",
-            "color": "scalar"
+            "color": "scalar",
+            "label": "Screen X"
           },
           {
             "id": "y",
-            "color": "scalar"
+            "color": "scalar",
+            "label": "Screen Y"
           },
           {
             "id": "point",
-            "color": "dict"
+            "color": "dict",
+            "label": "Graphics Point"
           }
         ],
         "params": [
-          {
-            "id": "scale_x",
-            "label": "Scale X",
-            "type": "float",
-            "default": 1.0,
-            "min": 0.1,
-            "max": 10.0,
-            "step": 0.05
-          },
-          {
-            "id": "scale_y",
-            "label": "Scale Y",
-            "type": "float",
-            "default": 1.0,
-            "min": 0.1,
-            "max": 10.0,
-            "step": 0.05
-          },
-          {
-            "id": "offset_x",
-            "label": "Offset X",
-            "type": "float",
-            "default": 0.0,
-            "min": -1.0,
-            "max": 1.0,
-            "step": 0.01
-          },
-          {
-            "id": "offset_y",
-            "label": "Offset Y",
-            "type": "float",
-            "default": 0.0,
-            "min": -1.0,
-            "max": 1.0,
-            "step": 0.01
-          },
-          {
-            "id": "smooth",
-            "label": "Smoothing",
-            "type": "float",
-            "default": 0.7,
-            "min": 0.0,
-            "max": 0.99,
-            "step": 0.01
-          },
-          {
-            "id": "clamp",
-            "label": "Clamp",
-            "type": "bool",
-            "default": true
-          },
-          {
-            "id": "flip_x",
-            "label": "Flip X",
-            "type": "bool",
-            "default": false
-          },
-          {
-            "id": "flip_y",
-            "label": "Flip Y",
-            "type": "bool",
-            "default": false
-          }
+          { "id": "scale_x", "label": "Scale X", "type": "float", "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.05 },
+          { "id": "scale_y", "label": "Scale Y", "type": "float", "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.05 },
+          { "id": "offset_x", "label": "Offset X", "type": "float", "default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01 },
+          { "id": "offset_y", "label": "Offset Y", "type": "float", "default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01 },
+          { "id": "smooth", "label": "Smoothing", "type": "float", "default": 0.7, "min": 0.0, "max": 0.99, "step": 0.01 },
+          { "id": "clamp", "label": "Clamp", "type": "bool", "default": true },
+          { "id": "flip_x", "label": "Flip X", "type": "bool", "default": false },
+          { "id": "flip_y", "label": "Flip Y", "type": "bool", "default": false },
+          { "id": "use_fov", "label": "Use Camera FOV", "type": "bool", "default": false },
+          { "id": "hfov", "label": "H-FOV (deg)", "type": "float", "default": 60.0, "min": 10.0, "max": 170.0 },
+          { "id": "sep_cal", "label": "--- Calibration ---", "type": "separator" },
+          { "id": "calibration_enabled", "label": "Enable Calibration", "type": "bool", "default": false },
+          { "id": "calibrate_tl", "label": "Calibrate TL", "type": "trigger" },
+          { "id": "calibrate_tr", "label": "Calibrate TR", "type": "trigger" },
+          { "id": "calibrate_br", "label": "Calibrate BR", "type": "trigger" },
+          { "id": "calibrate_bl", "label": "Calibrate BL", "type": "trigger" },
+          { "id": "calibrate_reset", "label": "Reset Calib", "type": "trigger" }
+        ],
+        "resizable": false,
+        "colorable": true
+      },
+      {
+        "type": "math_3d_to_screen",
+        "label": "3D \u2192 Screen",
+        "category": "math",
+        "icon": "Box",
+        "description": "Universal perspective projection of a 3D vector [x, y, z] to 2D screen coordinates [0..1].",
+        "inputs": [
+          { "id": "vector", "color": "dict", "label": "Vector (X, Y, Z)" },
+          { "id": "image", "color": "image", "label": "Background (opt)" }
+        ],
+        "outputs": [
+          { "id": "main", "color": "image", "label": "Image Output" },
+          { "id": "x", "color": "scalar", "label": "Screen X" },
+          { "id": "y", "color": "scalar", "label": "Screen Y" },
+          { "id": "point", "color": "dict", "label": "Graphics Point" }
+        ],
+        "params": [
+          { "id": "focal_length", "label": "Focal Length", "type": "float", "default": 1.0, "min": 0.1, "max": 5.0, "step": 0.1 },
+          { "id": "scale_x", "label": "Scale X", "type": "float", "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.05 },
+          { "id": "scale_y", "label": "Scale Y", "type": "float", "default": 1.0, "min": 0.1, "max": 10.0, "step": 0.05 },
+          { "id": "offset_x", "label": "Offset X", "type": "float", "default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01 },
+          { "id": "offset_y", "label": "Offset Y", "type": "float", "default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01 },
+          { "id": "flip_x", "label": "Flip X", "type": "bool", "default": false },
+          { "id": "flip_y", "label": "Flip Y", "type": "bool", "default": false },
+          { "id": "clamp", "label": "Clamp [0..1]", "type": "bool", "default": true }
         ],
         "resizable": false,
         "colorable": true

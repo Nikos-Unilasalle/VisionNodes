@@ -526,7 +526,7 @@ export const AnalysisGazeNode = memo(({ selected, data }: any) => (
 
 export const MathVecToScreenNode = memo(({ selected, data }: any) => (
   <BaseNode title="Vec → Screen" icon={Monitor} selected={selected} data={data} color="green"
-    inputs={[{id: '3Dvector', color: 'dict'}, {id: 'image', color: 'image'}]}
+    inputs={[{id: '3dvector', color: 'dict'}, {id: 'image', color: 'image'}]}
     outputs={[{id: 'main', color: 'image'}, {id: 'x', color: 'scalar'}, {id: 'y', color: 'scalar'}, {id: 'point', color: 'dict'}]} />
 ));
 
@@ -985,6 +985,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const { customBg } = useNodeColor();
   const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]');
+  const isMinified = !!(data as any)?.minified;
 
   // Extract available keys from dict or list-of-dicts
   const keys = useMemo(() => {
@@ -1016,27 +1017,46 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
     return d;
   }, [d, filterKey]);
 
+  const isScalar = displayData !== null && (typeof displayData === 'number' || typeof displayData === 'string' || typeof displayData === 'boolean');
+
   return (
     <div
       className={`w-full h-full rounded-xl bg-[#2c333f] border-2 ${accentBorder} shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
-      style={{ position: 'relative', zIndex: 0, ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) }}
+      style={{ 
+        position: 'relative', 
+        zIndex: 0, 
+        minHeight: isMinified ? 24 : 120,
+        ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) 
+      }}
     >
-      <div className="absolute left-0 flex items-center pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
-        <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" />
+      <div className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top: isMinified ? 10 : '50%', transform: 'translateY(-50%)' }}>
+        <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" noBorder={isMinified} />
+      </div>
+      <div className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top: isMinified ? 10 : '50%', transform: 'translateY(-50%)' }}>
+        <StyledHandle type="source" position={Position.Right} id="data_out" color="any" top="50%" noBorder={isMinified} />
       </div>
 
-      {/* Title bar */}
-      <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
-           style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-        <div className="flex items-center gap-3 truncate">
-          <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
-          <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>Inspector</span>
+      {isMinified ? (
+        <div className="absolute inset-0 flex items-center justify-center px-4 overflow-hidden pointer-events-none">
+          <span className={`text-[9px] font-black uppercase tracking-widest truncate ${isScalar ? 'text-yellow-400' : ''}`}
+                style={!isScalar && customBg ? { color: customBg } : {}}>
+            {isScalar ? String(displayData) : 'Inspector'}
+          </span>
         </div>
-        {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
-      </div>
+      ) : (
+        <>
+          {/* Title bar */}
+          <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between gap-3 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+               style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+            <div className="flex items-center gap-3 truncate">
+              <Eye size={14} className="shrink-0" style={customBg ? { color: customBg } : { color: '#9ca3af' }} />
+              <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>Inspector</span>
+            </div>
+            {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse shrink-0" />}
+          </div>
 
-      {/* Key filter pills — only shown when dict/list-of-dicts detected */}
-      {keys.length > 0 && (
+          {/* Key filter pills — only shown when dict/list-of-dicts detected */}
+          {keys.length > 0 && (
         <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-[#4f5b6b] bg-[#3d4452] overflow-x-auto scrollbar-hide shrink-0">
           <button
             onClick={() => setFilterKey(null)}
@@ -1061,9 +1081,11 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
       )}
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
-        <JsonTreeView data={displayData} />
-      </div>
+          <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
+            <JsonTreeView data={displayData} />
+          </div>
+        </>
+      )}
     </div>
   );
 });

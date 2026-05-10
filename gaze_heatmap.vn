@@ -1,0 +1,146 @@
+{
+  "nodes": [
+    {
+      "id": "webcam",
+      "type": "input_webcam",
+      "position": { "x": 35, "y": 200 },
+      "data": {
+        "label": "Webcam",
+        "params": { "device_index": 0 }
+      }
+    },
+    {
+      "id": "gaze",
+      "type": "analysis_gaze",
+      "position": { "x": 320, "y": 200 },
+      "data": {
+        "label": "Gaze Estimator",
+        "params": {}
+      }
+    },
+    {
+      "id": "vec2screen",
+      "type": "math_vec_to_screen",
+      "position": { "x": 610, "y": 200 },
+      "data": {
+        "label": "Vec → Screen",
+        "params": {
+          "scale_x": 1.0,
+          "scale_y": 1.0,
+          "smooth": 0.7,
+          "clamp": true,
+          "flip_x": false,
+          "flip_y": false
+        }
+      }
+    },
+    {
+      "id": "coord_cmb",
+      "type": "data_coord_combine",
+      "position": { "x": 850, "y": 200 },
+      "data": {
+        "label": "Coord Combine",
+        "params": {}
+      }
+    },
+    {
+      "id": "heatmap",
+      "type": "sci_heatmap",
+      "position": { "x": 1090, "y": 200 },
+      "data": {
+        "label": "Heatmap",
+        "params": {
+          "res": 64,
+          "decay": 0.005,
+          "intensity": 2.0,
+          "blur": 5,
+          "colormap": 0,
+          "blend": 0.6
+        }
+      }
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": { "x": 1380, "y": 200 },
+      "data": {
+        "label": "Display",
+        "params": {}
+      }
+    },
+    {
+      "id": "note",
+      "type": "canvas_note",
+      "position": { "x": 35, "y": 20 },
+      "style": { "width": 240, "height": 100 },
+      "data": {
+        "label": "Instructions",
+        "params": {
+          "text": "GAZE HEATMAP\n\n1. Regardez la caméra\n2. Visualisez Heatmap (œil)\n   pour voir l'accumulation\n3. Ajustez decay & intensity\n   dans ses paramètres"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-wb-gaze",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "gaze",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gaze-vec",
+      "source": "gaze",
+      "sourceHandle": "dict__gaze",
+      "target": "vec2screen",
+      "targetHandle": "dict__3dvector"
+    },
+    {
+      "id": "e-vec-wb",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "vec2screen",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-vec-x",
+      "source": "vec2screen",
+      "sourceHandle": "scalar__x",
+      "target": "coord_cmb",
+      "targetHandle": "scalar__x"
+    },
+    {
+      "id": "e-vec-y",
+      "source": "vec2screen",
+      "sourceHandle": "scalar__y",
+      "target": "coord_cmb",
+      "targetHandle": "scalar__y"
+    },
+    {
+      "id": "e-cmb-heat",
+      "source": "coord_cmb",
+      "sourceHandle": "any__dict_out",
+      "target": "heatmap",
+      "targetHandle": "any__points"
+    },
+    {
+      "id": "e-wb-heat",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "heatmap",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-heat-disp",
+      "source": "heatmap",
+      "sourceHandle": "image__main",
+      "target": "display",
+      "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "activePaletteIndex": 2,
+    "visualizedNodeId": "heatmap"
+  }
+}
