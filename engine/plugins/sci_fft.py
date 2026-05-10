@@ -73,7 +73,10 @@ class FFTNode(NodeProcessor):
         filtered_imgs  = []
         complex_results = []
 
-        for ch in channels:
+        total_channels = len(channels)
+        for i, ch in enumerate(channels):
+            self.report_progress(i / total_channels, f"FFT: Processing channel {i+1}/{total_channels}...")
+            
             f_transform = np.fft.fft2(ch)
             f_shift     = np.fft.fftshift(f_transform)
 
@@ -101,6 +104,8 @@ class FFTNode(NodeProcessor):
             phases.append(((phase + np.pi) / (2 * np.pi) * 255).astype(np.uint8))
             filtered_imgs.append(img_back.astype(np.uint8))
             complex_results.append(f_shift_filtered)
+
+        self.report_progress(1.0, "FFT: Done")
 
         def stack(l):
             if is_color: return np.stack(l, axis=2)

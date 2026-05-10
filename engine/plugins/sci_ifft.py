@@ -44,10 +44,14 @@ class IFFTNode(NodeProcessor):
             if complex_data is None: return {'main': None}
 
             is_color = complex_data.get('is_color', False)
-            for ch_complex in complex_data.get('channels', []):
+            channels = complex_data.get('channels', [])
+            total = len(channels)
+            for i, ch_complex in enumerate(channels):
+                self.report_progress(i / total, f"iFFT: Reconstructing channel {i+1}/{total}...")
                 f_ishift   = np.fft.ifftshift(ch_complex)
                 img_recon  = np.abs(np.fft.ifft2(f_ishift))
                 reconstructed_channels.append(img_recon)
+            self.report_progress(1.0, "iFFT: Done")
 
         # --- MODE 2: Magnitude + Phase ---
         elif mode == 'magnitude_phase' or (mode == 'auto' and (mag_raw is not None or mag_img is not None)):
@@ -73,7 +77,9 @@ class IFFTNode(NodeProcessor):
             else:
                 phases = [np.zeros(m.shape, dtype=np.float64) for m in mags]
 
-            for m, p in zip(mags, phases):
+            total = len(mags)
+            for i, (m, p) in enumerate(zip(mags, phases)):
+                self.report_progress(i / total, f"iFFT: Reconstructing channel {i+1}/{total}...")
                 mag_f = m.astype(np.float64)
                 if not use_raw and inv_log:
                     # Inverse of np.log(x + 1) applied before normalization
@@ -83,6 +89,7 @@ class IFFTNode(NodeProcessor):
                 f_ishift  = np.fft.ifftshift(f_shift)
                 img_recon = np.abs(np.fft.ifft2(f_ishift))
                 reconstructed_channels.append(img_recon)
+            self.report_progress(1.0, "iFFT: Done")
 
         if not reconstructed_channels:
             return {'main': None}

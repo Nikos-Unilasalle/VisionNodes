@@ -54,9 +54,14 @@ class CoordSplitterNode(NodeProcessor):
 )
 class CoordCombineNode(NodeProcessor):
     def process(self, inputs, params):
+        x = inputs.get("x")
+        y = inputs.get("y")
+        if x is None or y is None:
+            return {"dict_out": None}
+            
         return {"dict_out": {
-            "xmin": float(inputs.get("x") or 0.0),
-            "ymin": float(inputs.get("y") or 0.0),
+            "xmin": float(x),
+            "ymin": float(y),
             "width": float(inputs.get("w") or 0.0),
             "height": float(inputs.get("h") or 0.0),
         }}

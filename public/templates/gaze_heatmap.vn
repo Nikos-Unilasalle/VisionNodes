@@ -1,0 +1,211 @@
+{
+  "nodes": [
+    {
+      "id": "webcam",
+      "type": "input_webcam",
+      "position": {
+        "x": 40,
+        "y": 200
+      },
+      "data": {
+        "label": "Webcam",
+        "params": {
+          "device_index": 1,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "gaze",
+      "type": "analysis_gaze",
+      "position": {
+        "x": 320,
+        "y": 200
+      },
+      "data": {
+        "label": "Gaze Estimator",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "vec2screen",
+      "type": "math_gaze_to_screen",
+      "position": {
+        "x": 610,
+        "y": 200
+      },
+      "data": {
+        "label": "Gaze → Screen",
+        "params": {
+          "scale_x": 1,
+          "scale_y": 1,
+          "smooth": 0.7,
+          "clamp": false,
+          "flip_x": false,
+          "flip_y": false,
+          "calibrate_tl": 0,
+          "calibrate_br": 0,
+          "calibrate_bl": 0,
+          "calibrate_tr": 0,
+          "calibration_enabled": true,
+          "sep_cal": 14,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "coord_cmb",
+      "type": "data_coord_combine",
+      "position": {
+        "x": 850,
+        "y": 200
+      },
+      "data": {
+        "label": "Coord Combine",
+        "params": {
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "heatmap",
+      "type": "sci_heatmap",
+      "position": {
+        "x": 1100,
+        "y": 200
+      },
+      "data": {
+        "label": "Heatmap",
+        "params": {
+          "res": 27,
+          "decay": 0,
+          "intensity": 11.1,
+          "blur": 4,
+          "colormap": 0,
+          "blend": 0.6,
+          "reset": 0,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1100,
+        "y": 200
+      }
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": {
+        "x": 1380,
+        "y": 200
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 4
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-wb-gaze",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "gaze",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gaze-vec",
+      "source": "gaze",
+      "sourceHandle": "dict__gaze",
+      "target": "vec2screen",
+      "targetHandle": "dict__3dvector"
+    },
+    {
+      "id": "e-vec-wb",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "vec2screen",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-vec-x",
+      "source": "vec2screen",
+      "sourceHandle": "scalar__x",
+      "target": "coord_cmb",
+      "targetHandle": "scalar__x"
+    },
+    {
+      "id": "e-vec-y",
+      "source": "vec2screen",
+      "sourceHandle": "scalar__y",
+      "target": "coord_cmb",
+      "targetHandle": "scalar__y"
+    },
+    {
+      "id": "e-cmb-heat",
+      "source": "coord_cmb",
+      "sourceHandle": "any__dict_out",
+      "target": "heatmap",
+      "targetHandle": "any__points"
+    },
+    {
+      "id": "e-wb-heat",
+      "source": "webcam",
+      "sourceHandle": "image__main",
+      "target": "heatmap",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-heat-disp",
+      "source": "heatmap",
+      "sourceHandle": "image__main",
+      "target": "display",
+      "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 957.10546875,
+      "h": 538
+    },
+    "previewPos": {
+      "x": 544.0390625,
+      "y": -107.83984375
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "heatmap"
+  }
+}

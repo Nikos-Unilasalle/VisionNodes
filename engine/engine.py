@@ -367,9 +367,10 @@ class VisionEngine:
                         th = th_raw.split('__')[-1].lower()
                         
                         # Try to get value from source results (case-insensitive keys)
-                        val = None
-                        source_res_lower = {k.lower(): v for k, v in source_res.items()}
-                        val = source_res_lower.get(sh)
+                        val = source_res.get(sh) if hasattr(source_res, 'get') else None
+                        if val is None:
+                            source_res_lower = {k.lower(): v for k, v in source_res.items()}
+                            val = source_res_lower.get(sh)
                         
                         if val is None and sh == 'main':
                             # Fallback: if 'main' requested but not found, take the first available output

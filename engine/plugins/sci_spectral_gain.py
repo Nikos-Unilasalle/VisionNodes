@@ -39,8 +39,11 @@ class SpectralGainNode(NodeProcessor):
         high_gain = int(params.get('high_gain', 100)) / 100.0
         lm = int(params.get('low_mid_split',  15)) / 100.0
         mh = int(params.get('mid_high_split', 50)) / 100.0
+        # Ensure splits are ordered and not equal
         if lm >= mh:
             mh = min(lm + 0.01, 1.0)
+        if lm <= 0: lm = 0.01
+        if mh >= 1.0: mh = 0.99
 
         rows, cols = channels[0].shape
         crow, ccol = rows // 2, cols // 2
@@ -54,11 +57,19 @@ class SpectralGainNode(NodeProcessor):
         gain_map = np.where(dist <= lm, low_gain,
                    np.where(dist <= mh, mid_gain, high_gain))
 
-        boosted = [ch * gain_map for ch in channels]
+        total = len(channels)
+        boosted = []
+        for i, ch in enumerate(channels):
+            self.report_progress(i / total, f"Spectral Gain: Processing channel {i+1}/{total}...")
+            boosted.append(ch * gain_map)
+
+        self.report_progress(1.0, "Spectral Gain: Done")
 
         # Spectrum preview: log-scale → colormap
-        mag_vis = np.log(boosted[0] + 1) if boosted else None
-        if mag_vis is not None:
+        # We use np.abs() to handle complex data correctly for the visualization
+        first_ch = boosted[0] if boosted else None
+        if first_ch is not None:
+            mag_vis = np.log(np.abs(first_ch) + 1)
             cv2.normalize(mag_vis, mag_vis, 0, 255, cv2.NORM_MINMAX)
             preview = cv2.applyColorMap(mag_vis.astype(np.uint8), cv2.COLORMAP_INFERNO)
         else:

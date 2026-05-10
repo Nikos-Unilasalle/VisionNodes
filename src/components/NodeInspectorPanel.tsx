@@ -332,6 +332,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
     'plugin_audio_freq_filter', 'plugin_audio_pitch_shift', 'plugin_audio_time_stretch',
     'plugin_spectrogram_to_audio', 'plugin_audio_export', 'plugin_audio_info',
     'util_landmark_selector',
+    'math_vec_to_screen',
   ]);
 
   return (
@@ -742,6 +743,67 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               15, 16 : Poignets (L, R)
             </div>
           </div>
+        </div>
+      )}
+
+      {/* math_vec_to_screen calibration */}
+      {node.type === 'math_vec_to_screen' && (
+        <div className="space-y-6">
+          <div className="bg-accent/5 border border-accent/20 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Activity size={14} className="text-accent" />
+              <span className="text-[9px] font-black text-accent uppercase tracking-widest">Calibration</span>
+            </div>
+            <p className="text-[9px] text-gray-400 leading-relaxed">
+              Regardez chaque coin de l'écran pendant 1 seconde et cliquez sur le bouton correspondant.
+              Réalisez les 4 coins, puis activez la calibration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { key: 'calibrate_tl', label: '↖ Top-Left' },
+              { key: 'calibrate_tr', label: '↗ Top-Right' },
+              { key: 'calibrate_bl', label: '↙ Bottom-Left' },
+              { key: 'calibrate_br', label: '↘ Bottom-Right' },
+            ].map(corner => {
+              const done = node.data.params?.[corner.key];
+              return (
+                <button key={corner.key}
+                  onClick={() => up({ [corner.key]: true })}
+                  className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[10px] font-bold transition-all border ${
+                    done
+                      ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:bg-accent/10 hover:border-accent/30 hover:text-accent'
+                  }`}
+                >
+                  {corner.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <ToggleInput label="Activer Calibration" val={!!p.calibration_enabled} onChange={v => up({ calibration_enabled: v })} />
+
+          {p.calibration_enabled && (
+            <button onClick={() => up({ calibrate_reset: true })}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
+            >
+              Reset Calibration
+            </button>
+          )}
+
+          <hr className="border-white/5" />
+
+          <Slider label="Scale X" val={p.scale_x ?? 1.0} min={0.1} max={10} step={0.05} onChange={v => up({ scale_x: v })} />
+          <Slider label="Scale Y" val={p.scale_y ?? 1.0} min={0.1} max={10} step={0.05} onChange={v => up({ scale_y: v })} />
+          <Slider label="Offset X" val={p.offset_x ?? 0.0} min={-1.0} max={1.0} step={0.01} onChange={v => up({ offset_x: v })} />
+          <Slider label="Offset Y" val={p.offset_y ?? 0.0} min={-1.0} max={1.0} step={0.01} onChange={v => up({ offset_y: v })} />
+          <Slider label="Smoothing" val={p.smooth ?? 0.7} min={0.0} max={0.99} step={0.01} onChange={v => up({ smooth: v })} />
+          <ToggleInput label="Clamp" val={p.clamp ?? true} onChange={v => up({ clamp: v })} />
+          <ToggleInput label="Flip X" val={!!p.flip_x} onChange={v => up({ flip_x: v })} />
+          <ToggleInput label="Flip Y" val={!!p.flip_y} onChange={v => up({ flip_y: v })} />
+          <ToggleInput label="Use Camera FOV" val={!!p.use_fov} onChange={v => up({ use_fov: v })} />
         </div>
       )}
 
