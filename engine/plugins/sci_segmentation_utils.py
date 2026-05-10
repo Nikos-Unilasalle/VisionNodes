@@ -76,30 +76,35 @@ class SeedsFromBoundariesNode(NodeProcessor):
         }
 
 @vision_node(
-    type_id='sci_stone_segmenter',
-    label='Stone Wall Segmenter',
+    type_id='sci_general_segmenter',
+    label='General Segmenter',
     category='analytics',
     icon='Grid',
-    description="Dedicated tool for segmenting individual stones in a wall. Combines contrast enhancement, seed detection, and watershed.",
-    inputs=[{'id': 'image', 'color': 'image'}],
+    description="Versatile segmentation tool. Combines contrast enhancement (CLAHE), seed detection, and watershed for object separation.",
+    inputs=[
+        {'id': 'image',   'color': 'image'},
+        {'id': 'markers', 'color': 'any'}  # Optional external seeds
+    ],
     outputs=[
         {'id': 'main',    'color': 'image'},
         {'id': 'mask',    'color': 'mask'},
         {'id': 'count',   'color': 'scalar'}
     ],
     params=[
-        {'id': 'sensitivity', 'label': 'Stone Sensitivity', 'type': 'number', 'default': 30, 'min': 1, 'max': 90},
-        {'id': 'straightness', 'label': 'Joint Straightness', 'type': 'number', 'default': 5, 'min': 0, 'max': 20},
-        {'id': 'smoothing',    'label': 'Texture Smoothing', 'type': 'number', 'default': 3, 'min': 0, 'max': 10},
-        {'id': 'viz_mode',     'label': 'Visualization',     'type': 'enum', 'options': ['Boundaries', 'Colored Stones', 'Stones + Boundaries'], 'default': 2},
+        {'id': 'sensitivity', 'label': 'Peak Sensitivity', 'type': 'number', 'default': 30, 'min': 1, 'max': 90},
+        {'id': 'contrast',    'label': 'Auto Contrast (CLAHE)', 'type': 'boolean', 'default': True},
+        {'id': 'smoothing',   'label': 'Denoise (Blur)',  'type': 'number', 'default': 3, 'min': 0, 'max': 10},
+        {'id': 'boundary',    'label': 'Boundary Strength', 'type': 'number', 'default': 5, 'min': 0, 'max': 20},
+        {'id': 'min_size',    'label': 'Min Object Size',   'type': 'number', 'default': 50, 'min': 0, 'max': 5000},
+        {'id': 'viz_mode',    'label': 'Visualization',     'type': 'enum', 'options': ['Boundaries', 'Colored Objects', 'Full Overlay'], 'default': 2},
     ]
 )
-class StoneWallSegmenterNode(NodeProcessor):
+class GeneralSegmenterNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
         if img is None: return {'main': None, 'mask': None, 'count': 0}
         
-        # 1. Pre-process
+        # 1. Pre-process (Grayscale & Contrast)
         if len(img.shape) == 3 and img.shape[2] >= 3:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         elif len(img.shape) == 3 and img.shape[2] == 1:
@@ -109,66 +114,73 @@ class StoneWallSegmenterNode(NodeProcessor):
             if len(img.shape) == 2:
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
             
-        # Ensure uint8 for thresholding
         if gray.dtype != np.uint8:
             gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
             
+        if params.get('contrast', True):
+            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+            gray = clahe.apply(gray)
+
         sm = int(params.get('smoothing', 3))
         if sm > 0:
             gray = cv2.GaussianBlur(gray, (sm*2+1, sm*2+1), 0)
             
-        # 2. Omnidirectional Linear Filtering
-        str_val = int(params.get('straightness', 5))
-        if str_val > 0:
-            # Threshold to find joints (dark lines)
-            _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+        # 2. Boundary detection (using original joint logic but generalized)
+        boundary_val = int(params.get('boundary', 5))
+        if boundary_val > 0:
+            _, b_mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+            min_len = boundary_val * 5
+            lines = cv2.HoughLinesP(b_mask, 1, np.pi/180, threshold=50, minLineLength=min_len, maxLineGap=min_len//2)
             
-            # Detect line segments at any angle
-            # minLineLength is tied to our 'straightness' parameter
-            min_len = str_val * 5
-            lines = cv2.HoughLinesP(mask, 1, np.pi/180, threshold=50, minLineLength=min_len, maxLineGap=min_len//2)
-            
-            straight_mask = np.zeros_like(mask)
+            straight_mask = np.zeros_like(b_mask)
             if lines is not None:
                 for line in lines:
                     x1, y1, x2, y2 = line[0]
                     cv2.line(straight_mask, (x1, y1), (x2, y2), 255, 3)
             
-            # Combine straight features with original threshold
             _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            
-            # If we found straight joints, prioritize them to "cut" the stones
             thresh = cv2.bitwise_and(thresh, cv2.bitwise_not(straight_mask))
-            
-            # Fill holes in stones
             kernel_fill = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
             thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel_fill)
         else:
             _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-        # 3. Find Seeds
-        dist = cv2.distanceTransform(thresh, cv2.DIST_L2, 5)
-        dist = cv2.GaussianBlur(dist, (5, 5), 0)
-        
-        sens = float(params.get('sensitivity', 30)) / 100.0
-        _, peaks = cv2.threshold(dist, sens * dist.max(), 255, cv2.THRESH_BINARY)
-        peaks = np.uint8(peaks)
+        # 3. Find Seeds (Markers)
+        external_markers = inputs.get('markers')
+        if external_markers is not None:
+            markers = external_markers.astype(np.int32)
+            num = int(np.max(markers)) + 1
+        else:
+            dist = cv2.distanceTransform(thresh, cv2.DIST_L2, 5)
+            dist = cv2.GaussianBlur(dist, (5, 5), 0)
+            sens = float(params.get('sensitivity', 30)) / 100.0
+            _, peaks = cv2.threshold(dist, sens * dist.max(), 255, cv2.THRESH_BINARY)
+            num, markers = cv2.connectedComponents(np.uint8(peaks))
         
         # 4. Watershed
-        num, markers = cv2.connectedComponents(peaks)
         markers = cv2.watershed(img, markers.astype(np.int32))
         
-        # 5. Result Construction
-        count = num - 1
+        # 5. Size Filtering
+        min_size = int(params.get('min_size', 50))
+        if min_size > 0:
+            new_markers = np.zeros_like(markers)
+            counts = np.bincount(markers[markers > 0].flatten())
+            valid_ids = np.where(counts >= min_size)[0]
+            # Remap valid IDs to be contiguous
+            for i, old_id in enumerate(valid_ids, 1):
+                new_markers[markers == old_id] = i
+            markers = new_markers
+            count = len(valid_ids)
+        else:
+            count = num - 1
+            
+        # 6. Result Construction
         viz_mode = int(params.get('viz_mode', 2))
-        
-        # Prepare colorized stones
         n = max(1, count)
         vis_stones = (np.clip(markers, 0, None).astype(np.float32) * (255.0 / n)).astype(np.uint8)
         colored = cv2.applyColorMap(vis_stones, cv2.COLORMAP_TURBO)
         colored[markers <= 0] = 0
         
-        # Prepare boundaries (red)
         res = img.copy()
         boundary_mask = (markers == -1)
         res[boundary_mask] = [0, 0, 255]
@@ -179,10 +191,9 @@ class StoneWallSegmenterNode(NodeProcessor):
             out = cv2.addWeighted(img, 0.4, colored, 0.6, 0)
         else: # Both
             blended = cv2.addWeighted(img, 0.4, colored, 0.6, 0)
-            blended[boundary_mask] = [0, 0, 255]
+            blended[markers == -1] = [0, 0, 255]
             out = blended
             
-        # Binary mask of stones (excluding boundaries)
         mask_out = np.zeros_like(gray)
         mask_out[markers > 0] = 255
         

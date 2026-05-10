@@ -189,6 +189,19 @@ export const BaseNode = ({
         <div className="flex items-center gap-3 truncate">
           <Icon size={14} className="shrink-0 transition-colors" style={customBg ? { color: customBg } : {}} />
           <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>{title}</span>
+          
+          {data?.schema?.variable_inputs && (
+            <div className="flex gap-1 ml-2 shrink-0">
+              <button 
+                onClick={(e) => { e.stopPropagation(); data.onChangeParams?.({ var_count: Math.max((data.params?.var_count || 0) - 1, 0) }); }}
+                className="w-4 h-4 flex items-center justify-center bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-500 rounded border border-white/10 transition-all text-[10px] font-bold"
+              >-</button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); data.onChangeParams?.({ var_count: Math.min((data.params?.var_count || 0) + 1, 10) }); }}
+                className="w-4 h-4 flex items-center justify-center bg-white/5 hover:bg-green-500/20 text-gray-400 hover:text-green-500 rounded border border-white/10 transition-all text-[10px] font-bold"
+              >+</button>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse" />}
@@ -408,10 +421,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
 });
 
 export const SolidColorNode = memo(({ selected, data }: any) => {
-  const r = data.params?.r ?? 255;
-  const g = data.params?.g ?? 0;
-  const b = data.params?.b ?? 0;
-  const hex = `rgb(${r},${g},${b})`;
+  const hex = data.params?.color || '#ff0000';
   return (
     <BaseNode title="Solid Color" icon={Palette} selected={selected} data={data} color="green" outputs={[{id: 'main', color: 'image'}]}>
       <div className="flex justify-center py-1 nodrag">
@@ -1029,10 +1039,10 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
         ...(customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}) 
       }}
     >
-      <div className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top: isMinified ? 10 : '50%', transform: 'translateY(-50%)' }}>
+      <div className="absolute left-0 w-full flex items-center pointer-events-none" style={{ top: isMinified ? '12px' : '50%', transform: 'translateY(-50%)' }}>
         <StyledHandle type="target" position={Position.Left} id="data" color="any" top="50%" noBorder={isMinified} />
       </div>
-      <div className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top: isMinified ? 10 : '50%', transform: 'translateY(-50%)' }}>
+      <div className="absolute right-0 w-full flex items-center justify-end pointer-events-none" style={{ top: isMinified ? '12px' : '50%', transform: 'translateY(-50%)' }}>
         <StyledHandle type="source" position={Position.Right} id="data_out" color="any" top="50%" noBorder={isMinified} />
       </div>
 

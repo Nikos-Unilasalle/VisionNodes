@@ -9,7 +9,9 @@ from registry import vision_node, NodeProcessor
     description='Encapsulates a subgraph. Double-click to enter/edit.',
     inputs=[],
     outputs=[],
-    params=[{'id': 'label', 'type': 'string', 'default': 'Group'}]
+    params=[{'id': 'label', 'type': 'string', 'default': 'Group'}],
+    dynamic_inputs=True,
+    dynamic_outputs=True
 )
 class GroupNodeProcessor(NodeProcessor):
     def process(self, inputs, params):
@@ -24,7 +26,8 @@ class GroupNodeProcessor(NodeProcessor):
     description='Relay: group input ports into the subgraph.',
     inputs=[],
     outputs=[{'id': 'slot_0', 'color': 'any'}],
-    params=[]
+    params=[],
+    dynamic_outputs=True
 )
 class GroupInputProcessor(NodeProcessor):
     def process(self, inputs, params):
@@ -39,7 +42,8 @@ class GroupInputProcessor(NodeProcessor):
     description='Relay: inner subgraph outputs to group output ports.',
     inputs=[{'id': 'slot_0', 'color': 'any'}],
     outputs=[],
-    params=[]
+    params=[],
+    dynamic_inputs=True
 )
 class GroupOutputProcessor(NodeProcessor):
     def process(self, inputs, params):

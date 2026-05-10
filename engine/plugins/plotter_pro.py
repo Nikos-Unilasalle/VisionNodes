@@ -145,6 +145,8 @@ def _smooth_pts(data, min_y, max_y, margin, plot_w, plot_h):
     category=['visualize', 'visualize'],
     icon="Activity",
     description="Advanced multi-series plotter with smooth curves, filtering, thresholding, normalization, and peak detection.",
+    resizable=True,
+    dynamic_inputs=True,
     inputs=[],
     outputs=[{"id": "main", "color": "image"}],
     params=[

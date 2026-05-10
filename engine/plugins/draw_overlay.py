@@ -8,6 +8,7 @@ from registry import vision_node, NodeProcessor
     category='draw',
     icon='PenTool',
     description="Draws graphical elements and AI detections over an image. Supports dynamic multi-inputs.",
+    dynamic_inputs=True,
     inputs=[
         {'id': 'image', 'color': 'image'}
     ],

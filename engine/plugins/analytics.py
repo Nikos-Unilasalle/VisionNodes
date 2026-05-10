@@ -8,6 +8,8 @@ from registry import NodeProcessor, vision_node
     category=['visualize', 'detect'],
     icon="Activity",
     description="Multi-series real-time graph. Connect any scalar/list inputs dynamically. Resizable.",
+    resizable=True,
+    dynamic_inputs=True,
     inputs=[],
     outputs=[
         {"id": "main", "color": "image"},

@@ -87,7 +87,19 @@ export function useKeyboardShortcuts({
                 }
               }
               const isMinified = !!(n.data as any)?.minified;
-              return { ...n, data: { ...n.data, minified: !isMinified } };
+              if (!isMinified) {
+                return { 
+                  ...n, 
+                  style: { ...n.style, height: 24 }, 
+                  data: { ...n.data, minified: true, savedHeight: n.style?.height } 
+                };
+              } else {
+                return { 
+                  ...n, 
+                  style: { ...n.style, height: n.data?.savedHeight }, 
+                  data: { ...n.data, minified: false } 
+                };
+              }
             }));
           }
         } else if (groupStackRef.current.length > 0) {

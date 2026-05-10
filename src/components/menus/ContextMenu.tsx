@@ -168,7 +168,21 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                       if (!n.selected && n.id !== menu.id) return n;
                       if (n.type === 'canvas_frame') return n;
                       const isMinified = !!(n.data as any)?.minified;
-                      return { ...n, data: { ...n.data, minified: !isMinified } };
+                      if (!isMinified) {
+                        // Minifying: Save current height and set to 24
+                        return { 
+                          ...n, 
+                          style: { ...n.style, height: 24 }, 
+                          data: { ...n.data, minified: true, savedHeight: n.style?.height } 
+                        };
+                      } else {
+                        // Expanding: Restore height
+                        return { 
+                          ...n, 
+                          style: { ...n.style, height: n.data?.savedHeight }, 
+                          data: { ...n.data, minified: false } 
+                        };
+                      }
                     }));
                     setMenu(null);
                   }}

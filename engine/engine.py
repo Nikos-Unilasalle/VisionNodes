@@ -124,7 +124,9 @@ class _PassThrough(dict):
     icon="GitCommit",
     description="Pass-through node to organize wires.",
     inputs=[{"id": "in", "color": "any"}],
-    outputs=[{"id": "out", "color": "any"}]
+    outputs=[{"id": "out", "color": "any"}],
+    dynamic_inputs=True,
+    dynamic_outputs=True
 )
 class RerouteNode(NodeProcessor):
     def process(self, inputs, params):

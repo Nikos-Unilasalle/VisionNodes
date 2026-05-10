@@ -39,6 +39,9 @@ class NodeSchema(TypedDict, total=False):
     min_width: int
     min_height: int
     colorable: bool
+    dynamic_inputs: bool
+    dynamic_outputs: bool
+    variable_inputs: bool
 
 
 NODE_SCHEMAS: list[NodeSchema] = []
@@ -63,6 +66,7 @@ def vision_node(
     params: Optional[list[ParamSpec]] = None,
     description: str = "",
     resizable: bool = False, min_width: int = 200, min_height: int = 150, colorable: bool = True,
+    dynamic_inputs: bool = False, dynamic_outputs: bool = False, variable_inputs: bool = False,
 ):
     def decorator(cls):
         NODE_SCHEMAS.append({
@@ -78,6 +82,9 @@ def vision_node(
             "min_width": min_width,
             "min_height": min_height,
             "colorable": colorable,
+            "dynamic_inputs": dynamic_inputs,
+            "dynamic_outputs": dynamic_outputs,
+            "variable_inputs": variable_inputs,
         })
         NODE_CLASS_REGISTRY[type_id] = cls
         return cls
