@@ -142,24 +142,42 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                   <span>{isLocked ? 'Unlock Output' : 'Lock Out'}</span>
                   <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘⇥</span>
                 </button>
-                {canBypass(menu.id) && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      pushSnapshot();
-                      setViewNodes((nds: any) => nds.map((n: any) => n.id === menu.id
-                        ? { ...n, data: { ...n.data, bypassed: !isBypassed } }
-                        : n
-                      ));
-                      setMenu(null);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${isBypassed ? 'bg-gray-500/30 hover:bg-gray-500/60' : 'hover:bg-gray-500/60'}`}
-                  >
-                    <ChevronsRight size={16} className="text-gray-400 group-hover:text-white" />
-                    <span>{isBypassed ? 'Remove Bypass' : 'Bypass'}</span>
-                    <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘B</span>
-                  </button>
-                )}
+                {canBypass(menu.id) && (() => {
+                  const menuNodeSelected = nodes.find(n => n.id === menu.id)?.selected;
+                  const selectedBypassable = nodes.filter(n => n.selected && canBypass(n.id));
+                  const isMulti = menuNodeSelected && selectedBypassable.length > 1;
+                  const allBypassed = isMulti
+                    ? selectedBypassable.every((n: any) => !!(n.data as any)?.bypassed)
+                    : isBypassed;
+                  const label = isMulti
+                    ? (allBypassed ? 'Remove Bypass (All)' : 'Bypass All')
+                    : (isBypassed ? 'Remove Bypass' : 'Bypass');
+                  return (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        pushSnapshot();
+                        if (isMulti) {
+                          const ids = new Set(selectedBypassable.map(n => n.id));
+                          setViewNodes((nds: any) => nds.map((n: any) =>
+                            ids.has(n.id) ? { ...n, data: { ...n.data, bypassed: !allBypassed } } : n
+                          ));
+                        } else {
+                          setViewNodes((nds: any) => nds.map((n: any) => n.id === menu.id
+                            ? { ...n, data: { ...n.data, bypassed: !isBypassed } }
+                            : n
+                          ));
+                        }
+                        setMenu(null);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white text-[11px] font-bold transition-all group ${allBypassed ? 'bg-gray-500/30 hover:bg-gray-500/60' : 'hover:bg-gray-500/60'}`}
+                    >
+                      <ChevronsRight size={16} className="text-gray-400 group-hover:text-white" />
+                      <span>{label}</span>
+                      <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘B</span>
+                    </button>
+                  );
+                })()}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
