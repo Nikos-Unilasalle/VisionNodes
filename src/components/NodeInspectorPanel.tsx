@@ -848,11 +848,12 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         let inner: React.ReactNode;
         if (sp.type === 'trigger') {
           const isSnapshotSave = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
+          const isSnapshotCapture = node.type === 'util_snapshot' && sp.id === 'capture';
           inner = (
             <div className="space-y-4 group">
               <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
               <button
-                onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
+                onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else if (isSnapshotCapture) { window.dispatchEvent(new CustomEvent('snapshot-to-node', { detail: { nodeId: node.id } })); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
                 className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
               >
                 <Save size={14} /> {sp.label || 'Execute'}

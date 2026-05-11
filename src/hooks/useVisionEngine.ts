@@ -108,6 +108,12 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
+  const requestSnapshotToNode = useCallback((nodeId: string) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'snapshot_to_node', node_id: nodeId }));
+    }
+  }, []);
+
   const setPreviewNode = useCallback((nodeId: string | null) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: 'set_preview_node', node_id: nodeId }));
@@ -155,5 +161,5 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport };
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport };
 }

@@ -219,7 +219,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport } = useVisionEngine(handleCapture);
 
   const handlePopout = useCallback(async () => {
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
@@ -828,25 +828,6 @@ function App() {
     });
   }, [setViewNodes]);
 
-  useEffect(() => {
-    if (lastCommands && lastCommands.length > 0) {
-      lastCommands.forEach(cmd => {
-        if (cmd.type === 'add_node') {
-          let label = "New Node";
-          if (cmd.node_type === 'input_image') label = "Captured Frame";
-          if (cmd.node_type === 'input_movie') label = "Recorded Video";
-          addNodeRef.current?.(cmd.node_type, label, null, cmd.params);
-        } else if (cmd.type === 'set_param') {
-          setViewNodes(nds => nds.map(n =>
-            n.id === cmd.node_id
-              ? { ...n, data: { ...n.data, params: { ...n.data.params, ...cmd.params } } }
-              : n
-          ));
-        }
-      });
-    }
-  }, [lastCommands]);
-
   const addNode = useCallback((type: string, label: string, schema?: any, initialParams: any = {}, dropPosition?: { x: number, y: number }, skipSnapshot = false) => {
     if (!skipSnapshot) pushSnapshot();
     const id = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -901,6 +882,41 @@ function App() {
     setPendingConnection(null);
   }, [pushSnapshot, pendingConnection, instance, setViewNodes, setViewEdges, setIsAddMenuOpen, setPendingConnection]);
   addNodeRef.current = addNode;
+
+  useEffect(() => {
+    if (lastCommands && lastCommands.length > 0) {
+      console.log("[Engine Commands] Processing:", lastCommands);
+      lastCommands.forEach(cmd => {
+        if (cmd.type === 'add_node') {
+          let label = "New Node";
+          if (cmd.node_type === 'input_image') label = "Captured Frame";
+          if (cmd.node_type === 'input_movie') label = "Recorded Video";
+          console.log("[Engine Commands] addNode call:", cmd.node_type, label, cmd.params);
+          addNode(cmd.node_type, label, null, cmd.params);
+        } else if (cmd.type === 'set_param') {
+          setViewNodes(nds => nds.map(n =>
+            n.id === cmd.node_id
+              ? { ...n, data: { ...n.data, params: { ...n.data.params, ...cmd.params } } }
+              : n
+          ));
+        }
+      });
+    }
+  }, [lastCommands, addNode]);
+
+  // Listen for snapshot-to-node events from the inspector panel
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const nodeId = (e as CustomEvent).detail?.nodeId;
+      if (nodeId) {
+        console.log('[Snapshot] Sending snapshot_to_node WS message for', nodeId);
+        requestSnapshotToNode(nodeId);
+      }
+    };
+    window.addEventListener('snapshot-to-node', handler);
+    return () => window.removeEventListener('snapshot-to-node', handler);
+  }, [requestSnapshotToNode]);
+
 
   const newProject = useCallback(async () => {
     await confirmUnsaved();
