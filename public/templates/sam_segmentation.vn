@@ -41,6 +41,135 @@
           "mask_index": 0,
           "multimask": false,
           "color_index": 4
+        },
+        "schema": {
+          "type": "sam_segmenter",
+          "label": "SAM Segmenter",
+          "category": "detect",
+          "icon": "Scan",
+          "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "box",
+              "color": "dict",
+              "label": "Box (from YOLO)"
+            },
+            {
+              "id": "points",
+              "color": "list",
+              "label": "Points List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "mask",
+              "color": "mask"
+            },
+            {
+              "id": "score",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "hf_token",
+              "label": "Hugging Face Token",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "enum",
+              "options": [
+                "SAM2 Tiny",
+                "SAM2 Small",
+                "SAM2 Base+",
+                "SAM2 Large"
+              ],
+              "default": 0
+            },
+            {
+              "id": "prompt_mode",
+              "label": "Prompt Mode",
+              "type": "enum",
+              "options": [
+                "Box Input Port",
+                "Points List Input Port"
+              ],
+              "default": 0
+            },
+            {
+              "id": "multimask",
+              "label": "Multi-mask (3 candidates)",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "mask_index",
+              "label": "Mask Selection",
+              "type": "number",
+              "default": 0,
+              "min": 0,
+              "max": 2,
+              "step": 1
+            },
+            {
+              "id": "auto_best",
+              "label": "Auto-select Best",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "overlay_opacity",
+              "label": "Overlay Opacity (%)",
+              "type": "number",
+              "default": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5
+            },
+            {
+              "id": "mask_color_r",
+              "label": "Mask R",
+              "type": "number",
+              "default": 30,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_g",
+              "label": "Mask G",
+              "type": "number",
+              "default": 144,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_b",
+              "label": "Mask B",
+              "type": "number",
+              "default": 255,
+              "min": 0,
+              "max": 255
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
         }
       },
       "width": 208,
@@ -148,6 +277,135 @@
           "mask_index": 0,
           "multimask": false,
           "color_index": 4
+        },
+        "schema": {
+          "type": "sam_segmenter",
+          "label": "SAM Segmenter",
+          "category": "detect",
+          "icon": "Scan",
+          "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "box",
+              "color": "dict",
+              "label": "Box (from YOLO)"
+            },
+            {
+              "id": "points",
+              "color": "list",
+              "label": "Points List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "mask",
+              "color": "mask"
+            },
+            {
+              "id": "score",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "hf_token",
+              "label": "Hugging Face Token",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "enum",
+              "options": [
+                "SAM2 Tiny",
+                "SAM2 Small",
+                "SAM2 Base+",
+                "SAM2 Large"
+              ],
+              "default": 0
+            },
+            {
+              "id": "prompt_mode",
+              "label": "Prompt Mode",
+              "type": "enum",
+              "options": [
+                "Box Input Port",
+                "Points List Input Port"
+              ],
+              "default": 0
+            },
+            {
+              "id": "multimask",
+              "label": "Multi-mask (3 candidates)",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "mask_index",
+              "label": "Mask Selection",
+              "type": "number",
+              "default": 0,
+              "min": 0,
+              "max": 2,
+              "step": 1
+            },
+            {
+              "id": "auto_best",
+              "label": "Auto-select Best",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "overlay_opacity",
+              "label": "Overlay Opacity (%)",
+              "type": "number",
+              "default": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5
+            },
+            {
+              "id": "mask_color_r",
+              "label": "Mask R",
+              "type": "number",
+              "default": 30,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_g",
+              "label": "Mask G",
+              "type": "number",
+              "default": 144,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_b",
+              "label": "Mask B",
+              "type": "number",
+              "default": 255,
+              "min": 0,
+              "max": 255
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
         }
       },
       "width": 208,
