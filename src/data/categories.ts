@@ -56,6 +56,7 @@ export const CATEGORIES: Category[] = [
     { type: 'analysis_hand_mp', label: 'Hand Tracker', description: 'Detects and tracks hands and joints (MediaPipe).' },
     { type: 'analysis_pose_mp', label: 'Pose Tracker', description: 'Analyzes and tracks human body posture (33 keypoints) via MediaPipe.' },
     { type: 'analysis_head_pose', label: 'Head Pose', description: 'Estimates 3D head orientation (yaw, pitch, roll) from facial landmarks via solvePnP.' },
+    { type: 'manual_points', label: 'Manual Points', description: 'Interactive point placement (left-click FG, right-click BG).' },
     { type: 'transform_eye_crop', label: 'Eye Crop', description: 'Crops and aligns left/right eye regions from facial landmarks. Reusable for any eye classifier.' },
     { type: 'analysis_gaze', label: 'Gaze Estimator', description: 'Estimates gaze direction (yaw/pitch) via L2CS-Net. Requires pip install l2cs + weights.' },
     { type: 'analysis_flow', label: 'Optical Flow', description: 'Analyzes the movement of every pixel between two frames.' }

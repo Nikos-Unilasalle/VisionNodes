@@ -12,9 +12,10 @@ import json
     description="Crops a rectangular region from the image. Define the region interactively using the built-in editor.",
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
-        {'id': 'main',   'color': 'image'},
+        {'id': 'main',   'color': 'image', 'label': 'Cropped Image'},
         {'id': 'width',  'color': 'scalar'},
         {'id': 'height', 'color': 'scalar'},
+        {'id': 'box',    'color': 'dict', 'label': 'Box Dict (YOLO)'},
     ],
     params=[
         {'id': 'rect', 'label': 'Rect', 'type': 'string',
@@ -67,7 +68,13 @@ class CropRectNode(NodeProcessor):
 
         return {
             'main': cropped,
+            'main_preview': self._last_preview,
             'width': cw,
             'height': ch,
-            'main_preview': self._last_preview,
+            'box': {
+                'xmin': rx,
+                'ymin': ry,
+                'width': rw,
+                'height': rh
+            }
         }

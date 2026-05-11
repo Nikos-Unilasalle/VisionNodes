@@ -73,7 +73,7 @@ COLLECTIONS = {
     ],
     params=[
         {'id': 'fetch',       'type': 'trigger', 'default': 0,               'label': 'Fetch'},
-        {'id': 'gcp_project', 'type': 'string',  'default': '',              'label': 'GCP Project ID'},
+        {'id': 'gcp_project', 'type': 'string',  'default': '',              'label': 'GCP Project ID (laisser vide si sauvegardé)'},
         {'id': 'collection',  'type': 'enum',    'options': list(COLLECTIONS.keys()), 'default': 'Sentinel-2 SR', 'label': 'Collection'},
         {'id': 'location',    'type': 'string',  'default': 'Paris, France', 'label': 'Location or "lat,lon"'},
         {'id': 'date_start',  'type': 'string',  'default': '2024-01-01',    'label': 'Start Date'},
@@ -169,6 +169,32 @@ class EarthEngineSourceNode(NodeProcessor):
             return
 
         gcp_project   = params.get('gcp_project', '').strip()
+
+        # Local persistence for GCP project
+        import json, os
+        secrets_path = os.path.expanduser('~/.vnstudio/secrets.json')
+        if gcp_project:
+            os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
+            secrets = {}
+            if os.path.exists(secrets_path):
+                try:
+                    with open(secrets_path, 'r') as f:
+                        secrets = json.load(f)
+                except Exception: pass
+            secrets['gcp_project'] = gcp_project
+            try:
+                with open(secrets_path, 'w') as f:
+                    json.dump(secrets, f)
+            except Exception: pass
+        else:
+            if os.path.exists(secrets_path):
+                try:
+                    with open(secrets_path, 'r') as f:
+                        secrets = json.load(f)
+                        if 'gcp_project' in secrets:
+                            gcp_project = secrets['gcp_project']
+                except Exception: pass
+
         col_name      = params.get('collection', 'Sentinel-2 SR')
         location      = params.get('location', 'Paris, France')
         date_start    = params.get('date_start', '2024-01-01')

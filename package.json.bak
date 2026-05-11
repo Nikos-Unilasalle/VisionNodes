@@ -1,0 +1,49 @@
+{
+  "name": "vision-nodes",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "setup": "./setup.sh",
+    "engine": ".venv/bin/python engine/engine.py",
+    "studio": "[ -d node_modules ] || (echo '📦 Missing node_modules. Installing...' && npm install); lsof -ti:8765 -ti:1420 -ti:1421 2>/dev/null | sort -u | xargs kill -9 2>/dev/null; sleep 0.5; .venv/bin/python engine/engine.py & sleep 1 && WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run tauri dev",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.7.0",
+    "@tauri-apps/plugin-fs": "^2.5.0",
+    "@tauri-apps/plugin-shell": "^2.0.0",
+    "clsx": "^2.1.0",
+    "concurrently": "^8.2.2",
+    "framer-motion": "^11.0.24",
+    "lucide-react": "^0.363.0",
+    "react": "^18.2.0",
+    "react-colorful": "^5.6.1",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.1",
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^2.2.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^4.1.5",
+    "autoprefixer": "^10.4.19",
+    "jsdom": "^29.0.2",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vitest": "^4.1.5"
+  }
+}

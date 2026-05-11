@@ -120,6 +120,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   group_input: N.GroupInputNode,
   group_output: N.GroupOutputNode,
   export_py: N.ExportPyNode,
+  manual_points: N.ManualPointsNode,
 };
 
 export const nodeTypes: Record<string, React.ComponentType<any>> = Object.fromEntries(
