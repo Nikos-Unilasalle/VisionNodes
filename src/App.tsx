@@ -32,6 +32,7 @@ import NotificationBar from './components/ui/NotificationBar';
 import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
 import CropEditorOverlay from './components/overlays/CropEditorOverlay';
+import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
 import ContextMenu from './components/menus/ContextMenu';
 import AddNodeMenu from './components/menus/AddNodeMenu';
@@ -135,6 +136,7 @@ function App() {
   const [paneMenu, setPaneMenu] = useState<{ x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
+  const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6);
@@ -386,6 +388,8 @@ function App() {
             ? () => setRoiEditingId(node.id)
             : node.type === 'geom_crop_rect'
             ? () => setCropEditingId(node.id)
+            : node.type === 'manual_points'
+            ? () => setManualPointsEditingId(node.id)
             : undefined,
           onChangeParams: (p: any) => {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
@@ -1250,6 +1254,13 @@ function App() {
                  node={nodesWithData.find(n => n.id === cropEditingId)}
                  nodesData={nodesData}
                  onClose={() => setCropEditingId(null)}
+               />
+            )}
+            {manualPointsEditingId && (
+               <ManualPointsEditorOverlay
+                 node={nodesWithData.find(n => n.id === manualPointsEditingId)}
+                 nodesData={nodesData}
+                 onClose={() => setManualPointsEditingId(null)}
                />
             )}
           </AnimatePresence>

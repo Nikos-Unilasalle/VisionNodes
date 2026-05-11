@@ -1,0 +1,672 @@
+{
+  "nodes": [
+    {
+      "id": "node-1778526149167-7utege777",
+      "type": "input_image",
+      "position": {
+        "x": -180,
+        "y": 620
+      },
+      "style": {},
+      "data": {
+        "label": "things.jpg",
+        "params": {
+          "path": "samples/things.jpg",
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -180,
+        "y": 620
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778526157050-3uy2aidoe",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 560,
+        "y": 560
+      },
+      "style": {},
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "hf_token": "",
+          "model": 2,
+          "prompt_mode": 1,
+          "mask_index": 0,
+          "multimask": false,
+          "color_index": 4
+        },
+        "schema": {
+          "type": "sam_segmenter",
+          "label": "SAM Segmenter",
+          "category": "detect",
+          "icon": "Scan",
+          "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "box",
+              "color": "dict",
+              "label": "Box (from YOLO)"
+            },
+            {
+              "id": "points",
+              "color": "list",
+              "label": "Points List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "mask",
+              "color": "mask"
+            },
+            {
+              "id": "score",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "hf_token",
+              "label": "Hugging Face Token",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "enum",
+              "options": [
+                "SAM2 Tiny",
+                "SAM2 Small",
+                "SAM2 Base+",
+                "SAM2 Large"
+              ],
+              "default": 0
+            },
+            {
+              "id": "prompt_mode",
+              "label": "Prompt Mode",
+              "type": "enum",
+              "options": [
+                "Box Input Port",
+                "Points List Input Port"
+              ],
+              "default": 0
+            },
+            {
+              "id": "multimask",
+              "label": "Multi-mask (3 candidates)",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "mask_index",
+              "label": "Mask Selection",
+              "type": "number",
+              "default": 0,
+              "min": 0,
+              "max": 2,
+              "step": 1
+            },
+            {
+              "id": "auto_best",
+              "label": "Auto-select Best",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "overlay_opacity",
+              "label": "Overlay Opacity (%)",
+              "type": "number",
+              "default": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5
+            },
+            {
+              "id": "mask_color_r",
+              "label": "Mask R",
+              "type": "number",
+              "default": 30,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_g",
+              "label": "Mask G",
+              "type": "number",
+              "default": 144,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_b",
+              "label": "Mask B",
+              "type": "number",
+              "default": 255,
+              "min": 0,
+              "max": 255
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 560
+      }
+    },
+    {
+      "id": "node-1778526171434-o1wxbsb6e",
+      "type": "geom_crop_rect",
+      "position": {
+        "x": 220,
+        "y": 720
+      },
+      "style": {},
+      "data": {
+        "label": "Crop",
+        "params": {
+          "rect": "{\"x\":0.6411982643939677,\"y\":0.2651933701657459,\"w\":0.2717168326433179,\"h\":0.6878453038674033}",
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 179,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 720
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778526292707-bprnubiwa",
+      "type": "manual_points",
+      "position": {
+        "x": 220,
+        "y": 520
+      },
+      "style": {
+        "width": 282,
+        "height": 242
+      },
+      "data": {
+        "label": "Manual Points",
+        "params": {
+          "points": "[{\"x\":0.44108761329305135,\"y\":0.5027624309392266,\"label\":1},{\"x\":0.5226586102719033,\"y\":0.3259668508287293,\"label\":0}]",
+          "color_index": 3
+        },
+        "minified": false,
+        "savedHeight": 242
+      },
+      "width": 282,
+      "height": 242,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 520
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1778528845555-ew3bl2iqe",
+      "type": "output_display",
+      "position": {
+        "x": 900,
+        "y": 880
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 1
+        },
+        "mainConnected": true,
+        "rotated": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 900,
+        "y": 880
+      }
+    },
+    {
+      "id": "node-1778529169730-0.8964377937290595",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 560,
+        "y": 720
+      },
+      "style": {},
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "hf_token": "",
+          "model": 2,
+          "prompt_mode": 0,
+          "mask_index": 0,
+          "multimask": false,
+          "color_index": 4
+        },
+        "schema": {
+          "type": "sam_segmenter",
+          "label": "SAM Segmenter",
+          "category": "detect",
+          "icon": "Scan",
+          "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "box",
+              "color": "dict",
+              "label": "Box (from YOLO)"
+            },
+            {
+              "id": "points",
+              "color": "list",
+              "label": "Points List"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "mask",
+              "color": "mask"
+            },
+            {
+              "id": "score",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "hf_token",
+              "label": "Hugging Face Token",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "enum",
+              "options": [
+                "SAM2 Tiny",
+                "SAM2 Small",
+                "SAM2 Base+",
+                "SAM2 Large"
+              ],
+              "default": 0
+            },
+            {
+              "id": "prompt_mode",
+              "label": "Prompt Mode",
+              "type": "enum",
+              "options": [
+                "Box Input Port",
+                "Points List Input Port"
+              ],
+              "default": 0
+            },
+            {
+              "id": "multimask",
+              "label": "Multi-mask (3 candidates)",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "mask_index",
+              "label": "Mask Selection",
+              "type": "number",
+              "default": 0,
+              "min": 0,
+              "max": 2,
+              "step": 1
+            },
+            {
+              "id": "auto_best",
+              "label": "Auto-select Best",
+              "type": "boolean",
+              "default": true
+            },
+            {
+              "id": "overlay_opacity",
+              "label": "Overlay Opacity (%)",
+              "type": "number",
+              "default": 50,
+              "min": 0,
+              "max": 100,
+              "step": 5
+            },
+            {
+              "id": "mask_color_r",
+              "label": "Mask R",
+              "type": "number",
+              "default": 30,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_g",
+              "label": "Mask G",
+              "type": "number",
+              "default": 144,
+              "min": 0,
+              "max": 255
+            },
+            {
+              "id": "mask_color_b",
+              "label": "Mask B",
+              "type": "number",
+              "default": 255,
+              "min": 0,
+              "max": 255
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 720
+      }
+    },
+    {
+      "id": "node-1778529335072-pkkgr27ji",
+      "type": "canvas_frame",
+      "position": {
+        "x": 480,
+        "y": 460
+      },
+      "style": {
+        "width": 380,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 380,
+          "color_index": 4,
+          "title": "Segmentation (SAM)"
+        }
+      },
+      "width": 380,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 480,
+        "y": 460
+      },
+      "resizing": false
+    },
+    {
+      "id": "reroute-1778529372466",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 96,
+        "y": 503
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__out_0_n67dlb",
+            "color": "any",
+            "label": "out_0"
+          },
+          {
+            "id": "any__out_1_cfjeaz",
+            "color": "any",
+            "label": "out_1"
+          },
+          {
+            "id": "any__out_2_m9lkal",
+            "color": "any",
+            "label": "out_2"
+          },
+          {
+            "id": "any__out_3_w7fjbt",
+            "color": "any",
+            "label": "out_3"
+          }
+        ]
+      },
+      "style": {
+        "width": 8,
+        "height": 194
+      },
+      "width": 8,
+      "height": 194,
+      "selected": false,
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1778529428986-0.02246268943162888",
+      "type": "canvas_frame",
+      "position": {
+        "x": 220,
+        "y": 460
+      },
+      "style": {
+        "width": 240,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 380,
+          "color_index": 3,
+          "title": "ROI and points"
+        }
+      },
+      "width": 240,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 460
+      },
+      "resizing": false
+    },
+    {
+      "id": "node-1778529467551-0.4657491504160798",
+      "type": "canvas_frame",
+      "position": {
+        "x": -200,
+        "y": 460
+      },
+      "style": {
+        "width": 400,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 150,
+          "color_index": 2,
+          "title": "Load image"
+        }
+      },
+      "width": 400,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -200,
+        "y": 460
+      },
+      "resizing": false
+    },
+    {
+      "id": "node-1778529505185-0.12726861707169856",
+      "type": "canvas_frame",
+      "position": {
+        "x": 880,
+        "y": 460
+      },
+      "style": {
+        "width": 240,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 150,
+          "color_index": 1,
+          "title": "Display"
+        }
+      },
+      "width": 240,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 880,
+        "y": 460
+      },
+      "resizing": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "node-1778526292707-bprnubiwa",
+      "sourceHandle": "list__points",
+      "target": "node-1778526157050-3uy2aidoe",
+      "targetHandle": "list__points",
+      "id": "e-1778528822397",
+      "selected": false
+    },
+    {
+      "source": "node-1778526171434-o1wxbsb6e",
+      "sourceHandle": "dict__box",
+      "target": "node-1778529169730-0.8964377937290595",
+      "targetHandle": "dict__box",
+      "id": "e-1778529176965",
+      "selected": false
+    },
+    {
+      "source": "node-1778526157050-3uy2aidoe",
+      "sourceHandle": "image__main",
+      "target": "node-1778528845555-ew3bl2iqe",
+      "targetHandle": "image__main",
+      "id": "e-1778529189070",
+      "selected": false
+    },
+    {
+      "source": "node-1778529169730-0.8964377937290595",
+      "sourceHandle": "image__main",
+      "target": "node-1778528845555-ew3bl2iqe",
+      "targetHandle": "image__DYNAMIC_NEW_HANDLE",
+      "id": "e-1778529191150",
+      "selected": false
+    },
+    {
+      "id": "rr-in-1778529372466",
+      "source": "node-1778526149167-7utege777",
+      "sourceHandle": "image__main",
+      "target": "reroute-1778529372466",
+      "targetHandle": "any__in"
+    },
+    {
+      "id": "rr-out-1778529372466-0",
+      "source": "reroute-1778529372466",
+      "sourceHandle": "any__out_0_n67dlb",
+      "target": "node-1778526171434-o1wxbsb6e",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "rr-out-1778529372466-1",
+      "source": "reroute-1778529372466",
+      "sourceHandle": "any__out_1_cfjeaz",
+      "target": "node-1778526292707-bprnubiwa",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778529372466-2",
+      "source": "reroute-1778529372466",
+      "sourceHandle": "any__out_2_m9lkal",
+      "target": "node-1778526157050-3uy2aidoe",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "rr-out-1778529372466-3",
+      "source": "reroute-1778529372466",
+      "sourceHandle": "any__out_3_w7fjbt",
+      "target": "node-1778529169730-0.8964377937290595",
+      "targetHandle": "image__image",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 1187.21875,
+      "h": 324
+    },
+    "previewPos": {
+      "x": 402.29296875,
+      "y": -101.65625
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1778528845555-ew3bl2iqe"
+  }
+}

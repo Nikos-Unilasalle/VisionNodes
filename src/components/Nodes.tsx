@@ -878,12 +878,12 @@ export const CropRectNode = memo(({ selected, data }: any) => {
   return (
     <BaseNode title="Crop" icon={Crop} selected={selected} data={data} color="accent"
       inputs={[{ id: 'image', color: 'image' }]}
-      outputs={[{ id: 'main', color: 'image' }, { id: 'width', color: 'scalar' }, { id: 'height', color: 'scalar' }]}
+      outputs={[{ id: 'main', color: 'image' }, { id: 'width', color: 'scalar' }, { id: 'height', color: 'scalar' }, { id: 'box', color: 'dict' }]}
     >
       <div className="flex flex-col gap-3 nodrag">
         <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/crop shadow-inner">
           {frame ? (
-            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-60 grayscale-[50%]" alt="Crop Preview" />
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block" alt="Crop Preview" />
           ) : (
             <div className="w-full aspect-video flex items-center justify-center text-gray-800">
               <Crop size={24} className="opacity-10" />
@@ -891,8 +891,14 @@ export const CropRectNode = memo(({ selected, data }: any) => {
           )}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             <svg viewBox="0 0 1 1" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
+              <path
+                d={`M 0 0 h 1 v 1 h -1 Z M ${rect.x} ${rect.y} h ${rect.w} v ${rect.h} h -${rect.w} Z`}
+                fill="#3b82f6"
+                fillOpacity="0.4"
+                fillRule="evenodd"
+              />
               <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h}
-                className="fill-accent/20 stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
+                className="fill-transparent stroke-accent" style={{ strokeWidth: 0.012, vectorEffect: 'non-scaling-stroke' }} />
             </svg>
           </svg>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/crop:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
@@ -3014,6 +3020,75 @@ export const AudioPlaybackNode = memo(({ selected, data }: any) => {
             <polyline points="3.5,8.5 1.5,7 3.5,5.5"  fill="currentColor" stroke="none"/>
           </svg>
         </button>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const ManualPointsNode = memo(({ selected, data }: any) => {
+  const frame = useNodeData(useNodeId())?.main_preview;
+  const onOpenEditor = data.onOpenEditor;
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  const [points, setPoints] = React.useState<{x:number;y:number;label:number}[]>([]);
+  React.useEffect(() => {
+    try {
+      const p = JSON.parse(data.params?.points || '[]');
+      if (Array.isArray(p)) setPoints(p);
+    } catch {}
+  }, [data.params?.points]);
+
+  return (
+    <BaseNode title="Manual Points" icon={Crosshair} selected={selected} data={data} color="purple"
+      inputs={[{ id: 'image', color: 'image' }]}
+      outputs={[{ id: 'main', color: 'image' }, { id: 'points', color: 'list' }, { id: 'count', color: 'scalar' }]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/pts shadow-inner">
+          {frame ? (
+            <img ref={imgRef} src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-70" alt="Points Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Crosshair size={24} className="opacity-10" />
+            </div>
+          )}
+          {/* Read-only SVG overlay for points and numbers */}
+          <svg 
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox={imgRef.current && imgRef.current.naturalWidth ? `0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}` : "0 0 1 1"}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <g>
+              {points.map((p, i) => {
+                const isFg = p.label === 1;
+                const nw = imgRef.current?.naturalWidth || 1;
+                const nh = imgRef.current?.naturalHeight || 1;
+                const cx = p.x * nw;
+                const cy = p.y * nh;
+                const r = Math.min(nw, nh) * 0.025;
+                
+                return (
+                  <g key={i}>
+                    <circle cx={cx} cy={cy} r={r} fill={isFg ? '#22dc50' : '#ff4444'} opacity={0.9} />
+                    <circle cx={cx} cy={cy} r={r + (Math.min(nw, nh) * 0.005)} fill="none" stroke="white" strokeWidth={Math.max(1, Math.min(nw, nh) * 0.003)} opacity={0.8} />
+                    <text x={cx} y={cy} dy={-(r + Math.min(nw, nh) * 0.015)} textAnchor="middle" fill="white" fontSize={Math.max(12, Math.min(nw, nh) * 0.025)} fontWeight="bold" className="drop-shadow-md" opacity={0.9}>{i+1}</text>
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/pts:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Crosshair size={12} /> Edit Points
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest">
+            {points.filter(p => p.label === 1).length} FG · {points.filter(p => p.label === 0).length} BG
+          </div>
+        </div>
       </div>
     </BaseNode>
   );
