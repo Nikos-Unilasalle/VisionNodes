@@ -68,26 +68,9 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Mask Selection ──
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
          'type': 'boolean', 'default': True},
-        {'id': 'mask_index', 'label': 'Mask Selection', 'type': 'number',
-         'default': 0, 'min': 0, 'max': 2, 'step': 1},
-        {'id': 'auto_best', 'label': 'Auto-select Best', 'type': 'boolean',
-         'default': True},
-        {'id': 'mask_threshold', 'label': 'Mask Threshold (Sensitivity)', 'type': 'number',
-         'default': 0.0, 'min': -10.0, 'max': 10.0, 'step': 0.5},
-
         # ── Visualization ──
         {'id': 'overlay_opacity', 'label': 'Overlay Opacity (%)', 'type': 'number',
          'default': 50, 'min': 0, 'max': 100, 'step': 5},
-        {'id': 'mask_color_index', 'label': 'Mask Color (Palette)', 'type': 'int',
-         'default': 3, 'min': 0, 'max': 7},
-
-        # ── Post-processing ──
-        {'id': 'refine_pixels', 'label': 'Erode/Dilate (px)', 'type': 'int',
-         'default': 0, 'min': -50, 'max': 50},
-        {'id': 'smoothing', 'label': 'Smoothing (px)', 'type': 'int',
-         'default': 0, 'min': 0, 'max': 20},
-        {'id': 'invert', 'label': 'Invert Mask', 'type': 'boolean',
-         'default': False},
     ],
     colorable=True,
 )
@@ -271,7 +254,7 @@ class SAMSegmenterNode(NodeProcessor):
                 rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
                 with torch.inference_mode():
-                    if self.device != 'cpu':
+                    if self.device == 'cuda':
                         with torch.autocast(self.device, dtype=torch.bfloat16):
                             self.predictor.set_image(rgb)
                     else:
@@ -332,7 +315,7 @@ class SAMSegmenterNode(NodeProcessor):
                 return empty
 
             with torch.inference_mode():
-                if self.device != 'cpu':
+                if self.device == 'cuda':
                     with torch.autocast(self.device, dtype=torch.bfloat16):
                         masks, scores, logits = self.predictor.predict(**predict_kwargs)
                 else:
@@ -348,62 +331,28 @@ class SAMSegmenterNode(NodeProcessor):
             return empty
 
         # ── 5. Select mask ──
-        if multimask and auto_best:
+        if multimask:
             best_idx = int(np.argmax(scores))
         else:
             best_idx = min(mask_idx, len(masks) - 1)
 
         selected_score = float(scores[best_idx])
-        selected_logits = logits[best_idx]
+        selected_mask = masks[best_idx]
         
         # CRITICAL: Convert torch tensor to numpy if needed
-        if hasattr(selected_logits, 'cpu'):
-            selected_logits = selected_logits.detach().cpu().numpy()
+        if hasattr(selected_mask, 'cpu'):
+            selected_mask = selected_mask.detach().cpu().numpy()
 
-        # Apply custom threshold on logits (SAM default is 0.0)
-        thresh = float(params.get('mask_threshold', 0.0))
-        mask_bool = selected_logits > thresh
+        # masks from SAM 2 are typically boolean or 0/1. Ensure it's uint8
+        mask_bool = selected_mask > 0
         mask_uint8 = mask_bool.astype(np.uint8) * 255
 
-        # ── 6. Post-processing ──
-        refine = int(params.get('refine_pixels', 0))
-        smooth = int(params.get('smoothing', 0))
-        invert = params.get('invert', False)
 
-        if refine != 0:
-            kernel = np.ones((abs(refine), abs(refine)), np.uint8)
-            if refine > 0:
-                mask_uint8 = cv2.dilate(mask_uint8, kernel, iterations=1)
-            else:
-                mask_uint8 = cv2.erode(mask_uint8, kernel, iterations=1)
-        
-        if smooth > 0:
-            ksize = smooth * 2 + 1
-            mask_uint8 = cv2.GaussianBlur(mask_uint8, (ksize, ksize), 0)
-            _, mask_uint8 = cv2.threshold(mask_uint8, 127, 255, cv2.THRESH_BINARY)
-
-        if invert:
-            mask_uint8 = 255 - mask_uint8
-
-        # Final boolean mask for overlay visualization
-        mask_bool = mask_uint8 > 127
-
-        # ── 7. Build overlay visualization ──
+        # ── 6. Build overlay visualization ──
         opacity = float(params.get('overlay_opacity', 50)) / 100.0
         
-        # Palette lookup (BGR order)
-        palette = [
-            (255, 144, 30),  # Astro Blue
-            (80, 220, 0),    # Green
-            (0, 200, 255),   # Yellow
-            (60, 60, 255),   # Red
-            (255, 80, 180),  # Purple
-            (200, 200, 200), # Gray
-            (255, 255, 255), # White
-            (20, 20, 20),    # Dark Gray
-        ]
-        c_idx = int(params.get('mask_color_index', 3))
-        mb, mg, mr = palette[c_idx % len(palette)]
+        # Original default green color
+        mb, mg, mr = (0, 255, 0)
 
         overlay = image.copy()
         color_mask = np.zeros_like(image)
