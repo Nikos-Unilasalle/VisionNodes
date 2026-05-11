@@ -122,13 +122,13 @@ export function useKeyboardShortcuts({
       }
       if (e.key === 'b' && cmdKey) {
         e.preventDefault();
-        const selectedNode = nodesRef.current.find((n: any) => n.selected);
-        if (selectedNode && canBypass(selectedNode.id)) {
-          const isBypassed = !!(selectedNode.data as any)?.bypassed;
+        const bypassable = nodesRef.current.filter((n: any) => n.selected && canBypass(n.id));
+        if (bypassable.length > 0) {
+          const allBypassed = bypassable.every((n: any) => !!(n.data as any)?.bypassed);
           pushSnapshot();
-          setViewNodes((nds: any) => nds.map((n: any) => n.id === selectedNode.id
-            ? { ...n, data: { ...n.data, bypassed: !isBypassed } }
-            : n
+          const ids = new Set(bypassable.map((n: any) => n.id));
+          setViewNodes((nds: any) => nds.map((n: any) =>
+            ids.has(n.id) ? { ...n, data: { ...n.data, bypassed: !allBypassed } } : n
           ));
         }
       }
