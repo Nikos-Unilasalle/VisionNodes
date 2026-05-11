@@ -88,6 +88,7 @@ class SeedsFromBoundariesNode(NodeProcessor):
     outputs=[
         {'id': 'main',    'color': 'image'},
         {'id': 'mask',    'color': 'mask'},
+        {'id': 'labels',  'color': 'any'},
         {'id': 'count',   'color': 'scalar'}
     ],
     params=[
@@ -95,7 +96,8 @@ class SeedsFromBoundariesNode(NodeProcessor):
         {'id': 'contrast',    'label': 'Auto Contrast (CLAHE)', 'type': 'boolean', 'default': True},
         {'id': 'smoothing',   'label': 'Denoise (Blur)',  'type': 'number', 'default': 3, 'min': 0, 'max': 10},
         {'id': 'boundary',    'label': 'Boundary Strength', 'type': 'number', 'default': 5, 'min': 0, 'max': 20},
-        {'id': 'min_size',    'label': 'Min Object Size',   'type': 'number', 'default': 50, 'min': 0, 'max': 5000},
+        {'id': 'min_size',    'label': 'Min Object Size',   'type': 'number', 'default': 50, 'min': 0, 'max': 5000, 'step': 10},
+        {'id': 'mask_thick',  'label': 'Mask Border (px)',  'type': 'number', 'default': 1, 'min': 0, 'max': 10},
         {'id': 'viz_mode',    'label': 'Visualization',     'type': 'enum', 'options': ['Boundaries', 'Colored Objects', 'Full Overlay'], 'default': 2},
     ]
 )
@@ -197,9 +199,16 @@ class GeneralSegmenterNode(NodeProcessor):
         mask_out = np.zeros_like(gray)
         mask_out[markers > 0] = 255
         
+        # Apply mask thickness (eroding objects to ensure separation)
+        mask_thick = int(params.get('mask_thick', 1))
+        if mask_thick > 0:
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (mask_thick*2+1, mask_thick*2+1))
+            mask_out = cv2.erode(mask_out, kernel)
+        
         return {
             'main': out,
             'mask': mask_out,
+            'labels': markers,
             'count': count
         }
 
