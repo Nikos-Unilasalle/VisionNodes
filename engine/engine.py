@@ -258,6 +258,7 @@ class VisionEngine:
         self.registry = {}
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
+        self.pending_snapshot = None
         self.preview_node_id = None
 
         self.fallback_img = None
@@ -402,7 +403,9 @@ class VisionEngine:
                     for out_spec in schema.get('outputs', []):
                         out_color, out_id = out_spec.get('color'), out_spec.get('id')
                         for in_spec in schema.get('inputs', []):
-                            if in_spec.get('color') == out_color:
+                            in_color = in_spec.get('color')
+                            # 'any' matches everything
+                            if in_color == out_color or in_color == 'any' or out_color == 'any':
                                 val = inputs.get(in_spec.get('id'))
                                 if val is not None:
                                     bypass_result[out_id] = val
@@ -454,6 +457,31 @@ class VisionEngine:
                                 asyncio.create_task(send_capture(c_b64))
                                 self.pending_capture = None # Reset
                             except Exception as ce: print(f"Capture Error: {ce}")
+
+                        # Handle Snapshot-to-Node
+                        if self.pending_snapshot and (nid == self.pending_snapshot or nid.endswith('::' + self.pending_snapshot)) and out.get('main') is not None:
+                            try:
+                                snap_img = out['main'].copy()
+                                if snap_img.ndim == 2: snap_img = cv2.cvtColor(snap_img, cv2.COLOR_GRAY2BGR)
+                                elif snap_img.ndim == 3 and snap_img.shape[2] == 4: snap_img = cv2.cvtColor(snap_img, cv2.COLOR_BGRA2BGR)
+                                engine_dir = os.path.dirname(os.path.abspath(__file__))
+                                project_root = os.path.dirname(engine_dir)
+                                snap_dir = os.path.join(project_root, "public", "snapshots")
+                                if not os.path.exists(snap_dir): os.makedirs(snap_dir, exist_ok=True)
+                                ts = int(time.time() * 1000)
+                                fname = f"snap_{ts}.png"
+                                snap_path = os.path.join(snap_dir, fname)
+                                res = cv2.imwrite(snap_path, snap_img)
+                                print(f"[Snapshot] imwrite -> {res}  path={snap_path}")
+                                if res:
+                                    commands.append({"type": "add_node", "node_type": "input_image", "params": {"path": snap_path}})
+                                    send_notification(f"Snapshot capturé : {fname}", level='info')
+                                else:
+                                    send_notification("Erreur écriture snapshot", level='error')
+                                self.pending_snapshot = None
+                            except Exception as se:
+                                print(f"Snapshot Error: {se}")
+                                self.pending_snapshot = None
 
                         for k, v in out.items():
                             if k == "_command" and v:
@@ -511,6 +539,9 @@ class VisionEngine:
                         self.update_graph(d.get('graph', {}))
                     elif d.get('type') == 'request_node_capture':
                         self.pending_capture = d.get('node_id')
+                    elif d.get('type') == 'snapshot_to_node':
+                        self.pending_snapshot = d.get('node_id')
+                        print(f"[Engine] pending_snapshot set to {self.pending_snapshot}")
                     elif d.get('type') == 'set_preview_node':
                         self.preview_node_id = d.get('node_id')
                     elif d.get('type') == 'export_py':
