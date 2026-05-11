@@ -98,6 +98,7 @@ class SAMSegmenterNode(NodeProcessor):
         self.current_model_name = ""
         self._loading = False
         self._failed = set()
+        self.lock = threading.Lock()
 
         # Image embedding cache
         self._embed_hash = None
@@ -158,8 +159,6 @@ class SAMSegmenterNode(NodeProcessor):
         finally:
             self._loading = False
 
-
-
     def _get_bbox_from_dict(self, box_dict, h, w):
         """Convert a YOLO-style dict {xmin, ymin, width, height} (normalized) to pixel bbox."""
         if not isinstance(box_dict, dict):
@@ -194,7 +193,6 @@ class SAMSegmenterNode(NodeProcessor):
         hf_token = params.get('hf_token', '')
 
         # Local persistence for HF token
-        import json, os
         secrets_path = os.path.expanduser('~/.vnstudio/secrets.json')
         if hf_token:
             os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
@@ -251,8 +249,6 @@ class SAMSegmenterNode(NodeProcessor):
         pts_in = inputs.get('points')
         
         box_hash = tuple(sorted(box_in.items())) if isinstance(box_in, dict) else None
-        
-        # for list of dicts (pts_in), stringify it safely
         pts_hash = str(pts_in) if isinstance(pts_in, list) else None
 
         prompt_key = (prompt_mode, box_hash, pts_hash, params.get('multimask'),
@@ -262,16 +258,22 @@ class SAMSegmenterNode(NodeProcessor):
         if cache_key == getattr(self, '_cache_hash', None) and getattr(self, '_cache_result', None) is not None:
             return self._cache_result
 
-        # ── 3. Set image embedding (cached) ──
-        self.report_progress(0.2, 'SAM: Computing embedding…')
+        # ── 3. Execution (with non-blocking lock) ──
+        if not self.lock.acquire(blocking=False):
+            return empty  # Skip frame if busy
 
         try:
+            if self.device == 'mps':
+                torch.mps.empty_cache()
+
             if img_hash != self._embed_hash:
+                self.report_progress(0.2, 'SAM: Encoding image…')
+                
                 # Convert BGR → RGB for SAM
                 rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-                with torch.inference_mode():
-                    if self.device != 'cpu':
+                with torch.no_grad():
+                    if self.device == 'cuda':
                         with torch.autocast(self.device, dtype=torch.bfloat16):
                             self.predictor.set_image(rgb)
                     else:
@@ -279,33 +281,27 @@ class SAMSegmenterNode(NodeProcessor):
 
                 self._embed_hash = img_hash
 
-            # ── 4. Run prediction ──
             self.report_progress(0.6, 'SAM: Segmenting…')
 
             multimask = bool(params.get('multimask', True))
             auto_best = bool(params.get('auto_best', True))
             mask_idx = int(params.get('mask_index', 0))
 
-            predict_kwargs = {
-                'multimask_output': multimask,
-            }
+            predict_kwargs = {'multimask_output': multimask}
 
             if prompt_mode == 0:
-                # Box from input port
                 box_input = inputs.get('box')
                 if box_input is None or not isinstance(box_input, dict):
-                    self.report_progress(1.0, 'SAM: No box input connected')
+                    self.report_progress(1.0, 'SAM: No box input')
                     return empty
                 bbox = self._get_bbox_from_dict(box_input, h, w)
-                if bbox is None:
-                    return empty
+                if bbox is None: return empty
                 predict_kwargs['box'] = bbox[None, :]
 
             elif prompt_mode == 1:
-                # Points List from input port
                 pts_list = inputs.get('points')
                 if not pts_list or not isinstance(pts_list, list):
-                    self.report_progress(1.0, 'SAM: No points list connected')
+                    self.report_progress(1.0, 'SAM: No points list')
                     return empty
                 
                 coords = []
@@ -315,148 +311,101 @@ class SAMSegmenterNode(NodeProcessor):
                         coords.append([p['x'] * w, p['y'] * h])
                         labels.append(p.get('label', 1))
                     elif isinstance(p, (list, tuple)) and len(p) >= 2:
-                        # Fallback for simple [x, y] lists (assume foreground)
                         if p[0] <= 1.0 and p[1] <= 1.0:
                             coords.append([p[0] * w, p[1] * h])
                         else:
                             coords.append([p[0], p[1]])
                         labels.append(1)
                 
-                if not coords:
-                    return empty
-                
+                if not coords: return empty
                 predict_kwargs['point_coords'] = np.array(coords)
                 predict_kwargs['point_labels'] = np.array(labels)
             
             else:
                 return empty
 
-            with torch.inference_mode():
+            with torch.no_grad():
                 if self.device == 'cuda':
                     with torch.autocast(self.device, dtype=torch.bfloat16):
                         masks, scores, logits = self.predictor.predict(**predict_kwargs)
                 else:
-                    # MPS/CPU: autocast bfloat16 can cause issues with internal operations like interpolate
                     masks, scores, logits = self.predictor.predict(**predict_kwargs)
 
-            # Ensure everything is on CPU/Numpy for post-processing
+            # Ensure CPU/Numpy
             if hasattr(masks, 'detach'): masks = masks.detach().cpu().numpy()
             if hasattr(scores, 'detach'): scores = scores.detach().cpu().numpy()
             if hasattr(logits, 'detach'): logits = logits.detach().cpu().numpy()
 
-        except Exception as e:
-            print(f'[SAM] Prediction error: {e}')
-            send_notification(
-                f'SAM error: {str(e)[:120]}',
-                level='error', notif_id=_NOTIF_ID
-            )
-            self.report_progress(1.0, 'SAM: Error')
-            return empty
-
-        # ── 5. Select mask ──
-        if multimask and auto_best:
-            best_idx = int(np.argmax(scores))
-        else:
-            best_idx = min(mask_idx, len(masks) - 1)
-
-        selected_score = float(scores[best_idx])
-        selected_logits = logits[best_idx]
-
-        # Apply custom threshold on logits (SAM default is 0.0)
-        thresh = float(params.get('mask_threshold', 0.0))
-        mask_bool = selected_logits > thresh
-        mask_uint8 = mask_bool.astype(np.uint8) * 255
-
-        # ── 6. Post-processing ──
-        refine = int(params.get('refine_pixels', 0))
-        smooth = int(params.get('smoothing', 0))
-        invert = params.get('invert', False)
-
-        if refine != 0:
-            kernel = np.ones((abs(refine), abs(refine)), np.uint8)
-            if refine > 0:
-                mask_uint8 = cv2.dilate(mask_uint8, kernel, iterations=1)
+            # Select mask
+            if multimask and auto_best:
+                best_idx = int(np.argmax(scores))
             else:
-                mask_uint8 = cv2.erode(mask_uint8, kernel, iterations=1)
-        
-        if smooth > 0:
-            ksize = smooth * 2 + 1
-            mask_uint8 = cv2.GaussianBlur(mask_uint8, (ksize, ksize), 0)
-            _, mask_uint8 = cv2.threshold(mask_uint8, 127, 255, cv2.THRESH_BINARY)
+                best_idx = min(mask_idx, len(masks) - 1)
 
-        if invert:
-            mask_uint8 = 255 - mask_uint8
+            selected_score = float(scores[best_idx])
+            selected_logits = logits[best_idx]
 
-        # Final boolean mask for overlay visualization
-        mask_bool = mask_uint8 > 127
+            thresh = float(params.get('mask_threshold', 0.0))
+            mask_bool = selected_logits > thresh
+            mask_uint8 = mask_bool.astype(np.uint8) * 255
 
-        # ── 7. Build overlay visualization ──
-        opacity = float(params.get('overlay_opacity', 50)) / 100.0
-        
-        # Palette lookup (BGR order)
-        palette = [
-            (255, 144, 30),  # Astro Blue
-            (80, 220, 0),    # Green
-            (0, 200, 255),   # Yellow
-            (60, 60, 255),   # Red
-            (255, 80, 180),  # Purple
-            (200, 200, 200), # Gray
-            (255, 255, 255), # White
-            (20, 20, 20),    # Dark Gray
-        ]
-        c_idx = int(params.get('mask_color_index', 3))
-        mb, mg, mr = palette[c_idx % len(palette)]
+            # Post-processing
+            refine = int(params.get('refine_pixels', 0))
+            smooth = int(params.get('smoothing', 0))
+            invert = params.get('invert', False)
 
-        overlay = image.copy()
-        color_mask = np.zeros_like(image)
-        color_mask[mask_bool] = [mb, mg, mr]
+            if refine != 0:
+                kernel = np.ones((abs(refine), abs(refine)), np.uint8)
+                mask_uint8 = cv2.dilate(mask_uint8, kernel) if refine > 0 else cv2.erode(mask_uint8, kernel)
+            
+            if smooth > 0:
+                ksize = smooth * 2 + 1
+                mask_uint8 = cv2.GaussianBlur(mask_uint8, (ksize, ksize), 0)
+                _, mask_uint8 = cv2.threshold(mask_uint8, 127, 255, cv2.THRESH_BINARY)
 
-        overlay = cv2.addWeighted(overlay, 1.0, color_mask, opacity, 0)
+            if invert: mask_uint8 = 255 - mask_uint8
+            mask_bool = mask_uint8 > 127
 
-        # Draw contour on overlay for clarity
-        contours, _ = cv2.findContours(
-            mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
-        cv2.drawContours(overlay, contours, -1, (mb, mg, mr), 2)
+            # Visualization
+            opacity = float(params.get('overlay_opacity', 50)) / 100.0
+            palette = [
+                (255, 144, 30), (80, 220, 0), (0, 200, 255), (60, 60, 255),
+                (255, 80, 180), (200, 200, 200), (255, 255, 255), (20, 20, 20)
+            ]
+            c_idx = int(params.get('mask_color_index', 3))
+            mb, mg, mr = palette[c_idx % len(palette)]
 
-        # Draw the prompt indicator on the overlay
-        if prompt_mode == 0:
-            # Draw box from input
-            box_input = inputs.get('box')
-            if isinstance(box_input, dict):
-                bbox = self._get_bbox_from_dict(box_input, h, w)
-                if bbox is not None:
-                    cv2.rectangle(overlay, (bbox[0], bbox[1]),
-                                  (bbox[2], bbox[3]), (0, 255, 255), 2)
-        elif prompt_mode == 1:
-            # Draw multi-points from input
-            pts_list = inputs.get('points')
-            if isinstance(pts_list, list):
-                for p in pts_list:
+            overlay = image.copy()
+            color_mask = np.zeros_like(image)
+            color_mask[mask_bool] = [mb, mg, mr]
+            overlay = cv2.addWeighted(overlay, 1.0, color_mask, opacity, 0)
+
+            contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(overlay, contours, -1, (mb, mg, mr), 2)
+
+            # Draw prompts
+            if prompt_mode == 0 and isinstance(box_in, dict):
+                bbox = self._get_bbox_from_dict(box_in, h, w)
+                if bbox is not None: cv2.rectangle(overlay, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 255), 2)
+            elif prompt_mode == 1 and isinstance(pts_in, list):
+                for p in pts_in:
                     if isinstance(p, dict) and 'x' in p and 'y' in p:
                         cx, cy = int(p['x'] * w), int(p['y'] * h)
-                        is_fg = p.get('label', 1) == 1
-                        color = (0, 220, 80) if is_fg else (60, 60, 255)
+                        color = (0, 220, 80) if p.get('label', 1) == 1 else (60, 60, 255)
                         cv2.circle(overlay, (cx, cy), 5, color, -1)
                         cv2.circle(overlay, (cx, cy), 6, (255, 255, 255), 1)
 
-        # Add score text
-        cv2.putText(
-            overlay, f"Score: {selected_score:.3f}",
-            (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-            0.8, (255, 255, 255), 2
-        )
+            cv2.putText(overlay, f"Score: {selected_score:.3f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+            self.report_progress(1.0, 'SAM: Done')
 
-        self.report_progress(1.0, 'SAM: Done')
+            result = {'main': overlay, 'mask': mask_uint8, 'score': selected_score}
+            self._cache_hash, self._cache_result = cache_key, result
+            return result
 
-        result = {
-            'main': overlay,
-            'mask': mask_uint8,
-            'score': selected_score,
-        }
-
-        # Cache result
-        self._cache_hash = cache_key
-        self._cache_result = result
-
-        return result
+        except Exception as e:
+            print(f'[SAM] Error: {e}')
+            send_notification(f'SAM error: {str(e)[:100]}', level='error', notif_id=_NOTIF_ID)
+            self.report_progress(1.0, 'SAM: Error')
+            return empty
+        finally:
+            self.lock.release()
