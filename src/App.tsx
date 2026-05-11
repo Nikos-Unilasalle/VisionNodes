@@ -18,6 +18,7 @@ import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, writeFile, readDir } from '@tauri-apps/plugin-fs';
 import { ask } from '@tauri-apps/plugin-dialog';
 
+import { listen } from '@tauri-apps/api/event';
 import { nodeTypes, ColoredGenericCustomNode } from './data/nodeTypes';
 import { CATEGORIES } from './data/categories';
 import { getNestedSubGraph, updateNestedSubGraph } from './utils/groups';
@@ -846,9 +847,9 @@ function App() {
     }
   }, [lastCommands]);
 
-  const addNode = (type: string, label: string, schema?: any, initialParams: any = {}) => {
-    pushSnapshot();
-    const id = `node-${Date.now()}`;
+  const addNode = useCallback((type: string, label: string, schema?: any, initialParams: any = {}, dropPosition?: { x: number, y: number }, skipSnapshot = false) => {
+    if (!skipSnapshot) pushSnapshot();
+    const id = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const defaultStyle: Record<string, any> = {
       data_inspector: { width: 220, height: 200 },
       canvas_note: { width: 300, height: 180 },
@@ -861,9 +862,13 @@ function App() {
     const nodeStyle = defaultStyle[type] || {};
     const nw = (nodeStyle.width ?? 160) as number;
     const nh = (nodeStyle.height ?? 80) as number;
-    const position = pendingConnection
-      ? (instance?.screenToFlowPosition({ x: pendingConnection.clientX, y: pendingConnection.clientY }) ?? { x: pendingConnection.clientX, y: pendingConnection.clientY })
-      : { x: cursorFlowPosRef.current.x - nw / 2, y: cursorFlowPosRef.current.y - nh / 2 };
+    
+    let position = dropPosition;
+    if (!position) {
+      position = pendingConnection
+        ? (instance?.screenToFlowPosition({ x: pendingConnection.clientX, y: pendingConnection.clientY }) ?? { x: pendingConnection.clientX, y: pendingConnection.clientY })
+        : { x: cursorFlowPosRef.current.x - nw / 2, y: cursorFlowPosRef.current.y - nh / 2 };
+    }
     setViewNodes((nds) => {
       const nextNodes = [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }];
       if (pendingConnection && pendingConnection.sourceNode) {
@@ -879,7 +884,7 @@ function App() {
             if (matchedHandleId) {
               setViewEdges(eds => {
                 return [...eds, {
-                  id: `e-${Date.now()}`,
+                  id: `e-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                   source: pendingConnection.type === 'source' ? pendingConnection.sourceNode : id,
                   target: pendingConnection.type === 'source' ? id : pendingConnection.sourceNode,
                   sourceHandle: pendingConnection.type === 'source' ? pendingConnection.sourceHandle : matchedHandleId,
@@ -894,7 +899,7 @@ function App() {
     });
     setIsAddMenuOpen(false);
     setPendingConnection(null);
-  };
+  }, [pushSnapshot, pendingConnection, instance, setViewNodes, setViewEdges, setIsAddMenuOpen, setPendingConnection]);
   addNodeRef.current = addNode;
 
   const newProject = useCallback(async () => {
@@ -928,6 +933,42 @@ function App() {
     window.addEventListener('remove-handle-edge', handleRemoveEdge);
     return () => window.removeEventListener('remove-handle-edge', handleRemoveEdge);
   }, [setViewEdges]);
+
+  // Handle File Drag & Drop from Tauri
+  useEffect(() => {
+    if (!instance) return;
+    const unlisten = listen('tauri://drag-drop', (event: any) => {
+      const { paths, position } = event.payload as { paths: string[], position: { x: number, y: number } };
+      if (!paths || paths.length === 0) return;
+
+      // Push a single snapshot for the entire drop operation
+      pushSnapshot();
+
+      // Convert window position to flow position
+      const flowPos = instance.screenToFlowPosition({ x: position.x, y: position.y });
+
+      paths.forEach((p, index) => {
+        const ext = p.split('.').pop()?.toLowerCase() || '';
+        const fileName = p.split(/[\\/]/).pop() || 'File';
+        
+        // Offset multiple files slightly
+        const finalPos = { x: flowPos.x + index * 20, y: flowPos.y + index * 20 };
+
+        if (['jpg', 'jpeg', 'png', 'bmp', 'webp'].includes(ext)) {
+          addNode('input_image', fileName, undefined, { path: p }, finalPos, true);
+        } else if (['mp4', 'avi', 'mov', 'mkv', 'webm', 'm4v'].includes(ext)) {
+          addNode('input_movie', fileName, undefined, { path: p }, finalPos, true);
+        } else if (['wav', 'mp3', 'flac', 'ogg', 'm4a', 'aac'].includes(ext)) {
+          addNode('plugin_audio_input', fileName, undefined, { path: p }, finalPos, true);
+        } else if (['tif', 'tiff', 'jp2'].includes(ext)) {
+          addNode('geo_geotiff_reader', fileName, undefined, { file_path: p }, finalPos, true);
+        } else if (ext === 'vn') {
+          confirmUnsaved().then(ok => { if (ok) loadProjectFromPath(p); });
+        }
+      });
+    });
+    return () => { unlisten.then(f => f()); };
+  }, [instance, addNode, confirmUnsaved, loadProjectFromPath, pushSnapshot]);
 
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
