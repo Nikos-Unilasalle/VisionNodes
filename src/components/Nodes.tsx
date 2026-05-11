@@ -90,7 +90,7 @@ export const BaseNode = ({
   const startOffset = isMinified ? 10 : 45;
   const spacing = isMinified ? 5 : 32;
 
-  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isRotated, nodeId, updateNodeInternals]);
+  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isRotated, isMinified, nodeId, updateNodeInternals]);
 
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';
@@ -991,11 +991,14 @@ const JsonTreeView = ({ data, level = 0 }: { data: any, level?: number }) => {
 const HIDDEN_KEYS = new Set(['_type', 'shape', 'pts', 'r', 'g', 'b', 'thickness']);
 
 export const DataInspectorNode = memo(({ selected, data }: any) => {
-  const d = useNodeData(useNodeId())?.data_out;
+  const nodeId = useNodeId();
+  const d = useNodeData(nodeId)?.data_out;
   const [filterKey, setFilterKey] = useState<string | null>(data?.params?.filter_key ?? null);
   const { customBg } = useNodeColor();
   const accentBorder = customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]');
   const isMinified = !!(data as any)?.minified;
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isMinified, nodeId, updateNodeInternals]);
 
   // Extract available keys from dict or list-of-dicts
   const keys = useMemo(() => {
