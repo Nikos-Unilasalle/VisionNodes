@@ -332,11 +332,17 @@ class SAMSegmenterNode(NodeProcessor):
                 return empty
 
             with torch.inference_mode():
-                if self.device != 'cpu':
+                if self.device == 'cuda':
                     with torch.autocast(self.device, dtype=torch.bfloat16):
                         masks, scores, logits = self.predictor.predict(**predict_kwargs)
                 else:
+                    # MPS/CPU: autocast bfloat16 can cause issues with internal operations like interpolate
                     masks, scores, logits = self.predictor.predict(**predict_kwargs)
+
+            # Ensure everything is on CPU/Numpy for post-processing
+            if hasattr(masks, 'detach'): masks = masks.detach().cpu().numpy()
+            if hasattr(scores, 'detach'): scores = scores.detach().cpu().numpy()
+            if hasattr(logits, 'detach'): logits = logits.detach().cpu().numpy()
 
         except Exception as e:
             print(f'[SAM] Prediction error: {e}')
@@ -355,10 +361,6 @@ class SAMSegmenterNode(NodeProcessor):
 
         selected_score = float(scores[best_idx])
         selected_logits = logits[best_idx]
-        
-        # CRITICAL: Convert torch tensor to numpy if needed
-        if hasattr(selected_logits, 'cpu'):
-            selected_logits = selected_logits.detach().cpu().numpy()
 
         # Apply custom threshold on logits (SAM default is 0.0)
         thresh = float(params.get('mask_threshold', 0.0))
