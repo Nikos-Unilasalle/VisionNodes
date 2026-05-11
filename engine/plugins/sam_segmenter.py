@@ -137,7 +137,11 @@ class SAMSegmenterNode(NodeProcessor):
             predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
 
             # Move model to the target accelerator
-            if self.device in ('mps', 'cuda'):
+            if self.device == 'mps':
+                # Force float32 on MPS: internal operations like interpolate are unreliable in bfloat16
+                predictor.model = predictor.model.to(self.device, dtype=torch.float32)
+            elif self.device == 'cuda':
+                # CUDA handles bfloat16/autocast well
                 predictor.model = predictor.model.to(self.device)
 
             self.predictor = predictor
@@ -237,6 +241,10 @@ class SAMSegmenterNode(NodeProcessor):
 
         if self.predictor is None:
             return empty
+
+        # Hotfix: Ensure float32 on MPS for stability (interpolate bug)
+        if self.device == 'mps' and next(self.predictor.model.parameters()).dtype != torch.float32:
+            self.predictor.model = self.predictor.model.to(dtype=torch.float32)
 
         h, w = image.shape[:2]
 
