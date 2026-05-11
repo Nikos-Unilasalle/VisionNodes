@@ -109,10 +109,9 @@ class SAMSegmenterNode(NodeProcessor):
         # Device detection
         self.device = 'cpu'
         if SAM2_AVAILABLE:
-            if torch.backends.mps.is_available():
-                self.device = 'mps'
-            elif torch.cuda.is_available():
+            if torch.cuda.is_available():
                 self.device = 'cuda'
+            # Note: MPS is currently disabled for SAM 2 due to an internal Torch/SAM 2 bug with 'interpolate'
             print(f"[SAM] Using device: {self.device}")
 
     def _load_model_thread(self, model_name):
