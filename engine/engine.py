@@ -566,7 +566,14 @@ load_plugins()
 
 async def main(engine_instance):
     try:
-        async with websockets.serve(engine_instance.hdl, "localhost", 8765):
+        # Increase timeouts and disable pings to be more resilient during heavy CPU/Network load (SAM Large)
+        async with websockets.serve(
+            engine_instance.hdl, "localhost", 8765,
+            ping_interval=None,
+            ping_timeout=None,
+            close_timeout=60,
+            max_size=2**24 # 16MB max message size for large graphs/images
+        ):
             await asyncio.gather(
                 engine_instance.run(),
                 engine_instance._drain_notifs_loop(),

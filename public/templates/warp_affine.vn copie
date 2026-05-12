@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    { "id": "src-1",     "type": "input_image",     "position": { "x": 50,   "y": 200 }, "data": { "label": "Portrait (portrait.jpeg)", "params": { "path": "samples/portrait.jpeg" } } },
+    { "id": "py-1",      "type": "logic_python",    "position": { "x": 280,  "y": 360 }, "data": { "label": "Affine Matrix", "params": { "code": "# Rotation + zoom oscillant\nif 'f' not in state: state['f'] = 0\nstate['f'] += 1\n\nangle = state['f'] * 0.8\nscale = 1.0 + 0.2 * np.sin(state['f'] * 0.04)\n\nif a is not None and isinstance(a, np.ndarray):\n    h, w = a.shape[:2]\n    M = cv2.getRotationMatrix2D((w / 2, h / 2), angle, scale)\n    out_any = M.tolist()" } } },
+    { "id": "warp-1",    "type": "geom_warp_affine","position": { "x": 540,  "y": 200 }, "data": { "label": "Warp Affine",  "params": {} } },
+    { "id": "compose-1", "type": "util_compose",    "position": { "x": 770,  "y": 200 }, "data": { "label": "Checkerboard", "params": { "mode": 6, "split_pos": 10 } } },
+    { "id": "disp-1",    "type": "output_display",  "position": { "x": 1010, "y": 200 }, "data": { "label": "Final Output", "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "src-1",     "target": "py-1",      "sourceHandle": "image__main",  "targetHandle": "any__a" },
+    { "id": "e2", "source": "py-1",      "target": "warp-1",    "sourceHandle": "any__out_any", "targetHandle": "any__matrix" },
+    { "id": "e3", "source": "src-1",     "target": "warp-1",    "sourceHandle": "image__main",  "targetHandle": "image__image" },
+    { "id": "e4", "source": "src-1",     "target": "compose-1", "sourceHandle": "image__main",  "targetHandle": "image__image_a" },
+    { "id": "e5", "source": "warp-1",    "target": "compose-1", "sourceHandle": "image__main",  "targetHandle": "image__image_b" },
+    { "id": "e6", "source": "compose-1", "target": "disp-1",    "sourceHandle": "image__main",  "targetHandle": "image__main" }
+  ]
+}
