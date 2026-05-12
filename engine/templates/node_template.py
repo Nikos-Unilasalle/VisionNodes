@@ -30,6 +30,11 @@ from registry import vision_node, NodeProcessor
     dynamic_outputs=False,       # Connection-driven: Same for outputs.
     variable_inputs=True,        # UI-driven: Show [+] and [-] buttons to add scalar inputs (a, b, c...).
     
+    # -- HUGGINGFACE MODEL INTEGRATION --
+    # Automatically add a HuggingFace Token field and download the model repository in the background.
+    # To get the downloaded path in `process`, simply call `self.get_hf_model_path(params)`.
+    # hf_model="Zlikwid/LTX_2.3_Upscale_IC_Lora",
+    
     # -- PORT DEFINITIONS --
     # Colors: 'image' (blue), 'mask' (gray), 'scalar' (yellow), 'string' (light blue), 
     #         'dict' (green), 'list' (purple), 'any' (white), 'flow' (red), 'audio' (indigo)
@@ -59,7 +64,13 @@ class MyMasterNode(NodeProcessor):
     """
 
     def process(self, inputs, params):
-        # 1. READ INPUTS
+        # 1. RETRIEVE HUGGINGFACE MODEL (If hf_model is defined in decorator)
+        # It will automatically manage the token and background downloading.
+        # model_path = self.get_hf_model_path(params)
+        # if not model_path:
+        #     return {'main': None} # Still downloading or failed
+        
+        # 2. READ INPUTS
         # Always use .get() to avoid errors if nothing is connected
         img = inputs.get('main_image')
         thresh_val = float(inputs.get('threshold', 128))
