@@ -20,3 +20,7 @@ rasterio>=1.3.0
 pyproj>=3.5.0
 earthengine-api>=0.1.390
 geopy>=2.4.0
+# AI Models
+huggingface_hub>=0.20.0
+typing_extensions>=4.0
+SAM-2 @ git+https://github.com/facebookresearch/sam2.git

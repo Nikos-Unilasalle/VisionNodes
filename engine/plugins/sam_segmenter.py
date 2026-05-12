@@ -12,7 +12,31 @@ import os
 
 try:
     import torch
+    import torchvision
     from sam2.sam2_image_predictor import SAM2ImagePredictor
+    from sam2.utils.transforms import SAM2Transforms
+    
+    # --- PATCH: Avoid JIT scripting errors on experimental PyTorch/Python 3.14 ---
+    # The official SAM2 library scripts these transforms, which fails with mangled enums
+    # or redefinition errors in bleeding-edge environments.
+    def _patched_sam2_transforms_init(self, resolution, mask_threshold, max_hole_area=0.0, max_sprinkle_area=0.0):
+        import torch.nn as nn
+        from torchvision.transforms import Resize, Normalize, ToTensor
+        nn.Module.__init__(self)
+        self.resolution = resolution
+        self.mask_threshold = mask_threshold
+        self.max_hole_area = max_hole_area
+        self.max_sprinkle_area = max_sprinkle_area
+        self.mean = [0.485, 0.456, 0.406]
+        self.std = [0.229, 0.224, 0.225]
+        self.to_tensor = ToTensor()
+        self.transforms = nn.Sequential(
+            Resize((self.resolution, self.resolution), antialias=True),
+            Normalize(self.mean, self.std),
+        )
+    SAM2Transforms.__init__ = _patched_sam2_transforms_init
+    # ---------------------------------------------------------------------------
+
     SAM2_AVAILABLE = True
 except ImportError:
     SAM2_AVAILABLE = False
@@ -115,8 +139,17 @@ class SAMSegmenterNode(NodeProcessor):
                 progress=0.1, notif_id=_NOTIF_ID
             )
 
-            # Always load on CPU first (from_pretrained doesn't support MPS directly)
-            predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
+            # --- Optimization: Limit CPU threads during heavy model loading ---
+            # This prevents starving the main event loop / WebSocket server,
+            # especially with large models like SAM 2 Large (~900 MB).
+            old_threads = torch.get_num_threads()
+            torch.set_num_threads(1)
+            
+            try:
+                # Always load on CPU first (from_pretrained doesn't support MPS directly)
+                predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
+            finally:
+                torch.set_num_threads(old_threads)
 
             # Move model to the target accelerator
             if self.device in ('mps', 'cuda'):
