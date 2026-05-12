@@ -31,14 +31,35 @@ class DrawOverlayNode(NodeProcessor):
             
             items = data if isinstance(data, list) else [data]
             for item in items:
-                if not isinstance(item, dict): continue
+                if item is None: continue
                 
                 # CASE 1: Explicit graphics objects (_type: 'graphics')
-                if item.get('_type') == 'graphics':
+                if isinstance(item, dict) and item.get('_type') == 'graphics':
                     self._draw_graphics(res, item, w, h, default_col, default_thick)
                 
-                # CASE 2: Raw AI Detection (xmin, ymin, ...)
-                elif 'xmin' in item and 'ymin' in item:
+                # CASE 2: Raw Point List (Contours / Polygons)
+                elif isinstance(item, list) and len(item) > 0:
+                    pts_arr = []
+                    for p in item:
+                        if isinstance(p, (list, tuple, np.ndarray)) and len(p) >= 2:
+                            pts_arr.append([int(p[0] * w), int(p[1] * h)])
+                    
+                    if len(pts_arr) > 2:
+                        pts_np = np.array(pts_arr, np.int32).reshape((-1, 1, 2))
+                        # Use a color based on the input key or index to distinguish contours
+                        idx = items.index(item)
+                        color = [
+                            int((idx * 67 + 40) % 200 + 55),
+                            int((idx * 137 + 80) % 200 + 55),
+                            int((idx * 197 + 120) % 200 + 55)
+                        ]
+                        cv2.polylines(res, [pts_np], True, color, default_thick)
+                    elif len(pts_arr) > 0:
+                        for p in pts_arr:
+                            cv2.circle(res, tuple(p), 2, default_col, -1)
+
+                # CASE 3: Raw AI Detection (xmin, ymin, ...)
+                elif isinstance(item, dict) and 'xmin' in item and 'ymin' in item:
                     x1 = int(item['xmin'] * w)
                     y1 = int(item['ymin'] * h)
                     if 'width' in item and 'height' in item:
@@ -64,8 +85,8 @@ class DrawOverlayNode(NodeProcessor):
                         cv2.putText(res, label, (x1, y1 - 10), 
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
                                     
-                # CASE 3: Landmarks
-                if 'landmarks' in item:
+                # CASE 4: Landmarks
+                elif isinstance(item, dict) and 'landmarks' in item:
                     color = self._parse_color(item.get('color', '#0000ff'))
                     for lm in item['landmarks']:
                         lx, ly = int(lm['x'] * w), int(lm['y'] * h)

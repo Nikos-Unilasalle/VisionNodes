@@ -14,6 +14,7 @@ try:
     import torch
     import torchvision
     from sam2.sam2_image_predictor import SAM2ImagePredictor
+    from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
     from sam2.utils.transforms import SAM2Transforms
     
     # --- PATCH: Avoid JIT scripting errors on experimental PyTorch/Python 3.14 ---
@@ -71,9 +72,12 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         {'id': 'points', 'color': 'list', 'label': 'Points List'},
     ],
     outputs=[
-        {'id': 'main',  'color': 'image', 'label': 'Overlay'},
-        {'id': 'mask',  'color': 'mask'},
-        {'id': 'score', 'color': 'scalar'},
+        {'id': 'main',      'color': 'image',  'label': 'Overlay'},
+        {'id': 'mask',      'color': 'mask',   'label': 'Combined Mask'},
+        {'id': 'count',     'color': 'scalar', 'label': 'Object Count'},
+        {'id': 'areas',     'color': 'list',   'label': 'Areas (px²)'},
+        {'id': 'centroids', 'color': 'list',   'label': 'Centroids'},
+        {'id': 'contours',  'color': 'list',   'label': 'Contours List'},
     ],
     params=[
         # ── Authentication ──
@@ -86,8 +90,16 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
 
         # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
-         'options': ['Box Input Port', 'Points List Input Port'],
+         'options': ['Box Input Port', 'Points List Input Port', 'Automatic (Grid)'],
          'default': 0},
+
+        # ── Automatic Mode Settings ──
+        {'id': 'points_per_side', 'label': 'Points per side (Auto)', 'type': 'int',
+         'default': 32, 'min': 8, 'max': 128, 'step': 8},
+        {'id': 'pred_iou_thresh', 'label': 'IOU Threshold (Auto)', 'type': 'float',
+         'default': 0.8, 'min': 0.0, 'max': 1.0, 'step': 0.05},
+        {'id': 'stability_score_thresh', 'label': 'Stability Threshold (Auto)', 'type': 'float',
+         'default': 0.95, 'min': 0.0, 'max': 1.0, 'step': 0.05},
 
         # ── Mask Selection ──
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
@@ -102,6 +114,8 @@ class SAMSegmenterNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         self.predictor = None
+        self.generator = None
+        self._gen_config = None
         self.current_model_name = ""
         self._loading = False
         self._failed = set()
@@ -156,6 +170,8 @@ class SAMSegmenterNode(NodeProcessor):
                 predictor.model = predictor.model.to(self.device)
 
             self.predictor = predictor
+            self.generator = None # Reset generator if model changes
+            self._gen_config = None
             self.current_model_name = model_name
             self._embed_hash = None  # Reset embedding cache
 
@@ -195,7 +211,14 @@ class SAMSegmenterNode(NodeProcessor):
 
     def process(self, inputs, params):
         image = inputs.get('image')
-        empty = {'main': image, 'mask': None, 'score': 0.0}
+        empty = {
+            'main': image, 
+            'mask': None, 
+            'count': 0, 
+            'areas': [], 
+            'centroids': [], 
+            'contours': []
+        }
 
         if image is None:
             return empty
@@ -296,11 +319,103 @@ class SAMSegmenterNode(NodeProcessor):
                 self._embed_hash = img_hash
 
             # ── 4. Run prediction ──
-            self.report_progress(0.6, 'SAM: Segmenting…')
-
             multimask = bool(params.get('multimask', True))
-            auto_best = bool(params.get('auto_best', True))
             mask_idx = int(params.get('mask_index', 0))
+
+            if prompt_mode == 2:
+                # ── 4a. Automatic Mode (Grid) ──
+                self.report_progress(0.6, 'SAM: Generating masks (Grid)…')
+                
+                pps = int(params.get('points_per_side', 32))
+                iou_t = float(params.get('pred_iou_thresh', 0.8))
+                stab_t = float(params.get('stability_score_thresh', 0.95))
+                
+                gen_config = (pps, iou_t, stab_t)
+                if self.generator is None or self._gen_config != gen_config:
+                    self.generator = SAM2AutomaticMaskGenerator(
+                        model=self.predictor.model,
+                        points_per_side=pps,
+                        pred_iou_thresh=iou_t,
+                        stability_score_thresh=stab_t
+                    )
+                    self._gen_config = gen_config
+
+                # SAM 2 generator expects RGB
+                rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                with torch.inference_mode():
+                    masks_data = self.generator.generate(rgb)
+
+                # Process results: combine into a colored label map
+                overlay = image.copy()
+                opacity = float(params.get('overlay_opacity', 50)) / 100.0
+                
+                label_map = np.zeros((h, w, 3), dtype=np.uint8)
+                combined_mask = np.zeros((h, w), dtype=np.uint8)
+                
+                areas = []
+                centroids = []
+                all_contours = []
+
+                for i, m in enumerate(masks_data):
+                    mask = m['segmentation']
+                    # CRITICAL: Ensure mask is a numpy array for indexing
+                    if hasattr(mask, 'cpu'):
+                        mask = mask.detach().cpu().numpy()
+                    
+                    # Ensure boolean
+                    mask = mask > 0
+                    
+                    # Extract metrics
+                    area = float(m.get('area', np.sum(mask)))
+                    areas.append(area)
+                    
+                    # Centroid from bbox (x, y, w, h)
+                    bbox = m.get('bbox', [0, 0, 0, 0])
+                    centroids.append([float(bbox[0] + bbox[2]/2), float(bbox[1] + bbox[3]/2)])
+                    
+                    # Extract contour
+                    m_u8 = mask.astype(np.uint8) * 255
+                    cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    if cnts:
+                        # Convert to list of points for the output list
+                        pts = cnts[0].reshape(-1, 2).tolist()
+                        all_contours.append(pts)
+
+                    # Color based on index i
+                    color = [
+                        int((i * 67 + 40) % 200 + 55),
+                        int((i * 137 + 80) % 200 + 55),
+                        int((i * 197 + 120) % 200 + 55)
+                    ]
+                    label_map[mask] = color
+                    combined_mask[mask] = 255
+                
+                overlay = cv2.addWeighted(overlay, 1.0, label_map, opacity, 0)
+                
+                # Draw white contours for each stone
+                for m in masks_data:
+                    mask = m['segmentation']
+                    if hasattr(mask, 'cpu'):
+                        mask = mask.detach().cpu().numpy()
+                    m_uint8 = (mask > 0).astype(np.uint8) * 255
+                    cnts, _ = cv2.findContours(m_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    cv2.drawContours(overlay, cnts, -1, (255, 255, 255), 1)
+
+                self.report_progress(1.0, f'SAM: {len(masks_data)} stones found')
+                result = {
+                    'main': overlay,
+                    'mask': combined_mask,
+                    'count': float(len(masks_data)),
+                    'areas': areas,
+                    'centroids': centroids,
+                    'contours': all_contours,
+                }
+                self._cache_hash = cache_key
+                self._cache_result = result
+                return result
+
+            # ── 4b. Prompted Mode (Box/Points) ──
+            self.report_progress(0.6, 'SAM: Segmenting…')
 
             predict_kwargs = {
                 'multimask_output': multimask,
@@ -361,7 +476,7 @@ class SAMSegmenterNode(NodeProcessor):
                 level='error', notif_id=_NOTIF_ID
             )
             self.report_progress(1.0, 'SAM: Error')
-            return empty
+            return {'main': image, 'mask': None, 'count': 0, 'areas': [], 'centroids': [], 'contours': []}
 
         # ── 5. Select mask ──
         if multimask:
@@ -429,10 +544,29 @@ class SAMSegmenterNode(NodeProcessor):
 
         self.report_progress(1.0, 'SAM: Done')
 
+        # Calculate metrics for the single mask
+        area = float(np.sum(mask_bool))
+        
+        # Centroid
+        M = cv2.moments(mask_uint8)
+        if M["m00"] != 0:
+            cx = float(M["m10"] / M["m00"])
+            cy = float(M["m01"] / M["m00"])
+        else:
+            cx, cy = 0.0, 0.0
+            
+        # Contour list
+        cnt_list = []
+        if contours:
+            cnt_list = [c.reshape(-1, 2).tolist() for c in contours]
+
         result = {
             'main': overlay,
             'mask': mask_uint8,
-            'score': selected_score,
+            'count': 1.0,
+            'areas': [area],
+            'centroids': [[cx, cy]],
+            'contours': cnt_list,
         }
 
         # Cache result
