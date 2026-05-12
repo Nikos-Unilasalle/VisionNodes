@@ -1171,20 +1171,18 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
   const updateNodeInternals = useUpdateNodeInternals();
   const nd = useNodeData(nodeId) as any;
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
-  const [activeTab, setActiveTab] = React.useState(0);
 
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
-  const showDynamic = !!data?.mainConnected || ports.length > 0;
   const inputs = [
     { id: 'main', color: 'image' },
     ...ports.map(p => {
       const idx = p.id.indexOf('__');
       const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
-      const color = idx >= 0 ? p.id.slice(0, idx) : (shortId.startsWith('image') ? 'image' : 'any');
+      const color = idx >= 0 ? p.id.slice(0, idx) : (shortId.startsWith('img') ? 'image' : 'any');
       return { id: shortId, color };
     }),
-    ...(showDynamic ? [{ id: 'DYNAMIC_NEW_HANDLE', color: 'image' }] : []),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
     { id: 'mask_in', color: 'mask' },
     { id: 'flow_in', color: 'flow' }
   ];
