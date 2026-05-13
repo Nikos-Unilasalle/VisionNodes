@@ -122,10 +122,13 @@ class ColorMaskNode(NodeProcessor):
             v_min, v_max = max(0, tv - v_tol), min(255, tv + v_tol)
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             if h_min < h_max:
-                mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([h_max, s_max, v_max]))
+                mask = cv2.inRange(hsv, np.array([h_min, s_min, v_min], dtype=np.uint8), 
+                                  np.array([h_max, s_max, v_max], dtype=np.uint8))
             else:
-                mask1 = cv2.inRange(hsv, np.array([h_min, s_min, v_min]), np.array([179, s_max, v_max]))
-                mask2 = cv2.inRange(hsv, np.array([0, s_min, v_min]), np.array([h_max, s_max, v_max]))
+                mask1 = cv2.inRange(hsv, np.array([h_min, s_min, v_min], dtype=np.uint8), 
+                                   np.array([179, s_max, v_max], dtype=np.uint8))
+                mask2 = cv2.inRange(hsv, np.array([0, s_min, v_min], dtype=np.uint8), 
+                                   np.array([h_max, s_max, v_max], dtype=np.uint8))
                 mask = cv2.bitwise_or(mask1, mask2)
         return {"mask": mask}
 
