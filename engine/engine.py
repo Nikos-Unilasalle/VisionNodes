@@ -266,7 +266,7 @@ class VisionEngine:
         if os.path.exists(img_path):
             self.fallback_img = cv2.imread(img_path)
 
-        self._run_event = asyncio.Event()  # set only when a live source is active
+        self._run_event = asyncio.Event()  # set when nodes present; cleared after static pass
 
     def switch_camera(self, idx):
         target_idx = str(idx)
@@ -522,7 +522,10 @@ class VisionEngine:
                     if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
 
-            await asyncio.sleep(1/30 if self.has_realtime_node else 0.5)
+            if self.has_realtime_node:
+                await asyncio.sleep(1/30)
+            else:
+                self._run_event.clear()  # static graph: wait until next update_graph()
 
     async def hdl(self, ws):
         self.connected_clients.add(ws)
