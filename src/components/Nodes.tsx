@@ -6,7 +6,8 @@ import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
-  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode, ZapOff
+  Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode, ZapOff,
+  Clipboard
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -435,6 +436,10 @@ export const FilterCannyNode = memo(({ selected, data }: any) => (
   <BaseNode title="Canny Edge" icon={Waves} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
+export const FilterGradientNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Image Gradient" icon={LucideIcons.ArrowUpRight} selected={selected} data={data} color="blue" inputs={[{id: 'image', color: 'image'}]} outputs={[{id: 'magnitude', color: 'image'}, {id: 'angle', color: 'image'}, {id: 'dx', color: 'any'}, {id: 'dy', color: 'any'}]} />
+));
+
 export const FilterBlurNode = memo(({ selected, data }: any) => (
   <BaseNode title="Blur" icon={Ghost} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
@@ -473,6 +478,10 @@ export const FilterGrayNode = memo(({ selected, data }: any) => (
 
 export const FilterMorphologyNode = memo(({ selected, data }: any) => (
   <BaseNode title="Morphology" icon={Waves} selected={selected} data={data} color="accent" inputs={[{id: 'mask', color: 'mask'}, {id: 'image', color: 'image'}]} outputs={[{id: 'mask', color: 'mask'}]} />
+));
+
+export const FilterMorphologySmartNode = memo(({ selected, data }: any) => (
+  <BaseNode title="Smart Morphology" icon={Zap} selected={selected} data={data} color="accent" inputs={[{id: 'mask', color: 'mask'}]} outputs={[{id: 'mask', color: 'mask'}]} />
 ));
 
 export const GeomFlipNode = memo(({ selected, data }: any) => (
@@ -799,6 +808,68 @@ export const MatrixDistNode = memo(({ selected, data }: any) => {
             ))}
           </div>
         )}
+      </div>
+    </BaseNode>
+  );
+});
+
+export const InteractiveCalibrationNode = memo(({ selected, data }: any) => {
+  const [points, setPoints] = React.useState<any[]>([]);
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
+  const onOpenEditor = data.onOpenEditor;
+
+  React.useEffect(() => {
+    if (data.params?.points) {
+      try {
+        const p = JSON.parse(data.params.points);
+        if (Array.isArray(p)) setPoints(p);
+      } catch (e) {}
+    }
+  }, [data.params?.points]);
+
+  return (
+    <BaseNode
+      title="Visual Calibration"
+      icon={Scaling}
+      selected={selected}
+      data={data}
+      color="indigo"
+      inputs={[{id: 'image', color: 'image'}]}
+      outputs={[{id: 'factor', color: 'scalar', label: 'Px/Unit'}]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/calib shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-80" alt="Calibration Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Image size={24} className="opacity-10" />
+            </div>
+          )}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {points.length >= 2 && (
+              <line 
+                x1={`${points[0].x * 100}%`} y1={`${points[0].y * 100}%`} 
+                x2={`${points[1].x * 100}%`} y2={`${points[1].y * 100}%`} 
+                className="stroke-indigo-400" style={{ strokeWidth: 3, strokeDasharray: '4 2' }} 
+              />
+            )}
+            {points.map((p, i) => (
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} className="fill-white stroke-indigo-500" style={{ strokeWidth: 2 }} />
+            ))}
+          </svg>
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/calib:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }} className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Scaling size={12} /> Set Scale
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-2 px-2 bg-black/20 rounded-lg border border-white/5">
+          <div className="text-lg font-mono text-white tabular-nums tracking-tighter">
+              {nd?.display_value || "---"}
+          </div>
+        </div>
       </div>
     </BaseNode>
   );
@@ -1543,6 +1614,38 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
         </div>
       </div>
     </div>
+  );
+});
+
+export const DictMergeNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      return { 
+        id: idx >= 0 ? p.id.slice(idx + 2) : p.id, 
+        color: idx >= 0 ? p.id.slice(0, idx) : 'dict',
+        label: p.label
+      };
+    }),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'dict', label: 'Add Dict' },
+  ];
+
+  return (
+    <BaseNode 
+        title="Merge Dicts" 
+        icon={PlusSquare} 
+        selected={selected} 
+        data={data} 
+        color="indigo" 
+        inputs={inputs} 
+        outputs={[{id: 'main', color: 'dict'}]} 
+    />
   );
 });
 
@@ -2530,6 +2633,52 @@ export const GenericCustomNode = memo((props: any) => {
 
   return <GenericCustomNodeInternal {...props} schema={schema} />;
 });
+
+const ScientificReportNodeUI = ({ data, selected }: { data: any, selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const stats = nd?.report || {};
+  const title = data.params?.title || 'Analysis Report';
+  
+  const keys = Object.keys(stats);
+  const formatVal = (v: any) => typeof v === 'number' ? (v % 1 === 0 ? v : v.toFixed(3)) : String(v || '—');
+  
+  const COLORS = [
+    { text: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+    { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { text: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+    { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+    { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+  ];
+
+  return (
+    <BaseNode title={title} icon={Clipboard} selected={selected} data={data} color="accent" inputs={[{id: 'data', color: 'dict'}]} outputs={[{id: 'report', color: 'dict'}]} width="18rem">
+       <div className="flex flex-col gap-2 mt-2 w-full">
+          {keys.length === 0 ? (
+            <div className="p-4 rounded-xl border border-white/5 bg-white/5 text-center">
+               <span className="text-[10px] text-gray-500 uppercase tracking-widest">Awaiting Data...</span>
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl border border-white/5 bg-white/5 space-y-2">
+               {keys.map((k, i) => {
+                  const theme = COLORS[i % COLORS.length];
+                  return (
+                    <div key={k} className="flex justify-between items-center text-[10px] border-b border-white/5 pb-1.5 last:border-0 last:pb-0">
+                       <span className="text-gray-400 font-medium tracking-tight">{k}</span>
+                       <span className={`font-mono font-black ${theme.text} ${theme.bg} ${theme.border} px-2 py-0.5 rounded-md border shadow-sm`}>
+                          {formatVal(stats[k])}
+                       </span>
+                    </div>
+                  );
+               })}
+            </div>
+          )}
+       </div>
+    </BaseNode>
+  );
+};
+
+export const ScientificReportNode = memo(ScientificReportNodeUI);
 
 const RootAnatomyReportNodeUI = ({ data, selected }: { data: any, selected: boolean }) => {
   const nodeId = useNodeId();

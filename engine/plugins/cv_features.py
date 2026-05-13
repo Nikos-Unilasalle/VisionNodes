@@ -176,51 +176,85 @@ class BilateralFilterNode(NodeProcessor):
     label="Hough Circles",
     category='features',
     icon="Target",
-    description="Identifies perfect circular shapes using mathematical circle transforms.",
-    inputs=[{"id": "image", "color": "any"}],
-    outputs=[{"id": "circles_list", "color": "list"}],
+    description="Identifies perfect circular shapes and exports them as a list, a mask, or a visualized image.",
+    inputs=[{"id": "image", "color": "image"}],
+    outputs=[
+        {"id": "main",         "color": "image"},
+        {"id": "mask",         "color": "mask"},
+        {"id": "labels_map",   "color": "any",  "label": "Labels"},
+        {"id": "circles_list", "color": "list"},
+        {"id": "count",        "color": "scalar"}
+    ],
     params=[
-        {"id": "dp", "label": "DP", "type": "scalar", "min": 1, "max": 10, "default": 1.2},
-        {"id": "min_dist", "label": "Min Dist", "type": "scalar", "min": 1, "max": 500, "default": 100},
-        {"id": "param1", "label": "Canny High", "type": "scalar", "min": 1, "max": 500, "default": 100},
-        {"id": "param2", "label": "Threshold", "type": "scalar", "min": 1, "max": 200, "default": 30},
-        {"id": "min_r", "label": "Min Radius", "type": "scalar", "min": 0, "max": 500, "default": 0},
-        {"id": "max_r", "label": "Max Radius", "type": "scalar", "min": 0, "max": 500, "default": 0}
+        {"id": "dp",        "label": "DP",          "type": "scalar", "min": 1.0, "max": 10.0, "default": 1.2},
+        {"id": "min_dist",  "label": "Min Dist",    "type": "scalar", "min": 1.0, "max": 1000.0, "default": 100.0},
+        {"id": "param1",    "label": "Canny High",  "type": "scalar", "min": 1.0, "max": 500.0, "default": 100.0},
+        {"id": "param2",    "label": "Threshold",   "type": "scalar", "min": 1.0, "max": 500.0, "default": 30.0},
+        {"id": "min_r",     "label": "Min Radius",  "type": "scalar", "min": 0, "max": 2000, "default": 0},
+        {"id": "max_r",     "label": "Max Radius",  "type": "scalar", "min": 0, "max": 2000, "default": 0},
+        {"id": "viz_color", "label": "Viz Color",   "type": "color", "default": "#00FF00"},
+        {"id": "thickness", "label": "Thickness",   "type": "scalar", "min": -1, "max": 20, "default": 2}
     ]
 )
 class HoughCirclesNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"circles_list": []}
+        if image is None: return {"main": None, "mask": None, "circles_list": [], "count": 0}
         
+        h, w = image.shape[:2]
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
         
         dp = float(params.get('dp', 1.2))
-        min_dist = float(params.get('min_dist', 100))
-        p1 = float(params.get('param1', 100))
-        p2 = float(params.get('param2', 30))
+        min_dist = float(params.get('min_dist', 100.0))
+        p1 = float(params.get('param1', 100.0))
+        p2 = float(params.get('param2', 30.0))
         min_r = int(params.get('min_r', 0))
         max_r = int(params.get('max_r', 0))
+        
+        color_hex = str(params.get('viz_color', '#00FF00')).lstrip('#')
+        bgr = tuple(int(color_hex[i:i+2], 16) for i in (4, 2, 0))
+        thick = int(params.get('thickness', 2))
         
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp, min_dist, param1=p1, param2=p2, minRadius=min_r, maxRadius=max_r)
         
         results = []
+        out_img = image.copy()
+        if len(out_img.shape) == 2:
+            out_img = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
+        mask = np.zeros((h, w), dtype=np.uint8)
+        labels_map = np.zeros((h, w), dtype=np.int32)
+        
         if circles is not None:
-            h, w = gray.shape[:2]
-            circles = np.uint16(np.around(circles))
-            for i, c in enumerate(circles[0, :]):
-                cx, cy, r = float(c[0]), float(c[1]), float(c[2])
+            circles = np.around(circles[0, :]).astype(np.int32)
+            for i, c in enumerate(circles):
+                cx, cy, r = int(c[0]), int(c[1]), int(c[2])
+                
+                # Draw on image
+                cv2.circle(out_img, (cx, cy), r, bgr, thick)
+                # Draw on mask
+                cv2.circle(mask, (cx, cy), r, 255, -1) 
+                # Draw on labels_map (unique ID)
+                cv2.circle(labels_map, (cx, cy), r, i + 1, -1)
+                
                 results.append({
-                    "id": i,
-                    "label": f"circle_{i}",
+                    "id": i + 1,
+                    "label": f"circle_{i+1}",
                     "_type": "graphics",
                     "shape": "circle",
-                    "pts": [[cx / w, cy / h]],
-                    "radius": r / w, # Store normalized radius based on width
+                    "pts": [[float(cx / w), float(cy / h)]],
+                    "radius": float(r / w),
+                    "area": float(np.pi * (r ** 2)),
                     "relative": True,
-                    "color": "#ff0000"
+                    "color": f"#{color_hex}"
                 })
-        return {"circles_list": results}
+                
+        return {
+            "main": out_img,
+            "mask": mask,
+            "labels_map": labels_map,
+            "circles_list": results,
+            "count": float(len(results))
+        }
 
 @vision_node(
     type_id="feat_filter_contours",

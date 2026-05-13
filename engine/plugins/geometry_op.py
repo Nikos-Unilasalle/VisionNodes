@@ -112,10 +112,10 @@ class ManualPointsNode(NodeProcessor):
 
 @vision_node(
     type_id="util_roi_polygon",
-    label="Mask Polygon",
+    label="ROI Polygon",
     category='geom',
     icon="Scaling",
-    description="Interactive polygonal mask — draws a region of interest, optionally restricted by an input mask.",
+    description="Interactive polygonal region of interest — draws a mask, optionally restricted by an input mask.",
     inputs=[{"id": "image", "color": "image"}, {"id": "mask_in", "color": "mask"}],
     outputs=[
         {"id": "main",       "color": "image"},
@@ -149,24 +149,22 @@ class ROIPolygonNode(NodeProcessor):
         # Performance optimization: Send a small preview for the editor
         preview_b64 = None
         if img is not None:
-            # We encode every ~6 frames to save bandwidth/CPU (assuming 30fps)
             if not hasattr(self, '_frame_count'): self._frame_count = 0
             self._frame_count += 1
             if self._frame_count % 6 == 0:
                 try:
-                    # Resize to something reasonable for background
                     ph, pw = 720, int(720 * (w/h))
                     pimg = cv2.resize(img, (pw, ph))
                     _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     preview_b64 = base64.b64encode(buf).decode('utf-8')
                     self._last_preview = preview_b64
                 except Exception as e:
-                    print(f"[CropRect] Preview encode error: {e}")
+                    print(f"[ROIPolygon] Preview encode error: {e}")
             else:
                 preview_b64 = getattr(self, '_last_preview', None)
 
+        pts = None
         if len(pts_data) > 0:
-            # Convert normalized points to pixel coordinates
             pts_array = []
             for p in pts_data:
                 if isinstance(p, dict):
@@ -192,10 +190,21 @@ class ROIPolygonNode(NodeProcessor):
             except Exception:
                 pass
 
+        main_out = img.copy() if img is not None else np.zeros((h, w, 3), dtype=np.uint8)
+        if img is not None and pts is not None and len(pts) >= 2:
+            # Add blue semi-opaque overlay for visualization
+            overlay = main_out.copy()
+            if len(pts) >= 3:
+                cv2.fillPoly(overlay, [pts], (255, 0, 0)) # Blue in BGR
+                cv2.addWeighted(overlay, 0.3, main_out, 0.7, 0, main_out)
+                cv2.polylines(main_out, [pts], True, (255, 50, 50), 2)
+            else:
+                cv2.line(main_out, tuple(pts[0]), tuple(pts[1]), (255, 0, 0), 3)
+
         if img is not None:
             masked     = cv2.bitwise_and(img, img, mask=mask)
             masked_inv = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
         else:
             masked = masked_inv = None
 
-        return {"main": img, "mask": mask, "masked": masked, "masked_inv": masked_inv, "pts": pts_data, "main_preview": preview_b64}
+        return {"main": main_out, "mask": mask, "masked": masked, "masked_inv": masked_inv, "pts": pts_data, "main_preview": preview_b64}

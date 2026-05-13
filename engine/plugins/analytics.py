@@ -272,3 +272,135 @@ class HeatmapNode(NodeProcessor):
             
         out = cv2.addWeighted(background, 1.0 - blend_alpha, heatmap_resized, blend_alpha, 0)
         return {"main": out}
+
+@vision_node(
+    type_id='feat_list_aggregator',
+    label='List Aggregator',
+    category='analytics',
+    icon='Sigma',
+    description="Extracts a key from a list of objects and computes group statistics (Sum, Mean, SD, Count). Useful for summarizing circle/contour lists.",
+    inputs=[
+        {'id': 'items', 'color': 'list'},
+        {'id': 'px_per_unit', 'color': 'scalar', 'label': 'Px/Unit (Calibration)'}
+    ],
+    outputs=[{'id': 'stats', 'color': 'dict'}],
+    params=[
+        {'id': 'key', 'label': 'Target Key', 'type': 'string', 'default': 'radius'},
+        {'id': 'prefix', 'label': 'Label Prefix', 'type': 'string', 'default': 'Item'},
+        {'id': 'is_area', 'label': 'Is Area (squared factor)', 'type': 'boolean', 'default': False},
+        {'id': 'unit', 'label': 'Unit Name', 'type': 'string', 'default': 'mm'}
+    ]
+)
+class ListAggregatorNode(NodeProcessor):
+    def process(self, inputs, params):
+        items = inputs.get('items') or []
+        key = params.get('key', 'radius')
+        prefix = params.get('prefix', 'Item')
+        factor = inputs.get('px_per_unit', 1.0)
+        is_area = params.get('is_area', False)
+        unit = params.get('unit', 'px')
+        
+        # If factor is connected but unit is still px, default to mm
+        if inputs.get('px_per_unit') is not None and unit == 'px':
+            unit = 'mm'
+
+        vals = []
+        for item in items:
+            if isinstance(item, dict) and key in item:
+                vals.append(float(item[key]))
+            elif isinstance(item, (int, float)):
+                vals.append(float(item))
+        
+        if not vals:
+            return {'stats': {
+                f"{prefix} Count": 0,
+                f"Avg {key.capitalize()}": 0,
+            }}
+        
+        arr = np.array(vals)
+        
+        # Calibration
+        if factor > 0 and factor != 1.0:
+            if is_area:
+                arr = arr / (factor ** 2)
+            else:
+                arr = arr / factor
+        else:
+            unit = "px"
+
+        return {'stats': {
+            f"{prefix} Count": len(vals),
+            f"Avg {key.capitalize()} ({unit})": round(float(np.mean(arr)), 4),
+            f"Std {key.capitalize()}": round(float(np.std(arr)), 4),
+            f"Min {key.capitalize()}": round(float(np.min(arr)), 4),
+            f"Max {key.capitalize()}": round(float(np.max(arr)), 4),
+            f"Total {key.capitalize()}": round(float(np.sum(arr)), 2)
+        }}
+
+@vision_node(
+    type_id='sci_analysis_report',
+    label='Analysis Report',
+    category='analytics',
+    icon='Clipboard',
+    description="Displays a beautiful summary table of all variables. Connect any dictionary (stats, report, etc.).",
+    inputs=[{'id': 'data', 'color': 'dict'}],
+    outputs=[{'id': 'report', 'color': 'dict'}],
+    params=[
+        {'id': 'title', 'label': 'Report Title', 'type': 'string', 'default': 'Analysis Report'},
+    ]
+)
+class AnalysisReportNode(NodeProcessor):
+    def process(self, inputs, params):
+        return {'report': inputs.get('data') or {}}
+
+@vision_node(
+    type_id='sci_kmeans_list',
+    label='K-Means Classifier',
+    category='analytics',
+    icon='Grid',
+    description="Clusters a list of objects (like circles) into K groups based on a numeric property. Adds a 'cluster_id' to each item.",
+    inputs=[{'id': 'items', 'color': 'list'}],
+    outputs=[
+        {'id': 'items', 'color': 'list', 'label': 'Clustered List'},
+        {'id': 'stats', 'color': 'dict', 'label': 'Group Counts'}
+    ],
+    params=[
+        {'id': 'k', 'label': 'K Clusters', 'type': 'int', 'default': 3, 'min': 2, 'max': 10},
+        {'id': 'key', 'label': 'Property Key', 'type': 'string', 'default': 'radius'},
+    ]
+)
+class KMeansListStatsNode(NodeProcessor):
+    def process(self, inputs, params):
+        items = inputs.get('items') or []
+        k = int(params.get('k', 3))
+        key = params.get('key', 'radius')
+        
+        if len(items) < k:
+            return {'items': items, 'stats': {'Error': 'Not enough items'}}
+            
+        # 1. Prepare data
+        data = []
+        valid_items = []
+        for item in items:
+            if isinstance(item, dict) and key in item:
+                data.append([float(item[key])])
+                valid_items.append(item)
+        
+        if not data:
+            return {'items': items, 'stats': {'Error': 'No valid property found'}}
+            
+        # 2. Run K-Means (OpenCV)
+        X = np.array(data, dtype=np.float32)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+        compactness, labels, centers = cv2.kmeans(X, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+        
+        # 3. Tag items and collect stats
+        counts = {}
+        for i, (item, label) in enumerate(zip(valid_items, labels.flatten())):
+            cluster_id = int(label)
+            item['cluster_id'] = cluster_id
+            counts[f"Group {cluster_id + 1}"] = counts.get(f"Group {cluster_id + 1}", 0) + 1
+            
+        # Sort counts by group ID
+        sorted_counts = {k: v for k, v in sorted(counts.items())}
+        return {'items': valid_items, 'stats': sorted_counts}

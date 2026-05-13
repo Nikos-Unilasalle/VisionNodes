@@ -138,15 +138,19 @@ class ColorMaskNode(NodeProcessor):
     inputs=[{"id": "mask", "color": "mask"}],
     outputs=[{"id": "mask", "color": "mask"}],
     params=[
-        {"id": "operation", "label": "Operation (0=Dilate, 1=Erode)", "type": "int", "default": 0},
-        {"id": "size", "label": "Kernel Size", "type": "int", "default": 5}
+        {"id": "operation", "label": "Operation", "type": "enum", "options": ["Dilate", "Erode"], "default": 0},
+        {"id": "size", "label": "Kernel Size", "type": "scalar", "min": 1, "max": 51, "default": 3}
     ]
 )
 class MorphologyNode(NodeProcessor):
     def process(self, inputs, params):
         mask = inputs.get('mask')
         if mask is None: return {"mask": None}
-        op, size = int(params.get('operation', 0)), int(params.get('size', 5))
+        
+        op_idx = int(params.get('operation', 0))
+        size = int(params.get('size', 3))
+        if size < 1: size = 1
+        
         kernel = np.ones((size, size), np.uint8)
-        res = cv2.dilate(mask, kernel) if op == 0 else cv2.erode(mask, kernel)
+        res = cv2.dilate(mask, kernel) if op_idx == 0 else cv2.erode(mask, kernel)
         return {"mask": res}

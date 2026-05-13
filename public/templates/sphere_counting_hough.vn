@@ -1,0 +1,615 @@
+{
+  "nodes": [
+    {
+      "id": "frame-preproc",
+      "type": "canvas_frame",
+      "position": {
+        "x": -300.8027563659006,
+        "y": -61.07803784942807
+      },
+      "style": {
+        "width": 550,
+        "height": 600,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 1,
+          "title": "1 — Pre-processing",
+          "collapsed": false,
+          "savedHeight": 600
+        }
+      },
+      "width": 550,
+      "height": 600,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -300.8027563659006,
+        "y": -61.07803784942807
+      },
+      "dragging": false
+    },
+    {
+      "id": "frame-detect",
+      "type": "canvas_frame",
+      "position": {
+        "x": 280,
+        "y": -50
+      },
+      "style": {
+        "width": 280,
+        "height": 600,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 2,
+          "title": "2 — Detection"
+        }
+      },
+      "width": 280,
+      "height": 600
+    },
+    {
+      "id": "frame-output",
+      "type": "canvas_frame",
+      "position": {
+        "x": 580,
+        "y": -50
+      },
+      "style": {
+        "width": 1050,
+        "height": 720,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 0,
+          "title": "3 — Results & Clustering",
+          "collapsed": false,
+          "savedHeight": 720
+        }
+      },
+      "width": 1050,
+      "height": 720,
+      "selected": false,
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "input-img",
+      "type": "input_image",
+      "position": {
+        "x": -270,
+        "y": 60
+      },
+      "data": {
+        "label": "Image source",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/billes.jpg",
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "roi-1",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": -28.806166620631444,
+        "y": 130.68731594249118
+      },
+      "data": {
+        "label": "ROI Polygon",
+        "params": {
+          "points": "[{\"x\":0.0425,\"y\":0.125},{\"x\":0.83625,\"y\":0.09444444444444444},{\"x\":0.88,\"y\":0.6194444444444445},{\"x\":0.8325,\"y\":0.6875},{\"x\":0.83875,\"y\":0.7319444444444444},{\"x\":0.81625,\"y\":0.7583333333333333},{\"x\":0.82875,\"y\":0.7916666666666666},{\"x\":0.84625,\"y\":0.8152777777777778},{\"x\":0.8725,\"y\":0.8347222222222223},{\"x\":0.89875,\"y\":0.8416666666666667},{\"x\":0.905,\"y\":0.9069444444444444},{\"x\":0.065,\"y\":0.9611111111111111}]",
+          "filled": true,
+          "color_index": 3
+        },
+        "lockedOut": false,
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "height": 24
+      },
+      "positionAbsolute": {
+        "x": -28.806166620631444,
+        "y": 130.68731594249118
+      }
+    },
+    {
+      "id": "gray-1",
+      "type": "filter_gray",
+      "position": {
+        "x": -28.004593943167645,
+        "y": 60
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 3
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "bilateral-1",
+      "type": "feat_bilateral",
+      "position": {
+        "x": -28.004593943167645,
+        "y": 82.40826909770175
+      },
+      "data": {
+        "label": "Denoise (Bilateral)",
+        "params": {
+          "diameter": 9,
+          "sigma_color": 75,
+          "sigma_space": 75,
+          "color_index": 3
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "height": 24
+      },
+      "positionAbsolute": {
+        "x": -28.027563659005857,
+        "y": 82.40826909770175
+      }
+    },
+    {
+      "id": "clahe-1",
+      "type": "feat_clahe",
+      "position": {
+        "x": -28.004593943167645,
+        "y": 103.4848865210057
+      },
+      "data": {
+        "label": "Enhance Contrast",
+        "params": {
+          "clip_limit": 2,
+          "grid_size": 8,
+          "color_index": 3
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "height": 24
+      },
+      "positionAbsolute": {
+        "x": -25.986218170497068,
+        "y": 103.4848865210057
+      }
+    },
+    {
+      "id": "hough-1",
+      "type": "feat_hough_circles",
+      "position": {
+        "x": 320,
+        "y": 60
+      },
+      "data": {
+        "label": "Hough Circles",
+        "params": {
+          "dp": 1.2,
+          "min_dist": 50,
+          "param1": 100,
+          "param2": 30,
+          "min_r": 10,
+          "max_r": 71,
+          "viz_color": "#00FF00",
+          "thickness": 2,
+          "color_index": 0
+        },
+        "lockedOut": false
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "calib-v",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 620,
+        "y": 20
+      },
+      "data": {
+        "label": "Visual Calibration",
+        "params": {
+          "points": "[{\"x\":0.22143765115315356,\"y\":0.6580045987904733},{\"x\":0.2589858045020458,\"y\":0.6836625061483163}]",
+          "real_len": 10,
+          "unit": "mm",
+          "color_index": 4
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 620,
+        "y": 20
+      },
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "kmeans-1",
+      "type": "sci_kmeans_list",
+      "position": {
+        "x": 619.362554421044,
+        "y": 134.25860335072394
+      },
+      "data": {
+        "label": "K-Means Classifier",
+        "params": {
+          "k": 3,
+          "key": "radius",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 619.362554421044,
+        "y": 134.25860335072394
+      },
+      "dragging": false
+    },
+    {
+      "id": "agg-1",
+      "type": "feat_list_aggregator",
+      "position": {
+        "x": 880,
+        "y": 10
+      },
+      "data": {
+        "label": "Physical Stats",
+        "params": {
+          "key": "radius",
+          "prefix": "Sphere",
+          "unit": "mm",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "report-1",
+      "type": "sci_analysis_report",
+      "position": {
+        "x": 1300,
+        "y": 240
+      },
+      "data": {
+        "label": "Full Analysis",
+        "params": {
+          "title": "Spheres Final Report",
+          "color_index": 2
+        }
+      },
+      "width": 288,
+      "height": 395,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1300,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "heatmap-1",
+      "type": "sci_cluster_heatmap",
+      "position": {
+        "x": 885.7282373332604,
+        "y": 132.60299942090714
+      },
+      "data": {
+        "label": "Cluster Heatmap",
+        "params": {
+          "feature": 2,
+          "colormap": 1,
+          "alpha": 0.47,
+          "colorbar": true,
+          "bg_alpha": 1,
+          "show_values": true,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 885.7282373332604,
+        "y": 132.60299942090714
+      },
+      "dragging": false
+    },
+    {
+      "id": "display-1",
+      "type": "output_display",
+      "position": {
+        "x": 1380,
+        "y": 0
+      },
+      "data": {
+        "label": "Cluster Preview",
+        "params": {
+          "color_index": 3
+        },
+        "ports": [
+          {
+            "id": "image__p1",
+            "color": "image",
+            "label": "Clusters"
+          },
+          {
+            "id": "image__1_md1m",
+            "color": "image",
+            "label": "img1"
+          }
+        ],
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1380,
+        "y": 0
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778656199440-znbshbb4y",
+      "type": "util_dict_merge",
+      "position": {
+        "x": 1120,
+        "y": 0
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Merge Dicts",
+        "params": {
+          "color_index": 4
+        },
+        "schema": {
+          "type": "util_dict_merge",
+          "label": "Merge Dicts",
+          "category": "util",
+          "icon": "PlusSquare",
+          "description": "Combines multiple dictionaries into a single one. Useful for combining statistics from different sources into one report.",
+          "inputs": [
+            {
+              "id": "dict__1",
+              "color": "dict",
+              "label": "Dict 1"
+            },
+            {
+              "id": "DYNAMIC_NEW_HANDLE",
+              "color": "dict",
+              "label": "Add New"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "dict"
+            }
+          ],
+          "params": [],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        },
+        "ports": [
+          {
+            "id": "dict__0_3r8c",
+            "color": "dict",
+            "label": "stats"
+          },
+          {
+            "id": "dict__1_vqw8",
+            "color": "dict",
+            "label": "stats"
+          }
+        ],
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1120,
+        "y": 0
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "input-img",
+      "sourceHandle": "image__main",
+      "target": "gray-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e2",
+      "source": "gray-1",
+      "sourceHandle": "image__main",
+      "target": "bilateral-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e3",
+      "source": "bilateral-1",
+      "sourceHandle": "image__main",
+      "target": "clahe-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e4",
+      "source": "clahe-1",
+      "sourceHandle": "image__main",
+      "target": "roi-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e5",
+      "source": "roi-1",
+      "sourceHandle": "image__masked",
+      "target": "hough-1",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e6",
+      "source": "hough-1",
+      "sourceHandle": "list__circles_list",
+      "target": "kmeans-1",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e7",
+      "source": "hough-1",
+      "sourceHandle": "list__circles_list",
+      "target": "agg-1",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e8",
+      "source": "calib-v",
+      "sourceHandle": "scalar__factor",
+      "target": "agg-1",
+      "targetHandle": "scalar__px_per_unit"
+    },
+    {
+      "id": "e12",
+      "source": "hough-1",
+      "sourceHandle": "any__labels_map",
+      "target": "heatmap-1",
+      "targetHandle": "any__labels_map"
+    },
+    {
+      "id": "e13",
+      "source": "kmeans-1",
+      "sourceHandle": "list__items",
+      "target": "heatmap-1",
+      "targetHandle": "list__regions"
+    },
+    {
+      "source": "roi-1",
+      "sourceHandle": "image__masked",
+      "target": "calib-v",
+      "targetHandle": "image__image",
+      "id": "e-1778655312940",
+      "selected": false
+    },
+    {
+      "source": "roi-1",
+      "sourceHandle": "image__masked",
+      "target": "display-1",
+      "targetHandle": "image__main",
+      "id": "e-1778655590732",
+      "selected": false
+    },
+    {
+      "source": "hough-1",
+      "sourceHandle": "image__main",
+      "target": "display-1",
+      "targetHandle": "image__1_md1m",
+      "id": "e-1778655605966",
+      "selected": false
+    },
+    {
+      "source": "heatmap-1",
+      "sourceHandle": "image__main",
+      "target": "display-1",
+      "targetHandle": "image__p1",
+      "id": "e-1778655702424",
+      "selected": false
+    },
+    {
+      "source": "node-1778656199440-znbshbb4y",
+      "sourceHandle": "dict__main",
+      "target": "report-1",
+      "targetHandle": "dict__data",
+      "id": "e-1778656212093",
+      "selected": false
+    },
+    {
+      "source": "agg-1",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778656199440-znbshbb4y",
+      "targetHandle": "dict__0_3r8c",
+      "id": "e-1778656233021",
+      "selected": false
+    },
+    {
+      "source": "kmeans-1",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778656199440-znbshbb4y",
+      "targetHandle": "dict__1_vqw8",
+      "id": "e-1778656237493",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 1199.2109375,
+      "h": 359
+    },
+    "previewPos": {
+      "x": 64.20703125,
+      "y": -21.12109375
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "display-1"
+  }
+}

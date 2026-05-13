@@ -17,7 +17,7 @@ _CMAP_IDS   = [i for _, i in _COLORMAPS]
 
 # Features produced by sci_region_props
 _FEATURES = [
-    'area', 'circularity', 'aspect_ratio', 'solidity', 'eccentricity',
+    'area', 'radius', 'cluster_id', 'circularity', 'aspect_ratio', 'solidity', 'eccentricity',
     'perimeter', 'equivalent_diameter', 'mean_intensity', 'max_intensity',
     'std_intensity', 'orientation',
 ]
@@ -61,7 +61,14 @@ class ClusterHeatmapNode(NodeProcessor):
 
         label_img    = labels.astype(np.int32)
         h, w         = label_img.shape[:2]
-        feat_name    = _FEATURES[int(params.get('feature', 0))]
+        
+        feat_raw = params.get('feature', 0)
+        if isinstance(feat_raw, str) and not feat_raw.isdigit():
+            feat_name = feat_raw if feat_raw in _FEATURES else _FEATURES[0]
+        else:
+            try: feat_name = _FEATURES[int(feat_raw)]
+            except: feat_name = _FEATURES[0]
+
         cmap_id      = _CMAP_IDS[int(params.get('colormap', 0))]
         alpha        = float(params.get('alpha', 0.85))
         bg_alpha     = float(params.get('bg_alpha', 0.25))
