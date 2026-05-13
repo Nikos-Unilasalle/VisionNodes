@@ -384,7 +384,7 @@ function App() {
           dynamicColor,
           activePaletteIndex,
           isVisualized: node.id === visualizedNodeId,
-          onOpenEditor: node.type === 'util_roi_polygon'
+          onOpenEditor: (node.type === 'util_roi_polygon' || node.type === 'sci_interactive_calibration')
             ? () => setRoiEditingId(node.id)
             : node.type === 'geom_crop_rect'
             ? () => setCropEditingId(node.id)

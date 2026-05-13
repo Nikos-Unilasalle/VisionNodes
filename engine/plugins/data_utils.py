@@ -78,3 +78,25 @@ class CoordSplitterNode(NodeProcessor):
             "a": nums[0] if len(nums) > 0 else 0,
             "b": nums[1] if len(nums) > 1 else 0
         }
+
+@vision_node(
+    type_id="util_dict_merge",
+    label="Merge Dicts",
+    category='util',
+    icon="PlusSquare",
+    description="Combines multiple dictionaries into a single one. Useful for combining statistics from different sources into one report.",
+    inputs=[
+        {"id": "dict__1", "color": "dict", "label": "Dict 1"},
+        {"id": "DYNAMIC_NEW_HANDLE", "color": "dict", "label": "Add New"}
+    ],
+    outputs=[{"id": "main", "color": "dict"}],
+    params=[],
+    dynamic_inputs=True
+)
+class DictMergeNode(NodeProcessor):
+    def process(self, inputs, params):
+        res = {}
+        for key, value in inputs.items():
+            if isinstance(value, dict):
+                res.update(value)
+        return {"main": res}
