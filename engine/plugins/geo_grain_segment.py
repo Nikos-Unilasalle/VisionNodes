@@ -84,19 +84,32 @@ class GeoGrainSegment(NodeProcessor):
             if stats[i, cv2.CC_STAT_AREA] >= opaque_min:
                 opaque_mask[lbl == i] = 255
 
-        # ── 2. Boundary detection via morphological gradient ──────────────
-        # Morph gradient gives thick closed boundaries at every color transition
+        # ── 2. Boundary detection via per-channel gradient ────────────────
+        # In XPL, two different colors might have same intensity (grayscale).
+        # We compute gradient on each channel and take the max.
         bnd_k = bnd_size if bnd_size % 2 == 1 else bnd_size + 1
         k_bnd = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (bnd_k, bnd_k))
-        grad_xpl = cv2.morphologyEx(xpl_gray, cv2.MORPH_GRADIENT, k_bnd)
-
+        
+        # Split channels and compute gradients
+        grads = []
+        for i in range(3):
+            ch = xpl[:, :, i]
+            ch_blur = cv2.GaussianBlur(ch, (ksize, ksize), 0)
+            grads.append(cv2.morphologyEx(ch_blur, cv2.MORPH_GRADIENT, k_bnd))
+        
         if ppl is not None:
-            grad_ppl = cv2.morphologyEx(ppl_gray, cv2.MORPH_GRADIENT, k_bnd)
-            gradient = cv2.addWeighted(grad_xpl, 1.0 - ppl_w, grad_ppl, ppl_w, 0)
-        else:
-            gradient = grad_xpl
+            for i in range(3):
+                ch_p = ppl[:, :, i]
+                ch_p_blur = cv2.GaussianBlur(ch_p, (ksize, ksize), 0)
+                grads.append(cv2.morphologyEx(ch_p_blur, cv2.MORPH_GRADIENT, k_bnd))
 
-        gradient = cv2.normalize(gradient, None, 0, 255, cv2.NORM_MINMAX)
+        # Max of all gradients
+        gradient = grads[0]
+        for g in grads[1:]:
+            gradient = cv2.max(gradient, g)
+
+        # Removed global normalize(0, 255) because it makes thresholding relative
+        # and hard to tune. Instead, we just ensure it's uint8.
         _, boundary = cv2.threshold(gradient, bnd_thresh, 255, cv2.THRESH_BINARY)
 
         # ── 3. Interior = not-boundary, not-opaque ─────────────────────────

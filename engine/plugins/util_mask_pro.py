@@ -165,3 +165,33 @@ class ImageMaskingNode(NodeProcessor):
         out[mask_bool] = img[mask_bool]
         
         return {'main': out}
+
+@vision_node(
+    type_id='mask_outline',
+    label='Mask Outline',
+    category='mask',
+    icon='Square',
+    description="Extracts the outline (boundary) from a binary mask. Useful for drawing borders around detected objects.",
+    inputs=[{'id': 'mask', 'color': 'mask'}],
+    outputs=[{'id': 'mask', 'color': 'mask'}],
+    params=[
+        {'id': 'thickness', 'label': 'Thickness (px)', 'type': 'int', 'default': 2, 'min': 1, 'max': 21}
+    ]
+)
+class MaskOutlineNode(NodeProcessor):
+    def process(self, inputs, params):
+        mask = inputs.get('mask')
+        if mask is None: return {'mask': None}
+        
+        if len(mask.shape) == 3:
+            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        mask = mask.astype(np.uint8)
+        
+        thick = int(params.get('thickness', 2))
+        # Ensure odd kernel size for morphological gradient
+        if thick % 2 == 0: thick += 1
+        
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (thick, thick))
+        outline = cv2.morphologyEx(mask, cv2.MORPH_GRADIENT, kernel)
+        
+        return {'mask': outline}
