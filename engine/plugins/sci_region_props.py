@@ -21,8 +21,9 @@ except ImportError:
         "Connects image input for mean/max/std intensity per region."
     ),
     inputs=[
-        {'id': 'labels_map', 'color': 'any',   'label': 'Label Map'},
+        {'id': 'labels_map', 'color': 'any',    'label': 'Label Map'},
         {'id': 'image',      'color': 'image',  'label': 'Image (intensity, optional)'},
+        {'id': 'um_per_px',  'color': 'scalar', 'label': 'µm/pixel (Calibration)'},
     ],
     outputs=[
         {'id': 'regions', 'color': 'list',   'label': 'Regions'},
@@ -30,9 +31,10 @@ except ImportError:
         {'id': 'main',    'color': 'image',  'label': 'Preview'},
     ],
     params=[
-        {'id': 'intensity',    'label': 'Intensity Features', 'type': 'bool', 'default': True},
-        {'id': 'show_ids',     'label': 'Show IDs',           'type': 'bool', 'default': False},
-        {'id': 'show_ellipse', 'label': 'Show Ellipses',      'type': 'bool', 'default': False},
+        {'id': 'intensity',    'label': 'Intensity Features', 'type': 'bool',  'default': True},
+        {'id': 'show_ids',     'label': 'Show IDs',           'type': 'bool',  'default': False},
+        {'id': 'show_ellipse', 'label': 'Show Ellipses',      'type': 'bool',  'default': False},
+        {'id': 'um_per_px',    'label': 'µm / pixel',         'type': 'float', 'default': 1.0, 'min': 0.001, 'max': 10000.0},
     ]
 )
 class RegionPropsNode(NodeProcessor):
@@ -42,6 +44,13 @@ class RegionPropsNode(NodeProcessor):
 
         if labels is None:
             return {'regions': [], 'count': 0, 'main': img}
+
+        um_px_in  = inputs.get('um_per_px')
+        um_per_px = float(um_px_in) if um_px_in is not None else float(params.get('um_per_px', 1.0))
+        calibrated   = um_per_px != 1.0
+        um2_per_px2  = um_per_px ** 2
+        unit_area    = "µm²" if calibrated else "px²"
+        unit_len     = "µm"  if calibrated else "px"
 
         label_img    = labels.astype(np.int32)
         do_intensity = bool(params.get('intensity', True)) and img is not None
@@ -56,23 +65,28 @@ class RegionPropsNode(NodeProcessor):
         if _SKIMAGE:
             props = _regionprops(label_img, intensity_image=intensity_img)
             for p in props:
-                area  = int(p.area)
-                perim = float(p.perimeter) if p.perimeter > 0 else 1.0
-                circ  = round(4.0 * np.pi * area / (perim ** 2), 4)
+                area_px = int(p.area)
+                perim_px = float(p.perimeter) if p.perimeter > 0 else 1.0
+                circ  = round(4.0 * np.pi * area_px / (perim_px ** 2), 4)
                 maj   = float(p.axis_major_length)
                 mino  = float(p.axis_minor_length)
                 ar    = round(maj / mino, 4) if mino > 0 else 0.0
                 cy, cx = p.centroid
-                bb = p.bbox  # (min_row, min_col, max_row, max_col)
+                bb = p.bbox
+                area_cal  = round(area_px  * um2_per_px2, 4)
+                perim_cal = round(perim_px * um_per_px,   4)
+                eqdiam_cal = round(float(p.equivalent_diameter_area) * um_per_px, 4)
                 r = {
                     'id':                   int(p.label),
-                    'area':                 area,
-                    'perimeter':            round(perim, 2),
+                    'area':                 area_cal,
+                    'area_unit':            unit_area,
+                    'perimeter':            perim_cal,
+                    'length_unit':          unit_len,
                     'circularity':          circ,
                     'aspect_ratio':         ar,
                     'solidity':             round(float(p.solidity), 4),
                     'eccentricity':         round(float(p.eccentricity), 4),
-                    'equivalent_diameter':  round(float(p.equivalent_diameter_area), 2),
+                    'equivalent_diameter':  eqdiam_cal,
                     'orientation':          round(float(p.orientation), 4),
                     'centroid_x':           round(float(cx), 1),
                     'centroid_y':           round(float(cy), 1),
@@ -122,13 +136,22 @@ class RegionPropsNode(NodeProcessor):
                 cx_ = M['m10'] / M['m00']
                 cy_ = M['m01'] / M['m00']
                 bx, by, bw, bh = cv2.boundingRect(cnt)
-                eq_diam = round(float(np.sqrt(4.0 * area / np.pi)), 2)
+                eq_diam_px = float(np.sqrt(4.0 * area / np.pi))
                 r = {
-                    'id': int(lbl), 'area': area, 'perimeter': round(perim, 2),
-                    'circularity': circ, 'aspect_ratio': ar, 'solidity': solidity,
-                    'eccentricity': 0.0, 'equivalent_diameter': eq_diam, 'orientation': 0.0,
-                    'centroid_x': round(float(cx_), 1), 'centroid_y': round(float(cy_), 1),
-                    'bbox': [bx, by, bw, bh],
+                    'id': int(lbl),
+                    'area':               round(area * um2_per_px2, 4),
+                    'area_unit':          unit_area,
+                    'perimeter':          round(perim * um_per_px, 4),
+                    'length_unit':        unit_len,
+                    'circularity':        circ,
+                    'aspect_ratio':       ar,
+                    'solidity':           solidity,
+                    'eccentricity':       0.0,
+                    'equivalent_diameter': round(eq_diam_px * um_per_px, 4),
+                    'orientation':        0.0,
+                    'centroid_x':         round(float(cx_), 1),
+                    'centroid_y':         round(float(cy_), 1),
+                    'bbox':               [bx, by, bw, bh],
                 }
                 if do_intensity and intensity_img is not None:
                     px = intensity_img[label_img == lbl]

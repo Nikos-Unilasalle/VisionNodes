@@ -104,6 +104,9 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Mask Selection ──
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
          'type': 'boolean', 'default': True},
+        {'id': 'mask_select', 'label': 'Candidate (si multi-mask)',
+         'type': 'enum', 'options': ['Best (IOU auto)', 'Candidat 1', 'Candidat 2', 'Candidat 3'],
+         'default': 0},
         # ── Visualization ──
         {'id': 'overlay_opacity', 'label': 'Overlay Opacity (%)', 'type': 'number',
          'default': 50, 'min': 0, 'max': 100, 'step': 5},
@@ -294,8 +297,12 @@ class SAMSegmenterNode(NodeProcessor):
         # for list of dicts (pts_in), stringify it safely
         pts_hash = str(pts_in) if isinstance(pts_in, list) else None
 
-        prompt_key = (prompt_mode, box_hash, pts_hash, params.get('multimask'),
-                      params.get('mask_index'), params.get('auto_best'))
+        prompt_key = (prompt_mode, box_hash, pts_hash,
+                      params.get('multimask'), params.get('mask_select', 0),
+                      params.get('overlay_opacity', 50),
+                      params.get('points_per_side', 32),
+                      params.get('pred_iou_thresh', 0.8),
+                      params.get('stability_score_thresh', 0.95))
 
         cache_key = (img_hash, prompt_key)
         if cache_key == getattr(self, '_cache_hash', None) and getattr(self, '_cache_result', None) is not None:
@@ -479,10 +486,11 @@ class SAMSegmenterNode(NodeProcessor):
             return {'main': image, 'mask': None, 'count': 0, 'areas': [], 'centroids': [], 'contours': []}
 
         # ── 5. Select mask ──
-        if multimask:
+        mask_select = int(params.get('mask_select', 0))
+        if not multimask or mask_select == 0:
             best_idx = int(np.argmax(scores))
         else:
-            best_idx = min(mask_idx, len(masks) - 1)
+            best_idx = min(mask_select - 1, len(masks) - 1)
 
         selected_score = float(scores[best_idx])
         selected_mask = masks[best_idx]
