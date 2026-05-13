@@ -242,7 +242,8 @@ class HoughCirclesNode(NodeProcessor):
                     "_type": "graphics",
                     "shape": "circle",
                     "pts": [[float(cx / w), float(cy / h)]],
-                    "radius": float(r / w),
+                    "radius": float(r),
+                    "radius_rel": float(r / w),
                     "area": float(np.pi * (r ** 2)),
                     "relative": True,
                     "color": f"#{color_hex}"

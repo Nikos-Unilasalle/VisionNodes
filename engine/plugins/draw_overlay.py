@@ -134,7 +134,7 @@ class DrawOverlayNode(NodeProcessor):
                 cv2.putText(img, data['label'], (scaled_pts[0][0], scaled_pts[0][1] - 10), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
         elif shape == 'circle' and len(scaled_pts) > 0:
-            rad = int(data.get('radius', 0.1) * w) if rel else int(data.get('radius', 10))
+            rad = int(data.get('radius_rel', data.get('radius', 0.1)) * w) if rel else int(data.get('radius', 10))
             cv2.circle(img, scaled_pts[0], rad, color, max(1, thick))
             if 'label' in data:
                 cv2.putText(img, data['label'], (scaled_pts[0][0] - rad, scaled_pts[0][1] - rad - 10), 
