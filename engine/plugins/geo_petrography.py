@@ -223,9 +223,10 @@ class GeoGrainMarkers(NodeProcessor):
         "and a grain-size histogram image."
     ),
     inputs=[
-        {'id': 'markers', 'color': 'any',   'label': 'Markers (watershed)'},
-        {'id': 'image',   'color': 'image', 'label': 'XPL Image (intensity)'},
-        {'id': 'opaques', 'color': 'any',   'label': 'Opaque Mask (optional)'},
+        {'id': 'markers',   'color': 'any',    'label': 'Markers (watershed)'},
+        {'id': 'image',     'color': 'image',  'label': 'XPL Image (intensity)'},
+        {'id': 'opaques',   'color': 'any',    'label': 'Opaque Mask (optional)'},
+        {'id': 'um_per_px', 'color': 'scalar', 'label': 'µm/pixel (Calibration)'},
     ],
     outputs=[
         {'id': 'histogram',        'color': 'image',  'label': 'Size Histogram'},
@@ -269,7 +270,12 @@ class GeoGrainStats(NodeProcessor):
         min_area  = int(params.get('min_area', 100))
         hist_bins = int(params.get('hist_bins', 30))
         bar_bgr   = self._parse_color(params.get('hist_color', '#4FC3F7'))
-        um_per_px = float(params.get('um_per_px', 1.0))
+        um_px_input = inputs.get('um_per_px')
+        um_per_px = float(um_px_input) if um_px_input is not None else float(params.get('um_per_px', 1.0))
+        calibrated = um_per_px != 1.0
+        um2_per_px2 = um_per_px ** 2
+        unit_area = "µm²" if calibrated else "px²"
+        unit_len  = "µm"  if calibrated else "px"
 
         h, w = markers.shape[:2]
         total_px = h * w
@@ -346,24 +352,28 @@ class GeoGrainStats(NodeProcessor):
         circularities = np.array([r['circularity'] for r in regions], dtype=np.float32)
         aspects       = np.array([r['aspect_ratio'] for r in regions], dtype=np.float32)
 
-        mean_area        = float(np.mean(areas))
-        median_area      = float(np.median(areas))
-        std_area         = float(np.std(areas))
-        mean_circularity = float(np.mean(circularities))
-        mean_aspect      = float(np.mean(aspects))
         grain_px         = int(np.sum(areas))
         grain_fraction   = round(100.0 * grain_px / total_px, 2)
         opaque_fraction  = round(100.0 * opaque_px / total_px, 2)
+        mean_circularity = float(np.mean(circularities))
+        mean_aspect      = float(np.mean(aspects))
 
-        um2_per_px2  = um_per_px ** 2
-        mean_area_um2 = round(mean_area * um2_per_px2, 2)
-        mean_dia_um   = round(2.0 * np.sqrt(mean_area * um2_per_px2 / np.pi), 2)
+        # Convert to calibrated units for all display/output
+        areas_cal     = areas * um2_per_px2
+        mean_area_cal = float(np.mean(areas_cal))
+        median_area_cal = float(np.median(areas_cal))
+        std_area_cal  = float(np.std(areas_cal))
+        mean_dia_cal  = round(2.0 * np.sqrt(mean_area_cal / np.pi), 2)
+
+        # Keep raw px values only for internal use (grain_fraction, opaque_fraction)
+        mean_area_um2 = round(mean_area_cal, 2)
+        mean_dia_um   = mean_dia_cal
 
         # ── Histogram image ───────────────────────────────────────────────
         IW, IH = 600, 340
         hist_img = np.full((IH, IW, 3), 30, dtype=np.uint8)
 
-        counts, bin_edges = np.histogram(areas, bins=hist_bins)
+        counts, bin_edges = np.histogram(areas_cal, bins=hist_bins)
         max_count = max(counts.max(), 1)
         bar_w = max(1, (IW - 80) // hist_bins)
         x0 = 50
@@ -377,20 +387,21 @@ class GeoGrainStats(NodeProcessor):
         # Axis labels
         cv2.putText(hist_img, f'Grain Size Distribution  (n={count})',
                     (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (220, 220, 220), 1)
-        cv2.putText(hist_img, 'Area (px2)',
+        cv2.putText(hist_img, f'Area ({unit_area})',
                     (IW // 2 - 30, IH - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (180, 180, 180), 1)
-        cv2.putText(hist_img, str(int(bin_edges[0])),
+        cv2.putText(hist_img, f'{bin_edges[0]:.2g}',
                     (x0, IH - 24), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (160, 160, 160), 1)
-        cv2.putText(hist_img, str(int(bin_edges[-1])),
+        cv2.putText(hist_img, f'{bin_edges[-1]:.2g}',
                     (x0 + hist_bins * bar_w - 30, IH - 24),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.35, (160, 160, 160), 1)
 
         # Stats inset
         lines = [
             f'Count : {count}',
-            f'Mean  : {mean_area:.0f} px2',
-            f'Median: {median_area:.0f} px2',
-            f'StdDev: {std_area:.0f} px2',
+            f'Mean  : {mean_area_cal:.2g} {unit_area}',
+            f'Median: {median_area_cal:.2g} {unit_area}',
+            f'StdDev: {std_area_cal:.2g} {unit_area}',
+            f'Diam. : {mean_dia_cal:.2g} {unit_len}',
             f'Circ. : {mean_circularity:.3f}',
             f'AR    : {mean_aspect:.2f}',
             f'Grain : {grain_fraction:.1f}%',
@@ -398,34 +409,35 @@ class GeoGrainStats(NodeProcessor):
         ]
         for i, line in enumerate(lines):
             cv2.putText(hist_img, line,
-                        (IW - 165, 40 + i * 18),
+                        (IW - 175, 35 + i * 17),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.38, (200, 230, 200), 1)
 
         # ── Summary text ──────────────────────────────────────────────────
-        scale_note = f"  ({um_per_px} µm/px)" if um_per_px != 1.0 else "  (1 µm/px — set µm/pixel param to calibrate)"
+        calib_str = f"{um_per_px:.4g} µm/px" if calibrated else "non calibré — connecter Math Div ou saisir µm/pixel"
         summary = (
             f"Grain count: {count}\n"
-            f"Mean area: {mean_area:.0f} px² ± {std_area:.0f}\n"
-            f"Median area: {median_area:.0f} px²\n"
-            f"Mean area: {mean_area_um2:.1f} µm²{scale_note}\n"
-            f"Mean diameter (equiv.): {mean_dia_um:.1f} µm\n"
+            f"Calibration: {calib_str}\n"
+            f"Mean area: {mean_area_cal:.3g} {unit_area} ± {std_area_cal:.3g}\n"
+            f"Median area: {median_area_cal:.3g} {unit_area}\n"
+            f"Mean diameter (equiv.): {mean_dia_cal:.3g} {unit_len}\n"
             f"Mean circularity: {mean_circularity:.3f}  (1=perfect circle)\n"
             f"Mean aspect ratio: {mean_aspect:.2f}\n"
             f"Grain fraction: {grain_fraction:.1f}%\n"
             f"Opaque fraction: {opaque_fraction:.1f}%\n"
-            f"Image size: {w}×{h} px ({total_px} px total)"
+            f"Image size: {w}×{h} px"
         )
 
         return {
             'histogram':        hist_img,
             'summary':          summary,
             'count':            count,
-            'mean_area':        round(mean_area, 2),
-            'median_area':      round(median_area, 2),
+            'mean_area':        round(mean_area_cal, 4),
+            'median_area':      round(median_area_cal, 4),
             'mean_area_um2':    mean_area_um2,
             'mean_dia_um':      mean_dia_um,
             'mean_circularity': round(mean_circularity, 4),
             'grain_fraction':   grain_fraction,
             'opaque_fraction':  opaque_fraction,
+            'unit':             unit_area,
             'regions':          regions,
         }

@@ -1,0 +1,304 @@
+{
+  "nodes": [
+    {
+      "id": "frame-inputs",
+      "type": "canvas_frame",
+      "position": {"x": -200, "y": 0},
+      "style": {"width": 300, "height": 940, "zIndex": -1},
+      "data": {"label": "Frame", "params": {"color_index": 6, "title": "1 — Image Inputs (XPL + PPL)"}}
+    },
+    {
+      "id": "note-xpl",
+      "type": "canvas_note",
+      "position": {"x": -185, "y": 55},
+      "style": {"width": 270},
+      "data": {"params": {"color_index": 6, "text": "XPL = Lumière Croisée (LP)\nCouleurs d'interférence — joints de grains nets.\nSource principale de segmentation."}}
+    },
+    {
+      "id": "img-xpl",
+      "type": "input_image",
+      "position": {"x": -185, "y": 120},
+      "data": {"label": "LP / XPL — PNG/JPG", "params": {"path": ""}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "note-ppl",
+      "type": "canvas_note",
+      "position": {"x": -185, "y": 305},
+      "style": {"width": 270},
+      "data": {"params": {"color_index": 6, "text": "PPL = Lumière Naturelle (LN)\nCouleurs intrinseques — identification minérale et zones d'altération."}}
+    },
+    {
+      "id": "img-ppl",
+      "type": "input_image",
+      "position": {"x": -185, "y": 370},
+      "data": {"label": "LN / PPL — PNG/JPG", "params": {"path": ""}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "note-float",
+      "type": "canvas_note",
+      "position": {"x": -185, "y": 560},
+      "style": {"width": 270},
+      "data": {"params": {"color_index": 6, "text": "FLOAT IMAGE (TIFF/HDR 16-bit)\nAlternatif pour images scientifiques haute dynamique.\nConnecter UNE paire seulement (PNG/JPG OU Float)."}}
+    },
+    {
+      "id": "img-xpl-float",
+      "type": "input_float_image",
+      "position": {"x": -185, "y": 640},
+      "data": {"label": "LP / XPL — TIFF/HDR (Float)", "params": {"path": "", "normalize": 0}},
+      "width": 208, "height": 194
+    },
+    {
+      "id": "img-ppl-float",
+      "type": "input_float_image",
+      "position": {"x": -185, "y": 755},
+      "data": {"label": "LN / PPL — TIFF/HDR (Float)", "params": {"path": "", "normalize": 0}},
+      "width": 208, "height": 194
+    },
+    {
+      "id": "frame-phases",
+      "type": "canvas_frame",
+      "position": {"x": 120, "y": 0},
+      "style": {"width": 340, "height": 600, "zIndex": -1},
+      "data": {"label": "Frame", "params": {"color_index": 2, "title": "2 — Phases Minérales (LN)"}}
+    },
+    {
+      "id": "note-phases",
+      "type": "canvas_note",
+      "position": {"x": 135, "y": 55},
+      "style": {"width": 305},
+      "data": {"params": {"color_index": 2, "text": "Segmentation couleur sur LN pour identifier les phases.\nAjuster les couleurs cibles et tolérances selon l'échantillon.\nMode CIELAB recommandé (perceptuel, plus robuste que RGB)."}}
+    },
+    {
+      "id": "color-seg",
+      "type": "geo_color_segmenter",
+      "position": {"x": 140, "y": 140},
+      "data": {
+        "label": "Phase Identification",
+        "params": {
+          "use_lab": true,
+          "c1_active": true,  "c1_label": "Quartz / Feldspar",     "c1_color": "#C8DCE8", "c1_tol": 50,
+          "c2_active": true,  "c2_label": "Altération (Fe-ox)",     "c2_color": "#B07030", "c2_tol": 45,
+          "c3_active": true,  "c3_label": "Opaques + Fractures",    "c3_color": "#121212", "c3_tol": 30,
+          "c4_active": false, "c4_label": "Phase 4",                "c4_color": "#00FF00", "c4_tol": 30
+        }
+      },
+      "width": 208, "height": 300
+    },
+    {
+      "id": "disp-zones",
+      "type": "output_display",
+      "position": {"x": 140, "y": 455},
+      "data": {"label": "Phase Overlay", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "frame-calib",
+      "type": "canvas_frame",
+      "position": {"x": 120, "y": 620},
+      "style": {"width": 340, "height": 310, "zIndex": -1},
+      "data": {"label": "Frame", "params": {"color_index": 4, "title": "3 — Calibration (µm/px)"}}
+    },
+    {
+      "id": "note-calib",
+      "type": "canvas_note",
+      "position": {"x": 135, "y": 670},
+      "style": {"width": 305},
+      "data": {"params": {"color_index": 4, "text": "Tracer une ligne sur la barre d'échelle (ex: 500 µm).\nKnown Length = valeur réelle, Unit = µm.\nMath Div calcule 1/px_per_µm = µm/px et l'injecte directement dans Grain Stats."}}
+    },
+    {
+      "id": "calibration",
+      "type": "sci_interactive_calibration",
+      "position": {"x": 140, "y": 760},
+      "data": {
+        "label": "Scale Bar Calibration",
+        "params": {"points": "[]", "real_len": 500, "unit": "µm"}
+      },
+      "width": 208, "height": 200
+    },
+    {
+      "id": "math-um-px",
+      "type": "math_div",
+      "position": {"x": 140, "y": 860},
+      "data": {"label": "1 / px_per_µm = µm/px", "params": {"value_a": 1.0, "value_b": 1.0}},
+      "width": 208, "height": 80
+    },
+    {
+      "id": "frame-grain",
+      "type": "canvas_frame",
+      "position": {"x": 480, "y": 0},
+      "style": {"width": 530, "height": 940, "zIndex": -1},
+      "data": {"label": "Frame", "params": {"color_index": 1, "title": "4 — Segmentation des Grains (XPL + PPL)"}}
+    },
+    {
+      "id": "note-grain",
+      "type": "canvas_note",
+      "position": {"x": 495, "y": 55},
+      "style": {"width": 500},
+      "data": {"params": {"color_index": 1, "text": "Fusion XPL+PPL : gradient multi-canal pour détection des joints. Watershed marker-controlled.\nAugmenter Boundary Threshold si trop d'artefacts intra-grain.\nAugmenter Min Grain (px) pour éliminer les fragments.\nPPL Weight : contribution relative du canal LN dans le gradient de frontière."}}
+    },
+    {
+      "id": "grain-seg",
+      "type": "geo_grain_segment",
+      "position": {"x": 500, "y": 155},
+      "data": {
+        "label": "Grain Segmentation",
+        "params": {
+          "blur_radius": 4,
+          "boundary_thresh": 25,
+          "boundary_size": 5,
+          "opaque_thresh": 35,
+          "opaque_min_px": 300,
+          "min_grain_px": 400,
+          "fill_radius": 6,
+          "ppl_weight": 0.4
+        }
+      },
+      "width": 208, "height": 320
+    },
+    {
+      "id": "disp-overlay",
+      "type": "output_display",
+      "position": {"x": 500, "y": 490},
+      "data": {"label": "Grain Overlay (XPL)", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "disp-labels",
+      "type": "output_display",
+      "position": {"x": 720, "y": 490},
+      "data": {"label": "Labels (grains colorés)", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "disp-opaques",
+      "type": "output_display",
+      "position": {"x": 500, "y": 640},
+      "data": {"label": "Opaques détectés", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "frame-stats",
+      "type": "canvas_frame",
+      "position": {"x": 1030, "y": 0},
+      "style": {"width": 1080, "height": 940, "zIndex": -1},
+      "data": {"label": "Frame", "params": {"color_index": 5, "title": "5 — Analyse, Statistiques & Export"}}
+    },
+    {
+      "id": "note-stats",
+      "type": "canvas_note",
+      "position": {"x": 1045, "y": 55},
+      "style": {"width": 500},
+      "data": {"params": {"color_index": 5, "text": "MARKER FILTER : seuil aire min/max pour éliminer bruit de bord.\nGRAIN STATS : agrège toute la population (count, aire, circularité, allongement, fraction opaque).\nREGION PROPS : descripteurs par grain (solidité, excentricité, intensité XPL).\nCSV EXPORT : toggle Recording ON — un grain par ligne."}}
+    },
+    {
+      "id": "note-analysis",
+      "type": "canvas_note",
+      "position": {"x": 1295, "y": 55},
+      "style": {"width": 500},
+      "data": {"params": {"color_index": 5, "text": "CALIBRATION µm/pixel : automatiquement transmis depuis Math Div (Frame 3).\n\nRAPPORT MODAL : % de surface par phase identifiée sur LN.\n\nCALIBRATION manuelle alternative : µm/px = taille_pixel_capteur / grandissement_objectif\nEx : 6.5 µm pixel, obj 10× → 0.65 µm/px."}}
+    },
+    {
+      "id": "mfilter-1",
+      "type": "feat_marker_filter",
+      "position": {"x": 1295, "y": 155},
+      "data": {
+        "label": "Filter Grains by Area",
+        "params": {"min_area": 400, "max_area": 1000000, "area_unit": 0, "remap_ids": 1}
+      },
+      "width": 208, "height": 190
+    },
+    {
+      "id": "grain-stats",
+      "type": "geo_grain_stats",
+      "position": {"x": 1050, "y": 155},
+      "data": {
+        "label": "Grain Population Stats",
+        "params": {"min_area": 100, "hist_bins": 25, "hist_color": "#4FC3F7", "um_per_px": 1.0}
+      },
+      "width": 208, "height": 280
+    },
+    {
+      "id": "regprops-1",
+      "type": "sci_region_props",
+      "position": {"x": 1295, "y": 365},
+      "data": {
+        "label": "Grain Region Props",
+        "params": {"intensity": true, "show_ids": false, "show_ellipse": true}
+      },
+      "width": 208, "height": 170
+    },
+    {
+      "id": "disp-regprops",
+      "type": "output_display",
+      "position": {"x": 1295, "y": 555},
+      "data": {"label": "Region Props Preview", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "csv-1",
+      "type": "util_csv_export",
+      "position": {"x": 1295, "y": 705},
+      "data": {
+        "label": "CSV Export (per grain)",
+        "params": {"record": false, "filename": "grain_analysis", "path": "exports", "auto_timestamp": true}
+      },
+      "width": 208, "height": 200
+    },
+    {
+      "id": "disp-histogram",
+      "type": "output_display",
+      "position": {"x": 1050, "y": 455},
+      "data": {"label": "Histogramme taille grains", "params": {}},
+      "width": 208, "height": 180
+    },
+    {
+      "id": "stats-text",
+      "type": "data_inspector",
+      "position": {"x": 1050, "y": 655},
+      "data": {"label": "Population Summary", "params": {}},
+      "width": 208, "height": 130
+    },
+    {
+      "id": "report",
+      "type": "sci_analysis_report",
+      "position": {"x": 1050, "y": 805},
+      "data": {
+        "label": "Rapport Modal",
+        "params": {"title": "Lame Mince — Analyse Modale (LN)"}
+      },
+      "width": 420, "height": 110
+    }
+  ],
+  "edges": [
+    {"id": "e-xpl-grain",      "source": "img-xpl",    "sourceHandle": "image__main",    "target": "grain-seg",   "targetHandle": "image__xpl"},
+    {"id": "e-ppl-grain",      "source": "img-ppl",    "sourceHandle": "image__main",    "target": "grain-seg",   "targetHandle": "image__ppl"},
+    {"id": "e-ppl-color",      "source": "img-ppl",    "sourceHandle": "image__main",    "target": "color-seg",   "targetHandle": "image__image"},
+    {"id": "e-ppl-calib",      "source": "img-ppl",    "sourceHandle": "image__main",    "target": "calibration", "targetHandle": "image__image"},
+
+    {"id": "e-overlay-disp",   "source": "grain-seg",  "sourceHandle": "image__overlay", "target": "disp-overlay",  "targetHandle": "image__main"},
+    {"id": "e-labels-disp",    "source": "grain-seg",  "sourceHandle": "image__labels",  "target": "disp-labels",   "targetHandle": "image__main"},
+    {"id": "e-opaques-disp",   "source": "grain-seg",  "sourceHandle": "image__opaques", "target": "disp-opaques",  "targetHandle": "image__main"},
+    {"id": "e-opaques-stats",  "source": "grain-seg",  "sourceHandle": "image__opaques", "target": "grain-stats",   "targetHandle": "any__opaques"},
+
+    {"id": "e-markers-filter", "source": "grain-seg",  "sourceHandle": "any__markers",   "target": "mfilter-1",   "targetHandle": "any__markers"},
+    {"id": "e-xpl-filter",     "source": "img-xpl",    "sourceHandle": "image__main",    "target": "mfilter-1",   "targetHandle": "image__image"},
+    {"id": "e-filter-stats",   "source": "mfilter-1",  "sourceHandle": "any__markers_out","target": "grain-stats", "targetHandle": "any__markers"},
+    {"id": "e-filter-regprops","source": "mfilter-1",  "sourceHandle": "any__markers_out","target": "regprops-1",  "targetHandle": "any__labels_map"},
+    {"id": "e-xpl-regprops",   "source": "img-xpl",    "sourceHandle": "image__main",    "target": "regprops-1",  "targetHandle": "image__image"},
+    {"id": "e-umpx-regprops",  "source": "math-um-px", "sourceHandle": "scalar__result", "target": "regprops-1",   "targetHandle": "scalar__um_per_px"},
+    {"id": "e-regprops-disp",  "source": "regprops-1", "sourceHandle": "image__main",    "target": "disp-regprops","targetHandle": "image__main"},
+    {"id": "e-regprops-csv",   "source": "regprops-1", "sourceHandle": "list__regions",  "target": "csv-1",       "targetHandle": "any__val_1"},
+
+    {"id": "e-xpl-stats",      "source": "img-xpl",    "sourceHandle": "image__main",    "target": "grain-stats",  "targetHandle": "image__image"},
+    {"id": "e-hist-disp",      "source": "grain-stats","sourceHandle": "image__histogram","target": "disp-histogram","targetHandle": "image__main"},
+    {"id": "e-summary-inspect","source": "grain-stats","sourceHandle": "any__summary",   "target": "stats-text",   "targetHandle": "any__data"},
+
+    {"id": "e-calib-math",     "source": "calibration","sourceHandle": "scalar__factor", "target": "math-um-px",  "targetHandle": "scalar__b"},
+    {"id": "e-umpx-stats",     "source": "math-um-px", "sourceHandle": "scalar__result", "target": "grain-stats", "targetHandle": "scalar__um_per_px"},
+
+    {"id": "e-zones-disp",     "source": "color-seg",  "sourceHandle": "image__overlay", "target": "disp-zones",  "targetHandle": "image__main"},
+    {"id": "e-stats-report",   "source": "color-seg",  "sourceHandle": "dict__stats",    "target": "report",      "targetHandle": "dict__data"}
+  ]
+}
