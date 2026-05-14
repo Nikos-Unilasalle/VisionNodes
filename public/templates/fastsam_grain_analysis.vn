@@ -1,0 +1,128 @@
+{
+  "nodes": [
+    {
+      "id": "fg-img",
+      "type": "input_image",
+      "position": { "x": 0, "y": 60 },
+      "data": { "label": "Petrographic Image", "params": { "path": "" } },
+      "width": 208
+    },
+
+    {
+      "id": "fg-calib",
+      "type": "sci_interactive_calibration",
+      "position": { "x": 0, "y": 320 },
+      "data": {
+        "label": "Scale Calibration (µm/px)",
+        "params": { "points": "[]", "real_len": 500.0, "unit": "µm" }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "fg-sam",
+      "type": "fast_sam_segmenter",
+      "position": { "x": 280, "y": 60 },
+      "data": {
+        "label": "FastSAM Grain Segmentation",
+        "params": {
+          "imgsz": 2, "conf": 0.25, "iou": 0.7, "max_det": 500,
+          "scale_factor": 1.0, "contour_thickness": 1,
+          "better_quality": false, "show_ids": true, "id_font_scale": 0.5
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "fg-stats",
+      "type": "sam_grain_stats",
+      "position": { "x": 560, "y": 60 },
+      "data": {
+        "label": "Grain Stats",
+        "params": { "min_area": 100, "hist_bins": 30, "hist_color": "#4FC3F7", "um_per_px": 1.0 }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "fg-report",
+      "type": "geo_petro_tableau",
+      "position": { "x": 840, "y": 60 },
+      "data": {
+        "label": "Petrographic Report",
+        "params": {
+          "sample_name": "Sample 01",
+          "rock_type": "Unknown",
+          "formation": "",
+          "analyst": "Anonymous",
+          "location": "",
+          "age": ""
+        }
+      },
+      "width": 320
+    },
+
+    {
+      "id": "fg-histogram",
+      "type": "geo_grain_histogram",
+      "position": { "x": 840, "y": 360 },
+      "data": {
+        "label": "Grain Size Histogram",
+        "params": { "bins": 30, "metric": 0 }
+      },
+      "width": 280,
+      "height": 220,
+      "style": { "width": 280, "height": 220 }
+    },
+
+    {
+      "id": "fg-display",
+      "type": "output_display",
+      "position": { "x": 1240, "y": 60 },
+      "data": {
+        "label": "Visual Output",
+        "params": {},
+        "ports": [
+          { "id": "image__0_overlay",   "color": "image", "label": "Overlay + IDs" },
+          { "id": "image__1_masks",     "color": "image", "label": "Masks" },
+          { "id": "image__2_histogram", "color": "image", "label": "Size Histogram" }
+        ]
+      },
+      "width": 208,
+      "height": 300
+    },
+
+    {
+      "id": "fg-inspector",
+      "type": "data_inspector",
+      "position": { "x": 1240, "y": 400 },
+      "data": {
+        "label": "Per-Grain Data (area, roundness, feret…)",
+        "params": {}
+      },
+      "width": 260,
+      "height": 420,
+      "style": { "width": 260, "height": 420 }
+    }
+  ],
+
+  "edges": [
+    { "id": "fg-e1",  "source": "fg-img",   "target": "fg-calib",    "sourceHandle": "image__main",              "targetHandle": "image__image" },
+    { "id": "fg-e2",  "source": "fg-img",   "target": "fg-sam",      "sourceHandle": "image__main",              "targetHandle": "image__image" },
+    { "id": "fg-e3",  "source": "fg-calib", "target": "fg-sam",      "sourceHandle": "scalar__factor",           "targetHandle": "scalar__scale" },
+    { "id": "fg-e4",  "source": "fg-calib", "target": "fg-stats",    "sourceHandle": "scalar__factor",           "targetHandle": "scalar__um_per_px" },
+    { "id": "fg-e5",  "source": "fg-img",   "target": "fg-stats",    "sourceHandle": "image__main",              "targetHandle": "image__image" },
+    { "id": "fg-e6",  "source": "fg-sam",   "target": "fg-stats",    "sourceHandle": "list__contours",           "targetHandle": "list__contours" },
+    { "id": "fg-e7",  "source": "fg-sam",   "target": "fg-display",  "sourceHandle": "image__main",              "targetHandle": "image__0_overlay" },
+    { "id": "fg-e8",  "source": "fg-sam",   "target": "fg-display",  "sourceHandle": "image__masks_img",         "targetHandle": "image__1_masks" },
+    { "id": "fg-e9",  "source": "fg-stats", "target": "fg-display",  "sourceHandle": "image__histogram",         "targetHandle": "image__2_histogram" },
+    { "id": "fg-e10", "source": "fg-sam",   "target": "fg-inspector","sourceHandle": "any__grain_data",          "targetHandle": "any__data" },
+    { "id": "fg-e11", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__count",            "targetHandle": "scalar__grain_count" },
+    { "id": "fg-e12", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__mean_dia_um",      "targetHandle": "scalar__mean_dia_um" },
+    { "id": "fg-e13", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__mean_circularity", "targetHandle": "scalar__circularity" },
+    { "id": "fg-e14", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__mean_aspect_ratio","targetHandle": "scalar__aspect_ratio" },
+    { "id": "fg-e15", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__grain_fraction",   "targetHandle": "scalar__grain_frac" },
+    { "id": "fg-e16", "source": "fg-stats", "target": "fg-histogram","sourceHandle": "list__regions",            "targetHandle": "list__regions" }
+  ]
+}

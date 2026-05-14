@@ -146,7 +146,7 @@ def _is_serializable(v, _depth=0):
             return False
         return all(_is_serializable(x, _depth + 1) for x in v.values())
     if isinstance(v, (list, tuple)):
-        if len(v) > 64:
+        if len(v) > 2000:
             return False
         return all(_is_serializable(x, _depth + 1) for x in v)
     return False  # Affine, bytes, unknown objects — skip
