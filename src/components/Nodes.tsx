@@ -19,7 +19,8 @@ const getIcon = (name: string, fallback = Box) => {
 };
 import {
   AreaChart, Area, ResponsiveContainer, YAxis, XAxis, Tooltip,
-  BarChart, Bar, Cell, LineChart, Line, CartesianGrid, ReferenceLine
+  BarChart, Bar, Cell, LineChart, Line, CartesianGrid, ReferenceLine,
+  ComposedChart,
 } from 'recharts';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8' };
@@ -2816,7 +2817,17 @@ const PetrographicReportNodeUI = ({ data, selected }: { data: any; selected: boo
 
   return (
     <BaseNode title={title} icon={FileText} selected={selected} data={data} color="accent"
-      inputs={[{ id: 'data', color: 'any', label: 'Report Data' }]}
+      inputs={[
+        { id: 'modal_stats',   color: 'any',    label: 'Modal Stats' },
+        { id: 'neighbor_data', color: 'any',    label: 'Neighbor Data' },
+        { id: 'grain_count',   color: 'scalar', label: 'Grain Count' },
+        { id: 'mean_dia_um',   color: 'scalar', label: 'Mean Diam.' },
+        { id: 'circularity',   color: 'scalar', label: 'Circularity' },
+        { id: 'grain_frac',    color: 'scalar', label: 'Grain Frac.' },
+        { id: 'opaque_count',  color: 'scalar', label: 'Opaque Count' },
+        { id: 'opaque_frac',   color: 'scalar', label: 'Opaque Frac.' },
+        { id: 'aspect_ratio',  color: 'scalar', label: 'Aspect Ratio' },
+      ]}
       outputs={[{ id: 'report', color: 'any', label: 'Report Dict' }]}
       width={expanded ? '44rem' : '20rem'}>
       <div className="flex flex-col gap-2 mt-2 w-full">
@@ -2882,6 +2893,92 @@ const PetrographicReportNodeUI = ({ data, selected }: { data: any; selected: boo
 };
 
 export const PetrographicReportNode = memo(PetrographicReportNodeUI);
+
+const GrainHistogramNodeUI = ({ data, selected }: { data: any; selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+
+  const chartData = useMemo(() => {
+    const bins  = nd?.bins       as number[] | undefined;
+    const cnts  = nd?.counts     as number[] | undefined;
+    const cumul = nd?.cumulative as number[] | undefined;
+    if (!bins?.length) return [];
+    return bins.map((b, i) => ({ b, count: cnts?.[i] ?? 0, cum: cumul?.[i] ?? 0 }));
+  }, [nd?.bins, nd?.counts, nd?.cumulative]);
+
+  const d50   = nd?.d50   as number | undefined;
+  const d10   = nd?.d10   as number | undefined;
+  const d90   = nd?.d90   as number | undefined;
+  const count = nd?.count as number | undefined;
+  const mean  = nd?.mean  as number | undefined;
+  const std   = nd?.std   as number | undefined;
+  const unit  = (nd?.unit  as string | undefined) ?? 'µm';
+  const label = (nd?.label as string | undefined) ?? 'Size';
+
+  const hasData = chartData.length > 0;
+
+  return (
+    <BaseNode title="Grain Size Histogram" icon={BarChart2} selected={selected} data={data}
+      color="blue"
+      inputs={[{ id: 'regions', color: 'list', label: 'Regions' }]}
+      outputs={[]}
+      width="100%" height="100%" className="w-full h-full">
+      <div className="flex flex-col gap-1 mt-1 w-full h-full min-h-0">
+        {!hasData ? (
+          <div className="flex-1 flex items-center justify-center text-[10px] text-gray-500 uppercase tracking-widest">
+            Awaiting data…
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={chartData} margin={{ top: 4, right: 28, left: 0, bottom: 2 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="b" tick={{ fontSize: 8, fill: '#6b7280' }}
+                    tickFormatter={(v: number) => v.toFixed(0)} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 8, fill: '#6b7280' }} width={28} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 100]}
+                    tick={{ fontSize: 8, fill: '#a78bfa' }} unit="%" width={28} />
+                  <Tooltip
+                    contentStyle={{ background: '#1e1e2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 10 }}
+                    formatter={(val: number, name: string) =>
+                      name === 'cum' ? [`${val.toFixed(1)}%`, 'Cumul.'] : [val, 'Count']
+                    }
+                    labelFormatter={(v: number) => `${v.toFixed(1)} ${unit}`}
+                  />
+                  {d50 != null && (
+                    <ReferenceLine yAxisId="left" x={d50} stroke="#f59e0b"
+                      strokeDasharray="4 3" label={{ value: 'D50', fill: '#f59e0b', fontSize: 8, position: 'top' }} />
+                  )}
+                  <Bar yAxisId="left" dataKey="count" fill="#3b82f6" opacity={0.75} radius={[2, 2, 0, 0]} />
+                  <Line yAxisId="right" type="monotone" dataKey="cum"
+                    stroke="#a78bfa" strokeWidth={1.5} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 px-1 pb-1">
+              {[
+                ['n', count],
+                [`D10 (${unit})`, d10],
+                [`D50 (${unit})`, d50],
+                [`D90 (${unit})`, d90],
+                [`Mean`, mean != null ? `${mean} ${unit}` : '—'],
+                [`Std`,  std  != null ? `${std} ${unit}`  : '—'],
+              ].map(([k, v]) => (
+                <div key={String(k)} className="flex flex-col">
+                  <span className="text-[7px] text-gray-500 truncate">{k}</span>
+                  <span className="text-[9px] font-bold text-blue-300 font-mono">{v ?? '—'}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </BaseNode>
+  );
+};
+
+export const GrainHistogramNode = memo(GrainHistogramNodeUI);
 
 export const RootAnatomyReportNode = memo(({ data, selected }: any) => {
   const nodeId = useNodeId();

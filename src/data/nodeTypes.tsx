@@ -66,6 +66,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   geo_land_cover: N.GenericCustomNode,
   sci_analysis_report: N.ScientificReportNode,
   geo_petro_tableau: N.PetrographicReportNode,
+  geo_grain_histogram: withNodeResizer(N.GrainHistogramNode, 260, 200),
   sci_kmeans_list: N.GenericCustomNode,
   sci_interactive_calibration: N.InteractiveCalibrationNode,
   feat_bilateral: N.GenericCustomNode,
