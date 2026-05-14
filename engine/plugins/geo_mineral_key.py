@@ -11,28 +11,6 @@ def _hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
     return (b, g, r)
 
 
-def _make_theme(accent_hex: str) -> dict:
-    try:
-        b, g, r = _hex_to_bgr(accent_hex)
-        return {
-            'c_title':   (b, g, r),
-            'bg_title':  (max(0, b // 8),  max(0, g // 5),  max(0, r // 8)),
-            'c_section': (min(255, b + 20), min(255, g - 15), min(255, r + 20)),
-            'bg_section':(max(0, b // 10), max(0, g // 7),  max(0, r // 10)),
-            'c_header':  (min(255, b + 60), min(255, g + 20), min(255, r + 60)),
-            'bg_header': (max(0, b // 6),  max(0, g // 4 + 5), max(0, r // 6)),
-        }
-    except Exception:
-        return {
-            'c_title':   C_TITLE,
-            'bg_title':  BG_TITLE,
-            'c_section': C_SECTION,
-            'bg_section':BG_SECTION,
-            'c_header':  C_HEADER,
-            'bg_header': BG_HEADER,
-        }
-
-
 # (name, PPL color, XPL/biref color, biref level, cleavage, diagnostic notes)
 _MINERALS = {
     0: [  # Igneous / Magmatique
@@ -87,24 +65,24 @@ TITLE_H  = 36
 SECTION_H= 28
 PAD_Y    = 6
 
-# Colors (BGR)
-BG         = ( 30,  38,  50)
-BG_ODD     = ( 36,  46,  60)
-BG_EVEN    = ( 42,  54,  70)
-BG_HEADER  = ( 18,  62,  48)
-BG_TITLE   = ( 12,  45,  35)
-BG_SECTION = ( 22,  52,  42)
+# Neutral palette — never accent-tinted
+BG         = (22,  28,  38)
+BG_ODD     = (30,  38,  52)
+BG_EVEN    = (36,  46,  62)
+BG_TITLE   = (14,  18,  26)   # neutral dark title bg
+BG_HEADER  = (26,  34,  46)   # neutral column header bg
+BG_SECTION = (26,  34,  46)   # neutral section header bg
 C_TEXT     = (218, 224, 230)
-C_TITLE    = ( 90, 225, 150)
-C_HEADER   = (160, 235, 195)
-C_SECTION  = (100, 210, 160)
-C_DIM      = (140, 148, 158)
-C_HIGH_LOW    = (120, 210, 100)
-C_HIGH_HIGH   = ( 80, 120, 220)
-C_HIGH_VERY   = ( 60,  80, 240)
-C_HIGH_ISOTR  = (180, 180, 100)
-C_HIGH_OPAQUE = ( 80,  80,  80)
-C_HIGH_MOD    = (140, 185, 230)
+C_TITLE    = ( 80, 220, 140)  # default accent (overridden by theme)
+C_HEADER   = (180, 192, 205)  # neutral light for column labels
+C_SECTION  = ( 80, 220, 140)  # default accent (overridden by theme)
+C_DIM      = (130, 140, 155)
+C_HIGH_LOW    = (100, 205,  90)   # green  — low biref
+C_HIGH_HIGH   = ( 80, 120, 220)   # blue   — high biref
+C_HIGH_VERY   = ( 60,  80, 240)   # deep blue — very high
+C_HIGH_ISOTR  = (160, 160,  80)   # yellow — isotropic
+C_HIGH_OPAQUE = ( 85,  85,  85)   # grey   — opaque
+C_HIGH_MOD    = (140, 185, 230)   # light blue — moderate
 
 
 def _biref_color(level: str):
@@ -123,15 +101,7 @@ def _text(img, s, x, y, color=None, scale=0.40, bold=False):
     cv2.putText(img, str(s), (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thick, cv2.LINE_AA)
 
 
-def _build_table(systems: list[int], theme: dict | None = None) -> np.ndarray:
-    t = theme or {}
-    t_c_title   = t.get('c_title',   C_TITLE)
-    t_bg_title  = t.get('bg_title',  BG_TITLE)
-    t_c_section = t.get('c_section', C_SECTION)
-    t_bg_section= t.get('bg_section',BG_SECTION)
-    t_c_header  = t.get('c_header',  C_HEADER)
-    t_bg_header = t.get('bg_header', BG_HEADER)
-
+def _build_table(systems: list[int], accent: tuple = C_TITLE) -> np.ndarray:
     rows = []
     for sys_idx in systems:
         rows.append(('__section__', _SECTION_LABELS[sys_idx]))
@@ -140,26 +110,28 @@ def _build_table(systems: list[int], theme: dict | None = None) -> np.ndarray:
     total_h = TITLE_H + HEADER_H + len(rows) * ROW_H + PAD_Y * 2
     img = np.full((total_h, W, 3), BG, dtype=np.uint8)
 
-    # Title bar
-    cv2.rectangle(img, (0, 0), (W, TITLE_H), t_bg_title, -1)
+    # Title bar — neutral bg, accent text + accent bottom border
+    cv2.rectangle(img, (0, 0), (W, TITLE_H), BG_TITLE, -1)
+    cv2.line(img, (0, TITLE_H - 1), (W, TITLE_H - 1), accent, 2)
     _text(img, 'PETROGRAPHIC MINERAL IDENTIFICATION KEY  (PPL + XPL)',
-          8, TITLE_H - 10, t_c_title, scale=0.50, bold=True)
+          8, TITLE_H - 11, accent, scale=0.50, bold=True)
 
-    # Column headers
+    # Column headers — neutral bg, neutral text
     hy = TITLE_H + HEADER_H
-    cv2.rectangle(img, (0, TITLE_H), (W, hy), t_bg_header, -1)
+    cv2.rectangle(img, (0, TITLE_H), (W, hy), BG_HEADER, -1)
     for col_i, hdr in enumerate(_HEADERS):
-        _text(img, hdr, _COL_X[col_i], hy - 9, t_c_header, scale=0.40, bold=True)
-    cv2.line(img, (0, hy), (W, hy), (60, 80, 100), 1)
+        _text(img, hdr, _COL_X[col_i], hy - 9, C_HEADER, scale=0.40, bold=True)
+    cv2.line(img, (0, hy), (W, hy), (50, 64, 82), 1)
 
     # Data rows
     y = hy
     row_i = 0
     for row in rows:
         if row[0] == '__section__':
-            # Section separator
-            cv2.rectangle(img, (0, y), (W, y + SECTION_H), t_bg_section, -1)
-            _text(img, '  ' + row[1], 8, y + SECTION_H - 9, t_c_section, scale=0.44, bold=True)
+            # Section separator — neutral bg, accent text
+            cv2.rectangle(img, (0, y), (W, y + SECTION_H), BG_SECTION, -1)
+            cv2.line(img, (0, y), (W, y), accent, 1)
+            _text(img, '  ' + row[1], 8, y + SECTION_H - 9, accent, scale=0.44, bold=True)
             y += SECTION_H
             row_i = 0
         else:
@@ -183,8 +155,9 @@ def _build_table(systems: list[int], theme: dict | None = None) -> np.ndarray:
     for cx in _COL_X[1:]:
         cv2.line(img, (cx - 2, TITLE_H), (cx - 2, total_h), (50, 62, 78), 1)
 
-    # Footer
-    cv2.line(img, (0, total_h - 1), (W, total_h - 1), (60, 80, 100), 1)
+    # Footer + outer border
+    cv2.line(img, (0, total_h - 1), (W, total_h - 1), accent, 1)
+    cv2.rectangle(img, (0, 0), (W - 1, total_h - 1), accent, 1)
 
     return img
 
@@ -212,5 +185,8 @@ class GeoMineralKey(NodeProcessor):
     def process(self, inputs, params):
         system = int(params.get('system', 3))
         systems = [0, 1, 2] if system == 3 else [system]
-        theme = _make_theme(str(params.get('accent_color', '#4ade80')))
-        return {'main': _build_table(systems, theme)}
+        try:
+            accent = _hex_to_bgr(str(params.get('accent_color', '#4ade80')))
+        except Exception:
+            accent = C_TITLE
+        return {'main': _build_table(systems, accent)}
