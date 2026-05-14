@@ -13,13 +13,14 @@ from registry import vision_node, NodeProcessor
     ),
     inputs=[{'id': 'image', 'color': 'image', 'label': 'Input Image'}],
     outputs=[
-        {'id': 'overlay', 'color': 'image',  'label': 'Visual Overlay'},
-        {'id': 'mask1',   'color': 'mask',   'label': 'Mask 1'},
-        {'id': 'mask2',   'color': 'mask',   'label': 'Mask 2'},
-        {'id': 'mask3',   'color': 'mask',   'label': 'Mask 3'},
-        {'id': 'mask4',   'color': 'mask',   'label': 'Mask 4'},
-        {'id': 'stats',   'color': 'dict',   'label': 'Statistics'},
-        {'id': 'summary', 'color': 'string', 'label': 'Text Summary'},
+        {'id': 'overlay',      'color': 'image',  'label': 'Visual Overlay'},
+        {'id': 'labeled_mask', 'color': 'mask',   'label': 'Labeled Mask (0=bg, 1…4=phase)'},
+        {'id': 'mask1',        'color': 'mask',   'label': 'Mask 1'},
+        {'id': 'mask2',        'color': 'mask',   'label': 'Mask 2'},
+        {'id': 'mask3',        'color': 'mask',   'label': 'Mask 3'},
+        {'id': 'mask4',        'color': 'mask',   'label': 'Mask 4'},
+        {'id': 'stats',        'color': 'dict',   'label': 'Statistics'},
+        {'id': 'summary',      'color': 'string', 'label': 'Text Summary'},
     ],
     params=[
         {'id': 'use_lab', 'label': 'Perceptual Mode (CIELAB)', 'type': 'boolean', 'default': True},
@@ -71,8 +72,10 @@ class GeoColorSegmenter(NodeProcessor):
         use_lab = params.get('use_lab', True)
 
         # Initialize all outputs with empty masks to ensure data flow
+        labeled_mask = np.zeros((h, w), dtype=np.uint8)
         results = {
             'overlay': image.copy(),
+            'labeled_mask': labeled_mask,
             'mask1': np.zeros((h, w), dtype=np.uint8),
             'mask2': np.zeros((h, w), dtype=np.uint8),
             'mask3': np.zeros((h, w), dtype=np.uint8),
@@ -128,6 +131,8 @@ class GeoColorSegmenter(NodeProcessor):
             area_pct = (area_px / total_px) * 100.0
             
             results[f'mask{p["id"]}'] = mask
+            # Labeled mask: assign phase id where unassigned (first match wins)
+            labeled_mask[mask == 255] = p['id']
             stats_data[p['label']] = round(area_pct, 2)
             summary_lines.append(f"{p['label']}: {area_pct:.1f}%")
             
@@ -137,6 +142,7 @@ class GeoColorSegmenter(NodeProcessor):
             overlay = cv2.addWeighted(overlay, 1.0, cv2.bitwise_and(color_mask, color_mask, mask=mask), 0.5, 0)
 
         results['overlay'] = overlay
+        results['labeled_mask'] = labeled_mask
         results['stats'] = stats_data
         results['summary'] = "\n".join(summary_lines)
         

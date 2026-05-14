@@ -21,6 +21,7 @@ export function useKeyboardShortcuts({
   setPendingConnection,
   handleRotate,
   handleVisualize,
+  handleTeleport,
 }: any) {
 
   useEffect(() => {
@@ -113,6 +114,10 @@ export function useKeyboardShortcuts({
         e.preventDefault();
         handleRotate();
       }
+      if (cmdKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        handleTeleport();
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
         const selectedNode = nodesRef.current.find((n: any) => n.selected);
@@ -135,5 +140,5 @@ export function useKeyboardShortcuts({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize, handleTeleport]);
 }

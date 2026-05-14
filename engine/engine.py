@@ -133,17 +133,33 @@ class RerouteNode(NodeProcessor):
         return _PassThrough(inputs.get('in'))
 
 # --- CORE ENGINE ---
-def _is_serializable(v):
-    """Reject numpy arrays, rasterio Affine, and any container holding them."""
+def _is_serializable(v, _depth=0):
+    """Reject numpy arrays and non-JSON types. Skips large/deep collections to avoid huge WS payloads."""
     if isinstance(v, (str, int, float, bool, type(None))):
         return True
     if isinstance(v, np.ndarray):
         return False
+    if _depth > 2:
+        return False
     if isinstance(v, dict):
-        return all(_is_serializable(x) for x in v.values())
+        if len(v) > 64:
+            return False
+        return all(_is_serializable(x, _depth + 1) for x in v.values())
     if isinstance(v, (list, tuple)):
-        return all(_is_serializable(x) for x in v)
+        if len(v) > 64:
+            return False
+        return all(_is_serializable(x, _depth + 1) for x in v)
     return False  # Affine, bytes, unknown objects — skip
+
+
+def _input_sig(v):
+    """Cheap cache-key token for an input value.
+    Lists/dicts/arrays: identity (id). Same object = same data in this graph execution model.
+    Scalars: value comparison.
+    """
+    if isinstance(v, (np.ndarray, list, dict)):
+        return id(v)
+    return v
 
 def flatten_groups(node_list, edge_list, prefix=''):
     """Recursively expand group_node types into flat nodes+edges."""
@@ -254,7 +270,7 @@ class VisionEngine:
         self.sorted_nodes = []
         self.connected_clients = set()
         self.node_instances = {}
-        self._node_cache = {}  # {nid: {'params': str, 'output': dict}}
+        self._node_cache = {}  # {nid: {'sig': str, 'output': dict}}
         self.registry = {}
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
@@ -267,6 +283,9 @@ class VisionEngine:
             self.fallback_img = cv2.imread(img_path)
 
         self._run_event = asyncio.Event()  # set when nodes present; cleared after static pass
+
+        # Precomputed at plugin load — static for the lifetime of the engine
+        self._schema_by_type: dict = {}
 
     def switch_camera(self, idx):
         target_idx = str(idx)
@@ -302,6 +321,18 @@ class VisionEngine:
 
     def update_graph(self, g):
         raw_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
+        # Implicit ordering edges for teleport nodes: source must run before its clones
+        for node in g.get('nodes', []):
+            if node.get('type') == 'canvas_teleport':
+                src_id = node.get('data', {}).get('params', {}).get('source_id', '')
+                if src_id:
+                    raw_edges.append({
+                        'id': f'__tp_{node["id"]}',
+                        'source': src_id,
+                        'target': node['id'],
+                        'sourceHandle': '__teleport__',
+                        'targetHandle': '__teleport__',
+                    })
         flat_nodes, flat_edges = flatten_groups(g.get('nodes', []), raw_edges)
         self.graph = {'nodes': flat_nodes, 'edges': flat_edges}
         nodes_dict = {n['id']: n for n in flat_nodes}
@@ -355,14 +386,16 @@ class VisionEngine:
             results, node_datas, final_img, commands = {}, {}, None, []
             locked_out_nids = {n['id'] for n in self.sorted_nodes if n.get('data', {}).get('lockedOut', False)}
             bypassed_nids = {n['id'] for n in self.sorted_nodes if n.get('data', {}).get('bypassed', False)}
-            schema_by_type = {s['type']: s for s in NODE_SCHEMAS}
+            # Index edges by target once per run — O(E) instead of O(N×E)
+            edges_by_target: dict[str, list] = {}
+            for e in self.graph.get('edges', []):
+                if e.get('source') and e.get('target') and e['source'] not in locked_out_nids:
+                    edges_by_target.setdefault(e['target'], []).append(e)
             for node in self.sorted_nodes:
                 nid, ntype = node['id'], node['type']
                 inputs = {"raw_frame": frame}
-                for e in self.graph.get('edges', []):
-                    if e['source'] in locked_out_nids:
-                        continue
-                    if e['target'] == nid and e['source'] in results:
+                for e in edges_by_target.get(nid, []):
+                    if e['source'] in results:
                         source_res = results[e['source']]
                         sh_raw = e.get('sourceHandle', 'main')
                         th_raw = e.get('targetHandle', '')
@@ -397,8 +430,14 @@ class VisionEngine:
                                 if isinstance(val, np.ndarray): inputs['image'] = val
                                 else: inputs['data'] = val
                 # Bypass: pass matching-type inputs directly to outputs
+                # Teleport: mirror source node outputs — no computation, no cache overhead
+                if ntype == 'canvas_teleport':
+                    src_id = node.get('data', {}).get('params', {}).get('source_id', '')
+                    results[nid] = results.get(src_id, {})
+                    continue
+
                 if nid in bypassed_nids:
-                    schema = schema_by_type.get(ntype, {})
+                    schema = self._schema_by_type.get(ntype, {})
                     bypass_result = {}
                     for out_spec in schema.get('outputs', []):
                         out_color, out_id = out_spec.get('color'), out_spec.get('id')
@@ -432,10 +471,10 @@ class VisionEngine:
                         is_cacheable = ntype not in REALTIME_NODE_TYPES
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
-                        scalar_inputs_sig = str({k: v for k, v in inputs.items() if not isinstance(v, np.ndarray) and k != 'raw_frame'})
-                        # id() of array objects: same object == upstream hit cache == no recompute needed
-                        array_inputs_sig = str({k: id(v) for k, v in inputs.items() if isinstance(v, np.ndarray) and k != 'raw_frame'})
-                        cache_sig = params_sig + scalar_inputs_sig + array_inputs_sig
+                        # Use id() for any object (arrays, lists, dicts): same object = same data.
+                        # Avoids O(N) str() on large contour lists / regions dicts every run.
+                        inputs_sig = str({k: _input_sig(v) for k, v in inputs.items() if k != 'raw_frame'})
+                        cache_sig = params_sig + inputs_sig
                         if is_cacheable and cache and cache['sig'] == cache_sig:
                             out = cache['output']
                         else:
@@ -509,20 +548,33 @@ class VisionEngine:
                     final_img = np.zeros((480, 640, 3), dtype=np.uint8)
             if final_img is not None and self.connected_clients:
                 try:
-                    if len(final_img.shape) == 2: final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
-                    elif len(final_img.shape) == 3 and final_img.shape[2] == 2:
-                        hsv = np.zeros((final_img.shape[0], final_img.shape[1], 3), dtype=np.uint8); hsv[..., 1] = 255
-                        mag, ang = cv2.cartToPolar(final_img[..., 0], final_img[..., 1])
-                        hsv[..., 0], hsv[..., 2] = ang * 180 / np.pi / 2, cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-                        final_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-                    _, buf = cv2.imencode('.jpg', final_img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+                    img_to_encode = final_img
+                    def _encode(img):
+                        if len(img.shape) == 2:
+                            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+                        elif len(img.shape) == 3 and img.shape[2] == 2:
+                            hsv = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+                            hsv[..., 1] = 255
+                            mag, ang = cv2.cartToPolar(img[..., 0], img[..., 1])
+                            hsv[..., 0] = ang * 180 / np.pi / 2
+                            hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+                            img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+                        # Cap to 1920px wide to keep transfer sizes reasonable
+                        h, w = img.shape[:2]
+                        if w > 1920:
+                            scale = 1920 / w
+                            img = cv2.resize(img, (1920, int(h * scale)), interpolation=cv2.INTER_AREA)
+                        _, buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 75])
+                        return base64.b64encode(buf).decode('utf-8')
+                    b64 = await asyncio.to_thread(_encode, img_to_encode)
                     msg = json.dumps({
-                        "type": "update", 
-                        "image": base64.b64encode(buf).decode('utf-8'), 
+                        "type": "update",
+                        "image": b64,
                         "nodes_data": node_datas,
                         "commands": commands
                     })
-                    if self.connected_clients: await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
+                    if self.connected_clients:
+                        await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
 
             if self.has_realtime_node:
@@ -550,6 +602,8 @@ class VisionEngine:
                         print(f"[Engine] pending_snapshot set to {self.pending_snapshot}")
                     elif d.get('type') == 'set_preview_node':
                         self.preview_node_id = d.get('node_id')
+                        if self._should_run():
+                            self._run_event.set()
                     elif d.get('type') == 'export_py':
                         try:
                             from code_generator import generate_pipeline_script
@@ -571,6 +625,9 @@ class VisionEngine:
 load_plugins()
 
 async def main(engine_instance):
+    # Build schema lookup once after all plugins are loaded
+    engine_instance._schema_by_type = {s['type']: s for s in NODE_SCHEMAS}
+
     try:
         # Increase timeouts and disable pings to be more resilient during heavy CPU/Network load (SAM Large)
         async with websockets.serve(

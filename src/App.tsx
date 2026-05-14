@@ -222,7 +222,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId } = useVisionEngine(handleCapture);
+  const { frame, nodesData, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId } = useVisionEngine(handleCapture);
 
   const handlePopout = useCallback(async () => {
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
@@ -496,14 +496,49 @@ function App() {
     setMenu(null);
   }, [pushSnapshot, setViewNodes]);
 
+  const handleTeleport = useCallback((nodeId?: string) => {
+    const targetId = nodeId ?? nodes.find((n: any) => n.selected)?.id;
+    if (!targetId) return;
+    const src = nodes.find((n: any) => n.id === targetId);
+    if (!src) return;
+    const skipTypes = ['canvas_note', 'canvas_reroute', 'canvas_frame', 'canvas_teleport', 'group_input', 'group_output'];
+    if (skipTypes.includes(src.type ?? '')) return;
+    const schema = pluginSchemas.find((s: any) => s.type === src.type);
+    const sourceOutputs = schema?.outputs ?? [];
+    if (sourceOutputs.length === 0) return;
+    pushSnapshot();
+    const newNode = {
+      id: `teleport_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      type: 'canvas_teleport',
+      position: { x: src.position.x + ((src.width as number) || 208) + 48, y: src.position.y },
+      data: {
+        label: src.data?.label ?? schema?.label ?? src.type,
+        params: {
+          source_id: src.id,
+          source_type: src.type,
+          color_index: src.data?.params?.color_index,
+          bg_color: src.data?.params?.bg_color,
+          text_color: src.data?.params?.text_color,
+        },
+        source_outputs: sourceOutputs,
+        activePaletteIndex: src.data?.activePaletteIndex,
+      },
+      width: Math.min((src.width as number) || 208, 200),
+      selected: false,
+    };
+    setViewNodes((nds: any) => [...nds, newNode]);
+    setMenu(null);
+  }, [nodes, pluginSchemas, pushSnapshot, setViewNodes]);
+
   const selectedNode = useMemo(() => nodesWithData.find((n) => n.id === selectedNodeId) || null, [nodesWithData, selectedNodeId]);
-  const selectedNodeLiveData = useMemo(() => {
-    if (!selectedNodeId) return {};
-    const dataKeys = Object.keys(nodesData).filter(k => k.startsWith(`${selectedNodeId}:`));
-    return dataKeys.length > 0
-      ? Object.fromEntries(dataKeys.map(k => [k.split(':')[1], nodesData[k]]))
-      : (nodesData[selectedNodeId] ?? {});
-  }, [selectedNodeId, nodesData]);
+  const [selectedNodeLiveData, setSelectedNodeLiveData] = useState<Record<string, any>>({});
+  useEffect(() => {
+    if (!selectedNodeId) { setSelectedNodeLiveData({}); return; }
+    setSelectedNodeLiveData(nodesDataStore.getNode(selectedNodeId));
+    return nodesDataStore.subscribe(selectedNodeId, () => {
+      setSelectedNodeLiveData(nodesDataStore.getNode(selectedNodeId));
+    });
+  }, [selectedNodeId, nodesDataStore]);
 
   const exposedGroupParams = useMemo((): ExposedParam[] => {
     if (selectedNode?.type !== 'group_node') return [];
@@ -937,7 +972,7 @@ function App() {
     pushSnapshot, setViewNodes, nodesRef, instance,
     groupSelectedNodes, exitGroup, groupStackRef, canBypass,
     setIsAddMenuOpen, saveProject, loadProject, setPendingConnection, handleRotate,
-    handleVisualize,
+    handleVisualize, handleTeleport,
   });
 
   useEffect(() => {
@@ -1144,7 +1179,7 @@ function App() {
 
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#1e2530]" onContextMenu={e => e.preventDefault()}>
-          <NodesDataContext.Provider value={nodesData}>
+          <NodesDataContext.Provider value={nodesDataStore}>
           <ComputingNodeContext.Provider value={computingNodeId}>
           <ReactFlow
             nodes={nodesWithData} edges={coloredEdges}
@@ -1285,6 +1320,7 @@ function App() {
             ungroupNode={ungroupNode}
             groupSelectedNodes={groupSelectedNodes}
             handleRotate={handleRotate}
+            handleTeleport={handleTeleport}
             setMenu={setMenu}
             setPaneMenu={setPaneMenu}
             setPreviewNode={setPreviewNode}

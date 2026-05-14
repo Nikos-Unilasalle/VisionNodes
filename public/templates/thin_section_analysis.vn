@@ -103,6 +103,19 @@
     },
 
     {
+      "id": "ts-thresh",
+      "type": "feat_threshold_adv",
+      "position": { "x": 280, "y": 920 },
+      "data": {
+        "label": "XPL Threshold (Grain Mask)",
+        "params": {
+          "mode": 2
+        }
+      },
+      "width": 208
+    },
+
+    {
       "id": "ts-grain-sep",
       "type": "petro_grain_separator",
       "position": { "x": 560, "y": 440 },
@@ -141,7 +154,7 @@
       "data": {
         "label": "Neighbor Analysis",
         "params": {
-          "mode": 0,
+          "mode": 1,
           "dilate_units": 0.5,
           "min_contact_units": 2.0
         }
@@ -210,11 +223,12 @@
           { "id": "image__2_histo",    "color": "image", "label": "Size Histogram" },
           { "id": "image__3_neigh",    "color": "image", "label": "Neighbor Map" },
           { "id": "image__4_opaque",   "color": "image", "label": "Opaque Overlay" },
-          { "id": "image__5_key",      "color": "image", "label": "Mineral Key" }
+          { "id": "image__5_key",      "color": "image", "label": "Mineral Key" },
+          { "id": "image__6_grainsep", "color": "image", "label": "Grain Sep Mask" }
         ]
       },
       "width": 208,
-      "height": 380
+      "height": 430
     }
   ],
 
@@ -225,10 +239,12 @@
     { "id": "e-xpl-colseg",         "source": "ts-xpl-src",    "target": "ts-color-seg",  "sourceHandle": "image__main", "targetHandle": "image__image" },
     { "id": "e-xpl-grainseg",       "source": "ts-xpl-src",    "target": "ts-grain-seg",  "sourceHandle": "image__main", "targetHandle": "image__xpl" },
     { "id": "e-ppl-grainseg",       "source": "ts-ppl-src",    "target": "ts-grain-seg",  "sourceHandle": "image__main", "targetHandle": "image__ppl" },
-    { "id": "e-colseg-grainsep",    "source": "ts-color-seg",  "target": "ts-grain-sep",  "sourceHandle": "mask__mask1", "targetHandle": "mask__mask" },
-    { "id": "e-colseg-pointcnt",    "source": "ts-color-seg",  "target": "ts-point-cnt",  "sourceHandle": "mask__mask1", "targetHandle": "mask__mask" },
+    { "id": "e-xpl-thresh",          "source": "ts-xpl-src",    "target": "ts-thresh",     "sourceHandle": "image__main", "targetHandle": "image__image" },
+    { "id": "e-thresh-grainsep",    "source": "ts-thresh",     "target": "ts-grain-sep",  "sourceHandle": "mask__mask",  "targetHandle": "mask__mask" },
+    { "id": "e-calib-grainsep",     "source": "ts-calib",      "target": "ts-grain-sep",  "sourceHandle": "scalar__factor","targetHandle": "scalar__scale" },
+    { "id": "e-grainsep-pointcnt",  "source": "ts-grain-sep",  "target": "ts-point-cnt",  "sourceHandle": "mask__mask",  "targetHandle": "mask__mask" },
     { "id": "e-xpl-pointcnt",       "source": "ts-xpl-src",    "target": "ts-point-cnt",  "sourceHandle": "image__main", "targetHandle": "any__image" },
-    { "id": "e-grainseg-neighbor",  "source": "ts-grain-seg",  "target": "ts-neighbor",   "sourceHandle": "any__markers","targetHandle": "any__markers" },
+    { "id": "e-grainsep-neighbor",  "source": "ts-grain-sep",  "target": "ts-neighbor",   "sourceHandle": "mask__mask",  "targetHandle": "any__markers" },
     { "id": "e-grainseg-stats",     "source": "ts-grain-seg",  "target": "ts-grain-stats","sourceHandle": "any__markers","targetHandle": "any__markers" },
     { "id": "e-xpl-grainstats",     "source": "ts-xpl-src",    "target": "ts-grain-stats","sourceHandle": "image__main", "targetHandle": "image__image" },
     { "id": "e-calib-stats",        "source": "ts-calib",      "target": "ts-grain-stats","sourceHandle": "scalar__factor","targetHandle": "scalar__um_per_px" },
@@ -246,6 +262,7 @@
     { "id": "e-histo-display",      "source": "ts-grain-stats","target": "ts-display",    "sourceHandle": "image__histogram","targetHandle": "image__2_histo" },
     { "id": "e-neigh-display",      "source": "ts-neighbor",   "target": "ts-display",    "sourceHandle": "image__main",  "targetHandle": "image__3_neigh" },
     { "id": "e-opaque-display",     "source": "ts-opaque",     "target": "ts-display",    "sourceHandle": "image__main",  "targetHandle": "image__4_opaque" },
-    { "id": "e-key-display",        "source": "ts-mineral-key","target": "ts-display",    "sourceHandle": "image__main",  "targetHandle": "image__5_key" }
+    { "id": "e-key-display",        "source": "ts-mineral-key","target": "ts-display",    "sourceHandle": "image__main",  "targetHandle": "image__5_key" },
+    { "id": "e-grainsep-display",   "source": "ts-grain-sep",  "target": "ts-display",    "sourceHandle": "mask__mask",   "targetHandle": "image__6_grainsep" }
   ]
 }
