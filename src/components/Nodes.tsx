@@ -3443,6 +3443,7 @@ export const TeleportNode = memo(({ data, selected }: any) => {
     data?.source_outputs ?? [];
   const label: string = data?.label ?? 'Téléport';
   const isBroken = !data?.params?.source_id;
+  const isMinified = !!(data as any)?.minified;
 
   const START_Y = 40;
   const STEP = 28;
@@ -3488,8 +3489,8 @@ export const TeleportNode = memo(({ data, selected }: any) => {
         </span>
       </div>
 
-      {/* Output rows */}
-      <div style={{ padding: '4px 0 6px' }}>
+      {/* Output rows — hidden when minified */}
+      {!isMinified && <div style={{ padding: '4px 0 6px' }}>
         {isBroken ? (
           <div style={{ fontSize: 9, color: '#f87171', padding: '4px 10px', fontStyle: 'italic' }}>
             Source introuvable
@@ -3520,7 +3521,7 @@ export const TeleportNode = memo(({ data, selected }: any) => {
             </div>
           ))
         )}
-      </div>
+      </div>}
     </div>
   );
 });
