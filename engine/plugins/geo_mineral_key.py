@@ -2,6 +2,37 @@ import cv2
 import numpy as np
 from registry import vision_node, NodeProcessor
 
+
+def _hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
+    h = hex_color.lstrip('#')
+    if len(h) != 6:
+        raise ValueError
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return (b, g, r)
+
+
+def _make_theme(accent_hex: str) -> dict:
+    try:
+        b, g, r = _hex_to_bgr(accent_hex)
+        return {
+            'c_title':   (b, g, r),
+            'bg_title':  (max(0, b // 8),  max(0, g // 5),  max(0, r // 8)),
+            'c_section': (min(255, b + 20), min(255, g - 15), min(255, r + 20)),
+            'bg_section':(max(0, b // 10), max(0, g // 7),  max(0, r // 10)),
+            'c_header':  (min(255, b + 60), min(255, g + 20), min(255, r + 60)),
+            'bg_header': (max(0, b // 6),  max(0, g // 4 + 5), max(0, r // 6)),
+        }
+    except Exception:
+        return {
+            'c_title':   C_TITLE,
+            'bg_title':  BG_TITLE,
+            'c_section': C_SECTION,
+            'bg_section':BG_SECTION,
+            'c_header':  C_HEADER,
+            'bg_header': BG_HEADER,
+        }
+
+
 # (name, PPL color, XPL/biref color, biref level, cleavage, diagnostic notes)
 _MINERALS = {
     0: [  # Igneous / Magmatique
@@ -92,7 +123,15 @@ def _text(img, s, x, y, color=None, scale=0.40, bold=False):
     cv2.putText(img, str(s), (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thick, cv2.LINE_AA)
 
 
-def _build_table(systems: list[int]) -> np.ndarray:
+def _build_table(systems: list[int], theme: dict | None = None) -> np.ndarray:
+    t = theme or {}
+    t_c_title   = t.get('c_title',   C_TITLE)
+    t_bg_title  = t.get('bg_title',  BG_TITLE)
+    t_c_section = t.get('c_section', C_SECTION)
+    t_bg_section= t.get('bg_section',BG_SECTION)
+    t_c_header  = t.get('c_header',  C_HEADER)
+    t_bg_header = t.get('bg_header', BG_HEADER)
+
     rows = []
     for sys_idx in systems:
         rows.append(('__section__', _SECTION_LABELS[sys_idx]))
@@ -102,15 +141,15 @@ def _build_table(systems: list[int]) -> np.ndarray:
     img = np.full((total_h, W, 3), BG, dtype=np.uint8)
 
     # Title bar
-    cv2.rectangle(img, (0, 0), (W, TITLE_H), BG_TITLE, -1)
+    cv2.rectangle(img, (0, 0), (W, TITLE_H), t_bg_title, -1)
     _text(img, 'PETROGRAPHIC MINERAL IDENTIFICATION KEY  (PPL + XPL)',
-          8, TITLE_H - 10, C_TITLE, scale=0.50, bold=True)
+          8, TITLE_H - 10, t_c_title, scale=0.50, bold=True)
 
     # Column headers
     hy = TITLE_H + HEADER_H
-    cv2.rectangle(img, (0, TITLE_H), (W, hy), BG_HEADER, -1)
+    cv2.rectangle(img, (0, TITLE_H), (W, hy), t_bg_header, -1)
     for col_i, hdr in enumerate(_HEADERS):
-        _text(img, hdr, _COL_X[col_i], hy - 9, C_HEADER, scale=0.40, bold=True)
+        _text(img, hdr, _COL_X[col_i], hy - 9, t_c_header, scale=0.40, bold=True)
     cv2.line(img, (0, hy), (W, hy), (60, 80, 100), 1)
 
     # Data rows
@@ -119,8 +158,8 @@ def _build_table(systems: list[int]) -> np.ndarray:
     for row in rows:
         if row[0] == '__section__':
             # Section separator
-            cv2.rectangle(img, (0, y), (W, y + SECTION_H), BG_SECTION, -1)
-            _text(img, '  ' + row[1], 8, y + SECTION_H - 9, C_SECTION, scale=0.44, bold=True)
+            cv2.rectangle(img, (0, y), (W, y + SECTION_H), t_bg_section, -1)
+            _text(img, '  ' + row[1], 8, y + SECTION_H - 9, t_c_section, scale=0.44, bold=True)
             y += SECTION_H
             row_i = 0
         else:
@@ -166,13 +205,12 @@ def _build_table(systems: list[int]) -> np.ndarray:
         {'id': 'system', 'label': 'Rock System', 'type': 'enum',
          'options': ['Igneous', 'Sedimentary', 'Metamorphic', 'All Systems'],
          'default': 3},
+        {'id': 'accent_color', 'label': 'Accent Color', 'type': 'color', 'default': '#4ade80'},
     ]
 )
 class GeoMineralKey(NodeProcessor):
     def process(self, inputs, params):
         system = int(params.get('system', 3))
-        if system == 3:
-            systems = [0, 1, 2]
-        else:
-            systems = [system]
-        return {'main': _build_table(systems)}
+        systems = [0, 1, 2] if system == 3 else [system]
+        theme = _make_theme(str(params.get('accent_color', '#4ade80')))
+        return {'main': _build_table(systems, theme)}
