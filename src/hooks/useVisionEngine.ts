@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createNodesDataStore, NodesDataStore } from '../context/NodesDataContext';
 
 export type EngineNotification = {
   id: string;
@@ -10,7 +11,9 @@ export type EngineNotification = {
 
 export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => void) {
   const [frame, setFrame] = useState<string | null>(null);
-  const [nodesData, setNodesData] = useState<Record<string, any>>({});
+  const nodesDataStore = useMemo(() => createNodesDataStore(), []);
+  // Legacy flat nodesData ref for App.tsx inspector and other direct consumers
+  const nodesDataRef = useRef<Record<string, any>>({});
   const [pluginSchemas, setPluginSchemas] = useState<any[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastCommands, setLastCommands] = useState<any[]>([]);
@@ -34,7 +37,8 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
             setFrame(`data:image/jpeg;base64,${msg.image}`);
             setComputingNodeId(null);
             if (msg.nodes_data) {
-                setNodesData(msg.nodes_data);
+                nodesDataRef.current = msg.nodes_data;
+                nodesDataStore._update(msg.nodes_data);
             }
             if (msg.commands && msg.commands.length > 0) {
               setLastCommands(msg.commands);
@@ -165,5 +169,5 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId };
+  return { frame, nodesData: nodesDataRef.current, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId };
 }

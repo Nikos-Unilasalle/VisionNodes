@@ -1,0 +1,223 @@
+{
+  "nodes": [
+    {
+      "id": "sg-ppl",
+      "type": "input_image",
+      "position": { "x": 0, "y": 80 },
+      "data": {
+        "label": "PPL — Natural Light (A)",
+        "params": { "path": "" }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-xpl",
+      "type": "input_image",
+      "position": { "x": 0, "y": 300 },
+      "data": {
+        "label": "XPL — Polarized Light (A+)",
+        "params": { "path": "" }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-calib",
+      "type": "sci_interactive_calibration",
+      "position": { "x": 0, "y": 520 },
+      "data": {
+        "label": "Scale Calibration (px/µm)",
+        "params": {
+          "points": "[]",
+          "real_len": 100.0,
+          "unit": "µm"
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-crop",
+      "type": "geom_crop_rect",
+      "position": { "x": 280, "y": 80 },
+      "data": {
+        "label": "PPL Region of Interest",
+        "params": {
+          "rect": "{\"x\":0.05,\"y\":0.05,\"w\":0.9,\"h\":0.9}"
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-crop-xpl",
+      "type": "geom_crop_rect",
+      "position": { "x": 280, "y": 380 },
+      "data": {
+        "label": "XPL Region of Interest",
+        "params": {
+          "rect": "{\"x\":0.05,\"y\":0.05,\"w\":0.9,\"h\":0.9}"
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-sam",
+      "type": "sam_segmenter",
+      "position": { "x": 560, "y": 0 },
+      "data": {
+        "label": "SAM2 Auto Grain Detection (PPL)",
+        "params": {
+          "model": 0,
+          "prompt_mode": 2,
+          "points_per_side": 32,
+          "pred_iou_thresh": 0.86,
+          "stability_score_thresh": 0.92,
+          "overlay_opacity": 50
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-colseg",
+      "type": "geo_color_segmenter",
+      "position": { "x": 560, "y": 480 },
+      "data": {
+        "label": "XPL Color Segmentation (Interference Colors)",
+        "params": {
+          "use_lab": true,
+          "c1_active": true,
+          "c1_label": "Low biref (quartz)",
+          "c1_color": "#BBBBBB",
+          "c1_tol": 35,
+          "c2_active": true,
+          "c2_label": "High biref (calcite/mica)",
+          "c2_color": "#CC8844",
+          "c2_tol": 40,
+          "c3_active": true,
+          "c3_label": "Vivid / Alt.",
+          "c3_color": "#4488CC",
+          "c3_tol": 40,
+          "c4_active": false,
+          "c4_label": "Phase 4",
+          "c4_color": "#00FF00",
+          "c4_tol": 30
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-stats",
+      "type": "sam_grain_stats",
+      "position": { "x": 840, "y": 0 },
+      "data": {
+        "label": "SAM Grain Stats",
+        "params": {
+          "min_area": 300,
+          "hist_bins": 30,
+          "hist_color": "#4FC3F7",
+          "um_per_px": 1.0
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-point-cnt",
+      "type": "petro_point_counter",
+      "position": { "x": 840, "y": 380 },
+      "data": {
+        "label": "Modal Point Counter (XPL phases)",
+        "params": {
+          "grid_rows": 20,
+          "grid_cols": 20,
+          "point_size": 4,
+          "show_labels": true
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-neighbor",
+      "type": "petro_neighbor_analysis",
+      "position": { "x": 840, "y": 580 },
+      "data": {
+        "label": "Grain Neighbor Analysis",
+        "params": {
+          "mode": 1,
+          "dilate_units": 0.5,
+          "min_contact_units": 2.0
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "sg-report",
+      "type": "geo_petro_tableau",
+      "position": { "x": 1120, "y": 0 },
+      "data": {
+        "label": "Petrographic Report",
+        "params": {
+          "sample_name": "Sample 01",
+          "rock_type": "Unknown",
+          "formation": "",
+          "analyst": "Anonymous",
+          "location": "",
+          "age": ""
+        }
+      },
+      "width": 320
+    },
+
+    {
+      "id": "sg-display",
+      "type": "output_display",
+      "position": { "x": 1120, "y": 560 },
+      "data": {
+        "label": "Visual Outputs",
+        "params": {},
+        "ports": [
+          { "id": "image__0_sam",    "color": "image", "label": "SAM Overlay (PPL)" },
+          { "id": "image__1_colseg", "color": "image", "label": "Color Seg. (XPL)" },
+          { "id": "image__2_histo",  "color": "image", "label": "Size Histogram" },
+          { "id": "image__3_neigh",  "color": "image", "label": "Neighbor Map" },
+          { "id": "image__4_modal",  "color": "image", "label": "Point Counter" }
+        ]
+      },
+      "width": 208,
+      "height": 360
+    }
+  ],
+
+  "edges": [
+    { "id": "e-ppl-calib",         "source": "sg-ppl",      "target": "sg-calib",     "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-ppl-crop",          "source": "sg-ppl",      "target": "sg-crop",      "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-xpl-crop",          "source": "sg-xpl",      "target": "sg-crop-xpl",  "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-crop-sam",          "source": "sg-crop",     "target": "sg-sam",       "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-cropxpl-colseg",    "source": "sg-crop-xpl", "target": "sg-colseg",    "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-sam-stats-cnt",     "source": "sg-sam",      "target": "sg-stats",     "sourceHandle": "list__contours",     "targetHandle": "list__contours" },
+    { "id": "e-crop-stats-img",    "source": "sg-crop",     "target": "sg-stats",     "sourceHandle": "image__main",        "targetHandle": "image__image" },
+    { "id": "e-calib-stats",       "source": "sg-calib",    "target": "sg-stats",     "sourceHandle": "scalar__factor",     "targetHandle": "scalar__um_per_px" },
+    { "id": "e-colseg-pointcnt",   "source": "sg-colseg",   "target": "sg-point-cnt", "sourceHandle": "mask__labeled_mask", "targetHandle": "mask__mask" },
+    { "id": "e-cropxpl-pointcnt",  "source": "sg-crop-xpl", "target": "sg-point-cnt", "sourceHandle": "image__main",        "targetHandle": "any__image" },
+    { "id": "e-sam-neighbor",      "source": "sg-sam",      "target": "sg-neighbor",  "sourceHandle": "mask__mask",         "targetHandle": "any__markers" },
+    { "id": "e-count-report",      "source": "sg-stats",    "target": "sg-report",    "sourceHandle": "scalar__count",              "targetHandle": "scalar__grain_count" },
+    { "id": "e-dia-report",        "source": "sg-stats",    "target": "sg-report",    "sourceHandle": "scalar__mean_dia_um",        "targetHandle": "scalar__mean_dia_um" },
+    { "id": "e-circ-report",       "source": "sg-stats",    "target": "sg-report",    "sourceHandle": "scalar__mean_circularity",   "targetHandle": "scalar__circularity" },
+    { "id": "e-ar-report",         "source": "sg-stats",    "target": "sg-report",    "sourceHandle": "scalar__mean_aspect_ratio",  "targetHandle": "scalar__aspect_ratio" },
+    { "id": "e-frac-report",       "source": "sg-stats",    "target": "sg-report",    "sourceHandle": "scalar__grain_fraction",     "targetHandle": "scalar__grain_frac" },
+    { "id": "e-colseg-modal",      "source": "sg-colseg",   "target": "sg-report",    "sourceHandle": "dict__stats",                "targetHandle": "any__modal_stats" },
+    { "id": "e-neighbor-report",   "source": "sg-neighbor", "target": "sg-report",    "sourceHandle": "any__data",          "targetHandle": "any__neighbor_data" },
+    { "id": "e-sam-display",       "source": "sg-sam",      "target": "sg-display",   "sourceHandle": "image__main",        "targetHandle": "image__0_sam" },
+    { "id": "e-colseg-display",    "source": "sg-colseg",   "target": "sg-display",   "sourceHandle": "image__overlay",     "targetHandle": "image__1_colseg" },
+    { "id": "e-histo-display",     "source": "sg-stats",    "target": "sg-display",   "sourceHandle": "image__histogram",   "targetHandle": "image__2_histo" },
+    { "id": "e-neigh-display",     "source": "sg-neighbor", "target": "sg-display",   "sourceHandle": "image__main",        "targetHandle": "image__3_neigh" },
+    { "id": "e-modal-display",     "source": "sg-point-cnt","target": "sg-display",   "sourceHandle": "image__main",        "targetHandle": "image__4_modal" }
+  ]
+}

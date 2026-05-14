@@ -160,7 +160,7 @@ class PetroPointCounterNode(NodeProcessor):
         stats = {}
         for k, v in sorted(counts.items()):
             if is_labeled:
-                name = "Background" if k == 0 else f"Grain {k}"
+                name = "Background" if k == 0 else f"Phase {k}"
             else:
                 name = "Black Grains" if k == 0 else ("White Matrix" if k == 255 else f"Class {k}")
             stats[name] = f"{(v/total)*100:.1f}%"

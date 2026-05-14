@@ -3430,3 +3430,97 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
     </BaseNode>
   );
 });
+
+// ── Teleport Node ─────────────────────────────────────────────────────────────
+// Ghost clone of a source node. Mirrors outputs without re-computing.
+// Semi-transparent, dashed border, no input handles.
+export const TeleportNode = memo(({ data, selected }: any) => {
+  const { customBg } = useNodeColor();
+  const nodeId = useNodeId();
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  const sourceOutputs: Array<{ id: string; color: string; label?: string }> =
+    data?.source_outputs ?? [];
+  const label: string = data?.label ?? 'Téléport';
+  const isBroken = !data?.params?.source_id;
+
+  const START_Y = 40;
+  const STEP = 28;
+
+  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [nodeId, updateNodeInternals]);
+
+  const borderColor = isBroken
+    ? '#ef4444'
+    : selected
+    ? '#60a5fa'
+    : customBg ?? '#60a5fa55';
+
+  return (
+    <div
+      style={{
+        minWidth: 160,
+        opacity: 0.72,
+        position: 'relative',
+        borderRadius: 12,
+        border: `2px dashed ${borderColor}`,
+        background: customBg ? `${customBg}22` : '#1e2a3a99',
+        boxShadow: selected ? `0 0 18px ${borderColor}55` : 'none',
+        backdropFilter: 'blur(6px)',
+        transition: 'box-shadow 0.2s, opacity 0.2s',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '7px 10px 5px', borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
+        <Zap size={11} color="#60a5fa" style={{ flexShrink: 0 }} />
+        <span style={{
+          fontSize: 10, fontWeight: 700, color: '#cbd5e1',
+          flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {label}
+        </span>
+        <span style={{ fontSize: 8, color: '#60a5fa99', fontFamily: 'monospace', flexShrink: 0 }}>
+          ⚡TP
+        </span>
+      </div>
+
+      {/* Output rows */}
+      <div style={{ padding: '4px 0 6px' }}>
+        {isBroken ? (
+          <div style={{ fontSize: 9, color: '#f87171', padding: '4px 10px', fontStyle: 'italic' }}>
+            Source introuvable
+          </div>
+        ) : sourceOutputs.length === 0 ? (
+          <div style={{ fontSize: 9, color: '#64748b', padding: '4px 10px', fontStyle: 'italic' }}>
+            Aucune sortie
+          </div>
+        ) : (
+          sourceOutputs.map((out, i) => (
+            <div
+              key={out.id}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                padding: '1px 14px 1px 10px', height: STEP,
+              }}
+            >
+              <span style={{ fontSize: 9, color: '#94a3b8', marginRight: 6 }}>
+                {out.label ?? out.id}
+              </span>
+              <StyledHandle
+                type="source"
+                id={out.id}
+                color={out.color as any}
+                position={Position.Right}
+                top={`${START_Y + i * STEP}px`}
+              />
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+});

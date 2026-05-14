@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Eye, Save, Maximize, Minimize2, Lock, LockOpen, ChevronsRight,
-  Layers, Package, LogIn, LogOut, Plus, RotateCcw
+  Layers, Package, LogIn, LogOut, Plus, RotateCcw, Zap
 } from 'lucide-react';
 import * as N from '../Nodes';
 import type { Node } from 'reactflow';
@@ -23,6 +23,7 @@ interface ContextMenuProps {
   ungroupNode: (id: string) => void;
   groupSelectedNodes: () => void;
   handleRotate: (id: string) => void;
+  handleTeleport: (id: string) => void;
   setMenu: (m: any) => void;
   setPaneMenu: (m: any) => void;
   setPreviewNode: (id: string | null) => void;
@@ -33,7 +34,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   menu, paneMenu, nodes, canVisualize, canSaveAsImage, canBypass,
   visualizedNodeId, activePaletteIndex, handleVisualize, handleSaveAsImage,
   pushSnapshot, setViewNodes, enterGroup, ungroupNode, groupSelectedNodes,
-  handleRotate, setMenu, setPaneMenu, setPreviewNode, setVisualizedNodeId,
+  handleRotate, handleTeleport, setMenu, setPaneMenu, setPreviewNode, setVisualizedNodeId,
 }) => {
   return (
     <>
@@ -287,6 +288,22 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             );
           })()}
           <div className="h-px bg-white/5 my-1 mx-2" />
+
+          {(() => {
+            const menuNode = nodes.find(n => n.id === menu.id);
+            const skipTeleport = ['canvas_note', 'canvas_reroute', 'canvas_frame', 'canvas_teleport', 'group_input', 'group_output'];
+            if (skipTeleport.includes(menuNode?.type ?? '')) return null;
+            return (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleTeleport(menu.id); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-600/60 rounded-xl text-white text-[11px] font-bold transition-all group"
+              >
+                <Zap size={16} className="text-blue-400 group-hover:text-white" />
+                <span>Téléporter</span>
+                <span className="ml-auto text-[9px] text-gray-500 font-mono">⌘T</span>
+              </button>
+            );
+          })()}
 
           <button
             onClick={() => {
