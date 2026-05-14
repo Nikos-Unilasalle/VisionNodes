@@ -290,7 +290,7 @@
       "source": "ts-color-seg",
       "target": "ts-grain-sep",
       "sourceHandle": "mask__mask1",
-      "targetHandle": "any__mask"
+      "targetHandle": "mask__mask"
     },
     {
       "id": "e-colseg-mask1-to-pointcnt",
