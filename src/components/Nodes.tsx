@@ -8,7 +8,7 @@ import {
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
   Plus, Info, Save, FolderOpen, BookOpen, Video, Type, Calculator, PlusSquare, Minus, Divide, Scissors, Keyboard, HelpCircle, ChevronDown, ChevronUp,
   Crosshair, Monitor, Lock, LockOpen, Crop, Filter, Package, LogIn, LogOut, BarChart2, Music, Volume2, RotateCcw, Repeat, Download, FileCode, ZapOff,
-  Clipboard
+  Clipboard, FileText
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -2777,6 +2777,177 @@ const RootAnatomyReportNodeUI = ({ data, selected }: { data: any, selected: bool
     </BaseNode>
   );
 };
+
+const PETRO_SECTION_COLORS: Record<string, { text: string; bg: string; dot: string }> = {
+  'Modal Analysis':    { text: 'text-cyan-400',    bg: 'bg-cyan-500/5',    dot: 'bg-cyan-400'    },
+  'Morphometry':       { text: 'text-emerald-400', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
+  'Opaques':           { text: 'text-amber-400',   bg: 'bg-amber-500/5',   dot: 'bg-amber-400'   },
+  'Neighbor Analysis': { text: 'text-purple-400',  bg: 'bg-purple-500/5',  dot: 'bg-purple-400'  },
+  'Classification':    { text: 'text-rose-400',    bg: 'bg-rose-500/5',    dot: 'bg-rose-400'    },
+};
+const PETRO_FALLBACK_COLORS = [
+  { text: 'text-cyan-400',    bg: 'bg-cyan-500/5',    dot: 'bg-cyan-400'    },
+  { text: 'text-emerald-400', bg: 'bg-emerald-500/5', dot: 'bg-emerald-400' },
+  { text: 'text-purple-400',  bg: 'bg-purple-500/5',  dot: 'bg-purple-400'  },
+  { text: 'text-amber-400',   bg: 'bg-amber-500/5',   dot: 'bg-amber-400'   },
+  { text: 'text-rose-400',    bg: 'bg-rose-500/5',    dot: 'bg-rose-400'    },
+];
+
+const PetrographicReportNodeUI = ({ data, selected }: { data: any; selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const [expanded, setExpanded] = React.useState(false);
+
+  const report = (nd as any)?.report || {};
+  const sections = Object.entries(report).filter(([, v]) => v && typeof v === 'object' && !Array.isArray(v)) as [string, Record<string, any>][];
+  const hasData = sections.length > 0;
+
+  const fmt = (v: any): string => {
+    if (v === null || v === undefined) return '—';
+    if (typeof v === 'number') return v > 1000 ? Math.round(v).toLocaleString() : v % 1 === 0 ? String(v) : v.toFixed(3);
+    return String(v);
+  };
+
+  const colorFor = (name: string, idx: number) =>
+    PETRO_SECTION_COLORS[name] ?? PETRO_FALLBACK_COLORS[idx % PETRO_FALLBACK_COLORS.length];
+
+  const sampleName = data.params?.sample_name || '';
+  const title = sampleName ? `Petro — ${sampleName}` : 'Petrographic Report';
+
+  return (
+    <BaseNode title={title} icon={FileText} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'data', color: 'any', label: 'Report Data' }]}
+      outputs={[{ id: 'report', color: 'any', label: 'Report Dict' }]}
+      width={expanded ? '44rem' : '20rem'}>
+      <div className="flex flex-col gap-2 mt-2 w-full">
+        {!hasData ? (
+          <div className="p-4 rounded-xl border border-white/5 bg-white/5 text-center">
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">Awaiting data...</span>
+          </div>
+        ) : !expanded ? (
+          <div className="flex flex-col gap-2">
+            {sections.map(([name, vals], i) => {
+              const c = colorFor(name, i);
+              const entries = Object.entries(vals).slice(0, 4);
+              return (
+                <div key={name} className={`p-2 rounded-xl border border-white/5 ${c.bg}`}>
+                  <div className="text-[7px] uppercase font-black mb-1.5 tracking-widest flex justify-between items-center text-gray-400">
+                    <span>{name}</span>
+                    <div className={`w-1 h-1 rounded-full ${c.dot}`} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                    {entries.map(([k, v]) => (
+                      <div key={k} className="flex flex-col">
+                        <span className="text-[7px] text-gray-500 truncate">{k}</span>
+                        <span className={`text-[10px] font-bold ${c.text} truncate`}>{fmt(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {sections.map(([name, vals], i) => {
+              const c = colorFor(name, i);
+              return (
+                <div key={name} className={`p-3 rounded-xl border border-white/5 ${c.bg}`}>
+                  <h5 className={`text-[9px] font-black uppercase tracking-wider ${c.text} mb-2 border-b border-white/10 pb-1 flex justify-between items-center`}>
+                    {name}
+                    <div className={`w-1.5 h-1.5 rounded-full ${c.dot} opacity-60`} />
+                  </h5>
+                  <div className="space-y-1">
+                    {Object.entries(vals).map(([k, v]) => (
+                      <div key={k} className="flex justify-between items-center text-[10px]">
+                        <span className="text-gray-400 truncate max-w-[55%]">{k}</span>
+                        <span className={`font-mono font-bold ${c.text} bg-black/20 px-1.5 py-0.5 rounded border border-white/5 text-right`}>{fmt(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <button onClick={() => setExpanded(e => !e)}
+          className="w-full py-1.5 mt-0.5 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2">
+          {expanded ? 'Compact' : 'Full Report'}
+          <BarChart2 size={10} />
+        </button>
+      </div>
+    </BaseNode>
+  );
+};
+
+export const PetrographicReportNode = memo(PetrographicReportNodeUI);
+
+export const RootAnatomyReportNode = memo(({ data, selected }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const [expanded, setExpanded] = React.useState(false);
+  const stats = nd?.report || {};
+  const categories = [
+    { label: 'Root & Stele', keys: ['RXSA', 'TSA', 'TSA:RXSA', 'TSA:TCA'], bg: 'bg-blue-500/5', color: 'text-blue-400' },
+    { label: 'Vascular', keys: ['XVA', '#PX', 'PXA', 'SCWA'], bg: 'bg-emerald-500/5', color: 'text-emerald-400' },
+    { label: 'Cortex', keys: ['TCA', 'AA', '#Lac', '%A'], bg: 'bg-purple-500/5', color: 'text-purple-400' },
+  ];
+  const extendedCategories = [
+    { label: 'Morphometry', keys: ['RXSA', 'TSA', 'TCA', 'EA', 'ExA'], bg: 'bg-blue-500/5', color: 'text-blue-400' },
+    { label: 'Vascular System', keys: ['XVA', 'XSCWA', 'PXA', '#PX', 'SCWA'], bg: 'bg-emerald-500/5', color: 'text-emerald-400' },
+    { label: 'Cortex & Lacunae', keys: ['TCA', 'AA', '%A', '#Lac', 'CCA', '%CCA'], bg: 'bg-purple-500/5', color: 'text-purple-400' },
+    { label: 'Ratios', keys: ['TSA:RXSA', 'TSA:TCA', 'quality_score', 'focus_score'], bg: 'bg-amber-500/5', color: 'text-amber-400' },
+  ];
+  const formatVal = (v: any) => typeof v === 'number' ? (v > 100 ? Math.round(v) : v.toFixed(3)) : v || '—';
+  return (
+    <BaseNode title="Anatomy Report" icon={BarChart2} selected={selected} data={data} color="accent" inputs={[{id: 'data', color: 'root_data'}]} outputs={[{id: 'report', color: 'dict'}]} width={expanded ? "45rem" : "20rem"}>
+      <div className="flex flex-col gap-3 mt-2 w-full">
+        {!expanded ? (
+          <div className="flex flex-col gap-2">
+            {categories.map(cat => (
+              <div key={cat.label} className={`p-2 rounded-xl border border-white/5 ${cat.bg}`}>
+                <div className="text-[7px] text-gray-500 uppercase font-black mb-2 tracking-widest flex justify-between">
+                  <span>{cat.label}</span><div className={`w-1 h-1 rounded-full ${cat.color.replace('text', 'bg')}`} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {cat.keys.map(k => (
+                    <div key={k} className="flex flex-col">
+                      <span className="text-[8px] text-gray-400 truncate">{k.toUpperCase()}</span>
+                      <span className={`text-[11px] font-bold ${cat.color}`}>{formatVal(stats[k])}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {extendedCategories.map(cat => (
+              <div key={cat.label} className={`p-3 rounded-xl border border-white/5 ${cat.bg}`}>
+                <h5 className={`text-[9px] font-black uppercase tracking-wider ${cat.color} mb-3 border-b border-white/10 pb-1 flex justify-between items-center`}>
+                  {cat.label}<div className={`w-1.5 h-1.5 rounded-full ${cat.color.replace('text', 'bg')} opacity-50`} />
+                </h5>
+                <div className="space-y-1.5">
+                  {cat.keys.map(k => (
+                    <div key={k} className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-400">{k.toUpperCase()}</span>
+                      <span className={`font-mono font-bold ${cat.color} bg-black/20 px-1.5 py-0.5 rounded border border-white/5`}>{formatVal(stats[k])}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={() => setExpanded(!expanded)}
+          className="w-full py-2 mt-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2">
+          {expanded ? 'Collapse View' : 'Precision Report'}<BarChart2 size={10} />
+        </button>
+      </div>
+    </BaseNode>
+  );
+});
 
 const TURB_CLASSES: { label: string; short: string; color: string; bg: string }[] = [
   { label: 'Cristal (0–1)',          short: 'Cristal',   color: 'text-blue-300',   bg: 'bg-blue-500/5'   },
