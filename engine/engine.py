@@ -309,7 +309,7 @@ class VisionEngine:
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
-        self._node_cache = {}
+        self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid in active_nids}
         node_types = {n.get('type') for n in flat_nodes}
         needs_camera = 'input_webcam' in node_types
         if needs_camera and (self.cap is None or not self.cap.isOpened()):
@@ -429,16 +429,19 @@ class VisionEngine:
                 if proc:
                     try:
                         params = node.get('data', {}).get('params', {})
-                        has_array_input = any(isinstance(v, np.ndarray) for v in inputs.values())
-                        is_cacheable = ntype not in REALTIME_NODE_TYPES and not has_array_input
+                        is_cacheable = ntype not in REALTIME_NODE_TYPES
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
-                        # Include non-array inputs in cache key so scalar-driven nodes invalidate correctly
                         scalar_inputs_sig = str({k: v for k, v in inputs.items() if not isinstance(v, np.ndarray) and k != 'raw_frame'})
-                        cache_sig = params_sig + scalar_inputs_sig
+                        # id() of array objects: same object == upstream hit cache == no recompute needed
+                        array_inputs_sig = str({k: id(v) for k, v in inputs.items() if isinstance(v, np.ndarray) and k != 'raw_frame'})
+                        cache_sig = params_sig + scalar_inputs_sig + array_inputs_sig
                         if is_cacheable and cache and cache['sig'] == cache_sig:
                             out = cache['output']
                         else:
+                            if self.connected_clients:
+                                computing_msg = json.dumps({"type": "node_computing", "node_id": nid})
+                                await asyncio.gather(*[c.send(computing_msg) for c in list(self.connected_clients)], return_exceptions=True)
                             out = await asyncio.to_thread(proc.process, inputs, params)
                             if is_cacheable:
                                 self._node_cache[nid] = {'sig': cache_sig, 'output': out}

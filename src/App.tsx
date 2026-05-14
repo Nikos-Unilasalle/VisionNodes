@@ -11,6 +11,7 @@ import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
 import { useHistory } from './hooks/useHistory';
 import { NodesDataContext } from './context/NodesDataContext';
+import { ComputingNodeContext } from './context/ComputingNodeContext';
 import { NodeInspectorPanel, AnalysisDataPanel } from './components/NodeInspectorPanel';
 import type { ExposedParam } from './components/NodeInspectorPanel';
 import { AnimatePresence } from 'framer-motion';
@@ -221,7 +222,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport } = useVisionEngine(handleCapture);
+  const { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId } = useVisionEngine(handleCapture);
 
   const handlePopout = useCallback(async () => {
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
@@ -1144,6 +1145,7 @@ function App() {
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#1e2530]" onContextMenu={e => e.preventDefault()}>
           <NodesDataContext.Provider value={nodesData}>
+          <ComputingNodeContext.Provider value={computingNodeId}>
           <ReactFlow
             nodes={nodesWithData} edges={coloredEdges}
             onInit={setInstance}
@@ -1234,6 +1236,7 @@ function App() {
               </div>
             </Panel>
           </ReactFlow>
+          </ComputingNodeContext.Provider>
           </NodesDataContext.Provider>
 
           <RerouteOverlay isRerouting={isRerouting} rerouteDragRef={rerouteDragRef} reroutePos={reroutePos} />
