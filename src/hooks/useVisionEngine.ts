@@ -15,6 +15,7 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
   const [isConnected, setIsConnected] = useState(false);
   const [lastCommands, setLastCommands] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<EngineNotification[]>([]);
+  const [computingNodeId, setComputingNodeId] = useState<string | null>(null);
   const ws = useRef<WebSocket | null>(null);
   const dismissTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const exportPyResolve = useRef<((result: { code?: string; error?: string }) => void) | null>(null);
@@ -31,6 +32,7 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
           const msg = JSON.parse(event.data);
           if (msg.type === 'update') {
             setFrame(`data:image/jpeg;base64,${msg.image}`);
+            setComputingNodeId(null);
             if (msg.nodes_data) {
                 setNodesData(msg.nodes_data);
             }
@@ -39,6 +41,8 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
             } else {
               setLastCommands(prev => prev.length > 0 ? [] : prev);
             }
+          } else if (msg.type === 'node_computing') {
+            setComputingNodeId(msg.node_id);
           } else if (msg.type === 'schema') {
             setPluginSchemas(msg.nodes);
           } else if (msg.type === 'node_capture') {
@@ -161,5 +165,5 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport };
+  return { frame, nodesData, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId };
 }

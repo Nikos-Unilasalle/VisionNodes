@@ -1,6 +1,7 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
 import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals, NodeResizer, useStore } from 'reactflow';
 import { useNodeData } from '../context/NodesDataContext';
+import { useComputingNodeId } from '../context/ComputingNodeContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
@@ -78,6 +79,8 @@ export const BaseNode = ({
 }: any) => {
   const { customBg } = useNodeColor();
   const nodeId = useNodeId();
+  const computingNodeId = useComputingNodeId();
+  const isComputing = !!nodeId && computingNodeId === nodeId;
   const updateNodeInternals = useUpdateNodeInternals();
   const totalInputs = inputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
@@ -248,6 +251,22 @@ export const BaseNode = ({
     {nodeNote && (
       <div className="absolute left-0 right-0 top-full mt-1 text-center text-[9px] text-gray-400/80 truncate px-2 pointer-events-none select-none">
         {nodeNote}
+      </div>
+    )}
+    {isComputing && (
+      <div
+        className="absolute pointer-events-none"
+        style={{ bottom: '-5px', right: 0, width: '50%', height: '3px', borderRadius: '9999px' }}
+      >
+        <div style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '9999px',
+          background: 'linear-gradient(90deg, transparent, #4ade80 40%, #86efac 50%, #4ade80 60%, transparent)',
+          backgroundSize: '200% 100%',
+          animation: 'computing-sweep 1.2s linear infinite',
+          boxShadow: '0 0 8px 2px rgba(74,222,128,0.6)',
+        }} />
       </div>
     )}
     </div>
