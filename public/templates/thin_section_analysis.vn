@@ -1,0 +1,399 @@
+{
+  "nodes": [
+    {
+      "id": "ts-ppl-src",
+      "type": "input_image",
+      "position": { "x": 0, "y": 80 },
+      "data": {
+        "label": "PPL Image (Natural Light)",
+        "params": { "path": "" }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-xpl-src",
+      "type": "input_image",
+      "position": { "x": 0, "y": 290 },
+      "data": {
+        "label": "XPL Image (Polarized Light)",
+        "params": { "path": "" }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-color-seg",
+      "type": "geo_color_segmenter",
+      "position": { "x": 280, "y": -120 },
+      "data": {
+        "label": "Phase Segmentation (PPL)",
+        "params": {
+          "use_lab": true,
+          "c1_active": true,
+          "c1_label": "Grains",
+          "c1_color": "#CCCCCC",
+          "c1_tol": 45,
+          "c2_active": true,
+          "c2_label": "Matrix / Cement",
+          "c2_color": "#5577AA",
+          "c2_tol": 40,
+          "c3_active": false,
+          "c3_label": "Pores",
+          "c3_color": "#2244FF",
+          "c3_tol": 30,
+          "c4_active": false,
+          "c4_label": "Phase 4",
+          "c4_color": "#00FF00",
+          "c4_tol": 30
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-opaque",
+      "type": "geo_opaque_detect",
+      "position": { "x": 280, "y": 440 },
+      "data": {
+        "label": "Opaque Minerals",
+        "params": {
+          "blur_radius": 4,
+          "dark_thresh": 35,
+          "opening_size": 15,
+          "min_area": 300,
+          "overlay_color": "#8B0000"
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-grain-sep",
+      "type": "petro_grain_separator",
+      "position": { "x": 580, "y": -60 },
+      "data": {
+        "label": "Grain Separator SRC (PPL)",
+        "params": {
+          "mode": 0,
+          "epsilon": 0.5,
+          "angle_thresh": 200.0,
+          "max_dist": 2.0
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-point-cnt",
+      "type": "petro_point_counter",
+      "position": { "x": 580, "y": 160 },
+      "data": {
+        "label": "Point Counter — Modal Analysis",
+        "params": {
+          "grid_rows": 20,
+          "grid_cols": 20,
+          "point_size": 4,
+          "show_labels": true
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-grain-seg",
+      "type": "geo_grain_segment",
+      "position": { "x": 580, "y": 420 },
+      "data": {
+        "label": "Grain Segmentation (XPL)",
+        "params": {
+          "blur_radius": 4,
+          "boundary_thresh": 30,
+          "boundary_size": 5,
+          "opaque_thresh": 35,
+          "opaque_min_px": 300,
+          "min_grain_px": 500,
+          "fill_radius": 5,
+          "ppl_weight": 0.4
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-neighbor",
+      "type": "petro_neighbor_analysis",
+      "position": { "x": 880, "y": -60 },
+      "data": {
+        "label": "Neighbor Analysis (Context)",
+        "params": {
+          "mode": 0,
+          "dilate_units": 0.5,
+          "min_contact_units": 2.0
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-grain-stats",
+      "type": "geo_grain_stats",
+      "position": { "x": 880, "y": 380 },
+      "data": {
+        "label": "Grain Population Stats",
+        "params": {
+          "min_area": 100,
+          "hist_bins": 25,
+          "hist_color": "#4FC3F7",
+          "um_per_px": 1.0
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-mineral-key",
+      "type": "geo_mineral_key",
+      "position": { "x": 1180, "y": -60 },
+      "data": {
+        "label": "Mineral Identification Key",
+        "params": {
+          "system": 3
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-report",
+      "type": "geo_thin_section_report",
+      "position": { "x": 1180, "y": 200 },
+      "data": {
+        "label": "Thin Section Report",
+        "params": {
+          "sample_name": "Sample 01",
+          "rock_type": "Unknown",
+          "formation": "",
+          "analyst": "Anonymous",
+          "location": "",
+          "age": ""
+        }
+      },
+      "width": 208
+    },
+    {
+      "id": "ts-display",
+      "type": "output_display",
+      "position": { "x": 1490, "y": -60 },
+      "data": {
+        "label": "Analysis Display",
+        "params": {},
+        "ports": [
+          { "id": "image__0_report", "color": "image", "label": "Report" },
+          { "id": "image__1_labels", "color": "image", "label": "XPL Labels" },
+          { "id": "image__2_histo",  "color": "image", "label": "Histogram" },
+          { "id": "image__3_neigh",  "color": "image", "label": "Neighbor Map" },
+          { "id": "image__4_ppl",    "color": "image", "label": "PPL Overlay" },
+          { "id": "image__5_key",    "color": "image", "label": "Mineral Key" }
+        ]
+      },
+      "width": 208,
+      "height": 380
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-ppl-to-colseg",
+      "source": "ts-ppl-src",
+      "target": "ts-color-seg",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-ppl-to-opaque",
+      "source": "ts-ppl-src",
+      "target": "ts-opaque",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__ppl"
+    },
+    {
+      "id": "e-ppl-to-grainseg",
+      "source": "ts-ppl-src",
+      "target": "ts-grain-seg",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__ppl"
+    },
+    {
+      "id": "e-ppl-to-pointcnt",
+      "source": "ts-ppl-src",
+      "target": "ts-point-cnt",
+      "sourceHandle": "image__main",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e-ppl-to-report",
+      "source": "ts-ppl-src",
+      "target": "ts-report",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__ppl_image"
+    },
+    {
+      "id": "e-xpl-to-opaque",
+      "source": "ts-xpl-src",
+      "target": "ts-opaque",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__xpl"
+    },
+    {
+      "id": "e-xpl-to-grainseg",
+      "source": "ts-xpl-src",
+      "target": "ts-grain-seg",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__xpl"
+    },
+    {
+      "id": "e-xpl-to-grainstats",
+      "source": "ts-xpl-src",
+      "target": "ts-grain-stats",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-xpl-to-report",
+      "source": "ts-xpl-src",
+      "target": "ts-report",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__xpl_image"
+    },
+    {
+      "id": "e-colseg-mask1-to-grainsep",
+      "source": "ts-color-seg",
+      "target": "ts-grain-sep",
+      "sourceHandle": "mask__mask1",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e-colseg-mask1-to-pointcnt",
+      "source": "ts-color-seg",
+      "target": "ts-point-cnt",
+      "sourceHandle": "mask__mask1",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e-colseg-overlay-to-display",
+      "source": "ts-color-seg",
+      "target": "ts-display",
+      "sourceHandle": "image__overlay",
+      "targetHandle": "image__4_ppl"
+    },
+    {
+      "id": "e-pointcnt-data-to-report",
+      "source": "ts-point-cnt",
+      "target": "ts-report",
+      "sourceHandle": "any__data",
+      "targetHandle": "any__modal_stats"
+    },
+    {
+      "id": "e-grainseg-markers-to-neighbor",
+      "source": "ts-grain-seg",
+      "target": "ts-neighbor",
+      "sourceHandle": "any__markers",
+      "targetHandle": "any__markers"
+    },
+    {
+      "id": "e-grainseg-markers-to-stats",
+      "source": "ts-grain-seg",
+      "target": "ts-grain-stats",
+      "sourceHandle": "any__markers",
+      "targetHandle": "any__markers"
+    },
+    {
+      "id": "e-grainseg-labels-to-display",
+      "source": "ts-grain-seg",
+      "target": "ts-display",
+      "sourceHandle": "image__labels",
+      "targetHandle": "image__1_labels"
+    },
+    {
+      "id": "e-opaque-mask-to-stats",
+      "source": "ts-opaque",
+      "target": "ts-grain-stats",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__opaques"
+    },
+    {
+      "id": "e-opaque-count-to-report",
+      "source": "ts-opaque",
+      "target": "ts-report",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__opaque_count"
+    },
+    {
+      "id": "e-neighbor-main-to-display",
+      "source": "ts-neighbor",
+      "target": "ts-display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__3_neigh"
+    },
+    {
+      "id": "e-neighbor-data-to-report",
+      "source": "ts-neighbor",
+      "target": "ts-report",
+      "sourceHandle": "any__data",
+      "targetHandle": "any__neighbor_data"
+    },
+    {
+      "id": "e-stats-histo-to-display",
+      "source": "ts-grain-stats",
+      "target": "ts-display",
+      "sourceHandle": "image__histogram",
+      "targetHandle": "image__2_histo"
+    },
+    {
+      "id": "e-stats-histo-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "image__histogram",
+      "targetHandle": "image__histogram"
+    },
+    {
+      "id": "e-stats-count-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__grain_count"
+    },
+    {
+      "id": "e-stats-dia-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "scalar__mean_dia_um",
+      "targetHandle": "scalar__mean_dia_um"
+    },
+    {
+      "id": "e-stats-circ-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "scalar__mean_circularity",
+      "targetHandle": "scalar__circularity"
+    },
+    {
+      "id": "e-stats-grainfrac-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "scalar__grain_fraction",
+      "targetHandle": "scalar__grain_frac"
+    },
+    {
+      "id": "e-stats-opaqfrac-to-report",
+      "source": "ts-grain-stats",
+      "target": "ts-report",
+      "sourceHandle": "scalar__opaque_fraction",
+      "targetHandle": "scalar__opaque_frac"
+    },
+    {
+      "id": "e-report-to-display",
+      "source": "ts-report",
+      "target": "ts-display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__0_report"
+    },
+    {
+      "id": "e-key-to-display",
+      "source": "ts-mineral-key",
+      "target": "ts-display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__5_key"
+    }
+  ]
+}
