@@ -31,7 +31,7 @@ def remove_binding_pixels(mask):
         "- Max Cut Dist: Maximum allowed length for a separation line. Should be close to the average grain diameter."
     ),
     inputs=[
-        {"id": "mask", "color": "any"},
+        {"id": "mask", "color": "mask", "label": "Binary Grain Mask"},
         {"id": "scale", "color": "scalar", "label": "Px/Unit"}
     ],
     outputs=[{"id": "mask", "color": "mask"}],
