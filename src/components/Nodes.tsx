@@ -856,7 +856,7 @@ export const InteractiveCalibrationNode = memo(({ selected, data }: any) => {
       data={data}
       color="indigo"
       inputs={[{id: 'image', color: 'image'}]}
-      outputs={[{id: 'factor', color: 'scalar', label: 'Px/Unit'}]}
+      outputs={[{id: 'factor', color: 'scalar', label: 'Px/Unit'}, {id: 'unit', color: 'scalar', label: 'Unit Name'}]}
     >
       <div className="flex flex-col gap-3 nodrag">
         <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/calib shadow-inner">
@@ -885,10 +885,149 @@ export const InteractiveCalibrationNode = memo(({ selected, data }: any) => {
             </button>
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center py-2 px-2 bg-black/20 rounded-lg border border-white/5">
-          <div className="text-lg font-mono text-white tabular-nums tracking-tighter">
-              {nd?.display_value || "---"}
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 text-[10px] font-mono">
+          <span className="text-indigo-400/80">{nd?.display_value || '—'}</span>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const VisualSizeGateNode = memo(({ selected, data }: any) => {
+  const [pts, setPts] = React.useState<any[]>([]);
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
+  const onOpenEditor = data.onOpenEditor;
+
+  React.useEffect(() => {
+    try {
+      const p = JSON.parse(data.params?.points || '[]');
+      if (Array.isArray(p)) setPts(p);
+    } catch (_) {}
+  }, [data.params?.points]);
+
+  const RulerIcon = getIcon('Ruler');
+
+  return (
+    <BaseNode
+      title="Visual Size Gate"
+      icon={RulerIcon}
+      selected={selected}
+      data={data}
+      color="yellow"
+      inputs={[{ id: 'markers', color: 'any', label: 'Labels' }, { id: 'image', color: 'image' }]}
+      outputs={[
+        { id: 'mask_kept',    color: 'mask',   label: 'Kept Mask' },
+        { id: 'mask_rej',     color: 'mask',   label: 'Rej Mask' },
+        { id: 'markers_out',  color: 'any',    label: 'Kept Labels' },
+        { id: 'markers_rej',  color: 'any',    label: 'Rej Labels' },
+        { id: 'main',         color: 'image',  label: 'Preview' },
+        { id: 'count',        color: 'scalar', label: 'Count' },
+        { id: 'ref_area',     color: 'scalar', label: 'Ref px²' },
+      ]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/sg shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-80" alt="Size Gate Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <RulerIcon size={24} className="opacity-10" />
+            </div>
+          )}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {pts.length >= 2 && (
+              <line
+                x1={`${pts[0].x * 100}%`} y1={`${pts[0].y * 100}%`}
+                x2={`${pts[1].x * 100}%`} y2={`${pts[1].y * 100}%`}
+                stroke="#facc15" strokeWidth={2} strokeDasharray="4 2"
+              />
+            )}
+            {pts.slice(0, 2).map((p: any, i: number) => (
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} fill="#facc15" stroke="white" strokeWidth={1.5} />
+            ))}
+          </svg>
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/sg:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button
+              onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-yellow-600 hover:bg-yellow-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2"
+            >
+              <RulerIcon size={12} /> Draw Line
+            </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 text-[10px] font-mono">
+          <span className="text-yellow-400/70">ref {nd?.ref_area != null ? `${nd.ref_area}` : '—'}</span>
+          <span className="text-orange-400/70">med {nd?.median_area != null ? `${Math.round(nd.median_area)}` : '—'}</span>
+          <span className="text-white/50">n={nd?.count ?? '—'}</span>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+export const VisualMeasureNode = memo(({ selected, data }: any) => {
+  const [pts, setPts] = React.useState<any[]>([]);
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
+  const onOpenEditor = data.onOpenEditor;
+
+  React.useEffect(() => {
+    try {
+      const p = JSON.parse(data.params?.points || '[]');
+      if (Array.isArray(p)) setPts(p);
+    } catch (_) {}
+  }, [data.params?.points]);
+
+  const RulerIcon = getIcon('Ruler');
+
+  return (
+    <BaseNode
+      title="Visual Measure"
+      icon={RulerIcon}
+      selected={selected}
+      data={data}
+      color="indigo"
+      inputs={[{ id: 'image', color: 'image', label: 'Image' }, { id: 'factor', color: 'scalar', label: 'Px/Unit' }, { id: 'unit', color: 'scalar', label: 'Unit' }]}
+      outputs={[
+        { id: 'main',   color: 'image',  label: 'Preview' },
+        { id: 'length', color: 'scalar', label: 'Length' },
+        { id: 'angle',  color: 'scalar', label: 'Angle (°)' },
+      ]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/sg shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-80" alt="Measure Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <RulerIcon size={24} className="opacity-10" />
+            </div>
+          )}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {pts.length >= 2 && (
+              <line
+                x1={`${pts[0].x * 100}%`} y1={`${pts[0].y * 100}%`}
+                x2={`${pts[1].x * 100}%`} y2={`${pts[1].y * 100}%`}
+                stroke="#00e6ff" strokeWidth={2} strokeDasharray="4 2"
+              />
+            )}
+            {pts.slice(0, 2).map((p: any, i: number) => (
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} fill="#00e6ff" stroke="white" strokeWidth={1.5} />
+            ))}
+          </svg>
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/sg:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button
+              onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2"
+            >
+              <RulerIcon size={12} /> Draw Line
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 text-[10px] font-mono">
+          <span className="text-cyan-400/70">L: {nd?.length != null ? `${nd.length}` : '—'}</span>
+          {pts.length >= 3 && <span className="text-white/50">A: {nd?.angle ?? '—'}°</span>}
         </div>
       </div>
     </BaseNode>
