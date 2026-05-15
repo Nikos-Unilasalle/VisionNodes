@@ -71,6 +71,7 @@ class CalibrationNode(NodeProcessor):
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'factor', 'color': 'scalar', 'label': 'Px/Unit'},
+        {'id': 'unit',   'color': 'scalar', 'label': 'Unit Name'},
         {'id': 'main',   'color': 'image'}
     ],
     params=[
@@ -126,8 +127,10 @@ class InteractiveCalibrationNode(NodeProcessor):
             preview_b64 = base64.b64encode(buf).decode('utf-8')
         except: pass
 
+        unit = params.get('unit', 'mm')
         return {
             'factor': float(px_per_unit),
+            'unit': unit,
             'main': out_img,
             'main_preview': preview_b64,
             'display_value': display
