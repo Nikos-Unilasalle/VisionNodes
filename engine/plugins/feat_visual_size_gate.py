@@ -204,16 +204,11 @@ class VisualSizeGateNode(NodeProcessor):
 
         preview = base.copy()
 
+        # Accepted: original colors intact
+        # Rejected: dimmed + desaturated so accepted cells stand out naturally
         rejected_mask = mask_rej > 0
         if np.any(rejected_mask):
-            preview[rejected_mask] = (preview[rejected_mask].astype(np.float32) * 0.3 +
-                                      np.array([0, 0, 80], dtype=np.float32)).clip(0, 255).astype(np.uint8)
-
-        accepted_mask = filtered > 0
-        if np.any(accepted_mask):
-            green_layer = np.zeros_like(preview)
-            green_layer[accepted_mask] = (0, 180, 60)
-            preview = cv2.addWeighted(preview, 0.65, green_layer, 0.35, 0)
+            preview[rejected_mask] = (preview[rejected_mask].astype(np.float32) * 0.25).clip(0, 255).astype(np.uint8)
 
         if p1 is not None and p2 is not None and ref_area > 0:
             ip1 = (int(round(p1[0])), int(round(p1[1])))
