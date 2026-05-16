@@ -191,7 +191,7 @@ export const CATEGORIES: Category[] = [
     { type: 'fast_sam_segmenter',   label: 'AI Segmenter',        description: 'Zero-shot instance segmentation using FastSAM.' },
     { type: 'sci_general_segmenter',  label: 'Segmenter',       description: 'General-purpose multi-method image segmenter.' },
     { type: 'feat_visual_size_gate',  label: 'Visual Size Gate',  description: 'Filters segmented objects by size with interactive preview.' },
-    { type: 'feat_shape_gate',        label: 'Shape Gate',        description: 'Filters blobs by compactness: aspect ratio and circularity.' },
+    { type: 'feat_shape_gate',        label: 'Shape Gate',        description: 'Filters connected regions by shape compactness (aspect ratio and circularity).' },
     { type: 'feat_connected_components', label: 'Connected Comp. (CV2)', description: 'Labels connected regions — OpenCV implementation.' },
     { type: 'feat_contour_props',     label: 'Contour Properties',description: 'Measures area, perimeter and bounding box of each contour.' },
     { type: 'feat_morphology_adv',    label: 'Advanced Morphology',description: 'Extended morphological operations (top-hat, skeleton, etc.).' },
@@ -202,6 +202,7 @@ export const CATEGORIES: Category[] = [
     { type: 'sam_segmenter',          label: 'SAM Segmenter',      description: 'Segment Anything Model — prompt-driven instance segmentation.' },
     { type: 'sam_depth_guided',       label: 'SAM Depth-Guided',   description: 'Combines depth map with SAM for guided segmentation.' },
     { type: 'filter_bg_subtraction',  label: 'BG Subtraction',     description: 'Background subtraction with configurable learning rate.' },
+    { type: 'obj_extractor',          label: 'Object Extractor',   description: 'Normalises any segmentation output (mask, circles, polygons) into a labeled map, count, and per-object stats.' },
   ]},
   { id: 'tracking', label: 'Tracking', icon: Navigation, section: 'generic', nodes: [
     { type: 'analysis_flow',    label: 'Optical Flow',              description: 'Analyzes pixel movement between frames (Lucas-Kanade / Farneback).' },
@@ -336,7 +337,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geo_color_segmenter',  label: 'Color Segmenter',   description: 'Segments minerals by color (HSV ranges).' },
     { type: 'geo_mineral_key',      label: 'Mineral Key',       description: 'Maps color labels to mineral names.' },
     { type: 'geo_opaque_detect',    label: 'Opaque Detector',   description: 'Detects opaque minerals in transmitted-light images.' },
-    { type: 'geo_petro_tableau',    label: 'Petro Tableau',     description: 'Renders a petrographic classification table.' },
+    { type: 'geo_petro_tableau',    label: 'Petrography Report', description: 'Renders a petrographic classification table.' },
     { type: 'geo_thin_section_report', label: 'Thin Section Report', description: 'Full petrographic report for a thin-section slide.' },
     { type: 'geo_sediment_loader',  label: 'Sediment Loader',   description: 'Loads sediment sample data for analysis.' },
     { type: 'geo_index',            label: 'Geo Index',         description: 'Computes a geology-specific spectral or spatial index.' },
@@ -363,6 +364,7 @@ export const CATEGORIES: Category[] = [
   { id: 'hematology', label: 'Hematology', icon: Droplets, section: 'domain', nodes: [
     { type: 'hema_blood_segment',  label: 'Blood Smear Segmenter', description: 'Segments blood smear images into cell regions.' },
     { type: 'hema_cell_classifier',label: 'Blood Cell Classifier', description: 'Classifies blood cells by type (RBC, WBC, platelets).' },
+    { type: 'hema_hemogramme',     label: 'Hemogramme',            description: 'Generates a CBC report (RBC, Neu, Lym, Mon, Plt) with biological interpretation.' },
     { type: 'hema_blood_report',   label: 'Blood Report',          description: 'Generates a structured hematology analysis report.' },
   ]},
 ];
