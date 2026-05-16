@@ -164,7 +164,7 @@
       {
         "type": "plugin_audio_input",
         "label": "Audio File",
-        "category": "audio",
+        "category": "input",
         "icon": "Music",
         "description": "Loads an audio file (.wav, .mp3, .flac…).",
         "inputs": [],
@@ -323,7 +323,7 @@
       {
         "type": "util_compose",
         "label": "Compose",
-        "category": "utility",
+        "category": "output",
         "icon": "Layout",
         "description": "Combines two images: side-by-side, split view, blend, difference, or checkerboard.",
         "inputs": [
@@ -1265,7 +1265,7 @@
       {
         "type": "plugin_rotate",
         "label": "Rotate",
-        "category": "geometry",
+        "category": "image",
         "icon": "Move",
         "description": "Rotates the image by an arbitrary angle.",
         "inputs": [
@@ -3229,7 +3229,7 @@
       {
         "type": "mask_to_svg",
         "label": "Mask to SVG",
-        "category": "output",
+        "category": "mask",
         "icon": "Download",
         "inputs": [
           {
@@ -5897,13 +5897,17 @@
       {
         "type": "feat_hough_circles",
         "label": "Hough Circles",
-        "category": "segmentation",
+        "category": "keypoints",
         "icon": "Target",
         "description": "Detects circular shapes via Hough transform.",
         "inputs": [
           {
             "id": "image",
             "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
           }
         ],
         "outputs": [
@@ -5996,7 +6000,7 @@
       {
         "type": "feat_hough_lines",
         "label": "Hough Lines",
-        "category": "segmentation",
+        "category": "keypoints",
         "icon": "Maximize",
         "description": "Detects straight line segments via Hough transform.",
         "inputs": [
@@ -6795,6 +6799,91 @@
         ]
       },
       {
+        "type": "feat_shape_gate",
+        "label": "Shape Gate",
+        "category": "segmentation",
+        "icon": "Circle",
+        "description": "Filters connected regions by shape compactness (aspect ratio and circularity).",
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 160,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask_kept",
+            "label": "Kept Mask",
+            "color": "mask"
+          },
+          {
+            "id": "mask_rej",
+            "label": "Rejected Mask",
+            "color": "mask"
+          },
+          {
+            "id": "main",
+            "label": "Preview",
+            "color": "image"
+          },
+          {
+            "id": "count",
+            "label": "Count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "use_aspect",
+            "label": "Aspect Ratio Filter",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "min_aspect",
+            "label": "Min Aspect (W/H)",
+            "type": "float",
+            "default": 0.6,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "use_circularity",
+            "label": "Circularity Filter",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "min_circularity",
+            "label": "Min Circularity",
+            "type": "float",
+            "default": 0.35,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "min_size",
+            "label": "Min Size (px²)",
+            "type": "int",
+            "default": 20,
+            "min": 1,
+            "max": 50000
+          }
+        ]
+      },
+      {
         "type": "feat_connected_components",
         "label": "Connected Comp. (CV2)",
         "category": "segmentation",
@@ -7409,7 +7498,7 @@
       {
         "type": "filter_bg_subtraction",
         "label": "BG Subtraction",
-        "category": "tracking",
+        "category": "segmentation",
         "icon": "Ghost",
         "description": "Background subtraction with configurable learning rate.",
         "inputs": [
@@ -9160,7 +9249,7 @@
       {
         "type": "sci_export_particles",
         "label": "Export Particles",
-        "category": "output",
+        "category": "measure",
         "icon": "DownloadCloud",
         "description": "Saves particle/region measurements to a file.",
         "inputs": [
@@ -9427,7 +9516,7 @@
       {
         "type": "analysis_monitor",
         "label": "Monitor",
-        "category": "analysis",
+        "category": "visualize",
         "icon": "Target",
         "description": "Polyvalent measurement display (flux, area, brightness, count).",
         "inputs": [
@@ -9500,7 +9589,7 @@
       {
         "type": "analysis_flow_viz",
         "label": "Flow Visualizer",
-        "category": "tracking",
+        "category": "visualize",
         "icon": "Eye",
         "description": "Colorized visualization of motion direction and strength.",
         "inputs": [
@@ -9967,7 +10056,7 @@
       {
         "type": "tracker_visualize",
         "label": "Tracker Visualizer",
-        "category": "tracking",
+        "category": "visualize",
         "icon": "Tv2",
         "description": "Renders tracked object trails and bounding boxes.",
         "inputs": [
@@ -10096,7 +10185,7 @@
       {
         "type": "data_list_selector",
         "label": "List Selector",
-        "category": "utility",
+        "category": "data",
         "icon": "List",
         "description": "Extracts a specific item from a list of detections.",
         "inputs": [
@@ -10123,7 +10212,7 @@
       {
         "type": "list_region_select",
         "label": "Region Selector",
-        "category": "utility",
+        "category": "data",
         "icon": "Filter",
         "description": "Filters, sorts and selects a detection region.",
         "inputs": [
@@ -10258,7 +10347,7 @@
       {
         "type": "util_landmark_selector",
         "label": "Landmark Selector",
-        "category": "analysis",
+        "category": "data",
         "icon": "Target",
         "description": "Extracts specific points from a landmark list.",
         "inputs": [
@@ -10335,7 +10424,7 @@
       {
         "type": "plugin_dict_get",
         "label": "Dict Get",
-        "category": "utility",
+        "category": "data",
         "icon": "Key",
         "description": "Extracts a value from a dictionary by key.",
         "inputs": [
@@ -10387,7 +10476,7 @@
       {
         "type": "data_group_dicts",
         "label": "Group Dicts",
-        "category": "utility",
+        "category": "data",
         "icon": "Layers",
         "description": "Groups a list of dicts by a shared key.",
         "inputs": [
@@ -10419,7 +10508,7 @@
       {
         "type": "util_dict_merge",
         "label": "Dict Merge",
-        "category": "utility",
+        "category": "data",
         "icon": "PlusSquare",
         "description": "Merges two dictionaries into one.",
         "inputs": [
@@ -10446,7 +10535,7 @@
       {
         "type": "util_on_each",
         "label": "On Each",
-        "category": "utility",
+        "category": "data",
         "icon": "Layers",
         "description": "Applies a node operation to every element of a list.",
         "inputs": [
@@ -10607,7 +10696,7 @@
       {
         "type": "util_csv_export",
         "label": "CSV Export",
-        "category": "output",
+        "category": "utility",
         "icon": "Database",
         "description": "Exports data to a CSV file with persistent column mapping.",
         "dynamic_inputs": true,
@@ -11167,7 +11256,7 @@
       {
         "type": "plugin_evm_color",
         "label": "EVM (Color)",
-        "category": "analysis",
+        "category": "utility",
         "icon": "Activity",
         "description": "Eulerian video magnification — amplifies color changes.",
         "inputs": [
@@ -11246,7 +11335,7 @@
       {
         "type": "plugin_evm_motion",
         "label": "EVM (Motion)",
-        "category": "tracking",
+        "category": "utility",
         "icon": "Waves",
         "description": "Eulerian video magnification — amplifies subtle motion.",
         "inputs": [
@@ -11328,7 +11417,7 @@
       {
         "type": "merge_points",
         "label": "Merge Points",
-        "category": "tracking",
+        "category": "utility",
         "icon": "Target",
         "inputs": [
           {
@@ -11381,7 +11470,7 @@
       {
         "type": "object_detection_yolo",
         "label": "YOLO Detector",
-        "category": "analysis",
+        "category": "utility",
         "icon": "Zap",
         "description": "Object detection using YOLO (v8 / v11).",
         "inputs": [
@@ -11430,7 +11519,7 @@
       {
         "type": "manual_points",
         "label": "Manual Points (Analysis)",
-        "category": "analysis",
+        "category": "utility",
         "icon": "MousePointer",
         "description": "Defines reference points for analysis workflows.",
         "inputs": [
@@ -11483,7 +11572,7 @@
       {
         "type": "input_float_image",
         "label": "Float Image",
-        "category": "input",
+        "category": "utility",
         "icon": "FileImage",
         "description": "Loads a 32-bit floating-point image (HDR, TIFF).",
         "inputs": [],
@@ -11632,7 +11721,7 @@
       {
         "type": "analysis_pose_mp",
         "label": "Pose Tracker",
-        "category": "analysis",
+        "category": "body",
         "icon": "User",
         "description": "Analyzes and tracks human body posture via MediaPipe.",
         "inputs": [
@@ -11783,7 +11872,7 @@
       {
         "type": "analysis_object_mp",
         "label": "Object Detector (MP)",
-        "category": "analysis",
+        "category": "body",
         "icon": "Box",
         "description": "Detects objects using MediaPipe Object Detection.",
         "inputs": [
@@ -11840,7 +11929,7 @@
       {
         "type": "depth_anything_v2",
         "label": "Depth Estimation",
-        "category": "analysis",
+        "category": "body",
         "icon": "BoxSelect",
         "description": "Estimates monocular depth using DepthAnything v2.",
         "inputs": [
@@ -14189,7 +14278,7 @@
       },
       {
         "type": "geo_petro_tableau",
-        "label": "Petro Tableau",
+        "label": "Petrography Report",
         "category": "geology",
         "icon": "FileText",
         "description": "Renders a petrographic classification table.",
@@ -15603,6 +15692,91 @@
             "label": "Accent",
             "type": "color",
             "default": "#ef4444"
+          }
+        ]
+      },
+      {
+        "type": "hema_hemogramme",
+        "label": "Hemogramme",
+        "category": "hematology",
+        "icon": "FileText",
+        "description": "Generates a CBC report (RBC, Neu, Lym, Mon, Plt) with biological interpretation.",
+        "inputs": [
+          {
+            "id": "mask_rbc",
+            "label": "Erythrocytes (RBC)",
+            "color": "mask"
+          },
+          {
+            "id": "mask_neu",
+            "label": "Neutrophils",
+            "color": "mask"
+          },
+          {
+            "id": "mask_lym",
+            "label": "Lymphocytes",
+            "color": "mask"
+          },
+          {
+            "id": "mask_mon",
+            "label": "Monocytes",
+            "color": "mask"
+          },
+          {
+            "id": "mask_plt",
+            "label": "Platelets",
+            "color": "mask"
+          },
+          {
+            "id": "calibration",
+            "label": "Calibration (px/um)",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "report",
+            "label": "Report Text",
+            "color": "string"
+          },
+          {
+            "id": "main",
+            "label": "Summary Table",
+            "color": "image"
+          },
+          {
+            "id": "stats",
+            "label": "Stats Dict",
+            "color": "dict"
+          },
+          {
+            "id": "rbc_count",
+            "label": "RBC",
+            "color": "scalar"
+          },
+          {
+            "id": "wbc_count",
+            "label": "WBC",
+            "color": "scalar"
+          },
+          {
+            "id": "plt_count",
+            "label": "PLT",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "patient_id",
+            "label": "Patient ID",
+            "type": "string",
+            "default": "ANON-B-01"
+          },
+          {
+            "id": "unit_name",
+            "label": "Unit Name",
+            "type": "string",
+            "default": "Apex Lab"
           }
         ]
       },

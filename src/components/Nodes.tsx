@@ -983,7 +983,7 @@ export const VisualMeasureNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode
-      title="Visual Measure"
+      title="Ruler"
       icon={RulerIcon}
       selected={selected}
       data={data}
@@ -1857,7 +1857,7 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode 
-        title="Histogram Analysis" 
+        title="Histogram" 
         icon={BarChart2} 
         selected={selected} 
         data={data} 
@@ -2952,7 +2952,7 @@ const PetrographicReportNodeUI = ({ data, selected }: { data: any; selected: boo
     PETRO_SECTION_COLORS[name] ?? PETRO_FALLBACK_COLORS[idx % PETRO_FALLBACK_COLORS.length];
 
   const sampleName = data.params?.sample_name || '';
-  const title = sampleName ? `Petro — ${sampleName}` : 'Petrographic Report';
+  const title = sampleName ? `Petro — ${sampleName}` : 'Petrography Report';
 
   return (
     <BaseNode title={title} icon={FileText} selected={selected} data={data} color="accent"
@@ -3370,7 +3370,7 @@ const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
 
 export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
-  const title = data.params?.title ?? 'Frame Layer';
+  const title = data.params?.title ?? 'Frame';
   const isCollapsed = !!(data.params?.collapsed);
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
@@ -3457,7 +3457,7 @@ export const GroupInputNode = memo(({ selected, data }: any) => {
     return { id: idx >= 0 ? p.id.slice(idx + 2) : p.id, color: idx >= 0 ? p.id.slice(0, idx) : 'any' };
   });
   return (
-    <BaseNode title="Group IN" icon={LogIn} selected={selected} data={data} outputs={outputs} inputs={[]}>
+    <BaseNode title="Group Input" icon={LogIn} selected={selected} data={data} outputs={outputs} inputs={[]}>
       {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">no inputs</div>}
     </BaseNode>
   );
@@ -3479,7 +3479,7 @@ export const GroupOutputNode = memo(({ selected, data }: any) => {
     { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
   ];
   return (
-    <BaseNode title="Group OUT" icon={LogOut} selected={selected} data={data} inputs={inputs} outputs={[]}>
+    <BaseNode title="Group Output" icon={LogOut} selected={selected} data={data} inputs={inputs} outputs={[]}>
       {ports.length === 0 && <div className="text-[8px] text-gray-600 italic text-center">connect outputs →</div>}
     </BaseNode>
   );
@@ -3597,6 +3597,77 @@ export const AudioPlaybackNode = memo(({ selected, data }: any) => {
     </BaseNode>
   );
 });
+export const HemogrammeNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  
+  // Try multiple sources for data
+  const rbc = nd?.rbc_count ?? nd?.stats?.rbc ?? 0;
+  const wbc = nd?.wbc_count ?? nd?.stats?.wbc ?? 0;
+  const plt = nd?.plt_count ?? nd?.stats?.plt ?? 0;
+  
+  // For percentages, we can also parse the report if stats is missing
+  let neu = nd?.stats?.neu || '0.0';
+  let lym = nd?.stats?.lym || '0.0';
+  let mon = nd?.stats?.mon || '0.0';
+  
+  if (nd?.report && (neu === '0.0' && lym === '0.0' && mon === '0.0')) {
+    const report = String(nd.report);
+    const nMatch = report.match(/Neutrophils:\s+\d+\s+\((\d+\.\d+)%\)/);
+    const lMatch = report.match(/Lymphocytes:\s+\d+\s+\((\d+\.\d+)%\)/);
+    const mMatch = report.match(/Monocytes:\s+\d+\s+\((\d+\.\d+)%\)/);
+    if (nMatch) neu = nMatch[1];
+    if (lMatch) lym = lMatch[1];
+    if (mMatch) mon = mMatch[1];
+  }
+  
+  return (
+    <BaseNode title="Hemogramme" icon={FileText} selected={selected} data={data} color="rose"
+      width={280}
+      inputs={data.schema?.inputs}
+      outputs={data.schema?.outputs}
+    >
+      <div className="flex flex-col gap-3 px-8 py-2 nodrag">
+        <div className="grid grid-cols-3 gap-1.5">
+          <div className="bg-black/40 rounded-xl p-2 flex flex-col items-center border border-white/5 shadow-inner">
+            <span className="text-[7px] text-rose-500/70 uppercase font-black tracking-tighter">RBC</span>
+            <span className="text-sm font-black font-mono text-rose-400">{rbc}</span>
+          </div>
+          <div className="bg-black/40 rounded-xl p-2 flex flex-col items-center border border-white/5 shadow-inner">
+            <span className="text-[7px] text-gray-500 uppercase font-black tracking-tighter">WBC</span>
+            <span className="text-sm font-black font-mono text-white">{wbc}</span>
+          </div>
+          <div className="bg-black/40 rounded-xl p-2 flex flex-col items-center border border-white/5 shadow-inner">
+            <span className="text-[7px] text-purple-500/70 uppercase font-black tracking-tighter">PLT</span>
+            <span className="text-sm font-black font-mono text-purple-400">{plt}</span>
+          </div>
+        </div>
+        
+        <div className="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col gap-2 shadow-inner">
+           <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5 pb-1.5">
+             <span>Differential</span>
+             <span className="text-[7px] opacity-40 font-mono">%</span>
+           </div>
+           <div className="flex flex-col gap-1.5">
+             <div className="flex items-center justify-between font-mono">
+               <span className="text-[10px] text-gray-400 font-medium">Neutrophils</span>
+               <span className="text-[11px] text-blue-400 font-black">{neu}</span>
+             </div>
+             <div className="flex items-center justify-between font-mono">
+               <span className="text-[10px] text-gray-400 font-medium">Lymphocytes</span>
+               <span className="text-[11px] text-cyan-400 font-black">{lym}</span>
+             </div>
+             <div className="flex items-center justify-between font-mono">
+               <span className="text-[10px] text-gray-400 font-medium">Monocytes</span>
+               <span className="text-[11px] text-emerald-400 font-black">{mon}</span>
+             </div>
+           </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 
 export const ManualPointsNode = memo(({ selected, data }: any) => {
   const nd = useNodeData(useNodeId());
@@ -3613,7 +3684,7 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
   }, [data.params?.points]);
 
   return (
-    <BaseNode title="Manual Points" icon={Crosshair} selected={selected} data={data} color="purple"
+    <BaseNode title="Manual Points (Analysis)" icon={Crosshair} selected={selected} data={data} color="purple"
       inputs={[{ id: 'image', color: 'image' }]}
       outputs={[{ id: 'main', color: 'image' }, { id: 'points', color: 'list' }, { id: 'count', color: 'scalar' }]}
     >

@@ -12,7 +12,7 @@ import base64
 
 @vision_node(
     type_id='manual_points',
-    label='Manual Points',
+    label='Manual Points (Analysis)',
     category='analysis',
     icon='MousePointer',
     description=(

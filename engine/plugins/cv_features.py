@@ -176,8 +176,19 @@ class BilateralFilterNode(NodeProcessor):
     label="Hough Circles",
     category='segmentation',
     icon="Target",
-    description="Identifies perfect circular shapes and exports them as a list, a mask, or a visualized image.",
-    inputs=[{"id": "image", "color": "image"}],
+    description=(
+        "Identifies perfect circular shapes in the image.\n\n"
+        "Parameters:\n"
+        "- DP: Inverse ratio of accumulator resolution (1.0 = full, 1.2 = recommended).\n"
+        "- Min Dist: Minimum distance between centers of detected circles.\n"
+        "- Canny High: Upper threshold for internal edge detection.\n"
+        "- Threshold: Center accumulator threshold (lower = more circles, but more noise).\n"
+        "- Min/Max Radius: Bounds for detected circle size in pixels."
+    ),
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "mask",  "color": "mask"}
+    ],
     outputs=[
         {"id": "main",         "color": "image"},
         {"id": "mask",         "color": "mask"},
@@ -199,10 +210,24 @@ class BilateralFilterNode(NodeProcessor):
 class HoughCirclesNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"main": None, "mask": None, "circles_list": [], "count": 0}
+        mask_in = inputs.get('mask')
         
-        h, w = image.shape[:2]
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+        # Decide source image
+        if image is not None:
+            source = image
+        elif mask_in is not None:
+            source = mask_in
+        else:
+            return {"main": None, "mask": None, "circles_list": [], "count": 0}
+            
+        h, w = source.shape[:2]
+        gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY) if len(source.shape) == 3 else source
+        
+        if image is not None and mask_in is not None:
+            # Restricted detection: apply mask to image
+            if mask_in.shape[:2] != (h, w):
+                mask_in = cv2.resize(mask_in, (w, h), interpolation=cv2.INTER_NEAREST)
+            gray = cv2.bitwise_and(gray, gray, mask=mask_in)
         
         dp = float(params.get('dp', 1.2))
         min_dist = float(params.get('min_dist', 100.0))
@@ -218,7 +243,7 @@ class HoughCirclesNode(NodeProcessor):
         circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, dp, min_dist, param1=p1, param2=p2, minRadius=min_r, maxRadius=max_r)
         
         results = []
-        out_img = image.copy()
+        out_img = source.copy()
         if len(out_img.shape) == 2:
             out_img = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
         mask = np.zeros((h, w), dtype=np.uint8)
