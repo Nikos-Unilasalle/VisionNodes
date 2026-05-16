@@ -17,6 +17,7 @@ interface RightPanelProps {
   onRequestCapture: (id: string) => void;
   onToggleExposed: (nodeId: string, paramId: string) => void;
   onUpdateGroupChildParams?: (childNodeId: string, params: any) => void;
+  onRenameExposedParam?: (childNodeId: string, paramId: string, newLabel: string) => void;
 }
 
 const RightPanel: React.FC<RightPanelProps> = ({
@@ -33,6 +34,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onRequestCapture,
   onToggleExposed,
   onUpdateGroupChildParams,
+  onRenameExposedParam,
 }) => {
   const selectedNodeId = selectedNode?.id;
   const show = !!selectedNodeId;
@@ -82,6 +84,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   onToggleExposed={onToggleExposed}
                   exposedGroupParams={exposedGroupParams}
                   onUpdateGroupChildParams={onUpdateGroupChildParams}
+                  onRenameExposedParam={onRenameExposedParam}
                 />
               </div>
             ) : (

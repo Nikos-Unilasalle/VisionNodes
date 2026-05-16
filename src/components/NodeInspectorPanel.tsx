@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check } from 'lucide-react';
 import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
@@ -297,6 +297,7 @@ export interface ExposedParam {
   paramSpec: ParamSpec;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentValue: any;
+  customLabel?: string;
 }
 
 interface NodeInspectorPanelProps {
@@ -312,15 +313,18 @@ interface NodeInspectorPanelProps {
   onToggleExposed?: (nodeId: string, paramId: string) => void;
   exposedGroupParams?: ExposedParam[];
   onUpdateGroupChildParams?: (childNodeId: string, params: Record<string, unknown>) => void;
+  onRenameExposedParam?: (childNodeId: string, paramId: string, newLabel: string) => void;
 }
 
 export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   node, liveData, activePaletteIndex,
   pickColorNodeId, onUpdateParams, onPickColorToggle, onRequestCapture,
   isInsideGroup, onToggleExposed, exposedGroupParams, onUpdateGroupChildParams,
+  onRenameExposedParam,
 }) => {
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
+  const [editingLabel, setEditingLabel] = useState<{ nodeId: string; paramId: string; value: string } | null>(null);
 
   // Skip manual types to avoid duplication with schema-driven loop below
   const MANUAL_TYPES = new Set([
@@ -363,32 +367,72 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   const sp = ep.paramSpec;
                   const val = ep.currentValue;
                   const up2 = (v: unknown) => onUpdateGroupChildParams?.(ep.nodeId, { [sp.id]: v });
-                  const lbl = sp.label || sp.id;
+                  const lbl = ep.customLabel || sp.label || sp.id;
+                  const isEditingThis = editingLabel?.nodeId === ep.nodeId && editingLabel?.paramId === ep.paramId;
                   const isE2 = sp.type === 'enum' || sp.options;
                   const isColor2 = sp.type === 'color';
                   const isS2 = sp.type === 'string' || typeof (val ?? sp.default) === 'string';
                   const isN2 = sp.type === 'number' || sp.type === 'float';
                   const isB2 = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (val ?? sp.default) === 'boolean';
-                  if (isE2) return <SelectInput key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
-                  if (isColor2) return <ColorInput  key={sp.id} label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
-                  if (sp.type === 'file_path') return <FilePathInput key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} />;
-                  if (isS2) return <TextInput   key={sp.id} label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
-                  if (isN2) {
+
+                  const confirmRename = (newVal: string) => {
+                    const trimmed = newVal.trim();
+                    onRenameExposedParam?.(ep.nodeId, ep.paramId, trimmed || (sp.label ?? ep.paramId));
+                    setEditingLabel(null);
+                  };
+
+                  let control: React.ReactNode;
+                  if (isE2) control = <SelectInput label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
+                  else if (isColor2) control = <ColorInput label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
+                  else if (sp.type === 'file_path') control = <FilePathInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} />;
+                  else if (isS2) control = <TextInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
+                  else if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
                     const min2 = sp.min ?? -10;
                     const max2 = sp.max ?? (v2 > 100 ? v2 * 2 : 100);
-                    return <Slider 
-                      key={sp.id} 
-                      label={lbl} 
-                      val={v2} 
-                      min={min2} 
-                      max={max2} 
-                      step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
-                      onChange={up2} 
-                    />;
+                    control = <Slider label={lbl} val={v2} min={min2} max={max2} step={sp.step || (sp.type === 'float' ? 0.01 : 1)} onChange={up2} />;
+                  } else if (isB2) {
+                    control = <ToggleInput label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
+                  } else {
+                    control = <Slider label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={up2} />;
                   }
-                  if (isB2) return <ToggleInput key={sp.id} label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
-                  return <Slider key={sp.id} label={lbl} val={Number(val ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={up2} />;
+
+                  return (
+                    <div key={ep.paramId} className="relative group/ep">
+                      {control}
+                      {/* Inline label rename — pencil appears on hover */}
+                      {isEditingThis ? (
+                        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-1.5 bg-[#2a2f3a] border border-accent/40 rounded-lg px-2 py-1.5 shadow-xl">
+                          <input
+                            autoFocus
+                            className="flex-1 bg-transparent text-accent text-[10px] uppercase tracking-widest outline-none font-black min-w-0"
+                            value={editingLabel.value}
+                            onChange={e => setEditingLabel({ ...editingLabel, value: e.target.value })}
+                            onBlur={() => confirmRename(editingLabel.value)}
+                            onKeyDown={e => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter') confirmRename(editingLabel.value);
+                              if (e.key === 'Escape') setEditingLabel(null);
+                            }}
+                          />
+                          <button
+                            onMouseDown={e => { e.preventDefault(); confirmRename(editingLabel.value); }}
+                            className="text-accent/60 hover:text-accent shrink-0"
+                          >
+                            <Check size={11} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          title="Rename label"
+                          className="absolute top-0 right-0 z-10 opacity-0 group-hover/ep:opacity-40 hover:!opacity-100 text-accent transition-opacity p-0.5"
+                          onClick={() => setEditingLabel({ nodeId: ep.nodeId, paramId: ep.paramId, value: lbl })}
+                        >
+                          <Pencil size={9} />
+                        </button>
+                      )}
+                    </div>
+                  );
                 })}
               </div>
             ));

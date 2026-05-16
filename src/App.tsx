@@ -561,6 +561,7 @@ function App() {
           paramId,
           paramSpec,
           currentValue: child.data?.params?.[paramId] ?? paramSpec.default,
+          customLabel: (child.data?.exposedParamLabels as Record<string, string> | undefined)?.[paramId],
         });
       }
     }
@@ -715,6 +716,25 @@ function App() {
       };
     }));
   }, [setViewNodes, pushSnapshot]);
+
+  const renameExposedParam = useCallback((childNodeId: string, paramId: string, newLabel: string) => {
+    if (!selectedNode || selectedNode.type !== 'group_node') return;
+    setViewNodes(nds => nds.map(n => {
+      if (n.id !== selectedNode.id) return n;
+      const sub = (n.data as any)?.subGraph ?? { nodes: [], edges: [] };
+      return {
+        ...n, data: {
+          ...n.data, subGraph: {
+            ...sub, nodes: sub.nodes.map((cn: any) =>
+              cn.id === childNodeId
+                ? { ...cn, data: { ...cn.data, exposedParamLabels: { ...(cn.data.exposedParamLabels ?? {}), [paramId]: newLabel } } }
+                : cn
+            ),
+          },
+        },
+      };
+    }));
+  }, [selectedNode, setViewNodes]);
 
   const handleUndo = useCallback(() => {
     const prev = histUndo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
@@ -1393,6 +1413,7 @@ function App() {
           onUpdateGroupChildParams={selectedNode?.type === 'group_node'
             ? (childNodeId, params) => updateGroupChildParams(selectedNode.id, childNodeId, params)
             : undefined}
+          onRenameExposedParam={selectedNode?.type === 'group_node' ? renameExposedParam : undefined}
         />
       </div>
 
