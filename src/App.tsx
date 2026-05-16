@@ -1,11 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import ReactFlow, {
-  Background, Controls, applyEdgeChanges, applyNodeChanges,
+  Background, Controls, ControlButton, applyEdgeChanges, applyNodeChanges,
   Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
-  Plus, ChevronRight, Layers
+  Plus, ChevronRight, Layers, Heart
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -16,7 +16,7 @@ import { NodeInspectorPanel, AnalysisDataPanel } from './components/NodeInspecto
 import type { ExposedParam } from './components/NodeInspectorPanel';
 import { AnimatePresence } from 'framer-motion';
 import { save, open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, writeFile, readDir } from '@tauri-apps/plugin-fs';
+import { writeTextFile, writeFile, readDir, readTextFile } from '@tauri-apps/plugin-fs';
 import { ask } from '@tauri-apps/plugin-dialog';
 
 import { listen } from '@tauri-apps/api/event';
@@ -48,6 +48,11 @@ function App() {
   const [activeCanvasId, setActiveCanvasId] = useState('c1');
   const activeCanvasIdRef = useRef('c1');
   useEffect(() => { activeCanvasIdRef.current = activeCanvasId; }, [activeCanvasId]);
+
+  const [favoriteFiles, setFavoriteFiles] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem('vn-favorites') || '{}'); }
+    catch { return {}; }
+  });
 
   const canvasNodes = useMemo(
     () => canvases.find(c => c.id === activeCanvasId)?.nodes ?? [],
@@ -816,6 +821,41 @@ function App() {
     if (workDir) refreshWorkDir(workDir);
   }, [workDir, refreshWorkDir]);
 
+  // Auto-load favorite files for each canvas on startup
+  useEffect(() => {
+    const favorites = JSON.parse(localStorage.getItem('vn-favorites') || '{}') as Record<string, string>;
+    if (Object.keys(favorites).length === 0) return;
+    (async () => {
+      for (const [canvasId, filePath] of Object.entries(favorites)) {
+        try {
+          const content = await readTextFile(filePath);
+          const { nodes: rawNodes, edges: newEdges } = JSON.parse(content);
+          const newNodes = rawNodes.map((n: any) =>
+            n.type === 'canvas_reroute'
+              ? { ...n, style: { ...n.style, width: 8, height: (typeof n.style?.height === 'number' && n.style.height >= 24) ? n.style.height : 48 } }
+              : n
+          );
+          setCanvases(prev => prev.map(c =>
+            c.id === canvasId ? { ...c, nodes: newNodes, edges: newEdges, filePath } : c
+          ));
+        } catch { /* file may have moved — silently skip */ }
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggleFavorite = useCallback(() => {
+    if (!activeFilePath) return;
+    const next = { ...favoriteFiles };
+    if (next[activeCanvasId] === activeFilePath) {
+      delete next[activeCanvasId];
+    } else {
+      next[activeCanvasId] = activeFilePath;
+    }
+    setFavoriteFiles(next);
+    localStorage.setItem('vn-favorites', JSON.stringify(next));
+  }, [activeFilePath, activeCanvasId, favoriteFiles]);
+
   const setWorkDirAndSave = async () => {
     const dir = await open({ directory: true, multiple: false });
     if (dir && typeof dir === 'string') {
@@ -1263,7 +1303,28 @@ function App() {
             fitView
           >
             <Background color="rgba(255, 255, 255, 0.04)" variant={BackgroundVariant.Lines} gap={40} size={1} />
-            <Controls className="bg-[#3d4452] border-[#4f5b6b] fill-white" />
+            <Controls className="bg-[#3d4452] border-[#4f5b6b] fill-white">
+              {(() => {
+                const isFav = !!activeFilePath && favoriteFiles[activeCanvasId] === activeFilePath;
+                const noFile = !activeFilePath;
+                return (
+                  <ControlButton
+                    onClick={toggleFavorite}
+                    title={noFile ? 'Save the file first' : isFav ? 'Auto-load ON — click to disable' : 'Set as startup file for this canvas'}
+                    style={{ opacity: noFile ? 0.3 : 1, cursor: noFile ? 'not-allowed' : 'pointer' }}
+                  >
+                    <Heart
+                      size={12}
+                      style={{
+                        color: isFav ? '#4ade80' : '#9ca3af',
+                        fill: isFav ? '#4ade80' : 'none',
+                        transition: 'color 0.2s, fill 0.2s',
+                      }}
+                    />
+                  </ControlButton>
+                );
+              })()}
+            </Controls>
             <Panel position="top-left">
               <div className="flex flex-col gap-2">
                 <button
