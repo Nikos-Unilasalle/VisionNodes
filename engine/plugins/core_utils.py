@@ -72,7 +72,7 @@ class MaskBlendNode(NodeProcessor):
 
 @vision_node(
     type_id="data_inspector",
-    label="Inspect Unit",
+    label="Inspector",
     category='visualize',
     icon="Eye",
     description="Displays the raw data content flowing through a link.",

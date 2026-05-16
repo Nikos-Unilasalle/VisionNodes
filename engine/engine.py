@@ -490,6 +490,8 @@ class VisionEngine:
                         if self.pending_capture and (nid == self.pending_capture or nid.endswith('::' + self.pending_capture)) and out.get('main') is not None:
                             try:
                                 capture_img = out['main']
+                                if capture_img.dtype != np.uint8:
+                                    capture_img = np.clip(capture_img, 0, 255).astype(np.uint8)
                                 if len(capture_img.shape) == 2: capture_img = cv2.cvtColor(capture_img, cv2.COLOR_GRAY2BGR)
                                 _, c_buf = cv2.imencode('.png', capture_img)
                                 c_b64 = base64.b64encode(c_buf).decode('utf-8')
@@ -504,6 +506,8 @@ class VisionEngine:
                         if self.pending_snapshot and (nid == self.pending_snapshot or nid.endswith('::' + self.pending_snapshot)) and out.get('main') is not None:
                             try:
                                 snap_img = out['main'].copy()
+                                if snap_img.dtype != np.uint8:
+                                    snap_img = np.clip(snap_img, 0, 255).astype(np.uint8)
                                 if snap_img.ndim == 2: snap_img = cv2.cvtColor(snap_img, cv2.COLOR_GRAY2BGR)
                                 elif snap_img.ndim == 3 and snap_img.shape[2] == 4: snap_img = cv2.cvtColor(snap_img, cv2.COLOR_BGRA2BGR)
                                 engine_dir = os.path.dirname(os.path.abspath(__file__))
@@ -550,6 +554,11 @@ class VisionEngine:
                 try:
                     img_to_encode = final_img
                     def _encode(img):
+                        if img.dtype != np.uint8:
+                            if img.dtype in (np.float32, np.float64):
+                                img = (np.clip(img, 0.0, 1.0) * 255).astype(np.uint8) if float(img.max()) <= 1.0 else np.clip(img, 0, 255).astype(np.uint8)
+                            else:
+                                img = np.clip(img, 0, 255).astype(np.uint8)
                         if len(img.shape) == 2:
                             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
                         elif len(img.shape) == 3 and img.shape[2] == 2:

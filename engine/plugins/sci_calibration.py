@@ -5,7 +5,7 @@ import cv2
 @vision_node(
     type_id='sci_calibration',
     label='Unit Calibration',
-    category=['visualize', 'math'],
+    category='measure',
     icon='Scaling',
     description="Converts pixel measurements (length or area) into real-world units based on a calibration factor.",
     inputs=[{'id': 'input', 'color': 'any'}],
@@ -65,7 +65,7 @@ class CalibrationNode(NodeProcessor):
 @vision_node(
     type_id='sci_interactive_calibration',
     label='Visual Calibration',
-    category='math',
+    category='measure',
     icon='Scaling',
     description="Calculates a calibration factor by drawing a line of a known physical length on the image.",
     inputs=[{'id': 'image', 'color': 'image'}],

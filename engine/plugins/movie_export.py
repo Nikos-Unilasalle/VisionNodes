@@ -6,7 +6,7 @@ import time
 @vision_node(
     type_id='output_movie',
     label='Movie Export',
-    category='out',
+    category='output',
     icon='Film',
     description='Records frames to MP4. Stream mode captures from pipeline; Webcam mode records directly from camera and creates a Movie node on stop.',
     inputs=[

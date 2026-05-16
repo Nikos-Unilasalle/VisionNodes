@@ -1,5 +1,6 @@
 from registry import vision_node, NodeProcessor
 import cv2
+import numpy as np
 
 @vision_node(
     type_id='plugin_invert_mask',
@@ -14,5 +15,8 @@ import cv2
 class InvertMaskNode(NodeProcessor):
     def process(self, inputs, params):
         mask = inputs.get('mask')
-        if mask is None: return {'main': None}
-        return {'main': cv2.bitwise_not(mask)}
+        if mask is None:
+            return {'main': None}
+        if mask.dtype in (np.float32, np.float64):
+            return {'main': (1.0 - mask).astype(mask.dtype)}
+        return {'main': cv2.bitwise_not(mask.astype(np.uint8))}

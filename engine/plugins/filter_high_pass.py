@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='filter_high_pass',
     label='Filter: High Pass',
-    category='cv',
+    category='image',
     icon='Waves',
     description="Extracts fine details and edges by removing low frequencies. Useful for frequency separation.",
     

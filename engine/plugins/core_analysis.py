@@ -23,7 +23,7 @@ _FLOW_PRESETS = [
 @vision_node(
     type_id="analysis_flow",
     label="Optical Flow",
-    category='detect',
+    category='tracking',
     icon="Wind",
     description="Analyzes movement between frames using Farneback algorithm.",
     inputs=[{"id": "image", "color": "image"}],
@@ -76,8 +76,8 @@ class OpticalFlowNode(NodeProcessor):
 
 @vision_node(
     type_id="analysis_flow_viz",
-    label="Flow Viz",
-    category='visualize',
+    label="Flow Visualizer",
+    category='tracking',
     icon="Eye",
     description="Colorized visualization of optical flow data.",
     inputs=[{"id": "data", "color": "any"}],
@@ -97,8 +97,8 @@ class FlowVizNode(NodeProcessor):
 
 @vision_node(
     type_id="analysis_monitor",
-    label="Universal Monitor",
-    category='detect',
+    label="Monitor",
+    category='analysis',
     icon="Target",
     description="Universal measurement tool for flow, area, brightness, and counting objects.",
     inputs=[
@@ -191,7 +191,7 @@ class UniversalMonitorNode(NodeProcessor):
 @vision_node(
     type_id="analysis_face_mp",
     label="Face Tracker",
-    category='detect',
+    category='body',
     icon="User",
     description="Detects and tracks faces and facial landmarks (MediaPipe).",
     inputs=[{"id": "image", "color": "image"}],
@@ -251,7 +251,7 @@ class FaceDetectionNode(NodeProcessor):
 @vision_node(
     type_id="analysis_hand_mp",
     label="Hand Tracker",
-    category='detect',
+    category='body',
     icon="Hand",
     description="Detects and tracks hands and joints (MediaPipe).",
     inputs=[{"id": "image", "color": "image"}],

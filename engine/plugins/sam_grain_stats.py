@@ -31,7 +31,7 @@ def _feret_diameters(cnt):
 
 @vision_node(
     type_id='sam_grain_stats',
-    label='SAM Grain Stats',
+    label='Region Statistics',
     category='geology',
     icon='BarChart2',
     description=(
@@ -42,7 +42,7 @@ def _feret_diameters(cnt):
         "fraction de grain — plus histogramme et courbe cumulative de taille."
     ),
     inputs=[
-        {'id': 'contours',  'color': 'list',   'label': 'Contours (SAM / FastSAM Auto)'},
+        {'id': 'contours',  'color': 'contours', 'label': 'Contours (SAM / FastSAM Auto)'},
         {'id': 'image',     'color': 'image',  'label': 'Image source (pour fraction)'},
         {'id': 'um_per_px', 'color': 'scalar', 'label': 'Px/µm (Calibration)'},
     ],
@@ -56,7 +56,7 @@ def _feret_diameters(cnt):
         {'id': 'mean_circularity',  'color': 'scalar', 'label': 'Circularité moyenne'},
         {'id': 'mean_aspect_ratio', 'color': 'scalar', 'label': 'Rapport de forme moyen'},
         {'id': 'grain_fraction',    'color': 'scalar', 'label': 'Fraction de grain (%)'},
-        {'id': 'regions',           'color': 'list',   'label': 'Régions (par grain)'},
+        {'id': 'regions',           'color': 'regions', 'label': 'Régions (par grain)'},
     ],
     params=[
         {'id': 'min_area',   'label': 'Aire min (px²)',   'type': 'int',   'default': 200,      'min': 1,    'max': 500000},

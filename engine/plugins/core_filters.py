@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id="filter_canny",
     label="Canny Edge",
-    category='cv',
+    category='image',
     icon="Waves",
     description="Detects edges using the Canny algorithm.",
     inputs=[{"id": "image", "color": "image"}],
@@ -25,7 +25,7 @@ class CannyFilter(NodeProcessor):
 @vision_node(
     type_id="filter_blur",
     label="Gaussian Blur",
-    category='cv',
+    category='image',
     icon="Waves",
     description="Applies a Gaussian blur to smooth the image.",
     inputs=[{"id": "image", "color": "image"}],
@@ -43,7 +43,7 @@ class BlurFilter(NodeProcessor):
 @vision_node(
     type_id="filter_gray",
     label="Grayscale",
-    category='cv',
+    category='image',
     icon="Waves",
     description="Converts the image to grayscale.",
     inputs=[{"id": "image", "color": "image"}],
@@ -59,7 +59,7 @@ class GrayFilter(NodeProcessor):
 @vision_node(
     type_id="filter_threshold",
     label="Threshold",
-    category='cv',
+    category='image',
     icon="Waves",
     description="Separates the image into black and white based on intensity.",
     inputs=[{"id": "image", "color": "image"}],
@@ -116,7 +116,7 @@ class ColorMaskNode(NodeProcessor):
             s_tol = int(params.get('s_tol', 40))
             v_tol = int(params.get('v_tol', 40))
             target_hsv = cv2.cvtColor(np.uint8([[[b, g, r]]]), cv2.COLOR_BGR2HSV)[0][0]
-            th, ts, tv = target_hsv
+            th, ts, tv = int(target_hsv[0]), int(target_hsv[1]), int(target_hsv[2])
             h_min, h_max = (th - h_tol) % 180, (th + h_tol) % 180
             s_min, s_max = max(0, ts - s_tol), min(255, ts + s_tol)
             v_min, v_max = max(0, tv - v_tol), min(255, tv + v_tol)

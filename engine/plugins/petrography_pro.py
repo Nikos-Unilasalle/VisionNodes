@@ -34,7 +34,11 @@ def remove_binding_pixels(mask):
         {"id": "mask", "color": "mask", "label": "Binary Grain Mask"},
         {"id": "scale", "color": "scalar", "label": "Px/Unit"}
     ],
-    outputs=[{"id": "mask", "color": "mask"}],
+    outputs=[
+        {"id": "mask",  "color": "mask"},
+        {"id": "count", "color": "scalar", "label": "Grain Count"},
+        {"id": "frac",  "color": "scalar", "label": "Area Fraction (%)"},
+    ],
     params=[
         {"id": "mode", "label": "Target Grains", "type": "enum", "options": ["White (on black)", "Black (on white)"], "default": 0},
         {"id": "epsilon", "label": "Polygonal Approx (Units)", "type": "float", "default": 0.02, "min": 0.0, "max": 100.0},
@@ -95,8 +99,11 @@ class PetroGrainSeparatorNode(NodeProcessor):
                     if best_j is not None:
                         cv2.line(result_mask, tuple(cp1['pos']), tuple(concave_points[best_j]['pos']), 0, 1)
                         used.add(i); used.add(best_j)
+        n_labels, _ = cv2.connectedComponents(result_mask)
+        grain_count = n_labels - 1
+        grain_frac = round(float(np.count_nonzero(result_mask)) / result_mask.size * 100.0, 2)
         if mode == 1: result_mask = cv2.bitwise_not(result_mask)
-        return {"mask": result_mask}
+        return {"mask": result_mask, "count": grain_count, "frac": grain_frac}
 
 @vision_node(
     type_id="petro_point_counter",
@@ -166,6 +173,28 @@ class PetroPointCounterNode(NodeProcessor):
             stats[name] = f"{(v/total)*100:.1f}%"
         return {"main": canvas, "data": stats}
 
+def _label_bboxes_from_sorted(markers: np.ndarray) -> dict:
+    """Compute {lbl: (ymin,ymax,xmin,xmax)} for all non-zero labels in one vectorized pass."""
+    h, w = markers.shape[:2]
+    flat = markers.ravel()
+    nz   = flat > 0
+    if not np.any(nz):
+        return {}
+    nz_flat = flat[nz]
+    nz_idx  = np.where(nz)[0]
+    order   = np.argsort(nz_flat, kind='stable')
+    s_lbl   = nz_flat[order]
+    s_row   = nz_idx[order] // w
+    s_col   = nz_idx[order] %  w
+    uniq, starts = np.unique(s_lbl, return_index=True)
+    ends = np.append(starts[1:], len(s_lbl))
+    return {
+        int(lbl): (int(s_row[s:e].min()), int(s_row[s:e].max()),
+                   int(s_col[s:e].min()), int(s_col[s:e].max()))
+        for lbl, s, e in zip(uniq, starts, ends)
+    }
+
+
 @vision_node(
     type_id="petro_neighbor_analysis",
     label="Petro Neighbor Analysis (Context)",
@@ -179,85 +208,124 @@ class PetroPointCounterNode(NodeProcessor):
         "- Min Contact: Minimum boundary length to consider grains as 'touching'."
     ),
     inputs=[
-        {"id": "markers", "color": "any", "label": "Mask or Markers"},
-        {"id": "scale", "color": "scalar", "label": "Px/Unit"}
+        {"id": "contours", "color": "list",   "label": "Contours (FastSAM / Grain Stats)"},
+        {"id": "image",    "color": "image",   "label": "Image (required with Contours)"},
+        {"id": "markers",  "color": "any",     "label": "Mask or Labeled Markers (alt.)"},
+        {"id": "scale",    "color": "scalar",  "label": "Px/Unit"}
     ],
     outputs=[
         {"id": "main", "color": "image", "label": "Coordination Map"},
-        {"id": "data", "color": "any", "label": "Context Stats"}
+        {"id": "data", "color": "any",   "label": "Context Stats"}
     ],
     params=[
-        {"id": "mode", "label": "Target Grains (for binary)", "type": "enum", "options": ["White (on black)", "Black (on white)"], "default": 0},
-        {"id": "dilate_units", "label": "Search Radius (Units)", "type": "float", "default": 0.02, "min": 0.0, "max": 10.0},
-        {"id": "min_contact_units", "label": "Min Contact (Units)", "type": "float", "default": 0.05, "min": 0.0, "max": 10.0}
+        {"id": "mode",             "label": "Target Grains (mask only)", "type": "enum",
+         "options": ["White (on black)", "Black (on white)"], "default": 0},
+        {"id": "dilate_units",     "label": "Search Radius (px / units)", "type": "float",
+         "default": 5.0, "min": 1.0, "max": 200.0, "step": 1.0},
+        {"id": "min_contact_units","label": "Min Contact (px / units)",   "type": "float",
+         "default": 2.0, "min": 1.0, "max": 200.0, "step": 1.0},
     ]
 )
 class PetroNeighborAnalysisNode(NodeProcessor):
     def process(self, inputs, params):
-        raw_markers = inputs.get('markers')
-        if raw_markers is None: return {"main": None}
-        scale = float(inputs.get('scale') or 1.0)
+        scale           = float(inputs.get('scale') or 1.0)
+        contours_input  = inputs.get('contours')
+        raw_markers     = inputs.get('markers')
+        image           = inputs.get('image')
 
-        # Ensure 2D grayscale
-        if len(raw_markers.shape) == 3:
-            raw_markers = cv2.cvtColor(raw_markers, cv2.COLOR_BGR2GRAY)
-            
-        markers = raw_markers.copy()
-        
-        # 1. Automatic Labeling if Binary
-        unique_vals = np.unique(markers)
-        if set(unique_vals).issubset({0, 255}):
-            # Binarize first to be safe
-            _, binary = cv2.threshold(markers, 127, 255, cv2.THRESH_BINARY)
-            # Invert if target grains are black
-            mode = int(params.get('mode', 0))
-            if mode == 1: binary = cv2.bitwise_not(binary)
-            # Perform connected components labeling
-            _, markers = cv2.connectedComponents(binary.astype(np.uint8))
-        else:
-            if markers.dtype != np.int32:
-                markers = markers.astype(np.int32)
-        
+        markers    = None
+        label_bbox = {}  # {lbl: (ymin, ymax, xmin, xmax)}
+
+        # Path A: FastSAM contours → fillPoly → bboxes from contour points (free)
+        if isinstance(contours_input, list) and len(contours_input) > 0:
+            ref = image if image is not None else (
+                  raw_markers if isinstance(raw_markers, np.ndarray) else None)
+            if ref is None:
+                return {"main": None, "data": "Connect Image input when using Contours"}
+            h, w = ref.shape[:2]
+            markers = np.zeros((h, w), dtype=np.int32)
+            for i, cnt_pts in enumerate(contours_input, 1):
+                pts = np.array(cnt_pts, dtype=np.int32).reshape(-1, 2)
+                cv2.fillPoly(markers, [pts.reshape(-1, 1, 2)], i)
+                label_bbox[i] = (int(pts[:, 1].min()), int(pts[:, 1].max()),
+                                 int(pts[:, 0].min()), int(pts[:, 0].max()))
+
+        # Path B: binary mask → connectedComponentsWithStats (bboxes free from OpenCV)
+        elif isinstance(raw_markers, np.ndarray):
+            m = raw_markers
+            if m.ndim == 3:
+                m = cv2.cvtColor(m, cv2.COLOR_BGR2GRAY)
+            unique_vals = np.unique(m)
+            if set(unique_vals.tolist()).issubset({0, 255}):
+                _, binary = cv2.threshold(m, 127, 255, cv2.THRESH_BINARY)
+                if int(params.get('mode', 0)) == 1:
+                    binary = cv2.bitwise_not(binary)
+                num_lbl, markers, stats, _ = cv2.connectedComponentsWithStats(binary.astype(np.uint8))
+                for lbl in range(1, num_lbl):
+                    x  = stats[lbl, cv2.CC_STAT_LEFT]
+                    y  = stats[lbl, cv2.CC_STAT_TOP]
+                    bw = stats[lbl, cv2.CC_STAT_WIDTH]
+                    bh = stats[lbl, cv2.CC_STAT_HEIGHT]
+                    label_bbox[lbl] = (y, y + bh - 1, x, x + bw - 1)
+            else:
+                markers    = m.astype(np.int32)
+                label_bbox = _label_bboxes_from_sorted(markers)
+
+        if markers is None:
+            return {"main": None}
+
         h, w = markers.shape[:2]
-        dilate_px = max(1, int(float(params.get('dilate_units', 0.02)) * scale))
-        min_contact_px = max(1, int(float(params.get('min_contact_units', 0.05)) * scale))
-        
-        # 2. Analysis
+        dilate_px      = max(1, int(float(params.get('dilate_units',      5.0)) * scale))
+        min_contact_px = max(1, int(float(params.get('min_contact_units', 2.0)) * scale))
+
         labels = np.unique(markers)
-        labels = labels[labels > 0] # Background is 0
-        if len(labels) == 0: return {"main": np.zeros((h, w, 3), dtype=np.uint8), "data": "No grains found"}
-        
-        adj = {lbl: set() for lbl in labels}
-        counts = {lbl: 0 for lbl in labels}
+        labels = labels[labels > 0]
+        if len(labels) == 0:
+            return {"main": np.zeros((h, w, 3), dtype=np.uint8), "data": "No grains found"}
+
+        adj    = {lbl: set() for lbl in labels}
+        counts = {lbl: 0     for lbl in labels}
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (dilate_px*2+1, dilate_px*2+1))
-        
+
         for lbl in labels:
-            ys, xs = np.where(markers == lbl)
-            if ys.size == 0: continue
+            bbox = label_bbox.get(int(lbl))
+            if bbox is None:
+                ys, xs = np.where(markers == lbl)
+                if ys.size == 0: continue
+                bbox = (int(ys.min()), int(ys.max()), int(xs.min()), int(xs.max()))
+            ymin, ymax, xmin, xmax = bbox
             pad = dilate_px + 1
-            y1, y2 = max(0, int(ys.min()) - pad), min(h, int(ys.max()) + pad + 1)
-            x1, x2 = max(0, int(xs.min()) - pad), min(w, int(xs.max()) + pad + 1)
+            y1, y2 = max(0, ymin - pad), min(h, ymax + pad + 1)
+            x1, x2 = max(0, xmin - pad), min(w, xmax + pad + 1)
             roi_markers = markers[y1:y2, x1:x2]
-            roi_grain = (roi_markers == lbl).astype(np.uint8) * 255
+            roi_grain   = (roi_markers == lbl).astype(np.uint8) * 255
             dilated_roi = cv2.dilate(roi_grain, kernel)
             overlap_zone = roi_markers[dilated_roi > 0]
             for n_lbl in np.unique(overlap_zone):
                 if n_lbl > 0 and n_lbl != lbl:
-                    contact_size = np.count_nonzero(overlap_zone == n_lbl)
-                    if contact_size >= min_contact_px:
+                    if np.count_nonzero(overlap_zone == n_lbl) >= min_contact_px:
                         adj[lbl].add(int(n_lbl))
-        
-        coord_map = np.zeros((h, w), dtype=np.int32)
+
         max_neighbors = 0
         for lbl, neighbors in adj.items():
             n_count = len(neighbors)
             counts[lbl] = n_count
-            max_neighbors = max(max_neighbors, n_count)
-            coord_map[markers == lbl] = n_count
-            
+            if n_count > max_neighbors:
+                max_neighbors = n_count
+
+        # Vectorized coord_map: O(H×W) lookup instead of N × O(H×W) loop
+        max_lbl   = int(labels.max())
+        count_lut = np.zeros(max_lbl + 1, dtype=np.int32)
+        for lbl, n in counts.items():
+            count_lut[int(lbl)] = n
+        clipped   = np.clip(markers, 0, max_lbl)
+        coord_map = count_lut[clipped]
+        coord_map[markers == 0] = 0
+
         if max_neighbors > 0:
-            # Color map. Higher coordination = warmer colors
-            vis = cv2.applyColorMap((coord_map.astype(np.float32) * 255 / max_neighbors).clip(0, 255).astype(np.uint8), cv2.COLORMAP_JET)
+            vis = cv2.applyColorMap(
+                (coord_map.astype(np.float32) * 255 / max_neighbors).clip(0, 255).astype(np.uint8),
+                cv2.COLORMAP_JET)
             vis[markers == 0] = 0
         else:
             vis = np.zeros((h, w, 3), dtype=np.uint8)

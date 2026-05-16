@@ -14,6 +14,7 @@ interface Category {
   label: string;
   icon: LucideIcon;
   nodes: CategoryNode[];
+  section?: 'generic' | 'domain';
 }
 
 interface AddNodeMenuProps {
@@ -52,15 +53,28 @@ const AddNodeMenu: React.FC<AddNodeMenuProps> = ({
         className="bg-[#3d4452] border border-[#4f5b6b] w-full max-w-[700px] h-[85vh] rounded-3xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-56 bg-[#1e2530] border-r border-[#4f5b6b] p-6 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
-          {dynamicCategories.map(cat => (
-            <button 
-              key={cat.id} onClick={() => setActiveCategoryId(cat.id)}
-              className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-[11px] font-bold transition-all ${activeCategoryId === cat.id ? 'bg-accent text-white shadow-xl shadow-accent/20' : 'text-gray-500 hover:bg-white/5'}`}
-            >
-              <cat.icon size={18} /> {cat.label}
-            </button>
-          ))}
+        <div className="w-56 bg-[#1e2530] border-r border-[#4f5b6b] p-6 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
+          {(() => {
+            const sections: Array<{ key: string; label: string; cats: Category[] }> = [
+              { key: 'generic', label: 'Generic', cats: dynamicCategories.filter(c => !c.section || c.section === 'generic') },
+              { key: 'domain',  label: 'Domain',  cats: dynamicCategories.filter(c => c.section === 'domain') },
+            ];
+            return sections.map(({ key, label, cats }) => cats.length === 0 ? null : (
+              <div key={key}>
+                <div className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-600 px-4 pt-4 pb-2">
+                  {label}
+                </div>
+                {cats.map(cat => (
+                  <button
+                    key={cat.id} onClick={() => setActiveCategoryId(cat.id)}
+                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-[11px] font-bold transition-all ${activeCategoryId === cat.id ? 'bg-accent text-white shadow-xl shadow-accent/20' : 'text-gray-500 hover:bg-white/5'}`}
+                  >
+                    <cat.icon size={18} /> {cat.label}
+                  </button>
+                ))}
+              </div>
+            ));
+          })()}
         </div>
         <div className="flex-1 p-12 overflow-y-auto overflow-x-hidden flex flex-col">
           <div className="flex items-center justify-between mb-10 border-b border-[#4f5b6b] pb-4">

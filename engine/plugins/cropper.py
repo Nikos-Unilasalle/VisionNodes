@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='geom_cropper',
     label='Auto Cropper',
-    category='geom',
+    category='geometry',
     icon='Maximize',
     description="Crops a rectangular area from the image using detection coordinates.",
     inputs=[

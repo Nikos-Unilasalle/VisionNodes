@@ -25,7 +25,7 @@ def _canonical_corners(pts):
 @vision_node(
     type_id='ocr_easyocr',
     label='OCR (EasyOCR)',
-    category='ocr',
+    category='text',
     icon='ScanText',
     description='End-to-end text detection + recognition with EasyOCR. Handles rotated, curved and multi-language text in one pass.',
     inputs=[{'id': 'image', 'color': 'image'}],

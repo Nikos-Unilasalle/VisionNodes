@@ -39,7 +39,7 @@ _BAUD_DEFAULT = _BAUD_RATES.index(115200)
 @vision_node(
     type_id='serial_reader',
     label='Serial Port',
-    category='io',
+    category='utility',
     icon='Cpu',
     description="Reads serial data from Arduino, ESP32, or any UART device. Non-blocking background thread. Parses CSV, JSON, or raw strings.",
     inputs=[],

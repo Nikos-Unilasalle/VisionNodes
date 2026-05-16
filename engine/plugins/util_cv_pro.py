@@ -38,7 +38,7 @@ class FillHolesNode(NodeProcessor):
 @vision_node(
     type_id="util_colormap",
     label="Apply Colormap",
-    category='visualize',
+    category='color',
     icon="Palette",
     description="Applies a scientific colormap (Heatmap, Jet, Magma) to a grayscale image.",
     inputs=[{"id": "image", "color": "any"}],
@@ -75,8 +75,8 @@ class ApplyColormapNode(NodeProcessor):
 
 @vision_node(
     type_id="util_image_math",
-    label="Image Math (Power)",
-    category='cv',
+    label="Image Math",
+    category='image',
     icon="Zap",
     description="Applies mathematical power operation (gamma) to image pixels.",
     inputs=[{"id": "image", "color": "any"}],

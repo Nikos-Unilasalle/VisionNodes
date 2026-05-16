@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_rotate',
     label='Rotate Image',
-    category='geom',
+    category='geometry',
     icon='Move',
     description="Applies a custom rotation and scaling to the video stream.",
     inputs=[{'id': 'image', 'color': 'image'}],

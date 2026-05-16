@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_blend_modes',
     label='Advanced Blend',
-    category='blend',
+    category='image',
     icon='Layers',
     description="Blends two images using advanced layer blend modes (Product, Overlay, etc.).",
     inputs=[

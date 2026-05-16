@@ -4,8 +4,8 @@ from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='sci_roi_stats',
-    label='ROI Statistics',
-    category=['visualize', 'analytics'],
+    label='Area Statistics',
+    category='measure',
     icon='Crosshair',
     description="Measure pixel statistics (mean, std, min, max) inside a rectangular region of interest.",
     inputs=[{'id': 'image', 'color': 'any'}],

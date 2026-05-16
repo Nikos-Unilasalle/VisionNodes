@@ -172,7 +172,7 @@ _AUDIO_OUTPUTS = [
 @vision_node(
     type_id='plugin_audio_input',
     label='Audio File',
-    category=['audio', 'src'],
+    category='audio',
     icon='Music',
     description='Loads an audio file and plays it via system audio (sounddevice).',
     inputs=[],
@@ -755,7 +755,7 @@ class SpectrogramToAudioNode(NodeProcessor):
 @vision_node(
     type_id='plugin_audio_playback',
     label='Speaker Out',
-    category=['audio', 'out'],
+    category='audio',
     icon='Volume2',
     description='Receives processed audio and streams it to the browser via Web Audio API.',
     inputs=[

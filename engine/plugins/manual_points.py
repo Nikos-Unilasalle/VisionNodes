@@ -13,7 +13,7 @@ import base64
 @vision_node(
     type_id='manual_points',
     label='Manual Points',
-    category='detect',
+    category='analysis',
     icon='MousePointer',
     description=(
         "Interactive point placement tool. Click on the preview to place foreground points, "
@@ -25,7 +25,7 @@ import base64
     ],
     outputs=[
         {'id': 'main',   'color': 'image',  'label': 'Annotated'},
-        {'id': 'points', 'color': 'list',   'label': 'Points List'},
+        {'id': 'points', 'color': 'points', 'label': 'Points List'},
         {'id': 'count',  'color': 'scalar', 'label': 'Count'},
     ],
     params=[

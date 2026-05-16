@@ -22,8 +22,8 @@ def _to_uint8_bgr(img) -> np.ndarray:
 
 @vision_node(
     type_id='sci_visual_measure',
-    label='Visual Measure',
-    category='math',
+    label='Ruler',
+    category='measure',
     icon='Ruler',
     description=(
         'Measures the physical length and angle of a hand-drawn line.\n\n'

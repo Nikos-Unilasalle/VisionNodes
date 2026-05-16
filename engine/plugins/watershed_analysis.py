@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_threshold_adv",
     label="Threshold (Advanced)",
-    category='features',
+    category='segmentation',
     icon="Layers",
     description="Advanced thresholding including Otsu's method and relative percentage thresholds.",
     inputs=[{"id": "image", "color": "image"}],
@@ -55,7 +55,7 @@ class AdvancedThresholdNode(NodeProcessor):
 @vision_node(
     type_id="feat_morphology_adv",
     label="Morphology (Advanced)",
-    category='features',
+    category='segmentation',
     icon="Wind",
     description="Advanced morphological operations like Opening, Closing, and Gradient.",
     inputs=[{"id": "mask", "color": "any"}],
@@ -97,7 +97,7 @@ class AdvancedMorphologyNode(NodeProcessor):
 @vision_node(
     type_id="feat_distance_transform",
     label="Distance Transform",
-    category='features',
+    category='segmentation',
     icon="Maximize",
     description="Calculates the distance from each pixel to the nearest zero pixel (mask border).",
     inputs=[{"id": "mask", "color": "any"}],
@@ -131,12 +131,12 @@ class DistanceTransformNode(NodeProcessor):
 
 @vision_node(
     type_id="feat_connected_components",
-    label="Markers (Connected)",
-    category='features',
+    label="Connected Components",
+    category='segmentation',
     icon="Database",
     description="Labels connected regions in a binary image. Each region gets a unique ID (Markers).",
     inputs=[{"id": "mask", "color": "any"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "markers", "color": "any"}, {"id": "count", "color": "scalar"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[]
 )
 class ConnectedComponentsNode(NodeProcessor):
@@ -161,11 +161,11 @@ class ConnectedComponentsNode(NodeProcessor):
 @vision_node(
     type_id="feat_watershed",
     label="Watershed",
-    category='features',
+    category='segmentation',
     icon="Target",
     description="Separates overlapping objects using marker-controlled watershed algorithm.",
-    inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "any"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}, {"id": "count", "color": "scalar"}],
+    inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "markers"}, {"id": "mask", "color": "mask", "label": "Cell Mask (opt)"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "visualization", "label": "Visualization", "type": "enum", "options": ["Original + Boundaries", "Colorized Regions", "Regions + Boundaries", "Original"], "default": 0},
         {"id": "boundary_color", "label": "Boundary Color", "type": "color", "default": "#FF0000"},
@@ -187,6 +187,17 @@ class WatershedNode(NodeProcessor):
             markers = cv2.resize(markers.astype(np.float32), (w, h), interpolation=cv2.INTER_NEAREST).astype(np.int32)
 
         markers_copy = markers.copy().astype(np.int32)
+        # Seeds must start at 2 (label 1 = sure background in OpenCV watershed).
+        markers_copy[markers_copy > 0] += 1   # seeds: 1→2, 2→3... background stays 0 (unknown)
+
+        mask_in = inputs.get('mask')
+        if mask_in is not None:
+            m = mask_in if len(mask_in.shape) == 2 else cv2.cvtColor(mask_in, cv2.COLOR_BGR2GRAY)
+            if m.shape[:2] != (h, w):
+                m = cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST)
+            # Pixels outside cell region = sure background → label 1, won't be flooded
+            markers_copy[m == 0] = 1
+
         res_markers = cv2.watershed(img, markers_copy)
 
         viz_mode = int(params.get('visualization', 0))
@@ -205,7 +216,7 @@ class WatershedNode(NodeProcessor):
         alpha = float(params.get('region_alpha', 0.5))
 
         valid_labels = np.unique(res_markers)
-        valid_labels = valid_labels[(valid_labels > 0)]
+        valid_labels = valid_labels[(valid_labels > 1)]  # >1 excludes background(1) and boundaries(-1)
         count = len(valid_labels)
 
         def colorize(markers_map):
@@ -243,11 +254,11 @@ class WatershedNode(NodeProcessor):
 @vision_node(
     type_id="feat_marker_filter",
     label="Marker Filter",
-    category='features',
+    category='segmentation',
     icon="Filter",
     description="Filters markers (label map) by area, removing regions outside the min/max range.",
-    inputs=[{"id": "markers", "color": "any"}, {"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "any"}, {"id": "count", "color": "scalar"}],
+    inputs=[{"id": "markers", "color": "markers"}, {"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "min_area", "label": "Min Area", "type": "scalar", "min": 0, "max": 1000000, "default": 0},
         {"id": "max_area", "label": "Max Area", "type": "scalar", "min": 0, "max": 1000000, "default": 100000},

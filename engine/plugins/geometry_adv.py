@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="geom_approx_poly",
     label="Approx. Polygon",
-    category='geom',
+    category='geometry',
     icon="Shapes",
     description="Simplifies a contour into a polygon with fewer vertices.",
     inputs=[{"id": "contour", "color": "dict"}],
@@ -35,7 +35,7 @@ class ApproxPolyNode(NodeProcessor):
 @vision_node(
     type_id="geom_fit_shape",
     label="Fit Shape",
-    category='geom',
+    category='geometry',
     icon="Square",
     description="Calculates the bounding box or minimum area rectangle for a contour.",
     inputs=[{"id": "contour", "color": "dict"}],
@@ -72,7 +72,7 @@ class FitShapeNode(NodeProcessor):
 @vision_node(
     type_id="geom_warp_affine",
     label="Warp Affine",
-    category='geom',
+    category='geometry',
     icon="Move",
     description="Applies a 2x3 affine transformation matrix to the image.",
     inputs=[{"id": "image", "color": "image"}, {"id": "matrix", "color": "any"}],
@@ -92,7 +92,7 @@ class WarpAffineNode(NodeProcessor):
 @vision_node(
     type_id="geom_rotate_no_crop",
     label="Rotate (No Crop)",
-    category='geom',
+    category='geometry',
     icon="RotateCw",
     description="Rotates the image while expanding the canvas to keep all pixels visible.",
     inputs=[{"id": "image", "color": "image"}],

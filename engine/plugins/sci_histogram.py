@@ -5,8 +5,8 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id='sci_histogram',
-    label='Histogram Analysis',
-    category=['visualize', 'visualize'],
+    label='Histogram',
+    category='measure',
     icon='BarChart2',
     description="Statistical distribution of pixel intensities. Performs radiometric analysis of input data across spectral channels for scientific validation.",
     inputs=[{'id': 'image', 'color': 'any'}],

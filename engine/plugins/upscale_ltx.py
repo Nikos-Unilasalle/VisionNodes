@@ -17,8 +17,8 @@ except ImportError:
 
 @vision_node(
     type_id='upscale_realesrgan',
-    label='Real-ESRGAN Upscale',
-    category='cv',
+    label='AI Upscale',
+    category='image',
     icon='Maximize',
     description="High-quality image upscaling using Real-ESRGAN (x4plus). Automatically handles model download.",
     hf_model="Comfy-Org/Real-ESRGAN_repackaged",

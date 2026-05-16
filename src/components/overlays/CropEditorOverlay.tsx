@@ -56,7 +56,12 @@ const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
     dragMode.current = getMode(pos.x, pos.y, rect);
     dragStart.current = { mx: pos.x, my: pos.y, rect: { ...rect } };
 
+    let moved = false;
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
     const onMove = (ev: MouseEvent) => {
+      if (!moved && Math.hypot(ev.clientX - startClientX, ev.clientY - startClientY) < 5) return;
+      moved = true;
       const p = getRelPos(ev);
       const dx = p.x - dragStart.current.mx;
       const dy = p.y - dragStart.current.my;
@@ -86,7 +91,12 @@ const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
         return { x: Math.max(0, x), y: Math.max(0, y), w: Math.max(0.01, Math.min(1-Math.max(0,x), w)), h: Math.max(0.01, Math.min(1-Math.max(0,y), h)) };
       });
     };
-    const onUp = () => { dragMode.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    const onUp = () => {
+      if (dragMode.current === 'draw' && !moved) setRect(dragStart.current.rect);
+      dragMode.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
@@ -121,6 +131,12 @@ const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
     window.addEventListener('mouseup', onUp);
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const save = () => { node.data.onChangeParams({ rect: JSON.stringify(rect) }); onClose(); };
 

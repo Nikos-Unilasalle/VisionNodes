@@ -5,11 +5,11 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="feat_find_contours",
     label="Find Contours",
-    category='features',
+    category='segmentation',
     icon="Target",
     description="Detects and extracts isolated shapes from a binary image (mask).",
     inputs=[{"id": "mask", "color": "any"}],
-    outputs=[{"id": "contours_list", "color": "list"}, {"id": "count", "color": "scalar"}],
+    outputs=[{"id": "contours_list", "color": "contours"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "mode", "label": "Mode", "type": "enum", "options": ["External", "List", "CComp", "Tree"], "default": 0},
         {"id": "method", "label": "Method", "type": "enum", "options": ["None", "Simple", "TC89_L1", "TC89_KCOS"], "default": 1},
@@ -89,7 +89,7 @@ class FindContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_contour_props",
     label="Contour Properties",
-    category='features',
+    category='segmentation',
     icon="Info",
     description="Calculates geometric metrics (area, center, perimeter) of an isolated shape.",
     inputs=[{"id": "contour", "color": "dict"}],
@@ -117,7 +117,7 @@ class ContourInfoNode(NodeProcessor):
 @vision_node(
     type_id="feat_clahe",
     label="CLAHE (Contrast)",
-    category='cv',
+    category='image',
     icon="Maximize",
     description="Adaptively improves local image contrast (CLAHE algorithm).",
     inputs=[{"id": "image", "color": "image"}],
@@ -149,7 +149,7 @@ class ClaheNode(NodeProcessor):
 @vision_node(
     type_id="feat_bilateral",
     label="Bilateral Filter",
-    category='cv',
+    category='image',
     icon="Wind",
     description="Smoothes the image while preserving edge sharpness and textures.",
     inputs=[{"id": "image", "color": "image"}],
@@ -174,14 +174,14 @@ class BilateralFilterNode(NodeProcessor):
 @vision_node(
     type_id="feat_hough_circles",
     label="Hough Circles",
-    category='features',
+    category='segmentation',
     icon="Target",
     description="Identifies perfect circular shapes and exports them as a list, a mask, or a visualized image.",
     inputs=[{"id": "image", "color": "image"}],
     outputs=[
         {"id": "main",         "color": "image"},
         {"id": "mask",         "color": "mask"},
-        {"id": "labels_map",   "color": "any",  "label": "Labels"},
+        {"id": "labels_map",   "color": "markers", "label": "Labels"},
         {"id": "circles_list", "color": "list"},
         {"id": "count",        "color": "scalar"}
     ],
@@ -260,12 +260,12 @@ class HoughCirclesNode(NodeProcessor):
 @vision_node(
     type_id="feat_filter_contours",
     label="Filter Contours",
-    category='features',
+    category='segmentation',
     icon="Filter",
     description="Filters a contour list by elongation (long/short axis ratio) and/or area. Use min_elongation > 1 to keep only elongated shapes like rivers.",
-    inputs=[{"id": "contours", "color": "list"}],
+    inputs=[{"id": "contours", "color": "contours"}],
     outputs=[
-        {"id": "contours_list", "color": "list"},
+        {"id": "contours_list", "color": "contours"},
         {"id": "count",         "color": "scalar"}
     ],
     params=[
@@ -314,11 +314,11 @@ class FilterContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_fill_contours",
     label="Fill Contours",
-    category='features',
+    category='segmentation',
     icon="Pentagon",
     description="Fills all contours from a list into a binary mask (union). Connect contours_list from Find Contours.",
     inputs=[
-        {"id": "contours", "color": "list"},
+        {"id": "contours", "color": "contours"},
         {"id": "image",    "color": "image"}
     ],
     outputs=[
@@ -369,7 +369,7 @@ class FillContoursNode(NodeProcessor):
 @vision_node(
     type_id="feat_hough_lines",
     label="Hough Lines",
-    category='features',
+    category='segmentation',
     icon="Maximize",
     description="Detects straight line segments in the image (walls, joints, etc.).",
     inputs=[{"id": "image", "color": "any"}],

@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='sci_line_profile',
     label='Line Profile',
-    category=['visualize', 'analytics'],
+    category='measure',
     icon='Activity',
     description="Extract intensity profile along a line segment. Fundamental in microscopy, spectroscopy, and materials analysis.",
     inputs=[{'id': 'image', 'color': 'any'}],

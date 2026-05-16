@@ -15,7 +15,7 @@ except ImportError:
 @vision_node(
     type_id='analysis_object_mp',
     label='Object Detector',
-    category='detect',
+    category='analysis',
     icon='Box',
     description="Detects common objects (80 categories) using the fast MediaPipe model.",
     inputs=[{'id': 'image', 'color': 'image'}],

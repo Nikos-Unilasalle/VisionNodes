@@ -104,12 +104,12 @@ class GeoOpaqueDetect(NodeProcessor):
         "then places exactly one seed per grain. Feed markers into the Watershed node."
     ),
     inputs=[
-        {'id': 'interior', 'color': 'any',  'label': 'Interior Mask'},
-        {'id': 'opaques',  'color': 'any',  'label': 'Opaque Mask (optional)'},
-        {'id': 'boundary', 'color': 'any',  'label': 'Boundary Mask (optional)'},
+        {'id': 'interior', 'color': 'mask',  'label': 'Interior Mask'},
+        {'id': 'opaques',  'color': 'mask',  'label': 'Opaque Mask (optional)'},
+        {'id': 'boundary', 'color': 'mask',  'label': 'Boundary Mask (optional)'},
     ],
     outputs=[
-        {'id': 'markers',  'color': 'any',  'label': 'Markers (int32)'},
+        {'id': 'markers',  'color': 'markers',  'label': 'Markers (int32)'},
         {'id': 'preview',  'color': 'image','label': 'Preview'},
         {'id': 'count',    'color': 'scalar','label': 'Grain Count'},
     ],
@@ -223,9 +223,9 @@ class GeoGrainMarkers(NodeProcessor):
         "and a grain-size histogram image."
     ),
     inputs=[
-        {'id': 'markers',   'color': 'any',    'label': 'Markers (watershed)'},
+        {'id': 'markers',   'color': 'markers', 'label': 'Markers (watershed)'},
         {'id': 'image',     'color': 'image',  'label': 'XPL Image (intensity)'},
-        {'id': 'opaques',   'color': 'any',    'label': 'Opaque Mask (optional)'},
+        {'id': 'opaques',   'color': 'mask',   'label': 'Opaque Mask (optional)'},
         {'id': 'um_per_px', 'color': 'scalar', 'label': 'µm/pixel (Calibration)'},
     ],
     outputs=[

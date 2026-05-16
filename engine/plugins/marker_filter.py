@@ -4,12 +4,12 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="sci_marker_filter",
-    label="Marker Filter (Area)",
-    category='detect',
+    label="Region Filter",
+    category='measure',
     icon="Scissors",
     description="Filters markers/labels based on their pixel area. Removes objects that are too small or too large.",
-    inputs=[{"id": "markers", "color": "any"}],
-    outputs=[{"id": "markers", "color": "any"}, {"id": "count", "color": "scalar"}],
+    inputs=[{"id": "markers", "color": "markers"}],
+    outputs=[{"id": "markers", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "min_area", "label": "Min Area (px)", "type": "scalar", "min": 0, "max": 1000000, "default": 200},
         {"id": "max_area", "label": "Max Area (px)", "type": "scalar", "min": 0, "max": 10000000, "default": 1000000}

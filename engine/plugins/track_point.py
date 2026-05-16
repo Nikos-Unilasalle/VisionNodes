@@ -2,8 +2,8 @@ from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='geom_track_point',
-    label='Track Point',
-    category='detect',
+    label='Point Tracker',
+    category='tracking',
     icon='Target',
     description="Extracts the precise coordinates of a specific tracked landmark (e.g., joints).",
     inputs=[

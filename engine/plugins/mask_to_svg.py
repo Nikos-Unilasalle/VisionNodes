@@ -7,7 +7,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='mask_to_svg',
     label='Export Mask to SVG',
-    category=['mask', 'out'],
+    category='output',
     icon='Download',
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[{'id': 'mask', 'color': 'mask'}],

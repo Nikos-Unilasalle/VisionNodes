@@ -16,7 +16,7 @@ except ImportError:
 @vision_node(
     type_id='analysis_pose_mp',
     label='Pose Tracker',
-    category='detect',
+    category='analysis',
     icon='User',
     description="Analyzes and tracks human body posture (33 keypoints) via MediaPipe.",
     inputs=[{'id': 'image', 'color': 'image'}],

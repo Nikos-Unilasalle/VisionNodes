@@ -7,7 +7,7 @@ from registry import NodeProcessor, vision_node, send_notification
 @vision_node(
     type_id="util_snapshot",
     label="Snapshot",
-    category='util',
+    category='utility',
     icon="Camera",
     description="Captures the current frame and saves it as a new image node in the workspace.",
     inputs=[
