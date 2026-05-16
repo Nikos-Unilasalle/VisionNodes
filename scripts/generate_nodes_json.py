@@ -66,76 +66,89 @@ def scan_files(root_dir):
                     
     return all_nodes
 
-def group_by_category(nodes):
-    categories = {}
-    # Preferred order and labels for categories
-    CAT_ORDER = [
-        ("src", "Sources"),
-        ("cv", "Computer Vision"),
-        ("mask", "Masks"),
-        ("geom", "Geometry"),
-        ("track", "Tracking"),
-        ("features", "Features"),
-        ("analysis", "Analysis"),
-        ("audio", "Audio"),
-        ("visualize", "Visualizers"),
-        ("draw", "Drawing"),
-        ("util", "Utilities"),
-        ("math", "Mathematics"),
-        ("strings", "Strings"),
-        ("logic", "Logic"),
-        ("blend", "Blending"),
-        ("out", "Output"),
-        ("canvas", "Canvas")
-    ]
+def group_by_category(nodes, ts_path):
+    import re
     
-    cat_map = {id: label for id, label in CAT_ORDER}
-    
-    for node in nodes:
-        cat_data = node.get("category", "custom")
-        # Handle list of categories by taking the first one
-        cat_id = cat_data[0] if isinstance(cat_data, list) and cat_data else cat_data
-        if isinstance(cat_id, list): # Safety for nested lists if any
-            cat_id = "custom"
-            
-        if cat_id not in categories:
-            categories[cat_id] = {
-                "id": cat_id,
-                "label": cat_map.get(cat_id, cat_id.capitalize()),
-                "nodes": []
-            }
+    # Parse categories.ts
+    with open(ts_path, 'r', encoding='utf-8') as f:
+        content = f.read()
         
-        # Deduplicate nodes by type_id
-        if not any(n["type"] == node["type"] for n in categories[cat_id]["nodes"]):
-            categories[cat_id]["nodes"].append(node)
+    cats_config = []
+    current_cat = None
+    
+    for line in content.split('\n'):
+        cat_match = re.search(r"{\s*id:\s*'([^']+)',\s*label:\s*'([^']+)'", line)
+        if cat_match:
+            current_cat = {
+                'id': cat_match.group(1),
+                'label': cat_match.group(2),
+                'nodes': []
+            }
+            cats_config.append(current_cat)
             
-    # Sort categories based on CAT_ORDER
+        # Also capture description and label from TS to override python defaults
+        type_match = re.search(r"type:\s*'([^']+)',\s*label:\s*'([^']+)'(?:,\s*description:\s*'([^']*)')?", line)
+        if type_match and current_cat:
+            current_cat['nodes'].append({
+                'type': type_match.group(1),
+                'ts_label': type_match.group(2),
+                'ts_desc': type_match.group(3) if type_match.group(3) else ""
+            })
+            
+    # Now build the final grouped structure
+    # Map nodes by type for quick lookup
+    node_map = { n["type"]: n for n in nodes if "type" in n }
+    
     sorted_cats = []
-    seen_cats = set()
-    for cat_id, label in CAT_ORDER:
-        if cat_id in categories:
-            sorted_cats.append(categories[cat_id])
-            seen_cats.add(cat_id)
+    
+    for cat in cats_config:
+        cat_group = {
+            "id": cat["id"],
+            "label": cat["label"],
+            "nodes": []
+        }
+        
+        for n_info in cat["nodes"]:
+            t = n_info["type"]
+            if t in node_map:
+                node_data = node_map[t].copy()
+                # Override label and description with the TS ones for perfect consistency
+                if n_info["ts_label"]:
+                    node_data["label"] = n_info["ts_label"]
+                if n_info["ts_desc"]:
+                    node_data["description"] = n_info["ts_desc"]
+                cat_group["nodes"].append(node_data)
+                
+        if cat_group["nodes"]:
+            sorted_cats.append(cat_group)
             
-    for cat_id in categories:
-        if cat_id not in seen_cats:
-            sorted_cats.append(categories[cat_id])
-            
-    # Sort nodes within categories alphabetically
-    for cat in sorted_cats:
-        cat["nodes"].sort(key=lambda x: x.get("label", ""))
+    # Nodes that are in python but not in TS categories
+    # We can optionally group them under 'Uncategorized' or just ignore them.
+    # We will put them in a 'developer' category at the end if they exist.
+    mapped_types = { n_info["type"] for cat in cats_config for n_info in cat["nodes"] }
+    unmapped = [n for n in nodes if n.get("type") not in mapped_types]
+    
+    if unmapped:
+        unmapped.sort(key=lambda x: x.get("label", ""))
+        sorted_cats.append({
+            "id": "unmapped",
+            "label": "Other / Internal",
+            "nodes": unmapped
+        })
         
     return sorted_cats
 
 if __name__ == "__main__":
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ts_path = os.path.join(project_root, "src", "data", "categories.ts")
     nodes = scan_files(project_root)
-    grouped = group_by_category(nodes)
+    grouped = group_by_category(nodes, ts_path)
     
     output_path = os.path.join(project_root, "website", "src", "data", "nodes.json")
-    with open(output_path, "w") as f:
-        json.dump(grouped, f, indent=2)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding='utf-8') as f:
+        json.dump(grouped, f, indent=2, ensure_ascii=False)
     
     print(f"Successfully generated {output_path}")
-    print(f"Total nodes: {len(nodes)}")
-    print(f"Categories: {len(grouped)}")
+    print(f"Total nodes in Python: {len(nodes)}")
+    print(f"Mapped categories: {len(grouped)}")

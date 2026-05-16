@@ -115,7 +115,18 @@ class ManualPointsNode(NodeProcessor):
 
         # Generate preview for frontend (periodic, like Crop node)
         self._frame_count += 1
-        if self._frame_count % 6 == 0:
+        
+        # Fast heuristic to detect new image (e.g. user changed connection)
+        try:
+            current_sig = (image.shape, tuple(image[0,0]) if image.ndim == 3 else image[0,0])
+        except:
+            current_sig = None
+            
+        force = getattr(self, '_last_sig', None) != current_sig
+        if force:
+            self._last_sig = current_sig
+
+        if self._last_preview is None or self._frame_count % 6 == 0 or force:
             try:
                 ph = 360
                 pw = int(360 * w / h)

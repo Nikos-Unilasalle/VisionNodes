@@ -635,7 +635,13 @@ function App() {
     if (targetType === 'any' || sourceType === 'any') return true;
     const sourceColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || sourceType;
     const targetColor = N.HANDLE_COLORS[targetType as keyof typeof N.HANDLE_COLORS] || targetType;
-    return sourceColor === targetColor;
+    if (sourceColor === targetColor) return true;
+    // Typed lists (points, contours, regions, vectors) are compatible with generic list ports
+    const LIST_COLOR = N.HANDLE_COLORS['list'];
+    const listCompatible = new Set(['points', 'contours', 'regions', 'vectors']);
+    if (targetColor === LIST_COLOR && listCompatible.has(sourceType)) return true;
+    if (sourceColor === LIST_COLOR && listCompatible.has(targetType)) return true;
+    return false;
   }, []);
 
   const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {

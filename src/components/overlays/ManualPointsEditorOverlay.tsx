@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Image, Crosshair } from 'lucide-react';
+import { useNodeData } from '../../context/NodesDataContext';
 
-const ManualPointsEditorOverlay = ({ node, nodesData, onClose }: any) => {
+const ManualPointsEditorOverlay = ({ node, edges, onClose }: any) => {
   const [points, setPoints] = useState<{x:number, y:number, label:number}[]>([]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -10,15 +11,17 @@ const ManualPointsEditorOverlay = ({ node, nodesData, onClose }: any) => {
   const isPanning = useRef(false);
   const panOrigin = useRef({ mx: 0, my: 0, px: 0, py: 0 });
 
-  const nd = (() => {
-    if (!node?.id || !nodesData) return {};
-    const dataKeys = Object.keys(nodesData).filter((k: string) => k.startsWith(`${node.id}:`));
-    return dataKeys.length > 0
-      ? Object.fromEntries(dataKeys.map((k: string) => [k.split(':')[1], nodesData[k]]))
-      : (nodesData[node.id] ?? {});
-  })();
-  
-  const frame = nd?.main_preview || nd?.main;
+  // Live-subscribing node data (re-renders on each WebSocket update for this node)
+  const nd = useNodeData(node?.id ?? null);
+
+  // Trace back to the upstream image node for fallback frame
+  const srcNodeId = useMemo(() => {
+    const imgEdge = edges?.find((e: any) => e.target === node?.id && e.targetHandle === 'image__image');
+    return imgEdge?.source ?? null;
+  }, [edges, node?.id]);
+  const srcNd = useNodeData(srcNodeId);
+
+  const frame = srcNd?.main_preview || srcNd?.main || nd?.main_preview || nd?.main;
 
   useEffect(() => {
     try {
