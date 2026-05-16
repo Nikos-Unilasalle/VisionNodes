@@ -1,419 +1,1035 @@
 {
   "nodes": [
-
     {
-      "id": "s-input",
+      "id": "node-1778916628968-0.6760854756931174",
       "type": "input_image",
-      "position": { "x": 0, "y": 280 },
+      "position": {
+        "x": 140,
+        "y": 120
+      },
       "data": {
         "label": "① Blood Smear Image",
-        "params": { "path": "" }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "s-vignette",
-      "type": "remove_vignette",
-      "position": { "x": 240, "y": 280 },
-      "data": {
-        "label": "② FOV Correction (vignette → black)",
         "params": {
-          "method": 0,
-          "fill": 2,
-          "fill_color": "#000000",
-          "feather": 30,
-          "radius_pct": 45.0,
-          "center_x": 50.0,
-          "center_y": 50.0
+          "path": "/Users/nikos/Desktop/VNStudio/samples/blood.jpg"
         }
       },
-      "width": 208
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 140,
+        "y": 120
+      }
     },
-
     {
-      "id": "rbc-expr",
-      "type": "sci_channel_expr",
-      "position": { "x": 520, "y": 0 },
+      "id": "node-1778917687098-5nctdb8y3",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 2200,
+        "y": 1000
+      },
+      "style": {
+        "height": 24
+      },
       "data": {
-        "label": "RBC ①  Color Score — R − B  (pink cells bright)",
+        "label": "Visual Calibration",
         "params": {
-          "expression": "R - B",
-          "normalize": true,
-          "colormap": 0,
-          "clamp_min": -1000000000.0,
-          "clamp_max": 1000000000.0
-        }
+          "points": "[{\"x\":0.2977607544057116,\"y\":0.7890259881870112},{\"x\":0.36667661436342436,\"y\":0.7775400115273925}]",
+          "unit": "µm",
+          "real_len": 7.2
+        },
+        "rotated": false,
+        "minified": true
       },
-      "width": 300,
-      "height": 160,
-      "style": { "width": 300, "height": 160 }
-    },
-
-    {
-      "id": "rbc-thresh",
-      "type": "feat_threshold_adv",
-      "position": { "x": 860, "y": 0 },
-      "data": {
-        "label": "RBC ②  Threshold — Otsu",
-        "params": { "mode": 2, "threshold": 127 }
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 1000
       },
-      "width": 208
+      "dragging": false
     },
-
     {
-      "id": "rbc-close",
-      "type": "feat_morphology_adv",
-      "position": { "x": 1100, "y": 0 },
-      "data": {
-        "label": "RBC ③  Closing — fill stain gaps",
-        "params": { "operation": 1, "shape": 2, "size": 5, "iterations": 1 }
+      "id": "teleport_1778917690495_62qj",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1940,
+        "y": 960
       },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-open",
-      "type": "feat_morphology_adv",
-      "position": { "x": 1340, "y": 0 },
       "data": {
-        "label": "RBC ④  Opening — remove debris",
-        "params": { "operation": 0, "shape": 2, "size": 3, "iterations": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-fill",
-      "type": "fill_holes",
-      "position": { "x": 1580, "y": 0 },
-      "data": {
-        "label": "RBC ⑤  Fill Holes — central pallor",
-        "params": { "method": 0, "max_hole_px": 500 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-dist",
-      "type": "feat_distance_transform",
-      "position": { "x": 1820, "y": 0 },
-      "data": {
-        "label": "RBC ⑥  Distance Transform",
-        "params": { "dist_type": 0, "mask_size": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-peaks",
-      "type": "feat_threshold_adv",
-      "position": { "x": 2060, "y": 0 },
-      "data": {
-        "label": "RBC ⑦  Peak Seeds — 70% of max",
-        "params": { "mode": 4, "threshold": 127 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-cc",
-      "type": "feat_connected_components",
-      "position": { "x": 2300, "y": 0 },
-      "data": {
-        "label": "RBC ⑧  Connected Components (seeds)",
-        "params": {}
-      },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-water",
-      "type": "feat_watershed",
-      "position": { "x": 2540, "y": 0 },
-      "data": {
-        "label": "RBC ⑨  Watershed — separate touching cells",
+        "label": "① Blood Smear Image",
         "params": {
-          "visualization": 2,
-          "boundary_color": "#FF6666",
-          "boundary_thickness": 1,
-          "region_alpha": 0.35
-        }
+          "source_id": "node-1778916628968-0.6760854756931174",
+          "source_type": "input_image"
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ]
       },
-      "width": 208
-    },
-
-    {
-      "id": "rbc-filter",
-      "type": "feat_marker_filter",
-      "position": { "x": 2780, "y": 0 },
-      "data": {
-        "label": "RBC ⑩  Size Gate  150 – 700 px²",
-        "params": { "min_area": 150, "max_area": 700, "area_unit": 0, "remap_ids": 1 }
+      "width": 173,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 1940,
+        "y": 960
       },
-      "width": 208
+      "dragging": false
     },
-
     {
-      "id": "rbc-stats",
-      "type": "sci_region_color_stats",
-      "position": { "x": 3020, "y": 0 },
-      "data": {
-        "label": "RBC ⑪  Color Stats → count",
-        "params": { "colorspace": 1, "show_ids": false }
+      "id": "node-1778916645866-latty6r3x",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 120
       },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-expr",
-      "type": "sci_channel_expr",
-      "position": { "x": 520, "y": 580 },
+      "style": {},
       "data": {
-        "label": "WBC/PLT ①  Purple Score — B·0.5 + R·0.3 − G·0.8",
+        "label": "Color Mask",
         "params": {
-          "expression": "B*0.5 + R*0.3 - G*0.8",
-          "normalize": true,
-          "colormap": 0,
-          "clamp_min": -1000000000.0,
-          "clamp_max": 1000000000.0
-        }
-      },
-      "width": 340,
-      "height": 160,
-      "style": { "width": 340, "height": 160 }
-    },
-
-    {
-      "id": "wbc-thresh",
-      "type": "feat_threshold_adv",
-      "position": { "x": 900, "y": 580 },
-      "data": {
-        "label": "WBC/PLT ②  Threshold — Otsu",
-        "params": { "mode": 2, "threshold": 127 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-close",
-      "type": "feat_morphology_adv",
-      "position": { "x": 1140, "y": 580 },
-      "data": {
-        "label": "WBC/PLT ③  Closing",
-        "params": { "operation": 1, "shape": 2, "size": 7, "iterations": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-open",
-      "type": "feat_morphology_adv",
-      "position": { "x": 1380, "y": 580 },
-      "data": {
-        "label": "WBC/PLT ④  Opening",
-        "params": { "operation": 0, "shape": 2, "size": 3, "iterations": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-cc",
-      "type": "feat_connected_components",
-      "position": { "x": 1620, "y": 580 },
-      "data": {
-        "label": "WBC/PLT ⑤  Components — split PLT / WBC",
-        "params": {}
-      },
-      "width": 208
-    },
-
-    {
-      "id": "plt-filter",
-      "type": "feat_marker_filter",
-      "position": { "x": 1620, "y": 800 },
-      "data": {
-        "label": "PLT  Size Gate  5 – 80 px²  (platelets only)",
-        "params": { "min_area": 5, "max_area": 80, "area_unit": 0, "remap_ids": 1 }
-      },
-      "width": 240
-    },
-
-    {
-      "id": "wbc-fill",
-      "type": "fill_holes",
-      "position": { "x": 1880, "y": 580 },
-      "data": {
-        "label": "WBC ⑥  Fill Holes",
-        "params": { "method": 0, "max_hole_px": 2000 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-dist",
-      "type": "feat_distance_transform",
-      "position": { "x": 2120, "y": 580 },
-      "data": {
-        "label": "WBC ⑦  Distance Transform",
-        "params": { "dist_type": 0, "mask_size": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-peaks",
-      "type": "feat_threshold_adv",
-      "position": { "x": 2360, "y": 580 },
-      "data": {
-        "label": "WBC ⑧  Peak Seeds — 70% of max",
-        "params": { "mode": 4, "threshold": 127 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-cc2",
-      "type": "feat_connected_components",
-      "position": { "x": 2600, "y": 580 },
-      "data": {
-        "label": "WBC ⑨  Connected Components (seeds)",
-        "params": {}
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-water",
-      "type": "feat_watershed",
-      "position": { "x": 2840, "y": 580 },
-      "data": {
-        "label": "WBC ⑩  Watershed — separate touching nuclei",
-        "params": {
-          "visualization": 2,
-          "boundary_color": "#8899FF",
-          "boundary_thickness": 1,
-          "region_alpha": 0.40
-        }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-filter",
-      "type": "feat_marker_filter",
-      "position": { "x": 3080, "y": 580 },
-      "data": {
-        "label": "WBC ⑪  Size Gate  1500 – 15000 px²",
-        "params": { "min_area": 1500, "max_area": 15000, "area_unit": 0, "remap_ids": 1 }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "wbc-stats",
-      "type": "sci_region_color_stats",
-      "position": { "x": 3320, "y": 580 },
-      "data": {
-        "label": "WBC ⑫  Color Stats → count",
-        "params": { "colorspace": 1, "show_ids": true }
-      },
-      "width": 208
-    },
-
-    {
-      "id": "report",
-      "type": "hema_blood_report",
-      "position": { "x": 3560, "y": 200 },
-      "data": {
-        "label": "CBC Report",
-        "params": {
-          "species": 0,
-          "patient_id": "Patient 01",
-          "owner": "",
-          "vet": "",
-          "clinic": "",
-          "notes": "",
-          "accent_color": "#ef4444"
-        }
-      },
-      "width": 260
-    },
-
-    {
-      "id": "display",
-      "type": "output_display",
-      "position": { "x": 3560, "y": 520 },
-      "data": {
-        "label": "Output",
-        "params": {},
-        "mainConnected": true,
-        "ports": [
-          { "id": "image__1_rbc",  "color": "image", "label": "RBC" },
-          { "id": "image__2_wbc",  "color": "image", "label": "WBC" },
-          { "id": "image__3_orig", "color": "image", "label": "Original" }
+          "color": "#E2A0A4",
+          "r": 226,
+          "g": 160,
+          "b": 164,
+          "node_note": "erythrocites",
+          "color_index": 4
+        },
+        "exposedParams": [
+          "color"
         ]
       },
       "width": 208,
-      "height": 249
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916650306-0.46502027647819144",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#D097C1",
+          "r": 208,
+          "g": 151,
+          "b": 193,
+          "s_tol": 45,
+          "h_tol": 6,
+          "v_tol": 53,
+          "mode": 0,
+          "threshold": 20,
+          "node_note": "neutrophiles",
+          "color_index": 3
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916652742-0.6355882495359223",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#5B029C",
+          "r": 91,
+          "g": 2,
+          "b": 156,
+          "h_tol": 21,
+          "s_tol": 98,
+          "v_tol": 62,
+          "color_index": 2
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916816049-m9cbarcc2",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 20
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 501,
+          "color_index": 4
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 20
+      }
+    },
+    {
+      "id": "node-1778916840210-0.29021636636267356",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 180
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1709,
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 180
+      }
+    },
+    {
+      "id": "node-1778916862524-0.4515152333955982",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 360
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1709,
+          "color_index": 2
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 660,
+        "y": 300
+      }
+    },
+    {
+      "id": "node-1778916877756-0.9280644263834067",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 540
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#9066CA",
+          "r": 144,
+          "g": 102,
+          "b": 202,
+          "h_tol": 7,
+          "s_tol": 51,
+          "v_tol": 25,
+          "node_note": "plaquettes",
+          "color_index": 0
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916881594-0.3069963638143294",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 540
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 500,
+          "max_area": 12000,
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 540
+      }
+    },
+    {
+      "id": "node-1778917464167-s35tihpie",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1260,
+        "y": 520
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778934082130-2kq7mjvuc",
+      "type": "util_fill_holes",
+      "position": {
+        "x": 1320,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1320,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778934233215-n2npr7eos",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1820,
+        "y": -100
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.85,
+          "min_circularity": 0.65,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": -100
+      }
+    },
+    {
+      "id": "node-1778934362193-g931z0ae1",
+      "type": "plugin_mask_to_image",
+      "position": {
+        "x": 1560,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Mask to Image",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "node-1778934568211-qgnxzi0qh",
+      "type": "feat_hough_circles",
+      "position": {
+        "x": 1820,
+        "y": 100
+      },
+      "style": {},
+      "data": {
+        "label": "Hough Circles",
+        "params": {
+          "max_r": 103,
+          "min_dist": 51,
+          "param1": 7,
+          "param2": 20,
+          "thickness": 7,
+          "viz_color": "#D400FF",
+          "min_r": 60,
+          "dp": 2,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956813737-jkmttdt59",
+      "type": "hema_hemogramme",
+      "position": {
+        "x": 2620,
+        "y": 180
+      },
+      "style": {},
+      "data": {
+        "label": "Hemogramme",
+        "params": {}
+      },
+      "width": 380,
+      "height": 393,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2620,
+        "y": 180
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956908146-3y2y9fum1",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 0
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 0
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956996586-0.06326680218067293",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 200
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956998519-0.071608456713256",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 380
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957005353-0.7175029286385134",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 600
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957405241-20s1in10w",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1280,
+        "y": 320
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.25,
+          "use_aspect": false,
+          "min_circularity": 0.6,
+          "min_size": 6024,
+          "node_note": "Lymphocytes",
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1280,
+        "y": 320
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957594304-0.445523635066188",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1820,
+        "y": 420
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.25,
+          "use_aspect": false,
+          "min_circularity": 0.15,
+          "min_size": 14905,
+          "node_note": "Monocyte",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 420
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957689737-mj8d7lrb4",
+      "type": "filter_morphology_smart",
+      "position": {
+        "x": 1820,
+        "y": 600
+      },
+      "style": {},
+      "data": {
+        "label": "Smart Morphology",
+        "params": {
+          "area_thresh_pct": 0,
+          "amount": 16,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 600
+      }
+    },
+    {
+      "id": "node-1778957799185-0.5876012824595953",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 800
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 800
+      },
+      "dragging": false
+    },
+    {
+      "id": "reroute-1778958208658",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 456,
+        "y": 143
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__out_0_byrrc2",
+            "color": "any",
+            "label": "out_0"
+          },
+          {
+            "id": "any__out_1_lger27",
+            "color": "any",
+            "label": "out_1"
+          },
+          {
+            "id": "any__out_2_32l1v0",
+            "color": "any",
+            "label": "out_2"
+          },
+          {
+            "id": "any__out_3_kf2rkg",
+            "color": "any",
+            "label": "out_3"
+          }
+        ]
+      },
+      "style": {
+        "width": 8,
+        "height": 514
+      },
+      "width": 8,
+      "height": 514,
+      "selected": false,
+      "dragging": false,
+      "resizing": false
     }
-
   ],
-
   "edges": [
-
-    { "id": "e-00", "source": "s-input",    "sourceHandle": "image__main",       "target": "s-vignette",  "targetHandle": "image__image" },
-
-    { "id": "e-01", "source": "s-vignette", "sourceHandle": "image__main",       "target": "rbc-expr",    "targetHandle": "image__image" },
-    { "id": "e-02", "source": "rbc-expr",   "sourceHandle": "image__visualized", "target": "rbc-thresh",  "targetHandle": "image__image" },
-    { "id": "e-03", "source": "rbc-thresh", "sourceHandle": "mask__mask",        "target": "rbc-close",   "targetHandle": "any__mask" },
-    { "id": "e-04", "source": "rbc-close",  "sourceHandle": "mask__mask",        "target": "rbc-open",    "targetHandle": "any__mask" },
-    { "id": "e-05", "source": "rbc-open",   "sourceHandle": "mask__mask",        "target": "rbc-fill",    "targetHandle": "mask__mask" },
-    { "id": "e-06", "source": "rbc-fill",   "sourceHandle": "mask__main",        "target": "rbc-dist",    "targetHandle": "any__mask" },
-    { "id": "e-07", "source": "rbc-dist",   "sourceHandle": "image__main",       "target": "rbc-peaks",   "targetHandle": "image__image" },
-    { "id": "e-08", "source": "rbc-peaks",  "sourceHandle": "mask__mask",        "target": "rbc-cc",      "targetHandle": "any__mask" },
-    { "id": "e-09", "source": "rbc-cc",     "sourceHandle": "any__markers",      "target": "rbc-water",   "targetHandle": "any__markers" },
-    { "id": "e-10", "source": "s-vignette", "sourceHandle": "image__main",       "target": "rbc-water",   "targetHandle": "image__image" },
-    { "id": "e-11", "source": "s-vignette", "sourceHandle": "mask__mask",        "target": "rbc-water",   "targetHandle": "mask__mask" },
-    { "id": "e-12", "source": "rbc-water",  "sourceHandle": "any__markers_out",  "target": "rbc-filter",  "targetHandle": "any__markers" },
-    { "id": "e-13", "source": "s-vignette", "sourceHandle": "image__main",       "target": "rbc-filter",  "targetHandle": "image__image" },
-    { "id": "e-14", "source": "rbc-filter", "sourceHandle": "any__markers_out",  "target": "rbc-stats",   "targetHandle": "any__labels_map" },
-    { "id": "e-15", "source": "s-vignette", "sourceHandle": "image__main",       "target": "rbc-stats",   "targetHandle": "image__image" },
-
-    { "id": "e-16", "source": "s-vignette", "sourceHandle": "image__main",       "target": "wbc-expr",    "targetHandle": "image__image" },
-    { "id": "e-17", "source": "wbc-expr",   "sourceHandle": "image__visualized", "target": "wbc-thresh",  "targetHandle": "image__image" },
-    { "id": "e-18", "source": "wbc-thresh", "sourceHandle": "mask__mask",        "target": "wbc-close",   "targetHandle": "any__mask" },
-    { "id": "e-19", "source": "wbc-close",  "sourceHandle": "mask__mask",        "target": "wbc-open",    "targetHandle": "any__mask" },
-    { "id": "e-20", "source": "wbc-open",   "sourceHandle": "mask__mask",        "target": "wbc-cc",      "targetHandle": "any__mask" },
-    { "id": "e-21", "source": "wbc-cc",     "sourceHandle": "any__markers",      "target": "plt-filter",  "targetHandle": "any__markers" },
-    { "id": "e-22", "source": "s-vignette", "sourceHandle": "image__main",       "target": "plt-filter",  "targetHandle": "image__image" },
-    { "id": "e-23", "source": "wbc-open",   "sourceHandle": "mask__mask",        "target": "wbc-fill",    "targetHandle": "mask__mask" },
-    { "id": "e-24", "source": "wbc-fill",   "sourceHandle": "mask__main",        "target": "wbc-dist",    "targetHandle": "any__mask" },
-    { "id": "e-25", "source": "wbc-dist",   "sourceHandle": "image__main",       "target": "wbc-peaks",   "targetHandle": "image__image" },
-    { "id": "e-26", "source": "wbc-peaks",  "sourceHandle": "mask__mask",        "target": "wbc-cc2",     "targetHandle": "any__mask" },
-    { "id": "e-27", "source": "wbc-cc2",    "sourceHandle": "any__markers",      "target": "wbc-water",   "targetHandle": "any__markers" },
-    { "id": "e-28", "source": "s-vignette", "sourceHandle": "image__main",       "target": "wbc-water",   "targetHandle": "image__image" },
-    { "id": "e-29", "source": "s-vignette", "sourceHandle": "mask__mask",        "target": "wbc-water",   "targetHandle": "mask__mask" },
-    { "id": "e-30", "source": "wbc-water",  "sourceHandle": "any__markers_out",  "target": "wbc-filter",  "targetHandle": "any__markers" },
-    { "id": "e-31", "source": "s-vignette", "sourceHandle": "image__main",       "target": "wbc-filter",  "targetHandle": "image__image" },
-    { "id": "e-32", "source": "wbc-filter", "sourceHandle": "any__markers_out",  "target": "wbc-stats",   "targetHandle": "any__labels_map" },
-    { "id": "e-33", "source": "s-vignette", "sourceHandle": "image__main",       "target": "wbc-stats",   "targetHandle": "image__image" },
-
-    { "id": "e-34", "source": "rbc-stats",  "sourceHandle": "scalar__count",     "target": "report",      "targetHandle": "scalar__rbc_count" },
-    { "id": "e-35", "source": "wbc-stats",  "sourceHandle": "scalar__count",     "target": "report",      "targetHandle": "scalar__wbc_count" },
-    { "id": "e-36", "source": "plt-filter", "sourceHandle": "scalar__count",     "target": "report",      "targetHandle": "scalar__plt_count" },
-    { "id": "e-37", "source": "s-vignette", "sourceHandle": "image__main",       "target": "report",      "targetHandle": "image__image" },
-
-    { "id": "e-38", "source": "report",     "sourceHandle": "image__main",       "target": "display",     "targetHandle": "image__main" },
-    { "id": "e-39", "source": "rbc-stats",  "sourceHandle": "image__main",       "target": "display",     "targetHandle": "image__1_rbc" },
-    { "id": "e-40", "source": "wbc-stats",  "sourceHandle": "image__main",       "target": "display",     "targetHandle": "image__2_wbc" },
-    { "id": "e-41", "source": "s-vignette", "sourceHandle": "image__main",       "target": "display",     "targetHandle": "image__3_orig" }
-
+    {
+      "source": "teleport_1778917690495_62qj",
+      "sourceHandle": "image__main",
+      "target": "node-1778917687098-5nctdb8y3",
+      "targetHandle": "image__image",
+      "id": "e-1778917693953",
+      "selected": false
+    },
+    {
+      "source": "node-1778916645866-latty6r3x",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916816049-m9cbarcc2",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916818583",
+      "selected": false
+    },
+    {
+      "source": "node-1778916650306-0.46502027647819144",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916840210-0.29021636636267356",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916847700",
+      "selected": false
+    },
+    {
+      "source": "node-1778916652742-0.6355882495359223",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916862524-0.4515152333955982",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916865917",
+      "selected": false
+    },
+    {
+      "source": "node-1778916877756-0.9280644263834067",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916881594-0.3069963638143294",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916884471",
+      "selected": false
+    },
+    {
+      "id": "e-1778917464218-d6j2f2xdr",
+      "source": "node-1778916881594-0.3069963638143294",
+      "target": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "id": "e-1778917464218-psoczqag8",
+      "source": "node-1778916881594-0.3069963638143294",
+      "target": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "id": "e-1778917915630-0.12712178679530362",
+      "selected": false
+    },
+    {
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "id": "e-1778917915630-0.06087637180465555",
+      "selected": false
+    },
+    {
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "id": "e-1778917915630-0.08726885268277973",
+      "selected": false
+    },
+    {
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "id": "e-1778917915630-0.06200969907116882",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.886519184045566",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.8891871688408655",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.9189960718764619",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.5596699733487323",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.8472516663922693",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-1778917915630-0.2748308695280085",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "sourceHandle": "mask__mask_rej",
+      "targetHandle": "mask__mask_in",
+      "id": "e-1778917915630-0.5456588908376148",
+      "selected": false
+    },
+    {
+      "source": "node-1778916816049-m9cbarcc2",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778934082130-2kq7mjvuc",
+      "targetHandle": "any__mask",
+      "id": "e-1778934092786",
+      "selected": false
+    },
+    {
+      "source": "node-1778934082130-2kq7mjvuc",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778934233215-n2npr7eos",
+      "targetHandle": "mask__mask",
+      "id": "e-1778934237748",
+      "selected": false
+    },
+    {
+      "source": "node-1778934233215-n2npr7eos",
+      "sourceHandle": "mask__mask_rej",
+      "target": "node-1778934362193-g931z0ae1",
+      "targetHandle": "mask__mask",
+      "id": "e-1778934365714",
+      "selected": false
+    },
+    {
+      "source": "node-1778934362193-g931z0ae1",
+      "sourceHandle": "image__main",
+      "target": "node-1778934568211-qgnxzi0qh",
+      "targetHandle": "image__image",
+      "id": "e-1778934571098",
+      "selected": false
+    },
+    {
+      "source": "node-1778956908146-3y2y9fum1",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__rbc",
+      "id": "e-1778956918155",
+      "selected": false
+    },
+    {
+      "source": "node-1778934233215-n2npr7eos",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778956908146-3y2y9fum1",
+      "targetHandle": "mask__mask",
+      "id": "e-1778956929802",
+      "selected": false
+    },
+    {
+      "source": "node-1778934568211-qgnxzi0qh",
+      "sourceHandle": "list__circles_list",
+      "target": "node-1778956908146-3y2y9fum1",
+      "targetHandle": "list__objects",
+      "id": "e-1778956932516",
+      "selected": false
+    },
+    {
+      "source": "node-1778916840210-0.29021636636267356",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778956996586-0.06326680218067293",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957011874",
+      "selected": false
+    },
+    {
+      "source": "node-1778956996586-0.06326680218067293",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__neu",
+      "id": "e-1778957015749",
+      "selected": false
+    },
+    {
+      "source": "node-1778916862524-0.4515152333955982",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778957405241-20s1in10w",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957409408",
+      "selected": false
+    },
+    {
+      "source": "node-1778957405241-20s1in10w",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778956998519-0.071608456713256",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957547242",
+      "selected": false
+    },
+    {
+      "source": "node-1778956998519-0.071608456713256",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__lym",
+      "id": "e-1778957549848",
+      "selected": false
+    },
+    {
+      "source": "node-1778917687098-5nctdb8y3",
+      "sourceHandle": "scalar__factor",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "scalar__calibration",
+      "id": "e-1778957560750",
+      "selected": false
+    },
+    {
+      "source": "node-1778957405241-20s1in10w",
+      "sourceHandle": "mask__mask_rej",
+      "target": "node-1778957594304-0.445523635066188",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957599074",
+      "selected": false
+    },
+    {
+      "source": "node-1778957594304-0.445523635066188",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778957689737-mj8d7lrb4",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957693251",
+      "selected": false
+    },
+    {
+      "source": "node-1778957689737-mj8d7lrb4",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778957005353-0.7175029286385134",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957732575",
+      "selected": false
+    },
+    {
+      "source": "node-1778957005353-0.7175029286385134",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__mon",
+      "id": "e-1778957735752",
+      "selected": false
+    },
+    {
+      "source": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778957799185-0.5876012824595953",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957811914",
+      "selected": false
+    },
+    {
+      "source": "node-1778957799185-0.5876012824595953",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__plt",
+      "id": "e-1778957816126",
+      "selected": false
+    },
+    {
+      "id": "rr-in-1778958208658",
+      "source": "node-1778916628968-0.6760854756931174",
+      "sourceHandle": "image__main",
+      "target": "reroute-1778958208658",
+      "targetHandle": "any__in"
+    },
+    {
+      "id": "rr-out-1778958208658-0",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_0_byrrc2",
+      "target": "node-1778916645866-latty6r3x",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-1",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_1_lger27",
+      "target": "node-1778916650306-0.46502027647819144",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-2",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_2_32l1v0",
+      "target": "node-1778916652742-0.6355882495359223",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-3",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_3_kf2rkg",
+      "target": "node-1778916877756-0.9280644263834067",
+      "targetHandle": "image__image"
+    }
   ],
-
   "ui": {
-    "previewSize": { "w": 700, "h": 420 },
-    "previewPos":  { "x":  80, "y":  -20 },
-    "visualizedNodeId": "report"
+    "previewSize": {
+      "w": 523.125,
+      "h": 523
+    },
+    "previewPos": {
+      "x": 1659.890625,
+      "y": -409.62890625
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1778916628968-0.6760854756931174"
   }
 }
