@@ -191,6 +191,7 @@ export const CATEGORIES: Category[] = [
     { type: 'fast_sam_segmenter',   label: 'AI Segmenter',        description: 'Zero-shot instance segmentation using FastSAM.' },
     { type: 'sci_general_segmenter',  label: 'Segmenter',       description: 'General-purpose multi-method image segmenter.' },
     { type: 'feat_visual_size_gate',  label: 'Visual Size Gate',  description: 'Filters segmented objects by size with interactive preview.' },
+    { type: 'feat_shape_gate',        label: 'Shape Gate',        description: 'Filters blobs by compactness: aspect ratio and circularity.' },
     { type: 'feat_connected_components', label: 'Connected Comp. (CV2)', description: 'Labels connected regions — OpenCV implementation.' },
     { type: 'feat_contour_props',     label: 'Contour Properties',description: 'Measures area, perimeter and bounding box of each contour.' },
     { type: 'feat_morphology_adv',    label: 'Advanced Morphology',description: 'Extended morphological operations (top-hat, skeleton, etc.).' },
