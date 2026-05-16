@@ -1,3 +1,4 @@
+import base64
 import cv2
 import numpy as np
 from registry import vision_node, NodeProcessor
@@ -35,6 +36,10 @@ from registry import vision_node, NodeProcessor
     ],
 )
 class FillHolesNode(NodeProcessor):
+    def __init__(self):
+        self._last_preview: str | None = None
+        self._frame_count = 0
+
     def process(self, inputs, params):
         mask = inputs.get('mask')
         if mask is None:
@@ -85,4 +90,16 @@ class FillHolesNode(NodeProcessor):
                 if area <= max_hole_px:
                     filled[labels == i] = 255
 
-        return {'main': filled}
+        self._frame_count += 1
+        if self._last_preview is None or self._frame_count % 6 == 0:
+            try:
+                preview_bgr = cv2.cvtColor(filled, cv2.COLOR_GRAY2BGR)
+                ph = min(360, preview_bgr.shape[0])
+                pw = int(ph * preview_bgr.shape[1] / preview_bgr.shape[0])
+                _, buf = cv2.imencode('.jpg', cv2.resize(preview_bgr, (pw, ph)),
+                                     [cv2.IMWRITE_JPEG_QUALITY, 65])
+                self._last_preview = base64.b64encode(buf).decode('utf-8')
+            except Exception:
+                pass
+
+        return {'main': filled, 'main_preview': self._last_preview}

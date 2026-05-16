@@ -642,11 +642,16 @@ function App() {
     const sourceColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || sourceType;
     const targetColor = N.HANDLE_COLORS[targetType as keyof typeof N.HANDLE_COLORS] || targetType;
     if (sourceColor === targetColor) return true;
-    // Typed lists (points, contours, regions, vectors) are compatible with generic list ports
+    // Typed lists compatible with generic list ports
     const LIST_COLOR = N.HANDLE_COLORS['list'];
     const listCompatible = new Set(['points', 'contours', 'regions', 'vectors']);
     if (targetColor === LIST_COLOR && listCompatible.has(sourceType)) return true;
     if (sourceColor === LIST_COLOR && listCompatible.has(targetType)) return true;
+    // mask ↔ markers: both are label/binary maps, engine handles conversion
+    const MASK_COLOR    = N.HANDLE_COLORS['mask'];
+    const MARKERS_COLOR = N.HANDLE_COLORS['markers'];
+    if ((sourceColor === MASK_COLOR && targetColor === MARKERS_COLOR) ||
+        (sourceColor === MARKERS_COLOR && targetColor === MASK_COLOR)) return true;
     return false;
   }, []);
 
