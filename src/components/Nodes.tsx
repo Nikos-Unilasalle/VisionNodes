@@ -3685,18 +3685,18 @@ export const HemogrammeNode = memo(({ selected, data }: any) => {
           </div>
           <div className="flex flex-col gap-1.5">
             {([
-              ['Neutrophils',  neu, 'text-blue-400'],
-              ['Lymphocytes',  lym, 'text-cyan-400'],
-              ['Monocytes',    mon, 'text-emerald-400'],
-            ] as const).map(([label, val, cls]) => (
+              ['Neutrophils', neu, 'text-blue-400',    'bg-blue-400'],
+              ['Lymphocytes', lym, 'text-cyan-400',    'bg-cyan-400'],
+              ['Monocytes',   mon, 'text-emerald-400', 'bg-emerald-400'],
+            ] as const).map(([label, val, textCls, bgCls]) => (
               <div key={label} className="flex items-center justify-between font-mono">
                 <span className="text-[10px] text-gray-400">{label}</span>
                 <div className="flex items-center gap-1">
                   <div className="h-1 rounded-full bg-white/5 w-16 overflow-hidden">
-                    <div className={`h-full rounded-full opacity-60 ${cls.replace('text-', 'bg-')}`}
+                    <div className={`h-full rounded-full opacity-60 ${bgCls}`}
                          style={{ width: `${Math.min(100, parseFloat(val))}%` }} />
                   </div>
-                  <span className={`text-[11px] font-black w-8 text-right ${cls}`}>{val}</span>
+                  <span className={`text-[11px] font-black w-8 text-right ${textCls}`}>{val}</span>
                 </div>
               </div>
             ))}
