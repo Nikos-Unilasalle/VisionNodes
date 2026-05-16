@@ -6,7 +6,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='logic_collect',
     label='Collect',
-    category='logic',
+    category='utility',
     icon='ListPlus',
     description="Accumule des valeurs dans une liste quand la condition est vraie. Exporte en CSV à la demande.",
     inputs=[

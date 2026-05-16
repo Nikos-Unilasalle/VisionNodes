@@ -34,6 +34,7 @@ import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
 import CropEditorOverlay from './components/overlays/CropEditorOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
+import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
 import ContextMenu from './components/menus/ContextMenu';
 import AddNodeMenu from './components/menus/AddNodeMenu';
@@ -138,6 +139,7 @@ function App() {
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
   const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
+  const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6);
@@ -391,6 +393,8 @@ function App() {
             ? () => setCropEditingId(node.id)
             : node.type === 'manual_points'
             ? () => setManualPointsEditingId(node.id)
+            : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
+            ? () => setLineEditingId(node.id)
             : undefined,
           onChangeParams: (p: any) => {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
@@ -1272,7 +1276,6 @@ function App() {
             </Panel>
           </ReactFlow>
           </ComputingNodeContext.Provider>
-          </NodesDataContext.Provider>
 
           <RerouteOverlay isRerouting={isRerouting} rerouteDragRef={rerouteDragRef} reroutePos={reroutePos} />
 
@@ -1301,7 +1304,15 @@ function App() {
                  onClose={() => setManualPointsEditingId(null)}
                />
             )}
+            {lineEditingId && (
+              <LineEditorOverlay
+                node={nodesWithData.find(n => n.id === lineEditingId)}
+                edges={edges}
+                onClose={() => setLineEditingId(null)}
+              />
+            )}
           </AnimatePresence>
+          </NodesDataContext.Provider>
 
           <ContextMenu
             menu={menu}

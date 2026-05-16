@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id="output_display",
     label="Display",
-    category="out",
+    category='output',
     icon="Maximize",
     description="The output terminal displaying the final video stream.",
     dynamic_inputs=True,
@@ -57,6 +57,11 @@ class DisplayOutput(NodeProcessor):
                 return {"main": None}
         else:
             def to_bgr(img):
+                if img.dtype != np.uint8:
+                    if img.dtype in (np.float32, np.float64):
+                        img = (np.clip(img, 0.0, 1.0) * 255).astype(np.uint8) if float(img.max()) <= 1.0 else np.clip(img, 0, 255).astype(np.uint8)
+                    else:
+                        img = np.clip(img, 0, 255).astype(np.uint8)
                 if len(img.shape) == 2:
                     return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
                 elif len(img.shape) == 3 and img.shape[2] == 4:

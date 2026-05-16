@@ -4,8 +4,8 @@ from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='feat_seeds_from_boundaries',
-    label='Seeds from Boundaries',
-    category='visualize',
+    label='Boundary Seeds',
+    category='segmentation',
     icon='Target',
     description="Generates seed markers for Watershed from a boundary/corner mask. Finds the centers of the 'empty' regions.",
     inputs=[{'id': 'mask', 'color': 'mask'}],
@@ -77,8 +77,8 @@ class SeedsFromBoundariesNode(NodeProcessor):
 
 @vision_node(
     type_id='sci_general_segmenter',
-    label='General Segmenter',
-    category='analytics',
+    label='Segmenter',
+    category='segmentation',
     icon='Grid',
     description="Versatile segmentation tool. Combines contrast enhancement (CLAHE), seed detection, and watershed for object separation.",
     inputs=[
@@ -214,8 +214,8 @@ class GeneralSegmenterNode(NodeProcessor):
 
 @vision_node(
     type_id='filter_linearity',
-    label='Linear Feature Filter',
-    category='cv',
+    label='Linearity Filter',
+    category='image',
     icon='Slash',
     description="Filters out non-linear noise and keeps only straight segments at any angle.",
     inputs=[{'id': 'image', 'color': 'image'}],
@@ -313,8 +313,8 @@ class RegionSealerNode(NodeProcessor):
 
 @vision_node(
     type_id='filter_linear_direction',
-    label='Linear Direction Filter',
-    category='cv',
+    label='Direction Filter',
+    category='image',
     icon='Compass',
     description="Suppresses or isolates linear elements based on their orientation (angle in degrees).",
     inputs=[{'id': 'image', 'color': 'any'}],
@@ -407,8 +407,8 @@ class LinearDirectionFilterNode(NodeProcessor):
 
 @vision_node(
     type_id='filter_directional_morphology',
-    label='Directional Morphology',
-    category='cv',
+    label='Anisotropic Morphology',
+    category='image',
     icon='StretchHorizontal',
     description="Performs morphological operations (Dilate, Close, etc.) along a specific axis (Horizontal or Vertical).",
     inputs=[{'id': 'mask', 'color': 'mask'}],

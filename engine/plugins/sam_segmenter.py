@@ -57,8 +57,8 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
 
 @vision_node(
     type_id='sam_segmenter',
-    label='SAM Segmenter',
-    category='detect',
+    label='AI Segmenter (SAM)',
+    category='segmentation',
     icon='Scan',
     description=(
         "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). "

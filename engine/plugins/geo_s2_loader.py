@@ -88,7 +88,7 @@ def _auto_detect_bands(img_data_dir):
 @vision_node(
     type_id='geo_s2_loader',
     label='Sentinel-2 Loader',
-    category=['src', 'geography'],
+    category='geography',
     icon='Satellite',
     description=(
         "Load Sentinel-2 bands for turbidity analysis (B03, B04, B08, B11, optional B02). "

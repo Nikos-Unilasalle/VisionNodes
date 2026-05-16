@@ -4,12 +4,12 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="sci_marker_analysis",
-    label="Marker Analysis",
-    category='detect',
+    label="Region Analysis",
+    category='measure',
     icon="Hash",
     description="Extracts data (ID, coordinates, area) from a label map (markers) and overlays IDs.",
-    inputs=[{"id": "markers", "color": "any"}, {"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "data_list", "color": "list"}, {"id": "count", "color": "scalar"}],
+    inputs=[{"id": "markers", "color": "markers"}, {"id": "image", "color": "image"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "data_list", "color": "regions"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "show_labels", "label": "Show IDs", "type": "enum", "options": ["No", "Yes"], "default": 1},
         {"id": "show_points", "label": "Show Centroids", "type": "enum", "options": ["No", "Yes"], "default": 1},

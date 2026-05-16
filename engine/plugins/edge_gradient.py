@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_gradient',
     label='Image Gradient',
-    category='cv',
+    category='image',
     icon='ArrowUpRight',
     description="Computes image gradients (magnitude and orientation) using Sobel or Scharr operators.",
     inputs=[{'id': 'image', 'color': 'image'}],

@@ -25,7 +25,7 @@ def _to_uint8_bgr(img) -> np.ndarray:
 @vision_node(
     type_id='feat_visual_size_gate',
     label='Visual Size Gate',
-    category='features',
+    category='segmentation',
     icon='Ruler',
     description=(
         'Filters a label map by area using a hand-drawn reference line.\n\n'
@@ -43,14 +43,14 @@ def _to_uint8_bgr(img) -> np.ndarray:
     min_height=200,
     colorable=True,
     inputs=[
-        {'id': 'markers', 'label': 'Labels Map', 'color': 'any'},
+        {'id': 'markers', 'label': 'Labels Map', 'color': 'markers'},
         {'id': 'image',   'label': 'Image',       'color': 'image'},
     ],
     outputs=[
         {'id': 'mask_kept',   'label': 'Kept Mask',   'color': 'mask'},
         {'id': 'mask_rej',    'label': 'Rejected Mask', 'color': 'mask'},
-        {'id': 'markers_out', 'label': 'Kept Labels', 'color': 'any'},
-        {'id': 'markers_rej', 'label': 'Rejected Labels', 'color': 'any'},
+        {'id': 'markers_out', 'label': 'Kept Labels', 'color': 'markers'},
+        {'id': 'markers_rej', 'label': 'Rejected Labels', 'color': 'markers'},
         {'id': 'main',        'label': 'Preview',          'color': 'image'},
         {'id': 'count',       'label': 'Count',            'color': 'scalar'},
         {'id': 'ref_area',    'label': 'Ref Area (px²)',   'color': 'scalar'},

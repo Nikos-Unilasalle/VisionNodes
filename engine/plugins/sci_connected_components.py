@@ -5,7 +5,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='sci_connected_components',
     label='Connected Components',
-    category=['visualize', 'analytics'],
+    category='segmentation',
     icon='Layers',
     description="Label and count connected regions (particles, cells, blobs). Measures area and centroid of each object.",
     inputs=[{'id': 'image', 'color': 'any'}],
@@ -14,7 +14,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'count',      'color': 'scalar', 'label': 'Object Count'},
         {'id': 'areas',      'color': 'list',   'label': 'Areas (px²)'},
         {'id': 'centroids',  'color': 'list',   'label': 'Centroids'},
-        {'id': 'labels_map', 'color': 'any',    'label': 'Label Map'},
+        {'id': 'labels_map', 'color': 'markers', 'label': 'Label Map'},
         {'id': 'mask_out',   'color': 'mask',   'label': 'Binary Mask'},
         {'id': 'contour_out','color': 'mask',   'label': 'Contours Mask'},
     ],

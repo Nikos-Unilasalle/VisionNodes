@@ -7,7 +7,7 @@ _POSITIONS = ['Bottom Right', 'Bottom Left', 'Top Right', 'Top Left']
 @vision_node(
     type_id='sci_scale_bar',
     label='Scale Bar',
-    category=['visualize', 'analytics'],
+    category='measure',
     icon='Ruler',
     description="Overlay calibrated scale bar on image. Set Pixels/Unit to match your Unit Calibration node.",
     inputs=[{'id': 'image', 'color': 'any'}],

@@ -3,7 +3,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="mask_point_query",
     label="Mask Point Query",
-    category='logic',
+    category='utility',
     icon="Crosshair",
     description="Checks if a point (x, y) falls within a mask. Returns True if the mask value at that point is non-zero.",
     inputs=[

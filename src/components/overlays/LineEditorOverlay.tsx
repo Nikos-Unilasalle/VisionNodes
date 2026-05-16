@@ -81,6 +81,12 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const lineLength = pts.length === 2
     ? (Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y) * 100).toFixed(1)
     : null;
@@ -97,7 +103,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
     >
       {/* Header */}
       <div className="absolute top-8 left-8 flex items-center gap-4 z-10">
-        <div className="p-3 bg-yellow-500/20 rounded-2xl text-yellow-400 shadow-2xl shadow-yellow-500/20">
+        <div className="p-3 bg-blue-500/20 rounded-2xl text-blue-400 shadow-2xl shadow-blue-500/20">
           <Ruler size={28} />
         </div>
         <div>
@@ -109,7 +115,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
       </div>
 
       <div className="absolute top-8 right-8 flex items-center gap-4 z-10">
-        <div className="text-[10px] font-black font-mono text-yellow-400/60 bg-yellow-400/5 border border-yellow-400/10 px-3 py-1.5 rounded-full">
+        <div className="text-[10px] font-black font-mono text-blue-400/60 bg-blue-400/5 border border-blue-400/10 px-3 py-1.5 rounded-full">
           {Math.round(zoom * 100)}%
         </div>
       </div>
@@ -137,13 +143,13 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
                   <line
                     x1={`${pts[0].x * 100}%`} y1={`${pts[0].y * 100}%`}
                     x2={`${pts[1].x * 100}%`} y2={`${pts[1].y * 100}%`}
-                    stroke="#facc15" strokeWidth={2 / zoom} strokeDasharray={`${6 / zoom} ${3 / zoom}`}
+                    stroke="#3b82f6" strokeWidth={2 / zoom} strokeDasharray={`${6 / zoom} ${3 / zoom}`}
                   />
                   {pts.length >= 3 && (
                     <line
                       x1={`${pts[1].x * 100}%`} y1={`${pts[1].y * 100}%`}
                       x2={`${pts[2].x * 100}%`} y2={`${pts[2].y * 100}%`}
-                      stroke="#facc15" strokeWidth={2 / zoom} strokeDasharray={`${6 / zoom} ${3 / zoom}`}
+                      stroke="#3b82f6" strokeWidth={2 / zoom} strokeDasharray={`${6 / zoom} ${3 / zoom}`}
                     />
                   )}
                   <text
@@ -151,7 +157,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
                     y={`${(pts[0].y + pts[1].y) / 2 * 100}%`}
                     dy={-10 / zoom}
                     textAnchor="middle"
-                    fill="#facc15"
+                    fill="#3b82f6"
                     fontSize={13 / zoom}
                     fontWeight="bold"
                     style={{ filter: 'drop-shadow(0 1px 2px black)' }}
@@ -162,7 +168,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
               )}
               {pts.map((p, i) => (
                 <g key={i}>
-                  <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={6 / zoom} fill="#facc15" opacity={0.9} />
+                  <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={6 / zoom} fill="#3b82f6" opacity={0.9} />
                   <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={8 / zoom} fill="none" stroke="white" strokeWidth={1.5 / zoom} opacity={0.6} />
                   <text
                     x={`${p.x * 100}%`} y={`${p.y * 100}%`} dy={-14 / zoom}
@@ -181,7 +187,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
       <div className="p-8 w-full flex flex-col items-center gap-6 bg-gradient-to-t from-black/80 to-transparent">
         <div className="flex items-center gap-6 px-8 py-4 bg-white/5 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400">
-            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-lg border border-yellow-500/20">CLICK</span>
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20">CLICK</span>
             <span>Place point</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
@@ -195,7 +201,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
             <span>Zoom</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
-          <div className="font-mono text-[11px] text-yellow-400">
+          <div className="font-mono text-[11px] text-blue-400">
             {pts.length === 0 && 'Click to place point 1'}
             {pts.length > 0 && pts.length < maxPts && `Click to place point ${pts.length + 1}`}
             {pts.length === maxPts && `Line defined · ${lineLength}% rel. length`}
@@ -209,7 +215,7 @@ const LineEditorOverlay = ({ node, edges, onClose }: any) => {
           <button
             onClick={save}
             disabled={pts.length < 2}
-            className="px-20 py-4 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-30 disabled:cursor-not-allowed shadow-2xl shadow-yellow-500/40 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-110 hover:scale-115 active:scale-95 border border-white/10"
+            className="px-20 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed shadow-2xl shadow-blue-500/40 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-110 hover:scale-115 active:scale-95 border border-white/10"
           >
             Apply Line
           </button>

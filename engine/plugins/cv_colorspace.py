@@ -4,8 +4,8 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id='cv_colorspace',
-    label='Color Space Convert',
-    category='detect',
+    label='Color Space',
+    category='color',
     icon='Palette',
     description="Convert RGB image to HSV or CIE Lab color space for advanced analysis and processing.",
     inputs=[{'id': 'image', 'color': 'image'}],

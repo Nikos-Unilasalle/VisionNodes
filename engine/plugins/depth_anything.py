@@ -27,8 +27,8 @@ _MODEL_NAMES = list(_MODELS.keys())
 
 @vision_node(
     type_id='depth_anything_v2',
-    label='Depth Anything V2',
-    category='analyze',
+    label='Depth Estimator',
+    category='analysis',
     icon='BoxSelect',
     description=(
         "State-of-the-art monocular depth estimation powered by Depth Anything V2 (TikTok/ByteDance). "

@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='cv_levels',
     label='Image Levels',
-    category='cv',
+    category='color',
     icon='Sliders',
     description="Adjusts image intensity levels: black point, white point, gamma (midtones), and output range.",
     inputs=[{'id': 'image', 'color': 'image'}],

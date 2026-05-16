@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_blend_images',
     label='Simple Image Blend',
-    category='blend',
+    category='image',
     icon='Layers',
     description="Linearly blends two images based on a simple opacity factor.",
     inputs=[

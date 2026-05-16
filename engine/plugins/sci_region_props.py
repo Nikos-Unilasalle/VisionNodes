@@ -11,8 +11,8 @@ except ImportError:
 
 @vision_node(
     type_id='sci_region_props',
-    label='Region Props',
-    category=['visualize', 'analytics'],
+    label='Region Properties',
+    category='measure',
     icon='Database',
     description=(
         "Extract shape and intensity features from a labeled region map (from Connected Components). "
@@ -21,12 +21,12 @@ except ImportError:
         "Connects image input for mean/max/std intensity per region."
     ),
     inputs=[
-        {'id': 'labels_map', 'color': 'any',    'label': 'Label Map'},
+        {'id': 'labels_map', 'color': 'markers', 'label': 'Label Map'},
         {'id': 'image',      'color': 'image',  'label': 'Image (intensity, optional)'},
         {'id': 'um_per_px',  'color': 'scalar', 'label': 'µm/pixel (Calibration)'},
     ],
     outputs=[
-        {'id': 'regions', 'color': 'list',   'label': 'Regions'},
+        {'id': 'regions', 'color': 'regions', 'label': 'Regions'},
         {'id': 'count',   'color': 'scalar', 'label': 'Count'},
         {'id': 'main',    'color': 'image',  'label': 'Preview'},
     ],

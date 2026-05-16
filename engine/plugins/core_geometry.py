@@ -4,7 +4,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id="geom_flip",
     label="Flip",
-    category='geom',
+    category='geometry',
     icon="Move",
     description="Inverts the image horizontally or vertically.",
     inputs=[{"id": "image", "color": "image"}],
@@ -20,7 +20,7 @@ class FlipNode(NodeProcessor):
 @vision_node(
     type_id="geom_resize",
     label="Resize",
-    category="geom",
+    category='geometry',
     icon="Scaling",
     description="Réduit la résolution de l'image pour accélérer les traitements en aval.",
     inputs=[{"id": "image", "color": "image"}],

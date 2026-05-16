@@ -22,8 +22,8 @@ _IMGSZ_OPTIONS = [512, 640, 1024, 1280]
 
 @vision_node(
     type_id='fast_sam_segmenter',
-    label='FastSAM Segmenter (Petro)',
-    category='geology',
+    label='AI Segmenter',
+    category='segmentation',
     icon='Zap',
     description=(
         "Grain segmentation via FastSAM fine-tuned for petrography (GrainSight pipeline).\n"
@@ -41,8 +41,8 @@ _IMGSZ_OPTIONS = [512, 640, 1024, 1280]
     outputs=[
         {'id': 'main',       'color': 'image', 'label': 'Overlay'},
         {'id': 'masks_img',  'color': 'image', 'label': 'Masks'},
-        {'id': 'contours',   'color': 'list',  'label': 'Contours (→ SAM Grain Stats)'},
-        {'id': 'grain_data', 'color': 'any',   'label': 'Grain Data'},
+        {'id': 'contours',   'color': 'contours', 'label': 'Contours (→ SAM Grain Stats)'},
+        {'id': 'grain_data', 'color': 'regions', 'label': 'Grain Data'},
     ],
     params=[
         {'id': 'imgsz',            'label': 'Inference Size',    'type': 'enum',

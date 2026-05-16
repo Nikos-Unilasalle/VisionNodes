@@ -7,7 +7,7 @@ import json
 @vision_node(
     type_id='geom_crop_rect',
     label='Crop',
-    category='geom',
+    category='geometry',
     icon='Crop',
     description="Crops a rectangular region from the image. Define the region interactively using the built-in editor.",
     inputs=[{'id': 'image', 'color': 'image'}],

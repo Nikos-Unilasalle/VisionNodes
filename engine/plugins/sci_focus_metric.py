@@ -7,7 +7,7 @@ _METHODS = ['Laplacian Variance', 'Tenengrad', 'Normalized Variance']
 @vision_node(
     type_id='sci_focus_metric',
     label='Focus Metric',
-    category=['visualize', 'analytics'],
+    category='measure',
     icon='Eye',
     description="Measure image sharpness / focus quality. Higher score = sharper. Use for autofocus, Z-stack selection, QC.",
     inputs=[{'id': 'image', 'color': 'any'}],

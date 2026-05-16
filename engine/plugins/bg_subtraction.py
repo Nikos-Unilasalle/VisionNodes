@@ -4,8 +4,8 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="bg_sub_mog2",
-    label="MOG2 Subtractor",
-    category=['cv', 'detect'],
+    label="Background Subtractor (MOG2)",
+    category='tracking',
     icon="Layers",
     description="Separates moving foreground objects from a static background (MOG2).",
     inputs=[{"id": "image", "color": "image"}],
@@ -42,8 +42,8 @@ class MOG2SubtractorNode(NodeProcessor):
 
 @vision_node(
     type_id="bg_sub_knn",
-    label="KNN Subtractor",
-    category=['cv', 'detect'],
+    label="Background Subtractor (KNN)",
+    category='tracking',
     icon="Layers",
     description="Separates moving foreground objects using K-Nearest Neighbors approach.",
     inputs=[{"id": "image", "color": "image"}],

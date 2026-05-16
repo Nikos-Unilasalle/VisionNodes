@@ -5,7 +5,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="sci_plotter",
     label="Plotter",
-    category=['visualize', 'detect'],
+    category='visualize',
     icon="Activity",
     description="Multi-series real-time graph. Connect any scalar/list inputs dynamically. Resizable.",
     resizable=True,
@@ -120,7 +120,7 @@ class PlotterNode(NodeProcessor):
 @vision_node(
     type_id="sci_stats",
     label="Statistics",
-    category='detect',
+    category='measure',
     icon="Info",
     description="Calculates key statistical metrics (mean, median, standard deviation) from a list.",
     inputs=[{"id": "data_list", "color": "list"}],
@@ -158,11 +158,11 @@ class StatsNode(NodeProcessor):
 
 @vision_node(
     type_id="sci_heatmap",
-    label="Heatmap",
-    category='detect',
+    label="Density Heatmap",
+    category='visualize',
     icon="Wind",
     description="Generates a cumulative heatmap based on provided detection points.",
-    inputs=[{"id": "image", "color": "image"}, {"id": "points", "color": "any"}],
+    inputs=[{"id": "image", "color": "image"}, {"id": "points", "color": "points"}],
     outputs=[{"id": "main", "color": "image"}],
     params=[
         {"id": "res", "label": "Resolution", "type": "scalar", "min": 16, "max": 256, "default": 64},
@@ -276,7 +276,7 @@ class HeatmapNode(NodeProcessor):
 @vision_node(
     type_id='feat_list_aggregator',
     label='List Aggregator',
-    category='analytics',
+    category='data',
     icon='Sigma',
     description="Extracts a key from a list of objects and computes group statistics (Sum, Mean, SD, Count). Useful for summarizing circle/contour lists.",
     inputs=[
@@ -340,7 +340,7 @@ class ListAggregatorNode(NodeProcessor):
 @vision_node(
     type_id='sci_analysis_report',
     label='Analysis Report',
-    category='analytics',
+    category='measure',
     icon='Clipboard',
     description="Displays a beautiful summary table of all variables. Connect any dictionary (stats, report, etc.).",
     inputs=[{'id': 'data', 'color': 'dict'}],
@@ -356,7 +356,7 @@ class AnalysisReportNode(NodeProcessor):
 @vision_node(
     type_id='sci_kmeans_list',
     label='K-Means Classifier',
-    category='analytics',
+    category='measure',
     icon='Grid',
     description="Clusters a list of objects (like circles) into K groups based on a numeric property. Adds a 'cluster_id' to each item.",
     inputs=[{'id': 'items', 'color': 'list'}],

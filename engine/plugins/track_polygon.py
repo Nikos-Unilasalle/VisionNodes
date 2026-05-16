@@ -3,8 +3,8 @@ import numpy as np
 
 @vision_node(
     type_id='geom_track_polygon',
-    label='Track Polygon',
-    category='detect',
+    label='Polygon Tracker',
+    category='tracking',
     icon='Target',
     description="Calculates the area of a zone defined by multiple tracked landmarks.",
     inputs=[

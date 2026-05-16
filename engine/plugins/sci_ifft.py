@@ -7,7 +7,7 @@ _MODES = ['auto', 'complex_data', 'magnitude_phase']
 @vision_node(
     type_id='sci_ifft',
     label='Inverse FFT',
-    category=['visualize', 'analytics'],
+    category='signal',
     icon='RotateCcw',
     description="Reconstructs an image from spectral data. Perfect reconstruction from Complex Data or Magnitude Raw + Phase. Magnitude image input is approximate (visualization data).",
     inputs=[

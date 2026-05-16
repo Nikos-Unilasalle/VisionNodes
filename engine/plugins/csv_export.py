@@ -8,7 +8,7 @@ _SCALAR = (int, float, str, bool, type(None))
 @vision_node(
     type_id='util_csv_export',
     label='CSV Export',
-    category='out',
+    category='output',
     icon='Database',
     description="Exports data to CSV. Dynamic inputs — connect any value to add a column. Use Recording for live streams or Snapshot for single-frame capture.",
     dynamic_inputs=True,

@@ -15,7 +15,7 @@ import numpy as np
     outputs=[
         {'id': 'overlay',    'color': 'image', 'label': 'Overlay'},
         {'id': 'labels',     'color': 'image', 'label': 'Labels'},
-        {'id': 'markers',    'color': 'any',   'label': 'Markers (int32)'},
+        {'id': 'markers',    'color': 'markers', 'label': 'Markers (int32)'},
         {'id': 'boundaries', 'color': 'image', 'label': 'Boundaries'},
         {'id': 'opaques',    'color': 'image', 'label': 'Opaques'},
     ],

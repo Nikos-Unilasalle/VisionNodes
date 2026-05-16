@@ -11,7 +11,7 @@
     {
       "id": "fg-calib",
       "type": "sci_interactive_calibration",
-      "position": { "x": 0, "y": 320 },
+      "position": { "x": 0, "y": 340 },
       "data": {
         "label": "Scale Calibration (µm/px)",
         "params": { "points": "[]", "real_len": 500.0, "unit": "µm" }
@@ -66,7 +66,7 @@
     {
       "id": "fg-histogram",
       "type": "geo_grain_histogram",
-      "position": { "x": 840, "y": 360 },
+      "position": { "x": 840, "y": 380 },
       "data": {
         "label": "Grain Size Histogram",
         "params": { "bins": 30, "metric": 0 }
@@ -86,24 +86,112 @@
         "ports": [
           { "id": "image__0_overlay",   "color": "image", "label": "Overlay + IDs" },
           { "id": "image__1_masks",     "color": "image", "label": "Masks" },
-          { "id": "image__2_histogram", "color": "image", "label": "Size Histogram" }
+          { "id": "image__2_histogram", "color": "image", "label": "Size Histogram" },
+          { "id": "image__3_neighbor",  "color": "image", "label": "Opaque Neighbor Map" },
+          { "id": "image__4_counter",   "color": "image", "label": "Point Counter" }
         ]
       },
       "width": 208,
-      "height": 300
+      "height": 380
     },
 
     {
       "id": "fg-inspector",
       "type": "data_inspector",
-      "position": { "x": 1240, "y": 400 },
+      "position": { "x": 1240, "y": 480 },
       "data": {
         "label": "Per-Grain Data (area, roundness, feret…)",
         "params": {}
       },
       "width": 260,
-      "height": 420,
-      "style": { "width": 260, "height": 420 }
+      "height": 300,
+      "style": { "width": 260, "height": 300 }
+    },
+
+    {
+      "id": "og-colormask",
+      "type": "filter_color_mask",
+      "position": { "x": 280, "y": 620 },
+      "data": {
+        "label": "Opaque Grain Color Mask",
+        "params": {
+          "mode": 1,
+          "color": "#271E19",
+          "h_tol": 15,
+          "r_tol": 35,
+          "g_tol": 35,
+          "b_tol": 35
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "og-invert",
+      "type": "plugin_invert_mask",
+      "position": { "x": 560, "y": 620 },
+      "data": { "label": "Invert (Isolate Opaques)", "params": {} },
+      "width": 208
+    },
+
+    {
+      "id": "og-separator",
+      "type": "petro_grain_separator",
+      "position": { "x": 840, "y": 620 },
+      "data": {
+        "label": "Opaque Grain Separator",
+        "params": {
+          "mode": 0,
+          "epsilon": 2.0,
+          "angle_thresh": 195.0,
+          "max_dist": 50.0
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "og-neighbor",
+      "type": "petro_neighbor_analysis",
+      "position": { "x": 1120, "y": 620 },
+      "data": {
+        "label": "Opaque Neighbor Analysis",
+        "params": {
+          "mode": 0,
+          "dilate_units": 20.0,
+          "min_contact_units": 5.0
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "og-pointcounter",
+      "type": "petro_point_counter",
+      "position": { "x": 1120, "y": 840 },
+      "data": {
+        "label": "Modal Point Counter",
+        "params": {
+          "grid_rows": 20,
+          "grid_cols": 25,
+          "point_size": 3,
+          "show_labels": true
+        }
+      },
+      "width": 208
+    },
+
+    {
+      "id": "og-inspector",
+      "type": "data_inspector",
+      "position": { "x": 1380, "y": 840 },
+      "data": {
+        "label": "Opaque Grain Stats",
+        "params": {}
+      },
+      "width": 220,
+      "height": 200,
+      "style": { "width": 220, "height": 200 }
     }
   ],
 
@@ -123,6 +211,24 @@
     { "id": "fg-e13", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__mean_circularity", "targetHandle": "scalar__circularity" },
     { "id": "fg-e14", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__mean_aspect_ratio","targetHandle": "scalar__aspect_ratio" },
     { "id": "fg-e15", "source": "fg-stats", "target": "fg-report",   "sourceHandle": "scalar__grain_fraction",   "targetHandle": "scalar__grain_frac" },
-    { "id": "fg-e16", "source": "fg-stats", "target": "fg-histogram","sourceHandle": "list__regions",            "targetHandle": "list__regions" }
+    { "id": "fg-e16", "source": "fg-stats", "target": "fg-histogram","sourceHandle": "list__regions",            "targetHandle": "list__regions" },
+
+    { "id": "og-e1",  "source": "fg-img",       "target": "og-colormask",  "sourceHandle": "image__main",     "targetHandle": "image__image" },
+    { "id": "og-e2",  "source": "og-colormask",  "target": "og-invert",     "sourceHandle": "mask__mask",      "targetHandle": "mask__mask" },
+    { "id": "og-e3",  "source": "og-invert",     "target": "og-separator",  "sourceHandle": "mask__main",      "targetHandle": "mask__mask" },
+    { "id": "og-e4",  "source": "fg-calib",      "target": "og-separator",  "sourceHandle": "scalar__factor",  "targetHandle": "scalar__scale" },
+    { "id": "og-e5",  "source": "og-separator",  "target": "og-neighbor",   "sourceHandle": "mask__mask",      "targetHandle": "any__markers" },
+    { "id": "og-e6",  "source": "fg-img",        "target": "og-neighbor",   "sourceHandle": "image__main",     "targetHandle": "image__image" },
+    { "id": "og-e7",  "source": "fg-calib",      "target": "og-neighbor",   "sourceHandle": "scalar__factor",  "targetHandle": "scalar__scale" },
+    { "id": "og-e8",  "source": "fg-img",        "target": "og-pointcounter","sourceHandle": "image__main",    "targetHandle": "any__image" },
+    { "id": "og-e9",  "source": "og-separator",  "target": "og-pointcounter","sourceHandle": "mask__mask",     "targetHandle": "mask__mask" },
+    { "id": "og-e10", "source": "og-neighbor",    "target": "fg-display",   "sourceHandle": "image__main",       "targetHandle": "image__3_neighbor" },
+    { "id": "og-e11", "source": "og-pointcounter","target": "fg-display",   "sourceHandle": "image__main",       "targetHandle": "image__4_counter" },
+    { "id": "og-e12", "source": "og-pointcounter","target": "og-inspector", "sourceHandle": "any__data",         "targetHandle": "any__data" },
+
+    { "id": "og-e13", "source": "og-separator",   "target": "fg-report",    "sourceHandle": "scalar__count",     "targetHandle": "scalar__opaque_count" },
+    { "id": "og-e14", "source": "og-separator",   "target": "fg-report",    "sourceHandle": "scalar__frac",      "targetHandle": "scalar__opaque_frac" },
+    { "id": "og-e15", "source": "og-pointcounter","target": "fg-report",    "sourceHandle": "any__data",         "targetHandle": "any__modal_stats" },
+    { "id": "og-e16", "source": "og-neighbor",    "target": "fg-report",    "sourceHandle": "any__data",         "targetHandle": "any__neighbor_data" }
   ]
 }

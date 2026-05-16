@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='sci_spectral_gain',
     label='Spectral Gain',
-    category=['visualize', 'analytics'],
+    category='measure',
     icon='Sliders',
     description="3-band frequency equalizer on raw spectral magnitude. Boost or cut low/mid/high spatial frequencies. Connect FFT.magnitude_raw → SpectralGain → IFFT.magnitude_raw.",
     inputs=[

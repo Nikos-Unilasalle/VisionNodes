@@ -96,17 +96,11 @@ const ROIEditorOverlay = ({ node, nodesData, onClose }: any) => {
         return;
     }
     if (e.button !== 0) return;
-    if (e.shiftKey) {
-      const c = imgCoords(e.clientX, e.clientY);
-      if (!c) return;
-      const newPoints = [...points, c];
-      setPoints(newPoints);
-      setSelectedIndex(newPoints.length - 1);
-      return;
-    }
-    isPanning.current = true;
-    panOrigin.current = { mx: e.clientX, my: e.clientY, px: pan.x, py: pan.y };
-    setSelectedIndex(null);
+    const c = imgCoords(e.clientX, e.clientY);
+    if (!c) return;
+    const newPoints = [...points, c];
+    setPoints(newPoints);
+    setSelectedIndex(newPoints.length - 1);
   };
 
   useEffect(() => {
@@ -135,7 +129,7 @@ const ROIEditorOverlay = ({ node, nodesData, onClose }: any) => {
         <div className="p-3 bg-blue-500/20 rounded-2xl text-blue-400 shadow-2xl shadow-blue-500/20"><Scaling size={28} /></div>
         <div>
           <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">
-            {node.type === 'sci_interactive_calibration' ? 'VISUAL CALIBRATION' : 'ROI POLYGON'}
+            {node.type === 'sci_interactive_calibration' ? 'VISUAL CALIBRATION' : 'MASK POLYGON'}
           </h2>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-50 mt-1">
             {node.type === 'sci_interactive_calibration' ? 'Define a known distance by drawing a line' : 'Fullscreen Spatial Editor · Precision Masking'}
@@ -228,7 +222,7 @@ const ROIEditorOverlay = ({ node, nodesData, onClose }: any) => {
       <div className="p-8 w-full flex flex-col items-center gap-6 bg-gradient-to-t from-black/80 to-transparent">
         <div className="flex items-center gap-6 px-8 py-4 bg-white/5 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400">
-            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20">SHIFT+CLIC</span><span>ADD</span>
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg border border-blue-500/20">CLIC</span><span>ADD</span>
           </div>
           <div className="w-px h-4 bg-white/10" />
           <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-400">
@@ -249,7 +243,7 @@ const ROIEditorOverlay = ({ node, nodesData, onClose }: any) => {
           <button onClick={() => setPoints([])} className="px-10 py-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-all active:scale-95">Clear All</button>
           <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} className="px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-all active:scale-95">Reset View</button>
           <button onClick={save} className="px-20 py-4 bg-blue-600 hover:bg-blue-500 shadow-2xl shadow-blue-500/40 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white transition-all scale-110 hover:scale-115 active:scale-95 border border-white/10">
-            {node.type === 'sci_interactive_calibration' ? 'Save Calibration' : 'Apply ROI'}
+            {node.type === 'sci_interactive_calibration' ? 'Save Calibration' : 'Apply Mask'}
           </button>
         </div>
       </div>

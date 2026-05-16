@@ -16,7 +16,7 @@ def _parse_hex(s, fallback=(0, 212, 170)):
 @vision_node(
     type_id='sci_matrix_dist',
     label='Matrix Distribution',
-    category=['visualize', 'analytics'],
+    category='measure',
     icon='BarChart',
     description="Histogram and distribution analysis of float matrix data.",
     inputs=[{'id': 'data', 'color': 'any'}],

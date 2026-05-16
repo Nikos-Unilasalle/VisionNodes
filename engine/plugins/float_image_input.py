@@ -12,7 +12,7 @@ except ImportError:
 @vision_node(
     type_id='input_float_image',
     label='Float Image',
-    category='src',
+    category='input',
     icon='FileImage',
     description="Loads float32/uint16 scientific images (TIFF, NDVI, HDR, etc.) and normalizes to 8-bit for processing. Supports min-max stretch, percentile clipping, and fixed range.",
     inputs=[],

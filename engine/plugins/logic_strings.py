@@ -1,7 +1,7 @@
 from registry import vision_node, NodeProcessor
 import re as _re
 
-@vision_node(type_id='string_concat', label='String: Concat', category='strings', icon='PlusSquare',
+@vision_node(type_id='string_concat', label='String: Concat', category='text', icon='PlusSquare',
              inputs=[{'id': 'a', 'color': 'string'}, {'id': 'b', 'color': 'string'}, {'id': 'list_in', 'color': 'list', 'label': 'List'}],
              outputs=[{'id': 'result', 'color': 'string'}],
              params=[{'id': 'separator', 'label': 'Separator', 'type': 'string', 'default': ''}])
@@ -15,7 +15,7 @@ class StringConcatNode(NodeProcessor):
         b = str(inputs.get('b', '') or '')
         return {'result': f"{a}{sep}{b}"}
 
-@vision_node(type_id='string_split', label='String: Split', category='strings', icon='Scissors', 
+@vision_node(type_id='string_split', label='String: Split', category='text', icon='Scissors', 
              inputs=[{'id': 'string', 'color': 'string'}],
              outputs=[{'id': 'list', 'color': 'list'}, {'id': 'first', 'color': 'string'}],
              params=[{'id': 'separator', 'label': 'Separator', 'type': 'string', 'default': ' '}])
@@ -26,7 +26,7 @@ class StringSplitNode(NodeProcessor):
         parts = s.split(sep) if sep else list(s)
         return {'list': parts, 'first': parts[0] if parts else ''}
 
-@vision_node(type_id='string_length', label='String: Length', category='strings', icon='Hash', 
+@vision_node(type_id='string_length', label='String: Length', category='text', icon='Hash', 
              inputs=[{'id': 'string', 'color': 'string'}],
              outputs=[{'id': 'length', 'color': 'scalar'}])
 class StringLengthNode(NodeProcessor):
@@ -34,7 +34,7 @@ class StringLengthNode(NodeProcessor):
         s = str(inputs.get('string', ''))
         return {'length': float(len(s))}
 
-@vision_node(type_id='string_case', label='String: Case', category='strings', icon='Type', 
+@vision_node(type_id='string_case', label='String: Case', category='text', icon='Type', 
              inputs=[{'id': 'string', 'color': 'string'}],
              outputs=[{'id': 'result', 'color': 'string'}],
              params=[{'id': 'mode', 'label': 'Mode', 'type': 'enum', 'options': ['UPPER', 'lower'], 'default': 0}])
@@ -45,7 +45,7 @@ class StringCaseNode(NodeProcessor):
         res = s.upper() if mode == 0 else s.lower()
         return {'result': res}
 
-@vision_node(type_id='string_replace', label='String: Replace', category='strings', icon='Replace',
+@vision_node(type_id='string_replace', label='String: Replace', category='text', icon='Replace',
              inputs=[{'id': 'string', 'color': 'string'}],
              outputs=[{'id': 'result', 'color': 'string'}],
              params=[
@@ -74,7 +74,7 @@ class StringReplaceNode(NodeProcessor):
         return {'result': result}
 
 
-@vision_node(type_id='string_input', label='String: Input', category='strings', icon='Keyboard',
+@vision_node(type_id='string_input', label='String: Input', category='text', icon='Keyboard',
              outputs=[{'id': 'result', 'color': 'string'}],
              params=[{'id': 'value', 'label': 'Text', 'type': 'string', 'default': 'Hello'}])
 class StringInputNode(NodeProcessor):

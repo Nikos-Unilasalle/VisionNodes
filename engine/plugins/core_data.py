@@ -3,7 +3,7 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id="data_list_selector",
     label="List Selector",
-    category='util',
+    category='utility',
     icon="List",
     description="Extracts a specific item from a list by its index.",
     inputs=[{"id": "list", "color": "list"}],
@@ -24,7 +24,7 @@ class ListSelectorNode(NodeProcessor):
     category="data",
     icon="Box",
     description="Splits a coordinate dictionary into 4 scalar values.",
-    inputs=[{"id": "data", "color": "any"}],
+    inputs=[{"id": "data", "color": "coords"}],
     outputs=[
         {"id": "x", "color": "scalar"},
         {"id": "y", "color": "scalar"},
@@ -50,7 +50,7 @@ class CoordSplitterNode(NodeProcessor):
         {"id": "w", "color": "scalar"},
         {"id": "h", "color": "scalar"}
     ],
-    outputs=[{"id": "dict_out", "color": "any"}]
+    outputs=[{"id": "dict_out", "color": "coords"}]
 )
 class CoordCombineNode(NodeProcessor):
     def process(self, inputs, params):

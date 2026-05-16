@@ -38,7 +38,7 @@ def download_east_model():
 @vision_node(
     type_id="ocr_east_detect",
     label="Text Detector (EAST)",
-    category='ocr',
+    category='text',
     icon="Type",
     description="Locates text regions in images using the EAST Deep Learning model. Supports rotated text.",
     inputs=[{"id": "image", "color": "image"}],
@@ -168,7 +168,7 @@ def _deskew_crop(img, box):
 @vision_node(
     type_id="ocr_tesseract",
     label="OCR (Tesseract)",
-    category='ocr',
+    category='text',
     icon="Type",
     description="Extracts text from an image region using Tesseract OCR. Deskews rotated crops automatically.",
     inputs=[{"id": "image", "color": "image"}, {"id": "box", "color": "dict"}],

@@ -37,7 +37,7 @@ def _load_image_robust(path):
 @vision_node(
     type_id="input_webcam",
     label="Webcam",
-    category='src',
+    category='input',
     icon="Camera",
     description="Captures live video feed from your system camera.",
     inputs=[],
@@ -80,7 +80,7 @@ class WebcamInput(NodeProcessor):
 @vision_node(
     type_id="input_image",
     label="Image File",
-    category='src',
+    category='input',
     icon="Image",
     description="Loads a static image from your local drive.",
     inputs=[],
@@ -119,7 +119,7 @@ class ImageInput(NodeProcessor):
 @vision_node(
     type_id="input_movie",
     label="Movie File",
-    category='src',
+    category='input',
     icon="Film",
     description="Plays a video file with playback and scrubbing controls.",
     inputs=[],
@@ -165,7 +165,7 @@ class MovieInput(NodeProcessor):
 @vision_node(
     type_id="input_solid_color",
     label="Solid Color",
-    category='src',
+    category='input',
     icon="Palette",
     description="Generates an image of a custom solid color.",
     inputs=[],

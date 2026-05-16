@@ -18,8 +18,8 @@ import torch
 
 @vision_node(
     type_id='sam_depth_guided',
-    label='SAM Depth-Guided',
-    category='analyze',
+    label='Depth-Guided Segmenter',
+    category='segmentation',
     icon='Fingerprint',
     description="Automatic stone/object segmentation using Depth Anything V2 to guide SAM 2. Finds the 'highest' points of objects and prompts SAM to segment them.",
     inputs=[

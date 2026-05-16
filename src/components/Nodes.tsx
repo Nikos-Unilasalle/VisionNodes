@@ -23,7 +23,7 @@ import {
   ComposedChart,
 } from 'recharts';
 
-export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8' };
+export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8', markers: '#f59e0b', regions: '#2dd4bf', contours: '#a3e635', coords: '#fb7185', points: '#e879f9', vectors: '#38bdf8' };
 
 const NodeColorContext = React.createContext<{ customBg?: string; customText?: string }>({});
 export const useNodeColor = () => React.useContext(NodeColorContext);
@@ -914,13 +914,13 @@ export const VisualSizeGateNode = memo(({ selected, data }: any) => {
       icon={RulerIcon}
       selected={selected}
       data={data}
-      color="yellow"
-      inputs={[{ id: 'markers', color: 'any', label: 'Labels' }, { id: 'image', color: 'image' }]}
+      color="indigo"
+      inputs={[{ id: 'markers', color: 'markers', label: 'Labels' }, { id: 'image', color: 'image' }]}
       outputs={[
-        { id: 'mask_kept',    color: 'mask',   label: 'Kept Mask' },
-        { id: 'mask_rej',     color: 'mask',   label: 'Rej Mask' },
-        { id: 'markers_out',  color: 'any',    label: 'Kept Labels' },
-        { id: 'markers_rej',  color: 'any',    label: 'Rej Labels' },
+        { id: 'mask_kept',    color: 'mask',    label: 'Kept Mask' },
+        { id: 'mask_rej',     color: 'mask',    label: 'Rej Mask' },
+        { id: 'markers_out',  color: 'markers', label: 'Kept Labels' },
+        { id: 'markers_rej',  color: 'markers', label: 'Rej Labels' },
         { id: 'main',         color: 'image',  label: 'Preview' },
         { id: 'count',        color: 'scalar', label: 'Count' },
         { id: 'ref_area',     color: 'scalar', label: 'Ref px²' },
@@ -940,24 +940,24 @@ export const VisualSizeGateNode = memo(({ selected, data }: any) => {
               <line
                 x1={`${pts[0].x * 100}%`} y1={`${pts[0].y * 100}%`}
                 x2={`${pts[1].x * 100}%`} y2={`${pts[1].y * 100}%`}
-                stroke="#facc15" strokeWidth={2} strokeDasharray="4 2"
+                stroke="#3b82f6" strokeWidth={2} strokeDasharray="4 2"
               />
             )}
             {pts.slice(0, 2).map((p: any, i: number) => (
-              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} fill="#facc15" stroke="white" strokeWidth={1.5} />
+              <circle key={i} cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={4} fill="#3b82f6" stroke="white" strokeWidth={1.5} />
             ))}
           </svg>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/sg:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
             <button
               onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
-              className="bg-yellow-600 hover:bg-yellow-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2"
             >
               <RulerIcon size={12} /> Draw Line
             </button>
           </div>
         </div>
         <div className="flex items-center justify-between px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 text-[10px] font-mono">
-          <span className="text-yellow-400/70">ref {nd?.ref_area != null ? `${nd.ref_area}` : '—'}</span>
+          <span className="text-blue-400/70">ref {nd?.ref_area != null ? `${nd.ref_area}` : '—'}</span>
           <span className="text-orange-400/70">med {nd?.median_area != null ? `${Math.round(nd.median_area)}` : '—'}</span>
           <span className="text-white/50">n={nd?.count ?? '—'}</span>
         </div>

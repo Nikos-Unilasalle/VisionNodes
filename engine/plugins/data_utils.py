@@ -4,7 +4,7 @@ from registry import NodeProcessor, vision_node
 @vision_node(
     type_id="util_landmark_selector",
     label="Landmark Selector",
-    category='detect',
+    category='analysis',
     icon="Target",
     description="Selects specific points from a landmark list (e.g., torso from pose).",
     inputs=[{"id": "data", "color": "dict"}],
@@ -58,7 +58,7 @@ class LandmarkSelectorNode(NodeProcessor):
 @vision_node(
     type_id="data_coord_splitter",
     label="Coord Splitter",
-    category='util',
+    category='data',
     icon="Database",
     description="Extracts the first two numeric values from a dictionary (e.g., x, y).",
     inputs=[{"id": "dict_in", "color": "dict"}],
@@ -82,7 +82,7 @@ class CoordSplitterNode(NodeProcessor):
 @vision_node(
     type_id="util_dict_merge",
     label="Merge Dicts",
-    category='util',
+    category='utility',
     icon="PlusSquare",
     description="Combines multiple dictionaries into a single one. Useful for combining statistics from different sources into one report.",
     inputs=[

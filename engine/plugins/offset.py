@@ -5,7 +5,7 @@ import numpy as np
 @vision_node(
     type_id='plugin_offset',
     label='Offset Shift',
-    category='geom',
+    category='geometry',
     icon='Move',
     description="Shifts the image horizontally or vertically with wrapping.",
     inputs=[{'id': 'image', 'color': 'image'}],

@@ -30,7 +30,7 @@ _builtins_src = __builtins__ if isinstance(__builtins__, dict) else vars(__built
 _SAFE_BUILTINS = {k: v for k, v in _builtins_src.items() if k in _ALLOWED}
 _SAFE_BUILTINS['__import__'] = _safe_import
 
-@vision_node(type_id='logic_python', label='Python Node', category='logic', icon='Zap', 
+@vision_node(type_id='logic_python', label='Python Node', category='utility', icon='Zap', 
              inputs=[
                  {'id': 'a', 'color': 'any'}, 
                  {'id': 'b', 'color': 'any'}, 
