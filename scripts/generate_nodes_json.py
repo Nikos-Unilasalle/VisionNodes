@@ -98,6 +98,7 @@ def group_by_category(nodes, ts_path):
     # Now build the final grouped structure
     # Map nodes by type for quick lookup
     node_map = { n["type"]: n for n in nodes if "type" in n }
+    seen_types = set()
     
     sorted_cats = []
     
@@ -110,9 +111,11 @@ def group_by_category(nodes, ts_path):
         
         for n_info in cat["nodes"]:
             t = n_info["type"]
-            if t in node_map:
+            if t in node_map and t not in seen_types:
+                seen_types.add(t)
                 node_data = node_map[t].copy()
-                # Override label and description with the TS ones for perfect consistency
+                # Override label, description and CATEGORY with the TS ones for perfect consistency
+                node_data["category"] = cat["id"]
                 if n_info["ts_label"]:
                     node_data["label"] = n_info["ts_label"]
                 if n_info["ts_desc"]:
