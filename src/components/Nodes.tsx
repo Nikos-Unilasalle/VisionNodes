@@ -3599,7 +3599,8 @@ export const AudioPlaybackNode = memo(({ selected, data }: any) => {
 });
 
 export const ManualPointsNode = memo(({ selected, data }: any) => {
-  const frame = useNodeData(useNodeId())?.main_preview;
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview || nd?.main;
   const onOpenEditor = data.onOpenEditor;
   const imgRef = React.useRef<HTMLImageElement>(null);
 
@@ -3652,15 +3653,14 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
           </svg>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/pts:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
             <button onClick={(e) => { e.stopPropagation(); onOpenEditor?.(); }}
-              className="bg-accent hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              className="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
               <Crosshair size={12} /> Edit Points
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest">
-            {points.filter(p => p.label === 1).length} FG · {points.filter(p => p.label === 0).length} BG
-          </div>
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/20 rounded-lg border border-white/5 text-[10px] font-mono">
+          <span className="text-green-400/70">{points.filter(p => p.label === 1).length} FG</span>
+          <span className="text-red-400/70">{points.filter(p => p.label === 0).length} BG</span>
         </div>
       </div>
     </BaseNode>

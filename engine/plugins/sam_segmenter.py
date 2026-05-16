@@ -212,26 +212,33 @@ class SAMSegmenterNode(NodeProcessor):
 
         return np.array([x_min, y_min, x_max, y_max])
 
+    def _status_overlay(self, image, text, color=(255, 200, 50)):
+        """Draw a status banner on a copy of the image."""
+        if image is None:
+            return None
+        out = image.copy()
+        cv2.rectangle(out, (0, 0), (out.shape[1], 36), (20, 20, 20), -1)
+        cv2.putText(out, text, (10, 24), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.65, color, 1, cv2.LINE_AA)
+        return out
+
     def process(self, inputs, params):
         image = inputs.get('image')
-        empty = {
-            'main': image, 
-            'mask': None, 
-            'count': 0, 
-            'areas': [], 
-            'centroids': [], 
-            'contours': []
-        }
+
+        def empty(msg=None, color=(255, 200, 50)):
+            main = self._status_overlay(image, msg, color) if msg and image is not None else image
+            return {'main': main, 'mask': None, 'count': 0,
+                    'areas': [], 'centroids': [], 'contours': []}
 
         if image is None:
-            return empty
+            return empty()
 
         if not SAM2_AVAILABLE:
             send_notification(
                 'SAM: sam2 package not installed. Run: pip install git+https://github.com/facebookresearch/sam2.git',
                 level='error', notif_id=_NOTIF_ID
             )
-            return empty
+            return empty('SAM2 not installed — pip install sam2', color=(60, 60, 255))
 
         hf_token = params.get('hf_token', '')
 
@@ -269,7 +276,9 @@ class SAMSegmenterNode(NodeProcessor):
 
         # Check if we need a different model
         if model_name != self.current_model_name:
-            if not self._loading and model_name not in self._failed:
+            if model_name in self._failed:
+                return empty(f'SAM load failed: {model_name} — check HF token', color=(60, 60, 255))
+            if not self._loading:
                 self._loading = True
                 self.predictor = None
                 threading.Thread(
@@ -277,10 +286,10 @@ class SAMSegmenterNode(NodeProcessor):
                     args=(model_name,),
                     daemon=True
                 ).start()
-            return empty
+            return empty(f'Loading {model_name}…  (first run downloads model)')
 
         if self.predictor is None:
-            return empty
+            return empty(f'Loading {model_name}…')
 
         h, w = image.shape[:2]
 
@@ -428,15 +437,25 @@ class SAMSegmenterNode(NodeProcessor):
                 'multimask_output': multimask,
             }
 
+            # Auto-detect mode if the selected input port is empty
+            box_input  = inputs.get('box')
+            pts_input  = inputs.get('points')
+            has_box    = isinstance(box_input, dict)
+            has_points = isinstance(pts_input, list) and len(pts_input) > 0
+
+            if prompt_mode == 0 and not has_box and has_points:
+                prompt_mode = 1   # fall through to points
+            elif prompt_mode == 1 and not has_points and has_box:
+                prompt_mode = 0   # fall through to box
+
             if prompt_mode == 0:
                 # Box from input port
-                box_input = inputs.get('box')
-                if box_input is None or not isinstance(box_input, dict):
+                if not has_box:
                     self.report_progress(1.0, 'SAM: No box input connected')
-                    return empty
+                    return empty('No box connected — set Prompt Mode to Points')
                 bbox = self._get_bbox_from_dict(box_input, h, w)
                 if bbox is None:
-                    return empty
+                    return empty('Invalid box input')
                 predict_kwargs['box'] = bbox[None, :]
 
             elif prompt_mode == 1:
@@ -444,8 +463,8 @@ class SAMSegmenterNode(NodeProcessor):
                 pts_list = inputs.get('points')
                 if not pts_list or not isinstance(pts_list, list):
                     self.report_progress(1.0, 'SAM: No points list connected')
-                    return empty
-                
+                    return empty('No points connected — connect Manual Points → POINTS')
+
                 coords = []
                 labels = []
                 for p in pts_list:
@@ -453,21 +472,20 @@ class SAMSegmenterNode(NodeProcessor):
                         coords.append([p['x'] * w, p['y'] * h])
                         labels.append(p.get('label', 1))
                     elif isinstance(p, (list, tuple)) and len(p) >= 2:
-                        # Fallback for simple [x, y] lists (assume foreground)
                         if p[0] <= 1.0 and p[1] <= 1.0:
                             coords.append([p[0] * w, p[1] * h])
                         else:
                             coords.append([p[0], p[1]])
                         labels.append(1)
-                
+
                 if not coords:
-                    return empty
-                
+                    return empty('Points list empty — click on Manual Points to add points')
+
                 predict_kwargs['point_coords'] = np.array(coords)
                 predict_kwargs['point_labels'] = np.array(labels)
-            
+
             else:
-                return empty
+                return empty('Unknown prompt mode')
 
             with torch.inference_mode():
                 if self.device == 'cuda':
@@ -483,7 +501,7 @@ class SAMSegmenterNode(NodeProcessor):
                 level='error', notif_id=_NOTIF_ID
             )
             self.report_progress(1.0, 'SAM: Error')
-            return {'main': image, 'mask': None, 'count': 0, 'areas': [], 'centroids': [], 'contours': []}
+            return empty(f'SAM error: {str(e)[:80]}', color=(60, 60, 255))
 
         # ── 5. Select mask ──
         mask_select = int(params.get('mask_select', 0))
