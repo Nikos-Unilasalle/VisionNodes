@@ -3600,34 +3600,41 @@ export const AudioPlaybackNode = memo(({ selected, data }: any) => {
 export const HemogrammeNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
-  
-  // Try multiple sources for data
+
   const rbc = nd?.rbc_count ?? nd?.stats?.rbc ?? 0;
   const wbc = nd?.wbc_count ?? nd?.stats?.wbc ?? 0;
   const plt = nd?.plt_count ?? nd?.stats?.plt ?? 0;
-  
-  // For percentages, we can also parse the report if stats is missing
-  let neu = nd?.stats?.neu || '0.0';
-  let lym = nd?.stats?.lym || '0.0';
-  let mon = nd?.stats?.mon || '0.0';
-  
-  if (nd?.report && (neu === '0.0' && lym === '0.0' && mon === '0.0')) {
-    const report = String(nd.report);
-    const nMatch = report.match(/Neutrophils:\s+\d+\s+\((\d+\.\d+)%\)/);
-    const lMatch = report.match(/Lymphocytes:\s+\d+\s+\((\d+\.\d+)%\)/);
-    const mMatch = report.match(/Monocytes:\s+\d+\s+\((\d+\.\d+)%\)/);
-    if (nMatch) neu = nMatch[1];
-    if (lMatch) lym = lMatch[1];
-    if (mMatch) mon = mMatch[1];
-  }
-  
+
+  const neu = nd?.stats?.neu || '0.0';
+  const lym = nd?.stats?.lym || '0.0';
+  const mon = nd?.stats?.mon || '0.0';
+
+  const diamUm  = parseFloat(nd?.stats?.rbc_diam_um ?? 0);
+  const areaUm  = parseFloat(nd?.stats?.rbc_area_um ?? 0);
+  const cvDiam  = parseFloat(nd?.stats?.rbc_cv      ?? 0);
+
+  const diamColor  = diamUm === 0 ? 'text-gray-600'
+    : diamUm < 5.5 ? 'text-orange-400' : diamUm > 8.5 ? 'text-red-400' : 'text-sky-400';
+  const cvColor    = cvDiam === 0 ? 'text-gray-600'
+    : cvDiam > 25 ? 'text-red-400' : cvDiam > 15 ? 'text-orange-400' : 'text-emerald-400';
+
+  // Extract interpretation lines from the report
+  const interpretation: string[] = React.useMemo(() => {
+    if (!nd?.report) return [];
+    const match = String(nd.report).match(/INTERPRETATION:\n([\s\S]*)/);
+    if (!match) return [];
+    return match[1].trim().split('\n').filter(l => l.trim().length > 0).slice(0, 4);
+  }, [nd?.report]);
+
   return (
     <BaseNode title="Hemogramme" icon={FileText} selected={selected} data={data} color="rose"
-      width={280}
+      width={380}
       inputs={data.schema?.inputs}
       outputs={data.schema?.outputs}
     >
-      <div className="flex flex-col gap-3 px-8 py-2 nodrag">
+      <div className="flex flex-col gap-2.5 px-10 py-2 nodrag">
+
+        {/* ── Counts ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-1.5">
           <div className="bg-black/40 rounded-xl p-2 flex flex-col items-center border border-white/5 shadow-inner">
             <span className="text-[7px] text-rose-500/70 uppercase font-black tracking-tighter">RBC</span>
@@ -3642,27 +3649,77 @@ export const HemogrammeNode = memo(({ selected, data }: any) => {
             <span className="text-sm font-black font-mono text-purple-400">{plt}</span>
           </div>
         </div>
-        
-        <div className="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col gap-2 shadow-inner">
-           <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5 pb-1.5">
-             <span>Differential</span>
-             <span className="text-[7px] opacity-40 font-mono">%</span>
-           </div>
-           <div className="flex flex-col gap-1.5">
-             <div className="flex items-center justify-between font-mono">
-               <span className="text-[10px] text-gray-400 font-medium">Neutrophils</span>
-               <span className="text-[11px] text-blue-400 font-black">{neu}</span>
-             </div>
-             <div className="flex items-center justify-between font-mono">
-               <span className="text-[10px] text-gray-400 font-medium">Lymphocytes</span>
-               <span className="text-[11px] text-cyan-400 font-black">{lym}</span>
-             </div>
-             <div className="flex items-center justify-between font-mono">
-               <span className="text-[10px] text-gray-400 font-medium">Monocytes</span>
-               <span className="text-[11px] text-emerald-400 font-black">{mon}</span>
-             </div>
-           </div>
+
+        {/* ── RBC Morphometry ────────────────────────────────────────── */}
+        <div className="bg-black/40 rounded-xl p-2.5 border border-white/5 shadow-inner">
+          <div className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5 pb-1.5 mb-2">
+            RBC Morphometry
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 text-center">
+            <div>
+              <div className="text-[7px] text-gray-600 uppercase tracking-wide">Mean Ø</div>
+              <div className={`text-[11px] font-black font-mono ${diamColor}`}>
+                {diamUm > 0 ? `${diamUm.toFixed(2)}` : '—'} <span className="text-[8px] font-normal opacity-60">µm</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-[7px] text-gray-600 uppercase tracking-wide">Area</div>
+              <div className="text-[11px] font-black font-mono text-sky-400">
+                {areaUm > 0 ? `${areaUm.toFixed(1)}` : '—'} <span className="text-[8px] font-normal opacity-60">µm²</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-[7px] text-gray-600 uppercase tracking-wide">Aniso CV</div>
+              <div className={`text-[11px] font-black font-mono ${cvColor}`}>
+                {cvDiam > 0 ? `${cvDiam.toFixed(1)}` : '—'} <span className="text-[8px] font-normal opacity-60">%</span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* ── WBC Differential ──────────────────────────────────────── */}
+        <div className="bg-black/40 rounded-xl p-2.5 border border-white/5 shadow-inner">
+          <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-[0.2em] text-gray-500 border-b border-white/5 pb-1.5 mb-2">
+            <span>Differential</span>
+            <span className="opacity-40 font-mono">%</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {([
+              ['Neutrophils',  neu, 'text-blue-400'],
+              ['Lymphocytes',  lym, 'text-cyan-400'],
+              ['Monocytes',    mon, 'text-emerald-400'],
+            ] as const).map(([label, val, cls]) => (
+              <div key={label} className="flex items-center justify-between font-mono">
+                <span className="text-[10px] text-gray-400">{label}</span>
+                <div className="flex items-center gap-1">
+                  <div className="h-1 rounded-full bg-white/5 w-16 overflow-hidden">
+                    <div className={`h-full rounded-full opacity-60 ${cls.replace('text-', 'bg-')}`}
+                         style={{ width: `${Math.min(100, parseFloat(val))}%` }} />
+                  </div>
+                  <span className={`text-[11px] font-black w-8 text-right ${cls}`}>{val}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Interpretation ────────────────────────────────────────── */}
+        {interpretation.length > 0 && (
+          <div className="bg-black/30 rounded-xl p-2.5 border border-amber-500/10 shadow-inner">
+            <div className="text-[8px] font-black uppercase tracking-[0.2em] text-amber-500/60 border-b border-white/5 pb-1.5 mb-2">
+              Interpretation
+            </div>
+            <div className="flex flex-col gap-1">
+              {interpretation.map((line, i) => (
+                <div key={i} className="flex items-start gap-1.5">
+                  <span className="text-amber-500/40 text-[8px] mt-0.5">›</span>
+                  <span className="text-[9px] text-gray-400 leading-tight">{line}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </BaseNode>
   );
