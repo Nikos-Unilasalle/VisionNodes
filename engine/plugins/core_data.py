@@ -6,17 +6,17 @@ from registry import vision_node, NodeProcessor
     category='utility',
     icon="List",
     description="Extracts a specific item from a list by its index.",
-    inputs=[{"id": "list", "color": "list"}],
-    outputs=[{"id": "item", "color": "any"}],
+    inputs=[{"id": "list_in", "color": "list"}],
+    outputs=[{"id": "item_out", "color": "any"}],
     params=[{"id": "index", "label": "Index", "type": "int", "default": 0}]
 )
 class ListSelectorNode(NodeProcessor):
     def process(self, inputs, params):
-        lst = inputs.get('list')
-        if not lst or not isinstance(lst, list): return {"item": None}
+        lst = inputs.get('list_in') or inputs.get('list')
+        if not lst or not isinstance(lst, list): return {"item_out": None}
         idx = int(params.get('index', 0))
-        if 0 <= idx < len(lst): return {"item": lst[idx]}
-        return {"item": None}
+        if 0 <= idx < len(lst): return {"item_out": lst[idx]}
+        return {"item_out": None}
 
 @vision_node(
     type_id="data_coord_splitter",

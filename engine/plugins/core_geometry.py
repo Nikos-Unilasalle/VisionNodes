@@ -42,7 +42,9 @@ class ResizeNode(NodeProcessor):
                   cv2.INTER_CUBIC, cv2.INTER_LANCZOS4, cv2.INTER_AREA]
 
     def process(self, inputs, params):
-        img = inputs.get('image') or inputs.get('main')
+        img = inputs.get('image')
+        if img is None:
+            img = inputs.get('main')
         if img is None: return {"main": None, "width": 0, "height": 0}
         ih, iw = img.shape[:2]
         mode = int(params.get('mode', 0))

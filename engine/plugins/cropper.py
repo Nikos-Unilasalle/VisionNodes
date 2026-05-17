@@ -10,7 +10,7 @@ import numpy as np
     description="Crops a rectangular area from the image using detection coordinates.",
     inputs=[
         {'id': 'image', 'color': 'image'},
-        {'id': 'data', 'color': 'any'}
+        {'id': 'data', 'color': 'dict'}
     ],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[

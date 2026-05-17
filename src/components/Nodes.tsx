@@ -1152,6 +1152,47 @@ export const CropRectNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const AnnotatorNode = memo(({ selected, data }: any) => {
+  const frame = useNodeData(useNodeId())?.main_preview;
+  const onOpenEditor = data.onOpenEditor;
+  let annotCount = 0;
+  try { annotCount = JSON.parse(data.params?.annotations || '[]').length; } catch {}
+
+  return (
+    <BaseNode title="Annotator" icon={PenTool} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'image', color: 'image' }]}
+      outputs={[{ id: 'main', color: 'image' }]}
+    >
+      <div className="flex flex-col gap-3 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/ann shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block" alt="Annotator Preview" draggable={false} />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <PenTool size={24} className="opacity-10" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/ann:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <PenTool size={12} /> Annoter
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
+            {annotCount} annotation{annotCount !== 1 ? 's' : ''}
+          </div>
+          <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="text-[8px] font-black text-violet-400 uppercase tracking-widest hover:underline">
+            Annoter
+          </button>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const DrawOverlayNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId()!;
   const updateNodeInternals = useUpdateNodeInternals();

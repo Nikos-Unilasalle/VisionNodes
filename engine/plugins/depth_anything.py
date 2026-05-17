@@ -115,10 +115,10 @@ class DepthAnythingNode(NodeProcessor):
 
         if not TRANSFORMERS_AVAILABLE:
             send_notification(
-                'Depth: transformers/timm not installed.',
+                'Depth: pip install transformers timm',
                 level='error', notif_id=_NOTIF_ID
             )
-            return {}
+            return {'depth': image, 'overlay': image}
 
         # ── 1. Model Loading ──
         model_idx = int(params.get('model', 0))
