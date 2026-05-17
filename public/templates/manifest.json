@@ -1,31 +1,132 @@
 [
-  { "name": "OCR Scanner (EasyOCR)",            "description": "Détecte et lit le texte avec EasyOCR, joint les fragments, isole les zones par contour + remplissage, compose un rendu coloré avec le texte reconnu en overlay.", "file": "ocr_scanner.vn" },
-  { "name": "Movement Analysis (MOG2)",          "description": "Détecte les objets en mouvement par soustraction de fond et identifie leurs contours.",                                                                             "file": "movement_analysis.vn" },
-  { "name": "Harris Corner Detection",           "description": "Détecte les coins d'une image avec l'opérateur Harris.",                                                                                                            "file": "harris_corner.vn" },
-  { "name": "Smile Detector",                    "description": "Détecte les sourires via MediaPipe (distance coins de bouche), collecte les frames et exporte en CSV.",                                                             "file": "smile_detector.vn" },
-  { "name": "YOLO Object Detection",             "description": "Détection d'objets sur une image statique avec YOLOv11. Affiche les boîtes englobantes, le compte total et la liste des objets détectés.",                         "file": "yolo_detection.vn" },
-  { "name": "SORT Multi-Object Tracking",        "description": "Suivi multi-objets en temps réel : YOLO détecte les objets, SORT leur assigne un ID persistant avec Kalman Filter + algorithme hongrois.",                         "file": "sort_tracking.vn" },
-  { "name": "DeepSORT Multi-Object Tracking",    "description": "Suivi multi-objets avec réidentification visuelle : YOLO + DeepSORT (Kalman + CNN embeddings) pour des IDs plus stables même après occultation.",                 "file": "deepsort_tracking.vn" },
-  { "name": "Galets Segmenter",                  "description": "Segmente chaque galet avec watershed : seuillage Otsu, nettoyage morphologique, transform distance, filtrage des marqueurs par aire et analyse.",                  "file": "galets_segmenter.vn" },
-  { "name": "Interactive Magic Painter",         "description": "Dessine à l'écran avec les landmarks de la main (Hand Tracker).",                                                                                                   "file": "magic_painter.vn" },
-  { "name": "Ghost Motion Trail",                "description": "Crée un trail artistique en mélangeant le fond en mouvement dans le temps.",                                                                                        "file": "ghost_motion.vn" },
-  { "name": "Feature Matching (ORB)",            "description": "Compare deux images et trouve des similitudes avec les keypoints ORB et un matcher Brute-Force.",                                                                   "file": "feature_matching.vn" },
-  { "name": "Warp Affine: Animated Transform",   "description": "Un Python Node calcule une matrice affine 2x3 animée (rotation + zoom oscillant). Warp Affine l'applique.",                                                        "file": "warp_affine.vn" },
-  { "name": "Python: Image Stats",               "description": "Script Python personnalisé pour inverser l'image et calculer sa luminosité moyenne.",                                                                               "file": "python_stats.vn" },
-  { "name": "Sprint Race Tracker",               "description": "Détecte et suit chaque coureur avec SORT sur une vidéo de sprint. Chaque athlète reçoit un ID unique persistant.",                                                 "file": "sprint_tracker.vn" },
-  { "name": "EVM Pulse Detector (Wu et al. 2012)", "description": "Eulerian Video Magnification — détecte le pouls par amplification des variations de couleur (Cr/Cb) du visage.",                                               "file": "evm_pulse.vn" },
-  { "name": "Gaze & Head Pose Analyzer",           "description": "Combines Head Pose (solvePnP) and ETH-XGaze gaze estimation. Face Tracker feeds landmarks to Head Pose, which draws 3D axes on the face. Gaze Estimator overlays the gaze direction arrow. Live plots show gaze yaw and pitch in real time.", "file": "gaze_head_pose.vn" },
-  { "name": "Region Props & Population Analysis",   "description": "Segmente les billes (Otsu + morphologie), extrait les propriétés de forme par région (aire, circularité, solidité, excentricité, intensité) et visualise la population avec deux heatmaps fausses couleurs. Export CSV inclus.", "file": "region_props_analysis.vn" },
-  { "name": "Sediment Conductivity Analysis",        "description": "Analyse multi-couches de conductivité sédimentaire. Charge un CSV 5×100×100, visualise chaque couche avec Matrix Distribution, calcule des indices (ratio, différence) avec Geophysics Index, et produit des statistiques par bande. Le tout combiné en un composite final.", "file": "sediment_analysis.vn" },
-  { "name": "Root Anatomy Analysis",                 "description": "High-throughput phenotyping of root cross-sections. Segments RXSA, TSA, Cortex, Aerenchyma lacunae, Xylem vessels and cortical cells following the RootScan methodology.", "file": "root_anatomy_analysis.vn" },
-  { "name": "Thin Section Petrography",              "description": "Segments mineral grains from polarized light microscopy images (XPL + PPL). Detects opaque minerals, builds per-grain watershed markers, segments grains, and exports shape descriptors (area, circularity, aspect ratio, intensity) to CSV.", "file": "thin_section_petrography.vn" },
-  { "name": "IMU Phase Space (M5StickC Plus2)",        "description": "Visualise les données acceleromètre + gyroscope en espace de phase 2D. Dashboard 2×3 : Accel XY/XZ/YZ et Gyro XY/XZ/YZ avec traîne colorée et fadeout. Connecte via port série CSV.", "file": "imu_phase_space.vn" },
-  { "name": "Turbidité Marine Sentinel-2",             "description": "Pipeline complet de cartographie de la turbidité côtière. Charge les bandes S2 L2A (B03/B04/B08/B11), normalise en réflectance, calcule le masque eau MNDWI, corrige les reflets solaires (déglint NIR), puis applique le modèle bio-optique Nechad 2010 pour produire une carte NTU colorisée et un export GeoTIFF.", "file": "sentinel2_turbidity.vn" },
-  { "name": "Gaze Heatmap",                              "description": "Carte de chaleur cumulative du regard. Webcam → ETH-XGaze → Vec→Screen → heatmap accumulative (Jet). Calibration intégrée dans Vec→Screen.", "file": "gaze_heatmap.vn" },
-  { "name": "SAM 2: Interactive Segmentation",           "description": "Segmentation interactive haute précision propulsée par SAM 2 (Meta). Permet de détourer n'importe quel objet avec des points (Manual Points) ou des boîtes (YOLO/Crop).", "file": "sam_segmentation.vn" },
-  { "name": "Sphere Counting (Hough Circles)",          "description": "Workflow optimisé pour compter et visualiser des objets sphériques (billes, grains, cellules). Utilise un filtre bilatéral pour supprimer les reflets et CLAHE pour le contraste avant la détection.", "file": "sphere_counting_hough.vn" },
-  { "name": "Thin Section — Dual Mode XPL+PPL",         "description": "Analyse géologique avancée de lame mince en lumière croisée et naturelle. Phase 1 : identification modale par couleur sur LN (quartz, altération, opaques). Phase 2 : segmentation des grains par watershed sur XPL+PPL. Phase 3 : calibration µm/px sur barre d'échelle. Outputs : % modal par phase, taille/circularité/allongement des grains, histogramme granulométrique.", "file": "thin_section_dual_mode.vn" },
-  { "name": "Thin Section — Full Petrographic Pipeline", "description": "Pipeline complet d'analyse de lame mince (12 nodes, 29 connexions). PPL → segmentation couleur (phases modales) + séparateur SRC + comptage ponctuel. XPL+PPL → détection opaques + watershed grains + morphométrie + analyse de voisinage. Synthèse : Rapport pétrographique (1400×720px) + Table d'identification minérale (PPL/XPL/biréfringence). Connectez vos images PPL et XPL pour démarrer.", "file": "thin_section_analysis.vn" },
-  { "name": "FastSAM Grain Analysis (Petro)",            "description": "Segmentation automatique des grains pétrographiques via FastSAM fine-tuné (modèle GrainSight). Détecte chaque grain avec des masques colorés individuels et calcule les descripteurs de forme : aire, périmètre, rondeur, rapport d'aspect et diamètre de Feret. Calibration µm/px intégrée.", "file": "fastsam_grain_analysis.vn" },
-  { "name": "Hematology — Blood Cell Count (CBC)",       "description": "Pipeline vétérinaire de numération sanguine (CBC) en deux branches couleur parallèles. Branche rose (R−B) → GR par watershed + filtre taille. Branche violette (B·0.5+R·0.3−G·0.8) → GB par watershed + plaquettes par filtre taille directement. Chaque étape est exposée et paramétrable (12 nodes par branche, 42 connexions). Rapport CBC automatique (espèce, patient, interprétation).", "file": "hema_blood_analysis.vn" }
+  {
+    "name": "OCR Scanner (EasyOCR)",
+    "description": "Detects and reads text using EasyOCR, merges text fragments, isolates text regions using contours and filling, and overlays a colored rendering of the recognized text.",
+    "file": "ocr_scanner.vn"
+  },
+  {
+    "name": "Movement Analysis (MOG2)",
+    "description": "Detects moving objects using background subtraction (MOG2) and extracts their contours.",
+    "file": "movement_analysis.vn"
+  },
+  {
+    "name": "Harris Corner Detection",
+    "description": "Detects corner features in an image using the Harris corner detection operator.",
+    "file": "harris_corner.vn"
+  },
+  {
+    "name": "Smile Detector",
+    "description": "Detects smiles in real-time via MediaPipe by measuring mouth corner distance, records frame data, and exports results to CSV.",
+    "file": "smile_detector.vn"
+  },
+  {
+    "name": "YOLO Object Detection",
+    "description": "Object detection on static images using YOLOv11. Displays bounding boxes, object count, and a list of detected objects.",
+    "file": "yolo_detection.vn"
+  },
+  {
+    "name": "SORT Multi-Object Tracking",
+    "description": "Real-time multi-object tracking: YOLO detects objects while SORT assigns persistent IDs using a Kalman Filter and the Hungarian algorithm.",
+    "file": "sort_tracking.vn"
+  },
+  {
+    "name": "DeepSORT Multi-Object Tracking",
+    "description": "Multi-object tracking with visual re-identification: Combines YOLO and DeepSORT (Kalman filtering + CNN embeddings) for stable IDs even through temporary occlusions.",
+    "file": "deepsort_tracking.vn"
+  },
+  {
+    "name": "Pebble Segmenter",
+    "description": "Segments individual pebbles using a watershed algorithm: applies Otsu thresholding, morphological cleanup, distance transform, marker area filtering, and shape analysis.",
+    "file": "galets_segmenter.vn"
+  },
+  {
+    "name": "Interactive Magic Painter",
+    "description": "Draw on screen using hand landmarks tracked in real time.",
+    "file": "magic_painter.vn"
+  },
+  {
+    "name": "Ghost Motion Trail",
+    "description": "Creates an artistic motion trail by blending moving objects and background frames over time.",
+    "file": "ghost_motion.vn"
+  },
+  {
+    "name": "Feature Matching (ORB)",
+    "description": "Compares two images and identifies similarities using ORB keypoint detection and a Brute-Force matcher.",
+    "file": "feature_matching.vn"
+  },
+  {
+    "name": "Warp Affine: Animated Transform",
+    "description": "Applies an animated affine transformation (oscillating rotation and zoom) calculated dynamically by a Python node.",
+    "file": "warp_affine.vn"
+  },
+  {
+    "name": "Python: Image Stats",
+    "description": "A custom Python script node that inverts an image and computes its average brightness.",
+    "file": "python_stats.vn"
+  },
+  {
+    "name": "Sprint Race Tracker",
+    "description": "Detects and tracks runners in a sprint video using SORT, assigning a unique persistent ID to each athlete.",
+    "file": "sprint_tracker.vn"
+  },
+  {
+    "name": "EVM Pulse Detector (Wu et al. 2012)",
+    "description": "Eulerian Video Magnification (EVM) — detects heart rate by amplifying subtle color variations (Cr/Cb) in a face video.",
+    "file": "evm_pulse.vn"
+  },
+  {
+    "name": "Gaze & Head Pose Analyzer",
+    "description": "Combines Head Pose (solvePnP) and ETH-XGaze gaze estimation. Face Tracker feeds landmarks to Head Pose, which draws 3D axes on the face. Gaze Estimator overlays the gaze direction arrow. Live plots show gaze yaw and pitch in real time.",
+    "file": "gaze_head_pose.vn"
+  },
+  {
+    "name": "Region Props & Population Analysis",
+    "description": "Segments beads/particles using Otsu thresholding and morphological operations, extracts region properties (area, circularity, solidity, eccentricity, intensity), and visualizes the population using two false-color heatmaps. Includes CSV export.",
+    "file": "region_props_analysis.vn"
+  },
+  {
+    "name": "Sediment Conductivity Analysis",
+    "description": "Multi-layer analysis of sediment conductivity. Loads a 5×100×100 CSV grid, visualizes each layer with Matrix Distribution, computes custom indices (ratio, difference) using the Geophysics Index node, and calculates band statistics to produce a final composite map.",
+    "file": "sediment_analysis.vn"
+  },
+  {
+    "name": "Root Anatomy Analysis",
+    "description": "High-throughput phenotyping of root cross-sections. Segments RXSA, TSA, Cortex, Aerenchyma lacunae, Xylem vessels and cortical cells following the RootScan methodology.",
+    "file": "root_anatomy_analysis.vn"
+  },
+  {
+    "name": "Thin Section Petrography",
+    "description": "Segments mineral grains from polarized light microscopy images (XPL + PPL). Detects opaque minerals, builds per-grain watershed markers, segments grains, and exports shape descriptors (area, circularity, aspect ratio, intensity) to CSV.",
+    "file": "thin_section_petrography.vn"
+  },
+  {
+    "name": "IMU Phase Space (M5StickC Plus2)",
+    "description": "Visualizes accelerometer and gyroscope data from an M5StickC Plus2 in a 2D phase space. Features a 2x3 dashboard displaying Accel XY/XZ/YZ and Gyro XY/XZ/YZ with colored motion trails and fadeout. Connects via serial port CSV stream.",
+    "file": "imu_phase_space.vn"
+  },
+  {
+    "name": "Sentinel-2 Marine Turbidity Mapping",
+    "description": "End-to-end coastal turbidity mapping pipeline. Loads Sentinel-2 L2A bands (B03/B04/B08/B11), normalizes to reflectance, calculates the MNDWI water mask, performs sun glint correction (NIR deglint), and applies the bio-optical Nechad 2010 model to generate a colorized NTU map and export as a GeoTIFF.",
+    "file": "sentinel2_turbidity.vn"
+  },
+  {
+    "name": "Gaze Heatmap",
+    "description": "Cumulative gaze heatmap generation. Captures webcam feed, runs ETH-XGaze estimation, maps vectors to screen space (with integrated calibration), and overlays a dynamic, cumulative heatmap (Jet colormap).",
+    "file": "gaze_heatmap.vn"
+  },
+  {
+    "name": "SAM 2: Interactive Segmentation",
+    "description": "High-precision interactive segmentation powered by Meta's SAM 2. Segment any object using positive/negative points or bounding boxes (from YOLO or manual cropping).",
+    "file": "sam_segmentation.vn"
+  },
+  {
+    "name": "Sphere Counting (Hough Circles)",
+    "description": "Optimized workflow for counting and visualizing spherical objects (beads, grains, cells). Employs bilateral filtering to reduce specular reflections and CLAHE contrast enhancement prior to Hough circle detection.",
+    "file": "sphere_counting_hough.vn"
+  },
+  {
+    "name": "Hematology — Blood Cell Count (CBC)",
+    "description": "Veterinary complete blood count (CBC) pipeline processing two parallel color-separated channels. Pink channel (R-B) extracts RBCs via watershed segmentation and size filtering. Purple channel (B*0.5 + R*0.3 - G*0.8) isolates WBCs (via watershed) and platelets (via size filtering). Features a highly adjustable 24-node, 42-connection pipeline and compiles a structured CBC report (species, patient info, diagnostic interpretation).",
+    "file": "hema_blood_analysis.vn"
+  }
 ]
