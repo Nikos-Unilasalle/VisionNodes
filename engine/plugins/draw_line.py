@@ -20,9 +20,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'y1', 'type': 'float', 'default': 0.1, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'x2', 'type': 'float', 'default': 0.9, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'y2', 'type': 'float', 'default': 0.9, 'min': 0, 'max': 1, 'step': 0.01},
-        {'id': 'r', 'type': 'int', 'default': 0, 'min': 0, 'max': 255},
-        {'id': 'g', 'type': 'int', 'default': 255, 'min': 0, 'max': 255},
-        {'id': 'b', 'type': 'int', 'default': 0, 'min': 0, 'max': 255},
+        {'id': 'color', 'label': 'Color', 'type': 'color', 'default': '#00FF00'},
         {'id': 'thickness', 'type': 'int', 'default': 2, 'min': 1, 'max': 20}
     ]
 )
@@ -33,15 +31,20 @@ class DrawLineNode(NodeProcessor):
         x2 = inputs.get('x2', params.get('x2', 0.9))
         y2 = inputs.get('y2', params.get('y2', 0.9))
         
+        color = str(params.get('color', '#00FF00'))
+        hex_c = color.lstrip('#')
+        r, g, b = (int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)) if len(hex_c) == 6 else (0, 255, 0)
+        
         return {
             'draw': {
                 '_type': 'graphics',
                 'shape': 'line',
                 'pts': [(x1, y1), (x2, y2)],
                 'relative': True,
-                'r': int(params.get('r', 0)),
-                'g': int(params.get('g', 255)),
-                'b': int(params.get('b', 0)),
+                'color': color,
+                'r': r,
+                'g': g,
+                'b': b,
                 'thickness': int(params.get('thickness', 2))
             }
         }

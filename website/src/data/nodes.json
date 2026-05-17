@@ -3368,25 +3368,10 @@
             "step": 0.01
           },
           {
-            "id": "r",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "g",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "b",
-            "type": "int",
-            "default": 255,
-            "min": 0,
-            "max": 255
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#0000FF"
           },
           {
             "id": "thickness",
@@ -3489,28 +3474,10 @@
             "step": 1.0
           },
           {
-            "id": "r",
-            "label": "R",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "g",
-            "label": "G",
-            "type": "int",
-            "default": 255,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "b",
-            "label": "B",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#00FF00"
           },
           {
             "id": "thickness",
@@ -3592,25 +3559,10 @@
             "step": 0.01
           },
           {
-            "id": "r",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "g",
-            "type": "int",
-            "default": 255,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "b",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#00FF00"
           },
           {
             "id": "thickness",
@@ -3661,25 +3613,10 @@
             "step": 0.01
           },
           {
-            "id": "r",
-            "type": "int",
-            "default": 255,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "g",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "b",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 255
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#FF0000"
           },
           {
             "id": "thickness",
@@ -3769,28 +3706,10 @@
             "default": 2
           },
           {
-            "id": "r",
-            "label": "Red",
-            "type": "scalar",
-            "min": 0,
-            "max": 255,
-            "default": 255
-          },
-          {
-            "id": "g",
-            "label": "Green",
-            "type": "scalar",
-            "min": 0,
-            "max": 255,
-            "default": 255
-          },
-          {
-            "id": "b",
-            "label": "Blue",
-            "type": "scalar",
-            "min": 0,
-            "max": 255,
-            "default": 255
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#FFFFFF"
           }
         ]
       },
@@ -7535,6 +7454,66 @@
             "label": "Detect Shadows",
             "type": "bool",
             "default": true
+          }
+        ]
+      },
+      {
+        "type": "obj_extractor",
+        "label": "Object Extractor",
+        "category": "segmentation",
+        "icon": "Package",
+        "description": "Normalises any segmentation output (mask, circles, polygons) into a labeled map, count, and per-object stats.",
+        "resizable": true,
+        "min_width": 220,
+        "min_height": 160,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "objects",
+            "label": "Objects List",
+            "color": "list"
+          },
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "label": "Image (dims)",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "count",
+            "label": "Count",
+            "color": "scalar"
+          },
+          {
+            "id": "labels",
+            "label": "Labels Map",
+            "color": "markers"
+          },
+          {
+            "id": "main",
+            "label": "Preview",
+            "color": "image"
+          },
+          {
+            "id": "stats",
+            "label": "Stats",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_area",
+            "label": "Min Area (px²)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 100000
           }
         ]
       }
@@ -15703,33 +15682,33 @@
         "description": "Generates a CBC report (RBC, Neu, Lym, Mon, Plt) with biological interpretation.",
         "inputs": [
           {
-            "id": "mask_rbc",
-            "label": "Erythrocytes (RBC)",
-            "color": "mask"
+            "id": "rbc",
+            "label": "RBC Stats",
+            "color": "dict"
           },
           {
-            "id": "mask_neu",
-            "label": "Neutrophils",
-            "color": "mask"
+            "id": "neu",
+            "label": "Neutrophils Stats",
+            "color": "dict"
           },
           {
-            "id": "mask_lym",
-            "label": "Lymphocytes",
-            "color": "mask"
+            "id": "lym",
+            "label": "Lymphocytes Stats",
+            "color": "dict"
           },
           {
-            "id": "mask_mon",
-            "label": "Monocytes",
-            "color": "mask"
+            "id": "mon",
+            "label": "Monocytes Stats",
+            "color": "dict"
           },
           {
-            "id": "mask_plt",
-            "label": "Platelets",
-            "color": "mask"
+            "id": "plt",
+            "label": "Platelets Stats",
+            "color": "dict"
           },
           {
             "id": "calibration",
-            "label": "Calibration (px/um)",
+            "label": "Calibration (px/µm)",
             "color": "scalar"
           }
         ],
