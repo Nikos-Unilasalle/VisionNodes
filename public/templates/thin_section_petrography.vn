@@ -1,243 +1,1051 @@
 {
   "nodes": [
-    { "id": "frame-input",    "type": "canvas_frame", "position": { "x": -570, "y": 40  }, "style": { "width": 320, "height": 760, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 6, "title": "1 — Image Inputs" } }, "width": 320, "height": 760 },
-    { "id": "frame-preproc",  "type": "canvas_frame", "position": { "x": -230, "y": 40  }, "style": { "width": 250, "height": 310, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 1, "title": "2 — Pre-processing" } }, "width": 250, "height": 310 },
-    { "id": "frame-boundary", "type": "canvas_frame", "position": { "x":   40, "y": 40  }, "style": { "width": 960, "height": 310, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 2, "title": "3 — Boundary Detection" } }, "width": 960, "height": 310 },
-    { "id": "frame-opaque",   "type": "canvas_frame", "position": { "x": -230, "y": 380 }, "style": { "width": 250, "height": 260, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 5, "title": "4 — Opaque Mineral Detection" } }, "width": 250, "height": 260 },
-    { "id": "frame-markers",  "type": "canvas_frame", "position": { "x": 1020, "y": 40  }, "style": { "width": 300, "height": 600, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 3, "title": "5 — Grain Markers" } }, "width": 300, "height": 600 },
-    { "id": "frame-wshed",    "type": "canvas_frame", "position": { "x": 1340, "y": 40  }, "style": { "width": 300, "height": 310, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 4, "title": "6 — Watershed" } }, "width": 300, "height": 310 },
-    { "id": "frame-analysis", "type": "canvas_frame", "position": { "x": 1340, "y": 370 }, "style": { "width": 820, "height": 270, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 0, "title": "7 — Analysis & Export" } }, "width": 820, "height": 270 },
-    { "id": "frame-stats",    "type": "canvas_frame", "position": { "x": 2180, "y": 40  }, "style": { "width": 540, "height": 600, "zIndex": -1 }, "data": { "label": "Frame", "params": { "color_index": 3, "title": "8 — Population Statistics" } }, "width": 540, "height": 600 },
-
-    { "id": "note-input",
-      "type": "canvas_note",
-      "position": { "x": -560, "y": 830 },
-      "style": { "width": 300, "height": 120 },
-      "data": { "label": "Note", "params": { "color_index": 6, "text": "XPL = LC (lumière croisée) — PPL = LN (lumière naturelle).\n\nFLOAT IMAGE: primary — supports TIFF, PNG, JPG, HDR. Set path directly.\nIMAGE FILE (below): alternative for quick PNG/JPG — has a file picker.\n\nConnect ONE pair. PPL/LN optional but improves opaque detection."} },
-      "width": 300, "height": 120 },
-
-    { "id": "note-preproc",
-      "type": "canvas_note",
-      "position": { "x": -225, "y": 375 },
-      "style": { "width": 235, "height": 100 },
-      "data": { "label": "Note", "params": { "color_index": 1, "text": "Bilateral filter smoothes intra-grain texture while preserving sharp grain boundary transitions. Reduce Sigma Color for stronger edge preservation." } },
-      "width": 235, "height": 100 },
-
-    { "id": "note-boundary",
-      "type": "canvas_note",
-      "position": { "x": 50, "y": 375 },
-      "style": { "width": 940, "height": 120 },
-      "data": { "label": "Note", "params": { "color_index": 2, "text": "MORPHOLOGICAL GRADIENT detects all color transitions — strongest at grain boundaries (sharp color change between adjacent crystals).\nTHRESHOLD converts the gradient magnitude to a binary boundary map. Raise value if too many intra-grain false edges appear.\nCLOSING seals small gaps left in boundary lines. INVERT → grain interior mask (white = grain core)." } },
-      "width": 940, "height": 120 },
-
-    { "id": "note-opaque",
-      "type": "canvas_note",
-      "position": { "x": -225, "y": 670 },
-      "style": { "width": 235, "height": 140 },
-      "data": { "label": "Note", "params": { "color_index": 5, "text": "Detects opaque minerals (magnetite, ilmenite, pyrite…).\n\nOpening Size controls the minimum size of blobs kept as opaques — larger = fewer false positives.\n\nConnect PPL for better discrimination vs. isotropic minerals at extinction." } },
-      "width": 235, "height": 140 },
-
-    { "id": "note-markers",
-      "type": "canvas_note",
-      "position": { "x": 1025, "y": 660 },
-      "style": { "width": 285, "height": 160 },
-      "data": { "label": "Note", "params": { "color_index": 3, "text": "Places exactly ONE seed per grain interior — prevents watershed over-segmentation.\n\nPer-component closing fills micro-fractures and inclusions WITHOUT merging adjacent grain interiors.\n\nIncrease Min Grain (px) to remove small fragments. Increase Fill Radius if grains contain many micro-cracks." } },
-      "width": 285, "height": 160 },
-
-    { "id": "note-wshed",
-      "type": "canvas_note",
-      "position": { "x": 1345, "y": 375 },
-      "style": { "width": 285, "height": 100 },
-      "data": { "label": "Note", "params": { "color_index": 4, "text": "Marker-controlled watershed expands each seed until it meets a boundary or another grain. Red lines = watershed boundaries. Use 'Regions + Boundaries' visualization mode." } },
-      "width": 285, "height": 100 },
-
-    { "id": "note-analysis",
-      "type": "canvas_note",
-      "position": { "x": 1345, "y": 660 },
-      "style": { "width": 810, "height": 150 },
-      "data": { "label": "Note", "params": { "color_index": 0, "text": "MARKER FILTER removes grains outside the min/max area range (noise and image border artefacts).\nREGION PROPS extracts per-grain shape descriptors: area (px²), perimeter, circularity, aspect ratio, solidity, eccentricity, and mean XPL intensity.\nCSV EXPORT: toggle Recording ON to write a timestamped CSV file. Each row = one grain." } },
-      "width": 810, "height": 150 },
-
-    { "id": "note-stats",
-      "type": "canvas_note",
-      "position": { "x": 2190, "y": 660 },
-      "style": { "width": 520, "height": 180 },
-      "data": { "label": "Note", "params": { "color_index": 3, "text": "GRAIN POPULATION STATS aggregates all grains into population-level metrics:\n• Count, mean/median/std area (px²)\n• Mean area (µm²) + mean equivalent diameter (µm) — set µm/pixel param to calibrate\n• Mean circularity (1 = perfect circle)\n• Mean aspect ratio\n• Grain surface fraction (% image covered by grains)\n• Opaque surface fraction\n\nCALIBRATION: µm/pixel = sensor pixel size / objective magnification. Example: 6.5 µm pixel, 10× obj → 0.65 µm/px.\n\nHistogram shows grain-size distribution. Connect Regions output to CSV Export for full per-grain table." } },
-      "width": 520, "height": 180 },
-
-    { "id": "img-xpl",
-      "type": "input_float_image",
-      "position": { "x": -550, "y": 80 },
-      "data": { "label": "XPL / LC (Float Image)", "params": { "path": "", "normalize": 0 } },
-      "width": 208, "height": 194 },
-
-    { "id": "img-ppl",
-      "type": "input_float_image",
-      "position": { "x": -550, "y": 300 },
-      "data": { "label": "PPL / LN — optional (Float Image)", "params": { "path": "", "normalize": 0 } },
-      "width": 208, "height": 194 },
-
-    { "id": "img-xpl-png",
+    {
+      "id": "fg-img",
       "type": "input_image",
-      "position": { "x": -550, "y": 530 },
-      "data": { "label": "XPL / LC (PNG/JPG)", "params": { "path": "" } },
-      "width": 208, "height": 130 },
-
-    { "id": "img-ppl-png",
+      "position": {
+        "x": 1580,
+        "y": 800
+      },
+      "data": {
+        "label": "Petrographic Image",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/Thin plate LP.jpg",
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 800
+      },
+      "style": {}
+    },
+    {
+      "id": "fg-calib",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 1300,
+        "y": 520
+      },
+      "data": {
+        "label": "Scale Calibration (µm/px)",
+        "params": {
+          "points": "[{\"x\":0.7886854869751393,\"y\":0.9584612636561155},{\"x\":0.9902984866769768,\"y\":0.9584612636561155}]",
+          "real_len": 500,
+          "unit": "µm",
+          "color_index": 0
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "height": 24
+      },
+      "positionAbsolute": {
+        "x": 1300,
+        "y": 520
+      }
+    },
+    {
+      "id": "fg-sam",
+      "type": "fast_sam_segmenter",
+      "position": {
+        "x": 1580,
+        "y": 520
+      },
+      "data": {
+        "label": "FastSAM Grain Segmentation",
+        "params": {
+          "imgsz": 2,
+          "conf": 0.06,
+          "iou": 0.7,
+          "max_det": 1250,
+          "scale_factor": 1,
+          "contour_thickness": 3,
+          "better_quality": true,
+          "show_ids": true,
+          "id_font_scale": 0.5,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "fg-stats",
+      "type": "sam_grain_stats",
+      "position": {
+        "x": 1920,
+        "y": 600
+      },
+      "data": {
+        "label": "Grain Stats",
+        "params": {
+          "min_area": 100,
+          "hist_bins": 30,
+          "hist_color": "#4FC3F7",
+          "um_per_px": 1,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 345,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "fg-report",
+      "type": "geo_petro_tableau",
+      "position": {
+        "x": 2480,
+        "y": 560
+      },
+      "data": {
+        "label": "Petrographic Report",
+        "params": {
+          "sample_name": "Sample 01",
+          "rock_type": "Unknown",
+          "formation": "",
+          "analyst": "Anonymous",
+          "location": "",
+          "age": "",
+          "color_index": 2
+        }
+      },
+      "width": 320,
+      "height": 505,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2480,
+        "y": 560
+      }
+    },
+    {
+      "id": "fg-histogram",
+      "type": "geo_grain_histogram",
+      "position": {
+        "x": 2360,
+        "y": 1100
+      },
+      "data": {
+        "label": "Grain Size Histogram",
+        "params": {
+          "bins": 30,
+          "metric": 0,
+          "color_index": 2
+        }
+      },
+      "width": 700,
+      "height": 440,
+      "style": {
+        "width": 700,
+        "height": 440
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2360,
+        "y": 1100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1778788610545-0.0314411431128746",
       "type": "input_image",
-      "position": { "x": -550, "y": 680 },
-      "data": { "label": "PPL / LN (PNG/JPG)", "params": { "path": "" } },
-      "width": 208, "height": 130 },
-
-    { "id": "blur-1",
-      "type": "feat_bilateral",
-      "position": { "x": -210, "y": 100 },
-      "data": { "label": "Bilateral Blur", "params": { "diameter": 9, "sigma_color": 30, "sigma_space": 30 } },
-      "width": 208, "height": 170 },
-
-    { "id": "morph-grad",
-      "type": "feat_morphology_adv",
-      "position": { "x": 60, "y": 100 },
-      "data": { "label": "Morphological Gradient", "params": { "operation": 2, "shape": 2, "size": 5, "iterations": 1 } },
-      "width": 208, "height": 180 },
-
-    { "id": "thresh-bnd",
-      "type": "feat_threshold_adv",
-      "position": { "x": 310, "y": 100 },
-      "data": { "label": "Boundary Threshold", "params": { "mode": 0, "threshold": 30 } },
-      "width": 208, "height": 140 },
-
-    { "id": "morph-close",
-      "type": "feat_morphology_adv",
-      "position": { "x": 560, "y": 100 },
-      "data": { "label": "Close Boundary Gaps", "params": { "operation": 1, "shape": 2, "size": 3, "iterations": 2 } },
-      "width": 208, "height": 180 },
-
-    { "id": "invert-1",
-      "type": "plugin_invert_mask",
-      "position": { "x": 810, "y": 100 },
-      "data": { "label": "Invert → Interior", "params": {} },
-      "width": 208, "height": 80 },
-
-    { "id": "opaque-1",
-      "type": "geo_opaque_detect",
-      "position": { "x": -210, "y": 440 },
-      "data": { "label": "Opaque Mineral Detect", "params": { "blur_radius": 4, "dark_thresh": 35, "opening_size": 15, "min_area": 300, "overlay_color": "#8B0000" } },
-      "width": 208, "height": 230 },
-
-    { "id": "markers-1",
-      "type": "geo_grain_markers",
-      "position": { "x": 1040, "y": 100 },
-      "data": { "label": "Grain Markers", "params": { "min_grain_px": 500, "fill_radius": 5, "seed_erosion": 5 } },
-      "width": 208, "height": 200 },
-
-    { "id": "wshed-1",
-      "type": "feat_watershed",
-      "position": { "x": 1360, "y": 80 },
-      "data": { "label": "Watershed", "params": { "visualization": 2, "boundary_color": "#FF4444", "boundary_thickness": 1, "region_alpha": 0.4 } },
-      "width": 208, "height": 200 },
-
-    { "id": "disp-ws",
-      "type": "output_display",
-      "position": { "x": 1360, "y": 310 },
-      "data": {
-        "label": "Grain Segmentation",
-        "params": {},
-        "ports": [ { "id": "image__ws_p001", "color": "image", "label": "watershed" } ]
+      "position": {
+        "x": 1580,
+        "y": 1080
       },
-      "width": 208, "height": 130 },
-
-    { "id": "mfilter-1",
-      "type": "feat_marker_filter",
-      "position": { "x": 1360, "y": 410 },
-      "data": { "label": "Filter Grains by Area", "params": { "min_area": 500, "max_area": 1000000, "area_unit": 0, "remap_ids": 1 } },
-      "width": 208, "height": 190 },
-
-    { "id": "regprops-1",
-      "type": "sci_region_props",
-      "position": { "x": 1600, "y": 410 },
-      "data": { "label": "Grain Region Props", "params": { "intensity": true, "show_ids": false, "show_ellipse": true } },
-      "width": 208, "height": 170 },
-
-    { "id": "csv-1",
-      "type": "util_csv_export",
-      "position": { "x": 1840, "y": 410 },
-      "data": { "label": "CSV Export", "params": { "record": false, "filename": "grain_analysis", "path": "exports", "auto_timestamp": true } },
-      "width": 208, "height": 200 },
-
-    { "id": "disp-analysis",
-      "type": "output_display",
-      "position": { "x": 1600, "y": 280 },
       "data": {
-        "label": "Region Props Preview",
-        "params": {},
-        "ports": [ { "id": "image__rp_p001", "color": "image", "label": "props" } ]
+        "label": "Petrographic Image",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/Thin plate LN.jpg",
+          "color_index": 0
+        },
+        "minified": false
       },
-      "width": 208, "height": 115 },
-
-    { "id": "disp-opaque",
-      "type": "output_display",
-      "position": { "x": 1840, "y": 280 },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 1080
+      },
+      "style": {}
+    },
+    {
+      "id": "teleport_1778997497891_0dw0",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1580,
+        "y": 740
+      },
       "data": {
-        "label": "Opaque Overlay",
-        "params": {},
-        "ports": [ { "id": "image__op_p001", "color": "image", "label": "opaques" } ]
+        "label": "Scale Calibration (µm/px)",
+        "params": {
+          "source_id": "fg-calib",
+          "source_type": "sci_interactive_calibration",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "factor",
+            "color": "scalar",
+            "label": "Px/Unit"
+          },
+          {
+            "id": "unit",
+            "color": "scalar",
+            "label": "Unit Name"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "minified": true
       },
-      "width": 208, "height": 115 },
-
-    { "id": "grain-stats",
-      "type": "geo_grain_stats",
-      "position": { "x": 2200, "y": 100 },
-      "data": { "label": "Grain Population Stats", "params": { "min_area": 100, "hist_bins": 30, "hist_color": "#4FC3F7", "um_per_px": 1.0 } },
-      "width": 208, "height": 280 },
-
-    { "id": "disp-hist",
-      "type": "output_display",
-      "position": { "x": 2440, "y": 100 },
+      "width": 192,
+      "selected": false,
+      "height": 24,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 740
+      },
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "group-1778998072730",
+      "type": "group_node",
+      "position": {
+        "x": 1920,
+        "y": 960
+      },
       "data": {
-        "label": "Size Histogram",
-        "params": {},
-        "ports": [ { "id": "image__hist_p001", "color": "image", "label": "histogram" } ]
+        "label": "Group",
+        "params": {
+          "color_index": 3
+        },
+        "inputs": [
+          {
+            "id": "scalar__scale",
+            "color": "scalar",
+            "label": "in0"
+          },
+          {
+            "id": "image__image",
+            "color": "image",
+            "label": "in1"
+          },
+          {
+            "id": "image__in2",
+            "color": "image",
+            "label": "in2"
+          },
+          {
+            "id": "any__image",
+            "color": "any",
+            "label": "in3"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image__main",
+            "color": "image",
+            "label": "out0"
+          },
+          {
+            "id": "scalar__count",
+            "color": "scalar",
+            "label": "out1"
+          },
+          {
+            "id": "scalar__frac",
+            "color": "scalar",
+            "label": "out2"
+          },
+          {
+            "id": "any__data",
+            "color": "any",
+            "label": "out3"
+          },
+          {
+            "id": "any__out4",
+            "color": "any",
+            "label": "out4"
+          },
+          {
+            "id": "any__data_out",
+            "color": "any",
+            "label": "data_out"
+          }
+        ],
+        "subGraph": {
+          "nodes": [
+            {
+              "id": "og-colormask",
+              "type": "filter_color_mask",
+              "position": {
+                "x": 1160,
+                "y": -220
+              },
+              "data": {
+                "label": "Opaque Grain Color Mask",
+                "params": {
+                  "mode": 1,
+                  "color": "#271E19",
+                  "h_tol": 15,
+                  "r_tol": 35,
+                  "g_tol": 35,
+                  "b_tol": 35
+                }
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1160,
+                "y": -220
+              },
+              "dragging": false
+            },
+            {
+              "id": "og-invert",
+              "type": "plugin_invert_mask",
+              "position": {
+                "x": 1440,
+                "y": -220
+              },
+              "data": {
+                "label": "Invert (Isolate Opaques)",
+                "params": {}
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1440,
+                "y": -220
+              },
+              "dragging": false
+            },
+            {
+              "id": "og-separator",
+              "type": "petro_grain_separator",
+              "position": {
+                "x": 1720,
+                "y": -220
+              },
+              "data": {
+                "label": "Opaque Grain Separator",
+                "params": {
+                  "mode": 0,
+                  "epsilon": 2,
+                  "angle_thresh": 195,
+                  "max_dist": 50
+                }
+              },
+              "width": 208,
+              "height": 121,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1720,
+                "y": -220
+              },
+              "dragging": false
+            },
+            {
+              "id": "og-neighbor",
+              "type": "petro_neighbor_analysis",
+              "position": {
+                "x": 2000,
+                "y": -320
+              },
+              "data": {
+                "label": "Opaque Neighbor Analysis",
+                "params": {
+                  "mode": 1,
+                  "dilate_units": 39,
+                  "min_contact_units": 14
+                }
+              },
+              "width": 208,
+              "height": 153,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2000,
+                "y": -320
+              },
+              "dragging": false
+            },
+            {
+              "id": "og-pointcounter",
+              "type": "petro_point_counter",
+              "position": {
+                "x": 2000,
+                "y": -40
+              },
+              "data": {
+                "label": "Modal Point Counter",
+                "params": {
+                  "grid_rows": 60,
+                  "grid_cols": 60,
+                  "point_size": 3,
+                  "show_labels": true
+                }
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2000,
+                "y": -40
+              },
+              "dragging": false
+            },
+            {
+              "id": "teleport_1778997480712_qmlw",
+              "type": "canvas_teleport",
+              "position": {
+                "x": 1720,
+                "y": -60
+              },
+              "data": {
+                "label": "Scale Calibration (µm/px)",
+                "params": {
+                  "source_id": "fg-calib",
+                  "source_type": "sci_interactive_calibration"
+                },
+                "source_outputs": [
+                  {
+                    "id": "factor",
+                    "color": "scalar",
+                    "label": "Px/Unit"
+                  },
+                  {
+                    "id": "unit",
+                    "color": "scalar",
+                    "label": "Unit Name"
+                  },
+                  {
+                    "id": "main",
+                    "color": "image"
+                  }
+                ]
+              },
+              "width": 192,
+              "selected": false,
+              "height": 126,
+              "positionAbsolute": {
+                "x": 1720,
+                "y": -60
+              },
+              "dragging": false
+            },
+            {
+              "id": "gin-1778998072728",
+              "type": "group_input",
+              "position": {
+                "x": 920,
+                "y": -220
+              },
+              "data": {
+                "label": "Group IN",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "scalar__scale",
+                    "color": "scalar",
+                    "label": "in0"
+                  },
+                  {
+                    "id": "image__image",
+                    "color": "image",
+                    "label": "in1"
+                  },
+                  {
+                    "id": "image__in2",
+                    "color": "image",
+                    "label": "in2"
+                  },
+                  {
+                    "id": "any__image",
+                    "color": "any",
+                    "label": "in3"
+                  }
+                ]
+              },
+              "width": 208,
+              "height": 153
+            },
+            {
+              "id": "gout-1778998072729",
+              "type": "group_output",
+              "position": {
+                "x": 2520,
+                "y": -220
+              },
+              "data": {
+                "label": "Group OUT",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "image__main",
+                    "color": "image",
+                    "label": "out0"
+                  },
+                  {
+                    "id": "scalar__count",
+                    "color": "scalar",
+                    "label": "out1"
+                  },
+                  {
+                    "id": "scalar__frac",
+                    "color": "scalar",
+                    "label": "out2"
+                  },
+                  {
+                    "id": "any__data",
+                    "color": "any",
+                    "label": "out3"
+                  },
+                  {
+                    "id": "any__out4",
+                    "color": "any",
+                    "label": "out4"
+                  },
+                  {
+                    "id": "any__data_out",
+                    "color": "any",
+                    "label": "data_out"
+                  }
+                ]
+              },
+              "width": 208,
+              "height": 249
+            }
+          ],
+          "edges": [
+            {
+              "id": "og-e2",
+              "source": "og-colormask",
+              "target": "og-invert",
+              "sourceHandle": "mask__mask",
+              "targetHandle": "mask__mask",
+              "selected": false
+            },
+            {
+              "id": "og-e3",
+              "source": "og-invert",
+              "target": "og-separator",
+              "sourceHandle": "mask__main",
+              "targetHandle": "mask__mask",
+              "selected": false
+            },
+            {
+              "id": "og-e5",
+              "source": "og-separator",
+              "target": "og-neighbor",
+              "sourceHandle": "mask__mask",
+              "targetHandle": "any__markers",
+              "selected": false
+            },
+            {
+              "id": "og-e9",
+              "source": "og-separator",
+              "target": "og-pointcounter",
+              "sourceHandle": "mask__mask",
+              "targetHandle": "mask__mask",
+              "selected": false
+            },
+            {
+              "source": "teleport_1778997480712_qmlw",
+              "sourceHandle": "scalar__factor",
+              "target": "og-neighbor",
+              "targetHandle": "scalar__scale",
+              "id": "e-1778997489318",
+              "selected": false
+            },
+            {
+              "id": "sg-1778998072728-0.2400122369989659",
+              "source": "gin-1778998072728",
+              "sourceHandle": "scalar__scale",
+              "target": "og-separator",
+              "targetHandle": "scalar__scale"
+            },
+            {
+              "id": "sg-1778998072728-0.9009826137652592",
+              "source": "gin-1778998072728",
+              "sourceHandle": "image__image",
+              "target": "og-neighbor",
+              "targetHandle": "image__image"
+            },
+            {
+              "id": "sg-1778998072728-0.09163621946282063",
+              "source": "gin-1778998072728",
+              "sourceHandle": "image__in2",
+              "target": "og-colormask",
+              "targetHandle": "image__image"
+            },
+            {
+              "id": "sg-1778998072728-0.1024391957320484",
+              "source": "gin-1778998072728",
+              "sourceHandle": "any__image",
+              "target": "og-pointcounter",
+              "targetHandle": "any__image"
+            },
+            {
+              "id": "sg-1778998072728-0.21552148885949074",
+              "source": "og-neighbor",
+              "sourceHandle": "image__main",
+              "target": "gout-1778998072729",
+              "targetHandle": "image__main"
+            },
+            {
+              "id": "sg-1778998072728-0.34034676743273184",
+              "source": "og-separator",
+              "sourceHandle": "scalar__count",
+              "target": "gout-1778998072729",
+              "targetHandle": "scalar__count"
+            },
+            {
+              "id": "sg-1778998072728-0.5335695990926876",
+              "source": "og-separator",
+              "sourceHandle": "scalar__frac",
+              "target": "gout-1778998072729",
+              "targetHandle": "scalar__frac"
+            },
+            {
+              "id": "sg-1778998072728-0.5908627904419419",
+              "source": "og-pointcounter",
+              "sourceHandle": "any__data",
+              "target": "gout-1778998072729",
+              "targetHandle": "any__data"
+            },
+            {
+              "id": "sg-1778998072728-0.9484698994166118",
+              "source": "og-neighbor",
+              "sourceHandle": "any__data",
+              "target": "gout-1778998072729",
+              "targetHandle": "any__out4"
+            }
+          ]
+        }
       },
-      "width": 208, "height": 180 },
-
-    { "id": "stats-text",
-      "type": "data_inspector",
-      "position": { "x": 2440, "y": 310 },
-      "data": { "label": "Population Summary", "params": {} },
-      "width": 208, "height": 130 }
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 960
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779000306040-0.8569410425166518",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1580,
+        "y": 1040
+      },
+      "data": {
+        "label": "Scale Calibration (µm/px)",
+        "params": {
+          "source_id": "fg-calib",
+          "source_type": "sci_interactive_calibration",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "factor",
+            "color": "scalar",
+            "label": "Px/Unit"
+          },
+          {
+            "id": "unit",
+            "color": "scalar",
+            "label": "Unit Name"
+          },
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "minified": true
+      },
+      "width": 192,
+      "selected": false,
+      "height": 24,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 1040
+      },
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "teleport_1779000477482_1st9",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1320,
+        "y": 480
+      },
+      "data": {
+        "label": "Petrographic Image",
+        "params": {
+          "source_id": "fg-img",
+          "source_type": "input_image",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ],
+        "minified": true
+      },
+      "width": 162,
+      "selected": false,
+      "height": 24,
+      "positionAbsolute": {
+        "x": 1320,
+        "y": 480
+      },
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "teleport_1779000504054_oa9h",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1580,
+        "y": 700
+      },
+      "data": {
+        "label": "Petrographic Image",
+        "params": {
+          "source_id": "fg-img",
+          "source_type": "input_image",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ],
+        "minified": true
+      },
+      "width": 162,
+      "selected": false,
+      "height": 24,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 700
+      },
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
+    },
+    {
+      "id": "node-1779001129744-6c9t2ifcc",
+      "type": "plugin_blend_modes",
+      "position": {
+        "x": 1920,
+        "y": 440
+      },
+      "style": {},
+      "data": {
+        "label": "Blend Modes",
+        "params": {
+          "mode": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 440
+      }
+    },
+    {
+      "id": "node-1779001244476-0.44918510276775436",
+      "type": "plugin_blend_modes",
+      "position": {
+        "x": 1920,
+        "y": 340
+      },
+      "style": {},
+      "data": {
+        "label": "Blend Modes",
+        "params": {
+          "mode": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 340
+      }
+    }
   ],
-
   "edges": [
-    { "id": "e-xpl-blur",         "source": "img-xpl",    "sourceHandle": "image__main",       "target": "blur-1",      "targetHandle": "image__image"       },
-    { "id": "e-blur-grad",        "source": "blur-1",     "sourceHandle": "image__main",       "target": "morph-grad",  "targetHandle": "any__mask"          },
-    { "id": "e-grad-thresh",      "source": "morph-grad", "sourceHandle": "image__main",       "target": "thresh-bnd",  "targetHandle": "image__image"       },
-    { "id": "e-thresh-close",     "source": "thresh-bnd", "sourceHandle": "mask__mask",        "target": "morph-close", "targetHandle": "any__mask"          },
-    { "id": "e-close-invert",     "source": "morph-close","sourceHandle": "mask__mask",        "target": "invert-1",    "targetHandle": "mask__mask"         },
-    { "id": "e-close-markers-b",  "source": "morph-close","sourceHandle": "mask__mask",        "target": "markers-1",   "targetHandle": "any__boundary"      },
-    { "id": "e-invert-markers-i", "source": "invert-1",   "sourceHandle": "mask__main",        "target": "markers-1",   "targetHandle": "any__interior"      },
-    { "id": "e-xpl-opaque",       "source": "img-xpl",    "sourceHandle": "image__main",       "target": "opaque-1",    "targetHandle": "image__xpl"         },
-    { "id": "e-ppl-opaque",       "source": "img-ppl",    "sourceHandle": "image__main",       "target": "opaque-1",    "targetHandle": "image__ppl"         },
-    { "id": "e-opaque-markers",   "source": "opaque-1",   "sourceHandle": "mask__mask",        "target": "markers-1",   "targetHandle": "any__opaques"       },
-    { "id": "e-markers-wshed",    "source": "markers-1",  "sourceHandle": "any__markers",      "target": "wshed-1",     "targetHandle": "any__markers"       },
-    { "id": "e-xpl-wshed",        "source": "img-xpl",    "sourceHandle": "image__main",       "target": "wshed-1",     "targetHandle": "image__image"       },
-    { "id": "e-wshed-disp",       "source": "wshed-1",    "sourceHandle": "image__main",       "target": "disp-ws",     "targetHandle": "image__ws_p001"     },
-    { "id": "e-wshed-filter",     "source": "wshed-1",    "sourceHandle": "any__markers_out",  "target": "mfilter-1",   "targetHandle": "any__markers"       },
-    { "id": "e-xpl-filter",       "source": "img-xpl",    "sourceHandle": "image__main",       "target": "mfilter-1",   "targetHandle": "image__image"       },
-    { "id": "e-filter-regprops",  "source": "mfilter-1",  "sourceHandle": "any__markers_out",  "target": "regprops-1",  "targetHandle": "any__labels_map"    },
-    { "id": "e-xpl-regprops",     "source": "img-xpl",    "sourceHandle": "image__main",       "target": "regprops-1",  "targetHandle": "image__image"       },
-    { "id": "e-regprops-csv",     "source": "regprops-1", "sourceHandle": "list__regions",     "target": "csv-1",       "targetHandle": "any__val_1"         },
-    { "id": "e-regprops-disp",    "source": "regprops-1", "sourceHandle": "image__main",       "target": "disp-analysis","targetHandle": "image__rp_p001"    },
-    { "id": "e-opaque-disp",      "source": "opaque-1",   "sourceHandle": "image__overlay",    "target": "disp-opaque",  "targetHandle": "image__op_p001"      },
-    { "id": "e-wshed-stats",      "source": "wshed-1",    "sourceHandle": "any__markers_out",  "target": "grain-stats",  "targetHandle": "any__markers"        },
-    { "id": "e-xpl-stats",        "source": "img-xpl",    "sourceHandle": "image__main",       "target": "grain-stats",  "targetHandle": "image__image"        },
-    { "id": "e-opaque-stats",     "source": "opaque-1",   "sourceHandle": "mask__mask",        "target": "grain-stats",  "targetHandle": "any__opaques"        },
-    { "id": "e-stats-hist",       "source": "grain-stats","sourceHandle": "image__histogram",  "target": "disp-hist",    "targetHandle": "image__hist_p001"    },
-    { "id": "e-stats-summary",    "source": "grain-stats","sourceHandle": "any__summary",      "target": "stats-text",   "targetHandle": "any__data"           }
+    {
+      "id": "fg-e3",
+      "source": "fg-calib",
+      "target": "fg-sam",
+      "sourceHandle": "scalar__factor",
+      "targetHandle": "scalar__scale",
+      "selected": false
+    },
+    {
+      "id": "fg-e6",
+      "source": "fg-sam",
+      "target": "fg-stats",
+      "sourceHandle": "list__contours",
+      "targetHandle": "list__contours",
+      "selected": false
+    },
+    {
+      "id": "fg-e11",
+      "source": "fg-stats",
+      "target": "fg-report",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__grain_count",
+      "selected": false
+    },
+    {
+      "id": "fg-e12",
+      "source": "fg-stats",
+      "target": "fg-report",
+      "sourceHandle": "scalar__mean_dia_um",
+      "targetHandle": "scalar__mean_dia_um",
+      "selected": false
+    },
+    {
+      "id": "fg-e13",
+      "source": "fg-stats",
+      "target": "fg-report",
+      "sourceHandle": "scalar__mean_circularity",
+      "targetHandle": "scalar__circularity",
+      "selected": false
+    },
+    {
+      "id": "fg-e14",
+      "source": "fg-stats",
+      "target": "fg-report",
+      "sourceHandle": "scalar__mean_aspect_ratio",
+      "targetHandle": "scalar__aspect_ratio",
+      "selected": false
+    },
+    {
+      "id": "fg-e15",
+      "source": "fg-stats",
+      "target": "fg-report",
+      "sourceHandle": "scalar__grain_fraction",
+      "targetHandle": "scalar__grain_frac",
+      "selected": false
+    },
+    {
+      "source": "teleport_1778997497891_0dw0",
+      "sourceHandle": "scalar__factor",
+      "target": "fg-stats",
+      "targetHandle": "scalar__um_per_px",
+      "id": "e-1778997525943",
+      "selected": false
+    },
+    {
+      "source": "fg-sam",
+      "sourceHandle": "contours__contours",
+      "target": "fg-stats",
+      "targetHandle": "contours__contours",
+      "id": "e-1778997628070",
+      "selected": false
+    },
+    {
+      "id": "oe-1778998072728-0.9040474889657603",
+      "source": "fg-img",
+      "target": "group-1778998072730",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "source": "node-1778788610545-0.0314411431128746",
+      "sourceHandle": "image__main",
+      "target": "group-1778998072730",
+      "targetHandle": "image__in2",
+      "id": "oe-1778998072728-0.9708828266674245",
+      "selected": false
+    },
+    {
+      "source": "node-1778788610545-0.0314411431128746",
+      "sourceHandle": "image__main",
+      "target": "group-1778998072730",
+      "targetHandle": "any__image",
+      "id": "oe-1778998072728-0.0737180409063114",
+      "selected": false
+    },
+    {
+      "id": "oe-1778998072728-0.7241967398297501",
+      "source": "group-1778998072730",
+      "target": "fg-report",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__opaque_count",
+      "selected": false
+    },
+    {
+      "id": "oe-1778998072728-0.1398695394088466",
+      "source": "group-1778998072730",
+      "target": "fg-report",
+      "sourceHandle": "scalar__frac",
+      "targetHandle": "scalar__opaque_frac",
+      "selected": false
+    },
+    {
+      "id": "oe-1778998072728-0.10703882660382236",
+      "source": "group-1778998072730",
+      "target": "fg-report",
+      "sourceHandle": "any__data",
+      "targetHandle": "any__modal_stats",
+      "selected": false
+    },
+    {
+      "id": "oe-1778998072728-0.19362411703684057",
+      "source": "group-1778998072730",
+      "target": "fg-report",
+      "sourceHandle": "any__out4",
+      "targetHandle": "any__neighbor_data",
+      "selected": false
+    },
+    {
+      "source": "node-1779000306040-0.8569410425166518",
+      "sourceHandle": "scalar__factor",
+      "target": "group-1778998072730",
+      "targetHandle": "scalar__scale",
+      "id": "e-1779000311272",
+      "selected": false
+    },
+    {
+      "source": "teleport_1779000477482_1st9",
+      "sourceHandle": "image__main",
+      "target": "fg-calib",
+      "targetHandle": "image__image",
+      "id": "e-1779000484326",
+      "selected": false
+    },
+    {
+      "source": "teleport_1779000477482_1st9",
+      "sourceHandle": "image__main",
+      "target": "fg-sam",
+      "targetHandle": "image__image",
+      "id": "e-1779000488876",
+      "selected": false
+    },
+    {
+      "source": "teleport_1779000504054_oa9h",
+      "sourceHandle": "image__main",
+      "target": "fg-stats",
+      "targetHandle": "image__image",
+      "id": "e-1779000513592",
+      "selected": false
+    },
+    {
+      "source": "fg-stats",
+      "sourceHandle": "regions__regions",
+      "target": "fg-histogram",
+      "targetHandle": "list__regions",
+      "id": "e-1779000589451"
+    },
+    {
+      "source": "fg-sam",
+      "sourceHandle": "image__masks_img",
+      "target": "node-1779001129744-6c9t2ifcc",
+      "targetHandle": "image__image_b",
+      "id": "e-1779001137039"
+    },
+    {
+      "source": "node-1778788610545-0.0314411431128746",
+      "sourceHandle": "image__main",
+      "target": "node-1779001129744-6c9t2ifcc",
+      "targetHandle": "image__image_a",
+      "id": "e-1779001142373"
+    },
+    {
+      "source": "node-1779001129744-6c9t2ifcc",
+      "sourceHandle": "image__main",
+      "target": "node-1779001244476-0.44918510276775436",
+      "targetHandle": "image__image_b",
+      "id": "e-1779001251368"
+    },
+    {
+      "source": "group-1778998072730",
+      "sourceHandle": "image__main",
+      "target": "node-1779001244476-0.44918510276775436",
+      "targetHandle": "image__image_a",
+      "id": "e-1779001257983"
+    }
   ],
-
   "ui": {
-    "previewSize": { "w": 860, "h": 368 },
-    "previewPos":  { "x": 400, "y": -160 }
+    "previewSize": {
+      "w": 413.4375,
+      "h": 310
+    },
+    "previewPos": {
+      "x": 1489.859375,
+      "y": -479.8828125
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1779001244476-0.44918510276775436"
   }
 }
