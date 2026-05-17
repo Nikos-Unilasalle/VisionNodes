@@ -116,23 +116,44 @@ class DrawContoursNode(NodeProcessor):
         cnts = inputs.get('contours')
         if cnts is None: return {"image": img}
         
+        # Determine canvas size
+        if img is not None:
+            h, w = img.shape[:2]
+        else:
+            h, w = 480, 640
+            
         # Handle background
         if params.get('background', False) or img is None:
-            h, w = (img.shape[0], img.shape[1]) if img is not None else (480, 640)
             canvas = np.zeros((h, w, 3), dtype=np.uint8)
         else:
             canvas = img.copy()
-            if len(canvas.shape) == 2:
+            if len(canvas.shape) == 2 or (len(canvas.shape) == 3 and canvas.shape[2] == 1):
                 canvas = cv2.cvtColor(canvas, cv2.COLOR_GRAY2BGR)
         
         # Parse color
-        import re
         hex_c = str(params.get('color', '#00FF00')).lstrip('#')
         bgr = (int(hex_c[4:6], 16), int(hex_c[2:4], 16), int(hex_c[0:2], 16)) if len(hex_c) == 6 else (0, 255, 0)
         
         thick = int(params.get('thickness', 2))
         
-        # Draw. cnts is expected to be a list of numpy arrays
-        cv2.drawContours(canvas, cnts, -1, bgr, thick)
+        # Parse contours (can be list of graphics dicts or raw numpy arrays)
+        parsed_cnts = []
+        for c in cnts:
+            if isinstance(c, dict) and 'pts' in c:
+                rel = c.get('relative', True)
+                pts_raw = c['pts']
+                if rel:
+                    px = np.array([[int(p[0] * w), int(p[1] * h)] for p in pts_raw], dtype=np.int32)
+                else:
+                    px = np.array([[int(p[0]), int(p[1])] for p in pts_raw], dtype=np.int32)
+                if len(px) > 0:
+                    # OpenCV expects contours in (N, 1, 2) shape
+                    parsed_cnts.append(px.reshape((-1, 1, 2)))
+            elif isinstance(c, np.ndarray):
+                parsed_cnts.append(c)
+        
+        # Draw contours
+        if parsed_cnts:
+            cv2.drawContours(canvas, parsed_cnts, -1, bgr, thick)
         
         return {"image": canvas}

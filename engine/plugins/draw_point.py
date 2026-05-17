@@ -16,9 +16,7 @@ from registry import vision_node, NodeProcessor
     params=[
         {'id': 'x', 'type': 'float', 'default': 0.5, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'y', 'type': 'float', 'default': 0.5, 'min': 0, 'max': 1, 'step': 0.01},
-        {'id': 'r', 'type': 'int', 'default': 255, 'min': 0, 'max': 255},
-        {'id': 'g', 'type': 'int', 'default': 0, 'min': 0, 'max': 255},
-        {'id': 'b', 'type': 'int', 'default': 0, 'min': 0, 'max': 255},
+        {'id': 'color', 'label': 'Color', 'type': 'color', 'default': '#FF0000'},
         {'id': 'thickness', 'type': 'int', 'default': 5, 'min': 1, 'max': 20}
     ]
 )
@@ -27,15 +25,20 @@ class DrawPointNode(NodeProcessor):
         x = inputs.get('x', params.get('x', 0.5))
         y = inputs.get('y', params.get('y', 0.5))
         
+        color = str(params.get('color', '#FF0000'))
+        hex_c = color.lstrip('#')
+        r, g, b = (int(hex_c[0:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)) if len(hex_c) == 6 else (255, 0, 0)
+        
         return {
             'draw': {
                 '_type': 'graphics',
                 'shape': 'point',
                 'pts': [(x, y)],
                 'relative': True,
-                'r': int(params.get('r', 255)),
-                'g': int(params.get('g', 0)),
-                'b': int(params.get('b', 0)),
+                'color': color,
+                'r': r,
+                'g': g,
+                'b': b,
                 'thickness': int(params.get('thickness', 5))
             }
         }

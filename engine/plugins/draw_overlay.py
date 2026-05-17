@@ -106,7 +106,17 @@ class DrawOverlayNode(NodeProcessor):
 
     def _draw_graphics(self, img, data, w, h, default_col, default_thick):
         shape, pts, rel = data.get('shape', 'point'), data.get('pts', []), data.get('relative', True)
-        color = self._parse_color(data.get('color', default_col))
+        
+        # Resolve color with support for legacy r, g, b keys or unified color parameter
+        color_val = data.get('color')
+        if color_val is not None:
+            color = self._parse_color(color_val)
+        elif 'r' in data and 'g' in data and 'b' in data:
+            # OpenCV BGR
+            color = (int(data.get('b', 0)), int(data.get('g', 255)), int(data.get('r', 0)))
+        else:
+            color = self._parse_color(default_col)
+            
         thick = int(data.get('thickness', default_thick))
         fill = data.get('fill', False)
         
@@ -139,6 +149,13 @@ class DrawOverlayNode(NodeProcessor):
             if 'label' in data:
                 cv2.putText(img, data['label'], (scaled_pts[0][0] - rad, scaled_pts[0][1] - rad - 10), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        elif shape == 'ellipse' and len(scaled_pts) > 0:
+            rx = int(data.get('rx', 0.2) * w) if rel else int(data.get('rx', 20))
+            ry = int(data.get('ry', 0.1) * h) if rel else int(data.get('ry', 10))
+            angle = float(data.get('angle', 0.0))
+            cv2.ellipse(img, scaled_pts[0], (rx, ry), angle, 0, 360, color, -1 if fill else max(1, thick))
+            if 'label' in data:
+                cv2.ellipse(img, scaled_pts[0], (rx, ry), angle, 0, 360, color, max(1, thick))
         elif shape == 'text' and len(scaled_pts) > 0:
             text = str(data.get('text', data.get('label', '')))
             scale = float(data.get('font_scale', 1.0))
