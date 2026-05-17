@@ -51,6 +51,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   geom_flip: N.GeomFlipNode,
   geom_resize: N.GeomResizeNode,
   geom_crop_rect: N.CropRectNode,
+  tool_annotator: N.AnnotatorNode,
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
   analysis_pose_mp: N.AnalysisPoseMPNode,

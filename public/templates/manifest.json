@@ -125,6 +125,11 @@
     "file": "sphere_counting_hough.vn"
   },
   {
+    "name": "Analyse d'Empreintes — Cours CV",
+    "description": "Pipeline pédagogique pour l'analyse forensique d'empreintes de chaussures : seuillage, morphologie, détection de contours, et analyse géométrique (BBox / OBB). 7 étapes annotées en français.",
+    "file": "footwear_cv_course.vn"
+  },
+  {
     "name": "Hematology — Blood Cell Count (CBC)",
     "description": "Veterinary complete blood count (CBC) pipeline processing two parallel color-separated channels. Pink channel (R-B) extracts RBCs via watershed segmentation and size filtering. Purple channel (B*0.5 + R*0.3 - G*0.8) isolates WBCs (via watershed) and platelets (via size filtering). Features a highly adjustable 24-node, 42-connection pipeline and compiles a structured CBC report (species, patient info, diagnostic interpretation).",
     "file": "hema_blood_analysis.vn"

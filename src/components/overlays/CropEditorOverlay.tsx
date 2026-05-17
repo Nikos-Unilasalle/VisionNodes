@@ -1,25 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Image, Crop } from 'lucide-react';
+import { useNodeData } from '../../context/NodesDataContext';
 
-const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
+const CropEditorOverlay = ({ node, onClose }: any) => {
   const [rect, setRect] = useState({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const viewportRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isPanning = useRef(false);
   const panOrigin = useRef({ mx: 0, my: 0, px: 0, py: 0 });
 
   const dragMode = useRef<string | null>(null);
   const dragStart = useRef({ mx: 0, my: 0, rect: { x: 0, y: 0, w: 0, h: 0 } });
 
-  const nd = (() => {
-    if (!node?.id || !nodesData) return {};
-    const dataKeys = Object.keys(nodesData).filter((k: string) => k.startsWith(`${node.id}:`));
-    return dataKeys.length > 0
-      ? Object.fromEntries(dataKeys.map((k: string) => [k.split(':')[1], nodesData[k]]))
-      : (nodesData[node.id] ?? {});
-  })();
+  const nd = useNodeData(node?.id ?? null);
   const frame = nd?.main_preview || nd?.main;
 
   useEffect(() => {
@@ -29,8 +25,8 @@ const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
   }, [node?.id]);
 
   const getRelPos = (e: MouseEvent | React.MouseEvent) => {
-    const r = imgRef.current?.getBoundingClientRect();
-    if (!r) return { x: 0, y: 0 };
+    const r = (imgRef.current ?? containerRef.current)?.getBoundingClientRect();
+    if (!r || r.width === 0 || r.height === 0) return { x: 0, y: 0 };
     return { x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) };
   };
 
@@ -176,7 +172,7 @@ const CropEditorOverlay = ({ node, nodesData, onClose }: any) => {
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: 'center center' }}
         >
-          <div className="relative inline-block shadow-[0_0_100px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c] pointer-events-auto" onMouseDown={handleMouseDown}>
+          <div ref={containerRef} className="relative inline-block shadow-[0_0_100px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c] pointer-events-auto" onMouseDown={handleMouseDown}>
             {frame ? (
               <img ref={imgRef} src={`data:image/jpeg;base64,${frame}`} className="block w-auto h-auto max-w-[90vw] max-h-[75vh]" draggable={false} />
             ) : (

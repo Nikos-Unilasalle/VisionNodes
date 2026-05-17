@@ -90,7 +90,7 @@ export const CATEGORIES: Category[] = [
     { type: 'util_manual_points',    label: 'Manual 4 Points',    description: 'Manually defines 4 reference points for geometric calculations.' },
     { type: 'geom_warp_affine',      label: 'Affine Warp',        description: 'Applies a 2×3 affine transformation matrix.' },
     { type: 'geom_rotate_no_crop',   label: 'Rotate (No Crop)',   description: 'Rotates without clipping — expands canvas to fit.' },
-    { type: 'geom_cropper',          label: 'Crop (Ratio)',        description: 'Crops to a fixed aspect ratio around a center point.' },
+    { type: 'geom_cropper',          label: 'Auto Cropper',        description: 'Crops around a detected object bounding box with padding.' },
     { type: 'geom_approx_poly',      label: 'Approx Polygon',     description: 'Approximates a contour with fewer vertices (Ramer-Douglas-Peucker).' },
     { type: 'geom_fit_shape',        label: 'Fit Shape',          description: 'Fits an ellipse or rectangle to a contour.' },
     { type: 'plugin_offset',         label: 'Offset',             description: 'Translates the image by (dx, dy) pixels.' },
@@ -118,6 +118,7 @@ export const CATEGORIES: Category[] = [
     { type: 'mask_to_svg',         label: 'Mask to SVG',    description: 'Converts a binary mask to SVG path data.' },
   ]},
   { id: 'draw', label: 'Draw', icon: PenTool, section: 'generic', nodes: [
+    { type: 'tool_annotator',    label: 'Annotator',    description: 'Interactive annotation layer: draw freehand strokes, lines, and text directly over the image.' },
     { type: 'draw_overlay',      label: 'Draw Overlay', description: 'Draws shapes and text over the main video stream.' },
     { type: 'draw_rect',         label: 'Draw Rect',    description: 'Draws a rectangle on the image.' },
     { type: 'draw_ellipse',      label: 'Draw Ellipse', description: 'Draws an ellipse on the image.' },

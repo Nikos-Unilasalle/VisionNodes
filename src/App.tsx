@@ -33,6 +33,7 @@ import NotificationBar from './components/ui/NotificationBar';
 import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
 import CropEditorOverlay from './components/overlays/CropEditorOverlay';
+import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
@@ -143,6 +144,7 @@ function App() {
   const [paneMenu, setPaneMenu] = useState<{ x: number, y: number } | null>(null);
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
+  const [annotatorEditingId, setAnnotatorEditingId] = useState<string | null>(null);
   const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
@@ -396,6 +398,8 @@ function App() {
             ? () => setRoiEditingId(node.id)
             : node.type === 'geom_crop_rect'
             ? () => setCropEditingId(node.id)
+            : node.type === 'tool_annotator'
+            ? () => setAnnotatorEditingId(node.id)
             : node.type === 'manual_points'
             ? () => setManualPointsEditingId(node.id)
             : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
@@ -1385,8 +1389,13 @@ function App() {
             {cropEditingId && (
                <CropEditorOverlay
                  node={nodesWithData.find(n => n.id === cropEditingId)}
-                 nodesData={nodesData}
                  onClose={() => setCropEditingId(null)}
+               />
+            )}
+            {annotatorEditingId && (
+               <AnnotatorOverlay
+                 node={nodesWithData.find(n => n.id === annotatorEditingId)}
+                 onClose={() => setAnnotatorEditingId(null)}
                />
             )}
             {manualPointsEditingId && (

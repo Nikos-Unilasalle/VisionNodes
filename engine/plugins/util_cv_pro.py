@@ -102,7 +102,7 @@ class ImageMathNode(NodeProcessor):
     category='draw',
     icon="PenTool",
     description="Draws a list of contours onto an image or a new black background.",
-    inputs=[{"id": "image", "color": "any"}, {"id": "contours", "color": "list"}],
+    inputs=[{"id": "image", "color": "any"}, {"id": "contours", "color": "contours"}],
     outputs=[{"id": "image", "color": "image"}],
     params=[
         {"id": "color", "label": "Color", "type": "color", "default": "#00FF00"},

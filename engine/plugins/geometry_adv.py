@@ -48,25 +48,32 @@ class FitShapeNode(NodeProcessor):
     def process(self, inputs, params):
         c_data = inputs.get('contour')
         if not c_data or 'pts' not in c_data: return {"bbox": None, "min_rect": None}
-        
+
         pts = np.array(c_data['pts'], dtype=np.float32)
-        
-        # Bounding Box (straight)
-        x, y, w, h = cv2.boundingRect(pts)
+        pad = float(params.get('padding', 0))
+
+        # Pts are normalized [0,1] — compute bbox in normalized space
+        xs, ys = pts[:, 0], pts[:, 1]
+        x = float(max(0.0, xs.min() - pad))
+        y = float(max(0.0, ys.min() - pad))
+        w = float(min(1.0 - x, xs.max() - xs.min() + 2 * pad))
+        h = float(min(1.0 - y, ys.max() - ys.min() + 2 * pad))
         bbox = {
             "xmin": x, "ymin": y, "width": w, "height": h,
-            "label": "bbox", "_type": "graphics", "shape": "rect", 
-            "pts": [[x, y], [x+w, y+h]], "color": "#ffffff", "relative": True
+            "label": "bbox", "_type": "graphics", "shape": "rect",
+            "pts": [[x, y], [x + w, y + h]], "color": "#ffffff", "relative": True
         }
-        
-        # Rotated Box
-        rect = cv2.minAreaRect(pts)
-        box = cv2.boxPoints(rect)
+
+        # Scale to large pixel space for rotated rect, then normalize back
+        SCALE = 10000
+        pts_px = (pts * SCALE).astype(np.float32)
+        rect = cv2.minAreaRect(pts_px)
+        box = cv2.boxPoints(rect) / SCALE
         min_rect = {
             "label": "min_rect", "_type": "graphics", "shape": "polygon",
             "pts": box.tolist(), "color": "#ff00ff", "relative": True
         }
-        
+
         return {"bbox": bbox, "min_rect": min_rect}
 
 @vision_node(
