@@ -5,7 +5,7 @@
       "type": "canvas_frame",
       "position": {
         "x": 520,
-        "y": -80
+        "y": -60
       },
       "style": {
         "width": 800,
@@ -28,7 +28,7 @@
       "resizing": false,
       "positionAbsolute": {
         "x": 520,
-        "y": -80
+        "y": -60
       }
     },
     {
@@ -84,33 +84,6 @@
       "dragging": false
     },
     {
-      "id": "fb-n3",
-      "type": "canvas_note",
-      "position": {
-        "x": 1980,
-        "y": 700
-      },
-      "style": {
-        "width": 570,
-        "height": 100
-      },
-      "data": {
-        "label": "Note",
-        "params": {
-          "text": "3 zones : Forefoot / Arch / Heel.\nWidth lines (orange) = largeur mesurée à mi-zone forefoot et heel.\nStaheli = aire_arch / (aire_forefoot + aire_arch).",
-          "color_index": 1
-        }
-      },
-      "width": 570,
-      "height": 100,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 1980,
-        "y": 700
-      },
-      "dragging": false
-    },
-    {
       "id": "fb-input",
       "type": "input_image",
       "position": {
@@ -144,7 +117,7 @@
         "label": "Depth Map",
         "params": {
           "model": 1,
-          "colormap": 4
+          "colormap": 3
         }
       },
       "width": 208,
@@ -166,27 +139,31 @@
       "data": {
         "label": "Morphometry",
         "params": {
-          "n_zones": 1,
+          "n_zones": 0,
           "pressure_weights": true,
           "show_measurements": true,
           "alpha": 0.34
-        }
+        },
+        "minified": true
       },
       "width": 208,
-      "height": 569,
+      "height": 24,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
         "x": 2000,
         "y": 20
+      },
+      "style": {
+        "height": 24
       }
     },
     {
       "id": "fb-display",
       "type": "output_display",
       "position": {
-        "x": 2320,
-        "y": 20
+        "x": 4020,
+        "y": -20
       },
       "data": {
         "label": "Morphometric Map",
@@ -196,25 +173,35 @@
             "id": "image__fb_viz",
             "color": "image",
             "label": "Morphometric Map"
+          },
+          {
+            "id": "image__1_9lw3",
+            "color": "image",
+            "label": "img1"
+          },
+          {
+            "id": "image__2_vzp1",
+            "color": "image",
+            "label": "img2"
           }
         ],
         "mainConnected": false
       },
       "width": 208,
-      "height": 185,
-      "selected": false,
+      "height": 249,
+      "selected": true,
       "dragging": false,
       "positionAbsolute": {
-        "x": 2320,
-        "y": 20
+        "x": 4020,
+        "y": -20
       }
     },
     {
       "id": "fb-report",
       "type": "sci_analysis_report",
       "position": {
-        "x": 2280,
-        "y": 240
+        "x": 2260,
+        "y": 20
       },
       "data": {
         "label": "Forensic Report B",
@@ -223,11 +210,11 @@
         }
       },
       "width": 288,
-      "height": 431,
+      "height": 611,
       "selected": false,
       "positionAbsolute": {
-        "x": 2280,
-        "y": 240
+        "x": 2260,
+        "y": 20
       },
       "dragging": false
     },
@@ -241,7 +228,9 @@
       "style": {},
       "data": {
         "label": "SAM Segmenter",
-        "params": {}
+        "params": {
+          "prompt_mode": 1
+        }
       },
       "width": 208,
       "height": 217,
@@ -383,6 +372,220 @@
         "y": 220
       },
       "dragging": false
+    },
+    {
+      "id": "calib-interactive",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 1700,
+        "y": 340
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Calibration (mm)",
+        "params": {
+          "real_len": 10,
+          "unit": "290mm",
+          "points": "[{\"x\":0.6995186487261359,\"y\":0.9943427948728855},{\"x\":0.5355139632665102,\"y\":0.0005155270715861617}]"
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1700,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779138525116-p1t43o8dp",
+      "type": "tool_annotator",
+      "position": {
+        "x": 780,
+        "y": 480
+      },
+      "style": {},
+      "data": {
+        "label": "Annotator",
+        "params": {
+          "annotations": "[{\"tool\":\"circle\",\"pts\":[[0.40834416596263357,0.4795989233936315]],\"color\":\"#ff3333\",\"size\":4},{\"tool\":\"circle\",\"pts\":[[0.2676155488111713,0.41011895370948437]],\"color\":\"#ff3333\",\"size\":4},{\"tool\":\"circle\",\"pts\":[[0.3738258259066145,0.12568532781500705]],\"color\":\"#ff3333\",\"size\":4}]"
+        }
+      },
+      "width": 208,
+      "height": 305,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 780,
+        "y": 480
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779138537665_be59",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 540,
+        "y": 520
+      },
+      "data": {
+        "label": "Footprint",
+        "params": {
+          "source_id": "fb-input",
+          "source_type": "input_image",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 540,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779138848733_i9rr",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 3740,
+        "y": 100
+      },
+      "data": {
+        "label": "Annotator",
+        "params": {
+          "source_id": "node-1779138525116-p1t43o8dp",
+          "source_type": "tool_annotator"
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": true,
+      "height": 70,
+      "positionAbsolute": {
+        "x": 3740,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779138952400_zcvn",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 3740,
+        "y": 180
+      },
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "source_id": "node-1779080971248-gr4vzq633",
+          "source_type": "sam_segmenter"
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Overlay"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Combined Mask"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Object Count"
+          },
+          {
+            "id": "areas",
+            "color": "list",
+            "label": "Areas (px²)"
+          },
+          {
+            "id": "centroids",
+            "color": "list",
+            "label": "Centroids"
+          },
+          {
+            "id": "contours",
+            "color": "list",
+            "label": "Contours List"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": true,
+      "height": 210,
+      "positionAbsolute": {
+        "x": 3740,
+        "y": 180
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779139013719_4xlt",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 3740,
+        "y": -60
+      },
+      "data": {
+        "label": "Morphometry",
+        "params": {
+          "source_id": "fb-forensic",
+          "source_type": "forensic_footprint"
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "report",
+            "color": "dict"
+          },
+          {
+            "id": "staheli",
+            "color": "scalar"
+          },
+          {
+            "id": "asymmetry",
+            "color": "scalar"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": true,
+      "height": 154,
+      "positionAbsolute": {
+        "x": 3740,
+        "y": -60
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -392,13 +595,6 @@
       "sourceHandle": "image__main",
       "target": "fb-depth",
       "targetHandle": "image__image"
-    },
-    {
-      "id": "fb-e9",
-      "source": "fb-forensic",
-      "sourceHandle": "image__main",
-      "target": "fb-display",
-      "targetHandle": "image__fb_viz"
     },
     {
       "id": "fb-e10",
@@ -499,18 +695,63 @@
       "targetHandle": "image__image",
       "id": "e-1779081528742",
       "selected": false
+    },
+    {
+      "source": "node-1779081377348-0.753672385075354",
+      "sourceHandle": "image__main",
+      "target": "calib-interactive",
+      "targetHandle": "image__image",
+      "id": "e-calib-img"
+    },
+    {
+      "source": "calib-interactive",
+      "sourceHandle": "scalar__factor",
+      "target": "fb-forensic",
+      "targetHandle": "scalar__px_per_mm",
+      "id": "e-calib-factor"
+    },
+    {
+      "source": "teleport_1779138537665_be59",
+      "sourceHandle": "image__main",
+      "target": "node-1779138525116-p1t43o8dp",
+      "targetHandle": "image__image",
+      "id": "e-1779138540982"
+    },
+    {
+      "source": "teleport_1779138848733_i9rr",
+      "sourceHandle": "image__main",
+      "target": "fb-display",
+      "targetHandle": "image__1_9lw3",
+      "id": "e-1779138863248",
+      "selected": true
+    },
+    {
+      "source": "teleport_1779138952400_zcvn",
+      "sourceHandle": "image__main",
+      "target": "fb-display",
+      "targetHandle": "image__2_vzp1",
+      "id": "e-1779138963090",
+      "selected": true
+    },
+    {
+      "source": "teleport_1779139013719_4xlt",
+      "sourceHandle": "image__main",
+      "target": "fb-display",
+      "targetHandle": "image__fb_viz",
+      "id": "e-1779139020945",
+      "selected": true
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 160,
-      "h": 407
+      "w": 938.1015625,
+      "h": 462
     },
     "previewPos": {
-      "x": 68.734375,
-      "y": -4.3203125
+      "x": 695.8125,
+      "y": -52.01953125
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "fb-display"
+    "visualizedNodeId": null
   }
 }
