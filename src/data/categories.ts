@@ -235,6 +235,7 @@ export const CATEGORIES: Category[] = [
     { type: 'sci_line_profile',       label: 'Line Profile',     description: 'Extracts pixel intensity along a drawn line.' },
     { type: 'sci_spectral_gain',      label: 'Spectral Gain',    description: 'Amplifies or attenuates specific frequency bands.' },
     { type: 'sci_analysis_report',    label: 'Analysis Report',  description: 'Generates a structured text report from measurement data.' },
+    { type: 'forensic_footprint',     label: 'Footprint Forensics', description: 'Forensic footwear analysis: pressure zones, Staheli arch index, asymmetry, centroid. Connect geom_obb rotated outputs.' },
     { type: 'sci_export_particles',   label: 'Export Particles', description: 'Saves particle/region measurements to a file.' },
     { type: 'sci_kmeans_list',        label: 'K-Means (List)',   description: 'Clusters a list of values into k groups.' },
     { type: 'sci_cluster_heatmap',    label: 'Cluster Heatmap',  description: 'Visualizes cluster assignments as a heatmap.' },

@@ -1193,6 +1193,45 @@ export const AnnotatorNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const ForensicFootprintNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const frame = nd?.main_preview;
+  const staheli   = nd?.staheli   != null ? Number(nd.staheli).toFixed(3)   : '—';
+  const asymmetry = nd?.asymmetry != null ? Number(nd.asymmetry).toFixed(3) : '—';
+
+  return (
+    <BaseNode title="Footprint Forensics" icon={Activity} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'image', color: 'image' }, { id: 'mask', color: 'mask' }]}
+      outputs={[
+        { id: 'main',      color: 'image'  },
+        { id: 'report',    color: 'dict'   },
+        { id: 'staheli',   color: 'scalar' },
+        { id: 'asymmetry', color: 'scalar' },
+      ]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        <div className="bg-black rounded-xl overflow-hidden border border-white/5 shadow-inner">
+          {frame ? (
+            <img src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block" draggable={false} />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Activity size={24} className="opacity-10" />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Staheli</div>
+          <div className="text-[9px] font-mono text-cyan-400">{staheli}</div>
+        </div>
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Asym</div>
+          <div className="text-[9px] font-mono text-yellow-400">{asymmetry}</div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const DrawOverlayNode = memo(({ selected, data }: any) => {
   const nodeId = useNodeId()!;
   const updateNodeInternals = useUpdateNodeInternals();

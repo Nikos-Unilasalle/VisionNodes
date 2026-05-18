@@ -15,9 +15,10 @@ from registry import vision_node, NodeProcessor
         {'id': 'mask',  'color': 'mask'},
     ],
     outputs=[
-        {'id': 'main',    'color': 'image'},
-        {'id': 'rotated', 'color': 'image'},
-        {'id': 'angle',   'color': 'number'},
+        {'id': 'main',         'color': 'image'},
+        {'id': 'rotated',      'color': 'image'},
+        {'id': 'rotated_mask', 'color': 'mask'},
+        {'id': 'angle',        'color': 'scalar'},
     ],
     params=[
         {'id': 'draw_obb',  'label': 'Draw OBB',    'type': 'bool',  'default': True},
@@ -60,6 +61,22 @@ class GeomOBBNode(NodeProcessor):
             return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
         return img.copy()
 
+    def _warp_crop(self, img, cx_p, cy_p, angle, w_rect, h_rect, pad,
+                   interp=cv2.INTER_LINEAR):
+        padded = cv2.copyMakeBorder(img, pad, pad, pad, pad,
+                                    cv2.BORDER_CONSTANT, value=0)
+        Hp, Wp = padded.shape[:2]
+        M = cv2.getRotationMatrix2D((cx_p, cy_p), angle, 1.0)
+        warped = cv2.warpAffine(padded, M, (Wp, Hp),
+                                flags=interp, borderMode=cv2.BORDER_CONSTANT)
+        x0 = max(0, int(cx_p - w_rect / 2))
+        y0 = max(0, int(cy_p - h_rect / 2))
+        x1 = min(Wp, int(cx_p + w_rect / 2))
+        y1 = min(Hp, int(cy_p + h_rect / 2))
+        if x1 > x0 and y1 > y0:
+            return warped[y0:y1, x0:x1]
+        return warped
+
     def process(self, inputs, params):
         image = inputs.get('image')
         mask  = inputs.get('mask')
@@ -70,13 +87,13 @@ class GeomOBBNode(NodeProcessor):
         vis = self._to_bgr(image)
         H, W = vis.shape[:2]
 
-        draw_obb  = str(params.get('draw_obb',  True)).lower()  not in ('false', '0', 'no')
-        auto_crop = str(params.get('auto_crop', True)).lower()  not in ('false', '0', 'no')
+        draw_obb  = str(params.get('draw_obb',  True)).lower() not in ('false', '0', 'no')
+        auto_crop = str(params.get('auto_crop', True)).lower() not in ('false', '0', 'no')
         color     = self._parse_color(params.get('color', '#00ff88'))
         thickness = max(1, int(params.get('thickness', 2)))
         target    = params.get('target', 'largest')
 
-        # Build binary source for contour detection
+        # Binary source for OBB detection (prefer mask)
         if mask is not None:
             src = mask if len(mask.shape) == 2 else cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         else:
@@ -85,9 +102,15 @@ class GeomOBBNode(NodeProcessor):
 
         contours, _ = cv2.findContours(src, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        empty_result = {
+            'main': vis, 'rotated': vis,
+            'rotated_mask': src, 'angle': 0.0,
+            'main_preview': self._last_preview,
+        }
+
         if not contours:
             self._encode_preview(vis)
-            return {'main': vis, 'rotated': vis, 'angle': 0.0, 'main_preview': self._last_preview}
+            return empty_result
 
         if target == 'largest':
             groups = [max(contours, key=cv2.contourArea)]
@@ -104,49 +127,42 @@ class GeomOBBNode(NodeProcessor):
                 box = np.int32(cv2.boxPoints(rect))
                 cv2.polylines(vis, [box], True, color, thickness, cv2.LINE_AA)
 
-        # Compute angle and deskewed output from last_rect
-        angle_out = 0.0
-        rotated_out = vis.copy()
+        if last_rect is None:
+            self._encode_preview(vis)
+            return empty_result
 
-        if last_rect is not None:
-            cx, cy = last_rect[0]
-            w_rect, h_rect = last_rect[1]
-            angle = last_rect[2]
+        cx, cy = last_rect[0]
+        w_rect, h_rect = last_rect[1]
+        angle = last_rect[2]
 
-            # Normalize so long axis is horizontal
-            if w_rect < h_rect:
-                angle += 90.0
-                w_rect, h_rect = h_rect, w_rect
+        # Normalize: long axis horizontal
+        if w_rect < h_rect:
+            angle += 90.0
+            w_rect, h_rect = h_rect, w_rect
 
-            angle_out = float(angle)
+        rotated_out      = vis.copy()
+        rotated_mask_out = src.copy()
 
-            if auto_crop and w_rect > 0 and h_rect > 0:
-                # Pad canvas so rotated content near borders isn't clipped
-                pad = int(max(W, H) * 0.75)
-                vis_pad = cv2.copyMakeBorder(vis, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)
-                cx_p, cy_p = cx + pad, cy + pad
-                Hp, Wp = vis_pad.shape[:2]
+        if auto_crop and w_rect > 0 and h_rect > 0:
+            pad   = int(max(W, H) * 0.75)
+            cx_p  = cx + pad
+            cy_p  = cy + pad
 
-                M = cv2.getRotationMatrix2D((cx_p, cy_p), angle, 1.0)
-                rotated_full = cv2.warpAffine(vis_pad, M, (Wp, Hp),
-                                              flags=cv2.INTER_LINEAR,
-                                              borderMode=cv2.BORDER_CONSTANT)
-                x0 = max(0, int(cx_p - w_rect / 2))
-                y0 = max(0, int(cy_p - h_rect / 2))
-                x1 = min(Wp, int(cx_p + w_rect / 2))
-                y1 = min(Hp, int(cy_p + h_rect / 2))
-                if x1 > x0 and y1 > y0:
-                    rotated_out = rotated_full[y0:y1, x0:x1]
-                else:
-                    rotated_out = rotated_full
+            rotated_out = self._warp_crop(
+                vis, cx_p, cy_p, angle, w_rect, h_rect, pad, cv2.INTER_LINEAR)
+
+            # Rotate mask with nearest-neighbour to keep binary values
+            rotated_mask_out = self._warp_crop(
+                src, cx_p, cy_p, angle, w_rect, h_rect, pad, cv2.INTER_NEAREST)
 
         self._frame_count += 1
         if self._frame_count % 3 == 1:
             self._encode_preview(vis)
 
         return {
-            'main':    vis,
-            'rotated': rotated_out,
-            'angle':   angle_out,
+            'main':         vis,
+            'rotated':      rotated_out,
+            'rotated_mask': rotated_mask_out,
+            'angle':        float(angle),
             'main_preview': self._last_preview,
         }
