@@ -277,7 +277,7 @@ class SORTTracker:
     label='Object Tracker (SORT)',
     category='tracking',
     icon='Crosshair',
-    description="Suivi multi-objets en temps réel avec SORT (Kalman Filter + Hungarian). Connecter la sortie 'objects_list' d'un détecteur YOLO ou MediaPipe.",
+    description="Real-time multi-object tracking using SORT (Kalman Filter + Hungarian). Connect the 'objects_list' output from a YOLO or MediaPipe detector.",
     inputs=[
         {'id': 'detections', 'color': 'list'},
         {'id': 'image',      'color': 'image'}

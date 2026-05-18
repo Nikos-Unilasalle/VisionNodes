@@ -1937,16 +1937,16 @@
             "label": "Mode",
             "type": "enum",
             "options": [
-              "Échelle (%)",
-              "Largeur",
-              "Hauteur",
+              "Scale (%)",
+              "Width",
+              "Height",
               "Exact"
             ],
             "default": 0
           },
           {
             "id": "scale",
-            "label": "Échelle",
+            "label": "Scale",
             "type": "float",
             "default": 0.5,
             "min": 0.01,
@@ -1955,7 +1955,7 @@
           },
           {
             "id": "width",
-            "label": "Largeur (px)",
+            "label": "Width (px)",
             "type": "int",
             "default": 640,
             "min": 1,
@@ -1963,7 +1963,7 @@
           },
           {
             "id": "height",
-            "label": "Hauteur (px)",
+            "label": "Height (px)",
             "type": "int",
             "default": 480,
             "min": 1,
@@ -1974,7 +1974,7 @@
             "label": "Interpolation",
             "type": "enum",
             "options": [
-              "Auto (reco.)",
+              "Auto (rec.)",
               "Nearest",
               "Linear",
               "Cubic",
@@ -2396,7 +2396,7 @@
         "label": "Oriented Bounding Box",
         "category": "geometry",
         "icon": "RotateCw",
-        "description": "Minimum-area oriented bounding box from mask contours with auto-rotation deskew.",
+        "description": "Automatic alignment and angle correction with rotated mask output. Deskews content to its minimum-area oriented bounding box.",
         "inputs": [
           {
             "id": "image",
@@ -3157,7 +3157,7 @@
         "label": "Mask Band",
         "category": "mask",
         "icon": "AlignCenter",
-        "description": "Extracts a horizontal or vertical band from image/mask by percentage position.",
+        "description": "Extracts a percentage-based band (by height or width) from an image or mask.",
         "inputs": [
           {
             "id": "image",
@@ -3212,7 +3212,7 @@
         "label": "Split Half",
         "category": "mask",
         "icon": "Columns2",
-        "description": "Splits image/mask into two halves along H or V axis at a configurable % position.",
+        "description": "Splits an image or mask into two halves along the horizontal or vertical axis.",
         "inputs": [
           {
             "id": "image",
@@ -3474,7 +3474,7 @@
         "label": "Annotator",
         "category": "draw",
         "icon": "PenTool",
-        "description": "Interactive annotation layer: draw freehand strokes, lines, and text directly over the image.",
+        "description": "Interactive drawing layer: brush, lines, circles, and text directly over the image.",
         "inputs": [
           {
             "id": "image",
@@ -3528,7 +3528,7 @@
         "label": "Tint Mask",
         "category": "draw",
         "icon": "Palette",
-        "description": "Colorizes a region defined by a binary mask with a chosen color and alpha.",
+        "description": "Transparent colorization of a masked region with a color picker and configurable opacity.",
         "inputs": [
           {
             "id": "image",
@@ -7499,7 +7499,7 @@
         "params": [
           {
             "id": "hf_token",
-            "label": "Hugging Face Token (laisser vide si sauvegardé)",
+            "label": "Hugging Face Token (leave empty if saved)",
             "type": "string",
             "default": ""
           },
@@ -7555,13 +7555,13 @@
           },
           {
             "id": "mask_select",
-            "label": "Candidate (si multi-mask)",
+            "label": "Candidate (if multi-mask)",
             "type": "enum",
             "options": [
               "Best (IOU auto)",
-              "Candidat 1",
-              "Candidat 2",
-              "Candidat 3"
+              "Candidate 1",
+              "Candidate 2",
+              "Candidate 3"
             ],
             "default": 0
           },
@@ -7811,11 +7811,11 @@
             "type": "enum",
             "options": [
               "Standard",
-              "Précis / Lent",
-              "Rapide",
-              "Haute qualité",
+              "Precise / Slow",
+              "Fast",
+              "High Quality",
               "Performance",
-              "Personnalisé"
+              "Custom"
             ],
             "default": 0
           },
@@ -9489,7 +9489,7 @@
         "label": "Mask Statistics",
         "category": "measure",
         "icon": "BarChart2",
-        "description": "Computes area (px + %), centroid, and bounding box from a binary mask. Supports intensity-weighted centroid.",
+        "description": "Computes area (px and %), center of gravity, and bounding box from a binary mask. Supports intensity-weighted centroid.",
         "inputs": [
           {
             "id": "mask",
@@ -9540,7 +9540,7 @@
         "label": "Footprint Forensics",
         "category": "measure",
         "icon": "Activity",
-        "description": "Forensic footwear analysis: pressure zones, Staheli arch index, asymmetry, centroid. Connect geom_obb rotated outputs.",
+        "description": "Full footwear analysis: pressure zones, asymmetry score, and Staheli arch index. Connect geom_obb rotated outputs.",
         "inputs": [
           {
             "id": "image",
@@ -13293,7 +13293,7 @@
             "id": "gcp_project",
             "type": "string",
             "default": "",
-            "label": "GCP Project ID (laisser vide si sauvegardé)"
+            "label": "GCP Project ID (leave empty if saved)"
           },
           {
             "id": "collection",
