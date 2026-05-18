@@ -2292,10 +2292,10 @@
       },
       {
         "type": "geom_cropper",
-        "label": "Crop (Ratio)",
+        "label": "Auto Cropper",
         "category": "geometry",
         "icon": "Maximize",
-        "description": "Crops to a fixed aspect ratio around a center point.",
+        "description": "Crops around a detected object bounding box with padding.",
         "inputs": [
           {
             "id": "image",
@@ -2303,7 +2303,7 @@
           },
           {
             "id": "data",
-            "color": "any"
+            "color": "dict"
           }
         ],
         "outputs": [
@@ -2390,6 +2390,81 @@
             "default": 0
           }
         ]
+      },
+      {
+        "type": "geom_obb",
+        "label": "Oriented Bounding Box",
+        "category": "geometry",
+        "icon": "RotateCw",
+        "description": "Minimum-area oriented bounding box from mask contours with auto-rotation deskew.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "rotated",
+            "color": "image"
+          },
+          {
+            "id": "rotated_mask",
+            "color": "mask"
+          },
+          {
+            "id": "angle",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "draw_obb",
+            "label": "Draw OBB",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#00ff88"
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20
+          },
+          {
+            "id": "target",
+            "label": "Target",
+            "type": "enum",
+            "default": "largest",
+            "options": [
+              "largest",
+              "all",
+              "combined"
+            ]
+          },
+          {
+            "id": "auto_crop",
+            "label": "Crop to OBB",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "colorable": true
       },
       {
         "type": "plugin_offset",
@@ -3078,6 +3153,116 @@
         ]
       },
       {
+        "type": "util_mask_band",
+        "label": "Mask Band",
+        "category": "mask",
+        "icon": "AlignCenter",
+        "description": "Extracts a horizontal or vertical band from image/mask by percentage position.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "start_pct",
+            "label": "Start %",
+            "type": "float",
+            "default": 0,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "end_pct",
+            "label": "End %",
+            "type": "float",
+            "default": 50,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "id": "axis",
+            "label": "Axis",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "Horizontal (rows)",
+              "Vertical (cols)"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "util_split_half",
+        "label": "Split Half",
+        "category": "mask",
+        "icon": "Columns2",
+        "description": "Splits image/mask into two halves along H or V axis at a configurable % position.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "first_image",
+            "color": "image"
+          },
+          {
+            "id": "second_image",
+            "color": "image"
+          },
+          {
+            "id": "first_mask",
+            "color": "mask"
+          },
+          {
+            "id": "second_mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "axis",
+            "label": "Axis",
+            "type": "enum",
+            "default": 1,
+            "options": [
+              "Horizontal (top / bottom)",
+              "Vertical (left / right)"
+            ]
+          },
+          {
+            "id": "position",
+            "label": "Split %",
+            "type": "float",
+            "default": 50,
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
         "type": "util_image_masking",
         "label": "Apply Mask",
         "category": "mask",
@@ -3285,6 +3470,40 @@
     "label": "Draw",
     "nodes": [
       {
+        "type": "tool_annotator",
+        "label": "Annotator",
+        "category": "draw",
+        "icon": "PenTool",
+        "description": "Interactive annotation layer: draw freehand strokes, lines, and text directly over the image.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "annotations",
+            "label": "Annotations",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "id": "with_background",
+            "label": "With Background",
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "colorable": true
+      },
+      {
         "type": "draw_overlay",
         "label": "Draw Overlay",
         "category": "draw",
@@ -3303,6 +3522,46 @@
             "color": "image"
           }
         ]
+      },
+      {
+        "type": "draw_tint_mask",
+        "label": "Tint Mask",
+        "category": "draw",
+        "icon": "Palette",
+        "description": "Colorizes a region defined by a binary mask with a chosen color and alpha.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#00ff88"
+          },
+          {
+            "id": "alpha",
+            "label": "Alpha",
+            "type": "float",
+            "default": 0.5,
+            "min": 0.0,
+            "max": 1.0
+          }
+        ],
+        "colorable": true
       },
       {
         "type": "draw_rect",
@@ -3726,7 +3985,7 @@
           },
           {
             "id": "contours",
-            "color": "list"
+            "color": "contours"
           }
         ],
         "outputs": [
@@ -9226,6 +9485,125 @@
         ]
       },
       {
+        "type": "feat_mask_stats",
+        "label": "Mask Statistics",
+        "category": "measure",
+        "icon": "BarChart2",
+        "description": "Computes area (px + %), centroid, and bounding box from a binary mask. Supports intensity-weighted centroid.",
+        "inputs": [
+          {
+            "id": "mask",
+            "color": "mask"
+          },
+          {
+            "id": "ref_mask",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "stats",
+            "color": "dict"
+          },
+          {
+            "id": "area_px",
+            "color": "scalar"
+          },
+          {
+            "id": "area_pct",
+            "color": "scalar"
+          },
+          {
+            "id": "centroid_x",
+            "color": "scalar"
+          },
+          {
+            "id": "centroid_y",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "weighted_centroid",
+            "label": "Weighted Centroid",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "forensic_footprint",
+        "label": "Footprint Forensics",
+        "category": "measure",
+        "icon": "Activity",
+        "description": "Forensic footwear analysis: pressure zones, Staheli arch index, asymmetry, centroid. Connect geom_obb rotated outputs.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "report",
+            "color": "dict"
+          },
+          {
+            "id": "staheli",
+            "color": "scalar"
+          },
+          {
+            "id": "asymmetry",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "n_zones",
+            "label": "Zones",
+            "type": "enum",
+            "default": 0,
+            "options": [
+              "4 zones (Toes/FF/Arch/Heel)",
+              "3 zones (FF/Arch/Heel)"
+            ]
+          },
+          {
+            "id": "pressure_weights",
+            "label": "Pressure Weights",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "show_measurements",
+            "label": "Width Lines",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "alpha",
+            "label": "Overlay Alpha",
+            "type": "float",
+            "default": 0.55,
+            "min": 0.0,
+            "max": 1.0
+          }
+        ],
+        "colorable": true
+      },
+      {
         "type": "sci_export_particles",
         "label": "Export Particles",
         "category": "measure",
@@ -10169,13 +10547,13 @@
         "description": "Extracts a specific item from a list of detections.",
         "inputs": [
           {
-            "id": "list",
+            "id": "list_in",
             "color": "list"
           }
         ],
         "outputs": [
           {
-            "id": "item",
+            "id": "item_out",
             "color": "any"
           }
         ],
