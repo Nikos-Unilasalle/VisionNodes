@@ -1,0 +1,311 @@
+{
+  "nodes": [
+    {
+      "id": "fa-frame1",
+      "type": "canvas_frame",
+      "position": {
+        "x": -20,
+        "y": -60
+      },
+      "style": {
+        "width": 1730,
+        "height": 330,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 0,
+          "title": "1 — Preprocessing"
+        }
+      },
+      "width": 1730,
+      "height": 330
+    },
+    {
+      "id": "fa-frame2",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1740,
+        "y": -60
+      },
+      "style": {
+        "width": 680,
+        "height": 330,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 2,
+          "title": "2 — Zone Analysis"
+        }
+      },
+      "width": 680,
+      "height": 330
+    },
+    {
+      "id": "fa-note1",
+      "type": "canvas_note",
+      "position": {
+        "x": -20,
+        "y": 280
+      },
+      "style": {
+        "width": 1730,
+        "height": 100
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Grayscale → Blur → Threshold → Erode (noise) → Dilate (fill mask).\nAdjust Threshold value to isolate the footprint.",
+          "color_index": 0
+        }
+      },
+      "width": 1730,
+      "height": 100
+    },
+    {
+      "id": "fa-note2",
+      "type": "canvas_note",
+      "position": {
+        "x": 1740,
+        "y": 280
+      },
+      "style": {
+        "width": 680,
+        "height": 100
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "4 zones: Toes / Forefoot / Arch / Heel.\nAsymmetry = |left area − right area| / total area  (0=symmetric).",
+          "color_index": 2
+        }
+      },
+      "width": 680,
+      "height": 100
+    },
+    {
+      "id": "fa-input",
+      "type": "input_image",
+      "position": {
+        "x": 20,
+        "y": 60
+      },
+      "data": {
+        "label": "Footprint",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/footprint.jpg",
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 203
+    },
+    {
+      "id": "fa-gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 290,
+        "y": 60
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {}
+      },
+      "width": 208,
+      "height": 180
+    },
+    {
+      "id": "fa-blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 560,
+        "y": 60
+      },
+      "data": {
+        "label": "Denoise",
+        "params": {
+          "size": 5
+        }
+      },
+      "width": 208,
+      "height": 180
+    },
+    {
+      "id": "fa-thresh",
+      "type": "filter_threshold",
+      "position": {
+        "x": 830,
+        "y": 60
+      },
+      "data": {
+        "label": "Threshold",
+        "params": {
+          "threshold": 100
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fa-erode",
+      "type": "filter_morphology",
+      "position": {
+        "x": 1100,
+        "y": 60
+      },
+      "data": {
+        "label": "Erode (denoise)",
+        "params": {
+          "operation": 1,
+          "size": 3
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fa-dilate",
+      "type": "filter_morphology",
+      "position": {
+        "x": 1370,
+        "y": 60
+      },
+      "data": {
+        "label": "Dilate (fill)",
+        "params": {
+          "operation": 0,
+          "size": 9
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fa-python",
+      "type": "logic_python",
+      "position": {
+        "x": 1760,
+        "y": 60
+      },
+      "data": {
+        "label": "Zone Analysis",
+        "params": {
+          "code": "# a = source image (BGR/gray), b = binary mask\nimg = a\nmask = b\nif img is None or mask is None:\n    out_main = img if img is not None else None\nelse:\n    mg = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY) if len(mask.shape)==3 else mask.copy()\n    _, bin_m = cv2.threshold(mg, 127, 255, cv2.THRESH_BINARY)\n    ctrs, _ = cv2.findContours(bin_m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n    if not ctrs:\n        out_main = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if len(img.shape)==2 else img.copy()\n    else:\n        cnt = max(ctrs, key=cv2.contourArea)\n        rect = cv2.minAreaRect(cnt)\n        cx, cy = rect[0]; w_r, h_r = rect[1]; ang = rect[2]\n        if w_r < h_r: ang += 90.0; w_r, h_r = h_r, w_r\n        H, W = bin_m.shape[:2]; pad = int(max(W,H)*0.75)\n        def rp(im, nearest=False):\n            p = cv2.copyMakeBorder(im, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)\n            M = cv2.getRotationMatrix2D((cx+pad, cy+pad), ang, 1.0)\n            fl = cv2.INTER_NEAREST if nearest else cv2.INTER_LINEAR\n            return cv2.warpAffine(p, M, (p.shape[1], p.shape[0]), flags=fl)\n        rb = rp(bin_m, nearest=True)\n        src = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if len(img.shape)==2 else img.copy()\n        ri = rp(src)\n        cpx = int(cx+pad); cpy = int(cy+pad)\n        x0=max(0,int(cpx-w_r/2)); y0=max(0,int(cpy-h_r/2))\n        x1=min(rb.shape[1],int(cpx+w_r/2)); y1=min(rb.shape[0],int(cpy+h_r/2))\n        cb=rb[y0:y1,x0:x1]; ci=ri[y0:y1,x0:x1]\n        h,w=cb.shape[:2]; tot=max(1,int(np.sum(cb>0)))\n        ZS=[('Toes',0,h//4,(80,200,120)),('Forefoot',h//4,h//2,(80,160,240)),('Arch',h//2,3*h//4,(240,160,60)),('Heel',3*h//4,h,(240,80,60))]\n        viz=ci.copy(); ov=viz.copy(); mets={}; asym=0.0\n        for nm,ys,ye,col in ZS:\n            zm=cb[ys:ye]; ar=int(np.sum(zm>0)); pc=round(100.0*ar/tot,1)\n            mets[nm.lower()+'_pct']=pc\n            ov[ys:ye][zm>0]=col\n            fs=max(0.3,0.5*w/180); th2=max(1,w//150)\n            cv2.putText(ov,nm+': '+str(pc)+'%',(8,(ys+ye)//2),cv2.FONT_HERSHEY_SIMPLEX,fs,(255,255,255),th2,cv2.LINE_AA)\n            if ye<h: cv2.line(ov,(0,ye),(w,ye),(180,180,180),1)\n        la=int(np.sum(cb[:,:w//2]>0)); ra2=int(np.sum(cb[:,w//2:]>0))\n        asym=round(abs(la-ra2)/max(la+ra2,1),3); mets['asymmetry']=asym\n        ysc,xsc=np.where(cb>0)\n        if len(xsc):\n            cxc=int(np.mean(xsc)); cyc=int(np.mean(ysc))\n            mets['centroid_x_pct']=round(100*cxc/w,1); mets['centroid_y_pct']=round(100*cyc/h,1)\n            rd=max(6,w//40); cv2.circle(ov,(cxc,cyc),rd,(0,255,255),-1); cv2.circle(ov,(cxc,cyc),rd,(0,0,0),2)\n        cv2.line(ov,(w//2,0),(w//2,h),(0,220,220),max(1,w//100))\n        out_main=cv2.addWeighted(ov,0.55,viz,0.45,0)\n        out_dict=mets; out_scalar=float(asym)"
+        }
+      },
+      "width": 280,
+      "height": 300
+    },
+    {
+      "id": "fa-display",
+      "type": "output_display",
+      "position": {
+        "x": 2100,
+        "y": 40
+      },
+      "data": {
+        "label": "Zone Visualization",
+        "params": {},
+        "ports": [
+          {
+            "id": "image__fa_viz",
+            "color": "image",
+            "label": "Zone Map"
+          }
+        ],
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 260
+    },
+    {
+      "id": "fa-inspector",
+      "type": "data_inspector",
+      "position": {
+        "x": 2100,
+        "y": 360
+      },
+      "data": {
+        "label": "Metrics",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__fa_data",
+            "color": "any",
+            "label": "Data"
+          }
+        ]
+      },
+      "width": 260,
+      "height": 180
+    }
+  ],
+  "edges": [
+    {
+      "id": "fa-e1",
+      "source": "fa-input",
+      "sourceHandle": "image__main",
+      "target": "fa-gray",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fa-e2",
+      "source": "fa-gray",
+      "sourceHandle": "image__main",
+      "target": "fa-blur",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fa-e3",
+      "source": "fa-blur",
+      "sourceHandle": "image__main",
+      "target": "fa-thresh",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fa-e4",
+      "source": "fa-thresh",
+      "sourceHandle": "mask__mask",
+      "target": "fa-erode",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "fa-e5",
+      "source": "fa-erode",
+      "sourceHandle": "mask__mask",
+      "target": "fa-dilate",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "fa-e6",
+      "source": "fa-input",
+      "sourceHandle": "image__main",
+      "target": "fa-python",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "fa-e7",
+      "source": "fa-dilate",
+      "sourceHandle": "mask__mask",
+      "target": "fa-python",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "fa-e8",
+      "source": "fa-python",
+      "sourceHandle": "image__main",
+      "target": "fa-display",
+      "targetHandle": "image__fa_viz"
+    },
+    {
+      "id": "fa-e9",
+      "source": "fa-python",
+      "sourceHandle": "dict__out_dict",
+      "target": "fa-inspector",
+      "targetHandle": "any__fa_data"
+    }
+  ]
+}

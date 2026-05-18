@@ -1,0 +1,311 @@
+{
+  "nodes": [
+    {
+      "id": "fb-frame1",
+      "type": "canvas_frame",
+      "position": {
+        "x": -20,
+        "y": -60
+      },
+      "style": {
+        "width": 1730,
+        "height": 330,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 0,
+          "title": "1 — Preprocessing"
+        }
+      },
+      "width": 1730,
+      "height": 330
+    },
+    {
+      "id": "fb-frame2",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1740,
+        "y": -60
+      },
+      "style": {
+        "width": 680,
+        "height": 330,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 1,
+          "title": "2 — Morphometric Analysis"
+        }
+      },
+      "width": 680,
+      "height": 330
+    },
+    {
+      "id": "fb-note1",
+      "type": "canvas_note",
+      "position": {
+        "x": -20,
+        "y": 280
+      },
+      "style": {
+        "width": 1730,
+        "height": 120
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Même preprocessing que Pipeline A.\nThreshold ~100 pour isoler l'empreinte (fond sombre → empreinte claire).\nDilate (size 9) pour refermer les petits trous.",
+          "color_index": 0
+        }
+      },
+      "width": 1730,
+      "height": 120
+    },
+    {
+      "id": "fb-note2",
+      "type": "canvas_note",
+      "position": {
+        "x": 1740,
+        "y": 280
+      },
+      "style": {
+        "width": 680,
+        "height": 120
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Staheli Arch Index = aire voûte / (voûte + avant-pied)\n  < 0.21 : voûte creuse  |  0.21-0.26 : normale  |  > 0.26 : plate\nAsymétrie médiale/latérale, ratio talon/avant-pied, centroïde de pression.",
+          "color_index": 1
+        }
+      },
+      "width": 680,
+      "height": 120
+    },
+    {
+      "id": "fb-input",
+      "type": "input_image",
+      "position": {
+        "x": 20,
+        "y": 60
+      },
+      "data": {
+        "label": "Footprint",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/footprint.jpg",
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 203
+    },
+    {
+      "id": "fb-gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 290,
+        "y": 60
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {}
+      },
+      "width": 208,
+      "height": 180
+    },
+    {
+      "id": "fb-blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 560,
+        "y": 60
+      },
+      "data": {
+        "label": "Denoise",
+        "params": {
+          "size": 5
+        }
+      },
+      "width": 208,
+      "height": 180
+    },
+    {
+      "id": "fb-thresh",
+      "type": "filter_threshold",
+      "position": {
+        "x": 830,
+        "y": 60
+      },
+      "data": {
+        "label": "Threshold",
+        "params": {
+          "threshold": 100
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fb-erode",
+      "type": "filter_morphology",
+      "position": {
+        "x": 1100,
+        "y": 60
+      },
+      "data": {
+        "label": "Erode (denoise)",
+        "params": {
+          "operation": 1,
+          "size": 3
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fb-dilate",
+      "type": "filter_morphology",
+      "position": {
+        "x": 1370,
+        "y": 60
+      },
+      "data": {
+        "label": "Dilate (fill)",
+        "params": {
+          "operation": 0,
+          "size": 9
+        }
+      },
+      "width": 208,
+      "height": 190
+    },
+    {
+      "id": "fb-python",
+      "type": "logic_python",
+      "position": {
+        "x": 1760,
+        "y": 60
+      },
+      "data": {
+        "label": "Morphometric Analysis",
+        "params": {
+          "code": "# a = source image (BGR/gray), b = binary mask\n# Morphometric forensic analysis: Staheli arch index, heel/forefoot ratio, asymmetry\nimg = a\nmask = b\nif img is None or mask is None:\n    out_main = img if img is not None else None\nelse:\n    mg = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY) if len(mask.shape)==3 else mask.copy()\n    _, bin_m = cv2.threshold(mg, 127, 255, cv2.THRESH_BINARY)\n    ctrs, _ = cv2.findContours(bin_m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)\n    if not ctrs:\n        out_main = img\n    else:\n        cnt = max(ctrs, key=cv2.contourArea)\n        rect = cv2.minAreaRect(cnt)\n        cx, cy = rect[0]; w_r, h_r = rect[1]; ang = rect[2]\n        if w_r < h_r: ang += 90.0; w_r, h_r = h_r, w_r\n        H, W = bin_m.shape[:2]; pad = int(max(W,H)*0.75)\n        def rp(im, nearest=False):\n            p = cv2.copyMakeBorder(im, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)\n            M = cv2.getRotationMatrix2D((cx+pad, cy+pad), ang, 1.0)\n            fl = cv2.INTER_NEAREST if nearest else cv2.INTER_LINEAR\n            return cv2.warpAffine(p, M, (p.shape[1], p.shape[0]), flags=fl)\n        rb = rp(bin_m, nearest=True)\n        src = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if len(img.shape)==2 else img.copy()\n        ri = rp(src)\n        cpx=int(cx+pad); cpy=int(cy+pad)\n        x0=max(0,int(cpx-w_r/2)); y0=max(0,int(cpy-h_r/2))\n        x1=min(rb.shape[1],int(cpx+w_r/2)); y1=min(rb.shape[0],int(cpy+h_r/2))\n        cb=rb[y0:y1,x0:x1]; ci=ri[y0:y1,x0:x1]\n        h,w=cb.shape[:2]; tot=max(1,int(np.sum(cb>0)))\n        ysp,xsp=np.where(cb>0)\n        if len(xsp)==0:\n            out_main=ci\n        else:\n            ymi,yma=int(np.min(ysp)),int(np.max(ysp))\n            xmi,xma=int(np.min(xsp)),int(np.max(xsp))\n            fh=max(1,yma-ymi); fw=max(1,xma-xmi)\n            t1=ymi+fh//3; t2=ymi+2*fh//3\n            fore_a=int(np.sum(cb[ymi:t1,xmi:xma]>0))\n            arch_a=int(np.sum(cb[t1:t2,xmi:xma]>0))\n            heel_a=int(np.sum(cb[t2:yma,xmi:xma]>0))\n            staheli=round(arch_a/max(1,fore_a+arch_a),3)\n            def zw(sl):\n                cols=np.where(np.any(sl>0,axis=0))[0]\n                return int(cols[-1]-cols[0]) if len(cols)>1 else 0\n            hw=zw(cb[t2:yma,xmi:xma]); fw2=zw(cb[ymi:t1,xmi:xma])\n            hw_fw=round(hw/max(fw2,1),3)\n            cxc=int(np.mean(xsp)); cyc=int(np.mean(ysp))\n            cx_pct=round(100*(cxc-xmi)/fw,1); cy_pct=round(100*(cyc-ymi)/fh,1)\n            mx=(xmi+xma)//2\n            la=int(np.sum(cb[:,xmi:mx]>0)); ra2=int(np.sum(cb[:,mx:xma]>0))\n            asym=round(abs(la-ra2)/max(la+ra2,1),3)\n            viz=ci.copy(); ov=viz.copy()\n            ZC=[(ymi,t1,(80,200,120),'Forefoot'),(t1,t2,(80,160,240),'Arch'),(t2,yma,(240,80,60),'Heel')]\n            for ys,ye,col,lbl in ZC:\n                zm=cb[ys:ye,xmi:xma]; m=zm>0; ov[ys:ye,xmi:xma][m]=col\n                fs=max(0.3,0.55*fw/200); th2=max(1,fw//150)\n                cv2.putText(ov,lbl,(xmi+5,(ys+ye)//2),cv2.FONT_HERSHEY_SIMPLEX,fs,(255,255,255),th2,cv2.LINE_AA)\n            for yline in [t1,t2]: cv2.line(ov,(xmi,yline),(xma,yline),(180,180,180),1)\n            cv2.line(ov,(mx,ymi),(mx,yma),(0,220,220),max(1,fw//120))\n            cv2.line(ov,(xmi,ymi+fh//6),(xma,ymi+fh//6),(255,165,0),max(1,fw//200))\n            cv2.line(ov,(xmi,ymi+5*fh//6),(xma,ymi+5*fh//6),(255,165,0),max(1,fw//200))\n            rd=max(5,fw//50); cv2.circle(ov,(cxc,cyc),rd,(0,255,255),-1); cv2.circle(ov,(cxc,cyc),rd,(0,0,0),2)\n            fs2=max(0.3,0.45*fw/200); th3=max(1,fw//180)\n            cv2.putText(ov,'Staheli: '+str(staheli),(xmi+5,yma-8),cv2.FONT_HERSHEY_SIMPLEX,fs2,(255,255,100),th3,cv2.LINE_AA)\n            cv2.putText(ov,'Asym: '+str(asym),(xmi+5,yma-8-int(20*fw/200)),cv2.FONT_HERSHEY_SIMPLEX,fs2,(0,220,220),th3,cv2.LINE_AA)\n            out_main=cv2.addWeighted(ov,0.55,viz,0.45,0)\n            out_dict={'staheli_arch_index':staheli,'heel_forefoot_ratio':hw_fw,'asymmetry_score':asym,\n                      'centroid_x_pct':cx_pct,'centroid_y_pct':cy_pct,\n                      'heel_area_pct':round(100*heel_a/tot,1),'arch_area_pct':round(100*arch_a/tot,1),\n                      'forefoot_area_pct':round(100*fore_a/tot,1),'total_area_px':tot}\n            out_scalar=float(staheli)"
+        }
+      },
+      "width": 280,
+      "height": 300
+    },
+    {
+      "id": "fb-display",
+      "type": "output_display",
+      "position": {
+        "x": 2100,
+        "y": 40
+      },
+      "data": {
+        "label": "Morphometric Viz",
+        "params": {},
+        "ports": [
+          {
+            "id": "image__fb_viz",
+            "color": "image",
+            "label": "Morphometric Map"
+          }
+        ],
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 260
+    },
+    {
+      "id": "fb-inspector",
+      "type": "data_inspector",
+      "position": {
+        "x": 2100,
+        "y": 360
+      },
+      "data": {
+        "label": "Forensic Metrics",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__fb_data",
+            "color": "any",
+            "label": "Data"
+          }
+        ]
+      },
+      "width": 260,
+      "height": 180
+    }
+  ],
+  "edges": [
+    {
+      "id": "fb-e1",
+      "source": "fb-input",
+      "sourceHandle": "image__main",
+      "target": "fb-gray",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fb-e2",
+      "source": "fb-gray",
+      "sourceHandle": "image__main",
+      "target": "fb-blur",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fb-e3",
+      "source": "fb-blur",
+      "sourceHandle": "image__main",
+      "target": "fb-thresh",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "fb-e4",
+      "source": "fb-thresh",
+      "sourceHandle": "mask__mask",
+      "target": "fb-erode",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "fb-e5",
+      "source": "fb-erode",
+      "sourceHandle": "mask__mask",
+      "target": "fb-dilate",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "fb-e6",
+      "source": "fb-input",
+      "sourceHandle": "image__main",
+      "target": "fb-python",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "fb-e7",
+      "source": "fb-dilate",
+      "sourceHandle": "mask__mask",
+      "target": "fb-python",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "fb-e8",
+      "source": "fb-python",
+      "sourceHandle": "image__main",
+      "target": "fb-display",
+      "targetHandle": "image__fb_viz"
+    },
+    {
+      "id": "fb-e9",
+      "source": "fb-python",
+      "sourceHandle": "dict__out_dict",
+      "target": "fb-inspector",
+      "targetHandle": "any__fb_data"
+    }
+  ]
+}
