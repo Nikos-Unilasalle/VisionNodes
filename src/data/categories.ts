@@ -93,6 +93,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geom_cropper',          label: 'Auto Cropper',        description: 'Crops around a detected object bounding box with padding.' },
     { type: 'geom_approx_poly',      label: 'Approx Polygon',     description: 'Approximates a contour with fewer vertices (Ramer-Douglas-Peucker).' },
     { type: 'geom_fit_shape',        label: 'Fit Shape',          description: 'Fits an ellipse or rectangle to a contour.' },
+    { type: 'geom_obb',              label: 'Oriented Bounding Box', description: 'Minimum-area oriented bounding box from mask contours with auto-rotation deskew.' },
     { type: 'plugin_offset',         label: 'Offset',             description: 'Translates the image by (dx, dy) pixels.' },
   ]},
   { id: 'mask', label: 'Mask', icon: Scissors, section: 'generic', nodes: [
