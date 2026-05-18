@@ -1201,7 +1201,7 @@ export const ForensicFootprintNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode title="Footprint Forensics" icon={Activity} selected={selected} data={data} color="accent"
-      inputs={[{ id: 'image', color: 'image' }, { id: 'mask', color: 'mask' }]}
+      inputs={[{ id: 'image', color: 'image' }, { id: 'mask', color: 'mask' }, { id: 'px_per_mm', color: 'scalar', label: 'Px/mm' }]}
       outputs={[
         { id: 'main',      color: 'image'  },
         { id: 'report',    color: 'dict'   },

@@ -125,19 +125,9 @@
     "file": "sphere_counting_hough.vn"
   },
   {
-    "name": "Footprint — A: Zone Analysis & Asymmetry",
-    "description": "Forensic footwear analysis pipeline A. Auto-aligns footprint via OBB, segments 4 longitudinal zones (Toes/Forefoot/Arch/Heel), computes per-zone area percentages, medial/lateral asymmetry score, and pressure centroid. Uses only generic nodes + Python Node.",
-    "file": "footprint_zone_analysis.vn"
-  },
-  {
-    "name": "Footprint — B: Morphometric Analysis",
-    "description": "Forensic footwear morphometry pipeline B. Computes Staheli Arch Index, heel/forefoot width ratio, asymmetry score, and pressure centroid from the auto-deskewed binary mask. Outputs a labeled color-zone visualization and full metrics dict.",
+    "name": "Forensic Foot Print Analysis",
+    "description": "Forensic footwear morphometry pipeline. Computes Staheli Arch Index, heel/forefoot width ratio, asymmetry score, and pressure centroid from the auto-deskewed binary mask. Includes mm calibration via interactive line drawing. Outputs a labeled color-zone visualization and full metrics dict.",
     "file": "footprint_morphometry.vn"
-  },
-  {
-    "name": "Analyse d'Empreintes — Cours CV",
-    "description": "Pipeline pédagogique pour l'analyse forensique d'empreintes de chaussures : seuillage, morphologie, détection de contours, et analyse géométrique (BBox / OBB). 7 étapes annotées en français.",
-    "file": "footwear_cv_course.vn"
   },
   {
     "name": "Hematology — Blood Cell Count (CBC)",

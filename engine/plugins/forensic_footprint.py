@@ -27,8 +27,9 @@ _ZONES_3 = [
         'and pressure centroid. Connect geom_obb rotated + rotated_mask outputs.'
     ),
     inputs=[
-        {'id': 'image', 'color': 'image'},
-        {'id': 'mask',  'color': 'mask'},
+        {'id': 'image',      'color': 'image'},
+        {'id': 'mask',       'color': 'mask'},
+        {'id': 'px_per_mm',  'color': 'scalar', 'label': 'Px/mm'},
     ],
     outputs=[
         {'id': 'main',      'color': 'image'},
@@ -73,6 +74,9 @@ class ForensicFootprintNode(NodeProcessor):
         use_pressure     = str(params.get('pressure_weights', True)).lower() not in ('false', '0', 'no')
         show_meas        = str(params.get('show_measurements', True)).lower() not in ('false', '0', 'no')
         alpha            = float(params.get('alpha', 0.55))
+        px_per_mm_raw    = inputs.get('px_per_mm')
+        px_per_mm        = float(px_per_mm_raw) if px_per_mm_raw is not None and float(px_per_mm_raw) > 0 else 0.0
+        has_calib        = px_per_mm > 0
 
         zone_defs = _ZONES_4 if n_zones_idx == 0 else _ZONES_3
         n = len(zone_defs)
@@ -175,6 +179,9 @@ class ForensicFootprintNode(NodeProcessor):
         metrics['centroid_x_pct'] = round(100 * (cxc - xmi) / fw, 1)
         metrics['centroid_y_pct'] = round(100 * (cyc - ymi) / fh, 1)
         metrics['total_area_px']  = total_area
+        if has_calib:
+            metrics['foot_length_mm'] = round(fh / px_per_mm, 1)
+            metrics['foot_width_mm']  = round(fw / px_per_mm, 1)
 
         # Width measurement lines at forefoot and heel levels
         if show_meas:
@@ -189,7 +196,12 @@ class ForensicFootprintNode(NodeProcessor):
                     cv2.line(ov, (lx, meas_y), (rx, meas_y), (255, 165, 0), max(1, fw // 200))
                     w_px = int(rx - lx)
                     fs2  = max(0.25, 0.38 * fw / 200)
-                    cv2.putText(ov, f'{w_px}px', (rx + 4, meas_y),
+                    if has_calib:
+                        label = f'{w_px / px_per_mm:.1f}mm'
+                        metrics[key + '_width_mm'] = round(w_px / px_per_mm, 1)
+                    else:
+                        label = f'{w_px}px'
+                    cv2.putText(ov, label, (rx + 4, meas_y),
                                 cv2.FONT_HERSHEY_SIMPLEX, fs2, (255, 165, 0), 1, cv2.LINE_AA)
                     widths[key] = w_px
             if widths.get('forefoot', 0) > 0:
