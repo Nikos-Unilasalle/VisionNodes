@@ -73,7 +73,7 @@ COLLECTIONS = {
     ],
     params=[
         {'id': 'fetch',       'type': 'trigger', 'default': 0,               'label': 'Fetch'},
-        {'id': 'gcp_project', 'type': 'string',  'default': '',              'label': 'GCP Project ID (laisser vide si sauvegardé)'},
+        {'id': 'gcp_project', 'type': 'string',  'default': '',              'label': 'GCP Project ID (leave empty if saved)'},
         {'id': 'collection',  'type': 'enum',    'options': list(COLLECTIONS.keys()), 'default': 'Sentinel-2 SR', 'label': 'Collection'},
         {'id': 'location',    'type': 'string',  'default': 'Paris, France', 'label': 'Location or "lat,lon"'},
         {'id': 'date_start',  'type': 'string',  'default': '2024-01-01',    'label': 'Start Date'},

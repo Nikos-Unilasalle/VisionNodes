@@ -22,7 +22,7 @@ class FlipNode(NodeProcessor):
     label="Resize",
     category='geometry',
     icon="Scaling",
-    description="Réduit la résolution de l'image pour accélérer les traitements en aval.",
+    description="Reduces the image resolution to accelerate downstream processing.",
     inputs=[{"id": "image", "color": "image"}],
     outputs=[
         {"id": "main", "color": "image"},
@@ -30,11 +30,11 @@ class FlipNode(NodeProcessor):
         {"id": "height", "color": "scalar"}
     ],
     params=[
-        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Échelle (%)", "Largeur", "Hauteur", "Exact"], "default": 0},
-        {"id": "scale", "label": "Échelle", "type": "float", "default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01},
-        {"id": "width", "label": "Largeur (px)", "type": "int", "default": 640, "min": 1, "max": 7680},
-        {"id": "height", "label": "Hauteur (px)", "type": "int", "default": 480, "min": 1, "max": 7680},
-        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Auto (reco.)", "Nearest", "Linear", "Cubic", "Lanczos", "Area"], "default": 0}
+        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Scale (%)", "Width", "Height", "Exact"], "default": 0},
+        {"id": "scale", "label": "Scale", "type": "float", "default": 0.5, "min": 0.01, "max": 1.0, "step": 0.01},
+        {"id": "width", "label": "Width (px)", "type": "int", "default": 640, "min": 1, "max": 7680},
+        {"id": "height", "label": "Height (px)", "type": "int", "default": 480, "min": 1, "max": 7680},
+        {"id": "interpolation", "label": "Interpolation", "type": "enum", "options": ["Auto (rec.)", "Nearest", "Linear", "Cubic", "Lanczos", "Area"], "default": 0}
     ]
 )
 class ResizeNode(NodeProcessor):

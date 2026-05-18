@@ -32,7 +32,7 @@ _FLOW_PRESETS = [
         {"id": "data", "color": "any"}
     ],
     params=[
-        {"id": "preset", "label": "Preset", "type": "enum", "options": ['Standard', 'Précis / Lent', 'Rapide', 'Haute qualité', 'Performance', 'Personnalisé'], "default": 0},
+        {"id": "preset", "label": "Preset", "type": "enum", "options": ['Standard', 'Precise / Slow', 'Fast', 'High Quality', 'Performance', 'Custom'], "default": 0},
         {"id": "pyr_scale", "label": "Pyramid Scale", "type": "float", "default": 0.5},
         {"id": "levels", "label": "Levels", "type": "int", "default": 3},
         {"id": "winsize", "label": "Win Size", "type": "int", "default": 15},

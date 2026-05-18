@@ -81,7 +81,7 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
     ],
     params=[
         # ── Authentication ──
-        {'id': 'hf_token', 'label': 'Hugging Face Token (laisser vide si sauvegardé)', 'type': 'string',
+        {'id': 'hf_token', 'label': 'Hugging Face Token (leave empty if saved)', 'type': 'string',
          'default': ''},
 
         # ── Model Selection ──
@@ -104,8 +104,8 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Mask Selection ──
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
          'type': 'boolean', 'default': True},
-        {'id': 'mask_select', 'label': 'Candidate (si multi-mask)',
-         'type': 'enum', 'options': ['Best (IOU auto)', 'Candidat 1', 'Candidat 2', 'Candidat 3'],
+        {'id': 'mask_select', 'label': 'Candidate (if multi-mask)',
+         'type': 'enum', 'options': ['Best (IOU auto)', 'Candidate 1', 'Candidate 2', 'Candidate 3'],
          'default': 0},
         # ── Visualization ──
         {'id': 'overlay_opacity', 'label': 'Overlay Opacity (%)', 'type': 'number',
