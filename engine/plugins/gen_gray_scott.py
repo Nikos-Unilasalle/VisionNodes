@@ -36,10 +36,11 @@ def _laplacian(Z: np.ndarray) -> np.ndarray:
     label='Gray-Scott',
     category='utility',
     icon='Atom',
-    description="Gray-Scott reaction-diffusion simulation. Stateful: runs N iterations per frame. Connect Canvas nodes for U/V init, or let it self-initialize. Reset to restart.",
+    description="Gray-Scott reaction-diffusion simulation. Stateful: runs N iterations per frame. Connect Canvas nodes for U/V init, or let it self-initialize. Connect a grayscale image to 'mask' for image-guided RD (bright=pattern, dark=suppressed). Reset to restart.",
     inputs=[
         {'id': 'init_u',    'color': 'image'},
         {'id': 'init_v',    'color': 'image'},
+        {'id': 'mask',      'color': 'image'},
         {'id': 'seed_x',    'color': 'scalar'},
         {'id': 'seed_y',    'color': 'scalar'},
         {'id': 'seed_trig', 'color': 'scalar'},
@@ -131,13 +132,17 @@ class GrayScottNode(NodeProcessor):
 
     # ── Step ──────────────────────────────────────────────────────────────
 
-    def _step(self, Du, Dv, f, k, dt):
+    def _step(self, Du, Dv, f, k, dt, mask=None):
         U, V = self._U, self._V
         uvv  = U * V * V
         lapU = _laplacian(U)
         lapV = _laplacian(V)
         self._U = np.clip(U + dt * (Du * lapU - uvv + f * (1.0 - U)), 0.0, 1.0)
         self._V = np.clip(V + dt * (Dv * lapV + uvv - (f + k) * V),   0.0, 1.0)
+        if mask is not None:
+            # Suppress V in dark regions; restore U toward 1 where V is killed
+            self._V *= mask
+            self._U = np.clip(self._U + (1.0 - mask) * 0.05, 0.0, 1.0)
 
     # ── Paint seed at (x,y) ───────────────────────────────────────────────
 
@@ -203,8 +208,14 @@ class GrayScottNode(NodeProcessor):
         dt         = float(params.get('dt', 1.0))
         iterations = int(params.get('iterations', 8))
 
+        # Image-guided mask: bright=pattern develops, dark=V suppressed
+        w = int(params.get('width', 256))
+        h = int(params.get('height', 256))
+        mask_img = inputs.get('mask')
+        rd_mask = self._to_float(mask_img, w, h) if mask_img is not None else None
+
         for _ in range(iterations):
-            self._step(Du, Dv, f, k, dt)
+            self._step(Du, Dv, f, k, dt, mask=rd_mask)
 
         # Build preview
         cmap_idx  = int(params.get('colormap', 0))

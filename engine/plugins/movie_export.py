@@ -1,5 +1,6 @@
 from registry import vision_node, NodeProcessor
 import cv2
+import numpy as np
 import os
 import time
 
@@ -35,7 +36,7 @@ class MovieExportNode(NodeProcessor):
         if not path.lower().endswith('.mp4'):
             path = path + '.mp4'
         h, w = img.shape[:2]
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
         self.writer = cv2.VideoWriter(path, fourcc, float(fps), (w, h))
         self.writer_size = (w, h)
         self.save_path = path
@@ -68,6 +69,8 @@ class MovieExportNode(NodeProcessor):
 
         if recording and self.writer is not None and img is not None:
             frame = img if (len(img.shape) == 3 and img.shape[2] == 3) else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            if frame.dtype != np.uint8:
+                frame = (np.clip(frame, 0.0, 1.0) * 255).astype(np.uint8)
             if (frame.shape[1], frame.shape[0]) != self.writer_size:
                 frame = cv2.resize(frame, self.writer_size)
             self.writer.write(frame)

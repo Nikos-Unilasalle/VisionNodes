@@ -21,7 +21,7 @@ class NoteNode(NodeProcessor):
     def process(self, inputs, params): return {}
 
 @vision_node(
-    type_id="group_frame",
+    type_id="canvas_frame",
     label="Frame",
     category='canvas',
     icon="Square",

@@ -41,8 +41,12 @@ class AdvancedBlendNode(NodeProcessor):
         img_b = cv2.resize(img_b, (img_a.shape[1], img_a.shape[0]))
         if len(img_b.shape) == 2: img_b = cv2.cvtColor(img_b, cv2.COLOR_GRAY2BGR)
 
-        A = img_a.astype(np.float32) / 255.0
-        B = img_b.astype(np.float32) / 255.0
+        def to_float(img):
+            f = img.astype(np.float32)
+            return f / 255.0 if f.max() > 1.0 else f
+
+        A = to_float(img_a)
+        B = to_float(img_b)
         
         mode = int(params.get('mode', 0))
         opacity = float(params.get('opacity', 100)) / 100.0
@@ -100,8 +104,4 @@ class AdvancedBlendNode(NodeProcessor):
         # Opacity blend
         final = A * (1.0 - opacity) + res * opacity
         
-        # Back to uint8
-        return {
-            'main': (final * 255).astype(np.uint8),
-            'display_text': params['mode_options'][mode] if 'mode_options' in params else params.get('options', [])[mode] if 'options' in params else f"Mode {mode}"
-        }
+        return {'main': final.astype(np.float32)}
