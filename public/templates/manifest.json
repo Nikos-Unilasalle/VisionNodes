@@ -133,5 +133,10 @@
     "name": "Hematology — Blood Cell Count (CBC)",
     "description": "Veterinary complete blood count (CBC) pipeline processing two parallel color-separated channels. Pink channel (R-B) extracts RBCs via watershed segmentation and size filtering. Purple channel (B*0.5 + R*0.3 - G*0.8) isolates WBCs (via watershed) and platelets (via size filtering). Features a highly adjustable 24-node, 42-connection pipeline and compiles a structured CBC report (species, patient info, diagnostic interpretation).",
     "file": "hema_blood_analysis.vn"
+  },
+  {
+    "name": "Reaction Diffusion (Gray-Scott)",
+    "description": "Two parallel pipelines: a modular generic implementation using Canvas, Feedback, and Python nodes for dU/dt and dV/dt equations; and a simplified all-in-one Gray-Scott node with coral preset for direct experimentation.",
+    "file": "reaction_diffusion.vn"
   }
 ]
