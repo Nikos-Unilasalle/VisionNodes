@@ -181,17 +181,21 @@ function App() {
     freeEndpoints: { x: number; y: number }[];
   } | null>(null);
 
-  const handleCapture = useCallback(async (nodeId: string, base64: string) => {
+  // Pending capture: open dialog immediately on click, write when both path + data are ready
+  const pendingCapturePath = useRef<string | null>(null);
+  const pendingCaptureBase64 = useRef<string | null>(null);
+
+  const handleCapture = useCallback(async (_nodeId: string, base64: string) => {
     try {
-      const path = await save({
-        defaultPath: `capture_${nodeId}_${Date.now()}.png`,
-        filters: [{ name: 'Image', extensions: ['png'] }]
-      });
-      if (path) {
-        const res = await fetch(`data:image/png;base64,${base64}`);
-        const arrayBuffer = await res.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
+      const writeTo = async (path: string, b64: string) => {
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
         await writeFile(path, bytes);
+      };
+      if (pendingCapturePath.current) {
+        await writeTo(pendingCapturePath.current, base64);
+        pendingCapturePath.current = null;
+      } else {
+        pendingCaptureBase64.current = base64;
       }
     } catch (err) {
       console.error('Failed to save image:', err);
@@ -279,10 +283,24 @@ function App() {
     }
   }, [requestPyExport, pushNotification]);
 
-  const handleSaveAsImage = useCallback((nodeId: string) => {
+  const handleSaveAsImage = useCallback(async (nodeId: string) => {
     const nodeType = nodes.find(n => n.id === nodeId)?.type;
-    if (nodeType === 'sci_plotter') capturePlotterAsImage(nodeId);
-    else requestCapture(nodeId);
+    if (nodeType === 'sci_plotter') { capturePlotterAsImage(nodeId); return; }
+    // Open dialog immediately — no wait for image data
+    pendingCapturePath.current = null;
+    pendingCaptureBase64.current = null;
+    const [path] = await Promise.all([
+      save({ defaultPath: `capture_${nodeId}_${Date.now()}.png`, filters: [{ name: 'Image', extensions: ['png'] }] }),
+      Promise.resolve(requestCapture(nodeId)),
+    ]);
+    if (!path) { pendingCaptureBase64.current = null; return; }
+    if (pendingCaptureBase64.current) {
+      const bytes = Uint8Array.from(atob(pendingCaptureBase64.current), c => c.charCodeAt(0));
+      await writeFile(path, bytes);
+      pendingCaptureBase64.current = null;
+    } else {
+      pendingCapturePath.current = path;
+    }
   }, [nodes, capturePlotterAsImage, requestCapture]);
 
   const dynamicCategories = useMemo(() => {

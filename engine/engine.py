@@ -493,7 +493,7 @@ class VisionEngine:
                                 if capture_img.dtype != np.uint8:
                                     capture_img = np.clip(capture_img, 0, 255).astype(np.uint8)
                                 if len(capture_img.shape) == 2: capture_img = cv2.cvtColor(capture_img, cv2.COLOR_GRAY2BGR)
-                                _, c_buf = cv2.imencode('.png', capture_img)
+                                _, c_buf = cv2.imencode('.png', capture_img, [cv2.IMWRITE_PNG_COMPRESSION, 1])
                                 c_b64 = base64.b64encode(c_buf).decode('utf-8')
                                 async def send_capture(b):
                                     msg = json.dumps({"type": "node_capture", "node_id": nid, "image": b})
