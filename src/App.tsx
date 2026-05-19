@@ -37,6 +37,7 @@ import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
+import TutorialOverlay from './components/overlays/TutorialOverlay';
 import ContextMenu from './components/menus/ContextMenu';
 import AddNodeMenu from './components/menus/AddNodeMenu';
 import Header from './components/header/Header';
@@ -154,6 +155,7 @@ function App() {
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
   const [previewPopped, setPreviewPopped] = useState(false);
+  const [isTutorialMode, setIsTutorialMode] = useState(false);
   const popoutWinRef = useRef<any>(null);
   const popoutLabelRef = useRef(`preview-popout-0`);
   const [previewZoom, setPreviewZoom] = useState(1);
@@ -1073,6 +1075,18 @@ function App() {
   });
 
   useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac ? e.metaKey : e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        setIsTutorialMode(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  useEffect(() => {
     const handleRemoveEdge = (e: any) => {
       const { nodeId, handleId, type } = e.detail;
       setViewEdges((eds) => {
@@ -1511,6 +1525,7 @@ function App() {
       </div>
 
       <AboutModal showAbout={showAbout} setShowAbout={setShowAbout} />
+      {isTutorialMode && <TutorialOverlay />}
     </div>
   );
 }

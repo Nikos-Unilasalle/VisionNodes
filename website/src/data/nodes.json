@@ -193,6 +193,13 @@
             "type": "trigger"
           }
         ]
+      },
+      {
+        "type": "gen_canvas",
+        "label": "Canvas",
+        "category": "input",
+        "icon": "Square",
+        "description": "Procedural float32 image: solid, center dot, noise, value noise, checkerboard, stripes, dots, gradients, rings. Static or animated."
       }
     ]
   },
@@ -381,6 +388,61 @@
             "min": 0.0,
             "max": 1.0,
             "default": 0.5
+          }
+        ]
+      },
+      {
+        "type": "output_save_frame",
+        "label": "Save Frame",
+        "category": "output",
+        "icon": "ImageDown",
+        "description": "Saves an image to disk on trigger. Supports PNG, JPG, TIFF, BMP.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "trigger",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "saved_path",
+            "color": "string"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "Folder",
+            "type": "string",
+            "default": "exports"
+          },
+          {
+            "id": "filename",
+            "label": "Filename",
+            "type": "string",
+            "default": "frame"
+          },
+          {
+            "id": "format",
+            "label": "Format",
+            "type": "enum",
+            "options": [
+              "PNG",
+              "JPG",
+              "TIFF",
+              "BMP"
+            ],
+            "default": 0
+          },
+          {
+            "id": "auto_timestamp",
+            "label": "Auto Timestamp",
+            "type": "bool",
+            "default": true
           }
         ]
       }
@@ -1510,6 +1572,20 @@
             "max": 5.0
           }
         ]
+      },
+      {
+        "type": "filter_laplacian",
+        "label": "Laplacian",
+        "category": "image",
+        "icon": "Sigma",
+        "description": "Discrete Laplacian (∇²) in float32. Essential diffusion step for reaction-diffusion."
+      },
+      {
+        "type": "filter_img_clamp",
+        "label": "Image Clamp",
+        "category": "image",
+        "icon": "Minimize2",
+        "description": "Clamps pixel values between min and max. Prevents overflow in iterative pipelines."
       }
     ]
   },
@@ -4015,6 +4091,57 @@
             "default": false
           }
         ]
+      },
+      {
+        "type": "draw_arrow",
+        "label": "Draw Arrow",
+        "category": "draw",
+        "icon": "MoveRight",
+        "description": "Draws an arrow between two normalized points.",
+        "inputs": [
+          {
+            "id": "x1",
+            "color": "scalar"
+          },
+          {
+            "id": "y1",
+            "color": "scalar"
+          },
+          {
+            "id": "x2",
+            "color": "scalar"
+          },
+          {
+            "id": "y2",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "draw",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "color",
+            "label": "Color",
+            "type": "color",
+            "default": "#FF6600"
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "int",
+            "default": 2
+          },
+          {
+            "id": "tip_length",
+            "label": "Tip Length",
+            "type": "float",
+            "default": 0.3
+          }
+        ]
       }
     ]
   },
@@ -4826,6 +4953,100 @@
             "label": "Manual B",
             "type": "number",
             "default": 0
+          }
+        ]
+      },
+      {
+        "type": "math_expr",
+        "label": "Math Expression",
+        "category": "math",
+        "icon": "Function",
+        "description": "Evaluates a math expression. Inputs a–e as variables. Supports sin, cos, sqrt, clamp, lerp, log, pow, pi, e, etc.",
+        "inputs": [
+          {
+            "id": "a",
+            "color": "scalar"
+          },
+          {
+            "id": "b",
+            "color": "scalar"
+          },
+          {
+            "id": "c",
+            "color": "scalar"
+          },
+          {
+            "id": "d",
+            "color": "scalar"
+          },
+          {
+            "id": "e",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "expression",
+            "label": "Expression",
+            "type": "string",
+            "default": "a + b"
+          }
+        ]
+      },
+      {
+        "type": "math_map_range",
+        "label": "Map Range",
+        "category": "math",
+        "icon": "ArrowLeftRight",
+        "description": "Remaps a scalar from [in_min, in_max] to [out_min, out_max]. Optional clamp.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "in_min",
+            "label": "In Min",
+            "type": "float",
+            "default": 0.0
+          },
+          {
+            "id": "in_max",
+            "label": "In Max",
+            "type": "float",
+            "default": 1.0
+          },
+          {
+            "id": "out_min",
+            "label": "Out Min",
+            "type": "float",
+            "default": 0.0
+          },
+          {
+            "id": "out_max",
+            "label": "Out Max",
+            "type": "float",
+            "default": 100.0
+          },
+          {
+            "id": "clamp",
+            "label": "Clamp",
+            "type": "bool",
+            "default": false
           }
         ]
       }
@@ -10927,12 +11148,58 @@
             "default": 0
           }
         ]
+      },
+      {
+        "type": "data_list_ops",
+        "label": "List Ops",
+        "category": "data",
+        "icon": "ListOrdered",
+        "description": "List operations: sort, reverse, unique, slice, flatten, append, length, contains.",
+        "inputs": [
+          {
+            "id": "list_in",
+            "color": "list"
+          },
+          {
+            "id": "value",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list_out",
+            "color": "list"
+          },
+          {
+            "id": "value_out",
+            "color": "any"
+          }
+        ],
+        "params": [
+          {
+            "id": "operation",
+            "label": "Operation",
+            "type": "enum",
+            "options": [
+              "sort",
+              "sort desc",
+              "reverse",
+              "unique",
+              "flatten",
+              "slice",
+              "append",
+              "length",
+              "contains"
+            ],
+            "default": 0
+          }
+        ]
       }
     ]
   },
   {
-    "id": "utility",
-    "label": "Utility",
+    "id": "logic",
+    "label": "Logic",
     "nodes": [
       {
         "type": "logic_python",
@@ -10989,6 +11256,301 @@
         ],
         "description": "Run custom Python scripts with dynamic inputs."
       },
+      {
+        "type": "logic_compare",
+        "label": "Compare",
+        "category": "utility",
+        "icon": "Layers",
+        "description": "Compares two values with =, ≠, <, >, ≤, ≥.",
+        "inputs": [
+          {
+            "id": "in_a",
+            "color": "scalar"
+          },
+          {
+            "id": "in_b",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "boolean"
+          }
+        ],
+        "params": [
+          {
+            "id": "op",
+            "label": "Operator",
+            "type": "enum",
+            "options": [
+              "==",
+              "!=",
+              ">",
+              "<",
+              ">=",
+              "<="
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "logic_gate",
+        "label": "Logic Gate",
+        "category": "utility",
+        "icon": "Layers",
+        "description": "AND, OR, NOT, XOR boolean gate on two signals.",
+        "inputs": [
+          {
+            "id": "in_a",
+            "color": "boolean"
+          },
+          {
+            "id": "in_b",
+            "color": "boolean"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "boolean"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "AND",
+              "OR",
+              "XOR",
+              "NOT A"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "logic_switch",
+        "label": "Switch",
+        "category": "utility",
+        "icon": "Zap",
+        "description": "Routes signal A or B based on a boolean condition.",
+        "inputs": [
+          {
+            "id": "condition",
+            "color": "boolean"
+          },
+          {
+            "id": "if_true",
+            "color": "any"
+          },
+          {
+            "id": "if_false",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "output",
+            "color": "any"
+          }
+        ]
+      },
+      {
+        "type": "logic_presence",
+        "label": "Presence",
+        "category": "utility",
+        "icon": "User",
+        "description": "Outputs a boolean indicating whether an input is present.",
+        "inputs": [
+          {
+            "id": "data",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "found",
+            "color": "boolean"
+          }
+        ]
+      },
+      {
+        "type": "logic_collect",
+        "label": "Collect",
+        "category": "utility",
+        "icon": "ListPlus",
+        "description": "Collects multiple values into a list.",
+        "inputs": [
+          {
+            "id": "condition",
+            "label": "Condition",
+            "color": "boolean"
+          },
+          {
+            "id": "value",
+            "label": "Value",
+            "color": "any"
+          },
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list",
+            "label": "List",
+            "color": "list"
+          },
+          {
+            "id": "count",
+            "label": "Count",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Every True frame",
+              "Rising edge only",
+              "Check every N frames"
+            ],
+            "default": 0
+          },
+          {
+            "id": "interval",
+            "label": "Check every N",
+            "type": "int",
+            "default": 30,
+            "min": 1,
+            "max": 500
+          },
+          {
+            "id": "reset",
+            "label": "Reset List",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "export",
+            "label": "Export CSV",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "filename",
+            "label": "Filename",
+            "type": "string",
+            "default": "collected"
+          },
+          {
+            "id": "path",
+            "label": "Folder",
+            "type": "string",
+            "default": "exports"
+          }
+        ]
+      },
+      {
+        "type": "logic_latch",
+        "label": "Latch",
+        "category": "logic",
+        "icon": "BookmarkCheck",
+        "description": "Holds the last valid value. Useful for intermittent detections.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "any"
+          },
+          {
+            "id": "reset",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "held",
+            "color": "any"
+          },
+          {
+            "id": "active",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Latch on",
+            "type": "enum",
+            "options": [
+              "non-null",
+              "non-zero",
+              "any"
+            ],
+            "default": 0
+          }
+        ]
+      },
+      {
+        "type": "signal_gate",
+        "label": "Signal Gate",
+        "category": "logic",
+        "icon": "DoorOpen",
+        "description": "Passes or blocks any value based on a gate signal.",
+        "inputs": [
+          {
+            "id": "value",
+            "color": "any"
+          },
+          {
+            "id": "gate",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "out",
+            "color": "any"
+          },
+          {
+            "id": "passed",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "open_when",
+            "label": "Open when gate",
+            "type": "enum",
+            "options": [
+              "> 0",
+              "= 0",
+              "always"
+            ],
+            "default": 0
+          },
+          {
+            "id": "hold_last",
+            "label": "Hold last value",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "utility",
+    "label": "Utility",
+    "nodes": [
       {
         "type": "mask_point_query",
         "label": "Mask Point Query",
@@ -11250,209 +11812,6 @@
             "min": 5.0,
             "max": 70.0,
             "step": 0.5
-          }
-        ]
-      },
-      {
-        "type": "logic_compare",
-        "label": "Compare",
-        "category": "utility",
-        "icon": "Layers",
-        "description": "Compares two values with =, ≠, <, >, ≤, ≥.",
-        "inputs": [
-          {
-            "id": "in_a",
-            "color": "scalar"
-          },
-          {
-            "id": "in_b",
-            "color": "scalar"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "result",
-            "color": "boolean"
-          }
-        ],
-        "params": [
-          {
-            "id": "op",
-            "label": "Operator",
-            "type": "enum",
-            "options": [
-              "==",
-              "!=",
-              ">",
-              "<",
-              ">=",
-              "<="
-            ],
-            "default": 0
-          }
-        ]
-      },
-      {
-        "type": "logic_gate",
-        "label": "Logic Gate",
-        "category": "utility",
-        "icon": "Layers",
-        "description": "AND, OR, NOT, XOR boolean gate on two signals.",
-        "inputs": [
-          {
-            "id": "in_a",
-            "color": "boolean"
-          },
-          {
-            "id": "in_b",
-            "color": "boolean"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "result",
-            "color": "boolean"
-          }
-        ],
-        "params": [
-          {
-            "id": "mode",
-            "label": "Mode",
-            "type": "enum",
-            "options": [
-              "AND",
-              "OR",
-              "XOR",
-              "NOT A"
-            ],
-            "default": 0
-          }
-        ]
-      },
-      {
-        "type": "logic_switch",
-        "label": "Switch",
-        "category": "utility",
-        "icon": "Zap",
-        "description": "Routes signal A or B based on a boolean condition.",
-        "inputs": [
-          {
-            "id": "condition",
-            "color": "boolean"
-          },
-          {
-            "id": "if_true",
-            "color": "any"
-          },
-          {
-            "id": "if_false",
-            "color": "any"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "output",
-            "color": "any"
-          }
-        ]
-      },
-      {
-        "type": "logic_presence",
-        "label": "Presence",
-        "category": "utility",
-        "icon": "User",
-        "description": "Outputs a boolean indicating whether an input is present.",
-        "inputs": [
-          {
-            "id": "data",
-            "color": "any"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "found",
-            "color": "boolean"
-          }
-        ]
-      },
-      {
-        "type": "logic_collect",
-        "label": "Collect",
-        "category": "utility",
-        "icon": "ListPlus",
-        "description": "Collects multiple values into a list.",
-        "inputs": [
-          {
-            "id": "condition",
-            "label": "Condition",
-            "color": "boolean"
-          },
-          {
-            "id": "value",
-            "label": "Value",
-            "color": "any"
-          },
-          {
-            "id": "image",
-            "label": "Image",
-            "color": "image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "list",
-            "label": "List",
-            "color": "list"
-          },
-          {
-            "id": "count",
-            "label": "Count",
-            "color": "scalar"
-          }
-        ],
-        "params": [
-          {
-            "id": "mode",
-            "label": "Mode",
-            "type": "enum",
-            "options": [
-              "Every True frame",
-              "Rising edge only",
-              "Check every N frames"
-            ],
-            "default": 0
-          },
-          {
-            "id": "interval",
-            "label": "Check every N",
-            "type": "int",
-            "default": 30,
-            "min": 1,
-            "max": 500
-          },
-          {
-            "id": "reset",
-            "label": "Reset List",
-            "type": "trigger",
-            "default": 0
-          },
-          {
-            "id": "export",
-            "label": "Export CSV",
-            "type": "trigger",
-            "default": 0
-          },
-          {
-            "id": "filename",
-            "label": "Filename",
-            "type": "string",
-            "default": "collected"
-          },
-          {
-            "id": "path",
-            "label": "Folder",
-            "type": "string",
-            "default": "exports"
           }
         ]
       },
@@ -12002,6 +12361,20 @@
           }
         ],
         "colorable": true
+      },
+      {
+        "type": "gen_feedback",
+        "label": "Feedback",
+        "category": "utility",
+        "icon": "RefreshCw",
+        "description": "Outputs previous frame. Essential for iterative algorithms (reaction-diffusion, cellular automata)."
+      },
+      {
+        "type": "gen_gray_scott",
+        "label": "Gray-Scott",
+        "category": "utility",
+        "icon": "Atom",
+        "description": "Gray-Scott reaction-diffusion. Presets: coral, mitosis, worms, spots, labyrinth, solitons…"
       }
     ]
   },

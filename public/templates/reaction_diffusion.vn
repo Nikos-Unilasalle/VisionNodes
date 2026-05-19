@@ -1,0 +1,283 @@
+{
+  "nodes": [
+    {
+      "id": "lbl-gen",
+      "type": "note",
+      "position": {
+        "x": 50,
+        "y": 30
+      },
+      "data": {
+        "label": "── Generic Pipeline (modular) ──",
+        "params": {
+          "text": "── Generic Pipeline (modular) ──"
+        }
+      }
+    },
+    {
+      "id": "lbl-gs",
+      "type": "note",
+      "position": {
+        "x": 50,
+        "y": 620
+      },
+      "data": {
+        "label": "── Simplified Pipeline — Gray-Scott ──",
+        "params": {
+          "text": "── Simplified Pipeline — Gray-Scott ──"
+        }
+      }
+    },
+    {
+      "id": "canvas-u",
+      "type": "gen_canvas",
+      "position": {
+        "x": 50,
+        "y": 100
+      },
+      "data": {
+        "label": "Canvas U (= 1)",
+        "params": {
+          "pattern": 0,
+          "width": 256,
+          "height": 256,
+          "value_min": 1.0,
+          "value_max": 1.0,
+          "seed_size": 0.05,
+          "tile_count": 8,
+          "octaves": 4,
+          "noise_scale": 0.1,
+          "seed": 42,
+          "animate": false,
+          "regenerate": 0
+        }
+      }
+    },
+    {
+      "id": "canvas-v",
+      "type": "gen_canvas",
+      "position": {
+        "x": 50,
+        "y": 380
+      },
+      "data": {
+        "label": "Canvas V (seed)",
+        "params": {
+          "pattern": 1,
+          "width": 256,
+          "height": 256,
+          "value_min": 0.0,
+          "value_max": 1.0,
+          "seed_size": 0.06,
+          "tile_count": 8,
+          "octaves": 4,
+          "noise_scale": 0.1,
+          "seed": 42,
+          "animate": false,
+          "regenerate": 0
+        }
+      }
+    },
+    {
+      "id": "feedback-u",
+      "type": "gen_feedback",
+      "position": {
+        "x": 310,
+        "y": 100
+      },
+      "data": {
+        "label": "Feedback U",
+        "params": {
+          "width": 256,
+          "height": 256
+        }
+      }
+    },
+    {
+      "id": "feedback-v",
+      "type": "gen_feedback",
+      "position": {
+        "x": 310,
+        "y": 380
+      },
+      "data": {
+        "label": "Feedback V",
+        "params": {
+          "width": 256,
+          "height": 256
+        }
+      }
+    },
+    {
+      "id": "py-u",
+      "type": "logic_python",
+      "position": {
+        "x": 620,
+        "y": 100
+      },
+      "data": {
+        "label": "dU / dt",
+        "params": {
+          "code": "# Gray-Scott — U channel update\n# a = U_prev, b = V_prev\nU = a.astype(np.float32) if a is not None else np.ones((256,256), dtype=np.float32)\nV = b.astype(np.float32) if b is not None else np.zeros((256,256), dtype=np.float32)\nif U.max() > 1.0: U /= 255.0\nif V.max() > 1.0: V /= 255.0\nlap = np.array([[0,1,0],[1,-4,1],[0,1,0]], np.float32)\nlapU = cv2.filter2D(U, cv2.CV_32F, lap)\nuvv = U * V * V\nDu, f = 0.16, 0.055\nout_main = np.clip(U + Du*lapU - uvv + f*(1-U), 0, 1).astype(np.float32)\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None"
+        }
+      }
+    },
+    {
+      "id": "py-v",
+      "type": "logic_python",
+      "position": {
+        "x": 620,
+        "y": 380
+      },
+      "data": {
+        "label": "dV / dt",
+        "params": {
+          "code": "# Gray-Scott — V channel update\n# a = U_prev, b = V_prev\nU = a.astype(np.float32) if a is not None else np.ones((256,256), dtype=np.float32)\nV = b.astype(np.float32) if b is not None else np.zeros((256,256), dtype=np.float32)\nif U.max() > 1.0: U /= 255.0\nif V.max() > 1.0: V /= 255.0\nlap = np.array([[0,1,0],[1,-4,1],[0,1,0]], np.float32)\nlapV = cv2.filter2D(V, cv2.CV_32F, lap)\nuvv = U * V * V\nDv, f, k = 0.08, 0.055, 0.062\nout_main = np.clip(V + Dv*lapV + uvv - (f+k)*V, 0, 1).astype(np.float32)\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None"
+        }
+      }
+    },
+    {
+      "id": "cmap-gen",
+      "type": "sci_colormap",
+      "position": {
+        "x": 890,
+        "y": 380
+      },
+      "data": {
+        "label": "Colormap V",
+        "params": {
+          "colormap": 0,
+          "auto_range": true
+        }
+      }
+    },
+    {
+      "id": "disp-gen",
+      "type": "output_display",
+      "position": {
+        "x": 1100,
+        "y": 240
+      },
+      "data": {
+        "label": "Display",
+        "params": {}
+      }
+    },
+    {
+      "id": "gs",
+      "type": "gen_gray_scott",
+      "position": {
+        "x": 200,
+        "y": 700
+      },
+      "data": {
+        "label": "Gray-Scott",
+        "params": {
+          "preset": 1,
+          "f": 0.0545,
+          "k": 0.062,
+          "Du": 0.16,
+          "Dv": 0.08,
+          "dt": 1.0,
+          "iterations": 8,
+          "width": 256,
+          "height": 256,
+          "seed_radius": 0.05,
+          "colormap": 0,
+          "reset": 0
+        }
+      }
+    },
+    {
+      "id": "disp-gs",
+      "type": "output_display",
+      "position": {
+        "x": 530,
+        "y": 700
+      },
+      "data": {
+        "label": "Display",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e01",
+      "source": "canvas-u",
+      "target": "feedback-u",
+      "sourceHandle": "image__image",
+      "targetHandle": "image__init"
+    },
+    {
+      "id": "e02",
+      "source": "canvas-v",
+      "target": "feedback-v",
+      "sourceHandle": "image__image",
+      "targetHandle": "image__init"
+    },
+    {
+      "id": "e03",
+      "source": "feedback-u",
+      "target": "py-u",
+      "sourceHandle": "image__prev",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e04",
+      "source": "feedback-v",
+      "target": "py-u",
+      "sourceHandle": "image__prev",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e05",
+      "source": "feedback-u",
+      "target": "py-v",
+      "sourceHandle": "image__prev",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e06",
+      "source": "feedback-v",
+      "target": "py-v",
+      "sourceHandle": "image__prev",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e07",
+      "source": "py-u",
+      "target": "feedback-u",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e08",
+      "source": "py-v",
+      "target": "feedback-v",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e09",
+      "source": "py-v",
+      "target": "cmap-gen",
+      "sourceHandle": "image__main",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e10",
+      "source": "cmap-gen",
+      "target": "disp-gen",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e11",
+      "source": "gs",
+      "target": "disp-gs",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    }
+  ]
+}

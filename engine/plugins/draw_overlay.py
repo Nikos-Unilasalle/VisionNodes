@@ -156,6 +156,9 @@ class DrawOverlayNode(NodeProcessor):
             cv2.ellipse(img, scaled_pts[0], (rx, ry), angle, 0, 360, color, -1 if fill else max(1, thick))
             if 'label' in data:
                 cv2.ellipse(img, scaled_pts[0], (rx, ry), angle, 0, 360, color, max(1, thick))
+        elif shape == 'arrow' and len(scaled_pts) >= 2:
+            tip = float(data.get('tip_length', 0.3))
+            cv2.arrowedLine(img, scaled_pts[0], scaled_pts[1], color, max(1, thick), tipLength=tip)
         elif shape == 'text' and len(scaled_pts) > 0:
             text = str(data.get('text', data.get('label', '')))
             scale = float(data.get('font_scale', 1.0))

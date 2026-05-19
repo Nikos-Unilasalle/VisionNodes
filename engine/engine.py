@@ -257,6 +257,8 @@ REALTIME_NODE_TYPES = {
     'signal_generator', 'signal_clock', 'serial_reader',
     'plotter_pro', 'sci_plotter', 'analysis_monitor', 'util_inspector',
     'logic_collect',
+    # Stateful simulation nodes — must loop continuously
+    'gen_gray_scott', 'gen_feedback',
 }
 
 
