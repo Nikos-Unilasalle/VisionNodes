@@ -1133,6 +1133,8 @@ function App() {
           addNode('plugin_audio_input', fileName, undefined, { path: p }, finalPos, true);
         } else if (['tif', 'tiff', 'jp2'].includes(ext)) {
           addNode('geo_geotiff_reader', fileName, undefined, { file_path: p }, finalPos, true);
+        } else if (ext === 'csv') {
+          addNode('ml_csv_reader', fileName, undefined, { path: p }, finalPos, true);
         } else if (ext === 'vn') {
           confirmUnsaved().then(ok => { if (ok) loadProjectFromPath(p); });
         }

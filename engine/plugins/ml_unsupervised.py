@@ -83,7 +83,7 @@ def _pick_features(df, feat_str):
 @vision_node(
     type_id='ml_kmeans',
     label='K-Means',
-    category='ML / Unsupervised',
+    category='Machine Learning',
     icon='Target',
     description=(
         "K-Means clustering. Slide k to watch clusters form in real time. "
@@ -219,7 +219,7 @@ class MLKMeansNode(NodeProcessor):
 @vision_node(
     type_id='ml_pca',
     label='PCA',
-    category='ML / Unsupervised',
+    category='Machine Learning',
     icon='Aperture',
     description=(
         "Principal Component Analysis. "

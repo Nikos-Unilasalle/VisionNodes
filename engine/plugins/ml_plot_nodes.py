@@ -70,7 +70,7 @@ def _get_mpl():
 @vision_node(
     type_id='ml_scatter_plot',
     label='Scatter Plot',
-    category='ML / Plot',
+    category='DataFrame',
     icon='Crosshair',
     description="2D scatter plot from a DataFrame. Set X/Y columns, optionally color by a class column (hue). Ideal for exploring feature relationships and class separability.",
     inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
@@ -186,7 +186,7 @@ class MLScatterPlotNode(NodeProcessor):
 @vision_node(
     type_id='ml_histogram',
     label='ML Histogram',
-    category='ML / Plot',
+    category='DataFrame',
     icon='BarChart2',
     description="Distribution histogram of a DataFrame column. Optional KDE overlay and per-class breakdown (hue).",
     inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
@@ -281,7 +281,7 @@ class MLHistogramNode(NodeProcessor):
 @vision_node(
     type_id='ml_corr_heatmap',
     label='Correlation Heatmap',
-    category='ML / Plot',
+    category='DataFrame',
     icon='Grid',
     description="Pearson correlation matrix of numeric DataFrame columns. Essential for feature selection.",
     inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],

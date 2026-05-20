@@ -176,6 +176,22 @@ const highlightPython = (code: string): string => {
 };
 
 interface CodeInputProps { label: string; val: string; onChange: (v: string) => void; }
+const CODE_GUTTER = 32;  // px — matches w-8
+const CODE_PAD_Y  = 12;  // px — matches py-3
+const CODE_PAD_R  = 16;  // px — matches pr-4
+const CODE_LINE_H = 18;  // px — explicit so textarea & highlight stay in sync
+const CODE_FONT   = 11;  // px
+
+const codeAreaStyle: React.CSSProperties = {
+  paddingTop:    CODE_PAD_Y,
+  paddingBottom: CODE_PAD_Y,
+  paddingLeft:   CODE_GUTTER,
+  paddingRight:  CODE_PAD_R,
+  lineHeight:    `${CODE_LINE_H}px`,
+  fontSize:      `${CODE_FONT}px`,
+  fontFamily:    'ui-monospace, SFMono-Regular, Menlo, monospace',
+};
+
 export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -193,15 +209,19 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
         <div className="text-[8px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</div>
       </div>
       <div className="relative rounded-xl overflow-hidden border border-[#4f5b6b] group-hover:border-accent/40 transition-all shadow-inner bg-[#1e2530]">
-        <div className="absolute inset-y-0 left-0 w-8 bg-black/15 border-r border-white/5 flex flex-col items-center pt-3 pb-3 text-[8px] font-mono text-gray-600 select-none pointer-events-none z-10 overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 bg-black/15 border-r border-white/5 flex flex-col items-center text-gray-600 select-none pointer-events-none z-10 overflow-hidden"
+          style={{ width: CODE_GUTTER, paddingTop: CODE_PAD_Y, paddingBottom: CODE_PAD_Y, fontSize: 8, fontFamily: codeAreaStyle.fontFamily }}
+        >
           {Array.from({ length: lineCount }, (_, i) => (
-            <div key={i} className="leading-relaxed h-[1.5em] flex items-center">{i + 1}</div>
+            <div key={i} style={{ height: CODE_LINE_H, lineHeight: `${CODE_LINE_H}px` }} className="flex items-center">{i + 1}</div>
           ))}
         </div>
         <div
           ref={highlightRef}
           aria-hidden="true"
-          className="absolute inset-0 left-8 pt-3 pb-3 pr-4 text-[11px] font-mono leading-relaxed overflow-hidden pointer-events-none whitespace-pre select-none"
+          className="absolute inset-0 overflow-hidden pointer-events-none whitespace-pre select-none"
+          style={codeAreaStyle}
           dangerouslySetInnerHTML={{ __html: highlightPython(val || '') + '\n' }}
         />
         <textarea
@@ -209,14 +229,28 @@ export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
           value={val}
           onChange={(e) => onChange(e.target.value)}
           onScroll={syncScroll}
+          onKeyDown={(e) => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              e.stopPropagation();
+              const ta = e.currentTarget;
+              const start = ta.selectionStart ?? 0;
+              const end   = ta.selectionEnd   ?? 0;
+              const indent = '    ';
+              onChange(val.substring(0, start) + indent + val.substring(end));
+              requestAnimationFrame(() => {
+                ta.selectionStart = ta.selectionEnd = start + indent.length;
+              });
+            }
+          }}
           spellCheck={false}
-          className="relative w-full h-80 bg-transparent pl-10 pr-4 py-3 text-[11px] font-mono text-transparent caret-white outline-none resize-none scrollbar-hide leading-relaxed z-[1]"
+          className="relative w-full h-80 bg-transparent text-transparent caret-white outline-none resize-none scrollbar-hide z-[1]"
           placeholder="Write your script here..."
-          style={{ caretColor: '#fff' }}
+          style={{ ...codeAreaStyle, color: 'transparent', caretColor: '#fff' }}
         />
       </div>
       <div className="text-[8px] text-gray-500 italic px-1">
-        Inputs: <span className="text-pink-400">a, b, c, d</span> · Persistence: <span className="text-pink-400">state['key']</span> · Outputs: <span className="text-blue-400">out_main, out_scalar, out_list, out_dict, out_any</span>
+        Inputs: <span className="text-pink-400">a, b, c, d</span> · Persistence: <span className="text-pink-400">state['key']</span> · Outputs: <span className="text-blue-400">out_main, out_scalar, out_list, out_dict, out_any, out_data, out_e</span>
       </div>
     </div>
   );
@@ -961,16 +995,118 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   );
 };
 
+const DataFramePanel = ({ meta }: { meta: any }) => {
+  const [showHead, setShowHead] = React.useState(false);
+  const shape: [number, number] = meta.shape || [0, 0];
+  const columns: string[] = meta.columns || [];
+  const dtypes: Record<string, string> = meta.dtypes || {};
+  const nulls: Record<string, number>  = meta.nulls  || {};
+  const head: Record<string, any>[]    = meta.head   || [];
+
+  const dtypeColor = (t: string) =>
+    t.startsWith('int') || t.startsWith('float') || t.startsWith('complex') ? 'text-blue-400' :
+    t.startsWith('bool') ? 'text-emerald-400' :
+    t === 'object' || t.startsWith('str') ? 'text-amber-400' :
+    t.startsWith('datetime') ? 'text-purple-400' :
+    'text-gray-400';
+
+  const totalNulls = Object.values(nulls).reduce((s, n) => s + n, 0);
+
+  return (
+    <div className="space-y-2">
+      {/* Shape + quality bar */}
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-black font-mono text-orange-300">
+          {shape[0].toLocaleString()} × {shape[1]}
+        </span>
+        {totalNulls > 0 && (
+          <span className="text-[8px] text-red-400 font-mono">{totalNulls} nulls</span>
+        )}
+      </div>
+
+      {/* Column list */}
+      <div className="space-y-0.5 max-h-40 overflow-y-auto scrollbar-hide">
+        {columns.map(col => {
+          const n = nulls[col] ?? 0;
+          const pct = shape[0] > 0 ? (n / shape[0]) * 100 : 0;
+          return (
+            <div key={col} className="flex items-center gap-1.5 text-[9px] py-0.5">
+              <span className="text-gray-300 flex-1 truncate font-medium">{col}</span>
+              <span className={`font-mono shrink-0 ${dtypeColor(dtypes[col] || '')}`}>{dtypes[col]}</span>
+              {n > 0 && (
+                <span className="text-[7px] font-mono text-red-400/80 shrink-0">{pct.toFixed(0)}%∅</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Head toggle */}
+      {head.length > 0 && (
+        <button
+          onClick={() => setShowHead(h => !h)}
+          className="w-full py-1 rounded-lg bg-white/5 border border-white/10 text-[7px] font-black uppercase tracking-widest text-gray-500 hover:text-orange-300 hover:border-orange-500/30 transition-all"
+        >
+          {showHead ? '▲ Masquer aperçu' : '▼ Aperçu données'}
+        </button>
+      )}
+      {showHead && head.length > 0 && (
+        <div className="overflow-x-auto scrollbar-hide rounded-lg border border-white/10">
+          <table className="text-[8px] font-mono w-full">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5">
+                {columns.slice(0, 6).map(c => (
+                  <th key={c} className="px-1.5 py-1 text-left text-gray-500 font-black truncate max-w-16">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {head.map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? '' : 'bg-white/3'}>
+                  {columns.slice(0, 6).map(c => (
+                    <td key={c} className="px-1.5 py-0.5 text-gray-400 truncate max-w-16">
+                      {row[c] === null || row[c] === undefined ? <span className="text-red-400/60">∅</span> : String(row[c]).slice(0, 10)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AnalysisDataPanel = ({ liveData }: { liveData: any }) => {
   if (!liveData || Object.keys(liveData).length === 0) return null;
+
+  const dfMeta = liveData.df_meta;
+  const otherKeys = Object.keys(liveData).filter(k => k !== 'df_meta' && k !== 'preview' && k !== 'main');
+  const hasOther = otherKeys.length > 0;
+
+  if (!dfMeta && !hasOther) return null;
+
   return (
-    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl shrink-0">
-      <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10">
-        <Activity size={10} /> Analysis Data
-      </div>
-      <pre className="text-[10px] font-mono text-green-400/90 max-h-48 overflow-auto scrollbar-hide italic leading-relaxed">
-        {JSON.stringify(liveData, null, 2)}
-      </pre>
+    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-4 shadow-2xl shrink-0">
+      {dfMeta && (
+        <div className="space-y-2">
+          <div className="text-[9px] font-black text-orange-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-orange-400/5 p-2 rounded-lg border border-orange-400/10">
+            <Activity size={10} /> DataFrame
+          </div>
+          <DataFramePanel meta={dfMeta} />
+        </div>
+      )}
+      {hasOther && (
+        <div className="space-y-2">
+          <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10">
+            <Activity size={10} /> Analysis Data
+          </div>
+          <pre className="text-[9px] font-mono text-green-400/90 max-h-32 overflow-auto scrollbar-hide italic leading-relaxed">
+            {JSON.stringify(Object.fromEntries(otherKeys.map(k => [k, liveData[k]])), null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 };

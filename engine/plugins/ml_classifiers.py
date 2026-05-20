@@ -65,7 +65,7 @@ def _out_size(params, default_w=540, default_h=420):
 @vision_node(
     type_id='ml_train_test_split',
     label='Train / Test Split',
-    category='ML / Data',
+    category='Machine Learning',
     icon='Scissors',
     description="Split a DataFrame into training and test sets. Connect train → model, test → evaluation.",
     inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
@@ -149,7 +149,7 @@ class MLTrainTestSplitNode(NodeProcessor):
 @vision_node(
     type_id='ml_knn_classifier',
     label='KNN Classifier',
-    category='ML / Classifiers',
+    category='Machine Learning',
     icon='Users',
     description=(
         "K-Nearest Neighbors classifier. "
@@ -162,10 +162,11 @@ class MLTrainTestSplitNode(NodeProcessor):
         {'id': 'test',  'color': 'data', 'label': 'Test set'},
     ],
     outputs=[
-        {'id': 'preview',    'color': 'image',  'label': 'Decision boundary / Confusion matrix'},
-        {'id': 'accuracy',   'color': 'scalar', 'label': 'Test accuracy'},
-        {'id': 'train_acc',  'color': 'scalar', 'label': 'Train accuracy'},
-        {'id': 'report',     'color': 'image',  'label': 'Classification report'},
+        {'id': 'preview',     'color': 'image',  'label': 'Decision boundary / Confusion matrix'},
+        {'id': 'accuracy',    'color': 'scalar', 'label': 'Test accuracy'},
+        {'id': 'train_acc',   'color': 'scalar', 'label': 'Train accuracy'},
+        {'id': 'report',      'color': 'image',  'label': 'Classification report'},
+        {'id': 'report_data', 'color': 'dict',   'label': 'Report dict'},
     ],
     params=[
         {'id': 'features',  'label': 'Feature columns (comma-separated)',  'type': 'string', 'default': ''},
@@ -263,19 +264,21 @@ class MLKnnClassifierNode(NodeProcessor):
 
             # ── Classification report panel ─────────────────────────────────
             if len(X_test) > 0:
-                report_str = classification_report(y_test, knn.predict(X_test),
-                                                   target_names=[str(c) for c in classes],
-                                                   zero_division=0)
+                report_dict = classification_report(y_test, knn.predict(X_test),
+                                                    target_names=[str(c) for c in classes],
+                                                    output_dict=True, zero_division=0)
             else:
-                report_str = "(no test data)"
-            report_img = _text_panel(report_str, max(int(fig_w * dpi), 380), 260,
-                                     title=f"Classification Report  —  k={k}")
+                report_dict = {}
+            report_w = max(int(fig_w * dpi), 420)
+            report_img = _report_panel(report_dict, report_w, 280,
+                                       title=f"KNN  k={k}", plt=plt)
 
         return {
-            'preview':   preview,
-            'accuracy':  test_acc,
-            'train_acc': train_acc,
-            'report':    report_img,
+            'preview':     preview,
+            'accuracy':    test_acc,
+            'train_acc':   train_acc,
+            'report':      report_img,
+            'report_data': report_dict,
         }
 
 
@@ -354,15 +357,65 @@ def _plot_confusion(knn, X_te, y_te, classes, cmap, test_acc, k, fig_w, fig_h, d
     return img
 
 
-def _text_panel(text: str, w: int, h: int, title: str = '') -> np.ndarray:
-    img = np.full((h, w, 3), 22, dtype=np.uint8)
-    cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
-    cv2.putText(img, title, (8, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 200), 1, cv2.LINE_AA)
-    cv2.line(img, (0, 26), (w, 26), (80, 80, 80), 1)
-    y0, line_h = 44, 15
-    max_lines = (h - y0) // line_h
-    for i, line in enumerate(text.split('\n')[:max_lines]):
-        color = (140, 200, 255) if i == 0 else (185, 185, 185)
-        cv2.putText(img, line[:90], (8, y0 + i * line_h),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.36, color, 1, cv2.LINE_AA)
+def _report_panel(report_dict: dict, w: int, h: int, title: str, plt) -> np.ndarray:
+    """Matplotlib-rendered classification report table."""
+    classes = [k for k in report_dict
+               if isinstance(report_dict[k], dict) and k not in ('macro avg', 'weighted avg')]
+
+    col_labels = ['Class', 'Precision', 'Recall', 'F1', 'Support']
+    rows = []
+    for cls in classes:
+        d = report_dict[cls]
+        rows.append([str(cls),
+                     f"{d.get('precision', 0):.2f}",
+                     f"{d.get('recall', 0):.2f}",
+                     f"{d.get('f1-score', 0):.2f}",
+                     str(int(d.get('support', 0)))])
+    if 'weighted avg' in report_dict:
+        d = report_dict['weighted avg']
+        rows.append(['weighted avg',
+                     f"{d.get('precision', 0):.2f}",
+                     f"{d.get('recall', 0):.2f}",
+                     f"{d.get('f1-score', 0):.2f}",
+                     str(int(d.get('support', 0)))])
+
+    acc = report_dict.get('accuracy', None)
+    dpi = 100
+    fig, ax = plt.subplots(figsize=(w / dpi, h / dpi))
+    ax.set_axis_off()
+    fig.patch.set_facecolor('#161616')
+
+    if rows:
+        tbl = ax.table(cellText=rows, colLabels=col_labels,
+                       loc='upper center', cellLoc='center')
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(9)
+        tbl.scale(1, 1.6)
+
+        for j in range(len(col_labels)):
+            cell = tbl[0, j]
+            cell.set_facecolor('#2a2a3a')
+            cell.set_text_props(color='#a5b4fc', fontweight='bold')
+            cell.set_edgecolor('#444466')
+
+        for i, row in enumerate(rows):
+            is_summary = row[0] == 'weighted avg'
+            for j in range(len(col_labels)):
+                cell = tbl[i + 1, j]
+                cell.set_facecolor('#1e1e30' if is_summary else ('#181820' if i % 2 == 0 else '#1a1a28'))
+                cell.set_edgecolor('#2a2a40')
+                if is_summary:
+                    cell.set_text_props(color='#888899', style='italic')
+                elif j == 3:
+                    f1 = float(row[3])
+                    color = '#6ee7b7' if f1 >= 0.9 else '#fcd34d' if f1 >= 0.7 else '#f87171'
+                    cell.set_text_props(color=color, fontweight='bold')
+                else:
+                    cell.set_text_props(color='#cccccc')
+
+    full_title = f"{title}  ·  Accuracy {acc:.1%}" if acc is not None else title
+    ax.set_title(full_title, fontsize=9, color='#cccccc', pad=8)
+    fig.tight_layout(pad=0.5)
+    img = _fig_to_bgr(fig, dpi)
+    plt.close(fig)
     return img

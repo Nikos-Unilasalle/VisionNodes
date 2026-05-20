@@ -41,6 +41,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   return (
     <div
+      data-no-shortcuts
       className="absolute right-0 top-0 bg-[#3d4452] border-l border-[#4f5b6b] flex flex-col transition-all duration-300 h-full overflow-hidden z-30"
       style={{ width: show ? rightPanelWidth : 0, opacity: show ? 1 : 0 }}
     >
