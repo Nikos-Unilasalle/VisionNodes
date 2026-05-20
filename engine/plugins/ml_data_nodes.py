@@ -307,7 +307,7 @@ class MLSklearnDatasetNode(NodeProcessor):
         self._cache: dict = {}   # key → DataFrame
 
     def process(self, inputs, params):
-        if not self.ensure_packages(['sklearn'], pip_names=['scikit-learn'], notif_id=_NOTIF_ID):
+        if not self.ensure_packages(['sklearn', 'pandas'], pip_names=['scikit-learn', 'pandas'], notif_id=_NOTIF_ID):
             return {}
 
         ds_idx = int(params.get('dataset', 0))
