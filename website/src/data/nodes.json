@@ -199,7 +199,115 @@
         "label": "Canvas",
         "category": "input",
         "icon": "Square",
-        "description": "Procedural float32 image: solid, center dot, noise, value noise, checkerboard, stripes, dots, gradients, rings. Static or animated."
+        "description": "Procedural float32 image generator: solid, dot, noise, value noise, checkerboard, stripes, dots, gradients, rings.",
+        "inputs": [
+          {
+            "id": "reset",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "pattern",
+            "label": "Pattern",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 512,
+            "min": 16,
+            "max": 2048
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 512,
+            "min": 16,
+            "max": 2048
+          },
+          {
+            "id": "value_min",
+            "label": "Value Min",
+            "type": "float",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          {
+            "id": "value_max",
+            "label": "Value Max",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          {
+            "id": "seed_size",
+            "label": "Size / Radius",
+            "type": "float",
+            "default": 0.05,
+            "min": 0.001,
+            "max": 0.5,
+            "step": 0.005
+          },
+          {
+            "id": "tile_count",
+            "label": "Tile Count",
+            "type": "int",
+            "default": 8,
+            "min": 1,
+            "max": 64
+          },
+          {
+            "id": "octaves",
+            "label": "Octaves",
+            "type": "int",
+            "default": 4,
+            "min": 1,
+            "max": 8
+          },
+          {
+            "id": "noise_scale",
+            "label": "Noise Scale",
+            "type": "float",
+            "default": 0.1,
+            "min": 0.001,
+            "max": 1.0,
+            "step": 0.005
+          },
+          {
+            "id": "seed",
+            "label": "Random Seed",
+            "type": "int",
+            "default": 42,
+            "min": 0,
+            "max": 9999
+          },
+          {
+            "id": "animate",
+            "label": "Animate",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "regenerate",
+            "label": "Regenerate",
+            "type": "trigger",
+            "default": 0
+          }
+        ]
       }
     ]
   },
@@ -443,6 +551,20 @@
             "label": "Auto Timestamp",
             "type": "bool",
             "default": true
+          },
+          {
+            "id": "record",
+            "label": "Record (every frame)",
+            "type": "toggle",
+            "default": false
+          },
+          {
+            "id": "quality",
+            "label": "JPG Quality",
+            "type": "int",
+            "default": 95,
+            "min": 1,
+            "max": 100
           }
         ]
       }
@@ -469,7 +591,7 @@
         ]
       },
       {
-        "type": "group_frame",
+        "type": "canvas_frame",
         "label": "Frame",
         "category": "canvas",
         "icon": "Square",
@@ -1578,14 +1700,84 @@
         "label": "Laplacian",
         "category": "image",
         "icon": "Sigma",
-        "description": "Discrete Laplacian (∇²) in float32. Essential diffusion step for reaction-diffusion."
+        "description": "Computes the discrete Laplacian (∇²) in float32. Essential for reaction-diffusion.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "laplacian",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "kernel",
+            "label": "Kernel",
+            "type": "enum",
+            "options": [
+              "4-connected",
+              "8-connected",
+              "Weighted"
+            ],
+            "default": 0
+          },
+          {
+            "id": "scale",
+            "label": "Scale",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.001,
+            "max": 10.0,
+            "step": 0.01
+          },
+          {
+            "id": "normalize",
+            "label": "Normalize out",
+            "type": "bool",
+            "default": false
+          }
+        ]
       },
       {
         "type": "filter_img_clamp",
         "label": "Image Clamp",
         "category": "image",
         "icon": "Minimize2",
-        "description": "Clamps pixel values between min and max. Prevents overflow in iterative pipelines."
+        "description": "Clamps all pixel values between min and max. Prevents overflow in iterative pipelines.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "image",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_val",
+            "label": "Min",
+            "type": "float",
+            "default": 0.0,
+            "max": 10.0,
+            "step": 0.01
+          },
+          {
+            "id": "max_val",
+            "label": "Max",
+            "type": "float",
+            "default": 1.0,
+            "max": 10.0,
+            "step": 0.01
+          }
+        ]
       }
     ]
   },
@@ -4097,7 +4289,7 @@
         "label": "Draw Arrow",
         "category": "draw",
         "icon": "MoveRight",
-        "description": "Draws an arrow between two normalized points.",
+        "description": "Draws an arrow from (x1,y1) to (x2,y2). Coordinates normalized [0,1].",
         "inputs": [
           {
             "id": "x1",
@@ -4124,6 +4316,42 @@
         ],
         "params": [
           {
+            "id": "x1",
+            "label": "X1",
+            "type": "float",
+            "default": 0.2,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y1",
+            "label": "Y1",
+            "type": "float",
+            "default": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "x2",
+            "label": "X2",
+            "type": "float",
+            "default": 0.8,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
+            "id": "y2",
+            "label": "Y2",
+            "type": "float",
+            "default": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          },
+          {
             "id": "color",
             "label": "Color",
             "type": "color",
@@ -4133,13 +4361,18 @@
             "id": "thickness",
             "label": "Thickness",
             "type": "int",
-            "default": 2
+            "default": 2,
+            "min": 1,
+            "max": 20
           },
           {
             "id": "tip_length",
             "label": "Tip Length",
             "type": "float",
-            "default": 0.3
+            "default": 0.3,
+            "min": 0.05,
+            "max": 1.0,
+            "step": 0.05
           }
         ]
       }
@@ -4957,54 +5190,11 @@
         ]
       },
       {
-        "type": "math_expr",
-        "label": "Math Expression",
-        "category": "math",
-        "icon": "Function",
-        "description": "Evaluates a math expression. Inputs a–e as variables. Supports sin, cos, sqrt, clamp, lerp, log, pow, pi, e, etc.",
-        "inputs": [
-          {
-            "id": "a",
-            "color": "scalar"
-          },
-          {
-            "id": "b",
-            "color": "scalar"
-          },
-          {
-            "id": "c",
-            "color": "scalar"
-          },
-          {
-            "id": "d",
-            "color": "scalar"
-          },
-          {
-            "id": "e",
-            "color": "scalar"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "result",
-            "color": "scalar"
-          }
-        ],
-        "params": [
-          {
-            "id": "expression",
-            "label": "Expression",
-            "type": "string",
-            "default": "a + b"
-          }
-        ]
-      },
-      {
         "type": "math_map_range",
         "label": "Map Range",
         "category": "math",
         "icon": "ArrowLeftRight",
-        "description": "Remaps a scalar from [in_min, in_max] to [out_min, out_max]. Optional clamp.",
+        "description": "Remaps a scalar from [in_min, in_max] to [out_min, out_max].",
         "inputs": [
           {
             "id": "value",
@@ -5047,6 +5237,29 @@
             "label": "Clamp",
             "type": "bool",
             "default": false
+          }
+        ]
+      },
+      {
+        "type": "math_expr",
+        "label": "Math Expression",
+        "category": "math",
+        "icon": "Function",
+        "description": "Evaluates a math expression. Inputs a–e as variables.",
+        "dynamic_inputs": true,
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "result",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "expression",
+            "label": "Expression",
+            "type": "string",
+            "default": "a + b"
           }
         ]
       }
@@ -8616,6 +8829,69 @@
     "label": "Measure",
     "nodes": [
       {
+        "type": "sci_index_painter",
+        "label": "Index Painter",
+        "category": "measure",
+        "icon": "Palette",
+        "description": "Interactive float-value painter: draw regions and assign scalar values. Outputs a float32 index map and a uint8 label map.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "index",
+            "color": "image",
+            "label": "Index (float32)"
+          },
+          {
+            "id": "labels",
+            "color": "markers",
+            "label": "Labels (uint8)"
+          }
+        ],
+        "params": [
+          {
+            "id": "classes",
+            "label": "Classes",
+            "type": "string"
+          },
+          {
+            "id": "strokes",
+            "label": "Strokes",
+            "type": "string",
+            "default": "[]"
+          },
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 512,
+            "min": 64,
+            "max": 2048
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 512,
+            "min": 64,
+            "max": 2048
+          },
+          {
+            "id": "bg_value",
+            "label": "BG Value",
+            "type": "float",
+            "default": 0.0,
+            "max": 2.0,
+            "step": 0.01
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          }
+        ]
+      },
+      {
         "type": "sci_histogram",
         "label": "Histogram",
         "category": "measure",
@@ -9770,6 +10046,11 @@
           {
             "id": "mask",
             "color": "mask"
+          },
+          {
+            "id": "px_per_mm",
+            "color": "scalar",
+            "label": "Px/mm"
           }
         ],
         "outputs": [
@@ -11192,6 +11473,24 @@
               "contains"
             ],
             "default": 0
+          },
+          {
+            "id": "slice_start",
+            "label": "Slice Start",
+            "type": "int",
+            "default": 0
+          },
+          {
+            "id": "slice_end",
+            "label": "Slice End",
+            "type": "int",
+            "default": 10
+          },
+          {
+            "id": "slice_step",
+            "label": "Slice Step",
+            "type": "int",
+            "default": 1
           }
         ]
       }
@@ -11204,7 +11503,7 @@
       {
         "type": "logic_python",
         "label": "Python Node",
-        "category": "utility",
+        "category": "logic",
         "icon": "Zap",
         "inputs": [
           {
@@ -11244,14 +11543,23 @@
           {
             "id": "out_any",
             "color": "any"
+          },
+          {
+            "id": "out_data",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "out_e",
+            "color": "string",
+            "label": "Error"
           }
         ],
         "params": [
           {
             "id": "code",
             "label": "Python Script",
-            "type": "string",
-            "default": "# Logic here\n# Inputs: a, b, c, d\n# State persistant entre frames: state['my_var']\n# Outputs: out_main, out_scalar, out_list, out_dict, out_any\n\nout_main = a if isinstance(a, np.ndarray) else None\nout_scalar = 0.0\nout_list = []\nout_dict = {}\nout_any = None\n"
+            "type": "string"
           }
         ],
         "description": "Run custom Python scripts with dynamic inputs."
@@ -11259,7 +11567,7 @@
       {
         "type": "logic_compare",
         "label": "Compare",
-        "category": "utility",
+        "category": "logic",
         "icon": "Layers",
         "description": "Compares two values with =, ≠, <, >, ≤, ≥.",
         "inputs": [
@@ -11298,7 +11606,7 @@
       {
         "type": "logic_gate",
         "label": "Logic Gate",
-        "category": "utility",
+        "category": "logic",
         "icon": "Layers",
         "description": "AND, OR, NOT, XOR boolean gate on two signals.",
         "inputs": [
@@ -11335,7 +11643,7 @@
       {
         "type": "logic_switch",
         "label": "Switch",
-        "category": "utility",
+        "category": "logic",
         "icon": "Zap",
         "description": "Routes signal A or B based on a boolean condition.",
         "inputs": [
@@ -11362,7 +11670,7 @@
       {
         "type": "logic_presence",
         "label": "Presence",
-        "category": "utility",
+        "category": "logic",
         "icon": "User",
         "description": "Outputs a boolean indicating whether an input is present.",
         "inputs": [
@@ -11381,7 +11689,7 @@
       {
         "type": "logic_collect",
         "label": "Collect",
-        "category": "utility",
+        "category": "logic",
         "icon": "ListPlus",
         "description": "Collects multiple values into a list.",
         "inputs": [
@@ -12367,14 +12675,226 @@
         "label": "Feedback",
         "category": "utility",
         "icon": "RefreshCw",
-        "description": "Outputs previous frame. Essential for iterative algorithms (reaction-diffusion, cellular automata)."
+        "description": "Outputs previous frame — essential for iterative algorithms (reaction-diffusion, CA).",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image"
+          },
+          {
+            "id": "init",
+            "color": "image"
+          },
+          {
+            "id": "reset",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "prev",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "width",
+            "label": "Width (init)",
+            "type": "int",
+            "default": 512,
+            "min": 16,
+            "max": 2048
+          },
+          {
+            "id": "height",
+            "label": "Height (init)",
+            "type": "int",
+            "default": 512,
+            "min": 16,
+            "max": 2048
+          }
+        ]
       },
       {
         "type": "gen_gray_scott",
         "label": "Gray-Scott",
         "category": "utility",
         "icon": "Atom",
-        "description": "Gray-Scott reaction-diffusion. Presets: coral, mitosis, worms, spots, labyrinth, solitons…"
+        "description": "Gray-Scott reaction-diffusion simulation with presets (coral, mitosis, worms, spots…).",
+        "inputs": [
+          {
+            "id": "init_u",
+            "color": "image"
+          },
+          {
+            "id": "init_v",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "image"
+          },
+          {
+            "id": "seed_x",
+            "color": "scalar"
+          },
+          {
+            "id": "seed_y",
+            "color": "scalar"
+          },
+          {
+            "id": "seed_trig",
+            "color": "scalar"
+          },
+          {
+            "id": "reset",
+            "color": "scalar"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "U",
+            "color": "image"
+          },
+          {
+            "id": "V",
+            "color": "image"
+          },
+          {
+            "id": "preview",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "preset",
+            "label": "Preset",
+            "type": "enum",
+            "default": 1
+          },
+          {
+            "id": "f",
+            "label": "f  (feed)",
+            "type": "float",
+            "default": 0.0545,
+            "min": 0.0,
+            "max": 0.2,
+            "step": 0.0005
+          },
+          {
+            "id": "k",
+            "label": "k  (kill)",
+            "type": "float",
+            "default": 0.062,
+            "min": 0.0,
+            "max": 0.2,
+            "step": 0.0005
+          },
+          {
+            "id": "Du",
+            "label": "Du (diffusion U)",
+            "type": "float",
+            "default": 0.16,
+            "min": 0.01,
+            "max": 1.0,
+            "step": 0.005
+          },
+          {
+            "id": "Dv",
+            "label": "Dv (diffusion V)",
+            "type": "float",
+            "default": 0.08,
+            "min": 0.01,
+            "max": 1.0,
+            "step": 0.005
+          },
+          {
+            "id": "dt",
+            "label": "dt (time step)",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.1,
+            "max": 2.0,
+            "step": 0.05
+          },
+          {
+            "id": "iterations",
+            "label": "Iter / frame",
+            "type": "int",
+            "default": 8,
+            "min": 1,
+            "max": 50
+          },
+          {
+            "id": "width",
+            "label": "Width",
+            "type": "int",
+            "default": 256,
+            "min": 16,
+            "max": 1024
+          },
+          {
+            "id": "height",
+            "label": "Height",
+            "type": "int",
+            "default": 256,
+            "min": 16,
+            "max": 1024
+          },
+          {
+            "id": "seed_radius",
+            "label": "Seed Radius",
+            "type": "float",
+            "default": 0.05,
+            "min": 0.005,
+            "max": 0.3,
+            "step": 0.005
+          },
+          {
+            "id": "init_mode",
+            "label": "Init Mode",
+            "type": "enum",
+            "options": [
+              "Scattered",
+              "Center Dot"
+            ],
+            "default": 0
+          },
+          {
+            "id": "seed",
+            "label": "Random Seed",
+            "type": "int",
+            "default": 42,
+            "min": 0,
+            "max": 9999
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Inferno",
+              "Viridis",
+              "Jet",
+              "Turbo",
+              "Hot",
+              "Gray"
+            ],
+            "default": 0
+          },
+          {
+            "id": "pause",
+            "label": "Pause",
+            "type": "toggle",
+            "default": false
+          },
+          {
+            "id": "reset",
+            "label": "Reset",
+            "type": "trigger",
+            "default": 0
+          }
+        ]
       }
     ]
   },
@@ -16617,6 +17137,1443 @@
     "label": "Other / Internal",
     "nodes": [
       {
+        "type": "ml_csv_reader",
+        "label": "CSV Reader",
+        "category": "DataFrame",
+        "icon": "FileText",
+        "description": "Load a CSV file as a DataFrame. Connect to DF Filter or DF Stats.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Rows"
+          },
+          {
+            "id": "col_count",
+            "color": "scalar",
+            "label": "Cols"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": "data.csv"
+          },
+          {
+            "id": "separator",
+            "label": "Separator",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "max_rows",
+            "label": "Max Rows (0 = all)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 100000
+          },
+          {
+            "id": "reload",
+            "label": "Reload",
+            "type": "trigger",
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 290,
+        "min_height": 200
+      },
+      {
+        "type": "ml_corr_heatmap",
+        "label": "Correlation Heatmap",
+        "category": "DataFrame",
+        "icon": "Grid",
+        "description": "Pearson correlation matrix of numeric DataFrame columns. Essential for feature selection.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Heatmap"
+          }
+        ],
+        "params": [
+          {
+            "id": "columns",
+            "label": "Columns (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "pearson",
+              "spearman",
+              "kendall"
+            ],
+            "default": 0
+          },
+          {
+            "id": "annot",
+            "label": "Show values",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "coolwarm",
+              "RdYlGn",
+              "viridis",
+              "plasma"
+            ],
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 280
+      },
+      {
+        "type": "df_export",
+        "label": "DF Export",
+        "category": "DataFrame",
+        "icon": "Save",
+        "description": "Save a DataFrame to CSV, Excel, JSON or Parquet. Trigger the Save button once to write the file.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [],
+        "params": [
+          {
+            "id": "save",
+            "label": "Save",
+            "type": "trigger",
+            "default": 0
+          },
+          {
+            "id": "path",
+            "label": "File Path",
+            "type": "string",
+            "default": "output.csv"
+          },
+          {
+            "id": "format",
+            "label": "Format",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "separator",
+            "label": "CSV Separator",
+            "type": "string",
+            "default": ","
+          },
+          {
+            "id": "index",
+            "label": "Write Index",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "df_fillna",
+        "label": "DF Fill NA",
+        "category": "DataFrame",
+        "icon": "Eraser",
+        "description": "Handle missing values: fill with constant, statistics, forward/back fill, or drop rows/columns.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "null_count",
+            "color": "scalar",
+            "label": "Nulls before"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "strategy",
+            "label": "Strategy",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "value",
+            "label": "Fill value (strategy=value)",
+            "type": "string",
+            "default": "0"
+          },
+          {
+            "id": "columns",
+            "label": "Columns (blank = all)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "thresh",
+            "label": "Min non-null (drop_cols only)",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 100000
+          }
+        ],
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 180
+      },
+      {
+        "type": "ml_df_filter",
+        "label": "DF Filter",
+        "category": "DataFrame",
+        "icon": "Filter",
+        "description": "Filter rows of a DataFrame by a column condition. Chain multiple filters for complex queries.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "Filtered DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Rows"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "enabled",
+            "label": "Enable Filter",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "column",
+            "label": "Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "operator",
+            "label": "Operator",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "value",
+            "label": "Value",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "dropna",
+            "label": "Drop NaN rows",
+            "type": "bool",
+            "default": false
+          }
+        ],
+        "resizable": true,
+        "min_width": 270,
+        "min_height": 180
+      },
+      {
+        "type": "df_groupby",
+        "label": "DF GroupBy",
+        "category": "DataFrame",
+        "icon": "Group",
+        "description": "Group rows by a column and aggregate numeric columns. Result is a new DataFrame with one row per group.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "Result DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Groups"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "by",
+            "label": "Group By column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "agg",
+            "label": "Aggregation",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "cols",
+            "label": "Agg Columns (blank=all)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "reset_index",
+            "label": "Reset Index",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 180
+      },
+      {
+        "type": "df_merge",
+        "label": "DF Merge",
+        "category": "DataFrame",
+        "icon": "Merge",
+        "description": "Merge two DataFrames on key columns (SQL-style join). Connect left and right DataFrames.",
+        "inputs": [
+          {
+            "id": "left",
+            "color": "data",
+            "label": "Left DF"
+          },
+          {
+            "id": "right",
+            "color": "data",
+            "label": "Right DF"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "Merged DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Rows"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "left_on",
+            "label": "Left key column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "right_on",
+            "label": "Right key column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "how",
+            "label": "Join type",
+            "type": "enum",
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 160
+      },
+      {
+        "type": "df_new_col",
+        "label": "DF New Column",
+        "category": "DataFrame",
+        "icon": "PlusSquare",
+        "description": "Add a computed column using a Python expression. Use df['col'] to reference columns. Example: df['a'] + df['b'].",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "name",
+            "label": "New column name",
+            "type": "string",
+            "default": "new_col"
+          },
+          {
+            "id": "expr",
+            "label": "Expression",
+            "type": "code",
+            "default": "df['col_a'] + df['col_b']"
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 160
+      },
+      {
+        "type": "df_rename",
+        "label": "DF Rename",
+        "category": "DataFrame",
+        "icon": "Type",
+        "description": "Rename columns. Format: old:new,old2:new2. Leave blank to pass through unchanged.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "map",
+            "label": "Rename map  (old:new, …)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "strip_spaces",
+            "label": "Strip spaces in column names",
+            "type": "bool",
+            "default": false
+          }
+        ],
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 140
+      },
+      {
+        "type": "df_sample",
+        "label": "DF Sample",
+        "category": "DataFrame",
+        "icon": "Rows",
+        "description": "Extract a subset of rows: head (first N), tail (last N), random sample, or slice (start:end).",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Rows"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "n",
+            "label": "N rows (head/tail/sample)",
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 100000
+          },
+          {
+            "id": "start",
+            "label": "Start index (slice)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 100000
+          },
+          {
+            "id": "end",
+            "label": "End index   (slice)",
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 100000
+          },
+          {
+            "id": "seed",
+            "label": "Random seed (sample)",
+            "type": "int",
+            "default": 42,
+            "min": 0,
+            "max": 9999
+          }
+        ],
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 160
+      },
+      {
+        "type": "df_select",
+        "label": "DF Select",
+        "category": "DataFrame",
+        "icon": "Columns",
+        "description": "Keep specific columns, drop others, or rename them. Columns: comma-separated names. Drop: columns to remove. Rename: old:new,old2:new2.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Rows"
+          },
+          {
+            "id": "col_count",
+            "color": "scalar",
+            "label": "Cols"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "keep",
+            "label": "Keep Columns (blank = all)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "drop",
+            "label": "Drop Columns",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "rename",
+            "label": "Rename  (old:new, …)",
+            "type": "string",
+            "default": ""
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 160
+      },
+      {
+        "type": "df_sort",
+        "label": "DF Sort",
+        "category": "DataFrame",
+        "icon": "ArrowUpDown",
+        "description": "Sort rows by one or more columns. Column: comma-separated names for multi-level sort.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Metadata"
+          }
+        ],
+        "params": [
+          {
+            "id": "by",
+            "label": "Sort By (column name)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "ascending",
+            "label": "Ascending",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "na_pos",
+            "label": "NaN position (first/last)",
+            "type": "enum",
+            "options": [
+              "last",
+              "first"
+            ],
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 160
+      },
+      {
+        "type": "ml_df_stats",
+        "label": "DF Stats",
+        "category": "DataFrame",
+        "icon": "BarChart2",
+        "description": "Show descriptive statistics of a DataFrame: describe(), head, dtypes, or value counts.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Stats"
+          },
+          {
+            "id": "stats_data",
+            "color": "dict",
+            "label": "Stats dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Display Mode",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "columns",
+            "label": "Columns (blank = all)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "col_vc",
+            "label": "Column (value_counts)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "out_w",
+            "label": "Export width px  (0 = taille nœud)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 4000
+          },
+          {
+            "id": "out_h",
+            "label": "Export height px (0 = taille nœud)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 4000
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 220
+      },
+      {
+        "type": "ml_decision_tree",
+        "label": "Decision Tree",
+        "category": "Machine Learning",
+        "icon": "GitBranch",
+        "description": "Arbre de décision. Slider max_depth pour observer la complexité de l'arbre. Affiche l'arbre complet + bar chart des feature importances.",
+        "inputs": [
+          {
+            "id": "train",
+            "color": "data",
+            "label": "Train set"
+          },
+          {
+            "id": "test",
+            "color": "data",
+            "label": "Test set"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "tree_plot",
+            "color": "image",
+            "label": "Arbre de décision"
+          },
+          {
+            "id": "importance",
+            "color": "image",
+            "label": "Feature importances"
+          },
+          {
+            "id": "accuracy",
+            "color": "scalar",
+            "label": "Test accuracy"
+          },
+          {
+            "id": "train_acc",
+            "color": "scalar",
+            "label": "Train accuracy"
+          },
+          {
+            "id": "depth",
+            "color": "scalar",
+            "label": "Profondeur réelle"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "target",
+            "label": "Target column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "max_depth",
+            "label": "Max depth (0 = illimité)",
+            "type": "int",
+            "default": 4,
+            "min": 0,
+            "max": 20
+          },
+          {
+            "id": "criterion",
+            "label": "Criterion",
+            "type": "enum",
+            "options": [
+              "gini",
+              "entropy",
+              "log_loss"
+            ],
+            "default": 0
+          },
+          {
+            "id": "min_samples_split",
+            "label": "Min samples split",
+            "type": "int",
+            "default": 2,
+            "min": 2,
+            "max": 50
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap (arbre)",
+            "type": "enum",
+            "default": 3
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
+        "type": "ml_kmeans",
+        "label": "K-Means",
+        "category": "Machine Learning",
+        "icon": "Target",
+        "description": "K-Means clustering. Slide k to watch clusters form in real time. 2 features → direct scatter + regions. N features → PCA 2D projection. Outputs inertia + silhouette score for elbow/quality analysis.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame + cluster"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Clusters"
+          },
+          {
+            "id": "inertia",
+            "color": "scalar",
+            "label": "Inertia (WCSS)"
+          },
+          {
+            "id": "silhouette",
+            "color": "scalar",
+            "label": "Silhouette score"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "k",
+            "label": "k  (clusters)",
+            "type": "int",
+            "default": 3,
+            "min": 2,
+            "max": 20
+          },
+          {
+            "id": "init",
+            "label": "Init method",
+            "type": "enum",
+            "options": [
+              "k-means++",
+              "random"
+            ],
+            "default": 0
+          },
+          {
+            "id": "max_iter",
+            "label": "Max iterations",
+            "type": "int",
+            "default": 300,
+            "min": 10,
+            "max": 1000
+          },
+          {
+            "id": "random_state",
+            "label": "Random seed",
+            "type": "int",
+            "default": 42,
+            "min": 0,
+            "max": 9999
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "show_regions",
+            "label": "Show regions",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "boundary_res",
+            "label": "Region resolution",
+            "type": "int",
+            "default": 120,
+            "min": 40,
+            "max": 300
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
+        "type": "ml_knn_classifier",
+        "label": "KNN Classifier",
+        "category": "Machine Learning",
+        "icon": "Users",
+        "description": "K-Nearest Neighbors classifier. 2 features → decision boundary + scatter. N features → confusion matrix. Slide k to see how the boundary changes in real time.",
+        "inputs": [
+          {
+            "id": "train",
+            "color": "data",
+            "label": "Train set"
+          },
+          {
+            "id": "test",
+            "color": "data",
+            "label": "Test set"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Decision boundary / Confusion matrix"
+          },
+          {
+            "id": "accuracy",
+            "color": "scalar",
+            "label": "Test accuracy"
+          },
+          {
+            "id": "train_acc",
+            "color": "scalar",
+            "label": "Train accuracy"
+          },
+          {
+            "id": "report",
+            "color": "image",
+            "label": "Classification report"
+          },
+          {
+            "id": "report_data",
+            "color": "dict",
+            "label": "Report dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Feature columns (comma-separated)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "target",
+            "label": "Target column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "k",
+            "label": "k (neighbors)",
+            "type": "int",
+            "default": 5,
+            "min": 1,
+            "max": 50
+          },
+          {
+            "id": "metric",
+            "label": "Distance metric",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "weights",
+            "label": "Weights",
+            "type": "enum",
+            "options": [
+              "uniform",
+              "distance"
+            ],
+            "default": 0
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "tab10",
+              "Set1",
+              "Set2",
+              "viridis"
+            ],
+            "default": 0
+          },
+          {
+            "id": "boundary_res",
+            "label": "Boundary resolution",
+            "type": "int",
+            "default": 150,
+            "min": 50,
+            "max": 400
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
+        "type": "ml_linear_regression",
+        "label": "Linear Regression",
+        "category": "Machine Learning",
+        "icon": "TrendingUp",
+        "description": "Linear regression: scatter prédit vs réel, résidus, et bar chart des coefficients par feature. Sorties : R² train/test, RMSE.",
+        "inputs": [
+          {
+            "id": "train",
+            "color": "data",
+            "label": "Train set"
+          },
+          {
+            "id": "test",
+            "color": "data",
+            "label": "Test set"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Prédit vs Réel + Résidus"
+          },
+          {
+            "id": "coef_plot",
+            "color": "image",
+            "label": "Coefficients"
+          },
+          {
+            "id": "r2_test",
+            "color": "scalar",
+            "label": "R² test"
+          },
+          {
+            "id": "r2_train",
+            "color": "scalar",
+            "label": "R² train"
+          },
+          {
+            "id": "rmse",
+            "color": "scalar",
+            "label": "RMSE test"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "target",
+            "label": "Target column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "fit_intercept",
+            "label": "Fit intercept",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "standardize",
+            "label": "Standardize features",
+            "type": "bool",
+            "default": false
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
+        "type": "ml_histogram",
+        "label": "ML Histogram",
+        "category": "DataFrame",
+        "icon": "BarChart2",
+        "description": "Distribution histogram of a DataFrame column. Optional KDE overlay and per-class breakdown (hue).",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Plot"
+          }
+        ],
+        "params": [
+          {
+            "id": "column",
+            "label": "Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "hue_col",
+            "label": "Split by (hue)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "bins",
+            "label": "Bins",
+            "type": "int",
+            "default": 30,
+            "min": 5,
+            "max": 200
+          },
+          {
+            "id": "kde",
+            "label": "KDE overlay",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "density",
+            "label": "Normalize (density)",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "grid",
+            "label": "Grid",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 240
+      },
+      {
+        "type": "pbr_material_gen",
+        "label": "PBR Material Generator",
+        "category": "cv",
+        "icon": "Layers",
+        "description": "Generates PBR material maps from a single image: Albedo, Normal Map, Roughness, Height, and Ambient Occlusion. Algorithmic mode runs in real-time. AI Enhanced uses Depth Anything V2 Small for higher-quality depth-based normals and height map.",
+        "resizable": false,
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "albedo",
+            "color": "image",
+            "label": "Albedo"
+          },
+          {
+            "id": "normal",
+            "color": "image",
+            "label": "Normal Map"
+          },
+          {
+            "id": "roughness",
+            "color": "image",
+            "label": "Roughness"
+          },
+          {
+            "id": "height",
+            "color": "image",
+            "label": "Height"
+          },
+          {
+            "id": "ao",
+            "color": "image",
+            "label": "AO"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Algorithmic",
+              "AI Enhanced"
+            ],
+            "default": 0
+          },
+          {
+            "id": "normal_strength",
+            "label": "Normal Strength",
+            "type": "float",
+            "min": 0.5,
+            "max": 15.0,
+            "default": 4.0
+          },
+          {
+            "id": "roughness_radius",
+            "label": "Roughness Radius",
+            "type": "int",
+            "min": 2,
+            "max": 24,
+            "default": 6
+          },
+          {
+            "id": "invert_roughness",
+            "label": "Invert Roughness",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "ao_radius",
+            "label": "AO Radius",
+            "type": "int",
+            "min": 4,
+            "max": 64,
+            "default": 16
+          }
+        ]
+      },
+      {
+        "type": "ml_pca",
+        "label": "PCA",
+        "category": "Machine Learning",
+        "icon": "Aperture",
+        "description": "Principal Component Analysis. Reduces dimensionality, shows PC1 vs PC2 scatter and explained variance chart. Connect hue column to colour by class or cluster.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "transformed",
+            "color": "data",
+            "label": "Projected DataFrame"
+          },
+          {
+            "id": "scatter",
+            "color": "image",
+            "label": "PC1 vs PC2"
+          },
+          {
+            "id": "variance_plot",
+            "color": "image",
+            "label": "Explained variance"
+          },
+          {
+            "id": "pc1_variance",
+            "color": "scalar",
+            "label": "PC1 variance %"
+          },
+          {
+            "id": "pc2_variance",
+            "color": "scalar",
+            "label": "PC2 variance %"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "n_components",
+            "label": "Components to compute",
+            "type": "int",
+            "default": 5,
+            "min": 2,
+            "max": 20
+          },
+          {
+            "id": "standardize",
+            "label": "Standardize (StandardScaler)",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "hue_col",
+            "label": "Color by column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "alpha",
+            "label": "Opacity",
+            "type": "float",
+            "default": 0.75,
+            "min": 0.1,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "dot_size",
+            "label": "Dot size",
+            "type": "int",
+            "default": 30,
+            "min": 5,
+            "max": 200
+          },
+          {
+            "id": "show_loadings",
+            "label": "Show loadings (biplot)",
+            "type": "bool",
+            "default": false
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
         "type": "canvas_reroute",
         "label": "Reroute",
         "category": "canvas",
@@ -16636,6 +18593,323 @@
         ],
         "dynamic_inputs": true,
         "dynamic_outputs": true
+      },
+      {
+        "type": "ml_svm_classifier",
+        "label": "SVM Classifier",
+        "category": "Machine Learning",
+        "icon": "Zap",
+        "description": "Support Vector Machine. 2 features → frontière de décision. N features → confusion matrix. Ajuster C (régularisation) et kernel pour comprendre les marges.",
+        "inputs": [
+          {
+            "id": "train",
+            "color": "data",
+            "label": "Train set"
+          },
+          {
+            "id": "test",
+            "color": "data",
+            "label": "Test set"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Frontière / Confusion matrix"
+          },
+          {
+            "id": "accuracy",
+            "color": "scalar",
+            "label": "Test accuracy"
+          },
+          {
+            "id": "train_acc",
+            "color": "scalar",
+            "label": "Train accuracy"
+          },
+          {
+            "id": "report",
+            "color": "image",
+            "label": "Classification report"
+          },
+          {
+            "id": "report_data",
+            "color": "dict",
+            "label": "Report dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "target",
+            "label": "Target column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "C",
+            "label": "C  (régularisation)",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.001,
+            "max": 1000.0
+          },
+          {
+            "id": "kernel",
+            "label": "Kernel",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "gamma",
+            "label": "Gamma",
+            "type": "enum",
+            "options": [
+              "scale",
+              "auto"
+            ],
+            "default": 0
+          },
+          {
+            "id": "degree",
+            "label": "Degree (poly only)",
+            "type": "int",
+            "default": 3,
+            "min": 2,
+            "max": 6
+          },
+          {
+            "id": "standardize",
+            "label": "Standardize features",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "boundary_res",
+            "label": "Résolution frontière",
+            "type": "int",
+            "default": 120,
+            "min": 40,
+            "max": 300
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
+      },
+      {
+        "type": "ml_scatter_plot",
+        "label": "Scatter Plot",
+        "category": "DataFrame",
+        "icon": "Crosshair",
+        "description": "2D scatter plot from a DataFrame. Set X/Y columns, optionally color by a class column (hue). Ideal for exploring feature relationships and class separability.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Plot"
+          }
+        ],
+        "params": [
+          {
+            "id": "x_col",
+            "label": "X Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "y_col",
+            "label": "Y Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "hue_col",
+            "label": "Color by (hue)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "alpha",
+            "label": "Opacity",
+            "type": "float",
+            "default": 0.75,
+            "min": 0.1,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "dot_size",
+            "label": "Dot Size",
+            "type": "int",
+            "default": 40,
+            "min": 5,
+            "max": 250
+          },
+          {
+            "id": "regression",
+            "label": "Regression Line",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "grid",
+            "label": "Grid",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "max_points",
+            "label": "Max Points (0=all)",
+            "type": "int",
+            "default": 2000,
+            "min": 0,
+            "max": 50000
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 240
+      },
+      {
+        "type": "ml_sklearn_dataset",
+        "label": "Sklearn Dataset",
+        "category": "DataFrame",
+        "icon": "Database",
+        "description": "Charge un jeu de données de démonstration scikit-learn. Colonne cible toujours nommée 'target' (labels texte pour les classifications). Idéal pour commencer sans fichier CSV.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame complet"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Info panel"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Lignes"
+          },
+          {
+            "id": "col_count",
+            "color": "scalar",
+            "label": "Colonnes"
+          }
+        ],
+        "params": [
+          {
+            "id": "dataset",
+            "label": "Dataset",
+            "type": "enum",
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 180
+      },
+      {
+        "type": "ml_train_test_split",
+        "label": "Train / Test Split",
+        "category": "Machine Learning",
+        "icon": "Scissors",
+        "description": "Split a DataFrame into training and test sets. Connect train → model, test → evaluation.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "train",
+            "color": "data",
+            "label": "Train set"
+          },
+          {
+            "id": "test",
+            "color": "data",
+            "label": "Test set"
+          },
+          {
+            "id": "train_count",
+            "color": "scalar",
+            "label": "Train rows"
+          },
+          {
+            "id": "test_count",
+            "color": "scalar",
+            "label": "Test rows"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Split info"
+          }
+        ],
+        "params": [
+          {
+            "id": "test_size",
+            "label": "Test size (%)",
+            "type": "int",
+            "default": 20,
+            "min": 5,
+            "max": 50
+          },
+          {
+            "id": "stratify_col",
+            "label": "Stratify by",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "random_state",
+            "label": "Random seed",
+            "type": "int",
+            "default": 42,
+            "min": 0,
+            "max": 9999
+          },
+          {
+            "id": "shuffle",
+            "label": "Shuffle",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 160
       }
     ]
   }
