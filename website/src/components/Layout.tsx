@@ -53,6 +53,7 @@ const PORT_COLORS: Record<string, string> = {
   mask:    '#fbbf24',
   audio:   '#818cf8',
   points:  '#a855f7',
+  dataframe: '#ff7300',
 };
 
 const CATEGORY_META: Record<string, { label: string; color: string }> = {
