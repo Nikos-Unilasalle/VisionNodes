@@ -321,6 +321,13 @@ class VisionEngine:
     def _should_run(self):
         return len(self.sorted_nodes) > 0
 
+    def _has_active_realtime_nodes(self) -> bool:
+        for node in self.sorted_nodes:
+            if node.get('type') in REALTIME_NODE_TYPES:
+                if not node.get('data', {}).get('params', {}).get('pause', False):
+                    return True
+        return False
+
     def update_graph(self, g):
         raw_edges = [e for e in g.get('edges', []) if e.get('source') and e.get('target')]
         # Implicit ordering edges for teleport nodes: source must run before its clones
@@ -470,7 +477,7 @@ class VisionEngine:
                 if proc:
                     try:
                         params = node.get('data', {}).get('params', {})
-                        is_cacheable = ntype not in REALTIME_NODE_TYPES
+                        is_cacheable = ntype not in REALTIME_NODE_TYPES or getattr(proc, '_paused', False)
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
                         # Use id() for any object (arrays, lists, dicts): same object = same data.
@@ -588,10 +595,10 @@ class VisionEngine:
                         await asyncio.gather(*[c.send(msg) for c in list(self.connected_clients)], return_exceptions=True)
                 except Exception as e: print(f"Encoding Error: {e}")
 
-            if self.has_realtime_node:
+            if self._has_active_realtime_nodes():
                 await asyncio.sleep(1/30)
             else:
-                self._run_event.clear()  # static graph: wait until next update_graph()
+                self._run_event.clear()  # no active realtime nodes: wait until next update_graph()
 
     async def hdl(self, ws):
         self.connected_clients.add(ws)
