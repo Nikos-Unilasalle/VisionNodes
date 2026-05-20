@@ -29,13 +29,32 @@ _MPL_DARK = {
 }
 
 
-def _fig_to_bgr(fig) -> np.ndarray:
+_EXPORT_PARAMS = [
+    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+]
+
+
+def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
+
+def _out_size(params, default_w=540, default_h=400):
+    """Return (fig_w_inches, fig_h_inches, dpi) for matplotlib subplots."""
+    dpi   = max(72, int(params.get('out_dpi', 100)))
+    out_w = int(params.get('out_w', 0))
+    out_h = int(params.get('out_h', 0))
+    if out_w > 0 and out_h > 0:
+        return out_w / dpi, out_h / dpi, dpi
+    ui_w = int(params.get('width',  default_w))
+    ui_h = int(params.get('height', default_h))
+    return ui_w / dpi, ui_h / dpi, dpi
 
 
 def _get_mpl():
@@ -66,6 +85,7 @@ def _get_mpl():
         {'id': 'regression', 'label': 'Regression Line',    'type': 'bool',   'default': False},
         {'id': 'grid',       'label': 'Grid',               'type': 'bool',   'default': True},
         {'id': 'max_points', 'label': 'Max Points (0=all)', 'type': 'int',    'default': 2000, 'min': 0, 'max': 50000},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=300,
@@ -92,8 +112,7 @@ class MLScatterPlotNode(NodeProcessor):
         regress  = bool(params.get('regression', False))
         grid     = bool(params.get('grid', True))
         max_pts  = int(params.get('max_points', 2000))
-        w_px     = int(params.get('width',  540))
-        h_px     = int(params.get('height', 400))
+        fig_w, fig_h, dpi = _out_size(params, 540, 400)
 
         cols = list(df.columns)
         num_cols = [c for c in cols if df[c].dtype.kind in 'biufc']  # numeric
@@ -114,7 +133,7 @@ class MLScatterPlotNode(NodeProcessor):
             plot_df = df.sample(max_pts, random_state=42)
 
         with plt.rc_context(_MPL_DARK):
-            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
             x_data = plot_df[x_col]
             y_data = plot_df[y_col]
@@ -156,7 +175,7 @@ class MLScatterPlotNode(NodeProcessor):
                 ax.grid(True)
 
             fig.tight_layout()
-            img = _fig_to_bgr(fig)
+            img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
         return {'main': img}
@@ -180,6 +199,7 @@ class MLScatterPlotNode(NodeProcessor):
         {'id': 'density',  'label': 'Normalize (density)', 'type': 'bool', 'default': False},
         {'id': 'colormap', 'label': 'Colormap',         'type': 'enum',   'options': _CLABELS, 'default': 0},
         {'id': 'grid',     'label': 'Grid',             'type': 'bool',   'default': True},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=300,
@@ -203,8 +223,7 @@ class MLHistogramNode(NodeProcessor):
         density = bool(params.get('density', False))
         cmap    = _CMAPS[int(params.get('colormap', 0))]
         grid    = bool(params.get('grid', True))
-        w_px    = int(params.get('width',  540))
-        h_px    = int(params.get('height', 380))
+        fig_w, fig_h, dpi = _out_size(params, 540, 380)
 
         num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
         if not col or col not in df.columns:
@@ -214,7 +233,7 @@ class MLHistogramNode(NodeProcessor):
             return {}
 
         with plt.rc_context(_MPL_DARK):
-            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
             if hue_col and hue_col in df.columns:
                 classes = df[hue_col].unique()[:10]
@@ -251,7 +270,7 @@ class MLHistogramNode(NodeProcessor):
             if grid:
                 ax.grid(True, axis='y')
             fig.tight_layout()
-            img = _fig_to_bgr(fig)
+            img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
         return {'main': img}
@@ -272,6 +291,7 @@ class MLHistogramNode(NodeProcessor):
         {'id': 'method',   'label': 'Method',   'type': 'enum', 'options': ['pearson', 'spearman', 'kendall'], 'default': 0},
         {'id': 'annot',    'label': 'Show values', 'type': 'bool', 'default': True},
         {'id': 'colormap', 'label': 'Colormap',   'type': 'enum', 'options': ['coolwarm', 'RdYlGn', 'viridis', 'plasma'], 'default': 0},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=300,
@@ -294,8 +314,7 @@ class MLCorrHeatmapNode(NodeProcessor):
         annot    = bool(params.get('annot', True))
         cmaps    = ['coolwarm', 'RdYlGn', 'viridis', 'plasma']
         cmap     = cmaps[int(params.get('colormap', 0))]
-        w_px     = int(params.get('width',  520))
-        h_px     = int(params.get('height', 480))
+        fig_w, fig_h, dpi = _out_size(params, 520, 480)
 
         num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
         if cols_str:
@@ -311,7 +330,7 @@ class MLCorrHeatmapNode(NodeProcessor):
         n    = len(num_cols)
 
         with plt.rc_context(_MPL_DARK):
-            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            fig, ax = plt.subplots(figsize=(fig_w, fig_h))
             im = ax.imshow(corr.values, cmap=cmap, vmin=-1, vmax=1, aspect='auto')
             fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
 
@@ -330,7 +349,7 @@ class MLCorrHeatmapNode(NodeProcessor):
 
             ax.set_title(f"Correlation ({method})  —  {n} features", fontsize=10)
             fig.tight_layout()
-            img = _fig_to_bgr(fig)
+            img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
         return {'main': img}
