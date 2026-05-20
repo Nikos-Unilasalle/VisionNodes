@@ -319,7 +319,7 @@ class MLDfStatsNode(NodeProcessor):
         out_w    = int(params.get('out_w', 0))
         out_h    = int(params.get('out_h', 0))
         w        = out_w if out_w > 0 else int(params.get('width',  580))
-        h        = out_h if out_h > 0 else int(params.get('height', 360))
+        # h is computed per-mode from row count; out_h overrides if set explicitly
 
         if cols_str:
             sel = [c.strip() for c in cols_str.split(',') if c.strip() in df.columns]
@@ -348,6 +348,7 @@ class MLDfStatsNode(NodeProcessor):
                     row_colors.append([None] * (len(num_cols) + 1))
 
             title = f"describe()  —  {rows_n} rows × {cols_n} cols"
+            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
             preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
             stats_data = {
                 'mode': 'describe',
@@ -367,6 +368,7 @@ class MLDfStatsNode(NodeProcessor):
             rows_data = [[str(sub.iloc[i][c])[:14] for c in visible]
                          for i in range(len(sub))]
             title = f"head(10)  —  {rows_n} rows × {cols_n} cols"
+            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
             preview = _table_img(col_labels, rows_data, w, h, title)
             stats_data = {
                 'mode': 'head',
@@ -389,6 +391,7 @@ class MLDfStatsNode(NodeProcessor):
                 for r in rows_data
             ]
             title = f"dtypes + shape  —  {rows_n} rows × {cols_n} cols"
+            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
             preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
             stats_data = {
                 'mode': 'dtypes',
@@ -410,6 +413,7 @@ class MLDfStatsNode(NodeProcessor):
                     for _ in rows_data
                 ]
                 title = f"value_counts({col_vc})  —  {len(vc)} unique / {total} total"
+                h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
                 preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
                 stats_data = {
                     'mode': 'value_counts',
