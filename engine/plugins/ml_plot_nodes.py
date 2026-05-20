@@ -1,5 +1,5 @@
 """
-ML Training — Plot Nodes (Scatter Plot).
+ML Training — Plot Nodes (Scatter Plot, Histogram, Correlation Heatmap).
 Uses matplotlib with Agg backend (no display needed, server-side rendering).
 Handle color: 'data' (orange) for DataFrame inputs.
 """
@@ -155,6 +155,180 @@ class MLScatterPlotNode(NodeProcessor):
             if grid:
                 ax.grid(True)
 
+            fig.tight_layout()
+            img = _fig_to_bgr(fig)
+            plt.close(fig)
+
+        return {'main': img}
+
+
+# ─── Histogram (DataFrame column) ─────────────────────────────────────────────
+
+@vision_node(
+    type_id='ml_histogram',
+    label='ML Histogram',
+    category='ML / Plot',
+    icon='BarChart2',
+    description="Distribution histogram of a DataFrame column. Optional KDE overlay and per-class breakdown (hue).",
+    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    outputs=[{'id': 'main', 'color': 'image', 'label': 'Plot'}],
+    params=[
+        {'id': 'column',   'label': 'Column',          'type': 'string', 'default': ''},
+        {'id': 'hue_col',  'label': 'Split by (hue)',  'type': 'string', 'default': ''},
+        {'id': 'bins',     'label': 'Bins',             'type': 'int',    'default': 30,  'min': 5, 'max': 200},
+        {'id': 'kde',      'label': 'KDE overlay',      'type': 'bool',   'default': True},
+        {'id': 'density',  'label': 'Normalize (density)', 'type': 'bool', 'default': False},
+        {'id': 'colormap', 'label': 'Colormap',         'type': 'enum',   'options': _CLABELS, 'default': 0},
+        {'id': 'grid',     'label': 'Grid',             'type': 'bool',   'default': True},
+    ],
+    resizable=True,
+    min_width=300,
+    min_height=240,
+)
+class MLHistogramNode(NodeProcessor):
+    def process(self, inputs, params):
+        df = inputs.get('table')
+        if df is None:
+            return {}
+
+        if not self.ensure_packages(['matplotlib'], notif_id=_NOTIF_ID):
+            return {}
+
+        _, plt = _get_mpl()
+
+        col     = str(params.get('column', '')).strip()
+        hue_col = str(params.get('hue_col', '')).strip()
+        bins    = int(params.get('bins', 30))
+        kde     = bool(params.get('kde', True))
+        density = bool(params.get('density', False))
+        cmap    = _CMAPS[int(params.get('colormap', 0))]
+        grid    = bool(params.get('grid', True))
+        w_px    = int(params.get('width',  540))
+        h_px    = int(params.get('height', 380))
+
+        num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
+        if not col or col not in df.columns:
+            col = num_cols[0] if num_cols else None
+        if col is None:
+            send_notification("ML Histogram: no numeric column found", level='warning', notif_id=_NOTIF_ID)
+            return {}
+
+        with plt.rc_context(_MPL_DARK):
+            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+
+            if hue_col and hue_col in df.columns:
+                classes = df[hue_col].unique()[:10]
+                colors  = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(classes)))
+                for cls, color in zip(classes, colors):
+                    data = df[df[hue_col] == cls][col].dropna()
+                    ax.hist(data, bins=bins, alpha=0.55, color=color,
+                            label=str(cls), density=density, edgecolor='none')
+                    if kde and len(data) > 2:
+                        from scipy.stats import gaussian_kde
+                        xs = np.linspace(data.min(), data.max(), 300)
+                        kde_fn = gaussian_kde(data)
+                        scale = 1.0 if density else len(data) * (data.max() - data.min()) / bins
+                        ax.plot(xs, kde_fn(xs) * scale, color=color, linewidth=1.5)
+                ax.legend(fontsize=8, labelcolor='#cccccc', title=hue_col, title_fontsize=8)
+            else:
+                data = df[col].dropna()
+                ax.hist(data, bins=bins, alpha=0.75, color='#3b82f6',
+                        density=density, edgecolor='none', label=col)
+                if kde and len(data) > 2:
+                    if not self.ensure_packages(['scipy'], notif_id=_NOTIF_ID):
+                        pass
+                    else:
+                        from scipy.stats import gaussian_kde
+                        xs = np.linspace(data.min(), data.max(), 300)
+                        kde_fn = gaussian_kde(data)
+                        scale = 1.0 if density else len(data) * (data.max() - data.min()) / bins
+                        ax.plot(xs, kde_fn(xs) * scale, color='#f97316', linewidth=2, label='KDE')
+                        ax.legend(fontsize=8, labelcolor='#cccccc')
+
+            ax.set_xlabel(col)
+            ax.set_ylabel('Density' if density else 'Count')
+            ax.set_title(f"Distribution — {col}  ({len(df[col].dropna())} values)", fontsize=10)
+            if grid:
+                ax.grid(True, axis='y')
+            fig.tight_layout()
+            img = _fig_to_bgr(fig)
+            plt.close(fig)
+
+        return {'main': img}
+
+
+# ─── Correlation Heatmap ───────────────────────────────────────────────────────
+
+@vision_node(
+    type_id='ml_corr_heatmap',
+    label='Correlation Heatmap',
+    category='ML / Plot',
+    icon='Grid',
+    description="Pearson correlation matrix of numeric DataFrame columns. Essential for feature selection.",
+    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    outputs=[{'id': 'main', 'color': 'image', 'label': 'Heatmap'}],
+    params=[
+        {'id': 'columns',  'label': 'Columns (blank = all numeric)', 'type': 'string', 'default': ''},
+        {'id': 'method',   'label': 'Method',   'type': 'enum', 'options': ['pearson', 'spearman', 'kendall'], 'default': 0},
+        {'id': 'annot',    'label': 'Show values', 'type': 'bool', 'default': True},
+        {'id': 'colormap', 'label': 'Colormap',   'type': 'enum', 'options': ['coolwarm', 'RdYlGn', 'viridis', 'plasma'], 'default': 0},
+    ],
+    resizable=True,
+    min_width=300,
+    min_height=280,
+)
+class MLCorrHeatmapNode(NodeProcessor):
+    def process(self, inputs, params):
+        df = inputs.get('table')
+        if df is None:
+            return {}
+
+        if not self.ensure_packages(['matplotlib'], notif_id=_NOTIF_ID):
+            return {}
+
+        _, plt = _get_mpl()
+
+        cols_str = str(params.get('columns', '')).strip()
+        methods  = ['pearson', 'spearman', 'kendall']
+        method   = methods[int(params.get('method', 0))]
+        annot    = bool(params.get('annot', True))
+        cmaps    = ['coolwarm', 'RdYlGn', 'viridis', 'plasma']
+        cmap     = cmaps[int(params.get('colormap', 0))]
+        w_px     = int(params.get('width',  520))
+        h_px     = int(params.get('height', 480))
+
+        num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
+        if cols_str:
+            sel = [c.strip() for c in cols_str.split(',') if c.strip() in num_cols]
+            if sel:
+                num_cols = sel
+
+        if len(num_cols) < 2:
+            send_notification("Corr Heatmap: need ≥ 2 numeric columns", level='warning', notif_id=_NOTIF_ID)
+            return {}
+
+        corr = df[num_cols].corr(method=method)
+        n    = len(num_cols)
+
+        with plt.rc_context(_MPL_DARK):
+            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            im = ax.imshow(corr.values, cmap=cmap, vmin=-1, vmax=1, aspect='auto')
+            fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
+
+            ax.set_xticks(range(n))
+            ax.set_yticks(range(n))
+            ax.set_xticklabels(num_cols, rotation=45, ha='right', fontsize=8)
+            ax.set_yticklabels(num_cols, fontsize=8)
+
+            if annot:
+                for i in range(n):
+                    for j in range(n):
+                        val = corr.values[i, j]
+                        color = 'white' if abs(val) > 0.6 else '#aaaaaa'
+                        ax.text(j, i, f'{val:.2f}', ha='center', va='center',
+                                fontsize=7, color=color)
+
+            ax.set_title(f"Correlation ({method})  —  {n} features", fontsize=10)
             fig.tight_layout()
             img = _fig_to_bgr(fig)
             plt.close(fig)
