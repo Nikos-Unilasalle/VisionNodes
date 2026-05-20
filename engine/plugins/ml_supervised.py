@@ -62,16 +62,67 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
 
-def _text_panel(text: str, w: int, h: int, title: str = '') -> np.ndarray:
-    img = np.full((h, w, 3), 22, dtype=np.uint8)
-    cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
-    cv2.putText(img, title, (8, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 200), 1, cv2.LINE_AA)
-    cv2.line(img, (0, 26), (w, 26), (80, 80, 80), 1)
-    y0, lh = 44, 15
-    for i, line in enumerate(text.split('\n')[:(h - y0) // lh]):
-        color = (140, 200, 255) if i == 0 else (185, 185, 185)
-        cv2.putText(img, line[:90], (8, y0 + i * lh),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.36, color, 1, cv2.LINE_AA)
+def _report_panel(report_dict: dict, w: int, h: int, title: str, plt) -> np.ndarray:
+    """Matplotlib-rendered classification report table."""
+    classes = [k for k in report_dict
+               if isinstance(report_dict[k], dict) and k not in ('macro avg', 'weighted avg')]
+
+    col_labels = ['Class', 'Precision', 'Recall', 'F1', 'Support']
+    rows = []
+    for cls in classes:
+        d = report_dict[cls]
+        rows.append([str(cls),
+                     f"{d.get('precision', 0):.2f}",
+                     f"{d.get('recall', 0):.2f}",
+                     f"{d.get('f1-score', 0):.2f}",
+                     str(int(d.get('support', 0)))])
+    if 'weighted avg' in report_dict:
+        d = report_dict['weighted avg']
+        rows.append(['weighted avg',
+                     f"{d.get('precision', 0):.2f}",
+                     f"{d.get('recall', 0):.2f}",
+                     f"{d.get('f1-score', 0):.2f}",
+                     str(int(d.get('support', 0)))])
+
+    acc = report_dict.get('accuracy', None)
+    dpi = 100
+    fig, ax = plt.subplots(figsize=(w / dpi, h / dpi))
+    ax.set_axis_off()
+    fig.patch.set_facecolor('#161616')
+
+    if rows:
+        tbl = ax.table(cellText=rows, colLabels=col_labels,
+                       loc='upper center', cellLoc='center')
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(9)
+        tbl.scale(1, 1.6)
+
+        for j in range(len(col_labels)):
+            cell = tbl[0, j]
+            cell.set_facecolor('#2a2a3a')
+            cell.set_text_props(color='#a5b4fc', fontweight='bold')
+            cell.set_edgecolor('#444466')
+
+        for i, row in enumerate(rows):
+            is_summary = row[0] == 'weighted avg'
+            for j in range(len(col_labels)):
+                cell = tbl[i + 1, j]
+                cell.set_facecolor('#1e1e30' if is_summary else ('#181820' if i % 2 == 0 else '#1a1a28'))
+                cell.set_edgecolor('#2a2a40')
+                if is_summary:
+                    cell.set_text_props(color='#888899', style='italic')
+                elif j == 3:
+                    f1 = float(row[3])
+                    color = '#6ee7b7' if f1 >= 0.9 else '#fcd34d' if f1 >= 0.7 else '#f87171'
+                    cell.set_text_props(color=color, fontweight='bold')
+                else:
+                    cell.set_text_props(color='#cccccc')
+
+    full_title = f"{title}  ·  Accuracy {acc:.1%}" if acc is not None else title
+    ax.set_title(full_title, fontsize=9, color='#cccccc', pad=8)
+    fig.tight_layout(pad=0.5)
+    img = _fig_to_bgr(fig, dpi)
+    plt.close(fig)
     return img
 
 
@@ -166,7 +217,7 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, fig_w, fi
 @vision_node(
     type_id='ml_linear_regression',
     label='Linear Regression',
-    category='ML / Supervised',
+    category='Machine Learning',
     icon='TrendingUp',
     description=(
         "Linear regression: scatter prédit vs réel, résidus, "
@@ -320,7 +371,7 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
 @vision_node(
     type_id='ml_svm_classifier',
     label='SVM Classifier',
-    category='ML / Supervised',
+    category='Machine Learning',
     icon='Zap',
     description=(
         "Support Vector Machine. "
@@ -332,10 +383,11 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
         {'id': 'test',  'color': 'data', 'label': 'Test set'},
     ],
     outputs=[
-        {'id': 'preview',   'color': 'image',  'label': 'Frontière / Confusion matrix'},
-        {'id': 'accuracy',  'color': 'scalar', 'label': 'Test accuracy'},
-        {'id': 'train_acc', 'color': 'scalar', 'label': 'Train accuracy'},
-        {'id': 'report',    'color': 'image',  'label': 'Classification report'},
+        {'id': 'preview',     'color': 'image',  'label': 'Frontière / Confusion matrix'},
+        {'id': 'accuracy',    'color': 'scalar', 'label': 'Test accuracy'},
+        {'id': 'train_acc',   'color': 'scalar', 'label': 'Train accuracy'},
+        {'id': 'report',      'color': 'image',  'label': 'Classification report'},
+        {'id': 'report_data', 'color': 'dict',   'label': 'Report dict'},
     ],
     params=[
         {'id': 'features',     'label': 'Features (blank = all numeric)', 'type': 'string', 'default': ''},
@@ -423,18 +475,22 @@ class MLSVMClassifierNode(NodeProcessor):
                 preview = _confusion_plot(model, X_te, y_te, classes, cmap,
                                           test_acc, model_name, fig_w, fig_h, dpi, plt)
 
-            rep_str = (classification_report(y_te, model.predict(X_te),
-                                             target_names=[str(c) for c in classes],
-                                             zero_division=0)
-                       if len(X_te) > 0 else "(no test data)")
-            report = _text_panel(rep_str, max(int(fig_w * dpi), 380), 260,
-                                 title=f"Classification Report — {model_name}")
+            if len(X_te) > 0:
+                report_dict = classification_report(y_te, model.predict(X_te),
+                                                    target_names=[str(c) for c in classes],
+                                                    output_dict=True, zero_division=0)
+            else:
+                report_dict = {}
+            report_w = max(int(fig_w * dpi), 420)
+            report = _report_panel(report_dict, report_w, 280,
+                                   title=model_name, plt=plt)
 
         return {
-            'preview':   preview,
-            'accuracy':  test_acc,
-            'train_acc': train_acc,
-            'report':    report,
+            'preview':     preview,
+            'accuracy':    test_acc,
+            'train_acc':   train_acc,
+            'report':      report,
+            'report_data': report_dict,
         }
 
 
@@ -443,7 +499,7 @@ class MLSVMClassifierNode(NodeProcessor):
 @vision_node(
     type_id='ml_decision_tree',
     label='Decision Tree',
-    category='ML / Supervised',
+    category='Machine Learning',
     icon='GitBranch',
     description=(
         "Arbre de décision. Slider max_depth pour observer la complexité de l'arbre. "

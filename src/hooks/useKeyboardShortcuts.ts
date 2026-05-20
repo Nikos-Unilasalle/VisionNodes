@@ -29,6 +29,20 @@ export function useKeyboardShortcuts({
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
+      // Don't intercept when user is typing in an input/textarea/code editor
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      const isTyping = tag === 'textarea' || tag === 'input' || !!target?.isContentEditable;
+      if (isTyping) {
+        // Cmd+S is safe and expected everywhere
+        if (cmdKey && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
+        return;
+      }
+
+      // Don't intercept bare keys (Enter, Tab, Delete…) when mouse hovers the params panel
+      const isOverPanel = !!document.querySelector('[data-no-shortcuts]:hover');
+      if (isOverPanel && !cmdKey && !e.altKey) return;
+
       if (cmdKey && e.key === 'c') copyNodes();
       if (cmdKey && e.key === 'v') pasteNodes();
       if (cmdKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
