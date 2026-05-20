@@ -435,7 +435,7 @@ const FEATURES = [
   {
     icon: <Layers size={22} strokeWidth={1.5} />,
     title: 'Modular Orchestration',
-    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 200+ production-ready nodes spanning CV, ML inference, signal processing, and data utilities.',
+    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 340+ production-ready nodes spanning CV, Machine Learning, signal processing, and data utilities (DataFrames).',
   },
   {
     icon: <Zap size={22} strokeWidth={1.5} />,

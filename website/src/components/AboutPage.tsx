@@ -37,10 +37,10 @@ const AboutPage = () => (
               <h2 className="text-[26px] text-[var(--text-main)]">The Mechanism: Stateful Graph Execution</h2>
             </div>
             <p className="text-[15px] text-[var(--text-dim)] leading-relaxed mb-6 text-justify">
-              At its core, VisionNodes Studio utilizes a <strong className="text-[var(--text-main)]">Directed Acyclic Graph (DAG)</strong> execution engine. Each "node" represents an atomic computational unit—ranging from fundamental morphological operations (OpenCV-based) to state-of-the-art deep learning inference (PyTorch, ONNX). Unlike traditional scripts where state management is often implicit and error-prone, VisionNodes makes the flow of data explicit. 
+              At its core, VisionNodes Studio utilizes a <strong className="text-[var(--text-main)]">Directed Acyclic Graph (DAG)</strong> execution engine. Each "node" represents an atomic computational unit—ranging from fundamental morphological operations (OpenCV-based), advanced DataFrames manipulation (Pandas), and classic Machine Learning (Scikit-Learn), to state-of-the-art deep learning inference (PyTorch, ONNX). Unlike traditional scripts where state management is often implicit and error-prone, VisionNodes makes the flow of data explicit. 
             </p>
             <p className="text-[15px] text-[var(--text-dim)] leading-relaxed text-justify">
-              The engine operates on a real-time reactive model: any parameter modification triggers a targeted re-propagation through the affected branches of the graph. This "Hot-Swapping" of logic and data ensures that the researcher remains in a state of continuous observation, allowing for the immediate visual validation of hyperspectral thresholds, spatial filters, or detection confidence scores.
+              The engine operates on a real-time reactive model: any parameter modification triggers a targeted re-propagation through the affected branches of the graph. This "Hot-Swapping" of logic and data ensures that the researcher remains in a state of continuous observation, allowing for the immediate visual validation of hyperspectral thresholds, spatial filters, data clusters, or detection confidence scores.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ const AboutPage = () => (
                 <Zap size={18} /> A Community-Driven Core
               </p>
               <p className="text-[14px] text-[var(--text-dim)] leading-relaxed">
-                The software is designed to grow through community contributions. By providing a streamlined "Plugin API", we invite the global scientific community to contribute their unique nodes—be it for specialized satellite imagery analysis, agricultural phenotyping, or medical diagnostic tools. This participatory model ensures that VisionNodes Studio remains at the bleeding edge of multidisciplinary research.
+                The software is designed to grow through community contributions. By providing a streamlined "Plugin API", we invite the global scientific community to contribute their unique nodes—be it for specialized satellite imagery analysis, agricultural phenotyping, medical diagnostic tools, or advanced statistical and machine learning models. This participatory model ensures that VisionNodes Studio remains at the bleeding edge of multidisciplinary research.
               </p>
             </div>
           </div>
