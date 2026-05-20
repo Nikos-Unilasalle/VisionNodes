@@ -80,6 +80,10 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   geology:     { label: 'Geology',      color: '#a8a29e' },
   root_anatomy:{ label: 'Root Anatomy', color: '#84cc16' },
   hematology:  { label: 'Hematology',   color: '#f43f5e' },
+  DataFrame:   { label: 'DataFrame',    color: '#eab308' },
+  'Machine Learning': { label: 'Machine Learning', color: '#6366f1' },
+  cv:          { label: 'Computer Vision', color: '#14b8a6' },
+  logic:       { label: 'Logic',        color: '#f59e0b' },
   unmapped:    { label: 'Other / Internal', color: '#6b7280' },
 };
 
