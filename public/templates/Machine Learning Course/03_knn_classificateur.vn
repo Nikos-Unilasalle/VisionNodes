@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    { "id": "ds",    "type": "ml_sklearn_dataset",   "position": { "x": 50,  "y": 300 }, "data": { "label": "Iris Dataset",     "params": { "dataset": 0 } } },
+    { "id": "scat",  "type": "ml_scatter_plot",      "position": { "x": 360, "y": 50  }, "data": { "label": "Exploration",      "params": { "x_col": "petal length (cm)", "y_col": "petal width (cm)", "hue_col": "target" } } },
+    { "id": "split", "type": "ml_train_test_split",  "position": { "x": 360, "y": 350 }, "data": { "label": "Train/Test Split", "params": { "test_size": 20, "stratify_col": "target", "random_state": 42 } } },
+    { "id": "knn",   "type": "ml_knn_classifier",    "position": { "x": 700, "y": 280 }, "data": { "label": "KNN  (glisser k)", "params": { "features": "petal length (cm), petal width (cm)", "target": "target", "k": 5, "metric": 0 } } },
+    { "id": "d1",    "type": "output_display",       "position": { "x": 680, "y": 50  }, "data": { "label": "Scatter (données)","params": {} } },
+    { "id": "d2",    "type": "output_display",       "position": { "x": 1060, "y": 180 }, "data": { "label": "Frontière (KNN)", "params": {} } },
+    { "id": "d3",    "type": "output_display",       "position": { "x": 1060, "y": 460 }, "data": { "label": "Rapport",         "params": {} } },
+    { "id": "ins",   "type": "data_inspector",       "position": { "x": 700, "y": 560 }, "data": { "label": "Accuracy",         "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "ds",    "sourceHandle": "data__table",   "target": "scat",  "targetHandle": "data__table" },
+    { "id": "e2", "source": "ds",    "sourceHandle": "data__table",   "target": "split", "targetHandle": "data__table" },
+    { "id": "e3", "source": "scat",  "sourceHandle": "image__main",   "target": "d1",    "targetHandle": "image__main" },
+    { "id": "e4", "source": "split", "sourceHandle": "data__train",   "target": "knn",   "targetHandle": "data__train" },
+    { "id": "e5", "source": "split", "sourceHandle": "data__test",    "target": "knn",   "targetHandle": "data__test" },
+    { "id": "e6", "source": "knn",   "sourceHandle": "image__preview","target": "d2",    "targetHandle": "image__main" },
+    { "id": "e7", "source": "knn",   "sourceHandle": "image__report", "target": "d3",    "targetHandle": "image__main" },
+    { "id": "e8", "source": "knn",   "sourceHandle": "scalar__accuracy","target": "ins", "targetHandle": "any__data" }
+  ]
+}

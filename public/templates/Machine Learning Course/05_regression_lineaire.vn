@@ -1,0 +1,24 @@
+{
+  "nodes": [
+    { "id": "ds",    "type": "ml_sklearn_dataset",    "position": { "x": 50,  "y": 300 }, "data": { "label": "Diabetes Dataset",   "params": { "dataset": 3 } } },
+    { "id": "stats", "type": "ml_df_stats",           "position": { "x": 360, "y": 50  }, "data": { "label": "Statistiques",        "params": { "mode": 0 } } },
+    { "id": "split", "type": "ml_train_test_split",   "position": { "x": 360, "y": 320 }, "data": { "label": "Train/Test Split",    "params": { "test_size": 20, "random_state": 42 } } },
+    { "id": "lr",    "type": "ml_linear_regression",  "position": { "x": 700, "y": 260 }, "data": { "label": "Régression linéaire", "params": { "target": "target", "standardize": true } } },
+    { "id": "corr",  "type": "ml_corr_heatmap",      "position": { "x": 360, "y": 560 }, "data": { "label": "Corrélations",        "params": { "colormap": 0, "annot": true } } },
+    { "id": "d1",    "type": "output_display",        "position": { "x": 700, "y": 50  }, "data": { "label": "Stats",               "params": {} } },
+    { "id": "d2",    "type": "output_display",        "position": { "x": 1060, "y": 180 }, "data": { "label": "Prédit vs Réel",     "params": {} } },
+    { "id": "d3",    "type": "output_display",        "position": { "x": 1060, "y": 460 }, "data": { "label": "Coefficients",       "params": {} } },
+    { "id": "d4",    "type": "output_display",        "position": { "x": 700, "y": 560 }, "data": { "label": "Heatmap corr.",       "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "ds",    "sourceHandle": "data__table",    "target": "stats",  "targetHandle": "data__table" },
+    { "id": "e2", "source": "ds",    "sourceHandle": "data__table",    "target": "split",  "targetHandle": "data__table" },
+    { "id": "e3", "source": "ds",    "sourceHandle": "data__table",    "target": "corr",   "targetHandle": "data__table" },
+    { "id": "e4", "source": "stats", "sourceHandle": "image__preview", "target": "d1",     "targetHandle": "image__main" },
+    { "id": "e5", "source": "split", "sourceHandle": "data__train",    "target": "lr",     "targetHandle": "data__train" },
+    { "id": "e6", "source": "split", "sourceHandle": "data__test",     "target": "lr",     "targetHandle": "data__test" },
+    { "id": "e7", "source": "lr",    "sourceHandle": "image__preview", "target": "d2",     "targetHandle": "image__main" },
+    { "id": "e8", "source": "lr",    "sourceHandle": "image__coef_plot","target": "d3",    "targetHandle": "image__main" },
+    { "id": "e9", "source": "corr",  "sourceHandle": "image__main",    "target": "d4",     "targetHandle": "image__main" }
+  ]
+}

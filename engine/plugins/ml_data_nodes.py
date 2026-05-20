@@ -262,3 +262,111 @@ class MLDfStatsNode(NodeProcessor):
                 title = "value_counts"
 
         return {'preview': _render_text_panel(text, w, h, title=title)}
+
+
+# ─── Sklearn Demo Datasets ────────────────────────────────────────────────────
+
+_SK_DATASETS = [
+    'iris',
+    'wine',
+    'breast_cancer',
+    'diabetes  (régression)',
+    'digits',
+    'california_housing  (régression)',
+]
+_SK_KEYS = ['iris', 'wine', 'breast_cancer', 'diabetes', 'digits', 'california_housing']
+
+
+@vision_node(
+    type_id='ml_sklearn_dataset',
+    label='Sklearn Dataset',
+    category='ML / Data',
+    icon='Database',
+    description=(
+        "Charge un jeu de données de démonstration scikit-learn. "
+        "Colonne cible toujours nommée 'target' (labels texte pour les classifications). "
+        "Idéal pour commencer sans fichier CSV."
+    ),
+    inputs=[],
+    outputs=[
+        {'id': 'table',     'color': 'data',   'label': 'DataFrame complet'},
+        {'id': 'preview',   'color': 'image',  'label': 'Info panel'},
+        {'id': 'row_count', 'color': 'scalar', 'label': 'Lignes'},
+        {'id': 'col_count', 'color': 'scalar', 'label': 'Colonnes'},
+    ],
+    params=[
+        {'id': 'dataset', 'label': 'Dataset', 'type': 'enum', 'options': _SK_DATASETS, 'default': 0},
+    ],
+    resizable=True,
+    min_width=260,
+    min_height=180,
+)
+class MLSklearnDatasetNode(NodeProcessor):
+    def __init__(self):
+        super().__init__()
+        self._cache: dict = {}   # key → DataFrame
+
+    def process(self, inputs, params):
+        if not self.ensure_packages(['sklearn'], pip_names=['scikit-learn'], notif_id=_NOTIF_ID):
+            return {}
+
+        ds_idx = int(params.get('dataset', 0))
+        key    = _SK_KEYS[ds_idx]
+        w      = int(params.get('width',  320))
+        h      = int(params.get('height', 200))
+
+        if key not in self._cache:
+            try:
+                import sklearn.datasets as skd
+                loaders = {
+                    'iris':               skd.load_iris,
+                    'wine':               skd.load_wine,
+                    'breast_cancer':      skd.load_breast_cancer,
+                    'diabetes':           skd.load_diabetes,
+                    'digits':             skd.load_digits,
+                    'california_housing': skd.fetch_california_housing,
+                }
+                bunch = loaders[key](as_frame=True)
+                df = bunch.frame.copy()
+
+                # Rename target column to 'target' (already named so, but enforce)
+                if 'target' not in df.columns and hasattr(bunch, 'target'):
+                    df['target'] = bunch.target.values
+
+                # Decode integer class labels to names for classification datasets
+                if hasattr(bunch, 'target_names') and df['target'].dtype.kind in 'iu':
+                    df['target'] = df['target'].map(
+                        lambda i: str(bunch.target_names[i])
+                    )
+
+                self._cache[key] = df
+                send_notification(
+                    f"sklearn: {key} chargé — {df.shape[0]} rows × {df.shape[1]} cols",
+                    notif_id=_NOTIF_ID
+                )
+            except Exception as e:
+                send_notification(f"sklearn dataset error: {e}", level='error', notif_id=_NOTIF_ID)
+                return {}
+
+        df = self._cache[key]
+
+        # Info panel
+        num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
+        lines = [
+            f"Dataset : {key}",
+            f"Shape   : {df.shape[0]} rows × {df.shape[1]} cols",
+            f"Target  : target  ({df['target'].nunique() if 'target' in df else '?'} valeurs uniques)",
+            f"Features: {len(num_cols)} numériques",
+            "",
+        ] + [f"  {c}" for c in df.columns[:12]]
+        if len(df.columns) > 12:
+            lines.append(f"  ... +{len(df.columns)-12} autres")
+
+        preview = _render_text_panel('\n'.join(lines), w, h, title=f"sklearn — {key}")
+
+        return {
+            'table':     df,
+            'preview':   preview,
+            'row_count': float(len(df)),
+            'col_count': float(len(df.columns)),
+        }

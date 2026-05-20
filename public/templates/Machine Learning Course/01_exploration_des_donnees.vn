@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    { "id": "ds",    "type": "ml_sklearn_dataset", "position": { "x": 50,  "y": 280 }, "data": { "label": "Iris Dataset", "params": { "dataset": 0 } } },
+    { "id": "stats", "type": "ml_df_stats",         "position": { "x": 360, "y": 60  }, "data": { "label": "Statistiques", "params": { "mode": 0 } } },
+    { "id": "scat",  "type": "ml_scatter_plot",     "position": { "x": 360, "y": 310 }, "data": { "label": "Scatter Plot", "params": { "x_col": "sepal length (cm)", "y_col": "sepal width (cm)", "hue_col": "target" } } },
+    { "id": "hist",  "type": "ml_histogram",        "position": { "x": 360, "y": 560 }, "data": { "label": "Histogram",   "params": { "column": "sepal length (cm)", "hue_col": "target", "kde": true } } },
+    { "id": "d1",    "type": "output_display",      "position": { "x": 700, "y": 60  }, "data": { "label": "Stats",       "params": {} } },
+    { "id": "d2",    "type": "output_display",      "position": { "x": 700, "y": 310 }, "data": { "label": "Scatter",     "params": {} } },
+    { "id": "d3",    "type": "output_display",      "position": { "x": 700, "y": 560 }, "data": { "label": "Histogram",   "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "ds",   "sourceHandle": "data__table",   "target": "stats", "targetHandle": "data__table" },
+    { "id": "e2", "source": "ds",   "sourceHandle": "data__table",   "target": "scat",  "targetHandle": "data__table" },
+    { "id": "e3", "source": "ds",   "sourceHandle": "data__table",   "target": "hist",  "targetHandle": "data__table" },
+    { "id": "e4", "source": "stats","sourceHandle": "image__preview", "target": "d1",   "targetHandle": "image__main" },
+    { "id": "e5", "source": "scat", "sourceHandle": "image__main",   "target": "d2",   "targetHandle": "image__main" },
+    { "id": "e6", "source": "hist", "sourceHandle": "image__main",   "target": "d3",   "targetHandle": "image__main" }
+  ]
+}

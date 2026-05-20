@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    { "id": "ds",    "type": "ml_sklearn_dataset", "position": { "x": 50,  "y": 300 }, "data": { "label": "Wine Dataset",      "params": { "dataset": 1 } } },
+    { "id": "filt",  "type": "ml_df_filter",       "position": { "x": 360, "y": 300 }, "data": { "label": "Filtre (optionnel)", "params": { "enabled": false, "column": "target", "operator": 0, "value": "0" } } },
+    { "id": "stats", "type": "ml_df_stats",        "position": { "x": 670, "y": 80  }, "data": { "label": "describe()",        "params": { "mode": 0 } } },
+    { "id": "corr",  "type": "ml_corr_heatmap",   "position": { "x": 670, "y": 360 }, "data": { "label": "Corrélations",      "params": { "method": 0, "annot": true, "colormap": 0 } } },
+    { "id": "d1",    "type": "output_display",     "position": { "x": 1000, "y": 80  }, "data": { "label": "Stats View",       "params": {} } },
+    { "id": "d2",    "type": "output_display",     "position": { "x": 1000, "y": 360 }, "data": { "label": "Heatmap View",     "params": {} } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "ds",   "sourceHandle": "data__table",   "target": "filt",  "targetHandle": "data__table" },
+    { "id": "e2", "source": "filt", "sourceHandle": "data__table",   "target": "stats", "targetHandle": "data__table" },
+    { "id": "e3", "source": "filt", "sourceHandle": "data__table",   "target": "corr",  "targetHandle": "data__table" },
+    { "id": "e4", "source": "stats","sourceHandle": "image__preview", "target": "d1",   "targetHandle": "image__main" },
+    { "id": "e5", "source": "corr", "sourceHandle": "image__main",   "target": "d2",   "targetHandle": "image__main" }
+  ]
+}
