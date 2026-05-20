@@ -227,6 +227,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geom_track_polygon',label:'Polygon Tracker',           description: 'Tracks a polygon region across frames.' },
   ]},
   { id: 'measure', label: 'Measure', icon: Ruler, section: 'generic', nodes: [
+    { type: 'sci_index_painter',      label: 'Index Painter',       description: 'Interactive float-value painter: draw regions and assign scalar values. Outputs a float32 index map and a uint8 label map.' },
     { type: 'sci_histogram',          label: 'Histogram',           description: 'Computes and displays pixel intensity distribution.' },
     { type: 'sci_stats',              label: 'Statistics',          description: 'Computes descriptive statistics on a data stream.' },
     { type: 'sci_roi_stats',          label: 'Area Statistics',     description: 'Measures statistics within a region of interest.' },

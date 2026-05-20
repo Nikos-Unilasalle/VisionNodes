@@ -1,5 +1,10 @@
 [
   {
+    "name": "NDVI Ground Truth Workbench",
+    "description": "Paint a synthetic NDVI land cover map by hand (water, vegetation, urban, bare soil). Outputs a float32 index map connected to a Viridis colormap, value distribution histogram, vegetation mask (NDVI > 0.2), and per-class region properties.",
+    "file": "ndvi_ground_truth.vn"
+  },
+  {
     "name": "OCR Scanner (EasyOCR)",
     "description": "Detects and reads text using EasyOCR, merges text fragments, isolates text regions using contours and filling, and overlays a colored rendering of the recognized text.",
     "file": "ocr_scanner.vn"

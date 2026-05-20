@@ -65,6 +65,7 @@ def _laplacian(Z: np.ndarray) -> np.ndarray:
         {'id': 'init_mode',  'label': 'Init Mode',      'type': 'enum',   'options': ['Scattered','Center Dot'], 'default': 0},
         {'id': 'seed',       'label': 'Random Seed',    'type': 'int',    'default': 42,     'min': 0,    'max': 9999},
         {'id': 'colormap',   'label': 'Colormap',       'type': 'enum',   'options': ['Inferno','Viridis','Jet','Turbo','Hot','Gray'], 'default': 0},
+        {'id': 'pause',      'label': 'Pause',          'type': 'toggle', 'default': False},
         {'id': 'reset',      'label': 'Reset',          'type': 'trigger','default': 0},
     ]
 )
@@ -75,6 +76,7 @@ class GrayScottNode(NodeProcessor):
         self._V: np.ndarray | None = None
         self._prev_reset = 0.0
         self._prev_seed_trig = 0.0
+        self._paused = False
 
     # ── Initialization ────────────────────────────────────────────────────
 
@@ -214,8 +216,11 @@ class GrayScottNode(NodeProcessor):
         mask_img = inputs.get('mask')
         rd_mask = self._to_float(mask_img, w, h) if mask_img is not None else None
 
-        for _ in range(iterations):
-            self._step(Du, Dv, f, k, dt, mask=rd_mask)
+        paused = bool(params.get('pause', False))
+        self._paused = paused
+        if not paused:
+            for _ in range(iterations):
+                self._step(Du, Dv, f, k, dt, mask=rd_mask)
 
         # Build preview
         cmap_idx  = int(params.get('colormap', 0))

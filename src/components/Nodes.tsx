@@ -3875,6 +3875,76 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
   );
 });
 
+// ── Index Painter Node ────────────────────────────────────────────────────────
+export const IndexPainterNode = memo(({ selected, data }: any) => {
+  const nd           = useNodeData(useNodeId());
+  const preview      = nd?.main_preview;
+  const onOpenEditor = data.onOpenEditor;
+
+  const classes: { label: string; value: number; color: string }[] = React.useMemo(() => {
+    try { return JSON.parse(data.params?.classes || '[]'); } catch { return []; }
+  }, [data.params?.classes]);
+
+  const strokeCount: number = React.useMemo(() => {
+    try { return JSON.parse(data.params?.strokes || '[]').length; } catch { return 0; }
+  }, [data.params?.strokes]);
+
+  return (
+    <BaseNode title="Index Painter" icon={Palette} selected={selected} data={data} color="cyan"
+      inputs={[]}
+      outputs={[
+        { id: 'index',  color: 'image',  label: 'Index' },
+        { id: 'labels', color: 'image',  label: 'Labels' },
+      ]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        {/* Preview */}
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/ip shadow-inner">
+          {preview ? (
+            <img src={`data:image/jpeg;base64,${preview}`}
+              className="w-full h-auto block" draggable={false} alt="Index map" />
+          ) : (
+            <div className="w-full aspect-square flex items-center justify-center text-gray-800">
+              <Palette size={24} className="opacity-10" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/ip:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <Palette size={11} /> Paint
+            </button>
+          </div>
+        </div>
+
+        {/* Class swatches */}
+        {classes.length > 0 && (
+          <div className="flex items-center gap-1 px-1 flex-wrap">
+            {classes.map((cls, i) => (
+              <div key={i} title={`${cls.label}: ${cls.value >= 0 ? '+' : ''}${cls.value.toFixed(2)}`}
+                className="flex items-center gap-1 bg-white/5 rounded-full px-1.5 py-0.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cls.color }} />
+                <span className="text-[7px] font-mono text-gray-400 tabular-nums">
+                  {cls.value >= 0 ? '+' : ''}{cls.value.toFixed(1)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between px-1">
+          <div className="text-[8px] font-black text-gray-600 uppercase tracking-widest">
+            {strokeCount} stroke{strokeCount !== 1 ? 's' : ''}
+          </div>
+          <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="text-[8px] font-black text-cyan-400 uppercase tracking-widest hover:underline">
+            Paint
+          </button>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 // ── Teleport Node ─────────────────────────────────────────────────────────────
 // Ghost clone of a source node. Mirrors outputs without re-computing.
 // Semi-transparent, dashed border, no input handles.

@@ -34,6 +34,7 @@ import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
 import CropEditorOverlay from './components/overlays/CropEditorOverlay';
 import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
+import IndexPainterOverlay from './components/overlays/IndexPainterOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
@@ -146,6 +147,7 @@ function App() {
   const [roiEditingId, setRoiEditingId] = useState<string | null>(null);
   const [cropEditingId, setCropEditingId] = useState<string | null>(null);
   const [annotatorEditingId, setAnnotatorEditingId] = useState<string | null>(null);
+  const [indexPainterEditingId, setIndexPainterEditingId] = useState<string | null>(null);
   const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
@@ -420,6 +422,8 @@ function App() {
             ? () => setCropEditingId(node.id)
             : node.type === 'tool_annotator'
             ? () => setAnnotatorEditingId(node.id)
+            : node.type === 'sci_index_painter'
+            ? () => setIndexPainterEditingId(node.id)
             : node.type === 'manual_points'
             ? () => setManualPointsEditingId(node.id)
             : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
@@ -1428,6 +1432,12 @@ function App() {
                <AnnotatorOverlay
                  node={nodesWithData.find(n => n.id === annotatorEditingId)}
                  onClose={() => setAnnotatorEditingId(null)}
+               />
+            )}
+            {indexPainterEditingId && (
+               <IndexPainterOverlay
+                 node={nodesWithData.find(n => n.id === indexPainterEditingId)}
+                 onClose={() => setIndexPainterEditingId(null)}
                />
             )}
             {manualPointsEditingId && (

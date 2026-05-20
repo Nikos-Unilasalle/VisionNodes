@@ -55,6 +55,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   depth_anything_v2: N.GenericCustomNode,
   forensic_footprint: N.ForensicFootprintNode,
   tool_annotator: N.AnnotatorNode,
+  sci_index_painter: N.IndexPainterNode,
   analysis_face_mp: N.AnalysisFaceMPNode,
   analysis_hand_mp: N.AnalysisHandMPNode,
   analysis_pose_mp: N.AnalysisPoseMPNode,
