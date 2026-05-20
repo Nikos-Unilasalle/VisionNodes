@@ -3,11 +3,12 @@ import numpy as np
 import threading
 from registry import vision_node, NodeProcessor, send_notification
 
+EASYOCR_AVAILABLE = False
 try:
     import easyocr
     EASYOCR_AVAILABLE = True
 except ImportError:
-    EASYOCR_AVAILABLE = False
+    pass
 
 _LANG_CODES = [['en'], ['fr'], ['en', 'fr'], ['de'], ['es'], ['ch_sim', 'en']]
 _LANG_LABELS = ['English', 'French', 'Eng + Fra', 'German', 'Spanish', 'Chinese + Eng']
@@ -55,12 +56,14 @@ class EasyOcrNode(NodeProcessor):
         self._cache_result = None
 
     def _load_reader(self, lang_idx, gpu):
-        self._loading = True
-        langs = _LANG_CODES[lang_idx]
-        send_notification(f'EasyOCR: loading {_LANG_LABELS[lang_idx]}…',
-                          progress=0.1, notif_id=_NOTIF_ID)
+        # Ensure packages are installed
+        if not self.ensure_packages(['easyocr'], notif_id=_NOTIF_ID):
+            self._loading = False
+            return
+
+        import easyocr
         try:
-            self.reader = easyocr.Reader(langs, gpu=gpu, verbose=False)
+            self.reader = easyocr.Reader(_LANG_CODES[lang_idx], gpu=gpu, verbose=False)
             self._loaded_lang_idx = lang_idx
             self._loaded_gpu = gpu
             send_notification(f'EasyOCR: ready ({_LANG_LABELS[lang_idx]})',
@@ -76,9 +79,8 @@ class EasyOcrNode(NodeProcessor):
         if img is None:
             return {'main': None, 'text_regions': [], 'texts': []}
 
-        if not EASYOCR_AVAILABLE:
-            return {'main': img, 'text_regions': [],
-                    'texts': ['pip install easyocr']}
+        if not self.ensure_packages(['easyocr'], notif_id=_NOTIF_ID):
+            return {'main': img, 'text_regions': [], 'texts': []}
 
         lang_idx = int(params.get('lang', 0))
         gpu      = bool(params.get('gpu', False))

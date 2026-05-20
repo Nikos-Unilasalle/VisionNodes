@@ -3,44 +3,20 @@ SAM Segmenter — Interactive AI segmentation using SAM 2 (Meta).
 Supports bounding box and point prompts for precise object segmentation.
 Models are downloaded automatically from HuggingFace on first use.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress
 import cv2
 import numpy as np
 import json
 import threading
 import os
 
+SAM2_AVAILABLE = False
 try:
     import torch
-    import torchvision
-    from sam2.sam2_image_predictor import SAM2ImagePredictor
-    from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
-    from sam2.utils.transforms import SAM2Transforms
-    
-    # --- PATCH: Avoid JIT scripting errors on experimental PyTorch/Python 3.14 ---
-    # The official SAM2 library scripts these transforms, which fails with mangled enums
-    # or redefinition errors in bleeding-edge environments.
-    def _patched_sam2_transforms_init(self, resolution, mask_threshold, max_hole_area=0.0, max_sprinkle_area=0.0):
-        import torch.nn as nn
-        from torchvision.transforms import Resize, Normalize, ToTensor
-        nn.Module.__init__(self)
-        self.resolution = resolution
-        self.mask_threshold = mask_threshold
-        self.max_hole_area = max_hole_area
-        self.max_sprinkle_area = max_sprinkle_area
-        self.mean = [0.485, 0.456, 0.406]
-        self.std = [0.229, 0.224, 0.225]
-        self.to_tensor = ToTensor()
-        self.transforms = nn.Sequential(
-            Resize((self.resolution, self.resolution), antialias=True),
-            Normalize(self.mean, self.std),
-        )
-    SAM2Transforms.__init__ = _patched_sam2_transforms_init
-    # ---------------------------------------------------------------------------
-
+    import sam2
     SAM2_AVAILABLE = True
 except ImportError:
-    SAM2_AVAILABLE = False
+    pass
 
 _NOTIF_ID = 'sam_segmenter'
 
@@ -156,6 +132,32 @@ class SAMSegmenterNode(NodeProcessor):
                 progress=0.1, notif_id=_NOTIF_ID
             )
 
+            # Check and install sam2 if missing
+            if not self.ensure_packages(['sam2'], pip_names=['git+https://github.com/facebookresearch/sam2.git'], notif_id=_NOTIF_ID):
+                return
+
+            # Dynamic imports and patching
+            from sam2.sam2_image_predictor import SAM2ImagePredictor
+            from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
+            from sam2.utils.transforms import SAM2Transforms
+
+            def _patched_sam2_transforms_init(self, resolution, mask_threshold, max_hole_area=0.0, max_sprinkle_area=0.0):
+                import torch.nn as nn
+                from torchvision.transforms import Resize, Normalize, ToTensor
+                nn.Module.__init__(self)
+                self.resolution = resolution
+                self.mask_threshold = mask_threshold
+                self.max_hole_area = max_hole_area
+                self.max_sprinkle_area = max_sprinkle_area
+                self.mean = [0.485, 0.456, 0.406]
+                self.std = [0.229, 0.224, 0.225]
+                self.to_tensor = ToTensor()
+                self.transforms = nn.Sequential(
+                    Resize((self.resolution, self.resolution), antialias=True),
+                    Normalize(self.mean, self.std),
+                )
+            SAM2Transforms.__init__ = _patched_sam2_transforms_init
+
             # --- Optimization: Limit CPU threads during heavy model loading ---
             # This prevents starving the main event loop / WebSocket server,
             # especially with large models like SAM 2 Large (~900 MB).
@@ -164,7 +166,9 @@ class SAMSegmenterNode(NodeProcessor):
             
             try:
                 # Always load on CPU first (from_pretrained doesn't support MPS directly)
-                predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
+                from sam2.sam2_image_predictor import SAM2ImagePredictor
+                with hf_ui_progress(_NOTIF_ID, prefix=f"Downloading {model_name}"):
+                    predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
             finally:
                 torch.set_num_threads(old_threads)
 
@@ -233,12 +237,8 @@ class SAMSegmenterNode(NodeProcessor):
         if image is None:
             return empty()
 
-        if not SAM2_AVAILABLE:
-            send_notification(
-                'SAM: sam2 package not installed. Run: pip install git+https://github.com/facebookresearch/sam2.git',
-                level='error', notif_id=_NOTIF_ID
-            )
-            return empty('SAM2 not installed — pip install sam2', color=(60, 60, 255))
+        if not self.ensure_packages(['sam2'], pip_names=['git+https://github.com/facebookresearch/sam2.git'], notif_id=_NOTIF_ID):
+            return empty()
 
         hf_token = params.get('hf_token', '')
 
