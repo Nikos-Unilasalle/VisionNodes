@@ -3,17 +3,16 @@ PBR Material Generator — Derives material maps from a single image.
 Algorithmic mode: real-time via gradient/variance analysis.
 AI Enhanced mode: Depth Anything V2 Small for depth-driven normals + height.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress
 import cv2
 import numpy as np
 import threading
 
 try:
     import torch
-    from transformers import AutoImageProcessor, AutoModelForDepthEstimation
-    TRANSFORMERS_AVAILABLE = True
+    TORCH_AVAILABLE = True
 except ImportError:
-    TRANSFORMERS_AVAILABLE = False
+    TORCH_AVAILABLE = False
 
 _NOTIF_ID = 'pbr_material_gen'
 _DEPTH_MODEL_ID = 'depth-anything/Depth-Anything-V2-Small-hf'
@@ -61,7 +60,7 @@ class PBRMaterialGenNode(NodeProcessor):
         self._model_ready = False
         self._failed = False
         self.device = 'cpu'
-        if TRANSFORMERS_AVAILABLE:
+        if TORCH_AVAILABLE:
             if torch.backends.mps.is_available():
                 self.device = 'mps'
             elif torch.cuda.is_available():
@@ -71,12 +70,19 @@ class PBRMaterialGenNode(NodeProcessor):
 
     def _load_model_thread(self):
         try:
+            # Install transformers and timm if missing, with progress bar notification
+            if not self.ensure_packages(['transformers', 'timm'], notif_id=_NOTIF_ID):
+                return
+
+            from transformers import AutoImageProcessor, AutoModelForDepthEstimation
+
             send_notification('PBR: Downloading depth model...', progress=0.1, notif_id=_NOTIF_ID)
             old_threads = torch.get_num_threads()
             torch.set_num_threads(1)
             try:
-                self._processor = AutoImageProcessor.from_pretrained(_DEPTH_MODEL_ID)
-                model = AutoModelForDepthEstimation.from_pretrained(_DEPTH_MODEL_ID)
+                with hf_ui_progress(_NOTIF_ID, prefix="Downloading Depth Anything V2 Small"):
+                    self._processor = AutoImageProcessor.from_pretrained(_DEPTH_MODEL_ID)
+                    model = AutoModelForDepthEstimation.from_pretrained(_DEPTH_MODEL_ID)
                 model.to(self.device)
                 model.eval()
                 self._model = model
@@ -91,8 +97,13 @@ class PBRMaterialGenNode(NodeProcessor):
             self._loading = False
 
     def _ensure_model(self):
-        if self._model_ready or self._loading or self._failed or not TRANSFORMERS_AVAILABLE:
+        if self._model_ready or self._loading or self._failed or not TORCH_AVAILABLE:
             return
+        
+        # Check if packages are available. If not, ensure_packages will trigger installation in background
+        if not self.ensure_packages(['transformers', 'timm'], notif_id=_NOTIF_ID):
+            return
+
         self._loading = True
         threading.Thread(target=self._load_model_thread, daemon=True).start()
 

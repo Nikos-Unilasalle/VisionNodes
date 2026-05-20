@@ -59,6 +59,48 @@ def send_notification(message, progress=None, level='info', notif_id=None):
     })
 
 
+import contextlib
+
+@contextlib.contextmanager
+def hf_ui_progress(notif_id: str, prefix: str = "Downloading"):
+    """Context manager to intercept huggingface_hub downloads and pipe them to UI."""
+    try:
+        from huggingface_hub import utils as hf_utils
+        import tqdm
+        
+        original_tqdm = hf_utils.tqdm
+        
+        class UI_Tqdm(tqdm.tqdm):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._notif_id = notif_id
+                self._prefix = prefix
+                self._last_pct = 0.0
+
+            def update(self, n=1):
+                super().update(n)
+                if getattr(self, 'total', None) and self.total > 0:
+                    pct = self.n / self.total
+                    if pct - self._last_pct >= 0.05 or pct >= 1.0:
+                        desc = getattr(self, 'desc', '') or ''
+                        desc = desc.split('/')[-1] if desc else ''
+                        msg = f"{self._prefix} {desc}: {int(pct*100)}%"
+                        send_notification(msg, progress=pct, notif_id=self._notif_id)
+                        self._last_pct = pct
+
+        hf_utils.tqdm = UI_Tqdm
+        yield
+    except ImportError:
+        yield
+    finally:
+        try:
+            from huggingface_hub import utils as hf_utils
+            hf_utils.tqdm = original_tqdm
+        except Exception:
+            pass
+
+
+
 def vision_node(
     type_id: str, label: str, category: str | list[str] = "custom", icon: str = "PenTool",
     inputs: Optional[list[PortSpec]] = None,
@@ -183,11 +225,13 @@ class NodeProcessor(ABC):
                     if hf_filename:
                         # Download specific file
                         from huggingface_hub import hf_hub_download
-                        path = hf_hub_download(repo_id=repo_id, filename=hf_filename, token=hf_token or None)
+                        with hf_ui_progress(notif_id, prefix="Downloading"):
+                            path = hf_hub_download(repo_id=repo_id, filename=hf_filename, token=hf_token or None)
                     else:
                         # Download entire snapshot
                         from huggingface_hub import snapshot_download
-                        path = snapshot_download(repo_id=repo_id, token=hf_token or None)
+                        with hf_ui_progress(notif_id, prefix="Downloading"):
+                            path = snapshot_download(repo_id=repo_id, token=hf_token or None)
                     
                     self._hf_path = path
                     self.report_progress(1.0, f'{repo_id.split("/")[-1]} ready ✓')
@@ -201,6 +245,84 @@ class NodeProcessor(ABC):
             threading.Thread(target=_download_thread, daemon=True).start()
             
         return None
+
+    def ensure_packages(self, packages: list[str], pip_names: Optional[list[str]] = None, notif_id: str = None) -> bool:
+        """
+        Check if packages are installed. If not, try to install them via pip in a background thread.
+        Returns True if already installed, False if installation is in progress or failed.
+        
+        :param packages: List of import names to check (e.g. ['transformers', 'timm'])
+        :param pip_names: List of pip package names if different from import names.
+        :param notif_id: Optional notification ID for status updates.
+        """
+        import importlib.util
+        import sys
+        import subprocess
+        import threading
+
+        # 1. Quick check if everything is already there
+        missing_indices = []
+        for i, pkg in enumerate(packages):
+            if importlib.util.find_spec(pkg) is None:
+                missing_indices.append(i)
+        
+        if not missing_indices:
+            return True
+
+        # 2. State management for installation
+        if not hasattr(self, '_install_state'):
+            self._install_state = {'installing': False, 'failed': False, 'success': False}
+
+        if self._install_state['success']:
+            return True
+        if self._install_state['failed']:
+            return False
+
+        # 3. Trigger installation if not already running
+        if not self._install_state['installing']:
+            self._install_state['installing'] = True
+            
+            # Use provided pip names or fallback to import names
+            targets = []
+            for idx in missing_indices:
+                if pip_names and idx < len(pip_names):
+                    targets.append(pip_names[idx])
+                else:
+                    targets.append(packages[idx])
+
+            def _install_thread():
+                nid = notif_id or f'install_{self.__class__.__name__}'
+                try:
+                    send_notification(
+                        f"Installing dependencies: {', '.join(targets)}...", 
+                        progress=0.1, notif_id=nid
+                    )
+                    
+                    # Run pip install
+                    # Use --no-cache-dir to save space and --quiet to reduce logs
+                    subprocess.check_call([
+                        sys.executable, "-m", "pip", "install", "--quiet"
+                    ] + targets)
+                    
+                    self._install_state['success'] = True
+                    send_notification(
+                        f"Dependencies installed ✓", 
+                        progress=1.0, notif_id=nid
+                    )
+                    print(f"[{self.__class__.__name__}] Successfully installed {targets}")
+                except Exception as e:
+                    self._install_state['failed'] = True
+                    print(f"[{self.__class__.__name__}] Installation FAILED: {e}")
+                    send_notification(
+                        f"Install failed: {str(e)[:100]}", 
+                        level='error', notif_id=nid
+                    )
+                finally:
+                    self._install_state['installing'] = False
+
+            threading.Thread(target=_install_thread, daemon=True).start()
+        
+        return False
 
     @abstractmethod
     def process(self, inputs, params): pass

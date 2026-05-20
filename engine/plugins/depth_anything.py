@@ -3,18 +3,21 @@ Depth Anything V2 — Monocular Depth Estimation.
 Provides high-quality depth maps from single images, useful for 3D analysis, 
 masonry joint detection, and surface relief visualization.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress
 import cv2
 import numpy as np
 import threading
 import torch
 import os
 
+# Global flag will be updated dynamically if needed, 
+# but we'll use ensure_packages() for auto-installation.
+TRANSFORMERS_AVAILABLE = False
 try:
-    from transformers import AutoImageProcessor, AutoModelForDepthEstimation
+    import transformers
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
-    TRANSFORMERS_AVAILABLE = False
+    pass
 
 _NOTIF_ID = 'depth_anything'
 
@@ -77,14 +80,22 @@ class DepthAnythingNode(NodeProcessor):
                 progress=0.1, notif_id=_NOTIF_ID
             )
             
+            # Check and install dependencies if missing
+            if not self.ensure_packages(['transformers', 'timm'], notif_id=_NOTIF_ID):
+                return
+
+            # Dynamic imports after ensuring packages are available
+            from transformers import AutoImageProcessor, AutoModelForDepthEstimation
+
             # Limit CPU threads during heavy model loading to avoid UI lag
             old_threads = torch.get_num_threads()
             torch.set_num_threads(1)
             
             try:
                 # Load processor and model
-                self.processor = AutoImageProcessor.from_pretrained(repo_id)
-                model = AutoModelForDepthEstimation.from_pretrained(repo_id)
+                with hf_ui_progress(_NOTIF_ID, prefix=f"Downloading {model_name}"):
+                    self.processor = AutoImageProcessor.from_pretrained(repo_id)
+                    model = AutoModelForDepthEstimation.from_pretrained(repo_id)
                 
                 # Move to accelerator
                 model.to(self.device)
@@ -113,12 +124,9 @@ class DepthAnythingNode(NodeProcessor):
         if image is None:
             return {}
 
-        if not TRANSFORMERS_AVAILABLE:
-            send_notification(
-                'Depth: pip install transformers timm',
-                level='error', notif_id=_NOTIF_ID
-            )
-            return {'depth': image, 'overlay': image}
+        # Check if packages are available. If not, ensure_packages will trigger installation.
+        if not self.ensure_packages(['transformers', 'timm'], notif_id=_NOTIF_ID):
+            return {}
 
         # ── 1. Model Loading ──
         model_idx = int(params.get('model', 0))

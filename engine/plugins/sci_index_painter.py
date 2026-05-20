@@ -38,7 +38,7 @@ def _rdylgn_lut() -> np.ndarray:
     return lut
 
 
-_RDYLGN = _rdylgn_lut()
+_RDYLGN = _rdylgn_lut().reshape((256, 1, 3))
 
 
 def _apply_colormap(gray8: np.ndarray, cmap_code) -> np.ndarray:
@@ -125,7 +125,17 @@ class IndexPainterNode(NodeProcessor):
         else:
             norm8 = np.zeros((h, w), dtype=np.uint8)
 
-        cm_idx  = int(params.get('colormap', 0))
+        cm_param = params.get('colormap', 0)
+        if isinstance(cm_param, str):
+            if cm_param in _CM_NAMES:
+                cm_idx = _CM_NAMES.index(cm_param)
+            else:
+                try:
+                    cm_idx = int(cm_param)
+                except ValueError:
+                    cm_idx = 0
+        else:
+            cm_idx = int(cm_param)
         cm_code = _COLORMAPS[cm_idx][1] if cm_idx < len(_COLORMAPS) else None
         preview = _apply_colormap(norm8, cm_code)
 

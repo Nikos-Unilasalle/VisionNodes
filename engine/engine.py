@@ -598,7 +598,8 @@ class VisionEngine:
             if self._has_active_realtime_nodes():
                 await asyncio.sleep(1/30)
             else:
-                self._run_event.clear()  # no active realtime nodes: wait until next update_graph()
+                # Static graph: compute once, wait for next graph/param change to trigger again
+                self._run_event.clear()
 
     async def hdl(self, ws):
         self.connected_clients.add(ws)
@@ -607,6 +608,9 @@ class VisionEngine:
                 await ws.send(json.dumps({"type": "schema", "nodes": NODE_SCHEMAS}))
             except Exception as e:
                 print(f"[Engine] Failed to send schema: {e}")
+        # For static graphs, trigger one render so the new client sees the current state immediately
+        if self._should_run() and not self.has_realtime_node:
+            self._run_event.set()
         try:
             async for m in ws:
                 try:
@@ -615,8 +619,10 @@ class VisionEngine:
                         self.update_graph(d.get('graph', {}))
                     elif d.get('type') == 'request_node_capture':
                         self.pending_capture = d.get('node_id')
+                        self._run_event.set()
                     elif d.get('type') == 'snapshot_to_node':
                         self.pending_snapshot = d.get('node_id')
+                        self._run_event.set()
                         print(f"[Engine] pending_snapshot set to {self.pending_snapshot}")
                     elif d.get('type') == 'set_preview_node':
                         self.preview_node_id = d.get('node_id')
