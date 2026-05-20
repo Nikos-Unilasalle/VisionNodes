@@ -17133,15 +17133,15 @@
     ]
   },
   {
-    "id": "unmapped",
-    "label": "Other / Internal",
+    "id": "DataFrame",
+    "label": "DataFrame",
     "nodes": [
       {
         "type": "ml_csv_reader",
         "label": "CSV Reader",
         "category": "DataFrame",
         "icon": "FileText",
-        "description": "Load a CSV file as a DataFrame. Connect to DF Filter or DF Stats.",
+        "description": "Load a CSV file as a DataFrame.",
         "inputs": [],
         "outputs": [
           {
@@ -17207,7 +17207,7 @@
         "label": "Correlation Heatmap",
         "category": "DataFrame",
         "icon": "Grid",
-        "description": "Pearson correlation matrix of numeric DataFrame columns. Essential for feature selection.",
+        "description": "Pearson correlation matrix of numeric columns.",
         "inputs": [
           {
             "id": "table",
@@ -17268,7 +17268,7 @@
         "label": "DF Export",
         "category": "DataFrame",
         "icon": "Save",
-        "description": "Save a DataFrame to CSV, Excel, JSON or Parquet. Trigger the Save button once to write the file.",
+        "description": "Save a DataFrame to CSV, Excel, JSON or Parquet.",
         "inputs": [
           {
             "id": "table",
@@ -17315,7 +17315,7 @@
         "label": "DF Fill NA",
         "category": "DataFrame",
         "icon": "Eraser",
-        "description": "Handle missing values: fill with constant, statistics, forward/back fill, or drop rows/columns.",
+        "description": "Handle missing values.",
         "inputs": [
           {
             "id": "table",
@@ -17382,7 +17382,7 @@
         "label": "DF Filter",
         "category": "DataFrame",
         "icon": "Filter",
-        "description": "Filter rows of a DataFrame by a column condition. Chain multiple filters for complex queries.",
+        "description": "Filter rows of a DataFrame.",
         "inputs": [
           {
             "id": "table",
@@ -17453,7 +17453,7 @@
         "label": "DF GroupBy",
         "category": "DataFrame",
         "icon": "Group",
-        "description": "Group rows by a column and aggregate numeric columns. Result is a new DataFrame with one row per group.",
+        "description": "Group rows by a column and aggregate.",
         "inputs": [
           {
             "id": "table",
@@ -17518,7 +17518,7 @@
         "label": "DF Merge",
         "category": "DataFrame",
         "icon": "Merge",
-        "description": "Merge two DataFrames on key columns (SQL-style join). Connect left and right DataFrames.",
+        "description": "Merge two DataFrames.",
         "inputs": [
           {
             "id": "left",
@@ -17582,7 +17582,7 @@
         "label": "DF New Column",
         "category": "DataFrame",
         "icon": "PlusSquare",
-        "description": "Add a computed column using a Python expression. Use df['col'] to reference columns. Example: df['a'] + df['b'].",
+        "description": "Add a computed column.",
         "inputs": [
           {
             "id": "table",
@@ -17630,7 +17630,7 @@
         "label": "DF Rename",
         "category": "DataFrame",
         "icon": "Type",
-        "description": "Rename columns. Format: old:new,old2:new2. Leave blank to pass through unchanged.",
+        "description": "Rename columns.",
         "inputs": [
           {
             "id": "table",
@@ -17678,7 +17678,7 @@
         "label": "DF Sample",
         "category": "DataFrame",
         "icon": "Rows",
-        "description": "Extract a subset of rows: head (first N), tail (last N), random sample, or slice (start:end).",
+        "description": "Extract a subset of rows.",
         "inputs": [
           {
             "id": "table",
@@ -17757,7 +17757,7 @@
         "label": "DF Select",
         "category": "DataFrame",
         "icon": "Columns",
-        "description": "Keep specific columns, drop others, or rename them. Columns: comma-separated names. Drop: columns to remove. Rename: old:new,old2:new2.",
+        "description": "Keep specific columns.",
         "inputs": [
           {
             "id": "table",
@@ -17821,7 +17821,7 @@
         "label": "DF Sort",
         "category": "DataFrame",
         "icon": "ArrowUpDown",
-        "description": "Sort rows by one or more columns. Column: comma-separated names for multi-level sort.",
+        "description": "Sort rows.",
         "inputs": [
           {
             "id": "table",
@@ -17879,7 +17879,7 @@
         "label": "DF Stats",
         "category": "DataFrame",
         "icon": "BarChart2",
-        "description": "Show descriptive statistics of a DataFrame: describe(), head, dtypes, or value counts.",
+        "description": "Show descriptive statistics.",
         "inputs": [
           {
             "id": "table",
@@ -17940,11 +17940,215 @@
         "min_height": 220
       },
       {
+        "type": "ml_histogram",
+        "label": "ML Histogram",
+        "category": "DataFrame",
+        "icon": "BarChart2",
+        "description": "Plot histogram.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Plot"
+          }
+        ],
+        "params": [
+          {
+            "id": "column",
+            "label": "Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "hue_col",
+            "label": "Split by (hue)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "bins",
+            "label": "Bins",
+            "type": "int",
+            "default": 30,
+            "min": 5,
+            "max": 200
+          },
+          {
+            "id": "kde",
+            "label": "KDE overlay",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "density",
+            "label": "Normalize (density)",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "grid",
+            "label": "Grid",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 240
+      },
+      {
+        "type": "ml_scatter_plot",
+        "label": "Scatter Plot",
+        "category": "DataFrame",
+        "icon": "Crosshair",
+        "description": "Scatter plot of data.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Plot"
+          }
+        ],
+        "params": [
+          {
+            "id": "x_col",
+            "label": "X Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "y_col",
+            "label": "Y Column",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "hue_col",
+            "label": "Color by (hue)",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "alpha",
+            "label": "Opacity",
+            "type": "float",
+            "default": 0.75,
+            "min": 0.1,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "dot_size",
+            "label": "Dot Size",
+            "type": "int",
+            "default": 40,
+            "min": 5,
+            "max": 250
+          },
+          {
+            "id": "regression",
+            "label": "Regression Line",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "grid",
+            "label": "Grid",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "max_points",
+            "label": "Max Points (0=all)",
+            "type": "int",
+            "default": 2000,
+            "min": 0,
+            "max": 50000
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 240
+      },
+      {
+        "type": "ml_sklearn_dataset",
+        "label": "Sklearn Dataset",
+        "category": "DataFrame",
+        "icon": "Database",
+        "description": "Load sample datasets.",
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame complet"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Info panel"
+          },
+          {
+            "id": "row_count",
+            "color": "scalar",
+            "label": "Lignes"
+          },
+          {
+            "id": "col_count",
+            "color": "scalar",
+            "label": "Colonnes"
+          }
+        ],
+        "params": [
+          {
+            "id": "dataset",
+            "label": "Dataset",
+            "type": "enum",
+            "default": 0
+          }
+        ],
+        "resizable": true,
+        "min_width": 260,
+        "min_height": 180
+      }
+    ]
+  },
+  {
+    "id": "Machine Learning",
+    "label": "Machine Learning",
+    "nodes": [
+      {
         "type": "ml_decision_tree",
         "label": "Decision Tree",
         "category": "Machine Learning",
         "icon": "GitBranch",
-        "description": "Arbre de décision. Slider max_depth pour observer la complexité de l'arbre. Affiche l'arbre complet + bar chart des feature importances.",
+        "description": "Decision Tree classifier/regressor.",
         "inputs": [
           {
             "id": "train",
@@ -18040,7 +18244,7 @@
         "label": "K-Means",
         "category": "Machine Learning",
         "icon": "Target",
-        "description": "K-Means clustering. Slide k to watch clusters form in real time. 2 features → direct scatter + regions. N features → PCA 2D projection. Outputs inertia + silhouette score for elbow/quality analysis.",
+        "description": "K-Means clustering.",
         "inputs": [
           {
             "id": "table",
@@ -18141,7 +18345,7 @@
         "label": "KNN Classifier",
         "category": "Machine Learning",
         "icon": "Users",
-        "description": "K-Nearest Neighbors classifier. 2 features → decision boundary + scatter. N features → confusion matrix. Slide k to see how the boundary changes in real time.",
+        "description": "K-Nearest Neighbors classifier.",
         "inputs": [
           {
             "id": "train",
@@ -18248,7 +18452,7 @@
         "label": "Linear Regression",
         "category": "Machine Learning",
         "icon": "TrendingUp",
-        "description": "Linear regression: scatter prédit vs réel, résidus, et bar chart des coefficients par feature. Sorties : R² train/test, RMSE.",
+        "description": "Linear Regression model.",
         "inputs": [
           {
             "id": "train",
@@ -18319,165 +18523,11 @@
         "min_height": 260
       },
       {
-        "type": "ml_histogram",
-        "label": "ML Histogram",
-        "category": "DataFrame",
-        "icon": "BarChart2",
-        "description": "Distribution histogram of a DataFrame column. Optional KDE overlay and per-class breakdown (hue).",
-        "inputs": [
-          {
-            "id": "table",
-            "color": "data",
-            "label": "DataFrame"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "main",
-            "color": "image",
-            "label": "Plot"
-          }
-        ],
-        "params": [
-          {
-            "id": "column",
-            "label": "Column",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "hue_col",
-            "label": "Split by (hue)",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "bins",
-            "label": "Bins",
-            "type": "int",
-            "default": 30,
-            "min": 5,
-            "max": 200
-          },
-          {
-            "id": "kde",
-            "label": "KDE overlay",
-            "type": "bool",
-            "default": true
-          },
-          {
-            "id": "density",
-            "label": "Normalize (density)",
-            "type": "bool",
-            "default": false
-          },
-          {
-            "id": "colormap",
-            "label": "Colormap",
-            "type": "enum",
-            "default": 0
-          },
-          {
-            "id": "grid",
-            "label": "Grid",
-            "type": "bool",
-            "default": true
-          }
-        ],
-        "resizable": true,
-        "min_width": 300,
-        "min_height": 240
-      },
-      {
-        "type": "pbr_material_gen",
-        "label": "PBR Material Generator",
-        "category": "cv",
-        "icon": "Layers",
-        "description": "Generates PBR material maps from a single image: Albedo, Normal Map, Roughness, Height, and Ambient Occlusion. Algorithmic mode runs in real-time. AI Enhanced uses Depth Anything V2 Small for higher-quality depth-based normals and height map.",
-        "resizable": false,
-        "inputs": [
-          {
-            "id": "image",
-            "color": "image",
-            "label": "Image"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "albedo",
-            "color": "image",
-            "label": "Albedo"
-          },
-          {
-            "id": "normal",
-            "color": "image",
-            "label": "Normal Map"
-          },
-          {
-            "id": "roughness",
-            "color": "image",
-            "label": "Roughness"
-          },
-          {
-            "id": "height",
-            "color": "image",
-            "label": "Height"
-          },
-          {
-            "id": "ao",
-            "color": "image",
-            "label": "AO"
-          }
-        ],
-        "params": [
-          {
-            "id": "mode",
-            "label": "Mode",
-            "type": "enum",
-            "options": [
-              "Algorithmic",
-              "AI Enhanced"
-            ],
-            "default": 0
-          },
-          {
-            "id": "normal_strength",
-            "label": "Normal Strength",
-            "type": "float",
-            "min": 0.5,
-            "max": 15.0,
-            "default": 4.0
-          },
-          {
-            "id": "roughness_radius",
-            "label": "Roughness Radius",
-            "type": "int",
-            "min": 2,
-            "max": 24,
-            "default": 6
-          },
-          {
-            "id": "invert_roughness",
-            "label": "Invert Roughness",
-            "type": "bool",
-            "default": false
-          },
-          {
-            "id": "ao_radius",
-            "label": "AO Radius",
-            "type": "int",
-            "min": 4,
-            "max": 64,
-            "default": 16
-          }
-        ]
-      },
-      {
         "type": "ml_pca",
         "label": "PCA",
         "category": "Machine Learning",
         "icon": "Aperture",
-        "description": "Principal Component Analysis. Reduces dimensionality, shows PC1 vs PC2 scatter and explained variance chart. Connect hue column to colour by class or cluster.",
+        "description": "Principal Component Analysis.",
         "inputs": [
           {
             "id": "table",
@@ -18574,32 +18624,11 @@
         "min_height": 260
       },
       {
-        "type": "canvas_reroute",
-        "label": "Reroute",
-        "category": "canvas",
-        "icon": "GitCommit",
-        "description": "Pass-through node to organize wires.",
-        "inputs": [
-          {
-            "id": "in",
-            "color": "any"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "out",
-            "color": "any"
-          }
-        ],
-        "dynamic_inputs": true,
-        "dynamic_outputs": true
-      },
-      {
         "type": "ml_svm_classifier",
         "label": "SVM Classifier",
         "category": "Machine Learning",
         "icon": "Zap",
-        "description": "Support Vector Machine. 2 features → frontière de décision. N features → confusion matrix. Ajuster C (régularisation) et kernel pour comprendre les marges.",
+        "description": "Support Vector Machine classifier.",
         "inputs": [
           {
             "id": "train",
@@ -18710,139 +18739,11 @@
         "min_height": 260
       },
       {
-        "type": "ml_scatter_plot",
-        "label": "Scatter Plot",
-        "category": "DataFrame",
-        "icon": "Crosshair",
-        "description": "2D scatter plot from a DataFrame. Set X/Y columns, optionally color by a class column (hue). Ideal for exploring feature relationships and class separability.",
-        "inputs": [
-          {
-            "id": "table",
-            "color": "data",
-            "label": "DataFrame"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "main",
-            "color": "image",
-            "label": "Plot"
-          }
-        ],
-        "params": [
-          {
-            "id": "x_col",
-            "label": "X Column",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "y_col",
-            "label": "Y Column",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "hue_col",
-            "label": "Color by (hue)",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "colormap",
-            "label": "Colormap",
-            "type": "enum",
-            "default": 0
-          },
-          {
-            "id": "alpha",
-            "label": "Opacity",
-            "type": "float",
-            "default": 0.75,
-            "min": 0.1,
-            "max": 1.0,
-            "step": 0.05
-          },
-          {
-            "id": "dot_size",
-            "label": "Dot Size",
-            "type": "int",
-            "default": 40,
-            "min": 5,
-            "max": 250
-          },
-          {
-            "id": "regression",
-            "label": "Regression Line",
-            "type": "bool",
-            "default": false
-          },
-          {
-            "id": "grid",
-            "label": "Grid",
-            "type": "bool",
-            "default": true
-          },
-          {
-            "id": "max_points",
-            "label": "Max Points (0=all)",
-            "type": "int",
-            "default": 2000,
-            "min": 0,
-            "max": 50000
-          }
-        ],
-        "resizable": true,
-        "min_width": 300,
-        "min_height": 240
-      },
-      {
-        "type": "ml_sklearn_dataset",
-        "label": "Sklearn Dataset",
-        "category": "DataFrame",
-        "icon": "Database",
-        "description": "Charge un jeu de données de démonstration scikit-learn. Colonne cible toujours nommée 'target' (labels texte pour les classifications). Idéal pour commencer sans fichier CSV.",
-        "inputs": [],
-        "outputs": [
-          {
-            "id": "table",
-            "color": "data",
-            "label": "DataFrame complet"
-          },
-          {
-            "id": "preview",
-            "color": "image",
-            "label": "Info panel"
-          },
-          {
-            "id": "row_count",
-            "color": "scalar",
-            "label": "Lignes"
-          },
-          {
-            "id": "col_count",
-            "color": "scalar",
-            "label": "Colonnes"
-          }
-        ],
-        "params": [
-          {
-            "id": "dataset",
-            "label": "Dataset",
-            "type": "enum",
-            "default": 0
-          }
-        ],
-        "resizable": true,
-        "min_width": 260,
-        "min_height": 180
-      },
-      {
         "type": "ml_train_test_split",
         "label": "Train / Test Split",
         "category": "Machine Learning",
         "icon": "Scissors",
-        "description": "Split a DataFrame into training and test sets. Connect train → model, test → evaluation.",
+        "description": "Split data into train and test sets.",
         "inputs": [
           {
             "id": "table",
@@ -18910,6 +18811,117 @@
         "resizable": true,
         "min_width": 260,
         "min_height": 160
+      }
+    ]
+  },
+  {
+    "id": "unmapped",
+    "label": "Other / Internal",
+    "nodes": [
+      {
+        "type": "pbr_material_gen",
+        "label": "PBR Material Generator",
+        "category": "cv",
+        "icon": "Layers",
+        "description": "Generates PBR material maps from a single image: Albedo, Normal Map, Roughness, Height, and Ambient Occlusion. Algorithmic mode runs in real-time. AI Enhanced uses Depth Anything V2 Small for higher-quality depth-based normals and height map.",
+        "resizable": false,
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "albedo",
+            "color": "image",
+            "label": "Albedo"
+          },
+          {
+            "id": "normal",
+            "color": "image",
+            "label": "Normal Map"
+          },
+          {
+            "id": "roughness",
+            "color": "image",
+            "label": "Roughness"
+          },
+          {
+            "id": "height",
+            "color": "image",
+            "label": "Height"
+          },
+          {
+            "id": "ao",
+            "color": "image",
+            "label": "AO"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Algorithmic",
+              "AI Enhanced"
+            ],
+            "default": 0
+          },
+          {
+            "id": "normal_strength",
+            "label": "Normal Strength",
+            "type": "float",
+            "min": 0.5,
+            "max": 15.0,
+            "default": 4.0
+          },
+          {
+            "id": "roughness_radius",
+            "label": "Roughness Radius",
+            "type": "int",
+            "min": 2,
+            "max": 24,
+            "default": 6
+          },
+          {
+            "id": "invert_roughness",
+            "label": "Invert Roughness",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "ao_radius",
+            "label": "AO Radius",
+            "type": "int",
+            "min": 4,
+            "max": 64,
+            "default": 16
+          }
+        ]
+      },
+      {
+        "type": "canvas_reroute",
+        "label": "Reroute",
+        "category": "canvas",
+        "icon": "GitCommit",
+        "description": "Pass-through node to organize wires.",
+        "inputs": [
+          {
+            "id": "in",
+            "color": "any"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "out",
+            "color": "any"
+          }
+        ],
+        "dynamic_inputs": true,
+        "dynamic_outputs": true
       }
     ]
   }
