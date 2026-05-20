@@ -37,9 +37,25 @@ def _get_mpl():
     return matplotlib, plt
 
 
-def _fig_to_bgr(fig) -> np.ndarray:
+_EXPORT_PARAMS = [
+    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+]
+
+
+def _out_size(params, default_w=540, default_h=420):
+    dpi   = max(72, int(params.get('out_dpi', 100)))
+    out_w = int(params.get('out_w', 0))
+    out_h = int(params.get('out_h', 0))
+    if out_w > 0 and out_h > 0:
+        return out_w / dpi, out_h / dpi, dpi
+    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
+
+
+def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
@@ -82,7 +98,7 @@ def _prepare_Xy(train_df, test_df, features, target):
 # ─── Boundary / Confusion helpers (shared by SVM & DT) ────────────────────────
 
 def _boundary_plot(model, X_tr, y_tr, X_te, y_te, features, classes, cmap,
-                   res, acc, model_name, w_px, h_px, plt):
+                   res, acc, model_name, fig_w, fig_h, dpi, plt):
     X_all  = np.vstack([X_tr, X_te]) if len(X_te) else X_tr
     margin = (X_all.max(axis=0) - X_all.min(axis=0)) * 0.12 + 1e-6
     xx, yy = np.meshgrid(
@@ -91,7 +107,7 @@ def _boundary_plot(model, X_tr, y_tr, X_te, y_te, features, classes, cmap,
     )
     Z = model.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
 
-    fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.contourf(xx, yy, Z, alpha=0.22, cmap=cmap, levels=len(classes))
     ax.contour(xx, yy, Z, colors='#555', linewidths=0.5)
 
@@ -111,22 +127,23 @@ def _boundary_plot(model, X_tr, y_tr, X_te, y_te, features, classes, cmap,
     ax.legend(fontsize=8, labelcolor='#cccccc', loc='best', framealpha=0.4)
     ax.grid(True)
     fig.tight_layout()
-    img = _fig_to_bgr(fig)
+    img = _fig_to_bgr(fig, dpi)
     plt.close(fig)
     return img
 
 
-def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, w_px, h_px, plt):
+def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, fig_w, fig_h, dpi, plt):
     from sklearn.metrics import confusion_matrix
     if len(X_te) == 0:
-        blank = np.full((h_px, w_px, 3), 22, dtype=np.uint8)
-        cv2.putText(blank, "No test data", (20, h_px // 2),
+        bh, bw = int(fig_h * dpi), int(fig_w * dpi)
+        blank = np.full((bh, bw, 3), 22, dtype=np.uint8)
+        cv2.putText(blank, "No test data", (20, bh // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (150, 150, 150), 1)
         return blank
 
     cm = confusion_matrix(y_te, model.predict(X_te))
     n  = len(classes)
-    fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     im = ax.imshow(cm, cmap=cmap, aspect='auto')
     fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
     ax.set_xticks(range(n)); ax.set_yticks(range(n))
@@ -139,7 +156,7 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, w_px, h_p
             ax.text(j, i, str(cm[i, j]), ha='center', va='center', fontsize=9, color=color)
     ax.set_title(f"{model_name}  |  acc = {acc:.1%}", fontsize=10)
     fig.tight_layout()
-    img = _fig_to_bgr(fig)
+    img = _fig_to_bgr(fig, dpi)
     plt.close(fig)
     return img
 
@@ -172,6 +189,7 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, w_px, h_p
         {'id': 'target',      'label': 'Target column',                  'type': 'string', 'default': ''},
         {'id': 'fit_intercept','label': 'Fit intercept',                 'type': 'bool',   'default': True},
         {'id': 'standardize', 'label': 'Standardize features',           'type': 'bool',   'default': False},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -196,8 +214,7 @@ class MLLinearRegressionNode(NodeProcessor):
         target        = str(params.get('target', '')).strip()
         fit_intercept = bool(params.get('fit_intercept', True))
         standardize   = bool(params.get('standardize', False))
-        w_px          = int(params.get('width',  600))
-        h_px          = int(params.get('height', 420))
+        fig_w, fig_h, dpi = _out_size(params, 600, 420)
 
         all_cols = list(train_df.columns)
         num_cols = [c for c in all_cols if train_df[c].dtype.kind in 'biufc']
@@ -238,7 +255,7 @@ class MLLinearRegressionNode(NodeProcessor):
 
         with plt.rc_context(_MPL_DARK):
             # ── Subplot: prédit vs réel + résidus ────────────────────────
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(w_px / 100, h_px / 100))
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(fig_w, fig_h))
 
             if len(y_te) > 0:
                 mn, mx = min(y_te.min(), y_pred.min()), max(y_te.max(), y_pred.max())
@@ -264,14 +281,14 @@ class MLLinearRegressionNode(NodeProcessor):
 
             fig.suptitle(f'Linear Regression  —  R² train={r2_train:.3f}  test={r2_test:.3f}', fontsize=10)
             fig.tight_layout()
-            preview_img = _fig_to_bgr(fig)
+            preview_img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
             # ── Coefficients bar chart ────────────────────────────────────
             coefs  = model.coef_
             n_feat = len(features)
             bar_h  = max(3.0, n_feat * 0.35)
-            fig_c, ax_c = plt.subplots(figsize=(max(5.0, w_px / 120), bar_h))
+            fig_c, ax_c = plt.subplots(figsize=(max(5.0, fig_w * dpi / 120), bar_h))
 
             colors = ['#3b82f6' if c >= 0 else '#ef4444' for c in coefs]
             ax_c.barh(range(n_feat), coefs, color=colors, alpha=0.85, edgecolor='none')
@@ -284,7 +301,7 @@ class MLLinearRegressionNode(NodeProcessor):
                            fontsize=9)
             ax_c.grid(True, axis='x')
             fig_c.tight_layout()
-            coef_img = _fig_to_bgr(fig_c)
+            coef_img = _fig_to_bgr(fig_c, dpi)
             plt.close(fig_c)
 
         return {
@@ -330,6 +347,7 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
         {'id': 'standardize',  'label': 'Standardize features',           'type': 'bool',   'default': True},
         {'id': 'colormap',     'label': 'Colormap',                       'type': 'enum',   'options': _CMAP_LABELS, 'default': 0},
         {'id': 'boundary_res', 'label': 'Résolution frontière',           'type': 'int',    'default': 120, 'min': 40, 'max': 300},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -360,8 +378,7 @@ class MLSVMClassifierNode(NodeProcessor):
         standardize= bool(params.get('standardize', True))
         cmap       = _CMAPS[int(params.get('colormap', 0))]
         res        = int(params.get('boundary_res', 120))
-        w_px       = int(params.get('width',  540))
-        h_px       = int(params.get('height', 420))
+        fig_w, fig_h, dpi = _out_size(params, 540, 420)
 
         all_cols = list(train_df.columns)
         if not target or target not in all_cols:
@@ -401,16 +418,16 @@ class MLSVMClassifierNode(NodeProcessor):
             if len(features) == 2:
                 preview = _boundary_plot(model, X_tr, y_tr, X_te, y_te,
                                          features, classes, cmap, res,
-                                         test_acc, model_name, w_px, h_px, plt)
+                                         test_acc, model_name, fig_w, fig_h, dpi, plt)
             else:
                 preview = _confusion_plot(model, X_te, y_te, classes, cmap,
-                                          test_acc, model_name, w_px, h_px, plt)
+                                          test_acc, model_name, fig_w, fig_h, dpi, plt)
 
             rep_str = (classification_report(y_te, model.predict(X_te),
                                              target_names=[str(c) for c in classes],
                                              zero_division=0)
                        if len(X_te) > 0 else "(no test data)")
-            report = _text_panel(rep_str, max(w_px, 380), 260,
+            report = _text_panel(rep_str, max(int(fig_w * dpi), 380), 260,
                                  title=f"Classification Report — {model_name}")
 
         return {
@@ -450,6 +467,7 @@ class MLSVMClassifierNode(NodeProcessor):
         {'id': 'criterion',       'label': 'Criterion',                      'type': 'enum',   'options': ['gini', 'entropy', 'log_loss'], 'default': 0},
         {'id': 'min_samples_split','label': 'Min samples split',             'type': 'int',    'default': 2, 'min': 2, 'max': 50},
         {'id': 'colormap',        'label': 'Colormap (arbre)',               'type': 'enum',   'options': _CMAP_LABELS, 'default': 3},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -477,8 +495,7 @@ class MLDecisionTreeNode(NodeProcessor):
         criterion  = criteria[int(params.get('criterion', 0))]
         min_split  = int(params.get('min_samples_split', 2))
         cmap       = _CMAPS[int(params.get('colormap', 3))]
-        w_px       = int(params.get('width',  700))
-        h_px       = int(params.get('height', 480))
+        fig_w, fig_h, dpi = _out_size(params, 700, 480)
 
         all_cols = list(train_df.columns)
         if not target or target not in all_cols:
@@ -513,10 +530,10 @@ class MLDecisionTreeNode(NodeProcessor):
 
         with plt.rc_context(_MPL_DARK):
             # ── Arbre visualisé ───────────────────────────────────────────
-            n_leaves = model.get_n_leaves()
-            fig_w    = max(w_px / 100, min(n_leaves * 1.4, 30.0))
-            fig_h    = max(h_px / 100, min((real_depth or 4) * 1.6, 20.0))
-            fig_t, ax_t = plt.subplots(figsize=(fig_w, fig_h))
+            n_leaves  = model.get_n_leaves()
+            tree_figw = max(fig_w, min(n_leaves * 1.4, 30.0))
+            tree_figh = max(fig_h, min((real_depth or 4) * 1.6, 20.0))
+            fig_t, ax_t = plt.subplots(figsize=(tree_figw, tree_figh))
             plot_tree(
                 model,
                 feature_names=features,
@@ -531,14 +548,14 @@ class MLDecisionTreeNode(NodeProcessor):
                 fontsize=9,
             )
             fig_t.tight_layout()
-            tree_img = _fig_to_bgr(fig_t)
+            tree_img = _fig_to_bgr(fig_t, dpi)
             plt.close(fig_t)
 
             # ── Feature importances ───────────────────────────────────────
             importances = model.feature_importances_
             order       = np.argsort(importances)
             bar_h       = max(3.0, len(features) * 0.4)
-            fig_i, ax_i = plt.subplots(figsize=(max(5.0, w_px / 120), bar_h))
+            fig_i, ax_i = plt.subplots(figsize=(max(5.0, fig_w * dpi / 120), bar_h))
 
             colors_imp = plt.cm.get_cmap(cmap)(importances[order] / (importances.max() or 1))
             ax_i.barh(range(len(features)), importances[order],
@@ -549,7 +566,7 @@ class MLDecisionTreeNode(NodeProcessor):
             ax_i.set_title('Feature Importances', fontsize=9)
             ax_i.grid(True, axis='x')
             fig_i.tight_layout()
-            imp_img = _fig_to_bgr(fig_i)
+            imp_img = _fig_to_bgr(fig_i, dpi)
             plt.close(fig_i)
 
         return {

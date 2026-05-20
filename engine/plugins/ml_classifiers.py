@@ -35,13 +35,29 @@ def _get_mpl():
     return matplotlib, plt
 
 
-def _fig_to_bgr(fig) -> np.ndarray:
+_EXPORT_PARAMS = [
+    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+]
+
+
+def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
+
+def _out_size(params, default_w=540, default_h=420):
+    dpi   = max(72, int(params.get('out_dpi', 100)))
+    out_w = int(params.get('out_w', 0))
+    out_h = int(params.get('out_h', 0))
+    if out_w > 0 and out_h > 0:
+        return out_w / dpi, out_h / dpi, dpi
+    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
 
 
 # ─── Train / Test Split ───────────────────────────────────────────────────────
@@ -159,6 +175,7 @@ class MLTrainTestSplitNode(NodeProcessor):
         {'id': 'weights',   'label': 'Weights',                            'type': 'enum',   'options': ['uniform', 'distance'], 'default': 0},
         {'id': 'colormap',  'label': 'Colormap',                           'type': 'enum',   'options': ['tab10', 'Set1', 'Set2', 'viridis'], 'default': 0},
         {'id': 'boundary_res', 'label': 'Boundary resolution',             'type': 'int',    'default': 150, 'min': 50, 'max': 400},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -188,8 +205,7 @@ class MLKnnClassifierNode(NodeProcessor):
         cmaps    = ['tab10', 'Set1', 'Set2', 'viridis']
         cmap     = cmaps[int(params.get('colormap', 0))]
         res      = int(params.get('boundary_res', 150))
-        w_px     = int(params.get('width',  540))
-        h_px     = int(params.get('height', 420))
+        fig_w, fig_h, dpi = _out_size(params, 540, 420)
 
         all_cols  = list(train_df.columns)
         num_cols  = [c for c in all_cols if train_df[c].dtype.kind in 'biufc']
@@ -240,10 +256,10 @@ class MLKnnClassifierNode(NodeProcessor):
             if len(features) == 2:
                 preview = _plot_boundary(knn, X_train, y_train, X_test, y_test,
                                          features, classes, cmap, res,
-                                         test_acc, k, w_px, h_px, plt)
+                                         test_acc, k, fig_w, fig_h, dpi, plt)
             else:
                 preview = _plot_confusion(knn, X_test, y_test, classes,
-                                          cmap, test_acc, k, w_px, h_px, plt)
+                                          cmap, test_acc, k, fig_w, fig_h, dpi, plt)
 
             # ── Classification report panel ─────────────────────────────────
             if len(X_test) > 0:
@@ -252,7 +268,7 @@ class MLKnnClassifierNode(NodeProcessor):
                                                    zero_division=0)
             else:
                 report_str = "(no test data)"
-            report_img = _text_panel(report_str, max(w_px, 380), 260,
+            report_img = _text_panel(report_str, max(int(fig_w * dpi), 380), 260,
                                      title=f"Classification Report  —  k={k}")
 
         return {
@@ -266,7 +282,7 @@ class MLKnnClassifierNode(NodeProcessor):
 # ─── Plot helpers ─────────────────────────────────────────────────────────────
 
 def _plot_boundary(knn, X_tr, y_tr, X_te, y_te, features, classes, cmap, res,
-                   test_acc, k, w_px, h_px, plt):
+                   test_acc, k, fig_w, fig_h, dpi, plt):
     """2-feature decision boundary with train + test scatter overlay."""
     X_all = np.vstack([X_tr, X_te]) if len(X_te) else X_tr
     margin = (X_all.max(axis=0) - X_all.min(axis=0)) * 0.1 + 1e-6
@@ -277,7 +293,7 @@ def _plot_boundary(knn, X_tr, y_tr, X_te, y_te, features, classes, cmap, res,
                          np.linspace(x1_min, x1_max, res))
     Z = knn.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
 
-    fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     ax.contourf(xx, yy, Z, alpha=0.25, cmap=cmap, levels=len(classes))
     ax.contour(xx, yy, Z, colors='#555', linewidths=0.5)
 
@@ -297,24 +313,25 @@ def _plot_boundary(knn, X_tr, y_tr, X_te, y_te, features, classes, cmap, res,
     ax.set_title(f"KNN  k={k}  |  test acc = {test_acc:.1%}", fontsize=10)
     ax.legend(fontsize=8, labelcolor='#cccccc', loc='best')
     fig.tight_layout()
-    img = _fig_to_bgr(fig)
+    img = _fig_to_bgr(fig, dpi)
     plt.close(fig)
     return img
 
 
-def _plot_confusion(knn, X_te, y_te, classes, cmap, test_acc, k, w_px, h_px, plt):
+def _plot_confusion(knn, X_te, y_te, classes, cmap, test_acc, k, fig_w, fig_h, dpi, plt):
     """Confusion matrix heatmap for N-feature case."""
     from sklearn.metrics import confusion_matrix
+    out_w, out_h = int(fig_w * dpi), int(fig_h * dpi)
     if len(X_te) == 0:
-        blank = np.full((h_px, w_px, 3), 22, dtype=np.uint8)
-        cv2.putText(blank, "No test data", (20, h_px // 2),
+        blank = np.full((out_h, out_w, 3), 22, dtype=np.uint8)
+        cv2.putText(blank, "No test data", (20, out_h // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (150, 150, 150), 1)
         return blank
 
     cm = confusion_matrix(y_te, knn.predict(X_te))
     n  = len(classes)
 
-    fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
     im = ax.imshow(cm, cmap=cmap, aspect='auto')
     fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
 
@@ -332,7 +349,7 @@ def _plot_confusion(knn, X_te, y_te, classes, cmap, test_acc, k, w_px, h_px, plt
 
     ax.set_title(f"Confusion Matrix  k={k}  |  acc = {test_acc:.1%}", fontsize=10)
     fig.tight_layout()
-    img = _fig_to_bgr(fig)
+    img = _fig_to_bgr(fig, dpi)
     plt.close(fig)
     return img
 

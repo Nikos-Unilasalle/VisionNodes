@@ -44,13 +44,29 @@ def _get_mpl():
     return matplotlib, plt
 
 
-def _fig_to_bgr(fig) -> np.ndarray:
+_EXPORT_PARAMS = [
+    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+]
+
+
+def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+
+
+def _out_size(params, default_w=540, default_h=420):
+    dpi   = max(72, int(params.get('out_dpi', 100)))
+    out_w = int(params.get('out_w', 0))
+    out_h = int(params.get('out_h', 0))
+    if out_w > 0 and out_h > 0:
+        return out_w / dpi, out_h / dpi, dpi
+    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
 
 
 def _pick_features(df, feat_str):
@@ -90,6 +106,7 @@ def _pick_features(df, feat_str):
         {'id': 'colormap',     'label': 'Colormap',        'type': 'enum', 'options': _CMAP_LABELS, 'default': 0},
         {'id': 'show_regions', 'label': 'Show regions',    'type': 'bool', 'default': True},
         {'id': 'boundary_res', 'label': 'Region resolution', 'type': 'int', 'default': 120, 'min': 40, 'max': 300},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -118,8 +135,7 @@ class MLKMeansNode(NodeProcessor):
         cmap         = _CMAPS[int(params.get('colormap', 0))]
         show_regions = bool(params.get('show_regions', True))
         res          = int(params.get('boundary_res', 120))
-        w_px         = int(params.get('width',  540))
-        h_px         = int(params.get('height', 420))
+        fig_w, fig_h, dpi = _out_size(params, 540, 420)
 
         features = _pick_features(df, feat_str)
         if not features:
@@ -154,7 +170,7 @@ class MLKMeansNode(NodeProcessor):
             centers_vis = km.cluster_centers_
 
         with plt.rc_context(_MPL_DARK):
-            fig, ax = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
             if show_regions:
                 margin = (X_vis.max(axis=0) - X_vis.min(axis=0)) * 0.12 + 1e-6
@@ -187,7 +203,7 @@ class MLKMeansNode(NodeProcessor):
                       markerscale=1.2, framealpha=0.4)
             ax.grid(True)
             fig.tight_layout()
-            img = _fig_to_bgr(fig)
+            img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
         return {
@@ -227,6 +243,7 @@ class MLKMeansNode(NodeProcessor):
         {'id': 'alpha',        'label': 'Opacity',                         'type': 'float',  'default': 0.75, 'min': 0.1, 'max': 1.0, 'step': 0.05},
         {'id': 'dot_size',     'label': 'Dot size',                        'type': 'int',    'default': 30,   'min': 5,   'max': 200},
         {'id': 'show_loadings','label': 'Show loadings (biplot)',           'type': 'bool',   'default': False},
+        *_EXPORT_PARAMS,
     ],
     resizable=True,
     min_width=320,
@@ -254,8 +271,7 @@ class MLPCANode(NodeProcessor):
         alpha         = float(params.get('alpha', 0.75))
         s             = int(params.get('dot_size', 30))
         show_loadings = bool(params.get('show_loadings', False))
-        w_px          = int(params.get('width',  540))
-        h_px          = int(params.get('height', 420))
+        fig_w, fig_h, dpi = _out_size(params, 540, 420)
 
         features = _pick_features(df, feat_str)
         if len(features) < 2:
@@ -285,7 +301,7 @@ class MLPCANode(NodeProcessor):
 
         # ── Scatter PC1 vs PC2 ───────────────────────────────────────────
         with plt.rc_context(_MPL_DARK):
-            fig_s, ax_s = plt.subplots(figsize=(w_px / 100, h_px / 100))
+            fig_s, ax_s = plt.subplots(figsize=(fig_w, fig_h))
 
             if hue_col and hue_col in df.columns:
                 hue_vals = df[hue_col].iloc[sub.index].reset_index(drop=True)
@@ -320,7 +336,7 @@ class MLPCANode(NodeProcessor):
             ax_s.set_title(f'PCA — {n_comp} components  |  {pc1_var+pc2_var:.1f}% var (PC1+PC2)', fontsize=9)
             ax_s.grid(True)
             fig_s.tight_layout()
-            scatter_img = _fig_to_bgr(fig_s)
+            scatter_img = _fig_to_bgr(fig_s, dpi)
             plt.close(fig_s)
 
             # ── Explained variance bar chart ──────────────────────────────
@@ -341,7 +357,7 @@ class MLPCANode(NodeProcessor):
             ax_v.set_ylim(0, 105)
             ax_v.grid(True, axis='y')
             fig_v.tight_layout()
-            var_img = _fig_to_bgr(fig_v)
+            var_img = _fig_to_bgr(fig_v, dpi)
             plt.close(fig_v)
 
         return {
