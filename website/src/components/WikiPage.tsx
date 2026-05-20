@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, PlusCircle } from 'lucide-react';
 import nodesData from '../data/nodes.json';
-import { NodeCard, CATEGORY_META } from './Layout';
+import { NodeCard, CATEGORY_META, PORT_COLORS } from './Layout';
 import type { NodeDef, Category } from './Layout';
 
 const ALL_CATS = Object.keys(CATEGORY_META);
@@ -49,6 +49,17 @@ const WikiPage = ({ onCommunity }: { onCommunity: () => void }) => {
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
+          </div>
+
+          {/* Port Legend */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-8 text-[12px] text-[var(--text-dim)]">
+            <span className="font-semibold uppercase tracking-widest text-[10px] text-[var(--text-xdim)]">Ports:</span>
+            {Object.entries(PORT_COLORS).map(([type, color]) => (
+              <div key={type} className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                <span className="capitalize">{type}</span>
+              </div>
+            ))}
           </div>
 
           {/* Category filter pills */}
