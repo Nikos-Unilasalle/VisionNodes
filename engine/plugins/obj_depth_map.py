@@ -1,31 +1,25 @@
 """
 OBJ Depth Map — charge un fichier .obj 3D et génère une carte de profondeur normalisée.
 
-Algorithme :
-  1. Chargement via trimesh, centrage + normalisation à l'échelle unitaire
-  2. Caméra positionnée par azimut / élévation, projection perspective
-  3. Ray casting vectorisé (trimesh.ray) → distances par pixel
-  4. Normalisation [0,1] → proche = blanc; fond = noir
-  5. Colormap optionnelle (OpenCV)
+Algorithme (numpy rasterizer — pas de dépendance à trimesh camera/ray API) :
+  1. Chargement via trimesh (uniquement vertices + faces)
+  2. Centrage + normalisation à l'échelle unitaire
+  3. Rotation caméra : azimut (Y) puis élévation (X)
+  4. Projection perspective (FOV 60°)
+  5. Z-buffer par rasterisation triangle (bary. vectorisé par face)
+  6. Normalisation [0,1] → proche = blanc; fond = noir
+  7. Colormap optionnelle (OpenCV)
 
-Résultat mis en cache par (chemin, mtime, paramètres) pour éviter tout recalcul.
+Cache par (chemin, mtime, paramètres).
 """
 from registry import vision_node, NodeProcessor
 import numpy as np
 import os
 import base64
+import traceback
 
-_NULL = {'depth': None, 'path': ''}
+_NULL = {'depth': None, 'path': '', '_thumb': None}
 _CACHE: dict = {}
-
-_MPL_CMAPS = {
-    'jet':     None,   # cv2.COLORMAP_JET
-    'magma':   None,
-    'inferno': None,
-    'plasma':  None,
-    'viridis': None,
-    'hot':     None,
-}
 
 
 def _cv2_cmap(name):
@@ -40,83 +34,142 @@ def _cv2_cmap(name):
     }.get(name, cv2.COLORMAP_MAGMA)
 
 
+def _rotation_y(angle_rad: float) -> np.ndarray:
+    c, s = np.cos(angle_rad), np.sin(angle_rad)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]], dtype=np.float64)
+
+
+def _rotation_x(angle_rad: float) -> np.ndarray:
+    c, s = np.cos(angle_rad), np.sin(angle_rad)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]], dtype=np.float64)
+
+
 def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
     import cv2
-    try:
-        import trimesh
-    except ImportError:
-        return None
 
     if not os.path.isfile(obj_path):
-        return None
+        return None, f"fichier introuvable: {obj_path}"
 
     try:
         mtime = os.path.getmtime(obj_path)
-    except OSError:
-        return None
+    except OSError as exc:
+        return None, str(exc)
 
     key = (obj_path, mtime, img_w, img_h, azimuth_deg, elevation_deg, colormap_name)
     if key in _CACHE:
-        return _CACHE[key]
+        return _CACHE[key], None
 
-    # Load mesh
+    # --- Chargement mesh ---
+    try:
+        import trimesh
+    except ImportError:
+        import subprocess, sys
+        try:
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'trimesh>=4.0.0'],
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            import trimesh
+        except Exception as exc:
+            return None, f"trimesh introuvable et installation échouée: {exc}"
+
     try:
         geo = trimesh.load(obj_path, force='mesh', process=False)
-    except Exception:
-        return None
+    except Exception as exc:
+        return None, f"trimesh.load: {exc}"
 
     if not hasattr(geo, 'faces') or len(geo.faces) == 0:
-        return None
+        return None, "aucune face dans le mesh"
 
-    # Center + unit scale
-    geo = geo.copy()
-    geo.vertices -= geo.bounding_box.centroid
-    ext = float(geo.bounding_box.extents.max())
-    if ext > 0:
-        geo.apply_scale(1.0 / ext)
+    verts = np.array(geo.vertices, dtype=np.float64)  # (V, 3)
+    faces = np.array(geo.faces,    dtype=np.int32)     # (F, 3)
 
-    # Camera setup
-    scene = geo.scene()
-    try:
-        scene.set_camera(
-            angles=[np.radians(elevation_deg), 0.0, np.radians(azimuth_deg)],
-            distance=2.5,
-            center=[0.0, 0.0, 0.0],
-        )
-    except Exception:
-        pass
-    scene.camera.resolution = [img_w, img_h]
+    # --- Centrage + normalisation ---
+    verts -= verts.mean(axis=0)
+    scale = np.abs(verts).max()
+    if scale > 0:
+        verts /= scale
 
-    # Generate rays
-    try:
-        origins, vectors, pixels = scene.camera_rays()
-    except Exception:
-        return None
+    # --- Rotation caméra ---
+    az = np.radians(azimuth_deg)
+    el = np.radians(elevation_deg)
+    R = _rotation_x(el) @ _rotation_y(az)
+    vc = (R @ verts.T).T  # (V, 3) en espace caméra
 
-    # Ray-mesh intersection (vectorised)
-    try:
-        loc, ray_idx, _ = trimesh.ray.ray_triangle.RayMeshIntersector(geo) \
-            .intersects_location(origins, vectors, multiple_hits=False)
-    except Exception:
-        return None
+    # --- Projection perspective ---
+    # Caméra à z = -cam_dist, regarde vers +z
+    cam_dist = 2.5
+    zc = vc[:, 2] + cam_dist          # profondeur depuis caméra (>0 = devant)
+    zc = np.where(zc > 1e-4, zc, 1e-4)
 
-    depth_buf = np.zeros((img_h, img_w), dtype=np.float32)
+    fov_half = np.radians(30.0)       # FOV 60°
+    f = (min(img_w, img_h) / 2.0) / np.tan(fov_half)
 
-    if len(loc) > 0:
-        cam_pos = np.asarray(scene.camera_transform[:3, 3], dtype=np.float32)
-        dists = np.linalg.norm(loc - cam_pos, axis=1).astype(np.float32)
-        hit_px = pixels[ray_idx]
-        d_min, d_max = dists.min(), dists.max()
-        norm_d = 1.0 - (dists - d_min) / (d_max - d_min + 1e-8)
-        mask = (
-            (hit_px[:, 0] >= 0) & (hit_px[:, 0] < img_w) &
-            (hit_px[:, 1] >= 0) & (hit_px[:, 1] < img_h)
-        )
-        hp = hit_px[mask]
-        nv = norm_d[mask]
-        depth_buf[hp[:, 1], hp[:, 0]] = nv
+    cx, cy = img_w / 2.0, img_h / 2.0
+    xp = f * vc[:, 0] / zc + cx      # x écran
+    yp = -f * vc[:, 1] / zc + cy     # y écran (axe Y inversé)
 
-    depth_u8 = (depth_buf * 255).astype(np.uint8)
+    # --- Rasterisation Z-buffer ---
+    depth_buf = np.full((img_h, img_w), np.inf, dtype=np.float32)
+
+    # Sommets projetés par face  (F, 3) chaque
+    ax, ay, az_f = xp[faces[:, 0]], yp[faces[:, 0]], zc[faces[:, 0]]
+    bx, by, bz_f = xp[faces[:, 1]], yp[faces[:, 1]], zc[faces[:, 1]]
+    cx_f, cy_f, cz_f = xp[faces[:, 2]], yp[faces[:, 2]], zc[faces[:, 2]]
+
+    for i in range(len(faces)):
+        x0, y0, z0 = ax[i], ay[i], az_f[i]
+        x1, y1, z1 = bx[i], by[i], bz_f[i]
+        x2, y2, z2 = cx_f[i], cy_f[i], cz_f[i]
+
+        xmin = max(0,        int(np.floor(min(x0, x1, x2))))
+        xmax = min(img_w-1,  int(np.ceil( max(x0, x1, x2))))
+        ymin = max(0,        int(np.floor(min(y0, y1, y2))))
+        ymax = min(img_h-1,  int(np.ceil( max(y0, y1, y2))))
+
+        if xmin > xmax or ymin > ymax:
+            continue
+
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(denom) < 1e-10:
+            continue
+
+        xs = np.arange(xmin, xmax + 1, dtype=np.float32)
+        ys = np.arange(ymin, ymax + 1, dtype=np.float32)
+        px, py = np.meshgrid(xs, ys)
+
+        w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
+        w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+        w2 = 1.0 - w0 - w1
+
+        inside = (w0 >= 0) & (w1 >= 0) & (w2 >= 0)
+        if not inside.any():
+            continue
+
+        z_interp = (w0 * z0 + w1 * z1 + w2 * z2).astype(np.float32)
+
+        ry = (py[inside] + 0.5).astype(int)
+        rx = (px[inside] + 0.5).astype(int)
+        ry = np.clip(ry, 0, img_h - 1)
+        rx = np.clip(rx, 0, img_w - 1)
+        zi = z_interp[inside]
+
+        # Écriture z-buffer (garde le minimum = le plus proche)
+        np.minimum.at(depth_buf, (ry, rx), zi)
+
+    # --- Normalisation ---
+    valid = np.isfinite(depth_buf)
+    if not valid.any():
+        return None, "aucun pixel visible (vérifier orientation caméra)"
+
+    d_min = float(depth_buf[valid].min())
+    d_max = float(depth_buf[valid].max())
+
+    norm = np.zeros((img_h, img_w), dtype=np.float32)
+    if d_max > d_min:
+        norm[valid] = 1.0 - (depth_buf[valid] - d_min) / (d_max - d_min)
+    else:
+        norm[valid] = 1.0
+
+    depth_u8 = (norm * 255).astype(np.uint8)
 
     if colormap_name and colormap_name != 'none':
         result = cv2.applyColorMap(depth_u8, _cv2_cmap(colormap_name))
@@ -125,7 +178,7 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
 
     _CACHE.clear()
     _CACHE[key] = result
-    return result
+    return result, None
 
 
 @vision_node(
@@ -167,17 +220,28 @@ class ObjDepthMapNode(NodeProcessor):
         if not obj_path:
             return _NULL
 
-        depth = _render(
-            obj_path=obj_path,
-            img_w=max(64, int(params.get('img_w', 512))),
-            img_h=max(64, int(params.get('img_h', 512))),
-            azimuth_deg=float(params.get('azimuth', 0)),
-            elevation_deg=float(params.get('elevation', 30)),
-            colormap_name=str(params.get('colormap', 'none')),
-        )
-        _thumb = None
+        try:
+            depth, err = _render(
+                obj_path=obj_path,
+                img_w=max(64, int(params.get('img_w', 512))),
+                img_h=max(64, int(params.get('img_h', 512))),
+                azimuth_deg=float(params.get('azimuth', 0)),
+                elevation_deg=float(params.get('elevation', 30)),
+                colormap_name=str(params.get('colormap', 'none')),
+            )
+        except Exception:
+            err = traceback.format_exc()
+            depth = None
+
+        thumb = None
         if depth is not None:
             import cv2
             _, buf = cv2.imencode('.jpg', depth, [cv2.IMWRITE_JPEG_QUALITY, 75])
-            _thumb = base64.b64encode(buf).decode('utf-8')
-        return {'depth': depth, 'path': obj_path, '_thumb': _thumb}
+            thumb = base64.b64encode(buf).decode('utf-8')
+
+        return {
+            'depth': depth,
+            'path':  obj_path,
+            '_thumb': thumb,
+            '_error': err,
+        }

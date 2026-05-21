@@ -90,20 +90,26 @@ def load_plugins():
         sys.path.insert(0, engine_dir)
 
     if hasattr(sys, '_MEIPASS'):
-        plugin_dir = os.path.join(sys._MEIPASS, "engine", "plugins")
+        plugin_dirs = [os.path.join(sys._MEIPASS, "engine", "plugins")]
     else:
-        plugin_dir = os.path.join(engine_dir, "plugins")
-    os.makedirs(plugin_dir, exist_ok=True)
-    for file in glob.glob(os.path.join(plugin_dir, "*.py")):
-        if os.path.basename(file) == "__init__.py": continue
-        module_name = f"plugins.{os.path.basename(file)[:-3]}"
-        spec = importlib.util.spec_from_file_location(module_name, file)
-        mod = importlib.util.module_from_spec(spec)
-        try:
-            spec.loader.exec_module(mod)
-            print(f"[Plugins] Loaded: {module_name}")
-        except Exception as e:
-            print(f"[Plugins] Failed to load {module_name}: {e}")
+        root_dir = os.path.dirname(engine_dir)
+        plugin_dirs = [
+            os.path.join(engine_dir, "plugins"),
+            os.path.join(root_dir, "BPA", "plugins"),
+        ]
+
+    for plugin_dir in plugin_dirs:
+        os.makedirs(plugin_dir, exist_ok=True)
+        for file in glob.glob(os.path.join(plugin_dir, "*.py")):
+            if os.path.basename(file) == "__init__.py": continue
+            module_name = f"plugins.{os.path.basename(file)[:-3]}"
+            spec = importlib.util.spec_from_file_location(module_name, file)
+            mod = importlib.util.module_from_spec(spec)
+            try:
+                spec.loader.exec_module(mod)
+                print(f"[Plugins] Loaded: {module_name}")
+            except Exception as e:
+                print(f"[Plugins] Failed to load {module_name}: {e}")
 
 
 from registry import vision_node, NodeProcessor

@@ -1154,6 +1154,8 @@ function App() {
           addNode('geo_geotiff_reader', fileName, undefined, { file_path: p }, finalPos, true);
         } else if (ext === 'csv') {
           addNode('ml_csv_reader', fileName, undefined, { path: p }, finalPos, true);
+        } else if (ext === 'obj') {
+          addNode('obj_depth_map', fileName, undefined, { obj_path: p }, finalPos, true);
         } else if (ext === 'vn') {
           confirmUnsaved().then(ok => { if (ok) loadProjectFromPath(p); });
         }

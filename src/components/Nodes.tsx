@@ -444,6 +444,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
 export const ObjDepthMapNode = memo(({ selected, data }: any) => {
   const nd = useNodeData(useNodeId());
   const thumb: string | undefined = nd?._thumb;
+  const error: string | undefined = nd?._error;
   const filePath: string = nd?.path || data.params?.obj_path || '';
   const filename = filePath ? filePath.split(/[\\/]/).pop() : '';
 
@@ -488,6 +489,11 @@ export const ObjDepthMapNode = memo(({ selected, data }: any) => {
         >
           <Box size={20} className="text-gray-500 mb-2" />
           <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop .obj</div>
+        </div>
+      )}
+      {error && !thumb && (
+        <div className="px-1 pt-1">
+          <div className="text-[8px] font-mono text-red-400 break-all leading-tight">{error}</div>
         </div>
       )}
       {filename && (
