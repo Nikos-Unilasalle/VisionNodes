@@ -441,6 +441,64 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
   );
 });
 
+export const ObjDepthMapNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const thumb: string | undefined = nd?._thumb;
+  const filePath: string = nd?.path || data.params?.obj_path || '';
+  const filename = filePath ? filePath.split(/[\\/]/).pop() : '';
+
+  const handleBrowse = async () => {
+    try {
+      const file = await open({
+        multiple: false,
+        filters: [{ name: 'OBJ 3D', extensions: ['obj'] }],
+      });
+      if (file && typeof file === 'string') data.onChangeParams?.({ obj_path: file });
+    } catch {}
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) data.onChangeParams?.({ obj_path: (file as any).path || file.name });
+  };
+
+  return (
+    <BaseNode title="OBJ Depth Map" icon={Box} selected={selected} data={data} color="accent"
+      inputs={[]} outputs={[{ id: 'depth', color: 'image', label: 'Depth' }, { id: 'path', color: 'string', label: 'Path' }]}>
+      {thumb ? (
+        <div className="relative group" onClick={handleBrowse}>
+          <img
+            src={`data:image/jpeg;base64,${thumb}`}
+            alt="Depth preview"
+            className="w-full h-32 object-cover rounded-lg border border-[#4f5b6b] mb-1"
+          />
+          <div
+            className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg border-2 border-dashed border-accent/50"
+            onDragOver={e => e.preventDefault()} onDrop={onDrop}
+          >
+            <Search size={20} className="text-white mb-1" />
+            <div className="text-[7px] text-white uppercase font-black">Browse / Drop .obj</div>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="flex flex-col items-center justify-center border-2 border-dashed border-[#4f5b6b] rounded-lg p-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer h-32"
+          onDragOver={e => e.preventDefault()} onDrop={onDrop} onClick={handleBrowse}
+        >
+          <Box size={20} className="text-gray-500 mb-2" />
+          <div className="text-[7px] text-gray-500 uppercase font-black text-center">Click to Browse<br/>or Drop .obj</div>
+        </div>
+      )}
+      {filename && (
+        <div className="px-1 pt-1">
+          <div className="text-[9px] font-mono text-accent truncate">{filename}</div>
+        </div>
+      )}
+    </BaseNode>
+  );
+});
+
 export const SolidColorNode = memo(({ selected, data }: any) => {
   const hex = data.params?.color || '#ff0000';
   return (

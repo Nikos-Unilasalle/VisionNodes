@@ -105,6 +105,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   mask_point_query: N.MaskPointQueryNode,
   canvas_note: withNodeResizer(N.CanvasNoteNode, 120, 60, getNoteColor),
   canvas_reroute: N.CanvasRerouteNode,
+  obj_depth_map: N.ObjDepthMapNode,
   canvas_ribbon: RibbonNode,
   output_movie: N.OutputMovieNode,
   geo_band_stats: N.RasterStatsNode,
