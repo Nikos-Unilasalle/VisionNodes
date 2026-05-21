@@ -1289,23 +1289,23 @@ function App() {
         const src = currentNodes.find((n: any) => n.id === edge.source);
         const tgt = currentNodes.find((n: any) => n.id === edge.target);
         if (!src || !tgt) continue;
-        if (src.type === 'canvas_ribbon' || tgt.type === 'canvas_ribbon') continue;
-        const srcRight = src.position.x + (src.measured?.width ?? src.width ?? 200);
-        const tgtLeft  = tgt.position.x;
-        const lo = Math.min(srcRight, tgtLeft);
-        const hi = Math.max(srcRight, tgtLeft);
+        const srcX = src.position.x + (src.measured?.width ?? src.width ?? 200) / 2;
+        const tgtX = tgt.position.x + (tgt.measured?.width ?? tgt.width ?? 200) / 2;
+        const lo = Math.min(srcX, tgtX);
+        const hi = Math.max(srcX, tgtX);
         if (ribbonFlowX < lo || ribbonFlowX > hi) continue;
         const srcY = src.position.y + (src.measured?.height ?? src.height ?? 0) / 2;
         const tgtY = tgt.position.y + (tgt.measured?.height ?? tgt.height ?? 0) / 2;
         const span = hi - lo;
-        const t = span < 1 ? 0.5 : (ribbonFlowX - srcRight) / (tgtLeft - srcRight);
-        const crossY = srcY + t * (tgtY - srcY);
-        // Only bundle edges whose path actually crosses the drawn segment
+        const t = span < 1 ? 0.5 : (ribbonFlowX - lo) / span;
+        const leftY  = srcX <= tgtX ? srcY : tgtY;
+        const rightY = srcX <= tgtX ? tgtY : srcY;
+        const crossY = leftY + t * (rightY - leftY);
         if (crossY < strokeYMin || crossY > strokeYMax) continue;
         intersecting.push({ edgeId: edge.id, crossY });
       }
 
-      if (intersecting.length >= 2) {
+      if (intersecting.length >= 1) {
         const ribbonId = `ribbon-${Date.now()}`;
         const edgeIds = intersecting.map(i => i.edgeId);
         pushSnapshot();
