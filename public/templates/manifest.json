@@ -145,8 +145,8 @@
     "file": "reaction_diffusion.vn"
   },
   {
-    "name": "Blood Pattern Analysis (BPA)",
-    "description": "Forensic bloodstain pattern analysis — single sample. Loads a 600 dpi Attinger dataset image, detects stains via LAB-A segmentation + spatial outlier filter, reconstructs 3D origin via stringing. Connects Metadata Reader → Image Loader → Stain Detector → Origin Reconstructor. Best on HP_50–HP_63 series (origin ~60 cm from target).",
+    "name": "Blood Pattern Analysis — Analyse complète",
+    "description": "Pipeline BPA forensique complet : Metadata Reader → Image Loader → Stain Detector → Origin Reconstructor → 4 visualisations (Stringing Overlay, Convergence Heatmap, Vue Top-Down XY, Scène 3D). Chargez un échantillon du dataset Attinger (HP_50 par défaut).",
     "file": "bpa_forensics.vn"
   },
   {

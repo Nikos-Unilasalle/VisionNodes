@@ -1,248 +1,171 @@
 {
   "nodes": [
     {
-      "id": "bpa-meta-1",
+      "id": "meta",
       "type": "bpa_metadata_reader",
-      "position": { "x": 60, "y": 260 },
-      "style": {},
-      "data": {
-        "label": "BPA Metadata",
-        "params": {
-          "dataset_path": "",
-          "sample_id": "HP_50"
-        }
-      },
-      "width": 250,
-      "height": 460,
-      "selected": false,
-      "positionAbsolute": { "x": 60, "y": 260 },
-      "dragging": false
+      "position": { "x": 60, "y": 300 },
+      "data": { "label": "BPA Metadata", "params": { "dataset_path": "", "sample_id": "HP_50" } },
+      "width": 250, "height": 480
     },
     {
-      "id": "bpa-loader-1",
+      "id": "loader",
       "type": "bpa_image_loader",
-      "position": { "x": 570, "y": 160 },
-      "style": {},
-      "data": {
-        "label": "BPA Image Loader",
-        "params": {
-          "load_scale": 0.2,
-          "path_override": ""
-        }
-      },
-      "width": 250,
-      "height": 280,
-      "selected": false,
-      "positionAbsolute": { "x": 570, "y": 160 },
-      "dragging": false
+      "position": { "x": 580, "y": 180 },
+      "data": { "label": "BPA Image Loader", "params": { "load_scale": 0.2, "path_override": "" } },
+      "width": 250, "height": 300
     },
     {
-      "id": "bpa-detector-1",
+      "id": "detector",
       "type": "bpa_stain_detector",
-      "position": { "x": 1080, "y": 120 },
-      "style": {},
+      "position": { "x": 1110, "y": 140 },
       "data": {
         "label": "BPA Stain Detector",
         "params": {
-          "a_threshold": 5,
-          "val_max": 230,
-          "blur_r": 3,
-          "min_stain_mm": 1.5,
-          "max_stain_mm": 30.0,
-          "min_aspect": 0.1,
+          "a_threshold": 5, "val_max": 230, "blur_r": 3,
+          "min_stain_mm": 1.5, "max_stain_mm": 30.0, "min_aspect": 0.1,
           "filter_outliers": true,
-          "show_ellipses": true,
-          "show_angles": true,
-          "show_centers": true
+          "show_ellipses": true, "show_angles": true, "show_centers": true
         }
       },
-      "width": 270,
-      "height": 380,
-      "selected": false,
-      "positionAbsolute": { "x": 1080, "y": 120 },
-      "dragging": false
+      "width": 270, "height": 420
     },
     {
-      "id": "bpa-recon-1",
+      "id": "reconstructor",
       "type": "bpa_origin_reconstructor",
-      "position": { "x": 1620, "y": 260 },
-      "style": {},
-      "data": {
-        "label": "BPA Origin Reconstructor",
-        "params": {
-          "residual_cutoff": 30.0,
-          "min_stains": 3
-        }
-      },
-      "width": 270,
-      "height": 360,
-      "selected": false,
-      "positionAbsolute": { "x": 1620, "y": 260 },
-      "dragging": false
+      "position": { "x": 1660, "y": 300 },
+      "data": { "label": "BPA Origin Reconstructor", "params": { "residual_cutoff": 30.0, "min_stains": 3 } },
+      "width": 270, "height": 380
     },
     {
-      "id": "bpa-display-1",
-      "type": "output_display",
-      "position": { "x": 2160, "y": 100 },
-      "style": {},
+      "id": "stringing",
+      "type": "bpa_stringing_overlay",
+      "position": { "x": 1660, "y": 760 },
       "data": {
-        "label": "Annotated Pattern",
+        "label": "Stringing Overlay",
+        "params": {
+          "line_alpha": 0.45, "line_thick": 1,
+          "show_origin": true, "show_gt": true,
+          "show_convergence": true, "darken_bg": false
+        }
+      },
+      "width": 270, "height": 360
+    },
+    {
+      "id": "convergence",
+      "type": "bpa_convergence_map",
+      "position": { "x": 2220, "y": 760 },
+      "data": {
+        "label": "Convergence Map",
+        "params": { "blur_sigma": 8.0, "blend_alpha": 0.65, "threshold_pct": 85, "show_peak_marker": true }
+      },
+      "width": 270, "height": 300
+    },
+    {
+      "id": "topdown",
+      "type": "bpa_topdown_view",
+      "position": { "x": 2220, "y": 260 },
+      "data": {
+        "label": "Top-Down View",
+        "params": { "n_rays": 30, "fig_w": 700, "fig_h": 520, "dark_theme": true }
+      },
+      "width": 270, "height": 300
+    },
+    {
+      "id": "scene3d",
+      "type": "bpa_3d_scene",
+      "position": { "x": 2780, "y": 260 },
+      "data": {
+        "label": "3D Scene",
+        "params": { "n_rays": 40, "elev": 25, "azim": -60, "fig_w": 700, "fig_h": 560, "dark_theme": true }
+      },
+      "width": 270, "height": 340
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": { "x": 2780, "y": 680 },
+      "data": {
+        "label": "BPA Output",
         "params": {},
         "mainConnected": false,
         "ports": [
-          { "id": "image__0_bpa1", "color": "image", "label": "annotated" },
-          { "id": "mask__1_bpa2",  "color": "mask",  "label": "mask" }
+          { "id": "image__0_ann",  "color": "image", "label": "annotated" },
+          { "id": "image__1_str",  "color": "image", "label": "stringing" },
+          { "id": "image__2_hmap", "color": "image", "label": "heatmap blend" },
+          { "id": "image__3_top",  "color": "image", "label": "top-down" },
+          { "id": "image__4_3d",   "color": "image", "label": "3D scene" }
         ]
       },
-      "width": 260,
-      "height": 260,
-      "selected": false,
-      "positionAbsolute": { "x": 2160, "y": 100 },
-      "dragging": false
+      "width": 280, "height": 360
     },
     {
-      "id": "bpa-report-1",
+      "id": "report",
       "type": "data_inspector",
-      "position": { "x": 2160, "y": 440 },
-      "style": {},
-      "data": {
-        "label": "Reconstruction Report",
-        "params": {}
-      },
-      "width": 260,
-      "height": 220,
-      "selected": false,
-      "positionAbsolute": { "x": 2160, "y": 440 },
-      "dragging": false
-    },
-    {
-      "id": "bpa-count-1",
-      "type": "data_inspector",
-      "position": { "x": 2160, "y": 720 },
-      "style": {},
-      "data": {
-        "label": "Stain Count & Mean Angle",
-        "params": {}
-      },
-      "width": 260,
-      "height": 160,
-      "selected": false,
-      "positionAbsolute": { "x": 2160, "y": 720 },
-      "dragging": false
+      "position": { "x": 2220, "y": 620 },
+      "data": { "label": "Reconstruction Report", "params": {} },
+      "width": 260, "height": 200
     }
   ],
   "edges": [
-    {
-      "id": "e-bpa-1",
-      "source": "bpa-meta-1",
-      "sourceHandle": "string__image_path",
-      "target": "bpa-loader-1",
-      "targetHandle": "string__image_path"
-    },
-    {
-      "id": "e-bpa-2",
-      "source": "bpa-loader-1",
-      "sourceHandle": "image__main",
-      "target": "bpa-detector-1",
-      "targetHandle": "image__image"
-    },
-    {
-      "id": "e-bpa-3",
-      "source": "bpa-loader-1",
-      "sourceHandle": "scalar__px_per_cm",
-      "target": "bpa-detector-1",
-      "targetHandle": "scalar__px_per_cm"
-    },
-    {
-      "id": "e-bpa-4",
-      "source": "bpa-loader-1",
-      "sourceHandle": "scalar__px_per_cm",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__px_per_cm"
-    },
-    {
-      "id": "e-bpa-5",
-      "source": "bpa-loader-1",
-      "sourceHandle": "scalar__height",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__height_px"
-    },
-    {
-      "id": "e-bpa-6",
-      "source": "bpa-detector-1",
-      "sourceHandle": "dict__stains",
-      "target": "bpa-recon-1",
-      "targetHandle": "dict__stains"
-    },
-    {
-      "id": "e-bpa-7",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__x_t",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__x_t"
-    },
-    {
-      "id": "e-bpa-8",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__y_t",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__y_t"
-    },
-    {
-      "id": "e-bpa-9",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__z_t",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__z_t"
-    },
-    {
-      "id": "e-bpa-10",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__x_o",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__x_o"
-    },
-    {
-      "id": "e-bpa-11",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__y_o",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__y_o"
-    },
-    {
-      "id": "e-bpa-12",
-      "source": "bpa-meta-1",
-      "sourceHandle": "scalar__z_o",
-      "target": "bpa-recon-1",
-      "targetHandle": "scalar__z_o"
-    },
-    {
-      "id": "e-bpa-13",
-      "source": "bpa-detector-1",
-      "sourceHandle": "image__annotated",
-      "target": "bpa-display-1",
-      "targetHandle": "image__0_bpa1"
-    },
-    {
-      "id": "e-bpa-14",
-      "source": "bpa-detector-1",
-      "sourceHandle": "mask__mask",
-      "target": "bpa-display-1",
-      "targetHandle": "mask__1_bpa2"
-    },
-    {
-      "id": "e-bpa-15",
-      "source": "bpa-recon-1",
-      "sourceHandle": "dict__report",
-      "target": "bpa-report-1",
-      "targetHandle": "any__data"
-    },
-    {
-      "id": "e-bpa-16",
-      "source": "bpa-detector-1",
-      "sourceHandle": "scalar__stain_count",
-      "target": "bpa-count-1",
-      "targetHandle": "any__data"
-    }
+    { "id": "e1",  "source": "meta",         "sourceHandle": "string__image_path", "target": "loader",        "targetHandle": "string__image_path" },
+    { "id": "e2",  "source": "loader",        "sourceHandle": "image__main",        "target": "detector",      "targetHandle": "image__image" },
+    { "id": "e3",  "source": "loader",        "sourceHandle": "scalar__px_per_cm",  "target": "detector",      "targetHandle": "scalar__px_per_cm" },
+    { "id": "e4",  "source": "loader",        "sourceHandle": "scalar__px_per_cm",  "target": "reconstructor", "targetHandle": "scalar__px_per_cm" },
+    { "id": "e5",  "source": "loader",        "sourceHandle": "scalar__height",     "target": "reconstructor", "targetHandle": "scalar__height_px" },
+    { "id": "e6",  "source": "detector",      "sourceHandle": "dict__stains",       "target": "reconstructor", "targetHandle": "dict__stains" },
+    { "id": "e7",  "source": "meta",          "sourceHandle": "scalar__x_t",        "target": "reconstructor", "targetHandle": "scalar__x_t" },
+    { "id": "e8",  "source": "meta",          "sourceHandle": "scalar__y_t",        "target": "reconstructor", "targetHandle": "scalar__y_t" },
+    { "id": "e9",  "source": "meta",          "sourceHandle": "scalar__z_t",        "target": "reconstructor", "targetHandle": "scalar__z_t" },
+    { "id": "e10", "source": "meta",          "sourceHandle": "scalar__x_o",        "target": "reconstructor", "targetHandle": "scalar__x_o" },
+    { "id": "e11", "source": "meta",          "sourceHandle": "scalar__y_o",        "target": "reconstructor", "targetHandle": "scalar__y_o" },
+    { "id": "e12", "source": "meta",          "sourceHandle": "scalar__z_o",        "target": "reconstructor", "targetHandle": "scalar__z_o" },
+    { "id": "e13", "source": "detector",      "sourceHandle": "image__annotated",   "target": "display",       "targetHandle": "image__0_ann" },
+
+    { "id": "e14", "source": "loader",        "sourceHandle": "image__main",        "target": "stringing",     "targetHandle": "image__image" },
+    { "id": "e15", "source": "detector",      "sourceHandle": "dict__stains",       "target": "stringing",     "targetHandle": "dict__stains" },
+    { "id": "e16", "source": "loader",        "sourceHandle": "scalar__px_per_cm",  "target": "stringing",     "targetHandle": "scalar__px_per_cm" },
+    { "id": "e17", "source": "reconstructor", "sourceHandle": "scalar__est_y",      "target": "stringing",     "targetHandle": "scalar__est_y" },
+    { "id": "e18", "source": "reconstructor", "sourceHandle": "scalar__est_z",      "target": "stringing",     "targetHandle": "scalar__est_z" },
+    { "id": "e19", "source": "meta",          "sourceHandle": "scalar__y_o",        "target": "stringing",     "targetHandle": "scalar__gt_y" },
+    { "id": "e20", "source": "meta",          "sourceHandle": "scalar__z_o",        "target": "stringing",     "targetHandle": "scalar__gt_z" },
+    { "id": "e21", "source": "meta",          "sourceHandle": "scalar__y_t",        "target": "stringing",     "targetHandle": "scalar__y_t" },
+    { "id": "e22", "source": "meta",          "sourceHandle": "scalar__z_t",        "target": "stringing",     "targetHandle": "scalar__z_t" },
+    { "id": "e23", "source": "stringing",     "sourceHandle": "image__overlay",     "target": "display",       "targetHandle": "image__1_str" },
+
+    { "id": "e24", "source": "loader",        "sourceHandle": "image__main",        "target": "convergence",   "targetHandle": "image__image" },
+    { "id": "e25", "source": "detector",      "sourceHandle": "dict__stains",       "target": "convergence",   "targetHandle": "dict__stains" },
+    { "id": "e26", "source": "convergence",   "sourceHandle": "image__blend",       "target": "display",       "targetHandle": "image__2_hmap" },
+
+    { "id": "e27", "source": "detector",      "sourceHandle": "dict__stains",       "target": "topdown",       "targetHandle": "dict__stains" },
+    { "id": "e28", "source": "loader",        "sourceHandle": "scalar__px_per_cm",  "target": "topdown",       "targetHandle": "scalar__px_per_cm" },
+    { "id": "e29", "source": "loader",        "sourceHandle": "scalar__height",     "target": "topdown",       "targetHandle": "scalar__height_px" },
+    { "id": "e30", "source": "loader",        "sourceHandle": "scalar__width_cm",   "target": "topdown",       "targetHandle": "scalar__width_cm" },
+    { "id": "e31", "source": "meta",          "sourceHandle": "scalar__x_t",        "target": "topdown",       "targetHandle": "scalar__x_t" },
+    { "id": "e32", "source": "meta",          "sourceHandle": "scalar__y_t",        "target": "topdown",       "targetHandle": "scalar__y_t" },
+    { "id": "e33", "source": "meta",          "sourceHandle": "scalar__z_t",        "target": "topdown",       "targetHandle": "scalar__z_t" },
+    { "id": "e34", "source": "reconstructor", "sourceHandle": "scalar__est_x",      "target": "topdown",       "targetHandle": "scalar__est_x" },
+    { "id": "e35", "source": "reconstructor", "sourceHandle": "scalar__est_y",      "target": "topdown",       "targetHandle": "scalar__est_y" },
+    { "id": "e36", "source": "reconstructor", "sourceHandle": "scalar__est_z",      "target": "topdown",       "targetHandle": "scalar__est_z" },
+    { "id": "e37", "source": "meta",          "sourceHandle": "scalar__x_o",        "target": "topdown",       "targetHandle": "scalar__gt_x" },
+    { "id": "e38", "source": "meta",          "sourceHandle": "scalar__y_o",        "target": "topdown",       "targetHandle": "scalar__gt_y" },
+    { "id": "e39", "source": "meta",          "sourceHandle": "scalar__z_o",        "target": "topdown",       "targetHandle": "scalar__gt_z" },
+    { "id": "e40", "source": "topdown",       "sourceHandle": "image__view",        "target": "display",       "targetHandle": "image__3_top" },
+
+    { "id": "e41", "source": "detector",      "sourceHandle": "dict__stains",       "target": "scene3d",       "targetHandle": "dict__stains" },
+    { "id": "e42", "source": "loader",        "sourceHandle": "scalar__px_per_cm",  "target": "scene3d",       "targetHandle": "scalar__px_per_cm" },
+    { "id": "e43", "source": "loader",        "sourceHandle": "scalar__height",     "target": "scene3d",       "targetHandle": "scalar__height_px" },
+    { "id": "e44", "source": "loader",        "sourceHandle": "scalar__width",      "target": "scene3d",       "targetHandle": "scalar__width_px" },
+    { "id": "e45", "source": "meta",          "sourceHandle": "scalar__x_t",        "target": "scene3d",       "targetHandle": "scalar__x_t" },
+    { "id": "e46", "source": "meta",          "sourceHandle": "scalar__y_t",        "target": "scene3d",       "targetHandle": "scalar__y_t" },
+    { "id": "e47", "source": "meta",          "sourceHandle": "scalar__z_t",        "target": "scene3d",       "targetHandle": "scalar__z_t" },
+    { "id": "e48", "source": "reconstructor", "sourceHandle": "scalar__est_x",      "target": "scene3d",       "targetHandle": "scalar__est_x" },
+    { "id": "e49", "source": "reconstructor", "sourceHandle": "scalar__est_y",      "target": "scene3d",       "targetHandle": "scalar__est_y" },
+    { "id": "e50", "source": "reconstructor", "sourceHandle": "scalar__est_z",      "target": "scene3d",       "targetHandle": "scalar__est_z" },
+    { "id": "e51", "source": "meta",          "sourceHandle": "scalar__x_o",        "target": "scene3d",       "targetHandle": "scalar__gt_x" },
+    { "id": "e52", "source": "meta",          "sourceHandle": "scalar__y_o",        "target": "scene3d",       "targetHandle": "scalar__gt_y" },
+    { "id": "e53", "source": "meta",          "sourceHandle": "scalar__z_o",        "target": "scene3d",       "targetHandle": "scalar__gt_z" },
+    { "id": "e54", "source": "scene3d",       "sourceHandle": "image__scene",       "target": "display",       "targetHandle": "image__4_3d" },
+
+    { "id": "e55", "source": "reconstructor", "sourceHandle": "dict__report",       "target": "report",        "targetHandle": "any__data" }
   ]
 }
