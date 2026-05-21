@@ -2,7 +2,8 @@ import {
   Camera, Layers, Box, Move, Target, Eye, PenTool,
   Hash, Type, Zap, Maximize, Music, BarChart3, Globe, Mountain,
   Activity, Navigation, Scissors, Database, Settings, User,
-  Ruler, Palette, Grid3X3, Leaf, Droplets, Layout, Waves, GitBranch
+  Ruler, Palette, Grid3X3, Leaf, Droplets, Layout, Waves, GitBranch,
+  Crosshair
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -388,6 +389,12 @@ export const CATEGORIES: Category[] = [
     { type: 'hema_cell_classifier',label: 'Blood Cell Classifier', description: 'Classifies blood cells by type (RBC, WBC, platelets).' },
     { type: 'hema_hemogramme',     label: 'Hemogramme',            description: 'Generates a CBC report (RBC, Neu, Lym, Mon, Plt) with biological interpretation.' },
     { type: 'hema_blood_report',   label: 'Blood Report',          description: 'Generates a structured hematology analysis report.' },
+  ]},
+  { id: 'bpa', label: 'Blood Pattern Analysis', icon: Crosshair, section: 'domain', nodes: [
+    { type: 'bpa_metadata_reader',     label: 'BPA Metadata Reader',     description: 'Parses Attinger dataset metadata (.txt): origin/target coords, hematocrit, blood volume, room conditions.' },
+    { type: 'bpa_image_loader',        label: 'BPA Image Loader',        description: 'Loads high-res BPA JPG (600 dpi). Scales for processing; outputs calibrated px/cm.' },
+    { type: 'bpa_stain_detector',      label: 'BPA Stain Detector',      description: 'Detects bloodstain ellipses via LAB-A + HSV mask. Computes impact angle per stain: sin(α) = minor/major.' },
+    { type: 'bpa_origin_reconstructor',label: 'BPA Origin Reconstructor',description: '3D blood origin reconstruction via stringing / least-squares ray intersection. Compares with ground-truth coords.' },
   ]},
   { id: 'DataFrame', label: 'DataFrame', icon: Database, section: 'domain', nodes: [
     { type: 'ml_csv_reader', label: 'CSV Reader', description: 'Load a CSV file as a DataFrame.' },
