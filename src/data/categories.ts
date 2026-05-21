@@ -2,8 +2,7 @@ import {
   Camera, Layers, Box, Move, Target, Eye, PenTool,
   Hash, Type, Zap, Maximize, Music, BarChart3, Globe, Mountain,
   Activity, Navigation, Scissors, Database, Settings, User,
-  Ruler, Palette, Grid3X3, Leaf, Droplets, Layout, Waves, GitBranch,
-  Crosshair
+  Ruler, Palette, Grid3X3, Leaf, Layout, Waves, GitBranch
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -383,23 +382,6 @@ export const CATEGORIES: Category[] = [
     { type: 'root_anatomy_overlay',  label: 'Anatomy Overlay',  description: 'Renders labeled anatomy zones on the root image.' },
     { type: 'root_anatomy_report',   label: 'Anatomy Report',   description: 'Generates a quantitative root anatomy report.' },
     { type: 'root_quality_score',    label: 'Quality Score',    description: 'Scores image and segmentation quality for QC.' },
-  ]},
-  { id: 'hematology', label: 'Hematology', icon: Droplets, section: 'domain', nodes: [
-    { type: 'hema_blood_segment',  label: 'Blood Smear Segmenter', description: 'Segments blood smear images into cell regions.' },
-    { type: 'hema_cell_classifier',label: 'Blood Cell Classifier', description: 'Classifies blood cells by type (RBC, WBC, platelets).' },
-    { type: 'hema_hemogramme',     label: 'Hemogramme',            description: 'Generates a CBC report (RBC, Neu, Lym, Mon, Plt) with biological interpretation.' },
-    { type: 'hema_blood_report',   label: 'Blood Report',          description: 'Generates a structured hematology analysis report.' },
-  ]},
-  { id: 'bpa', label: 'Blood Pattern Analysis', icon: Crosshair, section: 'domain', nodes: [
-    { type: 'bpa_metadata_reader',     label: 'BPA Metadata Reader',     description: 'Parses Attinger dataset metadata (.txt): origin/target coords, hematocrit, blood volume, room conditions.' },
-    { type: 'bpa_image_loader',        label: 'BPA Image Loader',        description: 'Loads high-res BPA JPG (600 dpi). Scales for processing; outputs calibrated px/cm.' },
-    { type: 'bpa_stain_detector',      label: 'BPA Stain Detector',      description: 'Detects bloodstain ellipses via LAB-A + HSV mask. Computes impact angle per stain: sin(α) = minor/major. Scale-independent size gates (mm).' },
-    { type: 'bpa_origin_reconstructor',label: 'BPA Origin Reconstructor',description: '3D blood origin reconstruction via stringing / least-squares ray intersection. Compares with ground-truth coords.' },
-    { type: 'bpa_batch_evaluator',     label: 'BPA Batch Evaluator',     description: 'Runs the full BPA pipeline on all samples in an Attinger dataset folder. Outputs a DataFrame (sample_id, est_x/y/z, error_cm, n_stains…) for aggregate analysis.' },
-    { type: 'bpa_stringing_overlay',   label: 'BPA Stringing Overlay',   description: 'Forensic stringing: draws trajectory lines through each stain. Lines converge toward the blood origin. Color = impact angle (blue=low/far → red=high/close).' },
-    { type: 'bpa_convergence_map',     label: 'BPA Convergence Map',     description: 'Heatmap of stringing ray accumulation. Hottest zone = most probable origin projection. More robust to outliers than least-squares.' },
-    { type: 'bpa_topdown_view',        label: 'BPA Top-Down View',       description: 'Top-down 2D map in room coordinates (XY plane). Target board, stain projections, estimated origin (red star), GT (green diamond), error arrow.' },
-    { type: 'bpa_3d_scene',            label: 'BPA 3D Scene',            description: '3D matplotlib scene: semi-transparent target board, stains, 3D stringing rays, estimated origin, GT, error arrow. Configurable elevation/azimuth.' },
   ]},
   { id: 'DataFrame', label: 'DataFrame', icon: Database, section: 'domain', nodes: [
     { type: 'ml_csv_reader', label: 'CSV Reader', description: 'Load a CSV file as a DataFrame.' },

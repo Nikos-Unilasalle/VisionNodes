@@ -151,7 +151,6 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   group_output: N.GroupOutputNode,
   export_py: N.ExportPyNode,
   manual_points: N.ManualPointsNode,
-  hema_hemogramme: N.HemogrammeNode,
 };
 
 export const nodeTypes: Record<string, React.ComponentType<any>> = Object.fromEntries(
