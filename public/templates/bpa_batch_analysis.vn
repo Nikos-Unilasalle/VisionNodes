@@ -1,0 +1,179 @@
+{
+  "nodes": [
+    {
+      "id": "bpa-batch-1",
+      "type": "bpa_batch_evaluator",
+      "position": { "x": 80, "y": 280 },
+      "style": {},
+      "data": {
+        "label": "BPA Batch Evaluator",
+        "params": {
+          "dataset_path": "",
+          "load_scale": 0.2,
+          "a_threshold": 5,
+          "val_max": 230,
+          "min_stain_mm": 1.5,
+          "max_stain_mm": 30.0,
+          "residual_cutoff": 30.0,
+          "trigger": false
+        }
+      },
+      "width": 270,
+      "height": 360,
+      "selected": false,
+      "positionAbsolute": { "x": 80, "y": 280 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-stats-1",
+      "type": "ml_df_stats",
+      "position": { "x": 560, "y": 100 },
+      "style": {},
+      "data": {
+        "label": "Result Statistics",
+        "params": {}
+      },
+      "width": 260,
+      "height": 220,
+      "selected": false,
+      "positionAbsolute": { "x": 560, "y": 100 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-scatter-err",
+      "type": "ml_scatter_plot",
+      "position": { "x": 560, "y": 400 },
+      "style": {},
+      "data": {
+        "label": "Error vs Blood Volume",
+        "params": {
+          "x_col": "blood_volume",
+          "y_col": "error_cm",
+          "color_col": "dowel_angle",
+          "title": "Reconstruction Error vs Blood Volume"
+        }
+      },
+      "width": 340,
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": { "x": 560, "y": 400 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-hist-err",
+      "type": "ml_histogram",
+      "position": { "x": 1060, "y": 100 },
+      "style": {},
+      "data": {
+        "label": "Error Distribution",
+        "params": {
+          "column": "error_cm",
+          "bins": 15,
+          "title": "3D Origin Error Distribution (cm)"
+        }
+      },
+      "width": 340,
+      "height": 300,
+      "selected": false,
+      "positionAbsolute": { "x": 1060, "y": 100 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-scatter-angle",
+      "type": "ml_scatter_plot",
+      "position": { "x": 1060, "y": 480 },
+      "style": {},
+      "data": {
+        "label": "Est. Y vs GT Y",
+        "params": {
+          "x_col": "gt_y",
+          "y_col": "est_y",
+          "color_col": "blood_volume",
+          "title": "Estimated Y vs Ground Truth Y (cm)"
+        }
+      },
+      "width": 340,
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": { "x": 1060, "y": 480 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-export-1",
+      "type": "df_export",
+      "position": { "x": 560, "y": 800 },
+      "style": {},
+      "data": {
+        "label": "Export Results CSV",
+        "params": {
+          "output_path": "bpa_results.csv",
+          "format": "csv"
+        }
+      },
+      "width": 260,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": { "x": 560, "y": 800 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-summary-1",
+      "type": "data_inspector",
+      "position": { "x": 1560, "y": 100 },
+      "style": {},
+      "data": {
+        "label": "Batch Summary",
+        "params": {}
+      },
+      "width": 260,
+      "height": 220,
+      "selected": false,
+      "positionAbsolute": { "x": 1560, "y": 100 },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-batch-1",
+      "source": "bpa-batch-1",
+      "sourceHandle": "data__results",
+      "target": "bpa-stats-1",
+      "targetHandle": "data__df"
+    },
+    {
+      "id": "e-batch-2",
+      "source": "bpa-batch-1",
+      "sourceHandle": "data__results",
+      "target": "bpa-scatter-err",
+      "targetHandle": "data__df"
+    },
+    {
+      "id": "e-batch-3",
+      "source": "bpa-batch-1",
+      "sourceHandle": "data__results",
+      "target": "bpa-hist-err",
+      "targetHandle": "data__df"
+    },
+    {
+      "id": "e-batch-4",
+      "source": "bpa-batch-1",
+      "sourceHandle": "data__results",
+      "target": "bpa-scatter-angle",
+      "targetHandle": "data__df"
+    },
+    {
+      "id": "e-batch-5",
+      "source": "bpa-batch-1",
+      "sourceHandle": "data__results",
+      "target": "bpa-export-1",
+      "targetHandle": "data__df"
+    },
+    {
+      "id": "e-batch-6",
+      "source": "bpa-batch-1",
+      "sourceHandle": "dict__report",
+      "target": "bpa-summary-1",
+      "targetHandle": "any__data"
+    }
+  ]
+}
