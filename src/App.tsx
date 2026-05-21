@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import ReactFlow, {
   Background, Controls, ControlButton, applyEdgeChanges, applyNodeChanges,
   Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant,
+  NodeRemoveChange,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -32,6 +33,7 @@ import { useGroupOperations } from './hooks/useGroupOperations';
 import NotificationBar from './components/ui/NotificationBar';
 import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
+import { RibbonEdge } from './components/Ribbon';
 import CropEditorOverlay from './components/overlays/CropEditorOverlay';
 import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
 import IndexPainterOverlay from './components/overlays/IndexPainterOverlay';
@@ -45,6 +47,8 @@ import Header from './components/header/Header';
 import PreviewWidget from './components/preview/PreviewWidget';
 import RightPanel from './components/panels/RightPanel';
 import logo from './assets/logo.svg';
+
+const RIBBON_EDGE_TYPES = { ribbon: RibbonEdge };
 
 function App() {
   const [canvases, setCanvases] = useState<Canvas[]>(makeInitialCanvases);
@@ -177,6 +181,9 @@ function App() {
   const [isRerouting, setIsRerouting] = useState(false);
   const [reroutePos, setReroutePos] = useState({ x: 0, y: 0 });
   const reroutePosRef = useRef({ x: 0, y: 0 });
+  const [isRibbonDrawing, setIsRibbonDrawing] = useState(false);
+  const [ribbonPreviewX, setRibbonPreviewX] = useState<number | null>(null);
+  const ribbonDrawRef = useRef<{ startX: number; startY: number } | null>(null);
   const connectingRef = useRef<{ nodeId: string; handleId: string; handleType: string } | null>(null);
   const connectionMadeRef = useRef(false);
   const rerouteDragRef = useRef<{
@@ -478,7 +485,7 @@ function App() {
   const canBypass = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return false;
-    if (['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(node.type || '')) return false;
+    if (['canvas_frame', 'canvas_note', 'canvas_reroute', 'canvas_ribbon'].includes(node.type || '')) return false;
     const inTypes = new Set(
       edges.filter(e => e.target === nodeId).map(e => e.targetHandle?.split('__')[0]).filter(Boolean)
     );
@@ -524,7 +531,7 @@ function App() {
     pushSnapshot();
     setViewNodes((nds: any) => nds.map((n: any) => {
       if (nodeId ? n.id === nodeId : n.selected) {
-        const uiTypes = ['canvas_frame', 'canvas_note', 'canvas_reroute'];
+        const uiTypes = ['canvas_frame', 'canvas_note', 'canvas_reroute', 'canvas_ribbon'];
         if (uiTypes.includes(n.type || '')) return n;
         return { ...n, data: { ...n.data, rotated: !(n.data as any)?.rotated } };
       }
@@ -538,7 +545,7 @@ function App() {
     if (!targetId) return;
     const src = nodes.find((n: any) => n.id === targetId);
     if (!src) return;
-    const skipTypes = ['canvas_note', 'canvas_reroute', 'canvas_frame', 'canvas_teleport', 'group_input', 'group_output'];
+    const skipTypes = ['canvas_note', 'canvas_reroute', 'canvas_frame', 'canvas_teleport', 'canvas_ribbon', 'group_input', 'group_output'];
     if (skipTypes.includes(src.type ?? '')) return;
     const schema = pluginSchemas.find((s: any) => s.type === src.type);
     const sourceOutputs = schema?.outputs ?? [];
@@ -602,9 +609,20 @@ function App() {
   }, [selectedNode, pluginSchemas]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => {
+    const removedRibbonIds = (changes.filter(c => c.type === 'remove') as NodeRemoveChange[])
+      .map(c => c.id)
+      .filter(id => nodesRef.current.find((n: any) => n.id === id)?.type === 'canvas_ribbon');
+    if (removedRibbonIds.length > 0) {
+      const removed = new Set(removedRibbonIds);
+      setViewEdges(eds => eds.map(e =>
+        e.data?.ribbonId && removed.has(e.data.ribbonId)
+          ? { ...e, data: { ...e.data, ribbonId: undefined } }
+          : e
+      ));
+    }
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
     setViewNodes((nds) => applyNodeChanges(changes, nds));
-  }, [pushSnapshot, setViewNodes]);
+  }, [pushSnapshot, setViewNodes, setViewEdges, nodesRef]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
@@ -1229,6 +1247,81 @@ function App() {
     };
   }, [isRerouting, instance, pushSnapshot, setViewNodes, setViewEdges]);
 
+  // Ribbon: Cmd + vertical drag on pane → bundle intersecting edges
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!e.metaKey || e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains('react-flow__pane')) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      ribbonDrawRef.current = { startX: e.clientX, startY: e.clientY };
+      setRibbonPreviewX(e.clientX);
+      setIsRibbonDrawing(true);
+    };
+    document.addEventListener('mousedown', onDown, { capture: true });
+    return () => document.removeEventListener('mousedown', onDown, { capture: true });
+  }, []);
+
+  useEffect(() => {
+    if (!isRibbonDrawing) return;
+    const onMove = (e: MouseEvent) => setRibbonPreviewX(e.clientX);
+    const onUp = (e: MouseEvent) => {
+      const draw = ribbonDrawRef.current;
+      if (!draw || !instance) { setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null; return; }
+      const dx = Math.abs(e.clientX - draw.startX);
+      const dy = Math.abs(e.clientY - draw.startY);
+      if (dy < 40 || dx > dy * 0.8) { setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null; return; }
+
+      const ribbonFlowX = instance.screenToFlowPosition({ x: (draw.startX + e.clientX) / 2, y: 0 }).x;
+      const currentNodes = nodesRef.current as any[];
+      const currentEdges = edgesRef.current as any[];
+
+      const intersecting: Array<{ edgeId: string; crossY: number }> = [];
+      for (const edge of currentEdges) {
+        if (edge.data?.ribbonId) continue;
+        const src = currentNodes.find((n: any) => n.id === edge.source);
+        const tgt = currentNodes.find((n: any) => n.id === edge.target);
+        if (!src || !tgt) continue;
+        if (src.type === 'canvas_ribbon' || tgt.type === 'canvas_ribbon') continue;
+        const srcRight = src.position.x + (src.measured?.width ?? src.width ?? 200);
+        const tgtLeft  = tgt.position.x;
+        const lo = Math.min(srcRight, tgtLeft);
+        const hi = Math.max(srcRight, tgtLeft);
+        if (ribbonFlowX < lo || ribbonFlowX > hi) continue;
+        const srcY = src.position.y + (src.measured?.height ?? src.height ?? 0) / 2;
+        const tgtY = tgt.position.y + (tgt.measured?.height ?? tgt.height ?? 0) / 2;
+        const span = hi - lo;
+        const t = span < 1 ? 0.5 : (ribbonFlowX - srcRight) / (tgtLeft - srcRight);
+        intersecting.push({ edgeId: edge.id, crossY: srcY + t * (tgtY - srcY) });
+      }
+
+      if (intersecting.length >= 2) {
+        const ys = intersecting.map(i => i.crossY);
+        const yMin = Math.min(...ys) - 30;
+        const yMax = Math.max(...ys) + 30;
+        const ribbonId = `ribbon-${Date.now()}`;
+        const edgeIds = intersecting.map(i => i.edgeId);
+        pushSnapshot();
+        setViewNodes(nds => [...nds, {
+          id: ribbonId,
+          type: 'canvas_ribbon',
+          position: { x: ribbonFlowX - 5, y: yMin },
+          data: { label: 'Ribbon', edgeIds, params: {} },
+          style: { width: 10, height: Math.max(yMax - yMin, 60) },
+        }]);
+        setViewEdges(eds => eds.map(e =>
+          edgeIds.includes(e.id) ? { ...e, data: { ...e.data, ribbonId } } : e
+        ));
+      }
+      setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null;
+    };
+    document.body.style.cursor = 'crosshair';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { document.body.style.cursor = ''; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [isRibbonDrawing, instance, nodesRef, edgesRef, pushSnapshot, setViewNodes, setViewEdges]);
+
   const coloredEdges = useMemo(() => {
     const resolveColor = (edge: any, visited = new Set()): string => {
       if (!edge || visited.has(edge.id)) return '#555';
@@ -1244,14 +1337,29 @@ function App() {
       }
       return '#555';
     };
+    const ribbonMap = new Map<string, { x: number; yCenter: number }>();
+    nodes.forEach(n => {
+      if (n.type === 'canvas_ribbon') {
+        ribbonMap.set(n.id, {
+          x: n.position.x + 5,
+          yCenter: n.position.y + ((n.style?.height as number) || 100) / 2,
+        });
+      }
+    });
     const hiddenIds = isRerouting && rerouteDragRef.current
       ? new Set(rerouteDragRef.current.capturedEdges.map(e => e.id))
       : null;
     return edges
       .filter(edge => !hiddenIds || !hiddenIds.has(edge.id))
-      .map((edge: any) => ({
-        ...edge, style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: 2 },
-      }));
+      .map((edge: any) => {
+        const ribbonPos = edge.data?.ribbonId ? ribbonMap.get(edge.data.ribbonId) : undefined;
+        return {
+          ...edge,
+          type: ribbonPos ? 'ribbon' : edge.type,
+          data: { ...edge.data, ribbon: ribbonPos },
+          style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: ribbonPos ? 1.5 : 2 },
+        };
+      });
   }, [edges, nodes, isRerouting]);
 
   return (
@@ -1296,6 +1404,13 @@ function App() {
 
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#1e2530]" onContextMenu={e => e.preventDefault()}>
+          {isRibbonDrawing && ribbonPreviewX !== null && (
+            <div style={{
+              position: 'fixed', left: ribbonPreviewX, top: 0, bottom: 0, width: 2,
+              background: 'repeating-linear-gradient(to bottom, rgba(251,191,36,0.9) 0px, rgba(251,191,36,0.9) 8px, transparent 8px, transparent 16px)',
+              pointerEvents: 'none', zIndex: 9999,
+            }} />
+          )}
           <NodesDataContext.Provider value={nodesDataStore}>
           <ComputingNodeContext.Provider value={computingNodeId}>
           <ReactFlow
@@ -1329,13 +1444,14 @@ function App() {
               }
             }}
             nodeTypes={dynamicNodeTypes}
+            edgeTypes={RIBBON_EDGE_TYPES}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
             onNodeDoubleClick={(_, node) => { if (node.type === 'group_node') enterGroup(node.id); }}
             onPaneClick={(e) => { setSelectedNodeId(null); setMenu(null); setPaneMenu(null); setIsAddMenuOpen(false); if (instance) { setCursorFlowPos(instance.screenToFlowPosition({ x: e.clientX, y: e.clientY })); } }}
             onDoubleClick={(e) => { if ((e.target as HTMLElement).classList.contains('react-flow__pane')) { instance?.fitView({ duration: 400 }); setTimeout(() => instance?.zoomOut({ duration: 300 }), 420); } }}
             onNodeContextMenu={(e, node) => {
               e.preventDefault(); setPaneMenu(null);
-              if (node.type !== 'canvas_reroute') setMenu({ id: node.id, x: e.clientX, y: e.clientY });
+              if (!['canvas_reroute', 'canvas_ribbon'].includes(node.type || '')) setMenu({ id: node.id, x: e.clientX, y: e.clientY });
             }}
             onPaneContextMenu={(e) => {
               e.preventDefault(); setMenu(null);

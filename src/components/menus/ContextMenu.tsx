@@ -117,7 +117,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 </>
               );
             }
-            const isUiNode = ['canvas_note', 'canvas_reroute'].includes(menuNode?.type || '');
+            const isUiNode = ['canvas_note', 'canvas_reroute', 'canvas_ribbon'].includes(menuNode?.type || '');
             if (isUiNode) return null;
             const isLocked = !!(menuNode?.data as any)?.lockedOut;
             const isBypassed = !!(menuNode?.data as any)?.bypassed;
@@ -291,7 +291,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
           {(() => {
             const menuNode = nodes.find(n => n.id === menu.id);
-            const skipTeleport = ['canvas_note', 'canvas_reroute', 'canvas_frame', 'canvas_teleport', 'group_input', 'group_output'];
+            const skipTeleport = ['canvas_note', 'canvas_reroute', 'canvas_ribbon', 'canvas_frame', 'canvas_teleport', 'group_input', 'group_output'];
             if (skipTeleport.includes(menuNode?.type ?? '')) return null;
             return (
               <button

@@ -84,7 +84,7 @@ export function useKeyboardShortcuts({
             pushSnapshot();
             setViewNodes((nds: any) => nds.map((n: any) => {
               if (!n.selected) return n;
-              const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute'].includes(n.type || '');
+              const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute', 'canvas_ribbon'].includes(n.type || '');
               if (isUiNode) return n;
               const isLocked = !!(n.data as any)?.lockedOut;
               return { ...n, data: { ...n.data, lockedOut: !isLocked } };
