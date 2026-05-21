@@ -2,25 +2,42 @@ import { memo } from 'react';
 import type { EdgeProps, NodeProps } from 'reactflow';
 import { getBezierPath } from 'reactflow';
 
-interface RibbonRouting {
+interface RibbonWaypoint {
   x: number;
   yCenter: number;
+}
+
+function buildRibbonPath(
+  sourceX: number, sourceY: number,
+  targetX: number, targetY: number,
+  waypoints: RibbonWaypoint[],
+): string {
+  if (waypoints.length === 0) {
+    const [d] = getBezierPath({ sourceX, sourceY, targetX, targetY });
+    return d;
+  }
+  const pts = [
+    { x: sourceX, y: sourceY },
+    ...waypoints.map(w => ({ x: w.x, y: w.yCenter })),
+    { x: targetX, y: targetY },
+  ];
+  const segs: string[] = [`M ${pts[0].x} ${pts[0].y}`];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    const mx = (a.x + b.x) / 2;
+    segs.push(`C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`);
+  }
+  return segs.join(' ');
 }
 
 export const RibbonEdge = memo(({
   id, sourceX, sourceY, targetX, targetY,
   style, markerEnd, data,
 }: EdgeProps) => {
-  const ribbon = data?.ribbon as RibbonRouting | undefined;
-
-  let d: string;
-  if (ribbon) {
-    const rx = ribbon.x;
-    const ry = ribbon.yCenter;
-    d = `M ${sourceX} ${sourceY} C ${(sourceX + rx) / 2} ${sourceY}, ${rx} ${(sourceY + ry) / 2}, ${rx} ${ry} C ${rx} ${(ry + targetY) / 2}, ${(rx + targetX) / 2} ${targetY}, ${targetX} ${targetY}`;
-  } else {
-    [d] = getBezierPath({ sourceX, sourceY, targetX, targetY });
-  }
+  const raw = data?.ribbon;
+  const waypoints: RibbonWaypoint[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const d = buildRibbonPath(sourceX, sourceY, targetX, targetY, waypoints);
 
   return (
     <>
