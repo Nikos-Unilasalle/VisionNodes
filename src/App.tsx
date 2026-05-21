@@ -1308,12 +1308,14 @@ function App() {
         const ribbonId = `ribbon-${Date.now()}`;
         const edgeIds = intersecting.map(i => i.edgeId);
         pushSnapshot();
+        const RIBBON_H = 44;
+        const strokeMidY = (strokeYMin + strokeYMax) / 2;
         setViewNodes(nds => [...nds, {
           id: ribbonId,
           type: 'canvas_ribbon',
-          position: { x: ribbonFlowX - 5, y: strokeYMin },
+          position: { x: ribbonFlowX - 5, y: strokeMidY - RIBBON_H / 2 },
           data: { label: 'Ribbon', edgeIds, params: {} },
-          style: { width: 10, height: Math.max(strokeYMax - strokeYMin, 60) },
+          style: { width: 10, height: RIBBON_H },
         }]);
         setViewEdges(eds => eds.map(e =>
           edgeIds.includes(e.id)

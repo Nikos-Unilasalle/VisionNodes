@@ -63,12 +63,12 @@ export const RibbonNode = memo(({ data, selected }: NodeProps) => {
       height: '100%',
       borderRadius: 4,
       background: selected
-        ? 'linear-gradient(to right, rgba(251,191,36,0.1), rgba(251,191,36,0.35), rgba(251,191,36,0.1))'
-        : 'linear-gradient(to right, rgba(255,255,255,0.03), rgba(255,255,255,0.18), rgba(255,255,255,0.03))',
+        ? 'linear-gradient(to right, rgba(20,184,166,0.15), rgba(20,184,166,0.5), rgba(20,184,166,0.15))'
+        : 'linear-gradient(to right, rgba(20,184,166,0.06), rgba(20,184,166,0.28), rgba(20,184,166,0.06))',
       border: selected
-        ? '1px solid rgba(251,191,36,0.7)'
-        : '1px solid rgba(255,255,255,0.22)',
-      boxShadow: selected ? '0 0 0 2px rgba(251,191,36,0.3)' : '0 1px 8px rgba(0,0,0,0.4)',
+        ? '1px solid rgba(20,184,166,0.85)'
+        : '1px solid rgba(20,184,166,0.45)',
+      boxShadow: selected ? '0 0 0 2px rgba(20,184,166,0.3), 0 0 12px rgba(20,184,166,0.2)' : '0 0 8px rgba(20,184,166,0.15)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -76,7 +76,7 @@ export const RibbonNode = memo(({ data, selected }: NodeProps) => {
       overflow: 'hidden',
     }}>
       <span style={{
-        color: selected ? 'rgba(251,191,36,0.95)' : 'rgba(255,255,255,0.6)',
+        color: selected ? 'rgba(20,184,166,1)' : 'rgba(20,184,166,0.75)',
         fontSize: 8,
         fontWeight: 700,
         writingMode: 'vertical-rl',
