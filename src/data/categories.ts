@@ -396,6 +396,10 @@ export const CATEGORIES: Category[] = [
     { type: 'bpa_stain_detector',      label: 'BPA Stain Detector',      description: 'Detects bloodstain ellipses via LAB-A + HSV mask. Computes impact angle per stain: sin(α) = minor/major. Scale-independent size gates (mm).' },
     { type: 'bpa_origin_reconstructor',label: 'BPA Origin Reconstructor',description: '3D blood origin reconstruction via stringing / least-squares ray intersection. Compares with ground-truth coords.' },
     { type: 'bpa_batch_evaluator',     label: 'BPA Batch Evaluator',     description: 'Runs the full BPA pipeline on all samples in an Attinger dataset folder. Outputs a DataFrame (sample_id, est_x/y/z, error_cm, n_stains…) for aggregate analysis.' },
+    { type: 'bpa_stringing_overlay',   label: 'BPA Stringing Overlay',   description: 'Forensic stringing: draws trajectory lines through each stain. Lines converge toward the blood origin. Color = impact angle (blue=low/far → red=high/close).' },
+    { type: 'bpa_convergence_map',     label: 'BPA Convergence Map',     description: 'Heatmap of stringing ray accumulation. Hottest zone = most probable origin projection. More robust to outliers than least-squares.' },
+    { type: 'bpa_topdown_view',        label: 'BPA Top-Down View',       description: 'Top-down 2D map in room coordinates (XY plane). Target board, stain projections, estimated origin (red star), GT (green diamond), error arrow.' },
+    { type: 'bpa_3d_scene',            label: 'BPA 3D Scene',            description: '3D matplotlib scene: semi-transparent target board, stains, 3D stringing rays, estimated origin, GT, error arrow. Configurable elevation/azimuth.' },
   ]},
   { id: 'DataFrame', label: 'DataFrame', icon: Database, section: 'domain', nodes: [
     { type: 'ml_csv_reader', label: 'CSV Reader', description: 'Load a CSV file as a DataFrame.' },
