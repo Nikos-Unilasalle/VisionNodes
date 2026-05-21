@@ -183,6 +183,7 @@ function App() {
   const reroutePosRef = useRef({ x: 0, y: 0 });
   const [isRibbonDrawing, setIsRibbonDrawing] = useState(false);
   const [ribbonPreviewX, setRibbonPreviewX] = useState<number | null>(null);
+  const [ribbonPreviewEndY, setRibbonPreviewEndY] = useState<number>(0);
   const ribbonDrawRef = useRef<{ startX: number; startY: number } | null>(null);
   const connectingRef = useRef<{ nodeId: string; handleId: string; handleType: string } | null>(null);
   const connectionMadeRef = useRef(false);
@@ -1257,6 +1258,7 @@ function App() {
       e.preventDefault();
       ribbonDrawRef.current = { startX: e.clientX, startY: e.clientY };
       setRibbonPreviewX(e.clientX);
+      setRibbonPreviewEndY(e.clientY);
       setIsRibbonDrawing(true);
     };
     document.addEventListener('mousedown', onDown, { capture: true });
@@ -1265,7 +1267,7 @@ function App() {
 
   useEffect(() => {
     if (!isRibbonDrawing) return;
-    const onMove = (e: MouseEvent) => setRibbonPreviewX(e.clientX);
+    const onMove = (e: MouseEvent) => { setRibbonPreviewX(e.clientX); setRibbonPreviewEndY(e.clientY); };
     const onUp = (e: MouseEvent) => {
       const draw = ribbonDrawRef.current;
       if (!draw || !instance) { setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null; return; }
@@ -1273,7 +1275,11 @@ function App() {
       const dy = Math.abs(e.clientY - draw.startY);
       if (dy < 40 || dx > dy * 0.8) { setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null; return; }
 
-      const ribbonFlowX = instance.screenToFlowPosition({ x: (draw.startX + e.clientX) / 2, y: 0 }).x;
+      const flowStart = instance.screenToFlowPosition({ x: draw.startX, y: draw.startY });
+      const flowEnd   = instance.screenToFlowPosition({ x: e.clientX,  y: e.clientY  });
+      const ribbonFlowX = (flowStart.x + flowEnd.x) / 2;
+      const strokeYMin  = Math.min(flowStart.y, flowEnd.y);
+      const strokeYMax  = Math.max(flowStart.y, flowEnd.y);
       const currentNodes = nodesRef.current as any[];
       const currentEdges = edgesRef.current as any[];
 
@@ -1293,22 +1299,22 @@ function App() {
         const tgtY = tgt.position.y + (tgt.measured?.height ?? tgt.height ?? 0) / 2;
         const span = hi - lo;
         const t = span < 1 ? 0.5 : (ribbonFlowX - srcRight) / (tgtLeft - srcRight);
-        intersecting.push({ edgeId: edge.id, crossY: srcY + t * (tgtY - srcY) });
+        const crossY = srcY + t * (tgtY - srcY);
+        // Only bundle edges whose path actually crosses the drawn segment
+        if (crossY < strokeYMin || crossY > strokeYMax) continue;
+        intersecting.push({ edgeId: edge.id, crossY });
       }
 
       if (intersecting.length >= 2) {
-        const ys = intersecting.map(i => i.crossY);
-        const yMin = Math.min(...ys) - 30;
-        const yMax = Math.max(...ys) + 30;
         const ribbonId = `ribbon-${Date.now()}`;
         const edgeIds = intersecting.map(i => i.edgeId);
         pushSnapshot();
         setViewNodes(nds => [...nds, {
           id: ribbonId,
           type: 'canvas_ribbon',
-          position: { x: ribbonFlowX - 5, y: yMin },
+          position: { x: ribbonFlowX - 5, y: strokeYMin },
           data: { label: 'Ribbon', edgeIds, params: {} },
-          style: { width: 10, height: Math.max(yMax - yMin, 60) },
+          style: { width: 10, height: Math.max(strokeYMax - strokeYMin, 60) },
         }]);
         setViewEdges(eds => eds.map(e =>
           edgeIds.includes(e.id) ? { ...e, data: { ...e.data, ribbonId } } : e
@@ -1404,12 +1410,22 @@ function App() {
 
       <div className="flex-1 flex w-full relative">
         <div className="flex-1 relative overflow-hidden bg-[#1e2530]" onContextMenu={e => e.preventDefault()}>
-          {isRibbonDrawing && ribbonPreviewX !== null && (
-            <div style={{
-              position: 'fixed', left: ribbonPreviewX, top: 0, bottom: 0, width: 2,
-              background: 'repeating-linear-gradient(to bottom, rgba(251,191,36,0.9) 0px, rgba(251,191,36,0.9) 8px, transparent 8px, transparent 16px)',
-              pointerEvents: 'none', zIndex: 9999,
-            }} />
+          {isRibbonDrawing && ribbonPreviewX !== null && ribbonDrawRef.current && (
+            <>
+              <div style={{
+                position: 'fixed', left: ribbonPreviewX, top: 0, bottom: 0, width: 1,
+                background: 'rgba(251,191,36,0.18)', pointerEvents: 'none', zIndex: 9998,
+              }} />
+              <div style={{
+                position: 'fixed',
+                left: ribbonPreviewX - 1,
+                top: Math.min(ribbonDrawRef.current.startY, ribbonPreviewEndY),
+                height: Math.abs(ribbonPreviewEndY - ribbonDrawRef.current.startY),
+                width: 3,
+                background: 'rgba(251,191,36,0.9)',
+                pointerEvents: 'none', zIndex: 9999,
+              }} />
+            </>
           )}
           <NodesDataContext.Provider value={nodesDataStore}>
           <ComputingNodeContext.Provider value={computingNodeId}>
