@@ -138,5 +138,5 @@
     "name": "Reaction Diffusion (Gray-Scott)",
     "description": "Two parallel pipelines: a modular generic implementation using Canvas, Feedback, and Python nodes for dU/dt and dV/dt equations; and a simplified all-in-one Gray-Scott node with coral preset for direct experimentation.",
     "file": "reaction_diffusion.vn"
-  },
+  }
 ]
