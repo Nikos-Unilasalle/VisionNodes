@@ -615,11 +615,11 @@ function App() {
       .filter(id => nodesRef.current.find((n: any) => n.id === id)?.type === 'canvas_ribbon');
     if (removedRibbonIds.length > 0) {
       const removed = new Set(removedRibbonIds);
-      setViewEdges(eds => eds.map(e =>
-        e.data?.ribbonId && removed.has(e.data.ribbonId)
-          ? { ...e, data: { ...e.data, ribbonId: undefined } }
-          : e
-      ));
+      setViewEdges(eds => eds.map(e => {
+        const ids = e.data?.ribbonIds as string[] | undefined;
+        if (!ids?.some(id => removed.has(id))) return e;
+        return { ...e, data: { ...e.data, ribbonIds: ids.filter(id => !removed.has(id)) } };
+      }));
     }
     if (changes.some(c => c.type === 'remove')) pushSnapshot();
     setViewNodes((nds) => applyNodeChanges(changes, nds));
@@ -1285,7 +1285,6 @@ function App() {
 
       const intersecting: Array<{ edgeId: string; crossY: number }> = [];
       for (const edge of currentEdges) {
-        if (edge.data?.ribbonId) continue;
         const src = currentNodes.find((n: any) => n.id === edge.source);
         const tgt = currentNodes.find((n: any) => n.id === edge.target);
         if (!src || !tgt) continue;
@@ -1317,7 +1316,9 @@ function App() {
           style: { width: 10, height: Math.max(strokeYMax - strokeYMin, 60) },
         }]);
         setViewEdges(eds => eds.map(e =>
-          edgeIds.includes(e.id) ? { ...e, data: { ...e.data, ribbonId } } : e
+          edgeIds.includes(e.id)
+            ? { ...e, data: { ...e.data, ribbonIds: [...(e.data?.ribbonIds ?? []), ribbonId] } }
+            : e
         ));
       }
       setIsRibbonDrawing(false); setRibbonPreviewX(null); ribbonDrawRef.current = null;
@@ -1358,12 +1359,16 @@ function App() {
     return edges
       .filter(edge => !hiddenIds || !hiddenIds.has(edge.id))
       .map((edge: any) => {
-        const ribbonPos = edge.data?.ribbonId ? ribbonMap.get(edge.data.ribbonId) : undefined;
+        const ids: string[] = edge.data?.ribbonIds ?? (edge.data?.ribbonId ? [edge.data.ribbonId] : []);
+        const waypoints = ids
+          .map((id: string) => ribbonMap.get(id))
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.x - b.x);
         return {
           ...edge,
-          type: ribbonPos ? 'ribbon' : edge.type,
-          data: { ...edge.data, ribbon: ribbonPos },
-          style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: ribbonPos ? 1.5 : 2 },
+          type: waypoints.length > 0 ? 'ribbon' : edge.type,
+          data: { ...edge.data, ribbon: waypoints.length > 0 ? waypoints : undefined },
+          style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: waypoints.length > 0 ? 1.5 : 2 },
         };
       });
   }, [edges, nodes, isRerouting]);
