@@ -143,5 +143,10 @@
     "name": "Reaction Diffusion (Gray-Scott)",
     "description": "Two parallel pipelines: a modular generic implementation using Canvas, Feedback, and Python nodes for dU/dt and dV/dt equations; and a simplified all-in-one Gray-Scott node with coral preset for direct experimentation.",
     "file": "reaction_diffusion.vn"
+  },
+  {
+    "name": "Blood Pattern Analysis (BPA)",
+    "description": "Forensic bloodstain pattern analysis using the Attinger dataset. Loads a 600 dpi image, detects stains via LAB-A segmentation, fits ellipses to compute impact angles, then reconstructs the 3D origin via least-squares ray intersection (stringing method). Compares estimated origin against ground truth.",
+    "file": "bpa_forensics.vn"
   }
 ]

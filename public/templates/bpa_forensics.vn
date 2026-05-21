@@ -1,0 +1,217 @@
+{
+  "nodes": [
+    {
+      "id": "bpa-meta-1",
+      "type": "bpa_metadata_reader",
+      "position": { "x": 80, "y": 280 },
+      "style": {},
+      "data": {
+        "label": "BPA Metadata",
+        "params": {
+          "dataset_path": "",
+          "sample_id": "HP_19"
+        }
+      },
+      "width": 240,
+      "height": 420,
+      "selected": false,
+      "positionAbsolute": { "x": 80, "y": 280 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-loader-1",
+      "type": "bpa_image_loader",
+      "position": { "x": 560, "y": 180 },
+      "style": {},
+      "data": {
+        "label": "BPA Image Loader",
+        "params": {
+          "load_scale": 0.1,
+          "path_override": ""
+        }
+      },
+      "width": 240,
+      "height": 260,
+      "selected": false,
+      "positionAbsolute": { "x": 560, "y": 180 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-detector-1",
+      "type": "bpa_stain_detector",
+      "position": { "x": 1060, "y": 180 },
+      "style": {},
+      "data": {
+        "label": "BPA Stain Detector",
+        "params": {
+          "a_threshold": 8,
+          "val_max": 210,
+          "blur_r": 3,
+          "min_area": 30,
+          "max_area": 20000,
+          "min_aspect": 0.15,
+          "show_ellipses": true,
+          "show_angles": true,
+          "show_centers": true
+        }
+      },
+      "width": 260,
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": { "x": 1060, "y": 180 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-recon-1",
+      "type": "bpa_origin_reconstructor",
+      "position": { "x": 1580, "y": 280 },
+      "style": {},
+      "data": {
+        "label": "BPA Origin Reconstructor",
+        "params": {
+          "residual_cutoff": 30.0,
+          "min_stains": 5
+        }
+      },
+      "width": 260,
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": { "x": 1580, "y": 280 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-display-1",
+      "type": "output_display",
+      "position": { "x": 2100, "y": 180 },
+      "style": {},
+      "data": {
+        "label": "BPA Output",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "image__0_bpa1", "color": "image", "label": "annotated" }
+        ]
+      },
+      "width": 240,
+      "height": 220,
+      "selected": false,
+      "positionAbsolute": { "x": 2100, "y": 180 },
+      "dragging": false
+    },
+    {
+      "id": "bpa-inspector-1",
+      "type": "data_inspector",
+      "position": { "x": 2100, "y": 480 },
+      "style": {},
+      "data": {
+        "label": "Reconstruction Report",
+        "params": {}
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": { "x": 2100, "y": 480 },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-bpa-1",
+      "source": "bpa-meta-1",
+      "sourceHandle": "string__image_path",
+      "target": "bpa-loader-1",
+      "targetHandle": "string__image_path"
+    },
+    {
+      "id": "e-bpa-2",
+      "source": "bpa-loader-1",
+      "sourceHandle": "image__main",
+      "target": "bpa-detector-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-bpa-3",
+      "source": "bpa-loader-1",
+      "sourceHandle": "scalar__px_per_cm",
+      "target": "bpa-detector-1",
+      "targetHandle": "scalar__px_per_cm"
+    },
+    {
+      "id": "e-bpa-4",
+      "source": "bpa-loader-1",
+      "sourceHandle": "scalar__px_per_cm",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__px_per_cm"
+    },
+    {
+      "id": "e-bpa-5",
+      "source": "bpa-loader-1",
+      "sourceHandle": "scalar__height",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__height_px"
+    },
+    {
+      "id": "e-bpa-6",
+      "source": "bpa-detector-1",
+      "sourceHandle": "dict__stains",
+      "target": "bpa-recon-1",
+      "targetHandle": "dict__stains"
+    },
+    {
+      "id": "e-bpa-7",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__x_t",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__x_t"
+    },
+    {
+      "id": "e-bpa-8",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__y_t",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__y_t"
+    },
+    {
+      "id": "e-bpa-9",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__z_t",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__z_t"
+    },
+    {
+      "id": "e-bpa-10",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__x_o",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__x_o"
+    },
+    {
+      "id": "e-bpa-11",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__y_o",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__y_o"
+    },
+    {
+      "id": "e-bpa-12",
+      "source": "bpa-meta-1",
+      "sourceHandle": "scalar__z_o",
+      "target": "bpa-recon-1",
+      "targetHandle": "scalar__z_o"
+    },
+    {
+      "id": "e-bpa-13",
+      "source": "bpa-detector-1",
+      "sourceHandle": "image__annotated",
+      "target": "bpa-display-1",
+      "targetHandle": "image__0_bpa1"
+    },
+    {
+      "id": "e-bpa-14",
+      "source": "bpa-recon-1",
+      "sourceHandle": "dict__report",
+      "target": "bpa-inspector-1",
+      "targetHandle": "any__data"
+    }
+  ]
+}
