@@ -362,7 +362,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
   // Skip manual types to avoid duplication with schema-driven loop below
   const MANUAL_TYPES = new Set([
-    'canvas_note', 'canvas_frame',
+    'canvas_note', 'canvas_frame', 'canvas_ribbon',
     'input_webcam', 'input_movie',
     'output_display',
     'geo_spectral_index', 'geo_band_calc',

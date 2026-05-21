@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import * as N from '../components/Nodes';
 import { withNodeResizer } from '../hocs/withNodeResizer';
+import { RibbonNode } from '../components/Ribbon';
 
 const withNodeColor = (Component: React.ComponentType<any>) =>
   memo(({ selected, data, ...props }: any) => {
@@ -104,6 +105,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   mask_point_query: N.MaskPointQueryNode,
   canvas_note: withNodeResizer(N.CanvasNoteNode, 120, 60, getNoteColor),
   canvas_reroute: N.CanvasRerouteNode,
+  canvas_ribbon: RibbonNode,
   output_movie: N.OutputMovieNode,
   geo_band_stats: N.RasterStatsNode,
   sci_matrix_dist: withNodeResizer(N.MatrixDistNode, 220, 160),
