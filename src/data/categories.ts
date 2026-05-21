@@ -428,4 +428,7 @@ export const CATEGORIES: Category[] = [
     { type: 'ml_svm_classifier', label: 'SVM Classifier', description: 'Support Vector Machine classifier.' },
     { type: 'ml_train_test_split', label: 'Train / Test Split', description: 'Split data into train and test sets.' },
   ]},
+  { id: '3d', label: '3D / Géométrie', icon: Box, section: 'domain', nodes: [
+    { type: 'obj_depth_map', label: 'OBJ Depth Map', description: 'Charge un fichier .obj 3D (drag & drop) et génère une carte de profondeur normalisée.' },
+  ]},
 ];
