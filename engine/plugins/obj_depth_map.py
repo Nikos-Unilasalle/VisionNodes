@@ -13,6 +13,7 @@ Résultat mis en cache par (chemin, mtime, paramètres) pour éviter tout recalc
 from registry import vision_node, NodeProcessor
 import numpy as np
 import os
+import base64
 
 _NULL = {'depth': None, 'path': ''}
 _CACHE: dict = {}
@@ -174,4 +175,9 @@ class ObjDepthMapNode(NodeProcessor):
             elevation_deg=float(params.get('elevation', 30)),
             colormap_name=str(params.get('colormap', 'none')),
         )
-        return {'depth': depth, 'path': obj_path}
+        _thumb = None
+        if depth is not None:
+            import cv2
+            _, buf = cv2.imencode('.jpg', depth, [cv2.IMWRITE_JPEG_QUALITY, 75])
+            _thumb = base64.b64encode(buf).decode('utf-8')
+        return {'depth': depth, 'path': obj_path, '_thumb': _thumb}
