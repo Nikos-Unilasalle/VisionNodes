@@ -138,35 +138,35 @@
       "source": "bpa-batch-1",
       "sourceHandle": "data__results",
       "target": "bpa-stats-1",
-      "targetHandle": "data__df"
+      "targetHandle": "data__table"
     },
     {
       "id": "e-batch-2",
       "source": "bpa-batch-1",
       "sourceHandle": "data__results",
       "target": "bpa-scatter-err",
-      "targetHandle": "data__df"
+      "targetHandle": "data__table"
     },
     {
       "id": "e-batch-3",
       "source": "bpa-batch-1",
       "sourceHandle": "data__results",
       "target": "bpa-hist-err",
-      "targetHandle": "data__df"
+      "targetHandle": "data__table"
     },
     {
       "id": "e-batch-4",
       "source": "bpa-batch-1",
       "sourceHandle": "data__results",
       "target": "bpa-scatter-angle",
-      "targetHandle": "data__df"
+      "targetHandle": "data__table"
     },
     {
       "id": "e-batch-5",
       "source": "bpa-batch-1",
       "sourceHandle": "data__results",
       "target": "bpa-export-1",
-      "targetHandle": "data__df"
+      "targetHandle": "data__table"
     },
     {
       "id": "e-batch-6",
