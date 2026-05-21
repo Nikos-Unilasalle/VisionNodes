@@ -40,9 +40,9 @@ export function useConnectionHandling({
     const targetSchema = pluginSchemas?.find((s: any) => s.type === targetNode?.type);
     
     // Check if node is dynamic via schema flags or known types
-    const isDynamic = !!targetSchema?.dynamic_inputs || 
-                     !!targetSchema?.dynamic_outputs || 
-                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge'].includes(targetNode?.type || '');
+    const isDynamic = !!targetSchema?.dynamic_inputs ||
+                     !!targetSchema?.dynamic_outputs ||
+                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py'].includes(targetNode?.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
