@@ -9,6 +9,24 @@ except ImportError:
     _pd_module = None
     _PANDAS_AVAILABLE = False
 
+
+def _df_meta_local(df) -> dict:
+    """Serializable DataFrame metadata — inlined to avoid cross-plugin imports."""
+    r, c = df.shape
+    head_df = df.head(8)
+    return {
+        'shape':   [r, c],
+        'columns': [str(col) for col in df.columns],
+        'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
+        'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
+        'head':    [{str(k): (None if (isinstance(v, float) and v != v) else (
+                        int(v) if hasattr(v, 'item') and isinstance(v, (int,)) else
+                        float(v) if isinstance(v, float) else str(v)
+                    )) for k, v in row.items()}
+                   for _, row in head_df.iterrows()],
+    }
+
+
 _BLOCKED_IMPORTS = frozenset([
     'os', 'sys', 'subprocess', 'shutil', 'socket', 'http', 'urllib',
     'requests', 'pathlib', 'glob', 'importlib', 'ctypes', 'mmap',
@@ -135,8 +153,7 @@ class PythonNode(NodeProcessor):
             df_out = ctx.get('out_data')
             if isinstance(df_out, _pd_module.DataFrame):
                 try:
-                    from ml_data_nodes import _df_meta
-                    result['df_meta'] = _df_meta(df_out)
+                    result['df_meta'] = _df_meta_local(df_out)
                 except Exception as e:
                     print(f"[Python Node df_meta error] {e}")
 

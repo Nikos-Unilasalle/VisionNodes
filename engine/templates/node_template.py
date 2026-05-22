@@ -15,7 +15,12 @@ from registry import vision_node, NodeProcessor
 @vision_node(
     type_id='my_new_node',        # Unique identifier (lowercase, underscores)
     label='My Master Node',      # Display name in the UI
-    category='cv',               # 'cv', 'math', 'logic', 'draw', 'sci', 'util', 'geo'
+    category='image',            # Existing: 'input','output','image','color','geometry','mask','draw',
+                               #           'math','signal','text','segmentation','tracking','measure',
+                               #           'visualize','data','logic','utility',
+                               #           'body','audio','geography','geology'
+                               # Custom:   any other string creates a new category automatically.
+                               # Multiple: use a list → category=['mask','segmentation']
     icon='Zap',                  # Lucide icon name (Zap, Image, Search, Ghost, etc.)
     description="Full description shown in the tooltip.",
     

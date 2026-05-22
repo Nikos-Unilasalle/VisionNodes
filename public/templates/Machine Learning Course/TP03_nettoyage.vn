@@ -1,0 +1,629 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -200
+      },
+      "style": {
+        "width": 1860,
+        "height": 72
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TP 03 — Nettoyage des données : valeurs manquantes, doublons, types",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1860,
+      "height": 72,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -110
+      },
+      "style": {
+        "width": 1860,
+        "height": 430,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "A — Théorie : Données imparfaites",
+          "color_index": 0
+        }
+      },
+      "width": 1860,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "Valeurs manquantes (NaN) :\n\ndf.isna()           → masque booléen\ndf.isna().sum()     → compte par colonne\ndf.dropna()         → supprimer les lignes\ndf.fillna(0)        → remplacer par 0\ndf.fillna(df.mean()) → remplacer par moyenne\n\nLes NaN brisent la plupart des calculs ML !\n→ Toujours vérifier avant d'entraîner.",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 500,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "Doublons :\n\ndf.duplicated()          → masque booléen\ndf.duplicated().sum()    → nombre de doublons\ndf.drop_duplicates()     → supprimer\ndf.drop_duplicates(\n   subset=['col1','col2']) → sur colonnes\n\nTypes de données :\n\ndf['col'].astype(int)\ndf['col'].astype(float)\ndf['col'].astype('category')",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1090,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "Pourquoi nettoyer ?\n\n1. Les algorithmes ML refusent les NaN\n2. Les doublons biaisent les statistiques\n3. Un mauvais type (str au lieu de float)\n   empêche les calculs numériques\n\nRègle d'or :\n→ Explorez TOUJOURS vos données\n   avant d'entraîner un modèle\n→ df.info() et df.describe() en premier !",
+          "bg_color": "#ffe4e6",
+          "text_color": "#9f1239"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 350
+      },
+      "style": {
+        "width": 1860,
+        "height": 480,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "B — Référence : Pipeline de nettoyage",
+          "color_index": 2
+        }
+      },
+      "width": 1860,
+      "height": 480,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 420
+      },
+      "data": {
+        "label": "Diabetes Dataset",
+        "params": {
+          "dataset": 3
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "fillna1",
+      "type": "df_fillna",
+      "position": {
+        "x": 200,
+        "y": 400
+      },
+      "data": {
+        "label": "Traiter NaN",
+        "params": {
+          "strategy": 0,
+          "fill_value": "0",
+          "subset": ""
+        }
+      },
+      "width": 290,
+      "height": 280,
+      "selected": false
+    },
+    {
+      "id": "dB1",
+      "type": "output_display",
+      "position": {
+        "x": 550,
+        "y": 400
+      },
+      "data": {
+        "label": "Après fillna",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "stats1",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 200,
+        "y": 610
+      },
+      "data": {
+        "label": "Audit NaN",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 300,
+      "selected": false
+    },
+    {
+      "id": "dB2",
+      "type": "output_display",
+      "position": {
+        "x": 640,
+        "y": 620
+      },
+      "data": {
+        "label": "Stats",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nB_ref",
+      "type": "canvas_note",
+      "position": {
+        "x": 1000,
+        "y": 390
+      },
+      "style": {
+        "width": 720,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_ref",
+        "params": {
+          "text": "Ce pipeline montre :\n\n1. Chargement du dataset Diabetes\n   (données médicales réelles, 442 patients)\n\n2. Node 'Traiter NaN' → remplace les\n   valeurs manquantes selon la stratégie :\n   • mean  : remplace par la moyenne\n   • median: remplace par la médiane\n   • value : remplace par une valeur fixe\n   • drop  : supprime les lignes avec NaN\n\n3. 'Audit NaN' → décrit le DataFrame nettoyé\n\nComparez les statistiques avant/après !",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 720,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 860
+      },
+      "style": {
+        "width": 1860,
+        "height": 500,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "C — Exercice 1 : Auditer et nettoyer un dataset",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 500,
+      "selected": false
+    },
+    {
+      "id": "nC_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 920
+      },
+      "style": {
+        "width": 540,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_inst",
+        "params": {
+          "text": "EXERCICE 1 — Audit complet\n\nComplétez le Python Node pour :\n\n1. Compter les NaN par colonne\n   INDICE : df.isna().sum()\n\n2. Calculer le pourcentage de NaN\n   INDICE : (nb_nan / len(df)) * 100\n\n3. Compter les lignes dupliquées\n   INDICE : df.duplicated().sum()\n\n4. Créer un rapport de qualité\n   sous forme de DataFrame\n\nout_data   = rapport de qualité (DataFrame)\nout_scalar = % de données manquantes (total)",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "dsC",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 930
+      },
+      "data": {
+        "label": "Diabetes Ex1",
+        "params": {
+          "dataset": 3
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyC",
+      "type": "logic_python",
+      "position": {
+        "x": 770,
+        "y": 920
+      },
+      "data": {
+        "label": "Python — Audit qualité",
+        "params": {
+          "code": "# TP03 — Exercice 1 : Audit qualité\n# 'a' = DataFrame à auditer\n# ─────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Compter les NaN par colonne\nnan_count = a.isna().sum()\n\n# TODO 2 : Pourcentage de NaN par colonne\nnan_pct = (nan_count / len(a) * 100).round(2)\n\n# TODO 3 : Lignes dupliquées\nn_doublons = int(a.duplicated().sum())\n\n# Rapport de qualité\nrapport = pd.DataFrame({\n    'NaN_count': nan_count,\n    'NaN_%': nan_pct,\n    'dtype': a.dtypes\n})\n\n# TODO 4 : Calculer le % global de données manquantes\ntotal_vals = a.size\ntotal_nan  = int(a.isna().sum().sum())\npct_global = round(total_nan / total_vals * 100, 2)\n\nout_data   = rapport\nout_scalar = float(pct_global)\n"
+        }
+      },
+      "width": 430,
+      "height": 420,
+      "selected": false
+    },
+    {
+      "id": "statsC",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1260,
+        "y": 920
+      },
+      "data": {
+        "label": "Rapport qualité",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 320,
+      "selected": false
+    },
+    {
+      "id": "dC1",
+      "type": "output_display",
+      "position": {
+        "x": 1700,
+        "y": 920
+      },
+      "data": {
+        "label": "Rapport",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspC",
+      "type": "data_inspector",
+      "position": {
+        "x": 1700,
+        "y": 1140
+      },
+      "data": {
+        "label": "% NaN global",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1390
+      },
+      "style": {
+        "width": 1860,
+        "height": 530,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "D — Exercice 2 : Stratégies de remplacement",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 530,
+      "selected": false
+    },
+    {
+      "id": "nD_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 1450
+      },
+      "style": {
+        "width": 540,
+        "height": 430
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_inst",
+        "params": {
+          "text": "EXERCICE 2 — Imputation\n\nComparez 3 stratégies pour gérer les NaN :\n\nPipeline A : Remplacer NaN par la MOYENNE\nPipeline B : Remplacer NaN par la MÉDIANE\nPipeline C : Supprimer les lignes avec NaN\n\nPour chaque pipeline :\n1. Connectez le dataset\n2. Utilisez df_fillna avec la bonne stratégie\n3. Observez l'impact sur describe()\n\nQUESTION : Quelle stratégie préserve\nle mieux la distribution originale ?",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "dsD",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 1460
+      },
+      "data": {
+        "label": "Dataset Ex2",
+        "params": {
+          "dataset": 3
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "fnA",
+      "type": "df_fillna",
+      "position": {
+        "x": 770,
+        "y": 1440
+      },
+      "data": {
+        "label": "Stratégie : Mean",
+        "params": {
+          "strategy": 0
+        }
+      },
+      "width": 280,
+      "height": 250,
+      "selected": false
+    },
+    {
+      "id": "fnB",
+      "type": "df_fillna",
+      "position": {
+        "x": 770,
+        "y": 1710
+      },
+      "data": {
+        "label": "Stratégie : Median",
+        "params": {
+          "strategy": 1
+        }
+      },
+      "width": 280,
+      "height": 250,
+      "selected": false
+    },
+    {
+      "id": "dD1",
+      "type": "output_display",
+      "position": {
+        "x": 1110,
+        "y": 1440
+      },
+      "data": {
+        "label": "Après Mean",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "dD2",
+      "type": "output_display",
+      "position": {
+        "x": 1110,
+        "y": 1660
+      },
+      "data": {
+        "label": "Après Median",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nD_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 1400,
+        "y": 1450
+      },
+      "style": {
+        "width": 440,
+        "height": 420
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_tip",
+        "params": {
+          "text": "ANALYSE COMPARATIVE\n\nObservez les statistiques :\n• Mean vs Median : lequel change\n  moins la variance ?\n\n• Si les données sont asymétriques\n  (skewed), la médiane est plus robuste\n\n• Si on supprime les lignes :\n  → on perd des données précieuses\n  → risque de biais si les NaN ne sont\n     pas aléatoires (MCAR vs MAR vs MNAR)\n\nEn ML, on utilise souvent\nsklearn.impute.SimpleImputer.",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 440,
+      "height": 420,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "eB1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "fillna1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB2",
+      "source": "fillna1",
+      "sourceHandle": "image__preview",
+      "target": "dB1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "stats1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB4",
+      "source": "stats1",
+      "sourceHandle": "image__preview",
+      "target": "dB2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC1",
+      "source": "dsC",
+      "sourceHandle": "data__table",
+      "target": "pyC",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eC2",
+      "source": "pyC",
+      "sourceHandle": "data__out_data",
+      "target": "statsC",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eC3",
+      "source": "statsC",
+      "sourceHandle": "image__preview",
+      "target": "dC1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC4",
+      "source": "pyC",
+      "sourceHandle": "scalar__out_scalar",
+      "target": "inspC",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "eD1",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "fnA",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD2",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "fnB",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD3",
+      "source": "fnA",
+      "sourceHandle": "image__preview",
+      "target": "dD1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eD4",
+      "source": "fnB",
+      "sourceHandle": "image__preview",
+      "target": "dD2",
+      "targetHandle": "image__main"
+    }
+  ]
+}

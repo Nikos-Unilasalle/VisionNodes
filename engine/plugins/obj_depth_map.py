@@ -1,16 +1,16 @@
 """
-OBJ Depth Map — charge un fichier .obj 3D et génère une carte de profondeur normalisée.
+OBJ Depth Map — loads a 3D .obj file and generates a normalized depth map.
 
-Algorithme (numpy rasterizer — pas de dépendance à trimesh camera/ray API) :
-  1. Chargement via trimesh (uniquement vertices + faces)
-  2. Centrage + normalisation à l'échelle unitaire
-  3. Rotation caméra : azimut (Y) puis élévation (X)
-  4. Projection perspective (FOV 60°)
-  5. Z-buffer par rasterisation triangle (bary. vectorisé par face)
-  6. Normalisation [0,1] → proche = blanc; fond = noir
-  7. Colormap optionnelle (OpenCV)
+Algorithm (numpy rasterizer — no dependency on trimesh camera/ray API):
+  1. Load via trimesh (vertices + faces only)
+  2. Centering + normalization to unit scale
+  3. Camera rotation: azimuth (Y) then elevation (X)
+  4. Perspective projection (FOV 60°)
+  5. Z-buffer via triangle rasterization (vectorized barycentric coordinates per face)
+  6. Normalization [0,1] → close = white; background = black
+  7. Optional colormap (OpenCV)
 
-Cache par (chemin, mtime, paramètres).
+Cache by (path, mtime, parameters).
 """
 from registry import vision_node, NodeProcessor
 import numpy as np
@@ -48,7 +48,7 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
     import cv2
 
     if not os.path.isfile(obj_path):
-        return None, f"fichier introuvable: {obj_path}"
+        return None, f"file not found: {obj_path}"
 
     try:
         mtime = os.path.getmtime(obj_path)
@@ -59,7 +59,7 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
     if key in _CACHE:
         return _CACHE[key], None
 
-    # --- Chargement mesh ---
+    # --- Mesh Loading ---
     try:
         import trimesh
     except ImportError:
@@ -69,7 +69,7 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             import trimesh
         except Exception as exc:
-            return None, f"trimesh introuvable et installation échouée: {exc}"
+            return None, f"trimesh not found and installation failed: {exc}"
 
     try:
         geo = trimesh.load(obj_path, force='mesh', process=False)
@@ -77,40 +77,40 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
         return None, f"trimesh.load: {exc}"
 
     if not hasattr(geo, 'faces') or len(geo.faces) == 0:
-        return None, "aucune face dans le mesh"
+        return None, "no faces found in the mesh"
 
     verts = np.array(geo.vertices, dtype=np.float64)  # (V, 3)
     faces = np.array(geo.faces,    dtype=np.int32)     # (F, 3)
 
-    # --- Centrage + normalisation ---
+    # --- Centering + normalization ---
     verts -= verts.mean(axis=0)
     scale = np.abs(verts).max()
     if scale > 0:
         verts /= scale
 
-    # --- Rotation caméra ---
+    # --- Camera Rotation ---
     az = np.radians(azimuth_deg)
     el = np.radians(elevation_deg)
     R = _rotation_x(el) @ _rotation_y(az)
-    vc = (R @ verts.T).T  # (V, 3) en espace caméra
+    vc = (R @ verts.T).T  # (V, 3) in camera space
 
-    # --- Projection perspective ---
-    # Caméra à z = -cam_dist, regarde vers +z
+    # --- Perspective Projection ---
+    # Camera at z = -cam_dist, looking towards +z
     cam_dist = 2.5
-    zc = vc[:, 2] + cam_dist          # profondeur depuis caméra (>0 = devant)
+    zc = vc[:, 2] + cam_dist          # depth from camera (>0 = in front)
     zc = np.where(zc > 1e-4, zc, 1e-4)
 
     fov_half = np.radians(30.0)       # FOV 60°
     f = (min(img_w, img_h) / 2.0) / np.tan(fov_half)
 
     cx, cy = img_w / 2.0, img_h / 2.0
-    xp = f * vc[:, 0] / zc + cx      # x écran
-    yp = -f * vc[:, 1] / zc + cy     # y écran (axe Y inversé)
+    xp = f * vc[:, 0] / zc + cx      # screen x
+    yp = -f * vc[:, 1] / zc + cy     # screen y (inverted Y axis)
 
-    # --- Rasterisation Z-buffer ---
+    # --- Z-buffer Rasterization ---
     depth_buf = np.full((img_h, img_w), np.inf, dtype=np.float32)
 
-    # Sommets projetés par face  (F, 3) chaque
+    # Projected vertices per face (F, 3) each
     ax, ay, az_f = xp[faces[:, 0]], yp[faces[:, 0]], zc[faces[:, 0]]
     bx, by, bz_f = xp[faces[:, 1]], yp[faces[:, 1]], zc[faces[:, 1]]
     cx_f, cy_f, cz_f = xp[faces[:, 2]], yp[faces[:, 2]], zc[faces[:, 2]]
@@ -152,13 +152,13 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
         rx = np.clip(rx, 0, img_w - 1)
         zi = z_interp[inside]
 
-        # Écriture z-buffer (garde le minimum = le plus proche)
+        # Write to z-buffer (keeps the minimum = closest)
         np.minimum.at(depth_buf, (ry, rx), zi)
 
-    # --- Normalisation ---
+    # --- Normalization ---
     valid = np.isfinite(depth_buf)
     if not valid.any():
-        return None, "aucun pixel visible (vérifier orientation caméra)"
+        return None, "no visible pixels (check camera orientation)"
 
     d_min = float(depth_buf[valid].min())
     d_max = float(depth_buf[valid].max())
@@ -187,9 +187,9 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
     category='3d',
     icon='Box',
     description=(
-        "Charge un fichier .obj 3D (drag & drop) et génère une carte de profondeur "
-        "normalisée. Proche de la caméra = blanc. Fond = noir. "
-        "Azimut et élévation permettent de faire pivoter la caméra autour de la mesh."
+        "Loads a 3D .obj file (drag & drop) and generates a normalized depth map. "
+        "Close to the camera = white. Background = black. "
+        "Azimuth and elevation allow rotating the camera around the mesh."
     ),
     resizable=True,
     min_width=240,
@@ -245,3 +245,5 @@ class ObjDepthMapNode(NodeProcessor):
             '_thumb': thumb,
             '_error': err,
         }
+
+}
