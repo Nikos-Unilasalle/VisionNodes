@@ -4325,7 +4325,7 @@ export const CopernicusNode = memo(({ selected, data }: any) => {
             <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Bands</span>
             <span className="text-[8px] font-mono text-gray-400 truncate max-w-[140px]">{bands.join(', ')}</span>
           </div>
-          {hasBbox ? (
+          {hasBbox && (
             <div className="px-2 py-1 bg-green-500/5 rounded-lg border border-green-500/15">
               <div className="text-[7px] font-mono text-green-400 leading-4">
                 W {bboxParts![0].toFixed(3)}° · E {bboxParts![2].toFixed(3)}°
@@ -4333,10 +4333,6 @@ export const CopernicusNode = memo(({ selected, data }: any) => {
               <div className="text-[7px] font-mono text-green-400 leading-4">
                 S {bboxParts![1].toFixed(3)}° · N {bboxParts![3].toFixed(3)}°
               </div>
-            </div>
-          ) : (
-            <div className="px-2 py-1.5 bg-amber-500/5 rounded-lg border border-amber-500/15 text-center">
-              <span className="text-[8px] font-black uppercase tracking-widest text-amber-500/70">Open editor to draw ROI</span>
             </div>
           )}
         </div>

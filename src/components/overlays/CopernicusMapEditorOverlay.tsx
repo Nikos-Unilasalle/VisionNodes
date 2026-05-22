@@ -299,19 +299,30 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     return () => ro.disconnect();
   }, [renderFrame]);
 
-  // ── Wheel zoom ────────────────────────────────────────────────────────────
+  // ── Wheel zoom — accumulated delta, 1 level per ~120px of scroll ───────────
+  const wheelAccum = useRef(0);
+  const lastMouse  = useRef({ x: 0, y: 0 });
+
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    const factor = e.deltaY < 0 ? 1 : -1;
-    setZoom(z => {
-      const newZ = Math.max(2, Math.min(18, z + factor));
-      if (newZ === z) return z;
-      // Zoom towards mouse position
-      const canvas = canvasRef.current;
-      if (!canvas) return newZ;
+    // Track mouse pos for zoom-to-cursor
+    const canvas = canvasRef.current;
+    if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      lastMouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    // Normalise delta: pixelMode deltas are large, lineMode ~3, pageMode huge
+    const delta = e.deltaMode === 0 ? e.deltaY : e.deltaY * 30;
+    wheelAccum.current += delta;
+    const THRESHOLD = 120; // px of scroll per zoom level
+    const steps = Math.trunc(wheelAccum.current / THRESHOLD);
+    if (steps === 0) return;
+    wheelAccum.current -= steps * THRESHOLD;
+    const dir = steps > 0 ? -1 : 1; // deltaY > 0 → zoom out → dir = -1
+    setZoom(z => {
+      const newZ = Math.max(2, Math.min(18, z + dir));
+      if (newZ === z) return z;
+      const { x: mx, y: my } = lastMouse.current;
       const scale = Math.pow(2, newZ - z);
       setOffsetX(ox => mx - (mx - ox) * scale);
       setOffsetY(oy => my - (my - oy) * scale);
