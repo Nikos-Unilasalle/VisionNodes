@@ -38,6 +38,7 @@ import CropEditorOverlay from './components/overlays/CropEditorOverlay';
 import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
 import IndexPainterOverlay from './components/overlays/IndexPainterOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
+import CopernicusMapEditorOverlay from './components/overlays/CopernicusMapEditorOverlay';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
 import TutorialOverlay from './components/overlays/TutorialOverlay';
@@ -153,6 +154,7 @@ function App() {
   const [annotatorEditingId, setAnnotatorEditingId] = useState<string | null>(null);
   const [indexPainterEditingId, setIndexPainterEditingId] = useState<string | null>(null);
   const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
+  const [copernicusEditingId,   setCopernicusEditingId]   = useState<string | null>(null);
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
@@ -434,6 +436,8 @@ function App() {
             ? () => setIndexPainterEditingId(node.id)
             : node.type === 'manual_points'
             ? () => setManualPointsEditingId(node.id)
+            : node.type === 'geo_copernicus'
+            ? () => setCopernicusEditingId(node.id)
             : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
             ? () => setLineEditingId(node.id)
             : undefined,
@@ -1602,6 +1606,12 @@ function App() {
                  node={nodesWithData.find(n => n.id === manualPointsEditingId)}
                  nodesData={nodesData}
                  onClose={() => setManualPointsEditingId(null)}
+               />
+            )}
+            {copernicusEditingId && (
+               <CopernicusMapEditorOverlay
+                 node={nodesWithData.find(n => n.id === copernicusEditingId)}
+                 onClose={() => setCopernicusEditingId(null)}
                />
             )}
             {lineEditingId && (
