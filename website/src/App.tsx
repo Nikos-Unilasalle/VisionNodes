@@ -29,7 +29,7 @@ const Footer = ({ setActiveTab }: { setActiveTab: (t: Tab) => void }) => (
             { label: 'Node Wiki',   tab: 'wiki'        as Tab },
             { label: 'Tutorials',   tab: 'tutorials'   as Tab },
             { label: 'Download',    tab: 'download'    as Tab },
-            { label: 'Marketplace', tab: 'marketplace' as Tab },
+            // { label: 'Marketplace', tab: 'marketplace' as Tab },
           ].map(l => (
             <button key={l.label} onClick={() => setActiveTab(l.tab)}
                     className="block text-[var(--text-dim)] hover:text-[var(--text-main)] transition-colors">

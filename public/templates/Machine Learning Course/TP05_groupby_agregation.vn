@@ -1,0 +1,631 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -200
+      },
+      "style": {
+        "width": 1860,
+        "height": 72
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TP 05 — Groupby et Agrégation : analyser par catégories",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1860,
+      "height": 72,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -110
+      },
+      "style": {
+        "width": 1860,
+        "height": 430,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "A — Théorie : Groupby, Agg, Pivot",
+          "color_index": 0
+        }
+      },
+      "width": 1860,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "groupby — Principe Split-Apply-Combine :\n\ndf.groupby('col')['val'].mean()\ndf.groupby('col').agg({'v': 'mean'})\ndf.groupby('col').agg(\n    moy=('val', 'mean'),\n    maxi=('val', 'max'),\n    compte=('val', 'count')\n)\n\nFonctions d'agrégation :\nmean, sum, min, max, count, std, var, median",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 500,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "Exemples pratiques :\n\n# Ventes par région\ndf.groupby('region')['ventes'].sum()\n\n# Prix moyen par catégorie\ndf.groupby('cat')['prix'].mean()\n\n# Multi-niveaux\ndf.groupby(['annee','mois']).agg(...)\n\n# Reset index après groupby\ndf.groupby('col').mean().reset_index()\n\n# transform() : aligne avec l'original\ndf['moy_groupe'] = df.groupby('cat')['v'].transform('mean')",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1090,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "Pivot Tables :\n\npd.pivot_table(\n    df,\n    values='ventes',\n    index='region',\n    columns='trimestre',\n    aggfunc='sum',\n    fill_value=0\n)\n\n→ Croise deux variables catégorielles\n→ Équivalent du tableau croisé Excel\n→ Idéal pour heatmaps de corrélation",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 350
+      },
+      "style": {
+        "width": 1860,
+        "height": 460,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "B — Référence : Groupby sur Iris",
+          "color_index": 2
+        }
+      },
+      "width": 1860,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 420
+      },
+      "data": {
+        "label": "Iris Dataset",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "grp1",
+      "type": "df_groupby",
+      "position": {
+        "x": 200,
+        "y": 390
+      },
+      "data": {
+        "label": "Groupe par espèce",
+        "params": {
+          "by": "target",
+          "agg_col": "sepal length (cm)",
+          "func": 0
+        }
+      },
+      "width": 310,
+      "height": 260,
+      "selected": false
+    },
+    {
+      "id": "dB1",
+      "type": "output_display",
+      "position": {
+        "x": 570,
+        "y": 390
+      },
+      "data": {
+        "label": "Moy. par espèce",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "grp2",
+      "type": "df_groupby",
+      "position": {
+        "x": 200,
+        "y": 620
+      },
+      "data": {
+        "label": "Max par espèce",
+        "params": {
+          "by": "target",
+          "agg_col": "petal length (cm)",
+          "func": 2
+        }
+      },
+      "width": 310,
+      "height": 260,
+      "selected": false
+    },
+    {
+      "id": "dB2",
+      "type": "output_display",
+      "position": {
+        "x": 570,
+        "y": 630
+      },
+      "data": {
+        "label": "Max petal length",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nB_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 900,
+        "y": 390
+      },
+      "style": {
+        "width": 830,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_tip",
+        "params": {
+          "text": "Lecture du résultat groupby :\n\n• target=0 → Iris Setosa\n• target=1 → Iris Versicolor\n• target=2 → Iris Virginica\n\nObservations attendues :\n• Setosa a des pétales beaucoup plus courts\n• Virginica a la plus grande sepal length\n• La variance intra-groupe << variance totale\n\n→ C'est exactement ce que les algorithmes\n   de classification apprennent à distinguer !",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 830,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 840
+      },
+      "style": {
+        "width": 1860,
+        "height": 530,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "C — Exercice 1 : Analyse multi-agrégation",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 530,
+      "selected": false
+    },
+    {
+      "id": "nC_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 900
+      },
+      "style": {
+        "width": 540,
+        "height": 430
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_inst",
+        "params": {
+          "text": "EXERCICE 1 — Groupby avancé\n\nAnalysez le dataset Wine par classe :\n\n1. Calculer pour chaque classe (0,1,2) :\n   • Moyenne d'alcool\n   • Écart-type d'alcool\n   • Nombre d'observations\n   → df.groupby('target').agg(...)\n\n2. Ajouter une colonne 'cv' (coefficient\n   de variation = std / mean * 100)\n\n3. Quelle classe est la plus homogène ?\n   (cv le plus faible)\n\nout_data   = DataFrame d'agrégation\nout_scalar = cv de la classe la + homogène",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "dsC",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 920
+      },
+      "data": {
+        "label": "Wine Ex1",
+        "params": {
+          "dataset": 1
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyC",
+      "type": "logic_python",
+      "position": {
+        "x": 770,
+        "y": 910
+      },
+      "data": {
+        "label": "Python — Groupby avancé",
+        "params": {
+          "code": "# TP05 — Exercice 1 : Groupby multi-agrégation\n# 'a' = DataFrame Wine\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Agrégation multi-colonnes\nagg = a.groupby('target').agg(\n    moy_alcool=('alcohol', 'mean'),\n    std_alcool=('alcohol', 'std'),\n    n=('alcohol', 'count')\n).round(3)\n\n# TODO 2 : Coefficient de variation\nagg['cv'] = (agg['std_alcool'] / agg['moy_alcool'] * 100).round(2)\n\n# TODO 3 : Trouver la classe la plus homogène\nclasse_homo = int(agg['cv'].idxmin())\ncv_min      = float(agg['cv'].min())\n\nout_data   = agg.reset_index()\nout_scalar = cv_min\n"
+        }
+      },
+      "width": 430,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "statsC",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1260,
+        "y": 910
+      },
+      "data": {
+        "label": "Agrégation",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 340,
+      "selected": false
+    },
+    {
+      "id": "dC1",
+      "type": "output_display",
+      "position": {
+        "x": 1700,
+        "y": 910
+      },
+      "data": {
+        "label": "Résultat groupby",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspC",
+      "type": "data_inspector",
+      "position": {
+        "x": 1700,
+        "y": 1130
+      },
+      "data": {
+        "label": "CV min (homogénéité)",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1400
+      },
+      "style": {
+        "width": 1860,
+        "height": 560,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "D — Exercice 2 : Comparaison visuelle par groupe",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 560,
+      "selected": false
+    },
+    {
+      "id": "nD_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 1460
+      },
+      "style": {
+        "width": 540,
+        "height": 460
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_inst",
+        "params": {
+          "text": "EXERCICE 2 — De l'agrégation à la visualisation\n\nObjectif : comparer les 3 espèces d'Iris\nvisuellement ET numériquement.\n\n1. Avec le Python Node, calculez pour\n   chaque espèce la moyenne de toutes\n   les colonnes numériques\n   → df.groupby('target').mean(numeric_only=True)\n\n2. Connectez le résultat au Scatter Plot :\n   Essayez x=sepal length, y=petal length\n\n3. Connectez aussi à la Heatmap de\n   corrélations (ml_corr_heatmap)\n\nQUESTION : Les 3 espèces sont-elles\nlinéairement séparables dans l'espace\ndes features ? Pourquoi ?",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "dsD",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 1470
+      },
+      "data": {
+        "label": "Iris Ex2",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyD",
+      "type": "logic_python",
+      "position": {
+        "x": 770,
+        "y": 1460
+      },
+      "data": {
+        "label": "Python — Moyennes par espèce",
+        "params": {
+          "code": "# TP05 — Exercice 2 : Comparaison par groupe\n# 'a' = DataFrame Iris\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO : Moyenne par espèce pour toutes les colonnes\nmoyennes_par_espece = (\n    a.groupby('target')\n     .mean(numeric_only=True)\n     .round(3)\n     .reset_index()\n)\n\n# Renommer les espèces pour lisibilité\nnoms = {0: 'Setosa', 1: 'Versicolor', 2: 'Virginica'}\nmoyennes_par_espece['espece'] = moyennes_par_espece['target'].map(noms)\n\n# Écart inter-groupes (spread)\nspread = a.groupby('target').mean(numeric_only=True).std()\ncol_plus_discriminante = spread.idxmax()\n\nout_data   = moyennes_par_espece\nout_scalar = float(spread.max())\n"
+        }
+      },
+      "width": 430,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "scatD",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 1260,
+        "y": 1460
+      },
+      "data": {
+        "label": "Scatter espèces",
+        "params": {
+          "x_col": "sepal length (cm)",
+          "y_col": "petal length (cm)",
+          "hue_col": "target"
+        }
+      },
+      "width": 240,
+      "height": 100,
+      "selected": false
+    },
+    {
+      "id": "corrD",
+      "type": "ml_corr_heatmap",
+      "position": {
+        "x": 1260,
+        "y": 1590
+      },
+      "data": {
+        "label": "Corrélations Iris",
+        "params": {}
+      },
+      "width": 240,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "dD1",
+      "type": "output_display",
+      "position": {
+        "x": 1560,
+        "y": 1460
+      },
+      "data": {
+        "label": "Nuage par espèce",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "dD2",
+      "type": "output_display",
+      "position": {
+        "x": 1560,
+        "y": 1690
+      },
+      "data": {
+        "label": "Heatmap corr.",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "eB1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "grp1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB2",
+      "source": "grp1",
+      "sourceHandle": "image__preview",
+      "target": "dB1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "grp2",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB4",
+      "source": "grp2",
+      "sourceHandle": "image__preview",
+      "target": "dB2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC1",
+      "source": "dsC",
+      "sourceHandle": "data__table",
+      "target": "pyC",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eC2",
+      "source": "pyC",
+      "sourceHandle": "data__out_data",
+      "target": "statsC",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eC3",
+      "source": "statsC",
+      "sourceHandle": "image__preview",
+      "target": "dC1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC4",
+      "source": "pyC",
+      "sourceHandle": "scalar__out_scalar",
+      "target": "inspC",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "eD1",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "pyD",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eD2",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "scatD",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD3",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "corrD",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD4",
+      "source": "scatD",
+      "sourceHandle": "image__main",
+      "target": "dD1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eD5",
+      "source": "corrD",
+      "sourceHandle": "image__main",
+      "target": "dD2",
+      "targetHandle": "image__main"
+    }
+  ]
+}

@@ -1,0 +1,667 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -200
+      },
+      "style": {
+        "width": 1860,
+        "height": 72
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TP 01 — Les DataFrames : Charger et Explorer les données",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1860,
+      "height": 72,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -110
+      },
+      "style": {
+        "width": 1860,
+        "height": 430,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "A — Théorie : Qu'est-ce qu'un DataFrame ?",
+          "color_index": 0
+        }
+      },
+      "width": 1860,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 590,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "Un DataFrame est un tableau de données à 2 dimensions.\n\n• Chaque COLONNE = une variable (ex : taille, poids, espèce)\n• Chaque LIGNE    = une observation (ex : une fleur Iris)\n• Chaque cellule  = une valeur scalaire, texte ou NaN\n\nC'est la structure de données centrale de la bibliothèque pandas.\nElle est similaire à une feuille Excel mais manipulable par code.",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 590,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 530,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "Vocabulaire essentiel :\n\ndf.shape      → (nb_lignes, nb_colonnes)\ndf.dtypes     → type de chaque colonne\ndf.columns    → liste des noms de colonnes\ndf.head(n)    → n premières lignes\ndf.tail(n)    → n dernières lignes\ndf.describe() → stats descriptives\ndf.info()     → résumé complet",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 580,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1140,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "Pandas vs Excel :\n\n✓  Millions de lignes sans ralentissement\n✓  Opérations vectorisées (très rapides)\n✓  Filtrage, tri, groupby en une ligne\n✓  Intégration avec scikit-learn, matplotlib\n✓  Reproductible et auditable (code)\n\nDans VNStudio, les DataFrames circulent\nsur les câbles orange entre les nodes.",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 580,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 350
+      },
+      "style": {
+        "width": 1860,
+        "height": 460,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "B — Pipeline de référence : Charger → Inspecter → Visualiser",
+          "color_index": 2
+        }
+      },
+      "width": 1860,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 420
+      },
+      "data": {
+        "label": "Iris Dataset",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "stats1",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 200,
+        "y": 390
+      },
+      "data": {
+        "label": "describe()",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 380,
+      "selected": false
+    },
+    {
+      "id": "d_stats",
+      "type": "output_display",
+      "position": {
+        "x": 640,
+        "y": 400
+      },
+      "data": {
+        "label": "Statistiques",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "hist1",
+      "type": "ml_histogram",
+      "position": {
+        "x": 200,
+        "y": 590
+      },
+      "data": {
+        "label": "Histogramme",
+        "params": {
+          "column": "sepal length (cm)",
+          "hue_col": "target",
+          "kde": true
+        }
+      },
+      "width": 220,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "d_hist",
+      "type": "output_display",
+      "position": {
+        "x": 480,
+        "y": 640
+      },
+      "data": {
+        "label": "Distribution",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "scat1",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 790,
+        "y": 410
+      },
+      "data": {
+        "label": "Scatter",
+        "params": {
+          "x_col": "sepal length (cm)",
+          "y_col": "sepal width (cm)",
+          "hue_col": "target"
+        }
+      },
+      "width": 220,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "d_scat",
+      "type": "output_display",
+      "position": {
+        "x": 1070,
+        "y": 400
+      },
+      "data": {
+        "label": "Nuage de points",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nB_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 1350,
+        "y": 400
+      },
+      "style": {
+        "width": 480,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_tip",
+        "params": {
+          "text": "Comment lire ce pipeline :\n\n1. Le node 'Iris Dataset' charge les données sklearn\n2. Le câble orange transporte le DataFrame\n3. 'describe()' calcule min/max/mean/std\n4. 'Histogramme' montre la distribution\n5. 'Scatter' montre les relations entre colonnes\n\n→ Modifiez les paramètres des nodes\n   pour explorer les autres variables !",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 480,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 840
+      },
+      "style": {
+        "width": 1860,
+        "height": 500,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "C — Exercice 1 : Calculer des statistiques personnalisées",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 500,
+      "selected": false
+    },
+    {
+      "id": "nC_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 900
+      },
+      "style": {
+        "width": 500,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_inst",
+        "params": {
+          "text": "EXERCICE 1\n\nCompléter le Python Node pour :\n\n1. Calculer la moyenne de chaque colonne\n2. Trouver la colonne avec la plus grande\n   variance (variabilité)\n3. Compter les lignes où sepal length > 5.5\n\nINDICES :\n  df.mean(numeric_only=True)\n  df.var(numeric_only=True).idxmax()\n  len(df[df['col'] > valeur])\n\nLe résultat s'affiche dans 'Résultat Exo1'.",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 500,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "pyC",
+      "type": "logic_python",
+      "position": {
+        "x": 450,
+        "y": 890
+      },
+      "data": {
+        "label": "Python — Exo 1",
+        "params": {
+          "code": "# TP01 — Exercice 1 : Statistiques personnalisées\n# 'a' contient le DataFrame Iris\n# ─────────────────────────────────────────────────\n\n# TODO 1 : Calculer la moyenne de chaque colonne\nmoyennes = a.mean(numeric_only=True)\n\n# TODO 2 : Trouver la colonne avec la plus grande variance\ncol_var_max = a.var(numeric_only=True).idxmax()\n\n# TODO 3 : Compter les lignes où sepal length > 5.5\nseuil = 5.5\nn_grand = len(a[a['sepal length (cm)'] > seuil])\n\n# Construction du résumé\nimport pandas as pd\nout_data = pd.DataFrame({\n    'Moyenne': moyennes,\n    'Variance': a.var(numeric_only=True)\n})\nout_scalar = float(n_grand)\n"
+        }
+      },
+      "width": 400,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "statsC",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 910,
+        "y": 890
+      },
+      "data": {
+        "label": "Résultat Exo1",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 360,
+      "selected": false
+    },
+    {
+      "id": "dC1",
+      "type": "output_display",
+      "position": {
+        "x": 1350,
+        "y": 890
+      },
+      "data": {
+        "label": "Stats Exo1",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspC",
+      "type": "data_inspector",
+      "position": {
+        "x": 1350,
+        "y": 1110
+      },
+      "data": {
+        "label": "Lignes > 5.5",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1370
+      },
+      "style": {
+        "width": 1860,
+        "height": 500,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "D — Exercice 2 : Changer de dataset et explorer",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 500,
+      "selected": false
+    },
+    {
+      "id": "nD_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 1430
+      },
+      "style": {
+        "width": 500,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_inst",
+        "params": {
+          "text": "EXERCICE 2\n\nExplorez un autre dataset :\n\n1. Dans le node 'Autre Dataset', changez\n   le paramètre Dataset :\n     0=iris  1=wine  2=breast_cancer\n     3=diabetes  4=digits  5=california\n\n2. Observez comment les stats et les\n   graphiques changent automatiquement\n\n3. Repérez :\n   - Combien de colonnes ?\n   - Y a-t-il des valeurs aberrantes ?\n   - Quelle colonne varie le plus ?\n\n→ Modifiez x_col et y_col dans le Scatter",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 500,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "ds2",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 450,
+        "y": 1440
+      },
+      "data": {
+        "label": "Autre Dataset",
+        "params": {
+          "dataset": 1
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "stats2",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 730,
+        "y": 1420
+      },
+      "data": {
+        "label": "Explorer",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 320,
+      "selected": false
+    },
+    {
+      "id": "dD1",
+      "type": "output_display",
+      "position": {
+        "x": 1170,
+        "y": 1420
+      },
+      "data": {
+        "label": "Aperçu",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "scat2",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 730,
+        "y": 1620
+      },
+      "data": {
+        "label": "Comparer 2 variables",
+        "params": {
+          "x_col": "alcohol",
+          "y_col": "malic_acid",
+          "hue_col": "target"
+        }
+      },
+      "width": 220,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "dD2",
+      "type": "output_display",
+      "position": {
+        "x": 1010,
+        "y": 1640
+      },
+      "data": {
+        "label": "Relation",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nD_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 1350,
+        "y": 1430
+      },
+      "style": {
+        "width": 480,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_tip",
+        "params": {
+          "text": "PISTE DE RÉFLEXION\n\nAprès avoir changé de dataset :\n\n• Pourquoi certains datasets ont plus\n  de colonnes que d'autres ?\n\n• Est-ce que la distribution change\n  beaucoup d'un dataset à l'autre ?\n\n• Que se passe-t-il si vous mettez\n  une colonne inexistante dans Scatter ?\n\nNotez vos observations dans une note\nVNStudio (bouton Note dans la toolbar).",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 480,
+      "height": 400,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "eB1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "stats1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB2",
+      "source": "stats1",
+      "sourceHandle": "image__preview",
+      "target": "d_stats",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "hist1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB4",
+      "source": "hist1",
+      "sourceHandle": "image__main",
+      "target": "d_hist",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB5",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "scat1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB6",
+      "source": "scat1",
+      "sourceHandle": "image__main",
+      "target": "d_scat",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "pyC",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eC2",
+      "source": "pyC",
+      "sourceHandle": "data__out_data",
+      "target": "statsC",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eC3",
+      "source": "statsC",
+      "sourceHandle": "image__preview",
+      "target": "dC1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC4",
+      "source": "pyC",
+      "sourceHandle": "scalar__out_scalar",
+      "target": "inspC",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "eD1",
+      "source": "ds2",
+      "sourceHandle": "data__table",
+      "target": "stats2",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD2",
+      "source": "stats2",
+      "sourceHandle": "image__preview",
+      "target": "dD1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eD3",
+      "source": "ds2",
+      "sourceHandle": "data__table",
+      "target": "scat2",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD4",
+      "source": "scat2",
+      "sourceHandle": "image__main",
+      "target": "dD2",
+      "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "visualizedNodeId": "d_stats"
+  }
+}

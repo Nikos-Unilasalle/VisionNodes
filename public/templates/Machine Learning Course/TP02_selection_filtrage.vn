@@ -1,0 +1,657 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -200
+      },
+      "style": {
+        "width": 1860,
+        "height": 72
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TP 02 — Sélection et Filtrage des données",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1860,
+      "height": 72,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -110
+      },
+      "style": {
+        "width": 1860,
+        "height": 430,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "A — Théorie : Sélectionner et Filtrer",
+          "color_index": 0
+        }
+      },
+      "width": 1860,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 590,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "Sélectionner des colonnes :\n\ndf['col']         → une colonne (Series)\ndf[['c1','c2']]   → plusieurs colonnes\ndf.loc[:, 'c']    → par nom de colonne\ndf.iloc[:, 0]     → par index numérique\n\nSélectionner des lignes :\n\ndf.loc[5]         → ligne index 5\ndf.iloc[5]        → ligne position 5\ndf.loc[2:8]       → lignes 2 à 8",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 590,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 530,
+        "y": -60
+      },
+      "style": {
+        "width": 590,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "Filtrer par condition booléenne :\n\nmasque = df['age'] > 30\nfiltre = df[masque]\n\n# En une ligne :\ndf[df['age'] > 30]\n\nConditions multiples :\n\ndf[(c1) & (c2)]   # ET\ndf[(c1) | (c2)]   # OU\ndf[~(c1)]         # NON\n\ndf.query('age > 30 and ville == \"Paris\"')",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 590,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1150,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "Node DF Filter vs Python Node :\n\nDF Filter (node orange) :\n✓ Interface graphique simple\n✓ Parfait pour une seule condition\n✓ Aperçu instantané\n\nPython Node :\n✓ Conditions complexes\n✓ Transformations avancées\n✓ Plusieurs opérations enchaînées\n\n→ Combinez les deux pour\n   des pipelines puissants !",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 580,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 350
+      },
+      "style": {
+        "width": 1860,
+        "height": 460,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "B — Référence : Pipeline Charger → Filtrer → Afficher",
+          "color_index": 2
+        }
+      },
+      "width": 1860,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 420
+      },
+      "data": {
+        "label": "Wine Dataset",
+        "params": {
+          "dataset": 1
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "filt1",
+      "type": "ml_df_filter",
+      "position": {
+        "x": 200,
+        "y": 400
+      },
+      "data": {
+        "label": "Filtre Alcool",
+        "params": {
+          "enabled": true,
+          "column": "alcohol",
+          "operator": 0,
+          "value": "13.0",
+          "dropna": false
+        }
+      },
+      "width": 300,
+      "height": 280,
+      "selected": false
+    },
+    {
+      "id": "dF1",
+      "type": "output_display",
+      "position": {
+        "x": 560,
+        "y": 400
+      },
+      "data": {
+        "label": "Aperçu filtré",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "sel1",
+      "type": "df_select",
+      "position": {
+        "x": 200,
+        "y": 600
+      },
+      "data": {
+        "label": "Sélection colonnes",
+        "params": {
+          "columns": "alcohol,malic_acid,ash,target"
+        }
+      },
+      "width": 300,
+      "height": 180,
+      "selected": false
+    },
+    {
+      "id": "dF2",
+      "type": "output_display",
+      "position": {
+        "x": 560,
+        "y": 620
+      },
+      "data": {
+        "label": "Colonnes sélectionnées",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "sort1",
+      "type": "df_sort",
+      "position": {
+        "x": 870,
+        "y": 420
+      },
+      "data": {
+        "label": "Trier",
+        "params": {
+          "by": "alcohol",
+          "ascending": false
+        }
+      },
+      "width": 280,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "dF3",
+      "type": "output_display",
+      "position": {
+        "x": 1210,
+        "y": 420
+      },
+      "data": {
+        "label": "Trié par alcool",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nB_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 1500,
+        "y": 400
+      },
+      "style": {
+        "width": 350,
+        "height": 370
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_tip",
+        "params": {
+          "text": "Essayez :\n\n1. Changer la valeur du filtre\n   (ex: 12.5, 14.0...)\n\n2. Changer l'opérateur :\n   > >= < <= == !=\n\n3. Dans 'Sélection colonnes',\n   modifiez la liste de colonnes\n\n4. Trier par une autre colonne",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 350,
+      "height": 370,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 840
+      },
+      "style": {
+        "width": 1860,
+        "height": 500,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "C — Exercice 1 : Filtrage simple avec DF Filter",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 500,
+      "selected": false
+    },
+    {
+      "id": "nC_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 900
+      },
+      "style": {
+        "width": 520,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_inst",
+        "params": {
+          "text": "EXERCICE 1 — Filtrage guidé\n\nObjectif : extraire les vins de haute qualité\n\nÉtapes :\n1. Connectez 'Iris Dataset Ex1' au node\n   'Filtre Guidé'\n\n2. Dans 'Filtre Guidé', configurez :\n   • Column    : sepal length (cm)\n   • Operator  : > (greater)\n   • Value     : 6.0\n\n3. Ajoutez un 2e DF Filter pour aussi\n   filtrer petal width (cm) > 1.5\n\n4. Combien de fleurs restent-il ?\n   → Observez le compteur 'Lignes'",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 520,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "dsC",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 470,
+        "y": 910
+      },
+      "data": {
+        "label": "Iris Dataset Ex1",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "filtC",
+      "type": "ml_df_filter",
+      "position": {
+        "x": 750,
+        "y": 890
+      },
+      "data": {
+        "label": "Filtre Guidé",
+        "params": {
+          "enabled": true,
+          "column": "sepal length (cm)",
+          "operator": 2,
+          "value": "6.0"
+        }
+      },
+      "width": 300,
+      "height": 280,
+      "selected": false
+    },
+    {
+      "id": "dC1",
+      "type": "output_display",
+      "position": {
+        "x": 1110,
+        "y": 890
+      },
+      "data": {
+        "label": "Résultat Ex1",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspC1",
+      "type": "data_inspector",
+      "position": {
+        "x": 1110,
+        "y": 1110
+      },
+      "data": {
+        "label": "Nombre de lignes",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    },
+    {
+      "id": "nC_tip",
+      "type": "canvas_note",
+      "position": {
+        "x": 1400,
+        "y": 900
+      },
+      "style": {
+        "width": 420,
+        "height": 380
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_tip",
+        "params": {
+          "text": "RÉFLEXION\n\nAvec le filtre sepal length > 6 :\n• Quelle proportion du dataset reste ?\n• Sont-elles toutes de la même espèce ?\n\nTestez :\n→ Remplacez > par < : qu'obtient-on ?\n→ Que se passe-t-il avec == 6.0 ?\n→ Peut-on filtrer sur 'target' (int) ?\n\nChaînez deux DF Filter pour combiner\ndeux conditions (ET logique).",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 420,
+      "height": 380,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1370
+      },
+      "style": {
+        "width": 1860,
+        "height": 530,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "D — Exercice 2 : Filtrage avancé avec Python Node",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 530,
+      "selected": false
+    },
+    {
+      "id": "nD_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 1430
+      },
+      "style": {
+        "width": 540,
+        "height": 430
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_inst",
+        "params": {
+          "text": "EXERCICE 2 — Filtrage avancé (Python)\n\nComplétez le Python Node pour :\n\n1. Garder uniquement les iris de\n   l'espèce 'Versicolor' (target == 1)\n\n2. Parmi ces iris, garder seulement\n   ceux dont sepal length est\n   dans le premier quartile Q1\n   INDICE : df.quantile(0.25)\n\n3. Calculer la moyenne de petal length\n   sur ce sous-ensemble\n\nRésultats attendus :\n  out_data   = DataFrame filtré\n  out_scalar = moyenne petal length",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "dsD",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 500,
+        "y": 1440
+      },
+      "data": {
+        "label": "Iris Dataset Ex2",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyD",
+      "type": "logic_python",
+      "position": {
+        "x": 780,
+        "y": 1430
+      },
+      "data": {
+        "label": "Python — Filtrage avancé",
+        "params": {
+          "code": "# TP02 — Exercice 2 : Filtrage avancé\n# 'a' contient le DataFrame Iris complet\n# ─────────────────────────────────────────\n\n# TODO 1 : Garder uniquement l'espèce Versicolor (target == 1)\nversicolor = a[a['target'] == 1]\n\n# TODO 2 : Calculer Q1 de sepal length\nq1 = versicolor['sepal length (cm)'].quantile(0.25)\n\n# Garder les iris sous le Q1\nsous_q1 = versicolor[versicolor['sepal length (cm)'] <= q1]\n\n# TODO 3 : Calculer la moyenne de petal length\nmoy_petal = sous_q1['petal length (cm)'].mean()\n\nout_data = sous_q1\nout_scalar = float(moy_petal) if not __import__('math').isnan(moy_petal) else 0.0\n"
+        }
+      },
+      "width": 420,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "statsD",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1260,
+        "y": 1430
+      },
+      "data": {
+        "label": "Stats résultat",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 340,
+      "selected": false
+    },
+    {
+      "id": "dD1",
+      "type": "output_display",
+      "position": {
+        "x": 1700,
+        "y": 1430
+      },
+      "data": {
+        "label": "Filtré avancé",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspD",
+      "type": "data_inspector",
+      "position": {
+        "x": 1700,
+        "y": 1650
+      },
+      "data": {
+        "label": "Moy. petal length",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "eB1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "filt1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB2",
+      "source": "filt1",
+      "sourceHandle": "image__preview",
+      "target": "dF1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "sel1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB4",
+      "source": "sel1",
+      "sourceHandle": "image__preview",
+      "target": "dF2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB5",
+      "source": "filt1",
+      "sourceHandle": "data__table",
+      "target": "sort1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB6",
+      "source": "sort1",
+      "sourceHandle": "image__preview",
+      "target": "dF3",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC1",
+      "source": "dsC",
+      "sourceHandle": "data__table",
+      "target": "filtC",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eC2",
+      "source": "filtC",
+      "sourceHandle": "image__preview",
+      "target": "dC1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC3",
+      "source": "filtC",
+      "sourceHandle": "scalar__row_count",
+      "target": "inspC1",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "eD1",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "pyD",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eD2",
+      "source": "pyD",
+      "sourceHandle": "data__out_data",
+      "target": "statsD",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD3",
+      "source": "statsD",
+      "sourceHandle": "image__preview",
+      "target": "dD1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eD4",
+      "source": "pyD",
+      "sourceHandle": "scalar__out_scalar",
+      "target": "inspD",
+      "targetHandle": "any__data"
+    }
+  ]
+}

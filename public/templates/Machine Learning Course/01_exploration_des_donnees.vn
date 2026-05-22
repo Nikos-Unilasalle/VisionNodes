@@ -1,19 +1,256 @@
 {
   "nodes": [
-    { "id": "ds",    "type": "ml_sklearn_dataset", "position": { "x": 50,  "y": 280 }, "data": { "label": "Iris Dataset", "params": { "dataset": 0 } } },
-    { "id": "stats", "type": "ml_df_stats",         "position": { "x": 360, "y": 60  }, "data": { "label": "Statistiques", "params": { "mode": 0 } } },
-    { "id": "scat",  "type": "ml_scatter_plot",     "position": { "x": 360, "y": 310 }, "data": { "label": "Scatter Plot", "params": { "x_col": "sepal length (cm)", "y_col": "sepal width (cm)", "hue_col": "target" } } },
-    { "id": "hist",  "type": "ml_histogram",        "position": { "x": 360, "y": 560 }, "data": { "label": "Histogram",   "params": { "column": "sepal length (cm)", "hue_col": "target", "kde": true } } },
-    { "id": "d1",    "type": "output_display",      "position": { "x": 700, "y": 60  }, "data": { "label": "Stats",       "params": {} } },
-    { "id": "d2",    "type": "output_display",      "position": { "x": 700, "y": 310 }, "data": { "label": "Scatter",     "params": {} } },
-    { "id": "d3",    "type": "output_display",      "position": { "x": 700, "y": 560 }, "data": { "label": "Histogram",   "params": {} } }
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -40,
+        "y": 60
+      },
+      "data": {
+        "label": "Iris Dataset",
+        "params": {
+          "dataset": 1
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -40,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "stats",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 320,
+        "y": -40
+      },
+      "data": {
+        "label": "Statistiques",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 288,
+      "height": 249,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 320,
+        "y": -40
+      }
+    },
+    {
+      "id": "scat",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 360,
+        "y": 310
+      },
+      "data": {
+        "label": "Scatter Plot",
+        "params": {
+          "x_col": "sepal length (cm)",
+          "y_col": "sepal width (cm)",
+          "hue_col": "target"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "hist",
+      "type": "ml_histogram",
+      "position": {
+        "x": 360,
+        "y": 560
+      },
+      "data": {
+        "label": "Histogram",
+        "params": {
+          "column": "sepal length (cm)",
+          "hue_col": "target",
+          "kde": true
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "d1",
+      "type": "output_display",
+      "position": {
+        "x": 1040,
+        "y": -20
+      },
+      "data": {
+        "label": "Stats",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1040,
+        "y": -20
+      },
+      "dragging": false
+    },
+    {
+      "id": "d2",
+      "type": "output_display",
+      "position": {
+        "x": 700,
+        "y": 310
+      },
+      "data": {
+        "label": "Scatter",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "d3",
+      "type": "output_display",
+      "position": {
+        "x": 700,
+        "y": 560
+      },
+      "data": {
+        "label": "Histogram",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "node-1779284810390-v1eg9jx8g",
+      "type": "logic_python",
+      "position": {
+        "x": 1000,
+        "y": 180
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# Logic here\n# Inputs: a, b, c, d\n# State persistant entre frames: state['my_var']\n# Outputs: out_main, out_scalar, out_list, \n\nidx_max = a.iloc[:, 1].idxmax()\nidx_min = a.iloc[:, 1].idxmin()\n\nligne_max = a.loc[idx_max]\nligne_min = a.loc[idx_min]\n\n\nout_any = a.loc[[idx_max, idx_min]]\n\n"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1000,
+        "y": 180
+      }
+    },
+    {
+      "id": "node-1779284907177-0.8871629408680597",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1340,
+        "y": 180
+      },
+      "data": {
+        "label": "Statistiques",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 608,
+      "height": 330,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1340,
+        "y": 180
+      }
+    }
   ],
   "edges": [
-    { "id": "e1", "source": "ds",   "sourceHandle": "data__table",   "target": "stats", "targetHandle": "data__table" },
-    { "id": "e2", "source": "ds",   "sourceHandle": "data__table",   "target": "scat",  "targetHandle": "data__table" },
-    { "id": "e3", "source": "ds",   "sourceHandle": "data__table",   "target": "hist",  "targetHandle": "data__table" },
-    { "id": "e4", "source": "stats","sourceHandle": "image__preview", "target": "d1",   "targetHandle": "image__main" },
-    { "id": "e5", "source": "scat", "sourceHandle": "image__main",   "target": "d2",   "targetHandle": "image__main" },
-    { "id": "e6", "source": "hist", "sourceHandle": "image__main",   "target": "d3",   "targetHandle": "image__main" }
-  ]
+    {
+      "id": "e1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "stats",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e2",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "scat",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "hist",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e4",
+      "source": "stats",
+      "sourceHandle": "image__preview",
+      "target": "d1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e5",
+      "source": "scat",
+      "sourceHandle": "image__main",
+      "target": "d2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e6",
+      "source": "hist",
+      "sourceHandle": "image__main",
+      "target": "d3",
+      "targetHandle": "image__main"
+    },
+    {
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "node-1779284810390-v1eg9jx8g",
+      "targetHandle": "any__a",
+      "id": "e-1779284818160"
+    },
+    {
+      "source": "node-1779284810390-v1eg9jx8g",
+      "sourceHandle": "any__out_any",
+      "target": "node-1779284907177-0.8871629408680597",
+      "targetHandle": "data__table",
+      "id": "e-1779284911299"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 899.0546875,
+      "h": 562
+    },
+    "previewPos": {
+      "x": 279.390625,
+      "y": -28.71484375
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "d1"
+  }
 }

@@ -160,7 +160,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'tutorials', label: 'Tutorials' },
   { id: 'community', label: 'Share'     },
   { id: 'download',  label: 'Download'  },
-  { id: 'marketplace', label: 'Marketplace' },
+  // { id: 'marketplace', label: 'Marketplace' },
 ];
 
 const SubNav = ({ activeTab, setActiveTab }: { activeTab: Tab; setActiveTab: (t: Tab) => void }) => {

@@ -5,6 +5,7 @@ All nodes accept/output 'data' color handles (orange).
 """
 import os
 import numpy as np
+import cv2
 from registry import vision_node, NodeProcessor, send_notification
 
 _NOTIF = 'df_nodes'
@@ -24,8 +25,46 @@ def _check_pd(node_name: str) -> bool:
     return True
 
 
+def _df_meta(df) -> dict:
+    r, c = df.shape
+    head_df = df.head(8)
+    return {
+        'shape':   [r, c],
+        'columns': [str(col) for col in df.columns],
+        'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
+        'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
+        'head':    [{str(k): (None if (isinstance(v, float) and v != v) else (
+                        int(v) if hasattr(v, 'item') and isinstance(v, (int,)) else
+                        float(v) if isinstance(v, float) else str(v)
+                    )) for k, v in row.items()}
+                   for _, row in head_df.iterrows()],
+    }
+
+
+def _render_text_panel(text: str, w: int, h: int, title: str = '') -> np.ndarray:
+    img = np.full((h, w, 3), 22, dtype=np.uint8)
+    cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
+    cv2.putText(img, title, (8, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 200), 1, cv2.LINE_AA)
+    cv2.line(img, (0, 26), (w, 26), (80, 80, 80), 1)
+    x0, y0, line_h = 8, 44, 15
+    for i, line in enumerate(text.split('\n')[:(h - y0) // line_h]):
+        color = (140, 200, 255) if i == 0 else (185, 185, 185)
+        cv2.putText(img, line[:100], (x0, y0 + i * line_h),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.36, color, 1, cv2.LINE_AA)
+    return img
+
+
+def _render_df_head(df, w: int, h: int, title: str = '') -> np.ndarray:
+    MAX_R, MAX_C = 8, 7
+    sub   = df.iloc[:MAX_R, :MAX_C]
+    col_w = 13
+    header = ' | '.join(str(c)[:col_w].ljust(col_w) for c in sub.columns)
+    sep    = '-' * len(header)
+    rows   = [' | '.join(str(v)[:col_w].ljust(col_w) for v in row) for _, row in sub.iterrows()]
+    return _render_text_panel('\n'.join([header, sep] + rows), w, h, title=title)
+
+
 def _meta_and_preview(df, w: int = 420, h: int = 200, title: str = '') -> dict:
-    from ml_data_nodes import _df_meta, _render_df_head
     try:
         meta    = _df_meta(df)
         preview = _render_df_head(df, w, h, title=title)

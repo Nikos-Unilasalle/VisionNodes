@@ -1,0 +1,581 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -200
+      },
+      "style": {
+        "width": 1860,
+        "height": 72
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TP 04 — Transformation : Nouvelles colonnes, normalisation, encodage",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1860,
+      "height": 72,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -110
+      },
+      "style": {
+        "width": 1860,
+        "height": 430,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "A — Théorie : Transformer les données",
+          "color_index": 0
+        }
+      },
+      "width": 1860,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "Créer une nouvelle colonne :\n\ndf['nouvelle'] = df['a'] + df['b']\ndf['ratio']    = df['a'] / df['b']\ndf.assign(col=lambda x: x['a']*2)\n\nTransformer avec apply :\n\ndf['col'] = df['col'].apply(f)\ndf['col'] = df['col'].map({'a':1, 'b':2})\n\nArrondir / caster :\ndf['col'].round(2)\ndf['col'].astype(int)",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 500,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "Normalisation (indispensable pour ML) :\n\nMin-Max (0 → 1) :\nx_norm = (x - x.min()) / (x.max() - x.min())\n\nZ-score (mean=0, std=1) :\nx_std  = (x - x.mean()) / x.std()\n\nPourquoi normaliser ?\n• KNN, SVM sensibles à l'échelle\n• Gradient descent converge plus vite\n• Comparaison équitable entre colonnes",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1090,
+        "y": -60
+      },
+      "style": {
+        "width": 560,
+        "height": 350
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "Encodage des catégories :\n\nLabel encoding (ordinal) :\ndf['col'] = df['col'].astype('category').cat.codes\n\nOne-Hot encoding :\npd.get_dummies(df, columns=['col'])\n\nDiscrétisation continue → catégorie :\npd.cut(df['age'], bins=[0,18,65,120],\n       labels=['jeune','adulte','senior'])\n\n→ Attention aux fuites de données !",
+          "bg_color": "#ffe4e6",
+          "text_color": "#9f1239"
+        }
+      },
+      "width": 560,
+      "height": 350,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 350
+      },
+      "style": {
+        "width": 1860,
+        "height": 460,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "B — Référence : Pipeline de transformation",
+          "color_index": 2
+        }
+      },
+      "width": 1860,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 420
+      },
+      "data": {
+        "label": "Iris Dataset",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "newcol1",
+      "type": "df_new_col",
+      "position": {
+        "x": 200,
+        "y": 400
+      },
+      "data": {
+        "label": "Ratio pétale/sépale",
+        "params": {
+          "col_name": "ratio_petale_sepale",
+          "expression": "petal length (cm) / sepal length (cm)",
+          "col_type": 0
+        }
+      },
+      "width": 300,
+      "height": 220,
+      "selected": false
+    },
+    {
+      "id": "dB1",
+      "type": "output_display",
+      "position": {
+        "x": 560,
+        "y": 400
+      },
+      "data": {
+        "label": "Nouvelle colonne",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "rename1",
+      "type": "df_rename",
+      "position": {
+        "x": 200,
+        "y": 590
+      },
+      "data": {
+        "label": "Renommer",
+        "params": {
+          "mapping": "sepal length (cm):long_sepale, petal length (cm):long_petale"
+        }
+      },
+      "width": 300,
+      "height": 180,
+      "selected": false
+    },
+    {
+      "id": "dB2",
+      "type": "output_display",
+      "position": {
+        "x": 560,
+        "y": 600
+      },
+      "data": {
+        "label": "Renommé",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "nB_ref",
+      "type": "canvas_note",
+      "position": {
+        "x": 870,
+        "y": 390
+      },
+      "style": {
+        "width": 840,
+        "height": 380
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_ref",
+        "params": {
+          "text": "Ce pipeline illustre :\n\n1. 'Ratio pétale/sépale' : nouvelle colonne\n   calculée = long_petale / long_sepale\n   Utile pour capturer des proportions\n\n2. 'Renommer' : noms de colonnes plus courts\n   Plus pratique pour le code Python ensuite\n\nModifiez l'expression mathématique :\npetal length * 10  (conversion mm)\nsepal length - petal length  (différence)",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 840,
+      "height": 380,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 840
+      },
+      "style": {
+        "width": 1860,
+        "height": 530,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "C — Exercice 1 : Normalisation Min-Max et Z-score",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 530,
+      "selected": false
+    },
+    {
+      "id": "nC_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 900
+      },
+      "style": {
+        "width": 540,
+        "height": 430
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC_inst",
+        "params": {
+          "text": "EXERCICE 1 — Normalisation\n\nImplémentez les deux normalisations :\n\n1. Min-Max (ramène entre 0 et 1)\n   x_norm = (x - min) / (max - min)\n\n2. Z-score (mean=0, std=1)\n   x_std = (x - mean) / std\n\nAppliquez sur TOUTES les colonnes\nnumériques (sauf 'target').\n\nRésultats :\nout_data   = df normalisé (Min-Max)\nout_scalar = écart-type moyen après norm.\n\nVérifiez que Min-Max donne bien [0,1] !",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "dsC",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 920
+      },
+      "data": {
+        "label": "Iris Ex1",
+        "params": {
+          "dataset": 0
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyC",
+      "type": "logic_python",
+      "position": {
+        "x": 770,
+        "y": 910
+      },
+      "data": {
+        "label": "Python — Normalisation",
+        "params": {
+          "code": "# TP04 — Exercice 1 : Normalisation\n# 'a' = DataFrame Iris\n# ─────────────────────────────────────\n\nimport pandas as pd\n\ncols_num = [c for c in a.columns if c != 'target']\n\n# TODO 1 : Normalisation Min-Max\ndf_minmax = a.copy()\nfor col in cols_num:\n    mn = a[col].min()\n    mx = a[col].max()\n    df_minmax[col] = (a[col] - mn) / (mx - mn)\n\n# TODO 2 : Normalisation Z-score (pour comparaison)\ndf_zscore = a.copy()\nfor col in cols_num:\n    df_zscore[col] = (a[col] - a[col].mean()) / a[col].std()\n\n# Vérification : min et max du df normalisé Min-Max\nassert df_minmax[cols_num].min().min() >= -0.001\nassert df_minmax[cols_num].max().max() <=  1.001\n\nout_data   = df_minmax\nout_scalar = float(df_zscore[cols_num].std().mean())\n"
+        }
+      },
+      "width": 430,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "statsC",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1260,
+        "y": 910
+      },
+      "data": {
+        "label": "Stats normalisé",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 340,
+      "selected": false
+    },
+    {
+      "id": "dC1",
+      "type": "output_display",
+      "position": {
+        "x": 1700,
+        "y": 910
+      },
+      "data": {
+        "label": "Valeurs [0,1]",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    },
+    {
+      "id": "inspC",
+      "type": "data_inspector",
+      "position": {
+        "x": 1700,
+        "y": 1130
+      },
+      "data": {
+        "label": "Std moyen",
+        "params": {}
+      },
+      "width": 220,
+      "height": 160,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1400
+      },
+      "style": {
+        "width": 1860,
+        "height": 530,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "D — Exercice 2 : Discrétisation et Feature Engineering",
+          "color_index": 4
+        }
+      },
+      "width": 1860,
+      "height": 530,
+      "selected": false
+    },
+    {
+      "id": "nD_inst",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 1460
+      },
+      "style": {
+        "width": 540,
+        "height": 430
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD_inst",
+        "params": {
+          "text": "EXERCICE 2 — Feature Engineering\n\nCréez 3 nouvelles features pour le dataset Wine :\n\n1. 'qualite' : catégorie basée sur l'alcool\n   alcool < 12  → 'faible'\n   alcool 12-13 → 'moyen'\n   alcool > 13  → 'élevé'\n   INDICE : pd.cut()\n\n2. 'ratio_mg_ca' : ratio magnésium/calcium\n   (si présent dans le dataset)\n\n3. 'alcool_carre' : alcool au carré\n   (feature non-linéaire)\n\nout_data = df enrichi avec les 3 colonnes",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 540,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "dsD",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 490,
+        "y": 1470
+      },
+      "data": {
+        "label": "Wine Ex2",
+        "params": {
+          "dataset": 1
+        }
+      },
+      "width": 220,
+      "height": 153,
+      "selected": false
+    },
+    {
+      "id": "pyD",
+      "type": "logic_python",
+      "position": {
+        "x": 770,
+        "y": 1460
+      },
+      "data": {
+        "label": "Python — Feature Eng.",
+        "params": {
+          "code": "# TP04 — Exercice 2 : Feature Engineering\n# 'a' = DataFrame Wine\n# ─────────────────────────────────────────\n\nimport pandas as pd, numpy as np\n\ndf = a.copy()\n\n# TODO 1 : Catégoriser l'alcool\ndf['qualite'] = pd.cut(\n    df['alcohol'],\n    bins=[0, 12, 13, 20],\n    labels=['faible', 'moyen', 'eleve']\n).astype(str)\n\n# TODO 2 : Ratio magnesium / ash\ndf['ratio_mg_ash'] = (df['magnesium'] / df['ash']).round(3)\n\n# TODO 3 : Feature non-linéaire\ndf['alcool_carre'] = (df['alcohol'] ** 2).round(4)\n\n# Vérification\nnouvelles = ['qualite', 'ratio_mg_ash', 'alcool_carre']\nout_data   = df[nouvelles + ['alcohol', 'target']]\nout_scalar = float(df['alcool_carre'].mean())\n"
+        }
+      },
+      "width": 430,
+      "height": 430,
+      "selected": false
+    },
+    {
+      "id": "statsD",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 1260,
+        "y": 1460
+      },
+      "data": {
+        "label": "Features enrichies",
+        "params": {
+          "mode": 0
+        }
+      },
+      "width": 380,
+      "height": 340,
+      "selected": false
+    },
+    {
+      "id": "dD1",
+      "type": "output_display",
+      "position": {
+        "x": 1700,
+        "y": 1460
+      },
+      "data": {
+        "label": "Nouvelles features",
+        "params": {
+          "mainConnected": true
+        }
+      },
+      "width": 240,
+      "height": 200,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "eB1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "newcol1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB2",
+      "source": "newcol1",
+      "sourceHandle": "image__preview",
+      "target": "dB1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eB3",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "rename1",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eB4",
+      "source": "rename1",
+      "sourceHandle": "image__preview",
+      "target": "dB2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC1",
+      "source": "dsC",
+      "sourceHandle": "data__table",
+      "target": "pyC",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eC2",
+      "source": "pyC",
+      "sourceHandle": "data__out_data",
+      "target": "statsC",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eC3",
+      "source": "statsC",
+      "sourceHandle": "image__preview",
+      "target": "dC1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "eC4",
+      "source": "pyC",
+      "sourceHandle": "scalar__out_scalar",
+      "target": "inspC",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "eD1",
+      "source": "dsD",
+      "sourceHandle": "data__table",
+      "target": "pyD",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "eD2",
+      "source": "pyD",
+      "sourceHandle": "data__out_data",
+      "target": "statsD",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "eD3",
+      "source": "statsD",
+      "sourceHandle": "image__preview",
+      "target": "dD1",
+      "targetHandle": "image__main"
+    }
+  ]
+}
