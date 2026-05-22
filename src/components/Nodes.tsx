@@ -22,6 +22,9 @@ import {
   BarChart, Bar, Cell, LineChart, Line, CartesianGrid, ReferenceLine,
   ComposedChart,
 } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { MarkdownToolbar } from './MarkdownToolbar';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8', markers: '#f59e0b', regions: '#2dd4bf', contours: '#a3e635', coords: '#fb7185', points: '#e879f9', vectors: '#38bdf8' };
 
@@ -2303,12 +2306,12 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
   return (
     <div
-      className="w-full overflow-hidden transition-all duration-200"
+      className="flex-1 w-full h-full flex flex-col overflow-hidden transition-all duration-200"
       style={{
         background: bgColor,
         borderRadius: '5px 5px 0 0',
         transform: `rotate(${rotation}deg)`,
-        height: isMinified ? 22 : undefined,
+        height: isMinified ? 22 : '100%',
         boxShadow: selected
           ? `5px 8px 24px rgba(0,0,0,0.38), 2px 3px 8px rgba(0,0,0,0.22), 0 0 0 2px rgba(0,0,0,0.25)`
           : `4px 6px 18px rgba(0,0,0,0.28), 2px 3px 6px rgba(0,0,0,0.16)`,
@@ -2333,34 +2336,45 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
       {!isMinified && (
         editing ? (
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={e => data.onChangeParams?.({ text: e.target.value })}
-            onBlur={() => setEditing(false)}
-            onKeyDown={e => {
-              if (e.key === 'Escape') setEditing(false);
-              e.stopPropagation();
-            }}
-            className="nodrag nopan w-full bg-transparent border-none outline-none resize-none px-3 py-2 leading-relaxed"
-            style={{ color: textColor, fontSize: 13, fontFamily: 'inherit', fontWeight: 400, caretColor: textColor, height: 'calc(100% - 26px)' }}
-            placeholder="Write your note here..."
-          />
+          <div className="flex-1 flex flex-col min-h-0 w-full h-full bg-black/10">
+            <MarkdownToolbar 
+              textareaRef={textareaRef} 
+              value={text} 
+              onChange={(val) => data.onChangeParams?.({ text: val })} 
+            />
+            <textarea
+              ref={textareaRef}
+              value={text}
+              onChange={e => data.onChangeParams?.({ text: e.target.value })}
+              onBlur={() => setEditing(false)}
+              onKeyDown={e => {
+                if (e.key === 'Escape') setEditing(false);
+                e.stopPropagation();
+              }}
+              className="nodrag nopan flex-1 w-full bg-transparent border-none outline-none resize-none px-3 py-2 leading-relaxed"
+              style={{ color: textColor, fontSize: 13, fontFamily: 'inherit', fontWeight: 400, caretColor: textColor }}
+              placeholder="Write your note here (Markdown supported)..."
+            />
+          </div>
         ) : (
           <div
-            className="px-3 py-2 overflow-hidden select-none cursor-text"
+            className="flex-1 nodrag px-3 py-2 overflow-y-auto select-none cursor-text markdown-body"
             style={{
               color: text ? textColor : `${textColor}55`,
               fontSize: 13,
               fontWeight: 400,
               lineHeight: '1.65',
-              whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
               fontStyle: text ? 'normal' : 'italic',
-              height: 'calc(100% - 26px)',
             }}
           >
-            {text || 'Double-click to edit…'}
+            {text ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {text}
+              </ReactMarkdown>
+            ) : (
+              'Double-click to edit…'
+            )}
           </div>
         )
       )}

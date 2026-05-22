@@ -11,7 +11,7 @@ export const withNodeResizer = (
   const isMinified = !!(data as any)?.minified;
   const isCollapsed = !!(data as any)?.params?.collapsed;
   return (
-    <div className="w-full" style={{ minWidth: (isMinified || isCollapsed) ? undefined : minWidth, minHeight: (isMinified || isCollapsed) ? undefined : minHeight, height: isMinified ? 22 : '100%', position: 'relative' }}>
+    <div className="w-full h-full flex flex-col" style={{ minWidth: (isMinified || isCollapsed) ? undefined : minWidth, minHeight: (isMinified || isCollapsed) ? undefined : minHeight, height: isMinified ? 22 : '100%', position: 'relative' }}>
       <NodeResizer
         isVisible={selected && !isMinified && !(data as any)?.params?.collapsed}
         minWidth={minWidth}

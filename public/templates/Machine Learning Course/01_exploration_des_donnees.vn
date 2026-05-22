@@ -8,9 +8,10 @@
         "y": 60
       },
       "data": {
-        "label": "Iris Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 1
+          "dataset": 1,
+          "node_note": "Iris Dataset"
         }
       },
       "width": 208,
@@ -30,9 +31,10 @@
         "y": -40
       },
       "data": {
-        "label": "Statistiques",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Statistiques"
         }
       },
       "width": 288,
@@ -72,11 +74,12 @@
         "y": 560
       },
       "data": {
-        "label": "Histogram",
+        "label": "ML Histogram",
         "params": {
           "column": "sepal length (cm)",
           "hue_col": "target",
-          "kde": true
+          "kde": true,
+          "node_note": "Histogram"
         }
       },
       "width": 208,
@@ -91,8 +94,10 @@
         "y": -20
       },
       "data": {
-        "label": "Stats",
-        "params": {},
+        "label": "Display",
+        "params": {
+          "node_note": "Stats"
+        },
         "mainConnected": true
       },
       "width": 208,
@@ -112,8 +117,10 @@
         "y": 310
       },
       "data": {
-        "label": "Scatter",
-        "params": {},
+        "label": "Display",
+        "params": {
+          "node_note": "Scatter"
+        },
         "mainConnected": true
       },
       "width": 208,
@@ -129,8 +136,10 @@
         "y": 560
       },
       "data": {
-        "label": "Histogram",
-        "params": {},
+        "label": "Display",
+        "params": {
+          "node_note": "Histogram"
+        },
         "mainConnected": true
       },
       "width": 208,
@@ -168,9 +177,10 @@
         "y": 180
       },
       "data": {
-        "label": "Statistiques",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Statistiques"
         }
       },
       "width": 608,

@@ -150,9 +150,10 @@
         "y": 420
       },
       "data": {
-        "label": "Iris Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Dataset"
         }
       },
       "width": 220,
@@ -167,11 +168,12 @@
         "y": 390
       },
       "data": {
-        "label": "Groupe par espèce",
+        "label": "DF GroupBy",
         "params": {
           "by": "target",
           "agg_col": "sepal length (cm)",
-          "func": 0
+          "func": 0,
+          "node_note": "Groupe par espèce"
         }
       },
       "width": 310,
@@ -186,9 +188,10 @@
         "y": 390
       },
       "data": {
-        "label": "Moy. par espèce",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Moy. par espèce"
         }
       },
       "width": 240,
@@ -203,11 +206,12 @@
         "y": 620
       },
       "data": {
-        "label": "Max par espèce",
+        "label": "DF GroupBy",
         "params": {
           "by": "target",
           "agg_col": "petal length (cm)",
-          "func": 2
+          "func": 2,
+          "node_note": "Max par espèce"
         }
       },
       "width": 310,
@@ -222,9 +226,10 @@
         "y": 630
       },
       "data": {
-        "label": "Max petal length",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Max petal length"
         }
       },
       "width": 240,
@@ -310,9 +315,10 @@
         "y": 920
       },
       "data": {
-        "label": "Wine Ex1",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 1
+          "dataset": 1,
+          "node_note": "Wine Ex1"
         }
       },
       "width": 220,
@@ -327,9 +333,10 @@
         "y": 910
       },
       "data": {
-        "label": "Python — Groupby avancé",
+        "label": "Python Node",
         "params": {
-          "code": "# TP05 — Exercice 1 : Groupby multi-agrégation\n# 'a' = DataFrame Wine\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Agrégation multi-colonnes\nagg = a.groupby('target').agg(\n    moy_alcool=('alcohol', 'mean'),\n    std_alcool=('alcohol', 'std'),\n    n=('alcohol', 'count')\n).round(3)\n\n# TODO 2 : Coefficient de variation\nagg['cv'] = (agg['std_alcool'] / agg['moy_alcool'] * 100).round(2)\n\n# TODO 3 : Trouver la classe la plus homogène\nclasse_homo = int(agg['cv'].idxmin())\ncv_min      = float(agg['cv'].min())\n\nout_data   = agg.reset_index()\nout_scalar = cv_min\n"
+          "code": "# TP05 — Exercice 1 : Groupby multi-agrégation\n# 'a' = DataFrame Wine\n# target est une chaîne : 'class_0', 'class_1', 'class_2'\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Agrégation multi-colonnes\nagg = a.groupby('target').agg(\n    moy_alcool=('alcohol', 'mean'),\n    std_alcool=('alcohol', 'std'),\n    n=('alcohol', 'count')\n).round(3)\n\n# TODO 2 : Coefficient de variation\nagg['cv'] = (agg['std_alcool'] / agg['moy_alcool'] * 100).round(2)\n\n# TODO 3 : Trouver la classe la plus homogène\n# idxmin() retourne le nom de la classe (chaîne), pas un entier\nclasse_homo = str(agg['cv'].idxmin())\ncv_min      = float(agg['cv'].min())\n\nout_data   = agg.reset_index()\nout_scalar = cv_min\n",
+          "node_note": "Python — Groupby avancé"
         }
       },
       "width": 430,
@@ -344,9 +351,10 @@
         "y": 910
       },
       "data": {
-        "label": "Agrégation",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Agrégation"
         }
       },
       "width": 380,
@@ -361,9 +369,10 @@
         "y": 910
       },
       "data": {
-        "label": "Résultat groupby",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Résultat groupby"
         }
       },
       "width": 240,
@@ -378,8 +387,10 @@
         "y": 1130
       },
       "data": {
-        "label": "CV min (homogénéité)",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "CV min (homogénéité)"
+        }
       },
       "width": 220,
       "height": 160,
@@ -440,9 +451,10 @@
         "y": 1470
       },
       "data": {
-        "label": "Iris Ex2",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Ex2"
         }
       },
       "width": 220,
@@ -457,9 +469,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Python — Moyennes par espèce",
+        "label": "Python Node",
         "params": {
-          "code": "# TP05 — Exercice 2 : Comparaison par groupe\n# 'a' = DataFrame Iris\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO : Moyenne par espèce pour toutes les colonnes\nmoyennes_par_espece = (\n    a.groupby('target')\n     .mean(numeric_only=True)\n     .round(3)\n     .reset_index()\n)\n\n# Renommer les espèces pour lisibilité\nnoms = {0: 'Setosa', 1: 'Versicolor', 2: 'Virginica'}\nmoyennes_par_espece['espece'] = moyennes_par_espece['target'].map(noms)\n\n# Écart inter-groupes (spread)\nspread = a.groupby('target').mean(numeric_only=True).std()\ncol_plus_discriminante = spread.idxmax()\n\nout_data   = moyennes_par_espece\nout_scalar = float(spread.max())\n"
+          "code": "# TP05 — Exercice 2 : Comparaison par groupe\n# 'a' = DataFrame Iris\n# target est une chaîne : 'setosa', 'versicolor', 'virginica'\n# ─────────────────────────────────────────────\n\nimport pandas as pd\n\n# TODO : Moyenne par espèce pour toutes les colonnes\nmoyennes_par_espece = (\n    a.groupby('target')\n     .mean(numeric_only=True)\n     .round(3)\n     .reset_index()\n)\n\n# Renommer les espèces pour lisibilité\n# target est déjà une chaîne lisible, on capitalise simplement\nmoyennes_par_espece['espece'] = moyennes_par_espece['target'].str.capitalize()\n\n# Écart inter-groupes (spread)\nspread = a.groupby('target').mean(numeric_only=True).std()\ncol_plus_discriminante = spread.idxmax()\n\nout_data   = moyennes_par_espece\nout_scalar = float(spread.max())\n",
+          "node_note": "Python — Moyennes par espèce"
         }
       },
       "width": 430,
@@ -474,11 +487,12 @@
         "y": 1460
       },
       "data": {
-        "label": "Scatter espèces",
+        "label": "Scatter Plot",
         "params": {
           "x_col": "sepal length (cm)",
           "y_col": "petal length (cm)",
-          "hue_col": "target"
+          "hue_col": "target",
+          "node_note": "Scatter espèces"
         }
       },
       "width": 240,
@@ -493,8 +507,10 @@
         "y": 1590
       },
       "data": {
-        "label": "Corrélations Iris",
-        "params": {}
+        "label": "Correlation Heatmap",
+        "params": {
+          "node_note": "Corrélations Iris"
+        }
       },
       "width": 240,
       "height": 90,
@@ -508,9 +524,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Nuage par espèce",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Nuage par espèce"
         }
       },
       "width": 240,
@@ -525,9 +542,10 @@
         "y": 1690
       },
       "data": {
-        "label": "Heatmap corr.",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Heatmap corr."
         }
       },
       "width": 240,

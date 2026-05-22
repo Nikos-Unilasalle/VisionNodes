@@ -150,9 +150,10 @@
         "y": 420
       },
       "data": {
-        "label": "Diabetes Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 3
+          "dataset": 3,
+          "node_note": "Diabetes Dataset"
         }
       },
       "width": 220,
@@ -167,11 +168,12 @@
         "y": 400
       },
       "data": {
-        "label": "Traiter NaN",
+        "label": "DF Fill NA",
         "params": {
           "strategy": 0,
           "fill_value": "0",
-          "subset": ""
+          "subset": "",
+          "node_note": "Traiter NaN"
         }
       },
       "width": 290,
@@ -186,9 +188,10 @@
         "y": 400
       },
       "data": {
-        "label": "Après fillna",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Après fillna"
         }
       },
       "width": 240,
@@ -203,9 +206,10 @@
         "y": 610
       },
       "data": {
-        "label": "Audit NaN",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Audit NaN"
         }
       },
       "width": 380,
@@ -220,9 +224,10 @@
         "y": 620
       },
       "data": {
-        "label": "Stats",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Stats"
         }
       },
       "width": 240,
@@ -308,9 +313,10 @@
         "y": 930
       },
       "data": {
-        "label": "Diabetes Ex1",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 3
+          "dataset": 3,
+          "node_note": "Diabetes Ex1"
         }
       },
       "width": 220,
@@ -325,9 +331,10 @@
         "y": 920
       },
       "data": {
-        "label": "Python — Audit qualité",
+        "label": "Python Node",
         "params": {
-          "code": "# TP03 — Exercice 1 : Audit qualité\n# 'a' = DataFrame à auditer\n# ─────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Compter les NaN par colonne\nnan_count = a.isna().sum()\n\n# TODO 2 : Pourcentage de NaN par colonne\nnan_pct = (nan_count / len(a) * 100).round(2)\n\n# TODO 3 : Lignes dupliquées\nn_doublons = int(a.duplicated().sum())\n\n# Rapport de qualité\nrapport = pd.DataFrame({\n    'NaN_count': nan_count,\n    'NaN_%': nan_pct,\n    'dtype': a.dtypes\n})\n\n# TODO 4 : Calculer le % global de données manquantes\ntotal_vals = a.size\ntotal_nan  = int(a.isna().sum().sum())\npct_global = round(total_nan / total_vals * 100, 2)\n\nout_data   = rapport\nout_scalar = float(pct_global)\n"
+          "code": "# TP03 — Exercice 1 : Audit qualité\n# 'a' = DataFrame à auditer\n# ─────────────────────────────────────\n\nimport pandas as pd\n\n# TODO 1 : Compter les NaN par colonne\nnan_count = a.isna().sum()\n\n# TODO 2 : Pourcentage de NaN par colonne\nnan_pct = (nan_count / len(a) * 100).round(2)\n\n# TODO 3 : Lignes dupliquées\nn_doublons = int(a.duplicated().sum())\n\n# Rapport de qualité\nrapport = pd.DataFrame({\n    'NaN_count': nan_count,\n    'NaN_%': nan_pct,\n    'dtype': a.dtypes\n})\n\n# TODO 4 : Calculer le % global de données manquantes\ntotal_vals = a.size\ntotal_nan  = int(a.isna().sum().sum())\npct_global = round(total_nan / total_vals * 100, 2)\n\nout_data   = rapport\nout_scalar = float(pct_global)\n",
+          "node_note": "Python — Audit qualité"
         }
       },
       "width": 430,
@@ -342,9 +349,10 @@
         "y": 920
       },
       "data": {
-        "label": "Rapport qualité",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Rapport qualité"
         }
       },
       "width": 380,
@@ -359,9 +367,10 @@
         "y": 920
       },
       "data": {
-        "label": "Rapport",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Rapport"
         }
       },
       "width": 240,
@@ -376,8 +385,10 @@
         "y": 1140
       },
       "data": {
-        "label": "% NaN global",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "% NaN global"
+        }
       },
       "width": 220,
       "height": 160,
@@ -438,9 +449,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Dataset Ex2",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 3
+          "dataset": 3,
+          "node_note": "Dataset Ex2"
         }
       },
       "width": 220,
@@ -455,9 +467,10 @@
         "y": 1440
       },
       "data": {
-        "label": "Stratégie : Mean",
+        "label": "DF Fill NA",
         "params": {
-          "strategy": 0
+          "strategy": 0,
+          "node_note": "Stratégie : Mean"
         }
       },
       "width": 280,
@@ -472,9 +485,10 @@
         "y": 1710
       },
       "data": {
-        "label": "Stratégie : Median",
+        "label": "DF Fill NA",
         "params": {
-          "strategy": 1
+          "strategy": 1,
+          "node_note": "Stratégie : Median"
         }
       },
       "width": 280,
@@ -489,9 +503,10 @@
         "y": 1440
       },
       "data": {
-        "label": "Après Mean",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Après Mean"
         }
       },
       "width": 240,
@@ -506,9 +521,10 @@
         "y": 1660
       },
       "data": {
-        "label": "Après Median",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Après Median"
         }
       },
       "width": 240,

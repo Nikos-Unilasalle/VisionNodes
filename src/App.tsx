@@ -6,7 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
-  Plus, ChevronRight, Layers, Heart
+  Plus, ChevronRight, Layers, Heart, MousePointer2
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -1099,8 +1099,8 @@ function App() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().includes('MAC');
-      if ((isMac ? e.metaKey : e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 't') {
+      // Use Alt+T for Tutorial mode to avoid conflicts with browser's Ctrl+Shift+T
+      if (e.altKey && e.key.toLowerCase() === 't') {
         e.preventDefault();
         setIsTutorialMode(prev => !prev);
       }
@@ -1250,10 +1250,10 @@ function App() {
     };
   }, [isRerouting, instance, pushSnapshot, setViewNodes, setViewEdges]);
 
-  // Ribbon: Cmd + vertical drag on pane → bundle intersecting edges
+  // Ribbon: Cmd/Ctrl + vertical drag on pane → bundle intersecting edges
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
-      if (!e.metaKey || e.button !== 0) return;
+      if (!(e.metaKey || e.ctrlKey) || e.button !== 0) return;
       const target = e.target as HTMLElement;
       if (!target.classList.contains('react-flow__pane')) return;
       e.stopImmediatePropagation();
@@ -1496,20 +1496,34 @@ function App() {
                 const isFav = !!activeFilePath && favoriteFiles[activeCanvasId] === activeFilePath;
                 const noFile = !activeFilePath;
                 return (
-                  <ControlButton
-                    onClick={toggleFavorite}
-                    title={noFile ? 'Save the file first' : isFav ? 'Auto-load ON — click to disable' : 'Set as startup file for this canvas'}
-                    style={{ opacity: noFile ? 0.3 : 1, cursor: noFile ? 'not-allowed' : 'pointer' }}
-                  >
-                    <Heart
-                      size={12}
-                      style={{
-                        color: isFav ? '#4ade80' : '#9ca3af',
-                        fill: isFav ? '#4ade80' : 'none',
-                        transition: 'color 0.2s, fill 0.2s',
-                      }}
-                    />
-                  </ControlButton>
+                  <>
+                    <ControlButton
+                      onClick={toggleFavorite}
+                      title={noFile ? 'Save the file first' : isFav ? 'Auto-load ON — click to disable' : 'Set as startup file for this canvas'}
+                      style={{ opacity: noFile ? 0.3 : 1, cursor: noFile ? 'not-allowed' : 'pointer' }}
+                    >
+                      <Heart
+                        size={12}
+                        style={{
+                          color: isFav ? '#4ade80' : '#9ca3af',
+                          fill: isFav ? '#4ade80' : 'none',
+                          transition: 'color 0.2s, fill 0.2s',
+                        }}
+                      />
+                    </ControlButton>
+                    <ControlButton
+                      onClick={() => setIsTutorialMode(p => !p)}
+                      title={isTutorialMode ? 'Disable Tutorial Mode (Alt+T)' : 'Enable Tutorial Mode (Alt+T)'}
+                    >
+                      <MousePointer2
+                        size={12}
+                        style={{
+                          color: isTutorialMode ? '#4ade80' : '#9ca3af',
+                          transition: 'color 0.2s',
+                        }}
+                      />
+                    </ControlButton>
+                  </>
                 );
               })()}
             </Controls>
