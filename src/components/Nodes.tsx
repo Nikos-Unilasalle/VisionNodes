@@ -4265,6 +4265,86 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
 });
 
 // ── Index Painter Node ────────────────────────────────────────────────────────
+// ── Copernicus CDSE Node ──────────────────────────────────────────────────────
+
+const COPERNICUS_COLLECTIONS = [
+  'Sentinel-2 L2A', 'Sentinel-2 L1C', 'Sentinel-1 GRD', 'Copernicus DEM',
+] as const;
+
+export const CopernicusNode = memo(({ selected, data }: any) => {
+  const nd           = useNodeData(useNodeId());
+  const thumb        = nd?._thumb || data.params?._thumb_cache;
+  const onOpenEditor = data.onOpenEditor;
+
+  const bbox    = data.params?.bbox ?? '';
+  const colIdx  = parseInt(data.params?.collection ?? '0', 10);
+  const colName = COPERNICUS_COLLECTIONS[colIdx] ?? 'Sentinel-2 L2A';
+  const bands   = (data.params?.bands ?? 'B04,B03,B02,B08').split(',').filter(Boolean);
+
+  const bboxParts = bbox ? bbox.split(',').map(Number) : null;
+  const hasBbox   = bboxParts && bboxParts.length === 4 && bboxParts.every(isFinite);
+
+  return (
+    <BaseNode title="Copernicus CDSE" icon={(LucideIcons as any).Satellite} selected={selected} data={data} color="blue"
+      inputs={[]}
+      outputs={[
+        { id: 'geotiff', color: 'geotiff', label: 'GeoTIFF' },
+        { id: 'preview', color: 'image',   label: 'Preview' },
+        { id: 'meta',    color: 'dict',    label: 'Meta' },
+      ]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        {/* Map preview / thumbnail */}
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/cop shadow-inner">
+          {thumb ? (
+            <img src={`data:image/jpeg;base64,${thumb}`} className="w-full h-auto block" draggable={false} alt="Satellite preview" />
+          ) : (
+            <div className="w-full aspect-video flex flex-col items-center justify-center text-gray-700 gap-2">
+              <LucideIcons.Satellite size={24} className="opacity-10" />
+              <span className="text-[8px] font-mono opacity-30">No data</span>
+            </div>
+          )}
+          {/* Hover overlay — open editor */}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cop:opacity-100 transition-all flex items-center justify-center backdrop-blur-[2px]">
+            <button
+              onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
+            >
+              <LucideIcons.Map size={11} /> Open Editor
+            </button>
+          </div>
+        </div>
+
+        {/* Info row */}
+        <div className="grid grid-cols-1 gap-1 px-0.5">
+          <div className="flex items-center justify-between px-2 py-1 bg-black/20 rounded-lg border border-white/5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Collection</span>
+            <span className="text-[8px] font-mono text-blue-400 truncate max-w-[140px]">{colName}</span>
+          </div>
+          <div className="flex items-center justify-between px-2 py-1 bg-black/20 rounded-lg border border-white/5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Bands</span>
+            <span className="text-[8px] font-mono text-gray-400 truncate max-w-[140px]">{bands.join(', ')}</span>
+          </div>
+          {hasBbox ? (
+            <div className="px-2 py-1 bg-green-500/5 rounded-lg border border-green-500/15">
+              <div className="text-[7px] font-mono text-green-400 leading-4">
+                W {bboxParts![0].toFixed(3)}° · E {bboxParts![2].toFixed(3)}°
+              </div>
+              <div className="text-[7px] font-mono text-green-400 leading-4">
+                S {bboxParts![1].toFixed(3)}° · N {bboxParts![3].toFixed(3)}°
+              </div>
+            </div>
+          ) : (
+            <div className="px-2 py-1.5 bg-amber-500/5 rounded-lg border border-amber-500/15 text-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-amber-500/70">Open editor to draw ROI</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const IndexPainterNode = memo(({ selected, data }: any) => {
   const nd           = useNodeData(useNodeId());
   const preview      = nd?.main_preview;

@@ -339,6 +339,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geo_dn_normalize',     label: 'DN Normalize',      description: 'Normalizes digital numbers to top-of-atmosphere reflectance.' },
     { type: 'geo_deglint',          label: 'Deglint',           description: 'Removes sun-glint from water-surface satellite imagery.' },
     { type: 'geo_earth_engine',     label: 'Earth Engine',      description: 'Fetches imagery from Google Earth Engine.' },
+    { type: 'geo_copernicus',       label: 'Copernicus CDSE',   description: 'Downloads Sentinel-2/1/DEM imagery from CDSE. Interactive map ROI editor.' },
     { type: 'geo_s2_loader',        label: 'Sentinel-2 Loader', description: 'Loads a Sentinel-2 scene from disk.' },
     { type: 'geo_land_cover',       label: 'Land Cover',        description: 'Classifies land-cover type from spectral data.' },
     { type: 'geo_mask',             label: 'Geo Mask',          description: 'Creates a mask from geographic features or bands.' },
