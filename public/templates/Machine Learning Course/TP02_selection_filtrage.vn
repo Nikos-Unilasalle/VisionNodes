@@ -150,9 +150,10 @@
         "y": 420
       },
       "data": {
-        "label": "Wine Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 1
+          "dataset": 1,
+          "node_note": "Wine Dataset"
         }
       },
       "width": 220,
@@ -167,13 +168,14 @@
         "y": 400
       },
       "data": {
-        "label": "Filtre Alcool",
+        "label": "DF Filter",
         "params": {
           "enabled": true,
           "column": "alcohol",
           "operator": 0,
           "value": "13.0",
-          "dropna": false
+          "dropna": false,
+          "node_note": "Filtre Alcool"
         }
       },
       "width": 300,
@@ -188,9 +190,10 @@
         "y": 400
       },
       "data": {
-        "label": "Aperçu filtré",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Aperçu filtré"
         }
       },
       "width": 240,
@@ -205,9 +208,10 @@
         "y": 600
       },
       "data": {
-        "label": "Sélection colonnes",
+        "label": "DF Select",
         "params": {
-          "columns": "alcohol,malic_acid,ash,target"
+          "keep": "alcohol,malic_acid,ash,target",
+          "node_note": "Sélection colonnes"
         }
       },
       "width": 300,
@@ -222,9 +226,10 @@
         "y": 620
       },
       "data": {
-        "label": "Colonnes sélectionnées",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Colonnes sélectionnées"
         }
       },
       "width": 240,
@@ -239,10 +244,11 @@
         "y": 420
       },
       "data": {
-        "label": "Trier",
+        "label": "DF Sort",
         "params": {
           "by": "alcohol",
-          "ascending": false
+          "ascending": false,
+          "node_note": "Trier"
         }
       },
       "width": 280,
@@ -257,9 +263,10 @@
         "y": 420
       },
       "data": {
-        "label": "Trié par alcool",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Trié par alcool"
         }
       },
       "width": 240,
@@ -345,9 +352,10 @@
         "y": 910
       },
       "data": {
-        "label": "Iris Dataset Ex1",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Dataset Ex1"
         }
       },
       "width": 220,
@@ -362,12 +370,13 @@
         "y": 890
       },
       "data": {
-        "label": "Filtre Guidé",
+        "label": "DF Filter",
         "params": {
           "enabled": true,
           "column": "sepal length (cm)",
           "operator": 2,
-          "value": "6.0"
+          "value": "6.0",
+          "node_note": "Filtre Guidé"
         }
       },
       "width": 300,
@@ -382,9 +391,10 @@
         "y": 890
       },
       "data": {
-        "label": "Résultat Ex1",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Résultat Ex1"
         }
       },
       "width": 240,
@@ -399,8 +409,10 @@
         "y": 1110
       },
       "data": {
-        "label": "Nombre de lignes",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "Nombre de lignes"
+        }
       },
       "width": 220,
       "height": 160,
@@ -468,7 +480,7 @@
         "label": "Note",
         "id": "nD_inst",
         "params": {
-          "text": "EXERCICE 2 — Filtrage avancé (Python)\n\nComplétez le Python Node pour :\n\n1. Garder uniquement les iris de\n   l'espèce 'Versicolor' (target == 1)\n\n2. Parmi ces iris, garder seulement\n   ceux dont sepal length est\n   dans le premier quartile Q1\n   INDICE : df.quantile(0.25)\n\n3. Calculer la moyenne de petal length\n   sur ce sous-ensemble\n\nRésultats attendus :\n  out_data   = DataFrame filtré\n  out_scalar = moyenne petal length",
+          "text": "EXERCICE 2 — Filtrage avancé (Python)\n\nComplétez le Python Node pour :\n\n1. Garder uniquement les iris de\n   l'espèce Versicolor\n   INDICE : a['target'] == 'versicolor'\n\n2. Parmi ces iris, garder seulement\n   ceux dont sepal length est\n   dans le premier quartile Q1\n   INDICE : df.quantile(0.25)\n\n3. Calculer la moyenne de petal length\n   sur ce sous-ensemble\n\nRésultats attendus :\n  out_data   = DataFrame filtré\n  out_scalar = moyenne petal length",
           "bg_color": "#fef9c3",
           "text_color": "#713f12"
         }
@@ -485,9 +497,10 @@
         "y": 1440
       },
       "data": {
-        "label": "Iris Dataset Ex2",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Dataset Ex2"
         }
       },
       "width": 220,
@@ -502,9 +515,10 @@
         "y": 1430
       },
       "data": {
-        "label": "Python — Filtrage avancé",
+        "label": "Python Node",
         "params": {
-          "code": "# TP02 — Exercice 2 : Filtrage avancé\n# 'a' contient le DataFrame Iris complet\n# ─────────────────────────────────────────\n\n# TODO 1 : Garder uniquement l'espèce Versicolor (target == 1)\nversicolor = a[a['target'] == 1]\n\n# TODO 2 : Calculer Q1 de sepal length\nq1 = versicolor['sepal length (cm)'].quantile(0.25)\n\n# Garder les iris sous le Q1\nsous_q1 = versicolor[versicolor['sepal length (cm)'] <= q1]\n\n# TODO 3 : Calculer la moyenne de petal length\nmoy_petal = sous_q1['petal length (cm)'].mean()\n\nout_data = sous_q1\nout_scalar = float(moy_petal) if not __import__('math').isnan(moy_petal) else 0.0\n"
+          "code": "# TP02 — Exercice 2 : Filtrage avancé\n# 'a' contient le DataFrame Iris complet\n# target est une chaîne : 'setosa', 'versicolor', 'virginica'\n# ─────────────────────────────────────────\n\n# TODO 1 : Garder uniquement l'espèce Versicolor\nversicolor = a[a['target'] == 'versicolor']\n\n# TODO 2 : Calculer Q1 de sepal length\nq1 = versicolor['sepal length (cm)'].quantile(0.25)\n\n# Garder les iris sous le Q1\nsous_q1 = versicolor[versicolor['sepal length (cm)'] <= q1]\n\n# TODO 3 : Calculer la moyenne de petal length\nmoy_petal = sous_q1['petal length (cm)'].mean()\n\nout_data = sous_q1\nout_scalar = float(moy_petal) if moy_petal == moy_petal else 0.0\n",
+          "node_note": "Python — Filtrage avancé"
         }
       },
       "width": 420,
@@ -519,9 +533,10 @@
         "y": 1430
       },
       "data": {
-        "label": "Stats résultat",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Stats résultat"
         }
       },
       "width": 380,
@@ -536,9 +551,10 @@
         "y": 1430
       },
       "data": {
-        "label": "Filtré avancé",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Filtré avancé"
         }
       },
       "width": 240,
@@ -553,8 +569,10 @@
         "y": 1650
       },
       "data": {
-        "label": "Moy. petal length",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "Moy. petal length"
+        }
       },
       "width": 220,
       "height": 160,

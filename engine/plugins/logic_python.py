@@ -14,15 +14,24 @@ def _df_meta_local(df) -> dict:
     """Serializable DataFrame metadata — inlined to avoid cross-plugin imports."""
     r, c = df.shape
     head_df = df.head(8)
+
+    def _serialize(v):
+        if isinstance(v, float) and v != v:  # NaN
+            return None
+        if isinstance(v, np.integer):
+            return int(v)
+        if isinstance(v, (int,)):
+            return v
+        if isinstance(v, (float, np.floating)):
+            return float(v)
+        return str(v)
+
     return {
         'shape':   [r, c],
         'columns': [str(col) for col in df.columns],
         'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
         'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
-        'head':    [{str(k): (None if (isinstance(v, float) and v != v) else (
-                        int(v) if hasattr(v, 'item') and isinstance(v, (int,)) else
-                        float(v) if isinstance(v, float) else str(v)
-                    )) for k, v in row.items()}
+        'head':    [{str(k): _serialize(v) for k, v in row.items()}
                    for _, row in head_df.iterrows()],
     }
 

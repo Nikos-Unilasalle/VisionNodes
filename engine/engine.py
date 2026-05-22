@@ -141,8 +141,11 @@ class RerouteNode(NodeProcessor):
 # --- CORE ENGINE ---
 def _is_serializable(v, _depth=0):
     """Reject numpy arrays and non-JSON types. Skips large/deep collections to avoid huge WS payloads."""
-    if isinstance(v, (str, int, float, bool, type(None))):
+    if isinstance(v, (str, int, bool, type(None))):
         return True
+    if isinstance(v, float):
+        import math
+        return math.isfinite(v)  # reject NaN/Inf — json.dumps outputs non-standard tokens that break frontend JSON.parse
     if isinstance(v, np.ndarray):
         return False
     if _depth > 2:

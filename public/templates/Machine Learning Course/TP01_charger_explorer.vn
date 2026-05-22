@@ -150,9 +150,10 @@
         "y": 420
       },
       "data": {
-        "label": "Iris Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Dataset"
         }
       },
       "width": 220,
@@ -167,9 +168,10 @@
         "y": 390
       },
       "data": {
-        "label": "describe()",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "describe()"
         }
       },
       "width": 380,
@@ -184,9 +186,10 @@
         "y": 400
       },
       "data": {
-        "label": "Statistiques",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Statistiques"
         }
       },
       "width": 240,
@@ -201,11 +204,12 @@
         "y": 590
       },
       "data": {
-        "label": "Histogramme",
+        "label": "ML Histogram",
         "params": {
           "column": "sepal length (cm)",
           "hue_col": "target",
-          "kde": true
+          "kde": true,
+          "node_note": "Histogramme"
         }
       },
       "width": 220,
@@ -220,9 +224,10 @@
         "y": 640
       },
       "data": {
-        "label": "Distribution",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Distribution"
         }
       },
       "width": 240,
@@ -237,11 +242,12 @@
         "y": 410
       },
       "data": {
-        "label": "Scatter",
+        "label": "Scatter Plot",
         "params": {
           "x_col": "sepal length (cm)",
           "y_col": "sepal width (cm)",
-          "hue_col": "target"
+          "hue_col": "target",
+          "node_note": "Scatter"
         }
       },
       "width": 220,
@@ -256,9 +262,10 @@
         "y": 400
       },
       "data": {
-        "label": "Nuage de points",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Nuage de points"
         }
       },
       "width": 240,
@@ -344,9 +351,10 @@
         "y": 890
       },
       "data": {
-        "label": "Python — Exo 1",
+        "label": "Python Node",
         "params": {
-          "code": "# TP01 — Exercice 1 : Statistiques personnalisées\n# 'a' contient le DataFrame Iris\n# ─────────────────────────────────────────────────\n\n# TODO 1 : Calculer la moyenne de chaque colonne\nmoyennes = a.mean(numeric_only=True)\n\n# TODO 2 : Trouver la colonne avec la plus grande variance\ncol_var_max = a.var(numeric_only=True).idxmax()\n\n# TODO 3 : Compter les lignes où sepal length > 5.5\nseuil = 5.5\nn_grand = len(a[a['sepal length (cm)'] > seuil])\n\n# Construction du résumé\nimport pandas as pd\nout_data = pd.DataFrame({\n    'Moyenne': moyennes,\n    'Variance': a.var(numeric_only=True)\n})\nout_scalar = float(n_grand)\n"
+          "code": "# TP01 — Exercice 1 : Statistiques personnalisées\n# 'a' contient le DataFrame Iris\n# ─────────────────────────────────────────────────\n\n# TODO 1 : Calculer la moyenne de chaque colonne\nmoyennes = a.mean(numeric_only=True)\n\n# TODO 2 : Trouver la colonne avec la plus grande variance\ncol_var_max = a.var(numeric_only=True).idxmax()\n\n# TODO 3 : Compter les lignes où sepal length > 5.5\nseuil = 5.5\nn_grand = len(a[a['sepal length (cm)'] > seuil])\n\n# Construction du résumé\nimport pandas as pd\nout_data = pd.DataFrame({\n    'Moyenne': moyennes,\n    'Variance': a.var(numeric_only=True)\n})\nout_scalar = float(n_grand)\n",
+          "node_note": "Python — Exo 1"
         }
       },
       "width": 400,
@@ -361,9 +369,10 @@
         "y": 890
       },
       "data": {
-        "label": "Résultat Exo1",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Résultat Exo1"
         }
       },
       "width": 380,
@@ -378,9 +387,10 @@
         "y": 890
       },
       "data": {
-        "label": "Stats Exo1",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Stats Exo1"
         }
       },
       "width": 240,
@@ -395,8 +405,10 @@
         "y": 1110
       },
       "data": {
-        "label": "Lignes > 5.5",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "Lignes > 5.5"
+        }
       },
       "width": 220,
       "height": 160,
@@ -457,9 +469,10 @@
         "y": 1440
       },
       "data": {
-        "label": "Autre Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 1
+          "dataset": 1,
+          "node_note": "Autre Dataset"
         }
       },
       "width": 220,
@@ -474,9 +487,10 @@
         "y": 1420
       },
       "data": {
-        "label": "Explorer",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Explorer"
         }
       },
       "width": 380,
@@ -491,9 +505,10 @@
         "y": 1420
       },
       "data": {
-        "label": "Aperçu",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Aperçu"
         }
       },
       "width": 240,
@@ -508,11 +523,12 @@
         "y": 1620
       },
       "data": {
-        "label": "Comparer 2 variables",
+        "label": "Scatter Plot",
         "params": {
           "x_col": "alcohol",
           "y_col": "malic_acid",
-          "hue_col": "target"
+          "hue_col": "target",
+          "node_note": "Comparer 2 variables"
         }
       },
       "width": 220,
@@ -527,9 +543,10 @@
         "y": 1640
       },
       "data": {
-        "label": "Relation",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Relation"
         }
       },
       "width": 240,

@@ -1,19 +1,154 @@
 {
   "nodes": [
-    { "id": "ds",   "type": "ml_sklearn_dataset", "position": { "x": 50,  "y": 350 }, "data": { "label": "Wine Dataset",      "params": { "dataset": 1 } } },
-    { "id": "km",   "type": "ml_kmeans",          "position": { "x": 370, "y": 150 }, "data": { "label": "K-Means (glisser k)","params": { "k": 3, "show_regions": true, "colormap": 0 } } },
-    { "id": "pca",  "type": "ml_pca",             "position": { "x": 370, "y": 480 }, "data": { "label": "PCA",               "params": { "n_components": 5, "standardize": true, "hue_col": "target", "colormap": 0, "show_loadings": false } } },
-    { "id": "d1",   "type": "output_display",     "position": { "x": 730, "y": 60  }, "data": { "label": "Clusters K-Means",  "params": {} } },
-    { "id": "d2",   "type": "output_display",     "position": { "x": 730, "y": 370 }, "data": { "label": "Scatter PCA",       "params": {} } },
-    { "id": "d3",   "type": "output_display",     "position": { "x": 730, "y": 640 }, "data": { "label": "Variance expliquée","params": {} } },
-    { "id": "ins1", "type": "data_inspector",     "position": { "x": 370, "y": 30  }, "data": { "label": "Silhouette score",  "params": {} } }
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": 50,
+        "y": 350
+      },
+      "data": {
+        "label": "Sklearn Dataset",
+        "params": {
+          "dataset": 1,
+          "node_note": "Wine Dataset"
+        }
+      }
+    },
+    {
+      "id": "km",
+      "type": "ml_kmeans",
+      "position": {
+        "x": 370,
+        "y": 150
+      },
+      "data": {
+        "label": "K-Means",
+        "params": {
+          "k": 3,
+          "show_regions": true,
+          "colormap": 0,
+          "node_note": "K-Means (glisser k)"
+        }
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_pca",
+      "position": {
+        "x": 370,
+        "y": 480
+      },
+      "data": {
+        "label": "PCA",
+        "params": {
+          "n_components": 5,
+          "standardize": true,
+          "hue_col": "target",
+          "colormap": 0,
+          "show_loadings": false
+        }
+      }
+    },
+    {
+      "id": "d1",
+      "type": "output_display",
+      "position": {
+        "x": 730,
+        "y": 60
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Clusters K-Means"
+        }
+      }
+    },
+    {
+      "id": "d2",
+      "type": "output_display",
+      "position": {
+        "x": 730,
+        "y": 370
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Scatter PCA"
+        }
+      }
+    },
+    {
+      "id": "d3",
+      "type": "output_display",
+      "position": {
+        "x": 730,
+        "y": 640
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Variance expliquée"
+        }
+      }
+    },
+    {
+      "id": "ins1",
+      "type": "data_inspector",
+      "position": {
+        "x": 370,
+        "y": 30
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "Silhouette score"
+        }
+      }
+    }
   ],
   "edges": [
-    { "id": "e1", "source": "ds",  "sourceHandle": "data__table",        "target": "km",   "targetHandle": "data__table" },
-    { "id": "e2", "source": "ds",  "sourceHandle": "data__table",        "target": "pca",  "targetHandle": "data__table" },
-    { "id": "e3", "source": "km",  "sourceHandle": "image__preview",     "target": "d1",   "targetHandle": "image__main" },
-    { "id": "e4", "source": "km",  "sourceHandle": "scalar__silhouette", "target": "ins1", "targetHandle": "any__data" },
-    { "id": "e5", "source": "pca", "sourceHandle": "image__scatter",     "target": "d2",   "targetHandle": "image__main" },
-    { "id": "e6", "source": "pca", "sourceHandle": "image__variance_plot","target": "d3",  "targetHandle": "image__main" }
+    {
+      "id": "e1",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "km",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e2",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "pca",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e3",
+      "source": "km",
+      "sourceHandle": "image__preview",
+      "target": "d1",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e4",
+      "source": "km",
+      "sourceHandle": "scalar__silhouette",
+      "target": "ins1",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e5",
+      "source": "pca",
+      "sourceHandle": "image__scatter",
+      "target": "d2",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e6",
+      "source": "pca",
+      "sourceHandle": "image__variance_plot",
+      "target": "d3",
+      "targetHandle": "image__main"
+    }
   ]
 }

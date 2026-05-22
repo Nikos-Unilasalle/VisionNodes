@@ -4,6 +4,7 @@ import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 import { HexColorPicker } from 'react-colorful';
+import { MarkdownToolbar } from './MarkdownToolbar';
 
 const FLOW_PRESETS: Record<number, Record<string, number>> = {
   0: { pyr_scale: 0.5, levels: 3, winsize: 15, iterations: 3, poly_n: 5, poly_sigma: 1.2 },
@@ -359,6 +360,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
   const [editingLabel, setEditingLabel] = useState<{ nodeId: string; paramId: string; value: string } | null>(null);
+  const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Skip manual types to avoid duplication with schema-driven loop below
   const MANUAL_TYPES = new Set([
@@ -483,15 +485,23 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         return (
           <>
             {node.type === 'canvas_note' ? (
-              <div className="space-y-4 group mb-6">
+              <div className="space-y-2 group mb-6">
                 <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
-                <textarea
-                  value={p.text || ''}
-                  onChange={e => up({ text: e.target.value })}
-                  className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none resize-none transition-all"
-                  style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)', fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
-                  placeholder="Enter note text…"
-                />
+                <div className="rounded-xl overflow-hidden border border-white/10 transition-all focus-within:border-accent/40" style={{ background: bgColor }}>
+                  <MarkdownToolbar 
+                    textareaRef={noteTextareaRef} 
+                    value={p.text || ''} 
+                    onChange={val => up({ text: val })} 
+                  />
+                  <textarea
+                    ref={noteTextareaRef}
+                    value={p.text || ''}
+                    onChange={e => up({ text: e.target.value })}
+                    className="w-full px-4 py-3 text-[13px] outline-none resize-y"
+                    style={{ background: 'transparent', color: textColor, fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
+                    placeholder="Enter note text (Markdown supported)..."
+                  />
+                </div>
               </div>
             ) : (
               <div className="space-y-4 group mb-6">

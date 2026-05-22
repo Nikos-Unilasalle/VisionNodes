@@ -150,9 +150,10 @@
         "y": 420
       },
       "data": {
-        "label": "Iris Dataset",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Dataset"
         }
       },
       "width": 220,
@@ -167,11 +168,12 @@
         "y": 400
       },
       "data": {
-        "label": "Ratio pétale/sépale",
+        "label": "DF New Column",
         "params": {
           "col_name": "ratio_petale_sepale",
           "expression": "petal length (cm) / sepal length (cm)",
-          "col_type": 0
+          "col_type": 0,
+          "node_note": "Ratio pétale/sépale"
         }
       },
       "width": 300,
@@ -186,9 +188,10 @@
         "y": 400
       },
       "data": {
-        "label": "Nouvelle colonne",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Nouvelle colonne"
         }
       },
       "width": 240,
@@ -203,9 +206,10 @@
         "y": 590
       },
       "data": {
-        "label": "Renommer",
+        "label": "DF Rename",
         "params": {
-          "mapping": "sepal length (cm):long_sepale, petal length (cm):long_petale"
+          "mapping": "sepal length (cm):long_sepale, petal length (cm):long_petale",
+          "node_note": "Renommer"
         }
       },
       "width": 300,
@@ -220,9 +224,10 @@
         "y": 600
       },
       "data": {
-        "label": "Renommé",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Renommé"
         }
       },
       "width": 240,
@@ -308,9 +313,10 @@
         "y": 920
       },
       "data": {
-        "label": "Iris Ex1",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 0
+          "dataset": 0,
+          "node_note": "Iris Ex1"
         }
       },
       "width": 220,
@@ -325,9 +331,10 @@
         "y": 910
       },
       "data": {
-        "label": "Python — Normalisation",
+        "label": "Python Node",
         "params": {
-          "code": "# TP04 — Exercice 1 : Normalisation\n# 'a' = DataFrame Iris\n# ─────────────────────────────────────\n\nimport pandas as pd\n\ncols_num = [c for c in a.columns if c != 'target']\n\n# TODO 1 : Normalisation Min-Max\ndf_minmax = a.copy()\nfor col in cols_num:\n    mn = a[col].min()\n    mx = a[col].max()\n    df_minmax[col] = (a[col] - mn) / (mx - mn)\n\n# TODO 2 : Normalisation Z-score (pour comparaison)\ndf_zscore = a.copy()\nfor col in cols_num:\n    df_zscore[col] = (a[col] - a[col].mean()) / a[col].std()\n\n# Vérification : min et max du df normalisé Min-Max\nassert df_minmax[cols_num].min().min() >= -0.001\nassert df_minmax[cols_num].max().max() <=  1.001\n\nout_data   = df_minmax\nout_scalar = float(df_zscore[cols_num].std().mean())\n"
+          "code": "# TP04 — Exercice 1 : Normalisation\n# 'a' = DataFrame Iris\n# ─────────────────────────────────────\n\nimport pandas as pd\n\ncols_num = [c for c in a.columns if c != 'target']\n\n# TODO 1 : Normalisation Min-Max\ndf_minmax = a.copy()\nfor col in cols_num:\n    mn = a[col].min()\n    mx = a[col].max()\n    df_minmax[col] = (a[col] - mn) / (mx - mn)\n\n# TODO 2 : Normalisation Z-score (pour comparaison)\ndf_zscore = a.copy()\nfor col in cols_num:\n    df_zscore[col] = (a[col] - a[col].mean()) / a[col].std()\n\n# Vérification : min et max du df normalisé Min-Max\nassert df_minmax[cols_num].min().min() >= -0.001\nassert df_minmax[cols_num].max().max() <=  1.001\n\nout_data   = df_minmax\nout_scalar = float(df_zscore[cols_num].std().mean())\n",
+          "node_note": "Python — Normalisation"
         }
       },
       "width": 430,
@@ -342,9 +349,10 @@
         "y": 910
       },
       "data": {
-        "label": "Stats normalisé",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Stats normalisé"
         }
       },
       "width": 380,
@@ -359,9 +367,10 @@
         "y": 910
       },
       "data": {
-        "label": "Valeurs [0,1]",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Valeurs [0,1]"
         }
       },
       "width": 240,
@@ -376,8 +385,10 @@
         "y": 1130
       },
       "data": {
-        "label": "Std moyen",
-        "params": {}
+        "label": "Inspector",
+        "params": {
+          "node_note": "Std moyen"
+        }
       },
       "width": 220,
       "height": 160,
@@ -438,9 +449,10 @@
         "y": 1470
       },
       "data": {
-        "label": "Wine Ex2",
+        "label": "Sklearn Dataset",
         "params": {
-          "dataset": 1
+          "dataset": 1,
+          "node_note": "Wine Ex2"
         }
       },
       "width": 220,
@@ -455,9 +467,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Python — Feature Eng.",
+        "label": "Python Node",
         "params": {
-          "code": "# TP04 — Exercice 2 : Feature Engineering\n# 'a' = DataFrame Wine\n# ─────────────────────────────────────────\n\nimport pandas as pd, numpy as np\n\ndf = a.copy()\n\n# TODO 1 : Catégoriser l'alcool\ndf['qualite'] = pd.cut(\n    df['alcohol'],\n    bins=[0, 12, 13, 20],\n    labels=['faible', 'moyen', 'eleve']\n).astype(str)\n\n# TODO 2 : Ratio magnesium / ash\ndf['ratio_mg_ash'] = (df['magnesium'] / df['ash']).round(3)\n\n# TODO 3 : Feature non-linéaire\ndf['alcool_carre'] = (df['alcohol'] ** 2).round(4)\n\n# Vérification\nnouvelles = ['qualite', 'ratio_mg_ash', 'alcool_carre']\nout_data   = df[nouvelles + ['alcohol', 'target']]\nout_scalar = float(df['alcool_carre'].mean())\n"
+          "code": "# TP04 — Exercice 2 : Feature Engineering\n# 'a' = DataFrame Wine\n# ─────────────────────────────────────────\n\nimport pandas as pd, numpy as np\n\ndf = a.copy()\n\n# TODO 1 : Catégoriser l'alcool\ndf['qualite'] = pd.cut(\n    df['alcohol'],\n    bins=[0, 12, 13, 20],\n    labels=['faible', 'moyen', 'eleve']\n).astype(str)\n\n# TODO 2 : Ratio magnesium / ash\ndf['ratio_mg_ash'] = (df['magnesium'] / df['ash']).round(3)\n\n# TODO 3 : Feature non-linéaire\ndf['alcool_carre'] = (df['alcohol'] ** 2).round(4)\n\n# Vérification\nnouvelles = ['qualite', 'ratio_mg_ash', 'alcool_carre']\nout_data   = df[nouvelles + ['alcohol', 'target']]\nout_scalar = float(df['alcool_carre'].mean())\n",
+          "node_note": "Python — Feature Eng."
         }
       },
       "width": 430,
@@ -472,9 +485,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Features enrichies",
+        "label": "DF Stats",
         "params": {
-          "mode": 0
+          "mode": 0,
+          "node_note": "Features enrichies"
         }
       },
       "width": 380,
@@ -489,9 +503,10 @@
         "y": 1460
       },
       "data": {
-        "label": "Nouvelles features",
+        "label": "Display",
         "params": {
-          "mainConnected": true
+          "mainConnected": true,
+          "node_note": "Nouvelles features"
         }
       },
       "width": 240,
