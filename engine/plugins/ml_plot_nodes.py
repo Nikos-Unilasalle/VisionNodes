@@ -42,18 +42,20 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
-    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
-def _out_size(params, default_w=540, default_h=400):
+def _out_size(params, default_w=540, default_h=400, inputs=None):
     """Return (fig_w_inches, fig_h_inches, dpi) for matplotlib subplots."""
     dpi   = max(72, int(params.get('out_dpi', 100)))
     out_w = int(params.get('out_w', 0))
     out_h = int(params.get('out_h', 0))
     if out_w > 0 and out_h > 0:
         return out_w / dpi, out_h / dpi, dpi
-    ui_w = int(params.get('width',  default_w))
-    ui_h = int(params.get('height', default_h))
+    s    = inputs.get('img_size') if inputs else None
+    ui_w = int(s[0]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('width',  default_w))
+    ui_h = int(s[1]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('height', default_h))
     return ui_w / dpi, ui_h / dpi, dpi
 
 
@@ -73,7 +75,10 @@ def _get_mpl():
     category='DataFrame',
     icon='Crosshair',
     description="2D scatter plot from a DataFrame. Set X/Y columns, optionally color by a class column (hue). Ideal for exploring feature relationships and class separability.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[{'id': 'main', 'color': 'image', 'label': 'Plot'}],
     params=[
         {'id': 'x_col',      'label': 'X Column',           'type': 'string', 'default': ''},
@@ -112,7 +117,7 @@ class MLScatterPlotNode(NodeProcessor):
         regress  = bool(params.get('regression', False))
         grid     = bool(params.get('grid', True))
         max_pts  = int(params.get('max_points', 2000))
-        fig_w, fig_h, dpi = _out_size(params, 540, 400)
+        fig_w, fig_h, dpi = _out_size(params, 540, 400, inputs=inputs)
 
         cols = list(df.columns)
         num_cols = [c for c in cols if df[c].dtype.kind in 'biufc']  # numeric
@@ -189,7 +194,10 @@ class MLScatterPlotNode(NodeProcessor):
     category='DataFrame',
     icon='BarChart2',
     description="Distribution histogram of a DataFrame column. Optional KDE overlay and per-class breakdown (hue).",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[{'id': 'main', 'color': 'image', 'label': 'Plot'}],
     params=[
         {'id': 'column',   'label': 'Column',          'type': 'string', 'default': ''},
@@ -223,7 +231,7 @@ class MLHistogramNode(NodeProcessor):
         density = bool(params.get('density', False))
         cmap    = _CMAPS[int(params.get('colormap', 0))]
         grid    = bool(params.get('grid', True))
-        fig_w, fig_h, dpi = _out_size(params, 540, 380)
+        fig_w, fig_h, dpi = _out_size(params, 540, 380, inputs=inputs)
 
         num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
         if not col or col not in df.columns:
@@ -284,7 +292,10 @@ class MLHistogramNode(NodeProcessor):
     category='DataFrame',
     icon='Grid',
     description="Pearson correlation matrix of numeric DataFrame columns. Essential for feature selection.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[{'id': 'main', 'color': 'image', 'label': 'Heatmap'}],
     params=[
         {'id': 'columns',  'label': 'Columns (blank = all numeric)', 'type': 'string', 'default': ''},
@@ -314,7 +325,7 @@ class MLCorrHeatmapNode(NodeProcessor):
         annot    = bool(params.get('annot', True))
         cmaps    = ['coolwarm', 'RdYlGn', 'viridis', 'plasma']
         cmap     = cmaps[int(params.get('colormap', 0))]
-        fig_w, fig_h, dpi = _out_size(params, 520, 480)
+        fig_w, fig_h, dpi = _out_size(params, 520, 480, inputs=inputs)
 
         num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
         if cols_str:

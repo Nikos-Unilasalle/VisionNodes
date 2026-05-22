@@ -41,7 +41,8 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
-    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
 def _table_img(col_labels, rows, w, h, title, row_colors=None, dpi=100) -> np.ndarray:
@@ -83,15 +84,24 @@ def _df_meta(df) -> dict:
     """Serializable DataFrame metadata for the inspector panel."""
     r, c = df.shape
     head_df = df.head(8)
+
+    def _serialize(v):
+        if isinstance(v, float) and v != v:  # NaN
+            return None
+        if isinstance(v, np.integer):
+            return int(v)
+        if isinstance(v, (int,)):
+            return v
+        if isinstance(v, (float, np.floating)):
+            return float(v)
+        return str(v)
+
     return {
         'shape':   [r, c],
         'columns': [str(col) for col in df.columns],
         'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
         'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
-        'head':    [{str(k): (None if (isinstance(v, float) and v != v) else (
-                        int(v) if hasattr(v, 'item') and isinstance(v, (int,)) else
-                        float(v) if isinstance(v, float) else str(v)
-                    )) for k, v in row.items()}
+        'head':    [{str(k): _serialize(v) for k, v in row.items()}
                    for _, row in head_df.iterrows()],
     }
 
@@ -110,15 +120,53 @@ def _render_text_panel(text: str, w: int, h: int, title: str = '') -> np.ndarray
     return img
 
 
-def _render_df_head(df, w: int, h: int, title: str = '') -> np.ndarray:
-    """Render DataFrame.head() as a monospaced table image (CSV/Filter preview)."""
+def _render_df_table(df, w: int, h: int, title: str = '') -> np.ndarray:
+    """Render DataFrame.head() as a matplotlib dark-theme table (same style as DF Stats)."""
     MAX_R, MAX_C = 8, 7
     sub = df.iloc[:MAX_R, :MAX_C]
-    col_w = 13
-    header = ' | '.join(str(c)[:col_w].ljust(col_w) for c in sub.columns)
-    sep    = '-' * len(header)
-    rows   = [' | '.join(str(v)[:col_w].ljust(col_w) for v in row) for _, row in sub.iterrows()]
-    return _render_text_panel('\n'.join([header, sep] + rows), w, h, title=title)
+    col_labels = [str(c)[:16] for c in sub.columns]
+    rows = [[str(sub.iloc[i][c])[:16] for c in sub.columns] for i in range(len(sub))]
+    if not col_labels:
+        col_labels, rows = ['(no data)'], [['—']]
+    elif not rows:
+        rows = [['—'] * len(col_labels)]
+    return _table_img(col_labels, rows, w, h, title)
+
+
+def _render_info_panel(lines: list, w: int, h: int, title: str = '') -> np.ndarray:
+    """Matplotlib-based info panel for text-only outputs (e.g., Sklearn Dataset)."""
+    _, plt = _get_mpl()
+    fig, ax = plt.subplots(figsize=(w / 100, h / 100))
+    ax.set_axis_off()
+    fig.patch.set_facecolor('#161616')
+    ax.set_facecolor('#1a1a28')
+
+    n = max(len([l for l in lines if l.strip()]), 1)
+    step = min(0.10, 0.88 / n)
+    y = 0.93
+    for line in lines:
+        if y < 0.03:
+            break
+        if not line.strip():
+            y -= step * 0.4
+            continue
+        if ':' in line and not line.startswith(' '):
+            key, _, val = line.partition(':')
+            ax.text(0.04, y, key + ':', transform=ax.transAxes,
+                    color='#a5b4fc', fontsize=8, va='top', fontfamily='monospace')
+            ax.text(0.44, y, val.strip(), transform=ax.transAxes,
+                    color='#e2e8f0', fontsize=8, va='top', fontfamily='monospace')
+        else:
+            color = '#777777' if line.startswith('  ') else '#cccccc'
+            ax.text(0.04, y, line, transform=ax.transAxes,
+                    color=color, fontsize=8, va='top', fontfamily='monospace')
+        y -= step
+
+    ax.set_title(title, fontsize=9, color='#a5b4fc', pad=6)
+    fig.tight_layout(pad=0.4)
+    img = _fig_to_bgr(fig, dpi=100)
+    plt.close(fig)
+    return img
 
 
 # ─── CSV Reader ───────────────────────────────────────────────────────────────
@@ -139,6 +187,7 @@ _SEP_LABELS  = ['Comma (,)', 'Semicolon (;)', 'Tab (\\t)', 'Pipe (|)']
         {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
         {'id': 'col_count', 'color': 'scalar', 'label': 'Cols'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'path',      'label': 'File Path',          'type': 'string', 'default': 'data.csv'},
@@ -184,13 +233,14 @@ class MLCsvReaderNode(NodeProcessor):
 
         w = int(params.get('width',  420))
         h = int(params.get('height', 240))
-        preview = _render_df_head(self._df, w, h, title=os.path.basename(path))
+        preview = _render_df_table(self._df, w, h, title=os.path.basename(path))
         return {
             'table':     self._df,
             'preview':   preview,
             'row_count': float(len(self._df)),
             'col_count': float(len(self._df.columns)),
             'df_meta':   _df_meta(self._df),
+            'img_size':  [w, h],
         }
 
 
@@ -226,12 +276,16 @@ def _apply_op(df, col, op, val):
     category='DataFrame',
     icon='Filter',
     description="Filter rows of a DataFrame by a column condition. Chain multiple filters for complex queries.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'Filtered DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'enabled',  'label': 'Enable Filter', 'type': 'bool',   'default': True},
@@ -269,14 +323,15 @@ class MLDfFilterNode(NodeProcessor):
             elif col:
                 send_notification(f"DF Filter: column '{col}' not found", level='warning', notif_id=_NOTIF_ID)
 
-        w = int(params.get('width',  380))
-        h = int(params.get('height', 200))
-        preview = _render_df_head(df, w, h, title=f"Filtered — {len(df)} rows")
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 380)), int(params.get('height', 200)))
+        preview = _render_df_table(df, w, h, title=f"Filtered — {len(df)} rows")
         return {
             'table':     df,
             'preview':   preview,
             'row_count': float(len(df)),
             'df_meta':   _df_meta(df),
+            'img_size':  [w, h],
         }
 
 
@@ -291,7 +346,10 @@ _MODES = ['describe()', 'head(10)', 'dtypes + shape', 'value_counts (1 col)']
     category='DataFrame',
     icon='BarChart2',
     description="Show descriptive statistics of a DataFrame: describe(), head, dtypes, or value counts.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'preview',    'color': 'image', 'label': 'Stats'},
         {'id': 'stats_data', 'color': 'dict',  'label': 'Stats dict'},
@@ -300,8 +358,8 @@ _MODES = ['describe()', 'head(10)', 'dtypes + shape', 'value_counts (1 col)']
         {'id': 'mode',    'label': 'Display Mode',          'type': 'enum',   'options': _MODES, 'default': 0},
         {'id': 'columns', 'label': 'Columns (blank = all)', 'type': 'string', 'default': ''},
         {'id': 'col_vc',  'label': 'Column (value_counts)', 'type': 'string', 'default': ''},
-        {'id': 'out_w',   'label': 'Export width px  (0 = taille nœud)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
-        {'id': 'out_h',   'label': 'Export height px (0 = taille nœud)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
+        {'id': 'out_w',   'label': 'Export width px  (0 = auto)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
+        {'id': 'out_h',   'label': 'Export height px (0 = auto)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
     ],
     resizable=True,
     min_width=320,
@@ -318,8 +376,10 @@ class MLDfStatsNode(NodeProcessor):
         col_vc   = str(params.get('col_vc', '')).strip()
         out_w    = int(params.get('out_w', 0))
         out_h    = int(params.get('out_h', 0))
-        w        = out_w if out_w > 0 else int(params.get('width',  580))
-        # h is computed per-mode from row count; out_h overrides if set explicitly
+        s        = inputs.get('img_size')
+        w_size, h_size = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (0, 0)
+        w = out_w if out_w > 0 else (w_size if w_size > 0 else int(params.get('width', 580)))
+        # h priority: out_h > img_size > auto per-mode
 
         if cols_str:
             sel = [c.strip() for c in cols_str.split(',') if c.strip() in df.columns]
@@ -348,7 +408,7 @@ class MLDfStatsNode(NodeProcessor):
                     row_colors.append([None] * (len(num_cols) + 1))
 
             title = f"describe()  —  {rows_n} rows × {cols_n} cols"
-            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
+            h = out_h if out_h > 0 else (h_size if h_size > 0 else max(160, 44 + (len(rows_data) + 1) * 26))
             preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
             stats_data = {
                 'mode': 'describe',
@@ -368,7 +428,7 @@ class MLDfStatsNode(NodeProcessor):
             rows_data = [[str(sub.iloc[i][c])[:14] for c in visible]
                          for i in range(len(sub))]
             title = f"head(10)  —  {rows_n} rows × {cols_n} cols"
-            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
+            h = out_h if out_h > 0 else (h_size if h_size > 0 else max(160, 44 + (len(rows_data) + 1) * 26))
             preview = _table_img(col_labels, rows_data, w, h, title)
             stats_data = {
                 'mode': 'head',
@@ -391,7 +451,7 @@ class MLDfStatsNode(NodeProcessor):
                 for r in rows_data
             ]
             title = f"dtypes + shape  —  {rows_n} rows × {cols_n} cols"
-            h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
+            h = out_h if out_h > 0 else (h_size if h_size > 0 else max(160, 44 + (len(rows_data) + 1) * 26))
             preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
             stats_data = {
                 'mode': 'dtypes',
@@ -406,14 +466,12 @@ class MLDfStatsNode(NodeProcessor):
                 col_labels = ['Value', 'Count', '%']
                 rows_data  = [[str(v)[:20], str(c), f"{c/total*100:.1f}%"]
                               for v, c in vc.items()]
-                # Color count bar using gradient: high → green, low → red
-                max_c = vc.max()
                 row_colors = [
                     [None, '#93c5fd', '#a5b4fc']
                     for _ in rows_data
                 ]
                 title = f"value_counts({col_vc})  —  {len(vc)} unique / {total} total"
-                h = out_h if out_h > 0 else max(160, 44 + (len(rows_data) + 1) * 26)
+                h = out_h if out_h > 0 else (h_size if h_size > 0 else max(160, 44 + (len(rows_data) + 1) * 26))
                 preview = _table_img(col_labels, rows_data, w, h, title, row_colors)
                 stats_data = {
                     'mode': 'value_counts',
@@ -424,6 +482,7 @@ class MLDfStatsNode(NodeProcessor):
                 }
             else:
                 # Fallback blank
+                h = out_h if out_h > 0 else (h_size if h_size > 0 else 200)
                 _, plt = _get_mpl()
                 fig, ax = plt.subplots(figsize=(w/100, h/100))
                 ax.set_axis_off()
@@ -466,6 +525,7 @@ _SK_KEYS = ['iris', 'wine', 'breast_cancer', 'diabetes', 'digits', 'california_h
         {'id': 'preview',   'color': 'image',  'label': 'Info panel'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Lignes'},
         {'id': 'col_count', 'color': 'scalar', 'label': 'Colonnes'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'dataset', 'label': 'Dataset', 'type': 'enum', 'options': _SK_DATASETS, 'default': 0},
@@ -535,11 +595,12 @@ class MLSklearnDatasetNode(NodeProcessor):
         if len(df.columns) > 12:
             lines.append(f"  ... +{len(df.columns)-12} autres")
 
-        preview = _render_text_panel('\n'.join(lines), w, h, title=f"sklearn — {key}")
+        preview = _render_info_panel(lines, w, h, title=f"sklearn — {key}")
 
         return {
             'table':     df,
             'preview':   preview,
             'row_count': float(len(df)),
             'col_count': float(len(df.columns)),
+            'img_size':  [w, h],
         }
