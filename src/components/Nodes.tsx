@@ -24,6 +24,7 @@ import {
 } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { MarkdownToolbar } from './MarkdownToolbar';
 
 export const HANDLE_COLORS = { image: '#3b82f6', data: '#f97316', dict: '#22c55e', list: '#a855f7', scalar: '#eab308', string: '#7dd3fc', mask: '#d1d5db', flow: '#ef4444', boolean: '#22d3ee', any: '#ffffff', geotiff: '#059669', audio: '#818cf8', markers: '#f59e0b', regions: '#2dd4bf', contours: '#a3e635', coords: '#fb7185', points: '#e879f9', vectors: '#38bdf8' };
@@ -2283,6 +2284,7 @@ const _noteHash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.len
 export const CanvasNoteNode = memo(({ selected, data }: any) => {
   const [editing, setEditing] = useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const blurTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const text = data.params?.text ?? '';
   const palIdx = data?.activePaletteIndex ?? 6;
@@ -2296,6 +2298,19 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   React.useEffect(() => {
     if (editing) textareaRef.current?.focus();
   }, [editing]);
+
+  // Cancel pending close if pointer stays inside the editing area (toolbar clicks)
+  const handleEditorMouseDown = () => {
+    if (blurTimerRef.current) {
+      clearTimeout(blurTimerRef.current);
+      blurTimerRef.current = null;
+    }
+  };
+
+  const handleTextareaBlur = () => {
+    // Delay close so toolbar onMouseDown can cancel it first
+    blurTimerRef.current = setTimeout(() => setEditing(false), 150);
+  };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -2319,7 +2334,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
       onDoubleClick={handleDoubleClick}
     >
       <div
-        className="flex items-center gap-1.5 px-2 py-1 nodrag select-none"
+        className="flex items-center gap-1.5 px-2 py-1 select-none cursor-grab active:cursor-grabbing"
         style={{ background: 'rgba(0,0,0,0.13)', borderBottom: isMinified ? 'none' : '1px solid rgba(0,0,0,0.10)' }}
       >
         <div
@@ -2336,17 +2351,17 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
       {!isMinified && (
         editing ? (
-          <div className="flex-1 flex flex-col min-h-0 w-full h-full bg-black/10">
-            <MarkdownToolbar 
-              textareaRef={textareaRef} 
-              value={text} 
-              onChange={(val) => data.onChangeParams?.({ text: val })} 
+          <div className="flex-1 flex flex-col min-h-0 w-full h-full bg-black/10 nodrag nopan" onMouseDown={handleEditorMouseDown}>
+            <MarkdownToolbar
+              textareaRef={textareaRef}
+              value={text}
+              onChange={(val) => data.onChangeParams?.({ text: val })}
             />
             <textarea
               ref={textareaRef}
               value={text}
               onChange={e => data.onChangeParams?.({ text: e.target.value })}
-              onBlur={() => setEditing(false)}
+              onBlur={handleTextareaBlur}
               onKeyDown={e => {
                 if (e.key === 'Escape') setEditing(false);
                 e.stopPropagation();
@@ -2369,7 +2384,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
             }}
           >
             {text ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                 {text}
               </ReactMarkdown>
             ) : (

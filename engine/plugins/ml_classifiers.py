@@ -427,3 +427,271 @@ def _report_panel(report_dict: dict, w: int, h: int, title: str, plt) -> np.ndar
     img = _fig_to_bgr(fig, dpi)
     plt.close(fig)
     return img
+
+
+# ─── Random Forest Classifier ─────────────────────────────────────────────────
+
+_RF_CRITERIA = ['gini', 'entropy', 'log_loss']
+_RF_MAX_FEAT = ['sqrt', 'log2', 'none (all)']
+
+
+@vision_node(
+    type_id='ml_random_forest',
+    label='Random Forest',
+    category='Machine Learning',
+    icon='TreePine',
+    description=(
+        "Random Forest classifier. "
+        "Confusion matrix + per-class report. "
+        "Feature importance bar chart. "
+        "Slide n_estimators or max_depth to see the effect in real time."
+    ),
+    inputs=[
+        {'id': 'train',         'color': 'data', 'label': 'Train set'},
+        {'id': 'test',          'color': 'data', 'label': 'Test set'},
+        {'id': 'predict_table', 'color': 'data', 'label': 'Full table (predict all pixels)'},
+        {'id': 'img_size',      'color': 'list', 'label': 'Img Size'},
+    ],
+    outputs=[
+        {'id': 'preview',      'color': 'image',  'label': 'Confusion matrix'},
+        {'id': 'importance',   'color': 'image',  'label': 'Feature importance'},
+        {'id': 'accuracy',     'color': 'scalar', 'label': 'Test accuracy'},
+        {'id': 'train_acc',    'color': 'scalar', 'label': 'Train accuracy'},
+        {'id': 'oob_score',    'color': 'scalar', 'label': 'OOB score'},
+        {'id': 'report',       'color': 'image',  'label': 'Classification report'},
+        {'id': 'report_data',  'color': 'dict',   'label': 'Report dict'},
+        {'id': 'predictions',  'color': 'data',   'label': 'Predictions (all pixels)'},
+    ],
+    params=[
+        {'id': 'features',      'label': 'Feature columns (comma-separated, blank=auto)', 'type': 'string', 'default': ''},
+        {'id': 'target',        'label': 'Target column',        'type': 'string', 'default': ''},
+        {'id': 'n_estimators',  'label': 'Num trees',            'type': 'int',    'default': 100,  'min': 1,   'max': 500},
+        {'id': 'max_depth',     'label': 'Max depth  (0 = none)','type': 'int',    'default': 0,    'min': 0,   'max': 50},
+        {'id': 'min_samples_split', 'label': 'Min samples split','type': 'int',    'default': 2,    'min': 2,   'max': 50},
+        {'id': 'criterion',     'label': 'Criterion',            'type': 'enum',   'options': _RF_CRITERIA, 'default': 0},
+        {'id': 'max_features',  'label': 'Max features / tree',  'type': 'enum',   'options': _RF_MAX_FEAT, 'default': 0},
+        {'id': 'bootstrap',     'label': 'Bootstrap',            'type': 'bool',   'default': True},
+        {'id': 'oob',           'label': 'OOB score (needs bootstrap)', 'type': 'bool', 'default': False},
+        {'id': 'random_state',  'label': 'Random seed',          'type': 'int',    'default': 42,   'min': 0,   'max': 9999},
+        {'id': 'colormap',      'label': 'Colormap',             'type': 'enum',   'options': ['tab10', 'Set1', 'Set2', 'viridis'], 'default': 0},
+        {'id': 'top_n_feat',    'label': 'Top N features in chart', 'type': 'int', 'default': 20,   'min': 1,   'max': 100},
+        *_EXPORT_PARAMS,
+    ],
+    resizable=True,
+    min_width=320,
+    min_height=260,
+)
+class MLRandomForestNode(NodeProcessor):
+    def process(self, inputs, params):
+        train_df = inputs.get('train')
+        test_df  = inputs.get('test')
+        if train_df is None or test_df is None:
+            return {}
+
+        if not self.ensure_packages(['sklearn'], pip_names=['scikit-learn'], notif_id=_NOTIF_ID):
+            return {}
+
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.preprocessing import LabelEncoder
+        from sklearn.metrics import classification_report, confusion_matrix
+
+        _, plt = _get_mpl()
+
+        # ── Parameters ────────────────────────────────────────────────────────
+        feat_str   = str(params.get('features', '')).strip()
+        target     = str(params.get('target',   '')).strip()
+        n_est      = max(1, int(params.get('n_estimators', 100)))
+        max_depth  = int(params.get('max_depth', 0)) or None
+        min_split  = max(2, int(params.get('min_samples_split', 2)))
+        criterion  = _RF_CRITERIA[int(params.get('criterion', 0))]
+        max_feat_i = int(params.get('max_features', 0))
+        max_feat   = [None if v == 'none (all)' else v for v in _RF_MAX_FEAT][max_feat_i]
+        bootstrap  = bool(params.get('bootstrap', True))
+        oob        = bool(params.get('oob', False)) and bootstrap
+        seed       = int(params.get('random_state', 42))
+        cmaps      = ['tab10', 'Set1', 'Set2', 'viridis']
+        cmap       = cmaps[int(params.get('colormap', 0))]
+        top_n      = max(1, int(params.get('top_n_feat', 20)))
+        fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
+
+        # ── Feature / target selection ────────────────────────────────────────
+        all_cols = list(train_df.columns)
+        num_cols = [c for c in all_cols if train_df[c].dtype.kind in 'biufc']
+
+        if not target or target not in all_cols:
+            target = all_cols[-1]
+        if feat_str:
+            features = [c.strip() for c in feat_str.split(',')
+                        if c.strip() in num_cols and c.strip() != target]
+        else:
+            features = [c for c in num_cols if c != target]
+
+        if not features:
+            send_notification("Random Forest: no feature columns found", level='warning', notif_id=_NOTIF_ID)
+            return {}
+
+        # ── Data prep ─────────────────────────────────────────────────────────
+        le = LabelEncoder()
+        try:
+            X_train = train_df[features].values.astype(float)
+            X_test  = test_df[features].values.astype(float)
+            y_train = le.fit_transform(train_df[target].astype(str))
+            y_test  = le.transform(test_df[target].astype(str))
+        except Exception as e:
+            send_notification(f"Random Forest: data error — {e}", level='error', notif_id=_NOTIF_ID)
+            return {}
+
+        mask_tr = ~np.isnan(X_train).any(axis=1)
+        mask_te = ~np.isnan(X_test).any(axis=1)
+        X_train, y_train = X_train[mask_tr], y_train[mask_tr]
+        X_test,  y_test  = X_test[mask_te],  y_test[mask_te]
+
+        if len(X_train) == 0:
+            send_notification("Random Forest: train set empty after NaN removal", level='error', notif_id=_NOTIF_ID)
+            return {}
+
+        # ── Train ─────────────────────────────────────────────────────────────
+        rf = RandomForestClassifier(
+            n_estimators=n_est,
+            max_depth=max_depth,
+            min_samples_split=min_split,
+            criterion=criterion,
+            max_features=max_feat,
+            bootstrap=bootstrap,
+            oob_score=oob,
+            random_state=seed,
+            n_jobs=-1,
+        )
+        rf.fit(X_train, y_train)
+
+        train_acc = float(rf.score(X_train, y_train))
+        test_acc  = float(rf.score(X_test, y_test)) if len(X_test) > 0 else 0.0
+        oob_score = float(rf.oob_score_) if oob else 0.0
+        classes   = le.classes_
+
+        # ── Confusion matrix ──────────────────────────────────────────────────
+        with plt.rc_context(_MPL_DARK):
+            preview = _plot_confusion_rf(rf, X_test, y_test, classes,
+                                         cmap, test_acc, n_est, fig_w, fig_h, dpi, plt)
+
+            # ── Feature importance chart ───────────────────────────────────────
+            importance_img = _plot_feature_importance(
+                rf.feature_importances_, features, top_n,
+                fig_w, fig_h, dpi, plt
+            )
+
+            # ── Report panel ──────────────────────────────────────────────────
+            if len(X_test) > 0:
+                report_dict = classification_report(
+                    y_test, rf.predict(X_test),
+                    target_names=[str(c) for c in classes],
+                    output_dict=True, zero_division=0,
+                )
+            else:
+                report_dict = {}
+            report_w   = max(int(fig_w * dpi), 420)
+            report_img = _report_panel(
+                report_dict, report_w, 280,
+                title=f"Random Forest  trees={n_est}", plt=plt
+            )
+
+        # ── Predict on full table (e.g. all geo pixels) ──────────────────────
+        predictions_df = None
+        pred_df = inputs.get('predict_table')
+        if pred_df is not None:
+            try:
+                import pandas as pd
+                feat_cols_avail = [c for c in features if c in pred_df.columns]
+                if feat_cols_avail:
+                    X_pred = pred_df[feat_cols_avail].values.astype(float)
+                    valid_pred = ~np.isnan(X_pred).any(axis=1)
+                    pred_out = np.full(len(pred_df), -1, dtype=np.int32)
+                    if valid_pred.any():
+                        pred_out[valid_pred] = rf.predict(X_pred[valid_pred])
+                    result_df = pred_df[['__px_idx']].copy() if '__px_idx' in pred_df.columns else pd.DataFrame()
+                    result_df['prediction'] = pred_out
+                    predictions_df = result_df
+            except Exception as e:
+                send_notification(f"Random Forest predict_table error: {e}", level='warning', notif_id=_NOTIF_ID)
+
+        return {
+            'preview':     preview,
+            'importance':  importance_img,
+            'accuracy':    test_acc,
+            'train_acc':   train_acc,
+            'oob_score':   oob_score,
+            'report':      report_img,
+            'report_data': report_dict,
+            'predictions': predictions_df,
+        }
+
+
+def _plot_confusion_rf(rf, X_te, y_te, classes, cmap, test_acc, n_est,
+                       fig_w, fig_h, dpi, plt):
+    """Confusion matrix for Random Forest (N features)."""
+    from sklearn.metrics import confusion_matrix
+    out_w, out_h = int(fig_w * dpi), int(fig_h * dpi)
+    if len(X_te) == 0:
+        blank = np.full((out_h, out_w, 3), 22, dtype=np.uint8)
+        cv2.putText(blank, "No test data", (20, out_h // 2),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (150, 150, 150), 1)
+        return blank
+
+    cm = confusion_matrix(y_te, rf.predict(X_te))
+    n  = len(classes)
+
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    im = ax.imshow(cm, cmap=cmap, aspect='auto')
+    fig.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels([str(c) for c in classes], rotation=45, ha='right', fontsize=8)
+    ax.set_yticklabels([str(c) for c in classes], fontsize=8)
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('Actual')
+
+    for i in range(n):
+        for j in range(n):
+            color = 'white' if cm[i, j] < cm.max() * 0.6 else 'black'
+            ax.text(j, i, str(cm[i, j]), ha='center', va='center', fontsize=9, color=color)
+
+    ax.set_title(f"Random Forest  trees={n_est}  |  acc = {test_acc:.1%}", fontsize=10)
+    fig.tight_layout()
+    img = _fig_to_bgr(fig, dpi)
+    plt.close(fig)
+    return img
+
+
+def _plot_feature_importance(importances: np.ndarray, feature_names: list,
+                              top_n: int, fig_w: float, fig_h: float,
+                              dpi: int, plt) -> np.ndarray:
+    """Horizontal bar chart of RF feature importances, top N only."""
+    idx = np.argsort(importances)[::-1][:top_n]
+    vals  = importances[idx]
+    names = [feature_names[i] for i in idx]
+
+    # Reverse so highest bar is at top
+    vals  = vals[::-1]
+    names = names[::-1]
+
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    colors = plt.cm.get_cmap('viridis')(np.linspace(0.25, 0.85, len(vals)))
+    bars = ax.barh(range(len(vals)), vals, color=colors, edgecolor='none', height=0.7)
+
+    ax.set_yticks(range(len(vals)))
+    ax.set_yticklabels(names, fontsize=8)
+    ax.set_xlabel('Importance (mean decrease in impurity)')
+    ax.set_title(f'Feature Importance  (top {len(vals)})', fontsize=10)
+    ax.xaxis.grid(True, alpha=0.3)
+    ax.set_axisbelow(True)
+
+    # Value labels on bars
+    for bar, val in zip(bars, vals):
+        ax.text(val + 0.001, bar.get_y() + bar.get_height() / 2,
+                f'{val:.3f}', va='center', fontsize=7, color='#aaaaaa')
+
+    fig.tight_layout()
+    img = _fig_to_bgr(fig, dpi)
+    plt.close(fig)
+    return img

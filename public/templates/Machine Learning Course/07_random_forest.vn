@@ -1,0 +1,857 @@
+{
+  "nodes": [
+    {
+      "id": "titre",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": -230
+      },
+      "style": {
+        "width": 1880,
+        "height": 80
+      },
+      "data": {
+        "label": "Note",
+        "id": "titre",
+        "params": {
+          "text": "TD — Random Forest : Certifier l'origine d'un vin par analyse chimique",
+          "bg_color": "#0f172a",
+          "text_color": "#f8fafc"
+        }
+      },
+      "width": 1880,
+      "height": 80,
+      "selected": false
+    },
+    {
+      "id": "fA",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": -130
+      },
+      "style": {
+        "width": 1880,
+        "height": 500,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Acte 1 — La Question : peut-on certifier un vin par la chimie ?",
+          "color_index": 0
+        }
+      },
+      "width": 1880,
+      "height": 500,
+      "selected": false
+    },
+    {
+      "id": "nA1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": -60
+      },
+      "style": {
+        "width": 570,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA1",
+        "params": {
+          "text": "## Le problème\n\nUn laboratoire d'œnologie travaille avec **3 producteurs** de vin\nde la région de Barolo (Italie). Chaque semaine, des centaines\nd'échantillons arrivent pour certification d'origine.\n\nLe processus actuel : un expert analyse chaque vin à la main.\n**C'est long, coûteux, et subjectif.**\n\n---\n\n### La question centrale\n\n> Peut-on prédire automatiquement le **producteur d'origine**\n> à partir d'une simple analyse chimique du vin ?\n\nSi oui, le laboratoire peut certifier **10× plus vite**\navec une traçabilité parfaite.",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 570,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "nA2",
+      "type": "canvas_note",
+      "position": {
+        "x": 520,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA2",
+        "params": {
+          "text": "## Le dataset Wine (sklearn)\n\n**178 échantillons · 13 features · 3 classes (producteurs)**\n\n| Feature | Description |\n|---------|-------------|\n| alcohol | Teneur en alcool (% vol.) |\n| malic_acid | Acide malique |\n| ash | Cendres minérales |\n| flavanoids | Polyphénols flavonoïdes |\n| proline | Acide aminé dominant |\n| color_intensity | Intensité colorante |\n| hue | Teinte optique |\n| … | 6 autres features |\n\n*Source : Forina et al., 1986 — University of Genova*\n\nLes **3 classes** correspondent à 3 producteurs distincts.\nLa colonne cible s'appelle `target` (valeurs : 0, 1, 2).",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 580,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "nA3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1145,
+        "y": -60
+      },
+      "style": {
+        "width": 590,
+        "height": 400
+      },
+      "data": {
+        "label": "Note",
+        "id": "nA3",
+        "params": {
+          "text": "## Notre plan d'attaque\n\n**Acte 2** — Explorer les données\n→ Y a-t-il des patterns visuels entre les 3 classes ?\n→ Quelles features semblent discriminantes ?\n\n**Acte 3** — Baseline : arbre de décision unique\n→ Un modèle simple suffit-il ?\n→ Quelles sont ses limites ?\n\n**Acte 4** — Random Forest\n→ Amélioration et robustesse\n→ Effet des hyperparamètres\n\n**Acte 5** — Interpréter et conclure\n→ Quelles features discriminent les producteurs ?\n→ Peut-on automatiser la certification ?\n\n---\n\n**Critère de succès :** accuracy > 90 % sur le test set",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 590,
+      "height": 400,
+      "selected": false
+    },
+    {
+      "id": "fB",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 390
+      },
+      "style": {
+        "width": 1880,
+        "height": 560,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Acte 2 — Explorer les données avant de modéliser",
+          "color_index": 2
+        }
+      },
+      "width": 1880,
+      "height": 560,
+      "selected": false
+    },
+    {
+      "id": "ds",
+      "type": "ml_sklearn_dataset",
+      "position": {
+        "x": -80,
+        "y": 460
+      },
+      "data": {
+        "label": "Wine Dataset",
+        "params": {
+          "dataset": 1,
+          "node_note": "Wine (178 échantillons, 13 features, 3 classes)"
+        }
+      }
+    },
+    {
+      "id": "stats",
+      "type": "ml_df_stats",
+      "position": {
+        "x": -80,
+        "y": 680
+      },
+      "data": {
+        "label": "Statistiques",
+        "params": {
+          "node_note": "describe()"
+        }
+      }
+    },
+    {
+      "id": "d_stats",
+      "type": "output_display",
+      "position": {
+        "x": 220,
+        "y": 680
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Stats descriptives"
+        }
+      }
+    },
+    {
+      "id": "scatter",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 220,
+        "y": 460
+      },
+      "data": {
+        "label": "Scatter Plot",
+        "params": {
+          "x_col": "flavanoids",
+          "y_col": "proline",
+          "hue_col": "target",
+          "node_note": "flavanoids vs proline"
+        }
+      }
+    },
+    {
+      "id": "d_scat",
+      "type": "output_display",
+      "position": {
+        "x": 490,
+        "y": 460
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Séparabilité visuelle"
+        }
+      }
+    },
+    {
+      "id": "heatmap",
+      "type": "ml_corr_heatmap",
+      "position": {
+        "x": 760,
+        "y": 460
+      },
+      "data": {
+        "label": "Corrélations",
+        "params": {
+          "annot": true,
+          "node_note": "Corrélations entre features"
+        }
+      }
+    },
+    {
+      "id": "d_heat",
+      "type": "output_display",
+      "position": {
+        "x": 1020,
+        "y": 460
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Heatmap corrélations"
+        }
+      }
+    },
+    {
+      "id": "nB_obs",
+      "type": "canvas_note",
+      "position": {
+        "x": 1270,
+        "y": 455
+      },
+      "style": {
+        "width": 470,
+        "height": 455
+      },
+      "data": {
+        "label": "Note",
+        "id": "nB_obs",
+        "params": {
+          "text": "## Ce qu'il faut observer\n\n**Sur le scatter plot** *(flavanoids vs proline)* :\n- Les 3 classes sont-elles séparables visuellement ?\n- Y a-t-il des zones de chevauchement ?\n- Une droite pourrait-elle séparer les classes ?\n\n**Sur la heatmap de corrélation** :\n- Quelles features sont fortement corrélées (|r| > 0.7) ?\n- Des features très corrélées apportent-elles la même info ?\n- Repérez les features *indépendantes* entre elles.\n\n---\n\n> Un bon data scientist **explore avant de modéliser**.\n> Notez vos observations ici ou sur papier avant\n> de passer à l'Acte 3.",
+          "bg_color": "#f0fdf4",
+          "text_color": "#166534"
+        }
+      },
+      "width": 470,
+      "height": 455,
+      "selected": false
+    },
+    {
+      "id": "fC",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 970
+      },
+      "style": {
+        "width": 1880,
+        "height": 560,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Acte 3 — Baseline : un seul arbre de décision (ses forces et ses limites)",
+          "color_index": 4
+        }
+      },
+      "width": 1880,
+      "height": 560,
+      "selected": false
+    },
+    {
+      "id": "split",
+      "type": "ml_train_test_split",
+      "position": {
+        "x": -80,
+        "y": 1050
+      },
+      "data": {
+        "label": "Train / Test Split",
+        "params": {
+          "test_size": 25,
+          "stratify_col": "target",
+          "random_state": 42,
+          "node_note": "75 % train / 25 % test — stratifié"
+        }
+      }
+    },
+    {
+      "id": "dt",
+      "type": "ml_decision_tree",
+      "position": {
+        "x": 270,
+        "y": 1010
+      },
+      "data": {
+        "label": "Decision Tree",
+        "params": {
+          "target": "target",
+          "max_depth": 3,
+          "criterion": 0,
+          "node_note": "Arbre — depth 3"
+        }
+      }
+    },
+    {
+      "id": "d_tree",
+      "type": "output_display",
+      "position": {
+        "x": 660,
+        "y": 1010
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Visualisation de l'arbre"
+        }
+      }
+    },
+    {
+      "id": "d_imp_dt",
+      "type": "output_display",
+      "position": {
+        "x": 920,
+        "y": 1010
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Feature importance (DT)"
+        }
+      }
+    },
+    {
+      "id": "i_acc_dt",
+      "type": "data_inspector",
+      "position": {
+        "x": 660,
+        "y": 1280
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "Test accuracy (DT)"
+        }
+      }
+    },
+    {
+      "id": "i_tr_dt",
+      "type": "data_inspector",
+      "position": {
+        "x": 860,
+        "y": 1280
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "Train accuracy (DT)"
+        }
+      }
+    },
+    {
+      "id": "nC1",
+      "type": "canvas_note",
+      "position": {
+        "x": 1140,
+        "y": 1010
+      },
+      "style": {
+        "width": 400,
+        "height": 260
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC1",
+        "params": {
+          "text": "## Un seul arbre suffit-il ?\n\nObservez le tree plot à `max_depth = 3` :\n- Quelles features apparaissent aux nœuds supérieurs ?\n- L'arbre isole-t-il les 3 classes correctement ?\n\n**Testez ces valeurs :**\n\n| max_depth | train_acc | test_acc | Diagnostic |\n|-----------|-----------|----------|------------|\n| 1 | ? | ? | underfitting ? |\n| 3 | ? | ? | équilibré ? |\n| 10 | ? | ? | overfit ? |\n\n**Constat :** changez le `random_state` du Split.\nL'arbre change-t-il beaucoup ? Pourquoi est-ce un problème ?",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 400,
+      "height": 260,
+      "selected": false
+    },
+    {
+      "id": "nC2",
+      "type": "canvas_note",
+      "position": {
+        "x": 1570,
+        "y": 1010
+      },
+      "style": {
+        "width": 300,
+        "height": 460
+      },
+      "data": {
+        "label": "Note",
+        "id": "nC2",
+        "params": {
+          "text": "## Limites de l'arbre unique\n\n**Variance élevée**\nUn petit changement dans les données d'entraînement\nproduit un arbre très différent.\n→ Le modèle est *instable*.\n\n**Frontières orthogonales**\nL'arbre ne capture pas les relations diagonales\nentre features.\n\n**Overfit facile**\nSans contrainte de profondeur, l'arbre mémorise\nles données au lieu d'apprendre.\n\n---\n\n### La solution intuitive\n\nEntraîner **N arbres différents** sur des\nsous-ensembles aléatoires des données,\npuis combiner leurs votes.\n\n→ **C'est exactement la Random Forest.**",
+          "bg_color": "#ffe4e6",
+          "text_color": "#9f1239"
+        }
+      },
+      "width": 300,
+      "height": 460,
+      "selected": false
+    },
+    {
+      "id": "fD",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 1550
+      },
+      "style": {
+        "width": 1880,
+        "height": 570,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Acte 4 — Random Forest : la forêt entre en scène",
+          "color_index": 1
+        }
+      },
+      "width": 1880,
+      "height": 570,
+      "selected": false
+    },
+    {
+      "id": "rf",
+      "type": "ml_random_forest",
+      "position": {
+        "x": -80,
+        "y": 1620
+      },
+      "data": {
+        "label": "Random Forest",
+        "params": {
+          "target": "target",
+          "n_estimators": 100,
+          "max_depth": 0,
+          "min_samples_split": 2,
+          "criterion": 0,
+          "max_features": 0,
+          "bootstrap": true,
+          "oob": true,
+          "random_state": 42,
+          "top_n_feat": 13,
+          "node_note": "100 arbres — OOB activé"
+        }
+      }
+    },
+    {
+      "id": "d_cm",
+      "type": "output_display",
+      "position": {
+        "x": 380,
+        "y": 1620
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Matrice de confusion (RF)"
+        }
+      }
+    },
+    {
+      "id": "d_imp",
+      "type": "output_display",
+      "position": {
+        "x": 640,
+        "y": 1620
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Feature Importance (RF)"
+        }
+      }
+    },
+    {
+      "id": "d_rep",
+      "type": "output_display",
+      "position": {
+        "x": 900,
+        "y": 1620
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "node_note": "Rapport de classification"
+        }
+      }
+    },
+    {
+      "id": "i_acc",
+      "type": "data_inspector",
+      "position": {
+        "x": 380,
+        "y": 1870
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "Test accuracy (RF)"
+        }
+      }
+    },
+    {
+      "id": "i_tr",
+      "type": "data_inspector",
+      "position": {
+        "x": 560,
+        "y": 1870
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "Train accuracy (RF)"
+        }
+      }
+    },
+    {
+      "id": "i_oob",
+      "type": "data_inspector",
+      "position": {
+        "x": 740,
+        "y": 1870
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "node_note": "OOB score"
+        }
+      }
+    },
+    {
+      "id": "nD1",
+      "type": "canvas_note",
+      "position": {
+        "x": 1140,
+        "y": 1620
+      },
+      "style": {
+        "width": 350,
+        "height": 250
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD1",
+        "params": {
+          "text": "## Pourquoi la forêt fait mieux ?\n\n**Bootstrap sampling**\nChaque arbre est entraîné sur un tirage\n*avec remise* des données.\n→ Chaque arbre voit ~63 % des exemples,\n  différents d'un arbre à l'autre.\n\n**Random subspace**\nÀ chaque nœud, seulement `sqrt(13) ≈ 4`\nfeatures sont candidates.\n→ Les arbres sont *décorrélés*.\n\n**Vote majoritaire**\nLes erreurs individuelles se compensent.\nLa variance globale s'effondre.\n\n**OOB score**\nLes ~37 % d'exemples non vus par chaque arbre\nservent de validation *gratuite*.\nOOB ≈ Leave-one-out cross-validation.",
+          "bg_color": "#1e293b",
+          "text_color": "#94a3b8"
+        }
+      },
+      "width": 350,
+      "height": 250,
+      "selected": false
+    },
+    {
+      "id": "nD2",
+      "type": "canvas_note",
+      "position": {
+        "x": 1510,
+        "y": 1620
+      },
+      "style": {
+        "width": 350,
+        "height": 480
+      },
+      "data": {
+        "label": "Note",
+        "id": "nD2",
+        "params": {
+          "text": "## Hyperparamètres à explorer\n\n**`n_estimators`** — 10 → 500\nÀ partir de combien d'arbres l'accuracy\nse stabilise-t-elle ?\n\n**`max_depth`** — 3, 5, None\n`None` = arbres profonds, haute variance\nindividuelle, mais compensée par l'ensemble.\n\n**`criterion`** — gini vs entropy\nDifférence généralement < 1 % en pratique.\n\n**`oob_score`** — activez-le !\nComparez OOB score et test accuracy.\nSont-ils cohérents ?\n\n---\n\nRemplissez ce tableau dans votre compte-rendu :\n\n| n_trees | test_acc | oob |\n|---------|----------|-----|\n| 10 | ? | ? |\n| 50 | ? | ? |\n| 200 | ? | ? |",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 350,
+      "height": 480,
+      "selected": false
+    },
+    {
+      "id": "fE",
+      "type": "canvas_frame",
+      "position": {
+        "x": -120,
+        "y": 2140
+      },
+      "style": {
+        "width": 1880,
+        "height": 490,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Acte 5 — Interpréter, Conclure, Répondre à la question initiale",
+          "color_index": 0
+        }
+      },
+      "width": 1880,
+      "height": 490,
+      "selected": false
+    },
+    {
+      "id": "nE1",
+      "type": "canvas_note",
+      "position": {
+        "x": -90,
+        "y": 2210
+      },
+      "style": {
+        "width": 570,
+        "height": 390
+      },
+      "data": {
+        "label": "Note",
+        "id": "nE1",
+        "params": {
+          "text": "## Interprétation : la chimie du vin\n\nLes features les plus importantes (attendues) :\n\n**proline** — acide aminé très abondant dans\ncertains cépages. Marqueur fort du terroir\net du producteur. Varie de 278 à 1680 mg/L.\n\n**flavanoids** — polyphénols antioxydants.\nCorrélés à la qualité et à l'origine géographique.\n\n**color_intensity** — liée à l'anthocyane,\nmarqueur du cépage et du millésime.\n\n**alcohol** — reflet du sucre résiduel\net des conditions de fermentation.\n\n---\n\n> Le modèle a **\"découvert\" la chimie du vin**\n> sans aucune connaissance préalable.\n> Les features importantes correspondent\n> exactement aux marqueurs œnologiques connus !",
+          "bg_color": "#dbeafe",
+          "text_color": "#1e40af"
+        }
+      },
+      "width": 570,
+      "height": 390,
+      "selected": false
+    },
+    {
+      "id": "nE2",
+      "type": "canvas_note",
+      "position": {
+        "x": 520,
+        "y": 2210
+      },
+      "style": {
+        "width": 580,
+        "height": 390
+      },
+      "data": {
+        "label": "Note",
+        "id": "nE2",
+        "params": {
+          "text": "## Votre conclusion — à rédiger\n\nRépondez à la question initiale du laboratoire :\n\n**1. Faisabilité**\nPeut-on automatiser la certification ?\nJustifiez avec les métriques obtenues.\n\n**2. Comparaison des modèles**\nDT vs RF — quel gain d'accuracy ?\nPourquoi la forêt est-elle plus robuste ?\n\n**3. Fiabilité**\nL'OOB score est-il cohérent avec le test accuracy ?\nQu'est-ce que cela implique ?\n\n**4. Feature selection**\nSi vous deviez ne garder que 5 features\npour accélérer l'analyse en laboratoire,\nlesquelles choisiriez-vous ? Pourquoi ?\n\n**5. Limites et conditions de déploiement**\nQuelles garanties faut-il avant de\nmettre ce modèle en production ?",
+          "bg_color": "#fef9c3",
+          "text_color": "#713f12"
+        }
+      },
+      "width": 580,
+      "height": 390,
+      "selected": false
+    },
+    {
+      "id": "nE3",
+      "type": "canvas_note",
+      "position": {
+        "x": 1145,
+        "y": 2210
+      },
+      "style": {
+        "width": 590,
+        "height": 390
+      },
+      "data": {
+        "label": "Note",
+        "id": "nE3",
+        "params": {
+          "text": "## Pour aller plus loin\n\n**Améliorer le modèle :**\n- Essayez `GradientBoostingClassifier`\n  (sklearn) — souvent encore meilleur\n- Testez `cross_val_score` pour une\n  évaluation plus robuste\n\n**Interpréter plus finement :**\n- *Permutation importance* — plus fiable\n  que la MDI si features corrélées\n- *SHAP values* — explication par exemple\n\n**Déployer :**\n- `joblib.dump(rf, 'modele.pkl')` pour\n  sauvegarder le modèle entraîné\n- `joblib.load(...)` pour le réutiliser\n  sur de nouveaux échantillons\n\n**Dataset plus challenging :**\n- `breast_cancer` (30 features, binaire)\n- `digits` (64 features, 10 classes)",
+          "bg_color": "#dcfce7",
+          "text_color": "#166534"
+        }
+      },
+      "width": 590,
+      "height": 390,
+      "selected": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_ds_stats",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "stats",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_stats_d",
+      "source": "stats",
+      "sourceHandle": "image__preview",
+      "target": "d_stats",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_ds_scat",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "scatter",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_scat_d",
+      "source": "scatter",
+      "sourceHandle": "image__main",
+      "target": "d_scat",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_ds_heat",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "heatmap",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_heat_d",
+      "source": "heatmap",
+      "sourceHandle": "image__main",
+      "target": "d_heat",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_ds_split",
+      "source": "ds",
+      "sourceHandle": "data__table",
+      "target": "split",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_sp_dt_tr",
+      "source": "split",
+      "sourceHandle": "data__train",
+      "target": "dt",
+      "targetHandle": "data__train"
+    },
+    {
+      "id": "e_sp_dt_te",
+      "source": "split",
+      "sourceHandle": "data__test",
+      "target": "dt",
+      "targetHandle": "data__test"
+    },
+    {
+      "id": "e_dt_tree",
+      "source": "dt",
+      "sourceHandle": "image__tree_plot",
+      "target": "d_tree",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_dt_imp",
+      "source": "dt",
+      "sourceHandle": "image__importance",
+      "target": "d_imp_dt",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_dt_acc",
+      "source": "dt",
+      "sourceHandle": "scalar__accuracy",
+      "target": "i_acc_dt",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_dt_tr",
+      "source": "dt",
+      "sourceHandle": "scalar__train_acc",
+      "target": "i_tr_dt",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_sp_rf_tr",
+      "source": "split",
+      "sourceHandle": "data__train",
+      "target": "rf",
+      "targetHandle": "data__train"
+    },
+    {
+      "id": "e_sp_rf_te",
+      "source": "split",
+      "sourceHandle": "data__test",
+      "target": "rf",
+      "targetHandle": "data__test"
+    },
+    {
+      "id": "e_rf_cm",
+      "source": "rf",
+      "sourceHandle": "image__preview",
+      "target": "d_cm",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_rf_imp",
+      "source": "rf",
+      "sourceHandle": "image__importance",
+      "target": "d_imp",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_rf_rep",
+      "source": "rf",
+      "sourceHandle": "image__report",
+      "target": "d_rep",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_rf_acc",
+      "source": "rf",
+      "sourceHandle": "scalar__accuracy",
+      "target": "i_acc",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_rf_tr",
+      "source": "rf",
+      "sourceHandle": "scalar__train_acc",
+      "target": "i_tr",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_rf_oob",
+      "source": "rf",
+      "sourceHandle": "scalar__oob_score",
+      "target": "i_oob",
+      "targetHandle": "any__data"
+    }
+  ]
+}
