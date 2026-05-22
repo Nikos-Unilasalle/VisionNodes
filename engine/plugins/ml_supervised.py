@@ -44,13 +44,16 @@ _EXPORT_PARAMS = [
 ]
 
 
-def _out_size(params, default_w=540, default_h=420):
+def _out_size(params, default_w=540, default_h=420, inputs=None):
     dpi   = max(72, int(params.get('out_dpi', 100)))
     out_w = int(params.get('out_w', 0))
     out_h = int(params.get('out_h', 0))
     if out_w > 0 and out_h > 0:
         return out_w / dpi, out_h / dpi, dpi
-    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
+    s = inputs.get('img_size') if inputs else None
+    w = int(s[0]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('width', default_w))
+    h = int(s[1]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('height', default_h))
+    return w / dpi, h / dpi, dpi
 
 
 def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
@@ -59,7 +62,8 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
-    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
 def _report_panel(report_dict: dict, w: int, h: int, title: str, plt) -> np.ndarray:
@@ -225,8 +229,9 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, fig_w, fi
         "Sorties : R² train/test, RMSE."
     ),
     inputs=[
-        {'id': 'train', 'color': 'data', 'label': 'Train set'},
-        {'id': 'test',  'color': 'data', 'label': 'Test set'},
+        {'id': 'train',    'color': 'data', 'label': 'Train set'},
+        {'id': 'test',     'color': 'data', 'label': 'Test set'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'preview',    'color': 'image',  'label': 'Prédit vs Réel + Résidus'},
@@ -265,7 +270,7 @@ class MLLinearRegressionNode(NodeProcessor):
         target        = str(params.get('target', '')).strip()
         fit_intercept = bool(params.get('fit_intercept', True))
         standardize   = bool(params.get('standardize', False))
-        fig_w, fig_h, dpi = _out_size(params, 600, 420)
+        fig_w, fig_h, dpi = _out_size(params, 600, 420, inputs=inputs)
 
         all_cols = list(train_df.columns)
         num_cols = [c for c in all_cols if train_df[c].dtype.kind in 'biufc']
@@ -280,9 +285,17 @@ class MLLinearRegressionNode(NodeProcessor):
             return {}
 
         try:
-            X_tr, y_tr, X_te, y_te = _prepare_Xy(train_df, test_df, features, target)
-            y_tr = y_tr.astype(float)
-            y_te = y_te.astype(float)
+            X_tr, y_tr_raw, X_te, y_te_raw = _prepare_Xy(train_df, test_df, features, target)
+            
+            if y_tr_raw.dtype.kind in 'OSU' or (len(y_te_raw) and y_te_raw.dtype.kind in 'OSU'):
+                from sklearn.preprocessing import LabelEncoder
+                le = LabelEncoder()
+                y_tr = le.fit_transform(y_tr_raw.astype(str)).astype(float)
+                y_te = le.transform(y_te_raw.astype(str)).astype(float) if len(y_te_raw) > 0 else np.array([], dtype=float)
+            else:
+                y_tr = y_tr_raw.astype(float)
+                y_te = y_te_raw.astype(float)
+                
         except Exception as e:
             send_notification(f"Linear Regression: data error — {e}", level='error', notif_id=_NOTIF_ID)
             return {}
@@ -379,8 +392,9 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
         "Ajuster C (régularisation) et kernel pour comprendre les marges."
     ),
     inputs=[
-        {'id': 'train', 'color': 'data', 'label': 'Train set'},
-        {'id': 'test',  'color': 'data', 'label': 'Test set'},
+        {'id': 'train',    'color': 'data', 'label': 'Train set'},
+        {'id': 'test',     'color': 'data', 'label': 'Test set'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'preview',     'color': 'image',  'label': 'Frontière / Confusion matrix'},
@@ -430,7 +444,7 @@ class MLSVMClassifierNode(NodeProcessor):
         standardize= bool(params.get('standardize', True))
         cmap       = _CMAPS[int(params.get('colormap', 0))]
         res        = int(params.get('boundary_res', 120))
-        fig_w, fig_h, dpi = _out_size(params, 540, 420)
+        fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
 
         all_cols = list(train_df.columns)
         if not target or target not in all_cols:
@@ -506,8 +520,9 @@ class MLSVMClassifierNode(NodeProcessor):
         "Affiche l'arbre complet + bar chart des feature importances."
     ),
     inputs=[
-        {'id': 'train', 'color': 'data', 'label': 'Train set'},
-        {'id': 'test',  'color': 'data', 'label': 'Test set'},
+        {'id': 'train',    'color': 'data', 'label': 'Train set'},
+        {'id': 'test',     'color': 'data', 'label': 'Test set'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'tree_plot',  'color': 'image',  'label': 'Arbre de décision'},
@@ -551,7 +566,7 @@ class MLDecisionTreeNode(NodeProcessor):
         criterion  = criteria[int(params.get('criterion', 0))]
         min_split  = int(params.get('min_samples_split', 2))
         cmap       = _CMAPS[int(params.get('colormap', 3))]
-        fig_w, fig_h, dpi = _out_size(params, 700, 480)
+        fig_w, fig_h, dpi = _out_size(params, 700, 480, inputs=inputs)
 
         all_cols = list(train_df.columns)
         if not target or target not in all_cols:

@@ -51,13 +51,16 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
 
-def _out_size(params, default_w=540, default_h=420):
+def _out_size(params, default_w=540, default_h=420, inputs=None):
     dpi   = max(72, int(params.get('out_dpi', 100)))
     out_w = int(params.get('out_w', 0))
     out_h = int(params.get('out_h', 0))
     if out_w > 0 and out_h > 0:
         return out_w / dpi, out_h / dpi, dpi
-    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
+    s = inputs.get('img_size') if inputs else None
+    w = int(s[0]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('width', default_w))
+    h = int(s[1]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('height', default_h))
+    return w / dpi, h / dpi, dpi
 
 
 # ─── Train / Test Split ───────────────────────────────────────────────────────
@@ -68,7 +71,10 @@ def _out_size(params, default_w=540, default_h=420):
     category='Machine Learning',
     icon='Scissors',
     description="Split a DataFrame into training and test sets. Connect train → model, test → evaluation.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'train',       'color': 'data',   'label': 'Train set'},
         {'id': 'test',        'color': 'data',   'label': 'Test set'},
@@ -115,8 +121,9 @@ class MLTrainTestSplitNode(NodeProcessor):
             send_notification(f"Train/Test Split error: {e}", level='error', notif_id=_NOTIF_ID)
             return {}
 
-        w = int(params.get('width',  300))
-        h = int(params.get('height', 160))
+        s = inputs.get('img_size')
+        w = int(s[0]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('width', 300))
+        h = int(s[1]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('height', 160))
         img = np.full((h, w, 3), 22, dtype=np.uint8)
         cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
         cv2.putText(img, "Train / Test Split", (8, 17),
@@ -158,8 +165,9 @@ class MLTrainTestSplitNode(NodeProcessor):
         "Slide k to see how the boundary changes in real time."
     ),
     inputs=[
-        {'id': 'train', 'color': 'data', 'label': 'Train set'},
-        {'id': 'test',  'color': 'data', 'label': 'Test set'},
+        {'id': 'train',    'color': 'data', 'label': 'Train set'},
+        {'id': 'test',     'color': 'data', 'label': 'Test set'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'preview',     'color': 'image',  'label': 'Decision boundary / Confusion matrix'},
@@ -206,7 +214,7 @@ class MLKnnClassifierNode(NodeProcessor):
         cmaps    = ['tab10', 'Set1', 'Set2', 'viridis']
         cmap     = cmaps[int(params.get('colormap', 0))]
         res      = int(params.get('boundary_res', 150))
-        fig_w, fig_h, dpi = _out_size(params, 540, 420)
+        fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
 
         all_cols  = list(train_df.columns)
         num_cols  = [c for c in all_cols if train_df[c].dtype.kind in 'biufc']

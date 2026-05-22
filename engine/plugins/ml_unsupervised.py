@@ -57,16 +57,20 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
-    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
-def _out_size(params, default_w=540, default_h=420):
+def _out_size(params, default_w=540, default_h=420, inputs=None):
     dpi   = max(72, int(params.get('out_dpi', 100)))
     out_w = int(params.get('out_w', 0))
     out_h = int(params.get('out_h', 0))
     if out_w > 0 and out_h > 0:
         return out_w / dpi, out_h / dpi, dpi
-    return int(params.get('width', default_w)) / dpi, int(params.get('height', default_h)) / dpi, dpi
+    s = inputs.get('img_size') if inputs else None
+    w = int(s[0]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('width', default_w))
+    h = int(s[1]) if isinstance(s, (list, tuple)) and len(s) >= 2 else int(params.get('height', default_h))
+    return w / dpi, h / dpi, dpi
 
 
 def _pick_features(df, feat_str):
@@ -90,7 +94,10 @@ def _pick_features(df, feat_str):
         "2 features → direct scatter + regions. N features → PCA 2D projection. "
         "Outputs inertia + silhouette score for elbow/quality analysis."
     ),
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',      'color': 'data',   'label': 'DataFrame + cluster'},
         {'id': 'preview',    'color': 'image',  'label': 'Clusters'},
@@ -135,7 +142,7 @@ class MLKMeansNode(NodeProcessor):
         cmap         = _CMAPS[int(params.get('colormap', 0))]
         show_regions = bool(params.get('show_regions', True))
         res          = int(params.get('boundary_res', 120))
-        fig_w, fig_h, dpi = _out_size(params, 540, 420)
+        fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
 
         features = _pick_features(df, feat_str)
         if not features:
@@ -226,7 +233,10 @@ class MLKMeansNode(NodeProcessor):
         "Reduces dimensionality, shows PC1 vs PC2 scatter and explained variance chart. "
         "Connect hue column to colour by class or cluster."
     ),
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'transformed',   'color': 'data',   'label': 'Projected DataFrame'},
         {'id': 'scatter',       'color': 'image',  'label': 'PC1 vs PC2'},
@@ -271,7 +281,7 @@ class MLPCANode(NodeProcessor):
         alpha         = float(params.get('alpha', 0.75))
         s             = int(params.get('dot_size', 30))
         show_loadings = bool(params.get('show_loadings', False))
-        fig_w, fig_h, dpi = _out_size(params, 540, 420)
+        fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
 
         features = _pick_features(df, feat_str)
         if len(features) < 2:

@@ -3,6 +3,7 @@ DataFrame manipulation nodes — pandas operations for VNStudio.
 Category: 'DataFrame'
 All nodes accept/output 'data' color handles (orange).
 """
+import io
 import os
 import numpy as np
 import cv2
@@ -28,46 +29,93 @@ def _check_pd(node_name: str) -> bool:
 def _df_meta(df) -> dict:
     r, c = df.shape
     head_df = df.head(8)
+
+    def _serialize(v):
+        if isinstance(v, float) and v != v:  # NaN
+            return None
+        if isinstance(v, np.integer):
+            return int(v)
+        if isinstance(v, (int,)):
+            return v
+        if isinstance(v, (float, np.floating)):
+            return float(v)
+        return str(v)
+
     return {
         'shape':   [r, c],
         'columns': [str(col) for col in df.columns],
         'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
         'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
-        'head':    [{str(k): (None if (isinstance(v, float) and v != v) else (
-                        int(v) if hasattr(v, 'item') and isinstance(v, (int,)) else
-                        float(v) if isinstance(v, float) else str(v)
-                    )) for k, v in row.items()}
+        'head':    [{str(k): _serialize(v) for k, v in row.items()}
                    for _, row in head_df.iterrows()],
     }
 
 
-def _render_text_panel(text: str, w: int, h: int, title: str = '') -> np.ndarray:
-    img = np.full((h, w, 3), 22, dtype=np.uint8)
-    cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
-    cv2.putText(img, title, (8, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 200), 1, cv2.LINE_AA)
-    cv2.line(img, (0, 26), (w, 26), (80, 80, 80), 1)
-    x0, y0, line_h = 8, 44, 15
-    for i, line in enumerate(text.split('\n')[:(h - y0) // line_h]):
-        color = (140, 200, 255) if i == 0 else (185, 185, 185)
-        cv2.putText(img, line[:100], (x0, y0 + i * line_h),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.36, color, 1, cv2.LINE_AA)
-    return img
+def _get_mpl():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    return matplotlib, plt
 
 
-def _render_df_head(df, w: int, h: int, title: str = '') -> np.ndarray:
+def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
+    buf.seek(0)
+    arr = np.frombuffer(buf.read(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
+
+
+def _render_df_table(df, w: int, h: int, title: str = '') -> np.ndarray:
     MAX_R, MAX_C = 8, 7
-    sub   = df.iloc[:MAX_R, :MAX_C]
-    col_w = 13
-    header = ' | '.join(str(c)[:col_w].ljust(col_w) for c in sub.columns)
-    sep    = '-' * len(header)
-    rows   = [' | '.join(str(v)[:col_w].ljust(col_w) for v in row) for _, row in sub.iterrows()]
-    return _render_text_panel('\n'.join([header, sep] + rows), w, h, title=title)
+    sub = df.iloc[:MAX_R, :MAX_C]
+    col_labels = [str(c)[:16] for c in sub.columns]
+    rows = [[str(sub.iloc[i][c])[:16] for c in sub.columns] for i in range(len(sub))]
+    if not col_labels:
+        col_labels = ['(no data)']
+        rows = [['—']]
+    elif not rows:
+        rows = [['—'] * len(col_labels)]
+
+    _, plt = _get_mpl()
+    fig, ax = plt.subplots(figsize=(w / 100, h / 100))
+    ax.set_axis_off()
+    fig.patch.set_facecolor('#161616')
+
+    tbl = ax.table(cellText=rows, colLabels=col_labels, loc='upper center', cellLoc='center')
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(8)
+    tbl.scale(1, 1.5)
+
+    for j in range(len(col_labels)):
+        cell = tbl[0, j]
+        cell.set_facecolor('#2a2a3a')
+        cell.set_text_props(color='#a5b4fc', fontweight='bold')
+        cell.set_edgecolor('#444466')
+
+    for i in range(len(rows)):
+        bg = '#181820' if i % 2 == 0 else '#1a1a28'
+        for j in range(len(col_labels)):
+            cell = tbl[i + 1, j]
+            cell.set_facecolor(bg)
+            cell.set_edgecolor('#2a2a40')
+            cell.set_text_props(color='#cccccc')
+
+    ax.set_title(title, fontsize=9, color='#cccccc', pad=8)
+    fig.tight_layout(pad=0.5)
+    img = _fig_to_bgr(fig, dpi=100)
+    plt.close(fig)
+    return img
 
 
 def _meta_and_preview(df, w: int = 420, h: int = 200, title: str = '') -> dict:
     try:
         meta    = _df_meta(df)
-        preview = _render_df_head(df, w, h, title=title)
+        preview = _render_df_table(df, w, h, title=title)
+        if preview is None:
+            preview = np.zeros((h, w, 3), dtype=np.uint8)
     except Exception:
         meta    = {}
         preview = np.zeros((h, w, 3), dtype=np.uint8)
@@ -136,13 +184,17 @@ class DfExportNode(NodeProcessor):
     category='DataFrame',
     icon='Columns',
     description="Keep specific columns, drop others, or rename them. Columns: comma-separated names. Drop: columns to remove. Rename: old:new,old2:new2.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
         {'id': 'col_count', 'color': 'scalar', 'label': 'Cols'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'keep',   'label': 'Keep Columns (blank = all)', 'type': 'string', 'default': ''},
@@ -175,8 +227,10 @@ class DfSelectNode(NodeProcessor):
                     rmap[old.strip()] = new.strip()
             out = out.rename(columns=rmap)
         r, c = out.shape
-        extra = _meta_and_preview(out, title='Select')
-        return {'table': out, 'row_count': float(r), 'col_count': float(c), **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title='Select')
+        return {'table': out, 'row_count': float(r), 'col_count': float(c), 'img_size': [w, h], **extra}
 
 
 # ─── DF Sort ──────────────────────────────────────────────────────────────────
@@ -187,11 +241,15 @@ class DfSelectNode(NodeProcessor):
     category='DataFrame',
     icon='ArrowUpDown',
     description="Sort rows by one or more columns. Column: comma-separated names for multi-level sort.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
-        {'id': 'table',   'color': 'data',  'label': 'DataFrame'},
-        {'id': 'preview', 'color': 'image', 'label': 'Preview'},
-        {'id': 'df_meta', 'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'table',    'color': 'data',  'label': 'DataFrame'},
+        {'id': 'preview',  'color': 'image', 'label': 'Preview'},
+        {'id': 'df_meta',  'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'img_size', 'color': 'list',  'label': 'Img Size'},
     ],
     params=[
         {'id': 'by',        'label': 'Sort By (column name)',       'type': 'string', 'default': ''},
@@ -210,14 +268,16 @@ class DfSortNode(NodeProcessor):
         by  = [c.strip() for c in str(params.get('by', '')).split(',') if c.strip()]
         asc = bool(params.get('ascending', True))
         na  = 'first' if int(params.get('na_pos', 0)) == 1 else 'last'
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
         if not by:
-            return _meta_and_preview(df, title='Sort (no column)')  | {'table': df}
+            return _meta_and_preview(df, w, h, title='Sort (no column)') | {'table': df, 'img_size': [w, h]}
         valid = [c for c in by if c in df.columns]
         if not valid:
-            return _meta_and_preview(df, title='Sort (column not found)') | {'table': df}
+            return _meta_and_preview(df, w, h, title='Sort (column not found)') | {'table': df, 'img_size': [w, h]}
         out   = df.sort_values(by=valid, ascending=asc, na_position=na)
-        extra = _meta_and_preview(out, title=f'Sort by {valid[0]}')
-        return {'table': out, **extra}
+        extra = _meta_and_preview(out, w, h, title=f'Sort by {valid[0]}')
+        return {'table': out, 'img_size': [w, h], **extra}
 
 
 # ─── DF Sample / Head / Tail ──────────────────────────────────────────────────
@@ -231,12 +291,16 @@ _SAMPLE_MODES = ['head', 'tail', 'sample', 'slice']
     category='DataFrame',
     icon='Rows',
     description="Extract a subset of rows: head (first N), tail (last N), random sample, or slice (start:end).",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'mode',  'label': 'Mode', 'type': 'enum', 'options': _SAMPLE_MODES, 'default': 0},
@@ -267,8 +331,10 @@ class DfSampleNode(NodeProcessor):
             out = df.sample(min(n, len(df)), random_state=seed)
         else:  # slice
             out = df.iloc[start:end]
-        extra = _meta_and_preview(out, title=mode)
-        return {'table': out, 'row_count': float(len(out)), **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title=mode)
+        return {'table': out, 'row_count': float(len(out)), 'img_size': [w, h], **extra}
 
 
 # ─── DF GroupBy ───────────────────────────────────────────────────────────────
@@ -282,12 +348,16 @@ _AGG_LABELS = ['mean', 'sum', 'count', 'min', 'max', 'std', 'median', 'nunique']
     category='DataFrame',
     icon='Group',
     description="Group rows by a column and aggregate numeric columns. Result is a new DataFrame with one row per group.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'Result DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Groups'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'by',  'label': 'Group By column',        'type': 'string', 'default': ''},
@@ -310,13 +380,17 @@ class DfGroupByNode(NodeProcessor):
         agg   = _AGG_LABELS[int(params.get('agg', 0))]
         cols  = [c.strip() for c in str(params.get('cols', '')).split(',') if c.strip()]
         reset = bool(params.get('reset_index', True))
-        sub   = df[cols] if cols else df.select_dtypes(include='number')
-        sub   = sub.copy()
+        sub = df[cols] if cols else df.select_dtypes(include='number')
+        if agg in {'mean', 'median', 'std'}:
+            sub = sub.select_dtypes(include='number')
+        sub = sub.copy()
         sub[by] = df[by]
         grp = sub.groupby(by).agg(agg)
         out = grp.reset_index() if reset else grp
-        extra = _meta_and_preview(out, title=f'GroupBy {by} / {agg}')
-        return {'table': out, 'row_count': float(len(out)), **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title=f'GroupBy {by} / {agg}')
+        return {'table': out, 'row_count': float(len(out)), 'img_size': [w, h], **extra}
 
 
 # ─── DF Merge ─────────────────────────────────────────────────────────────────
@@ -331,14 +405,16 @@ _HOW_LABELS = ['inner', 'left', 'right', 'outer']
     icon='Merge',
     description="Merge two DataFrames on key columns (SQL-style join). Connect left and right DataFrames.",
     inputs=[
-        {'id': 'left',  'color': 'data', 'label': 'Left DF'},
-        {'id': 'right', 'color': 'data', 'label': 'Right DF'},
+        {'id': 'left',     'color': 'data', 'label': 'Left DF'},
+        {'id': 'right',    'color': 'data', 'label': 'Right DF'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'Merged DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'left_on',  'label': 'Left key column',  'type': 'string', 'default': ''},
@@ -369,8 +445,10 @@ class DfMergeNode(NodeProcessor):
         except Exception as e:
             send_notification(f"DF Merge error: {e}", level='error', notif_id=_NOTIF)
             return {}
-        extra = _meta_and_preview(out, title=f'Merge ({how})')
-        return {'table': out, 'row_count': float(len(out)), **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title=f'Merge ({how})')
+        return {'table': out, 'row_count': float(len(out)), 'img_size': [w, h], **extra}
 
 
 # ─── DF Fill / Drop NaN ───────────────────────────────────────────────────────
@@ -384,12 +462,16 @@ _FILL_STRATEGIES = ['value', 'mean', 'median', 'mode', 'ffill', 'bfill', 'drop_r
     category='DataFrame',
     icon='Eraser',
     description="Handle missing values: fill with constant, statistics, forward/back fill, or drop rows/columns.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Preview'},
         {'id': 'null_count','color': 'scalar', 'label': 'Nulls before'},
         {'id': 'df_meta',   'color': 'dict',   'label': 'DF Metadata'},
+        {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
         {'id': 'strategy', 'label': 'Strategy',                      'type': 'enum',   'options': _FILL_STRATEGIES, 'default': 0},
@@ -422,9 +504,11 @@ class DfFillNaNode(NodeProcessor):
             elif strategy == 'bfill':
                 out[cols] = out[cols].bfill()
             elif strategy == 'mean':
-                out[cols] = out[cols].fillna(out[cols].mean())
+                num = [c for c in cols if out[c].dtype.kind in 'biufc']
+                out[num] = out[num].fillna(out[num].mean())
             elif strategy == 'median':
-                out[cols] = out[cols].fillna(out[cols].median())
+                num = [c for c in cols if out[c].dtype.kind in 'biufc']
+                out[num] = out[num].fillna(out[num].median())
             elif strategy == 'mode':
                 for c in cols:
                     m = out[c].mode()
@@ -439,8 +523,10 @@ class DfFillNaNode(NodeProcessor):
                 out[cols] = out[cols].fillna(fill)
         except Exception as e:
             send_notification(f"DF Fill NA error: {e}", level='error', notif_id=_NOTIF)
-        extra = _meta_and_preview(out, title=f'Fill NA ({strategy})')
-        return {'table': out, 'null_count': null_before, **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title=f'Fill NA ({strategy})')
+        return {'table': out, 'null_count': null_before, 'img_size': [w, h], **extra}
 
 
 # ─── DF New Column ────────────────────────────────────────────────────────────
@@ -451,11 +537,15 @@ class DfFillNaNode(NodeProcessor):
     category='DataFrame',
     icon='PlusSquare',
     description="Add a computed column using a Python expression. Use df['col'] to reference columns. Example: df['a'] + df['b'].",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
-        {'id': 'table',   'color': 'data',  'label': 'DataFrame'},
-        {'id': 'preview', 'color': 'image', 'label': 'Preview'},
-        {'id': 'df_meta', 'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'table',    'color': 'data',  'label': 'DataFrame'},
+        {'id': 'preview',  'color': 'image', 'label': 'Preview'},
+        {'id': 'df_meta',  'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'img_size', 'color': 'list',  'label': 'Img Size'},
     ],
     params=[
         {'id': 'name', 'label': 'New column name', 'type': 'string', 'default': 'new_col'},
@@ -472,8 +562,10 @@ class DfNewColNode(NodeProcessor):
             return {}
         name = str(params.get('name', 'new_col')).strip() or 'new_col'
         expr = str(params.get('expr', '')).strip()
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
         if not expr:
-            return {'table': df, **_meta_and_preview(df)}
+            return {'table': df, 'img_size': [w, h], **_meta_and_preview(df, w, h)}
         out = df.copy()
         try:
             import numpy as _np
@@ -481,8 +573,8 @@ class DfNewColNode(NodeProcessor):
             out[name] = result
         except Exception as e:
             send_notification(f"DF New Column error: {e}", level='error', notif_id=_NOTIF)
-        extra = _meta_and_preview(out, title=name)
-        return {'table': out, **extra}
+        extra = _meta_and_preview(out, w, h, title=name)
+        return {'table': out, 'img_size': [w, h], **extra}
 
 
 # ─── DF Rename ────────────────────────────────────────────────────────────────
@@ -493,11 +585,15 @@ class DfNewColNode(NodeProcessor):
     category='DataFrame',
     icon='Type',
     description="Rename columns. Format: old:new,old2:new2. Leave blank to pass through unchanged.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    inputs=[
+        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
+        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+    ],
     outputs=[
-        {'id': 'table',   'color': 'data',  'label': 'DataFrame'},
-        {'id': 'preview', 'color': 'image', 'label': 'Preview'},
-        {'id': 'df_meta', 'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'table',    'color': 'data',  'label': 'DataFrame'},
+        {'id': 'preview',  'color': 'image', 'label': 'Preview'},
+        {'id': 'df_meta',  'color': 'dict',  'label': 'DF Metadata'},
+        {'id': 'img_size', 'color': 'list',  'label': 'Img Size'},
     ],
     params=[
         {'id': 'map', 'label': 'Rename map  (old:new, …)', 'type': 'string', 'default': ''},
@@ -523,5 +619,7 @@ class DfRenameNode(NodeProcessor):
                     old, new = pair.split(':', 1)
                     rmap[old.strip()] = new.strip()
             out = out.rename(columns=rmap)
-        extra = _meta_and_preview(out, title='Rename')
-        return {'table': out, **extra}
+        s = inputs.get('img_size')
+        w, h = (int(s[0]), int(s[1])) if isinstance(s, (list, tuple)) and len(s) >= 2 else (int(params.get('width', 420)), int(params.get('height', 200)))
+        extra = _meta_and_preview(out, w, h, title='Rename')
+        return {'table': out, 'img_size': [w, h], **extra}
