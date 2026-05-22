@@ -184,7 +184,7 @@ class GeoCopernicusNode(NodeProcessor):
         """Download one tile to tile_path as float32 GeoTIFF. Returns True on success."""
         try:
             from sentinelhub import (
-                BBox, CRS, SentinelHubRequest, MimeType, DatasetId
+                BBox, CRS, SentinelHubRequest, MimeType
             )
             import rasterio
             from rasterio.transform import from_bounds
