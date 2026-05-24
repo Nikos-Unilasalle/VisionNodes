@@ -1,0 +1,961 @@
+{
+  "nodes": [
+    {
+      "id": "note_header",
+      "type": "canvas_note",
+      "position": {
+        "x": -100,
+        "y": -460
+      },
+      "data": {
+        "label": "GP Ensemble v2 — Regional Training + ACOLITE",
+        "params": {
+          "text": "# GP Ensemble Turbidity v2 — Données régionales + ACOLITE DSF\n\n**Améliorations vs v1** :\n- 🇫🇷 Naïades Hub'eau → données turbidité françaises (lat/lon/NTU)\n- 🛰 Ground Truth Sampler → matchup Naïades × Sentinel-2 dans les mêmes unités Rrs\n- ⚗️ ACOLITE DSF → correction atmosphérique rigoureuse L1C → Rrs [sr⁻¹]\n- 💧 NDWI + TableMaskFilter → inférence eau seulement\n\n## Workflow\n🔵 TRAINING : Naïades (fetch) → GT Sampler (avec image L1C ACOLITE) → GP Ensemble\n🟠 INFÉRENCE : Copernicus L1C → ACOLITE → NDWI → Bands→Table → Filter → Apply → Rasters μ/σ\n\n⚠️ Copernicus : choisir **Sentinel-2 L1C** (pas L2A) pour ACOLITE.",
+          "width": 1100,
+          "height": 200,
+          "fontSize": 13
+        }
+      },
+      "width": 640,
+      "height": 320
+    },
+    {
+      "id": "note_train",
+      "type": "canvas_note",
+      "position": {
+        "x": 740,
+        "y": -520
+      },
+      "data": {
+        "label": "",
+        "params": {
+          "text": "## 🔵 TRAINING\n1. Fetch Naïades (turbidité française)\n2. Copernicus L1C → ACOLITE (même ROI, date proche des mesures in-situ)\n3. GT Sampler appaire les deux → table Rrs + NTU\n4. GP Ensemble s'entraîne sur données régionales",
+          "width": 520,
+          "height": 110,
+          "fontSize": 12
+        }
+      },
+      "width": 490,
+      "height": 171,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 740,
+        "y": -520
+      },
+      "dragging": false
+    },
+    {
+      "id": "note_infer",
+      "type": "canvas_note",
+      "position": {
+        "x": 740,
+        "y": -320
+      },
+      "data": {
+        "label": "",
+        "params": {
+          "text": "## 🟠 INFÉRENCE\nCopernicus L1C (date d'intérêt) → ACOLITE → masque eau NDWI\n→ Bands→Table → Filtre pixels eau → Apply Ensemble → Rasters μ/σ\n⚡ ACOLITE : bouton Run après téléchargement du .SAFE (~30-120s)",
+          "width": 520,
+          "height": 110,
+          "fontSize": 12
+        }
+      },
+      "width": 448,
+      "height": 150,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 740,
+        "y": -320
+      },
+      "dragging": false
+    },
+    {
+      "id": "naiades",
+      "type": "geo_naiades",
+      "position": {
+        "x": -440,
+        "y": -360
+      },
+      "data": {
+        "label": "Naïades Hub'eau (turbidité FR)",
+        "params": {
+          "parameter": 0,
+          "param_code": "1295",
+          "bbox_lon_min": -5.5,
+          "bbox_lon_max": 9.5,
+          "bbox_lat_min": 41,
+          "bbox_lat_max": 51.5,
+          "date_min": "2020-06-15",
+          "date_max": "2024-06-18",
+          "target_min": 0,
+          "target_max": 500,
+          "max_results": 5000,
+          "save_csv": "/Users/nikos/Desktop/VNStudio/engine/plugins/naiade.csv",
+          "fetch": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": -360
+      }
+    },
+    {
+      "id": "copernicus_train",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -440,
+        "y": -140
+      },
+      "data": {
+        "label": "Copernicus L1C (training scene)",
+        "params": {
+          "bbox": "0.864279,49.254690,1.287990,49.471294",
+          "bands": "B04,B03,B02,B08",
+          "collection": "1",
+          "date_start": "2025-06-15",
+          "date_end": "2025-06-19",
+          "cloud_max": "5",
+          "resolution": "10",
+          "fetch": 1779637841654
+        }
+      },
+      "width": 208,
+      "height": 327,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": -140
+      },
+      "dragging": false
+    },
+    {
+      "id": "acolite_train",
+      "type": "geo_acolite_full",
+      "position": {
+        "x": -100,
+        "y": 120
+      },
+      "data": {
+        "label": "ACOLITE (training scene)",
+        "params": {
+          "band_names": "Blue,Green,Red,NIR",
+          "dsf_aot_estimate": 0,
+          "run": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -100,
+        "y": 120
+      }
+    },
+    {
+      "id": "gt_sampler",
+      "type": "geo_ground_truth_sampler",
+      "position": {
+        "x": 240,
+        "y": -60
+      },
+      "data": {
+        "label": "Ground Truth Sampler",
+        "params": {
+          "csv_path": "",
+          "lat_col": "lat",
+          "lon_col": "lon",
+          "target_col": "label",
+          "band_names": "Blue,Green,Red,NIR",
+          "target_min": 0,
+          "target_max": 500,
+          "mask_radius": 3
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 240,
+        "y": -60
+      }
+    },
+    {
+      "id": "gp",
+      "type": "ml_symbolic_regressor",
+      "position": {
+        "x": 540,
+        "y": 20
+      },
+      "data": {
+        "label": "GP Symbolic Regressor (N=10)",
+        "params": {
+          "target_column": "label",
+          "feature_columns": "",
+          "n_ensemble": 10,
+          "population_size": 500,
+          "generations": 30,
+          "parsimony": 0.01,
+          "test_size": 0.2,
+          "log_transform": true,
+          "use_log": true,
+          "use_sqrt": true,
+          "use_div": true,
+          "seed": 423,
+          "run": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 540,
+        "y": 20
+      }
+    },
+    {
+      "id": "acolite_infer",
+      "type": "geo_acolite_full",
+      "position": {
+        "x": 1120,
+        "y": 60
+      },
+      "data": {
+        "label": "ACOLITE (inference scene)",
+        "params": {
+          "band_names": "Blue,Green,Red,NIR",
+          "dsf_aot_estimate": 0,
+          "run": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1120,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "ndwi_mask",
+      "type": "geo_ndwi_mask",
+      "position": {
+        "x": 1200,
+        "y": 500
+      },
+      "data": {
+        "label": "Water Mask (NDWI)",
+        "params": {
+          "green_band": 2,
+          "nir_band": 4,
+          "threshold": 0.05,
+          "erode_px": 2
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1200,
+        "y": 500
+      },
+      "dragging": false
+    },
+    {
+      "id": "bands_table",
+      "type": "geo_bands_to_table",
+      "position": {
+        "x": 1360,
+        "y": 60
+      },
+      "data": {
+        "label": "Bands → Table",
+        "params": {
+          "band_names": "Blue,Green,Red,NIR",
+          "filter_nodata": true
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1360,
+        "y": 60
+      }
+    },
+    {
+      "id": "mask_filter",
+      "type": "ml_table_mask_filter",
+      "position": {
+        "x": 1460,
+        "y": 500
+      },
+      "data": {
+        "label": "Water Pixels Only",
+        "params": {}
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1460,
+        "y": 500
+      }
+    },
+    {
+      "id": "apply",
+      "type": "ml_ensemble_apply",
+      "position": {
+        "x": 1460,
+        "y": 740
+      },
+      "data": {
+        "label": "Apply Ensemble → μ + σ",
+        "params": {
+          "pred_column": "ntu",
+          "clip_min": 0,
+          "clip_max": 200,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "raster_mean",
+      "type": "geo_table_to_raster",
+      "position": {
+        "x": 1820,
+        "y": 540
+      },
+      "data": {
+        "label": "Mean NTU Raster (μ)",
+        "params": {
+          "column": "ntu",
+          "colormap": 1,
+          "nodata_val": -1,
+          "class_0_label": "0 NTU",
+          "class_1_label": "high NTU",
+          "file_path": "ntu_mean_v2.tif",
+          "save": 0
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "raster_std",
+      "type": "geo_table_to_raster",
+      "position": {
+        "x": 1820,
+        "y": 740
+      },
+      "data": {
+        "label": "Uncertainty σ Raster",
+        "params": {
+          "column": "ntu",
+          "colormap": 3,
+          "nodata_val": -1,
+          "class_0_label": "low sigma",
+          "class_1_label": "high sigma",
+          "file_path": "ntu_std_v2.tif",
+          "save": 0
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 740
+      }
+    },
+    {
+      "id": "d_naiades",
+      "type": "output_display",
+      "position": {
+        "x": -100,
+        "y": 300
+      },
+      "data": {
+        "label": "Naïades stations",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779613642777_tw6y",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 820,
+        "y": 80
+      },
+      "data": {
+        "label": "Copernicus L1C (training scene)",
+        "params": {
+          "source_id": "copernicus_train",
+          "source_type": "geo_copernicus"
+        },
+        "source_outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview RGB"
+          },
+          {
+            "id": "meta",
+            "color": "dict",
+            "label": "Meta"
+          }
+        ]
+      },
+      "width": 225,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 820,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779636364705-y5q7jjadd",
+      "type": "ml_spectral_features",
+      "position": {
+        "x": 540,
+        "y": -80
+      },
+      "style": {},
+      "data": {
+        "label": "Spectral Features",
+        "params": {
+          "blue_col": "Blue",
+          "green_col": "Green",
+          "red_col": "Red",
+          "nir_col": "NIR"
+        },
+        "schema": {
+          "type": "ml_spectral_features",
+          "label": "Spectral Features",
+          "category": "ml",
+          "icon": "GitBranch",
+          "description": "Add spectral indices and band ratios to a pixel table. Place between GT Sampler and GP (training) AND between Bands->Table and Apply Ensemble (inference). Both paths must use identical settings so feature columns match.",
+          "inputs": [
+            {
+              "id": "table",
+              "color": "data",
+              "label": "Pixel table (band columns)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "table",
+              "color": "data",
+              "label": "Augmented table"
+            },
+            {
+              "id": "preview",
+              "color": "image",
+              "label": "Features added"
+            }
+          ],
+          "params": [
+            {
+              "id": "blue_col",
+              "type": "string",
+              "default": "Bleu",
+              "label": "Blue band column"
+            },
+            {
+              "id": "green_col",
+              "type": "string",
+              "default": "Vert",
+              "label": "Green band column"
+            },
+            {
+              "id": "red_col",
+              "type": "string",
+              "default": "Rouge",
+              "label": "Red band column"
+            },
+            {
+              "id": "nir_col",
+              "type": "string",
+              "default": "NIR",
+              "label": "NIR band column"
+            },
+            {
+              "id": "add_red_green",
+              "type": "bool",
+              "default": true,
+              "label": "Rouge/Vert (turbidity proxy)"
+            },
+            {
+              "id": "add_blue_green",
+              "type": "bool",
+              "default": true,
+              "label": "Bleu/Vert"
+            },
+            {
+              "id": "add_blue_red",
+              "type": "bool",
+              "default": false,
+              "label": "Bleu/Rouge"
+            },
+            {
+              "id": "add_blue_nir",
+              "type": "bool",
+              "default": false,
+              "label": "Bleu/NIR"
+            },
+            {
+              "id": "add_ndti",
+              "type": "bool",
+              "default": true,
+              "label": "NDTI = (Rouge-Vert)/(Rouge+Vert)"
+            },
+            {
+              "id": "add_ndwi",
+              "type": "bool",
+              "default": false,
+              "label": "NDWI = (Vert-NIR)/(Vert+NIR)"
+            },
+            {
+              "id": "add_log_red",
+              "type": "bool",
+              "default": true,
+              "label": "log(Rouge+1)"
+            },
+            {
+              "id": "add_log_blue",
+              "type": "bool",
+              "default": false,
+              "label": "log(Bleu+1)"
+            },
+            {
+              "id": "custom_expr",
+              "type": "string",
+              "default": "",
+              "label": "Custom expr (e.g. r/g, log1p(b/r)) — use b,g,r,n"
+            },
+            {
+              "id": "custom_name",
+              "type": "string",
+              "default": "custom",
+              "label": "Custom feature name"
+            }
+          ],
+          "resizable": true,
+          "min_width": 280,
+          "min_height": 200,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 540,
+        "y": -80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779636451110-dzfs1b9ym",
+      "type": "ml_spectral_features",
+      "position": {
+        "x": 1460,
+        "y": 400
+      },
+      "style": {},
+      "data": {
+        "label": "Spectral Features",
+        "params": {
+          "blue_col": "Blue",
+          "green_col": "Green",
+          "red_col": "Red",
+          "nir_col": "NIR"
+        },
+        "schema": {
+          "type": "ml_spectral_features",
+          "label": "Spectral Features",
+          "category": "ml",
+          "icon": "GitBranch",
+          "description": "Add spectral indices and band ratios to a pixel table. Place between GT Sampler and GP (training) AND between Bands->Table and Apply Ensemble (inference). Both paths must use identical settings so feature columns match.",
+          "inputs": [
+            {
+              "id": "table",
+              "color": "data",
+              "label": "Pixel table (band columns)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "table",
+              "color": "data",
+              "label": "Augmented table"
+            },
+            {
+              "id": "preview",
+              "color": "image",
+              "label": "Features added"
+            }
+          ],
+          "params": [
+            {
+              "id": "blue_col",
+              "type": "string",
+              "default": "Bleu",
+              "label": "Blue band column"
+            },
+            {
+              "id": "green_col",
+              "type": "string",
+              "default": "Vert",
+              "label": "Green band column"
+            },
+            {
+              "id": "red_col",
+              "type": "string",
+              "default": "Rouge",
+              "label": "Red band column"
+            },
+            {
+              "id": "nir_col",
+              "type": "string",
+              "default": "NIR",
+              "label": "NIR band column"
+            },
+            {
+              "id": "add_red_green",
+              "type": "bool",
+              "default": true,
+              "label": "Rouge/Vert (turbidity proxy)"
+            },
+            {
+              "id": "add_blue_green",
+              "type": "bool",
+              "default": true,
+              "label": "Bleu/Vert"
+            },
+            {
+              "id": "add_blue_red",
+              "type": "bool",
+              "default": false,
+              "label": "Bleu/Rouge"
+            },
+            {
+              "id": "add_blue_nir",
+              "type": "bool",
+              "default": false,
+              "label": "Bleu/NIR"
+            },
+            {
+              "id": "add_ndti",
+              "type": "bool",
+              "default": true,
+              "label": "NDTI = (Rouge-Vert)/(Rouge+Vert)"
+            },
+            {
+              "id": "add_ndwi",
+              "type": "bool",
+              "default": false,
+              "label": "NDWI = (Vert-NIR)/(Vert+NIR)"
+            },
+            {
+              "id": "add_log_red",
+              "type": "bool",
+              "default": true,
+              "label": "log(Rouge+1)"
+            },
+            {
+              "id": "add_log_blue",
+              "type": "bool",
+              "default": false,
+              "label": "log(Bleu+1)"
+            },
+            {
+              "id": "custom_expr",
+              "type": "string",
+              "default": "",
+              "label": "Custom expr (e.g. r/g, log1p(b/r)) — use b,g,r,n"
+            },
+            {
+              "id": "custom_name",
+              "type": "string",
+              "default": "custom",
+              "label": "Custom feature name"
+            }
+          ],
+          "resizable": true,
+          "min_width": 280,
+          "min_height": 200,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1460,
+        "y": 400
+      }
+    },
+    {
+      "id": "node-1779638452627-n3vmfvdpy",
+      "type": "output_display",
+      "position": {
+        "x": 820,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 820,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779638565127-w8ac5esdg",
+      "type": "output_display",
+      "position": {
+        "x": 1740,
+        "y": 900
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": true,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_naiades_prev",
+      "source": "naiades",
+      "sourceHandle": "image__preview",
+      "target": "d_naiades",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_cop_train_ac",
+      "source": "copernicus_train",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "acolite_train",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_actrain_gt",
+      "source": "acolite_train",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "gt_sampler",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_gp_models",
+      "source": "gp",
+      "sourceHandle": "dict__models",
+      "target": "apply",
+      "targetHandle": "dict__models"
+    },
+    {
+      "id": "e_acinfer_bands",
+      "source": "acolite_infer",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "bands_table",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_acinfer_ndwi",
+      "source": "acolite_infer",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "ndwi_mask",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_ndwi_filter",
+      "source": "ndwi_mask",
+      "sourceHandle": "mask__mask",
+      "target": "mask_filter",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e_bands_shape_m",
+      "source": "bands_table",
+      "sourceHandle": "list__shape",
+      "target": "raster_mean",
+      "targetHandle": "list__shape"
+    },
+    {
+      "id": "e_bands_shape_s",
+      "source": "bands_table",
+      "sourceHandle": "list__shape",
+      "target": "raster_std",
+      "targetHandle": "list__shape"
+    },
+    {
+      "id": "e_bands_meta_m",
+      "source": "bands_table",
+      "sourceHandle": "dict__geo_meta",
+      "target": "raster_mean",
+      "targetHandle": "dict__geo_meta"
+    },
+    {
+      "id": "e_bands_meta_s",
+      "source": "bands_table",
+      "sourceHandle": "dict__geo_meta",
+      "target": "raster_std",
+      "targetHandle": "dict__geo_meta"
+    },
+    {
+      "id": "e_filter_apply",
+      "source": "mask_filter",
+      "sourceHandle": "data__table",
+      "target": "apply",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_apply_mean",
+      "source": "apply",
+      "sourceHandle": "data__mean_table",
+      "target": "raster_mean",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e_apply_std",
+      "source": "apply",
+      "sourceHandle": "data__std_table",
+      "target": "raster_std",
+      "targetHandle": "data__table"
+    },
+    {
+      "source": "teleport_1779613642777_tw6y",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "acolite_infer",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-1779613651677"
+    },
+    {
+      "source": "gt_sampler",
+      "sourceHandle": "data__train_table",
+      "target": "node-1779636364705-y5q7jjadd",
+      "targetHandle": "data__table",
+      "id": "e-1779636374462"
+    },
+    {
+      "source": "bands_table",
+      "sourceHandle": "data__table",
+      "target": "node-1779636451110-dzfs1b9ym",
+      "targetHandle": "data__table",
+      "id": "e-1779636454792"
+    },
+    {
+      "source": "node-1779636451110-dzfs1b9ym",
+      "sourceHandle": "data__table",
+      "target": "mask_filter",
+      "targetHandle": "data__table",
+      "id": "e-1779636458159"
+    },
+    {
+      "source": "node-1779636364705-y5q7jjadd",
+      "sourceHandle": "data__table",
+      "target": "gp",
+      "targetHandle": "data__train_table",
+      "id": "e-1779638083833"
+    },
+    {
+      "source": "naiades",
+      "sourceHandle": "data__csv_table",
+      "target": "gt_sampler",
+      "targetHandle": "data__table",
+      "id": "e-1779638097001"
+    },
+    {
+      "id": "e-1779638452688-nxnpmi43s",
+      "source": "teleport_1779613642777_tw6y",
+      "target": "node-1779638452627-n3vmfvdpy",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-1779638452689-qc715jl7d",
+      "source": "teleport_1779613642777_tw6y",
+      "target": "node-1779638452627-n3vmfvdpy",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-1779638565204-f7dn8bg3c",
+      "source": "apply",
+      "target": "node-1779638565127-w8ac5esdg",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-1779638565204-06c1b70lj",
+      "source": "apply",
+      "target": "node-1779638565127-w8ac5esdg",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 495.84375,
+      "h": 331
+    },
+    "previewPos": {
+      "x": 117.86328125,
+      "y": 9.78515625
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1779638565127-w8ac5esdg"
+  }
+}
