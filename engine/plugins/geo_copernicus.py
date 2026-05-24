@@ -18,7 +18,7 @@ import contextlib
 import numpy as np
 import cv2
 
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel, _notification_queue
 
 _NOTIF = 'copernicus'
 _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
@@ -57,8 +57,16 @@ COLLECTIONS: dict[str, dict] = {
         'units':        'DB',
         'has_cloud_filter': False,
     },
-    'Copernicus DEM': {
-        'sh_id':        'DEM',
+    'Copernicus DEM GLO-30': {
+        'sh_id':        'DEM_COPERNICUS_30',
+        'all_bands':    ['DEM'],
+        'default_bands':['DEM'],
+        'rgb':          ['DEM'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Copernicus DEM GLO-90': {
+        'sh_id':        'DEM_COPERNICUS_90',
         'all_bands':    ['DEM'],
         'default_bands':['DEM'],
         'rgb':          ['DEM'],
@@ -76,7 +84,7 @@ COLLECTIONS: dict[str, dict] = {
     icon='Satellite',
     description=(
         "Download satellite imagery from the Copernicus Data Space Ecosystem (CDSE). "
-        "Sentinel-2 L2A/L1C, Sentinel-1 GRD, Copernicus DEM. "
+        "Sentinel-2 L2A/L1C, Sentinel-1 GRD, Copernicus DEM GLO-30/90 (elevation). "
         "Draw your area of interest in the map editor (hover → Open Editor). "
         "Credentials: Client ID + Secret from shapps.dataspace.copernicus.eu."
     ),
@@ -106,7 +114,7 @@ class GeoCopernicusNode(NodeProcessor):
 
     def __init__(self):
         super().__init__()
-        self._prev_fetch    = False
+        self._prev_fetch    = 0  # stores last fetch timestamp; any change = trigger
         self._loading       = False
         self._cache_data    = None   # (geo_dict, preview_bgr, thumb_b64)
         self._thumb_dirty   = False
@@ -329,6 +337,9 @@ class GeoCopernicusNode(NodeProcessor):
         cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
         os.makedirs(cache_dir, exist_ok=True)
 
+        # Clear any leftover cancel flag from a previous operation
+        clear_cancel(_NOTIF)
+
         if auto:
             # On auto-restore, only continue if a matching cache file can be found
             test_key = self._cache_key(col_name, (west, south, east, north),
@@ -345,15 +356,19 @@ class GeoCopernicusNode(NodeProcessor):
         sh_config.sh_token_url     = _CDSE_TOKEN_URL
 
         # ── DataCollection ────────────────────────────────────────────────────
+        sh_id = col_cfg['sh_id']
         try:
-            base_col = getattr(DataCollection, col_cfg['sh_id'])
+            base_col = getattr(DataCollection, sh_id)
             data_collection = base_col.define_from(
-                f'{col_cfg["sh_id"]}_CDSE',
+                f'{sh_id}_CDSE',
                 service_url=_CDSE_BASE_URL,
             )
         except AttributeError:
-            # DEM and other collections may be looked up differently
-            data_collection = DataCollection.define_byoc(col_cfg['sh_id'])
+            send_notification(
+                f'Copernicus: unknown DataCollection "{sh_id}" — update sentinelhub library',
+                level='error', notif_id=_NOTIF,
+            )
+            return
 
         evalscript = self._make_evalscript(bands, col_cfg.get('units'))
 
@@ -401,6 +416,11 @@ class GeoCopernicusNode(NodeProcessor):
                 all_cached = False
                 if auto:
                     return  # don't trigger auth on auto-restore
+
+                # Check cancellation before each tile download
+                if is_cancelled(_NOTIF):
+                    send_notification('Copernicus: download cancelled', level='warning', notif_id=_NOTIF)
+                    return
 
                 tile_num = row * tile_cols + col + 1
                 send_notification(
@@ -518,13 +538,15 @@ class GeoCopernicusNode(NodeProcessor):
             f'Copernicus: ready — {geo["count"]} bands, {geo["width"]}×{geo["height"]} px',
             progress=1.0, notif_id=_NOTIF,
         )
+        # Wake static-graph engine, bust cache for this node type, so process() delivers results
+        _notification_queue.put_nowait({'_wake_engine': True, '_node_type': 'geo_copernicus'})
 
     # ── process ───────────────────────────────────────────────────────────────
 
     def process(self, inputs: dict, params: dict) -> dict:
-        fetch = bool(params.get('fetch', False))
-        rising = fetch and not self._prev_fetch
-        self._prev_fetch = fetch
+        fetch_val = params.get('fetch', 0)
+        rising = fetch_val != self._prev_fetch and fetch_val not in (False, 0, None)
+        self._prev_fetch = fetch_val
 
         if rising and not self._loading:
             self._loading = True

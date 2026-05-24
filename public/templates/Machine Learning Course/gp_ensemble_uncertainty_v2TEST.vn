@@ -4,8 +4,8 @@
       "id": "note_header",
       "type": "canvas_note",
       "position": {
-        "x": -100,
-        "y": -460
+        "x": 640,
+        "y": 400
       },
       "data": {
         "label": "GP Ensemble v2 — Regional Training + ACOLITE",
@@ -17,14 +17,20 @@
         }
       },
       "width": 640,
-      "height": 320
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 640,
+        "y": 400
+      },
+      "dragging": false
     },
     {
       "id": "note_train",
       "type": "canvas_note",
       "position": {
-        "x": 740,
-        "y": -520
+        "x": 40,
+        "y": -360
       },
       "data": {
         "label": "",
@@ -39,8 +45,8 @@
       "height": 171,
       "selected": false,
       "positionAbsolute": {
-        "x": 740,
-        "y": -520
+        "x": 40,
+        "y": -360
       },
       "dragging": false
     },
@@ -48,8 +54,8 @@
       "id": "note_infer",
       "type": "canvas_note",
       "position": {
-        "x": 740,
-        "y": -320
+        "x": 1940,
+        "y": -340
       },
       "data": {
         "label": "",
@@ -64,8 +70,8 @@
       "height": 150,
       "selected": false,
       "positionAbsolute": {
-        "x": 740,
-        "y": -320
+        "x": 1940,
+        "y": -340
       },
       "dragging": false
     },
@@ -136,13 +142,13 @@
       "id": "acolite_train",
       "type": "geo_acolite_full",
       "position": {
-        "x": -100,
-        "y": 120
+        "x": -120,
+        "y": -120
       },
       "data": {
         "label": "ACOLITE (training scene)",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Blue, Green, Red, NIR",
           "dsf_aot_estimate": 0,
           "run": 0
         }
@@ -152,8 +158,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": -100,
-        "y": 120
+        "x": -120,
+        "y": -120
       }
     },
     {
@@ -170,7 +176,7 @@
           "lat_col": "lat",
           "lon_col": "lon",
           "target_col": "label",
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Blue, Green, Red,NIR",
           "target_min": 0,
           "target_max": 500,
           "mask_radius": 3
@@ -190,7 +196,7 @@
       "type": "ml_symbolic_regressor",
       "position": {
         "x": 540,
-        "y": 20
+        "y": 40
       },
       "data": {
         "label": "GP Symbolic Regressor (N=10)",
@@ -208,28 +214,29 @@
           "use_div": true,
           "seed": 423,
           "run": 0
-        }
+        },
+        "rotated": false
       },
       "width": 208,
       "height": 153,
-      "selected": false,
+      "selected": true,
       "dragging": false,
       "positionAbsolute": {
         "x": 540,
-        "y": 20
+        "y": 40
       }
     },
     {
       "id": "acolite_infer",
       "type": "geo_acolite_full",
       "position": {
-        "x": 1120,
-        "y": 60
+        "x": 1200,
+        "y": -100
       },
       "data": {
         "label": "ACOLITE (inference scene)",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Bleu,Vert,Rouge,NIR",
           "dsf_aot_estimate": 0,
           "run": 0
         }
@@ -238,8 +245,8 @@
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1120,
-        "y": 60
+        "x": 1200,
+        "y": -100
       },
       "dragging": false
     },
@@ -247,8 +254,8 @@
       "id": "ndwi_mask",
       "type": "geo_ndwi_mask",
       "position": {
-        "x": 1200,
-        "y": 500
+        "x": 1460,
+        "y": 120
       },
       "data": {
         "label": "Water Mask (NDWI)",
@@ -263,8 +270,8 @@
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1200,
-        "y": 500
+        "x": 1460,
+        "y": 120
       },
       "dragging": false
     },
@@ -272,13 +279,13 @@
       "id": "bands_table",
       "type": "geo_bands_to_table",
       "position": {
-        "x": 1360,
-        "y": 60
+        "x": 1480,
+        "y": -180
       },
       "data": {
         "label": "Bands → Table",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Bleu,Vert,Rouge,NIR",
           "filter_nodata": true
         }
       },
@@ -287,16 +294,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1360,
-        "y": 60
+        "x": 1480,
+        "y": -180
       }
     },
     {
       "id": "mask_filter",
       "type": "ml_table_mask_filter",
       "position": {
-        "x": 1460,
-        "y": 500
+        "x": 1740,
+        "y": 80
       },
       "data": {
         "label": "Water Pixels Only",
@@ -307,16 +314,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1460,
-        "y": 500
+        "x": 1740,
+        "y": 80
       }
     },
     {
       "id": "apply",
       "type": "ml_ensemble_apply",
       "position": {
-        "x": 1460,
-        "y": 740
+        "x": 2080,
+        "y": 40
       },
       "data": {
         "label": "Apply Ensemble → μ + σ",
@@ -330,14 +337,18 @@
       "width": 208,
       "height": 153,
       "selected": false,
-      "dragging": false
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2080,
+        "y": 40
+      }
     },
     {
       "id": "raster_mean",
       "type": "geo_table_to_raster",
       "position": {
-        "x": 1820,
-        "y": 540
+        "x": 2580,
+        "y": -240
       },
       "data": {
         "label": "Mean NTU Raster (μ)",
@@ -354,14 +365,18 @@
       "width": 208,
       "height": 121,
       "selected": false,
-      "dragging": false
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2580,
+        "y": -240
+      }
     },
     {
       "id": "raster_std",
       "type": "geo_table_to_raster",
       "position": {
-        "x": 1820,
-        "y": 740
+        "x": 2580,
+        "y": -20
       },
       "data": {
         "label": "Uncertainty σ Raster",
@@ -380,16 +395,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1820,
-        "y": 740
+        "x": 2580,
+        "y": -20
       }
     },
     {
       "id": "d_naiades",
       "type": "output_display",
       "position": {
-        "x": -100,
-        "y": 300
+        "x": -120,
+        "y": 60
       },
       "data": {
         "label": "Naïades stations",
@@ -399,14 +414,18 @@
       "width": 208,
       "height": 153,
       "selected": false,
-      "dragging": false
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -120,
+        "y": 60
+      }
     },
     {
       "id": "teleport_1779613642777_tw6y",
       "type": "canvas_teleport",
       "position": {
-        "x": 820,
-        "y": 80
+        "x": 900,
+        "y": -20
       },
       "data": {
         "label": "Copernicus L1C (training scene)",
@@ -436,8 +455,8 @@
       "selected": false,
       "height": 126,
       "positionAbsolute": {
-        "x": 820,
-        "y": 80
+        "x": 900,
+        "y": -20
       },
       "dragging": false
     },
@@ -454,8 +473,7 @@
         "params": {
           "blue_col": "Blue",
           "green_col": "Green",
-          "red_col": "Red",
-          "nir_col": "NIR"
+          "red_col": "Red"
         },
         "schema": {
           "type": "ml_spectral_features",
@@ -592,8 +610,8 @@
       "id": "node-1779636451110-dzfs1b9ym",
       "type": "ml_spectral_features",
       "position": {
-        "x": 1460,
-        "y": 400
+        "x": 1740,
+        "y": -20
       },
       "style": {},
       "data": {
@@ -731,16 +749,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1460,
-        "y": 400
+        "x": 1740,
+        "y": -20
       }
     },
     {
       "id": "node-1779638452627-n3vmfvdpy",
       "type": "output_display",
       "position": {
-        "x": 820,
-        "y": 240
+        "x": 1200,
+        "y": 100
       },
       "style": {},
       "data": {
@@ -752,8 +770,8 @@
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 820,
-        "y": 240
+        "x": 1200,
+        "y": 100
       },
       "dragging": false
     },
@@ -761,8 +779,8 @@
       "id": "node-1779638565127-w8ac5esdg",
       "type": "output_display",
       "position": {
-        "x": 1740,
-        "y": 900
+        "x": 2580,
+        "y": 180
       },
       "style": {},
       "data": {
@@ -772,7 +790,169 @@
       },
       "width": 208,
       "height": 153,
-      "selected": true,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2580,
+        "y": 180
+      }
+    },
+    {
+      "id": "ribbon-1779638626165",
+      "type": "canvas_ribbon",
+      "position": {
+        "x": 2420,
+        "y": -100
+      },
+      "data": {
+        "label": "Ribbon",
+        "edgeIds": [
+          "e_apply_mean",
+          "e_apply_std"
+        ],
+        "params": {}
+      },
+      "style": {
+        "width": 10,
+        "height": 44
+      },
+      "width": 10,
+      "height": 44,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2420,
+        "y": -100
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1779638726635_ue5q",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1740,
+        "y": 280
+      },
+      "data": {
+        "label": "GP Symbolic Regressor (N=10)",
+        "params": {
+          "source_id": "gp",
+          "source_type": "ml_symbolic_regressor"
+        },
+        "source_outputs": [
+          {
+            "id": "models",
+            "color": "dict",
+            "label": "Trained ensemble"
+          },
+          {
+            "id": "formulas",
+            "color": "string",
+            "label": "Evolved formulas"
+          },
+          {
+            "id": "stats",
+            "color": "dict",
+            "label": "Fit stats (R², RMSE)"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Fitness + formulas panel"
+          }
+        ]
+      },
+      "width": 219,
+      "selected": false,
+      "height": 154,
+      "positionAbsolute": {
+        "x": 1740,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779638749367-adnz3lp7c",
+      "type": "data_inspector",
+      "position": {
+        "x": 2080,
+        "y": 300
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 320,
+      "height": 220,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2080,
+        "y": 300
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "ribbon-1779640740893",
+      "type": "canvas_ribbon",
+      "position": {
+        "x": 1780,
+        "y": -100
+      },
+      "data": {
+        "label": "Ribbon",
+        "edgeIds": [
+          "e_bands_shape_m",
+          "e_bands_shape_s",
+          "e_bands_meta_m",
+          "e_bands_meta_s"
+        ],
+        "params": {}
+      },
+      "style": {
+        "width": 10,
+        "height": 44
+      },
+      "width": 10,
+      "height": 44,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1780,
+        "y": -100
+      },
+      "dragging": false
+    },
+    {
+      "id": "ribbon-1779640757164",
+      "type": "canvas_ribbon",
+      "position": {
+        "x": 2200,
+        "y": -100
+      },
+      "data": {
+        "label": "Ribbon",
+        "edgeIds": [
+          "e_bands_shape_m",
+          "e_bands_shape_s",
+          "e_bands_meta_m",
+          "e_bands_meta_s"
+        ],
+        "params": {}
+      },
+      "style": {
+        "width": 10,
+        "height": 44
+      },
+      "width": 10,
+      "height": 44,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": -100
+      },
       "dragging": false
     }
   ],
@@ -782,105 +962,146 @@
       "source": "naiades",
       "sourceHandle": "image__preview",
       "target": "d_naiades",
-      "targetHandle": "image__main"
+      "targetHandle": "image__main",
+      "selected": false
     },
     {
       "id": "e_cop_train_ac",
       "source": "copernicus_train",
       "sourceHandle": "geotiff__geotiff",
       "target": "acolite_train",
-      "targetHandle": "geotiff__geotiff"
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
     },
     {
       "id": "e_actrain_gt",
       "source": "acolite_train",
       "sourceHandle": "geotiff__geotiff",
       "target": "gt_sampler",
-      "targetHandle": "geotiff__geotiff"
-    },
-    {
-      "id": "e_gp_models",
-      "source": "gp",
-      "sourceHandle": "dict__models",
-      "target": "apply",
-      "targetHandle": "dict__models"
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
     },
     {
       "id": "e_acinfer_bands",
       "source": "acolite_infer",
       "sourceHandle": "geotiff__geotiff",
       "target": "bands_table",
-      "targetHandle": "geotiff__geotiff"
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
     },
     {
       "id": "e_acinfer_ndwi",
       "source": "acolite_infer",
       "sourceHandle": "geotiff__geotiff",
       "target": "ndwi_mask",
-      "targetHandle": "geotiff__geotiff"
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
     },
     {
       "id": "e_ndwi_filter",
       "source": "ndwi_mask",
       "sourceHandle": "mask__mask",
       "target": "mask_filter",
-      "targetHandle": "mask__mask"
+      "targetHandle": "mask__mask",
+      "selected": false
     },
     {
       "id": "e_bands_shape_m",
       "source": "bands_table",
       "sourceHandle": "list__shape",
       "target": "raster_mean",
-      "targetHandle": "list__shape"
+      "targetHandle": "list__shape",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779640740893",
+          "ribbon-1779640757164"
+        ]
+      }
     },
     {
       "id": "e_bands_shape_s",
       "source": "bands_table",
       "sourceHandle": "list__shape",
       "target": "raster_std",
-      "targetHandle": "list__shape"
+      "targetHandle": "list__shape",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779640740893",
+          "ribbon-1779640757164"
+        ]
+      }
     },
     {
       "id": "e_bands_meta_m",
       "source": "bands_table",
       "sourceHandle": "dict__geo_meta",
       "target": "raster_mean",
-      "targetHandle": "dict__geo_meta"
+      "targetHandle": "dict__geo_meta",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779640740893",
+          "ribbon-1779640757164"
+        ]
+      }
     },
     {
       "id": "e_bands_meta_s",
       "source": "bands_table",
       "sourceHandle": "dict__geo_meta",
       "target": "raster_std",
-      "targetHandle": "dict__geo_meta"
+      "targetHandle": "dict__geo_meta",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779640740893",
+          "ribbon-1779640757164"
+        ]
+      }
     },
     {
       "id": "e_filter_apply",
       "source": "mask_filter",
       "sourceHandle": "data__table",
       "target": "apply",
-      "targetHandle": "data__table"
+      "targetHandle": "data__table",
+      "selected": false
     },
     {
       "id": "e_apply_mean",
       "source": "apply",
       "sourceHandle": "data__mean_table",
       "target": "raster_mean",
-      "targetHandle": "data__table"
+      "targetHandle": "data__table",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779638626165"
+        ]
+      }
     },
     {
       "id": "e_apply_std",
       "source": "apply",
       "sourceHandle": "data__std_table",
       "target": "raster_std",
-      "targetHandle": "data__table"
+      "targetHandle": "data__table",
+      "selected": false,
+      "data": {
+        "ribbonIds": [
+          "ribbon-1779638626165"
+        ]
+      }
     },
     {
       "source": "teleport_1779613642777_tw6y",
       "sourceHandle": "geotiff__geotiff",
       "target": "acolite_infer",
       "targetHandle": "geotiff__geotiff",
-      "id": "e-1779613651677"
+      "id": "e-1779613651677",
+      "selected": false
     },
     {
       "source": "gt_sampler",
@@ -894,14 +1115,16 @@
       "sourceHandle": "data__table",
       "target": "node-1779636451110-dzfs1b9ym",
       "targetHandle": "data__table",
-      "id": "e-1779636454792"
+      "id": "e-1779636454792",
+      "selected": false
     },
     {
       "source": "node-1779636451110-dzfs1b9ym",
       "sourceHandle": "data__table",
       "target": "mask_filter",
       "targetHandle": "data__table",
-      "id": "e-1779636458159"
+      "id": "e-1779636458159",
+      "selected": false
     },
     {
       "source": "node-1779636364705-y5q7jjadd",
@@ -922,28 +1145,48 @@
       "source": "teleport_1779613642777_tw6y",
       "target": "node-1779638452627-n3vmfvdpy",
       "sourceHandle": "image__preview",
-      "targetHandle": "image__main"
+      "targetHandle": "image__main",
+      "selected": false
     },
     {
       "id": "e-1779638452689-qc715jl7d",
       "source": "teleport_1779613642777_tw6y",
       "target": "node-1779638452627-n3vmfvdpy",
       "sourceHandle": "image__preview",
-      "targetHandle": "image__main"
+      "targetHandle": "image__main",
+      "selected": false
     },
     {
       "id": "e-1779638565204-f7dn8bg3c",
       "source": "apply",
       "target": "node-1779638565127-w8ac5esdg",
       "sourceHandle": "image__preview",
-      "targetHandle": "image__main"
+      "targetHandle": "image__main",
+      "selected": false
     },
     {
       "id": "e-1779638565204-06c1b70lj",
       "source": "apply",
       "target": "node-1779638565127-w8ac5esdg",
       "sourceHandle": "image__preview",
-      "targetHandle": "image__main"
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "source": "teleport_1779638726635_ue5q",
+      "sourceHandle": "dict__models",
+      "target": "apply",
+      "targetHandle": "dict__models",
+      "id": "e-1779638737105",
+      "selected": false
+    },
+    {
+      "source": "teleport_1779638726635_ue5q",
+      "sourceHandle": "string__formulas",
+      "target": "node-1779638749367-adnz3lp7c",
+      "targetHandle": "any__data",
+      "id": "e-1779638752084",
+      "selected": false
     }
   ],
   "ui": {
@@ -956,6 +1199,6 @@
       "y": 9.78515625
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "node-1779638565127-w8ac5esdg"
+    "visualizedNodeId": "raster_std"
   }
 }

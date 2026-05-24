@@ -169,5 +169,12 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     }
   }, []);
 
-  return { frame, nodesData: nodesDataRef.current, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, pushNotification, requestPyExport, computingNodeId };
+  const cancelNotification = useCallback((notifId: string) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'cancel_notif', notif_id: notifId }));
+    }
+    dismissNotification(notifId);
+  }, []);
+
+  return { frame, nodesData: nodesDataRef.current, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, cancelNotification, pushNotification, requestPyExport, computingNodeId };
 }

@@ -4,11 +4,16 @@
  * Full-screen map editor for the Copernicus CDSE node.
  * Canvas-based slippy map (OpenStreetMap tiles) with rectangle ROI drawing.
  * No external map library required.
+ *
+ * Controls:
+ *   Scroll          → zoom to cursor
+ *   Drag            → pan
+ *   Shift + Drag    → draw ROI
  */
 import React, {
-  useRef, useEffect, useState, useCallback, useMemo,
+  useRef, useEffect, useState, useCallback, useMemo, useReducer,
 } from 'react';
-import { X, Satellite, MousePointer, Square, Download, Trash2 } from 'lucide-react';
+import { X, Satellite, Download, Trash2 } from 'lucide-react';
 
 // ── Tile math (Web Mercator / EPSG:3857) ─────────────────────────────────────
 
@@ -34,7 +39,6 @@ const tileYToLat = (y: number, z: number) => {
 };
 
 // ── Pixel ↔ world coords ─────────────────────────────────────────────────────
-// offsetX/Y: pixel position of tile (0,0) on canvas.
 
 const canvasToLatLon = (
   px: number, py: number,
@@ -78,7 +82,12 @@ const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; 
     defaultBands:['VV','VH'],
     hasClouds: false,
   },
-  'Copernicus DEM': {
+  'Copernicus DEM GLO-30': {
+    allBands:    ['DEM'],
+    defaultBands:['DEM'],
+    hasClouds: false,
+  },
+  'Copernicus DEM GLO-90': {
     allBands:    ['DEM'],
     defaultBands:['DEM'],
     hasClouds: false,
@@ -86,6 +95,36 @@ const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; 
 };
 
 const COLLECTION_NAMES = Object.keys(COLLECTIONS);
+
+// ── Map transform state (atomic zoom + offset) ───────────────────────────────
+
+interface MapTransform { zoom: number; offsetX: number; offsetY: number }
+
+type MapAction =
+  | { type: 'zoom'; mx: number; my: number; delta: number }
+  | { type: 'pan_to'; offsetX: number; offsetY: number }
+  | { type: 'set'; zoom: number; offsetX: number; offsetY: number };
+
+function mapReducer(state: MapTransform, action: MapAction): MapTransform {
+  switch (action.type) {
+    case 'zoom': {
+      const newZ = Math.max(2, Math.min(18, state.zoom + action.delta));
+      if (newZ === state.zoom) return state;
+      const scale = Math.pow(2, newZ - state.zoom);
+      return {
+        zoom:    newZ,
+        offsetX: action.mx - (action.mx - state.offsetX) * scale,
+        offsetY: action.my - (action.my - state.offsetY) * scale,
+      };
+    }
+    case 'pan_to':
+      return { ...state, offsetX: action.offsetX, offsetY: action.offsetY };
+    case 'set':
+      return { zoom: action.zoom, offsetX: action.offsetX, offsetY: action.offsetY };
+    default:
+      return state;
+  }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -101,25 +140,21 @@ interface Props {
 const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
   const params = node?.data?.params ?? {};
 
-  // ── Map state
-  const [zoom,    setZoom]    = useState(5);
-  const [offsetX, setOffsetX] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
+  // ── Map state (atomic)
+  const [map, dispatchMap] = useReducer(mapReducer, { zoom: 5, offsetX: 0, offsetY: 0 });
 
-  // ── Draw mode
-  const [drawMode, setDrawMode] = useState(false);
-  const [bbox,     setBbox]     = useState<Bbox | null>(null);
+  // ── Bbox & cursor
+  const [bbox,     setBbox]   = useState<Bbox | null>(null);
+  const [cursor,   setCursor] = useState<[number, number] | null>(null);
+  const [shiftHeld, setShiftHeld] = useState(false);
 
-  // ── Mouse position
-  const [cursor, setCursor] = useState<[number, number] | null>(null);
-
-  // ── Form state (mirrors node params)
+  // ── Form state
   const colIdx0 = parseInt(String(params.collection ?? '0'), 10);
-  const [colIdx,      setColIdx]      = useState(isNaN(colIdx0) ? 0 : colIdx0);
-  const [dateStart,   setDateStart]   = useState<string>(params.date_start   ?? '2024-01-01');
-  const [dateEnd,     setDateEnd]     = useState<string>(params.date_end     ?? '2024-06-01');
-  const [cloudMax,    setCloudMax]    = useState<number>(parseInt(params.cloud_max ?? '20', 10));
-  const [resolution,  setResolution]  = useState<number>(parseInt(params.resolution ?? '10', 10));
+  const [colIdx,        setColIdx]        = useState(isNaN(colIdx0) ? 0 : colIdx0);
+  const [dateStart,     setDateStart]     = useState<string>(params.date_start   ?? '2024-01-01');
+  const [dateEnd,       setDateEnd]       = useState<string>(params.date_end     ?? '2024-06-01');
+  const [cloudMax,      setCloudMax]      = useState<number>(parseInt(params.cloud_max ?? '20', 10));
+  const [resolution,    setResolution]    = useState<number>(parseInt(params.resolution ?? '10', 10));
   const [selectedBands, setSelectedBands] = useState<string[]>(() => {
     const raw = (params.bands ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
     return raw.length > 0 ? raw : COLLECTIONS[COLLECTION_NAMES[colIdx0] ?? 'Sentinel-2 L2A'].defaultBands;
@@ -129,15 +164,29 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
   const colCfg  = COLLECTIONS[colName];
 
   // ── Canvas & tile cache
-  const canvasRef  = useRef<HTMLCanvasElement>(null);
-  const tileCache  = useRef<Map<string, HTMLImageElement>>(new Map());
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tileCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
-  // ── Panning state (refs to avoid stale closures)
-  const isPanning    = useRef(false);
-  const panStart     = useRef({ mx: 0, my: 0, ox: 0, oy: 0 });
-  const isDrawing    = useRef(false);
-  const drawStart    = useRef<[number, number] | null>(null); // [lat, lon]
-  const drawCurrent  = useRef<[number, number] | null>(null); // [lat, lon]
+  // ── Interaction refs (avoid stale closures in global listeners)
+  const isPanning   = useRef(false);
+  const panStart    = useRef({ mx: 0, my: 0, ox: 0, oy: 0 });
+  const isDrawing   = useRef(false);
+  const drawStart   = useRef<[number, number] | null>(null);
+  const drawCurrent = useRef<[number, number] | null>(null);
+  // Mirror of map state for use inside global event handlers
+  const mapRef = useRef(map);
+  useEffect(() => { mapRef.current = map; }, [map]);
+
+  // ── Shift key tracking ────────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => setShiftHeld(e.shiftKey);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup',   onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup',   onKey);
+    };
+  }, []);
 
   // ── Init bbox from params ─────────────────────────────────────────────────
   useEffect(() => {
@@ -147,33 +196,29 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     if (parts.length === 4 && parts.every(isFinite)) {
       const [w, s, e, n] = parts;
       setBbox({ west: w, south: s, east: e, north: n });
-      // Center map on existing bbox
       const lat = (s + n) / 2;
       const lon = (w + e) / 2;
-      const z = 6;
-      setZoom(z);
-      const tx = lonToTileX(lon, z) * TILE_SIZE;
-      const ty = latToTileY(lat, z) * TILE_SIZE;
-      const w2 = window.innerWidth * 0.6;
-      const h2 = window.innerHeight;
-      setOffsetX(w2 / 2 - tx);
-      setOffsetY(h2 / 2 - ty);
+      const z   = 6;
+      const cw  = window.innerWidth * 0.6;
+      const ch  = window.innerHeight;
+      dispatchMap({ type: 'set', zoom: z,
+        offsetX: cw / 2 - lonToTileX(lon, z) * TILE_SIZE,
+        offsetY: ch / 2 - latToTileY(lat, z) * TILE_SIZE,
+      });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Init map center (default: France) ─────────────────────────────────────
+  // ── Init map center (default: France) ────────────────────────────────────
   useEffect(() => {
-    const raw = (params.bbox ?? '').trim();
-    if (raw) return;  // handled above
+    if ((params.bbox ?? '').trim()) return;
     const lat = 46.5, lon = 2.5, z = 5;
-    setZoom(z);
-    const tx = lonToTileX(lon, z) * TILE_SIZE;
-    const ty = latToTileY(lat, z) * TILE_SIZE;
-    const w2 = window.innerWidth * 0.6;
-    const h2 = window.innerHeight;
-    setOffsetX(w2 / 2 - tx);
-    setOffsetY(h2 / 2 - ty);
+    const cw = window.innerWidth * 0.6;
+    const ch = window.innerHeight;
+    dispatchMap({ type: 'set', zoom: z,
+      offsetX: cw / 2 - lonToTileX(lon, z) * TILE_SIZE,
+      offsetY: ch / 2 - latToTileY(lat, z) * TILE_SIZE,
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -186,7 +231,6 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     if (tileCache.current.has(key)) return tileCache.current.get(key)!;
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    // Use a 1×1 transparent placeholder while loading
     img.src = `https://tile.openstreetmap.org/${z}/${cx}/${cy}.png`;
     img.onload = () => renderFrame();
     tileCache.current.set(key, img);
@@ -201,33 +245,33 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const W = canvas.width;
-    const H = canvas.height;
+    const W  = canvas.width;
+    const H  = canvas.height;
+    const { zoom: z, offsetX: ox, offsetY: oy } = mapRef.current;
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, W, H);
 
-    const ox = offsetX;
-    const oy = offsetY;
-    const z  = zoom;
+    // Float zoom: fetch tiles at nearest integer zoom, scale visually
+    const intZ = Math.round(z);
+    const TS   = TILE_SIZE * Math.pow(2, z - intZ);
 
-    const startTX = Math.floor(-ox / TILE_SIZE) - 1;
-    const startTY = Math.floor(-oy / TILE_SIZE) - 1;
-    const endTX   = Math.ceil((W - ox) / TILE_SIZE) + 1;
-    const endTY   = Math.ceil((H - oy) / TILE_SIZE) + 1;
+    const startTX = Math.floor(-ox / TS) - 1;
+    const startTY = Math.floor(-oy / TS) - 1;
+    const endTX   = Math.ceil((W - ox) / TS) + 1;
+    const endTY   = Math.ceil((H - oy) / TS) + 1;
 
-    // OSM tiles
     for (let ty = startTY; ty <= endTY; ty++) {
       for (let tx = startTX; tx <= endTX; tx++) {
-        const img = getTile(z, tx, ty);
-        const px  = tx * TILE_SIZE + ox;
-        const py  = ty * TILE_SIZE + oy;
+        const img = getTile(intZ, tx, ty);
+        const px  = tx * TS + ox;
+        const py  = ty * TS + oy;
         if (img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px, py, TILE_SIZE, TILE_SIZE);
+          ctx.drawImage(img, px, py, TS, TS);
         } else {
           ctx.fillStyle = '#262640';
-          ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+          ctx.fillRect(px, py, TS, TS);
         }
       }
     }
@@ -255,8 +299,6 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       const [x1, y1] = latLonToCanvas(bbox.north, bbox.west, z, ox, oy);
       const [x2, y2] = latLonToCanvas(bbox.south, bbox.east, z, ox, oy);
       drawRect(ctx, x1, y1, x2, y2, 'rgba(34,197,94,0.15)', '#22c55e', 2);
-
-      // Corner labels
       ctx.save();
       ctx.font = 'bold 10px monospace';
       ctx.fillStyle = '#22c55e';
@@ -265,7 +307,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       ctx.restore();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoom, offsetX, offsetY, bbox, getTile]);
+  }, [map, bbox, getTile]);
 
   const drawRect = (
     ctx: CanvasRenderingContext2D,
@@ -299,55 +341,41 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     return () => ro.disconnect();
   }, [renderFrame]);
 
-  // ── Wheel zoom — accumulated delta, 1 level per ~120px of scroll ───────────
-  const wheelAccum = useRef(0);
-  const lastMouse  = useRef({ x: 0, y: 0 });
-
+  // ── Wheel zoom — atomic, zoom-to-cursor ──────────────────────────────────
   const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    // Track mouse pos for zoom-to-cursor
     const canvas = canvasRef.current;
-    if (canvas) {
-      const rect = canvas.getBoundingClientRect();
-      lastMouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-    // Normalise delta: pixelMode deltas are large, lineMode ~3, pageMode huge
-    const delta = e.deltaMode === 0 ? e.deltaY : e.deltaY * 30;
-    wheelAccum.current += delta;
-    const THRESHOLD = 120; // px of scroll per zoom level
-    const steps = Math.trunc(wheelAccum.current / THRESHOLD);
-    if (steps === 0) return;
-    wheelAccum.current -= steps * THRESHOLD;
-    const dir = steps > 0 ? -1 : 1; // deltaY > 0 → zoom out → dir = -1
-    setZoom(z => {
-      const newZ = Math.max(2, Math.min(18, z + dir));
-      if (newZ === z) return z;
-      const { x: mx, y: my } = lastMouse.current;
-      const scale = Math.pow(2, newZ - z);
-      setOffsetX(ox => mx - (mx - ox) * scale);
-      setOffsetY(oy => my - (my - oy) * scale);
-      return newZ;
-    });
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx  = e.clientX - rect.left;
+    const my  = e.clientY - rect.top;
+    const raw = e.deltaMode === 0 ? e.deltaY : e.deltaY * 40;
+    // clamp per-event jump to ±0.5 levels; * 0.003 gives smooth trackpad feel
+    const delta = Math.max(-0.5, Math.min(0.5, -raw * 0.003));
+    dispatchMap({ type: 'zoom', mx, my, delta });
   }, []);
 
   // ── Mouse events ──────────────────────────────────────────────────────────
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const rect  = canvas.getBoundingClientRect();
-    const mx    = e.clientX - rect.left;
-    const my    = e.clientY - rect.top;
+    const rect = canvas.getBoundingClientRect();
+    const mx   = e.clientX - rect.left;
+    const my   = e.clientY - rect.top;
+    const { zoom, offsetX, offsetY } = mapRef.current;
 
-    if (drawMode) {
+    if (e.shiftKey) {
+      // Shift held → draw ROI
       const [lat, lon] = canvasToLatLon(mx, my, zoom, offsetX, offsetY);
-      isDrawing.current = true;
+      isDrawing.current  = true;
       drawStart.current   = [lat, lon];
       drawCurrent.current = [lat, lon];
     } else {
+      // Normal drag → pan
       isPanning.current = true;
       panStart.current  = { mx: e.clientX, my: e.clientY, ox: offsetX, oy: offsetY };
     }
-  }, [drawMode, zoom, offsetX, offsetY]);
+  }, []);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -356,14 +384,17 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       const rect = canvas.getBoundingClientRect();
       const mx   = e.clientX - rect.left;
       const my   = e.clientY - rect.top;
+      const { zoom, offsetX, offsetY } = mapRef.current;
 
-      // Update cursor coords
       const [lat, lon] = canvasToLatLon(mx, my, zoom, offsetX, offsetY);
       setCursor([lat, lon]);
 
       if (isPanning.current) {
-        setOffsetX(panStart.current.ox + (e.clientX - panStart.current.mx));
-        setOffsetY(panStart.current.oy + (e.clientY - panStart.current.my));
+        dispatchMap({
+          type: 'pan_to',
+          offsetX: panStart.current.ox + (e.clientX - panStart.current.mx),
+          offsetY: panStart.current.oy + (e.clientY - panStart.current.my),
+        });
       }
       if (isDrawing.current) {
         drawCurrent.current = [lat, lon];
@@ -371,24 +402,23 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       }
     };
 
-    const onUp = (e: MouseEvent) => {
+    const onUp = (_e: MouseEvent) => {
       if (isDrawing.current && drawStart.current && drawCurrent.current) {
         const [lat1, lon1] = drawStart.current;
         const [lat2, lon2] = drawCurrent.current;
-        const bbox: Bbox = {
+        const newBbox: Bbox = {
           west:  Math.min(lon1, lon2),
           east:  Math.max(lon1, lon2),
           south: Math.min(lat1, lat2),
           north: Math.max(lat1, lat2),
         };
-        const minDelta = 0.001;
-        if (Math.abs(bbox.east - bbox.west) > minDelta &&
-            Math.abs(bbox.north - bbox.south) > minDelta) {
-          setBbox(bbox);
+        if (Math.abs(newBbox.east - newBbox.west)   > 0.001 &&
+            Math.abs(newBbox.north - newBbox.south)  > 0.001) {
+          setBbox(newBbox);
         }
       }
-      isPanning.current = false;
-      isDrawing.current = false;
+      isPanning.current   = false;
+      isDrawing.current   = false;
       drawStart.current   = null;
       drawCurrent.current = null;
     };
@@ -399,15 +429,15 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup',   onUp);
     };
-  }, [zoom, offsetX, offsetY, renderFrame]);
+  }, [renderFrame]);
 
   // ── Estimated image size ──────────────────────────────────────────────────
   const estimatedSize = useMemo(() => {
     if (!bbox) return null;
-    const latC   = (bbox.south + bbox.north) / 2;
-    const widthM = Math.abs(bbox.east - bbox.west) * 111320 * Math.cos((latC * Math.PI) / 180);
+    const latC    = (bbox.south + bbox.north) / 2;
+    const widthM  = Math.abs(bbox.east - bbox.west) * 111320 * Math.cos((latC * Math.PI) / 180);
     const heightM = Math.abs(bbox.north - bbox.south) * 111320;
-    const W = Math.round(widthM / Math.max(1, resolution));
+    const W = Math.round(widthM  / Math.max(1, resolution));
     const H = Math.round(heightM / Math.max(1, resolution));
     return { W, H, mb: (W * H * selectedBands.length * 4 / 1024 / 1024).toFixed(1) };
   }, [bbox, resolution, selectedBands]);
@@ -417,14 +447,14 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     if (!bbox) return;
     const bboxStr = `${bbox.west.toFixed(6)},${bbox.south.toFixed(6)},${bbox.east.toFixed(6)},${bbox.north.toFixed(6)}`;
     node?.data?.onChangeParams?.({
-      bbox:        bboxStr,
-      bands:       selectedBands.join(','),
-      collection:  String(colIdx),
-      date_start:  dateStart,
-      date_end:    dateEnd,
-      cloud_max:   String(cloudMax),
-      resolution:  String(resolution),
-      fetch:       true,   // trigger rising edge
+      bbox:       bboxStr,
+      bands:      selectedBands.join(','),
+      collection: String(colIdx),
+      date_start: dateStart,
+      date_end:   dateEnd,
+      cloud_max:  String(cloudMax),
+      resolution: String(resolution),
+      fetch:      Date.now(),
     });
     onClose();
   }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, resolution, node, onClose]);
@@ -433,16 +463,21 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
     if (!bbox) return;
     const bboxStr = `${bbox.west.toFixed(6)},${bbox.south.toFixed(6)},${bbox.east.toFixed(6)},${bbox.north.toFixed(6)}`;
     node?.data?.onChangeParams?.({
-      bbox:        bboxStr,
-      bands:       selectedBands.join(','),
-      collection:  String(colIdx),
-      date_start:  dateStart,
-      date_end:    dateEnd,
-      cloud_max:   String(cloudMax),
-      resolution:  String(resolution),
+      bbox:       bboxStr,
+      bands:      selectedBands.join(','),
+      collection: String(colIdx),
+      date_start: dateStart,
+      date_end:   dateEnd,
+      cloud_max:  String(cloudMax),
+      resolution: String(resolution),
     });
     onClose();
   }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, resolution, node, onClose]);
+
+  // ── Dynamic cursor ────────────────────────────────────────────────────────
+  const canvasCursor = shiftHeld
+    ? 'cursor-crosshair'
+    : 'cursor-grab active:cursor-grabbing';
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -496,9 +531,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
                 <button
                   key={band}
                   onClick={() => setSelectedBands(prev =>
-                    prev.includes(band)
-                      ? prev.filter(b => b !== band)
-                      : [...prev, band]
+                    prev.includes(band) ? prev.filter(b => b !== band) : [...prev, band]
                   )}
                   className={`px-2 py-0.5 rounded-full text-[9px] font-black font-mono transition-all ${
                     selectedBands.includes(band)
@@ -520,18 +553,14 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
             <div>
               <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Start</label>
               <input
-                type="date"
-                value={dateStart}
-                onChange={e => setDateStart(e.target.value)}
+                type="date" value={dateStart} onChange={e => setDateStart(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-blue-500/50"
               />
             </div>
             <div>
               <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">End</label>
               <input
-                type="date"
-                value={dateEnd}
-                onChange={e => setDateEnd(e.target.value)}
+                type="date" value={dateEnd} onChange={e => setDateEnd(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-blue-500/50"
               />
             </div>
@@ -544,8 +573,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
                 Max clouds: <span className="text-blue-400">{cloudMax}%</span>
               </label>
               <input
-                type="range" min={0} max={100} step={5}
-                value={cloudMax}
+                type="range" min={0} max={100} step={5} value={cloudMax}
                 onChange={e => setCloudMax(parseInt(e.target.value, 10))}
                 className="w-full accent-blue-500"
               />
@@ -556,8 +584,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
           <div>
             <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Resolution (m/px)</label>
             <input
-              type="number" min={1} max={1000} step={1}
-              value={resolution}
+              type="number" min={1} max={1000} step={1} value={resolution}
               onChange={e => setResolution(parseInt(e.target.value, 10) || 10)}
               className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white font-mono focus:outline-none focus:border-blue-500/50"
             />
@@ -614,21 +641,19 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       <div className="flex-1 flex flex-col bg-[#12121f] relative overflow-hidden">
         {/* Top bar */}
         <div className="flex items-center gap-3 px-4 py-2 bg-black/40 border-b border-white/5 z-10">
-          {/* Draw mode toggle */}
-          <button
-            onClick={() => setDrawMode(m => !m)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-              drawMode
-                ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
-                : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {drawMode ? <Square size={10} /> : <MousePointer size={10} />}
-            {drawMode ? 'Drawing ROI' : 'Pan mode'}
-          </button>
+          {/* Mode indicator */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+            shiftHeld
+              ? 'bg-orange-500/20 border border-orange-500/40 text-orange-400'
+              : 'bg-white/5 border border-white/10 text-gray-500'
+          }`}>
+            {shiftHeld ? '✏ Drawing ROI' : '✦ Pan mode'}
+          </div>
 
           <div className="text-[9px] font-mono text-gray-600">
-            {drawMode ? 'Click + drag to define area of interest' : 'Scroll to zoom · Drag to pan'}
+            {shiftHeld
+              ? 'Drag to define area of interest'
+              : 'Scroll to zoom · Drag to pan · Hold Shift to draw ROI'}
           </div>
 
           <div className="ml-auto flex items-center gap-3 text-[9px] font-mono">
@@ -638,7 +663,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
               </span>
             )}
             <span className="text-blue-400/60 bg-blue-400/5 border border-blue-400/10 px-2 py-0.5 rounded-full">
-              z{zoom}
+              z{map.zoom.toFixed(1)}
             </span>
           </div>
         </div>
@@ -647,15 +672,15 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
         <div className="flex-1 relative">
           <canvas
             ref={canvasRef}
-            className={`absolute inset-0 w-full h-full ${drawMode ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+            className={`absolute inset-0 w-full h-full ${canvasCursor}`}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
           />
           {/* No-bbox hint */}
-          {!bbox && !drawMode && (
+          {!bbox && !shiftHeld && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none">
               <div className="px-4 py-2 bg-black/70 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400 border border-white/10">
-                Switch to <span className="text-orange-400">Drawing mode</span> to define your ROI
+                Hold <span className="text-orange-400">Shift</span> + drag to define your ROI
               </div>
             </div>
           )}

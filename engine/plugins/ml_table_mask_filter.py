@@ -45,10 +45,12 @@ class TableMaskFilterNode(NodeProcessor):
 
         df   = inputs.get('table')
         mask = inputs.get('mask')
+        print(f'[MaskFilter] inputs keys={list(inputs.keys())} table_type={type(df).__name__} mask_type={type(mask).__name__}')
 
         if not isinstance(df, pd.DataFrame):
             send_notification('TableMaskFilter: waiting for TABLE input', notif_id=_NOTIF)
             return {}
+        print(f'[MaskFilter] table cols={list(df.columns)[:10]} len={len(df)}')
 
         if '__px_idx' not in df.columns:
             send_notification('TableMaskFilter: no __px_idx column', level='error', notif_id=_NOTIF)

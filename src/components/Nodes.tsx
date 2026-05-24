@@ -3,6 +3,7 @@ import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals, NodeResi
 import { useNodeData } from '../context/NodesDataContext';
 import { useComputingNodeId } from '../context/ComputingNodeContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
+import { openPath } from '@tauri-apps/plugin-opener';
 import {
   Camera, Waves, Ghost, Maximize, Search, User, Zap, Activity,
   Hash, Eye, Layout, PenTool, Database, Wind, Target, Palette, Scaling, Move, Layers, Box, Image, Film, Play, Pause,
@@ -4275,6 +4276,7 @@ export const CopernicusNode = memo(({ selected, data }: any) => {
   const nd           = useNodeData(useNodeId());
   const thumb        = nd?._thumb || data.params?._thumb_cache;
   const onOpenEditor = data.onOpenEditor;
+  const cachePath    = nd?.meta?.cache_path as string | undefined;
 
   const bbox    = data.params?.bbox ?? '';
   const colIdx  = parseInt(data.params?.collection ?? '0', 10);
@@ -4334,6 +4336,16 @@ export const CopernicusNode = memo(({ selected, data }: any) => {
                 S {bboxParts![1].toFixed(3)}° · N {bboxParts![3].toFixed(3)}°
               </div>
             </div>
+          )}
+          {cachePath && (
+            <button
+              onClick={e => { e.stopPropagation(); openPath(cachePath.substring(0, cachePath.lastIndexOf('/'))); }}
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1 bg-blue-500/5 hover:bg-blue-500/15 border border-blue-500/15 hover:border-blue-500/30 rounded-lg transition-all"
+              title="Open cache folder in Finder"
+            >
+              <LucideIcons.FolderOpen size={9} className="text-blue-400" />
+              <span className="text-[7px] font-black uppercase tracking-widest text-blue-400">Open Folder</span>
+            </button>
           )}
         </div>
       </div>
