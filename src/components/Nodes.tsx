@@ -3656,12 +3656,12 @@ export const RootAnatomyReportNode = memo(({ data, selected }: any) => {
 });
 
 const TURB_CLASSES: { label: string; short: string; color: string; bg: string }[] = [
-  { label: 'Cristal (0–1)',          short: 'Cristal',   color: 'text-blue-300',   bg: 'bg-blue-500/5'   },
-  { label: 'Clair (1–5)',            short: 'Clair',     color: 'text-cyan-400',   bg: 'bg-cyan-500/5'   },
-  { label: 'Légèrement turbide',     short: 'Légt.',     color: 'text-green-400',  bg: 'bg-green-500/5'  },
-  { label: 'Turbide',                short: 'Turbide',   color: 'text-amber-400',  bg: 'bg-amber-500/5'  },
-  { label: 'Très turbide',           short: 'Très T.',   color: 'text-orange-400', bg: 'bg-orange-500/5' },
-  { label: 'Extrêmement turbide',    short: 'Extrême',   color: 'text-red-400',    bg: 'bg-red-500/5'    },
+  { label: 'Crystal (0-1)',          short: 'Crystal',   color: 'text-blue-300',   bg: 'bg-blue-500/5'   },
+  { label: 'Clear (1-5)',            short: 'Clear',     color: 'text-cyan-400',   bg: 'bg-cyan-500/5'   },
+  { label: 'Slightly turbid',        short: 'Slight.',   color: 'text-green-400',  bg: 'bg-green-500/5'  },
+  { label: 'Turbid',                 short: 'Turbid',    color: 'text-amber-400',  bg: 'bg-amber-500/5'  },
+  { label: 'Very turbid',            short: 'Very T.',   color: 'text-orange-400', bg: 'bg-orange-500/5' },
+  { label: 'Extremely turbid',       short: 'Extreme',   color: 'text-red-400',    bg: 'bg-red-500/5'    },
 ];
 
 const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean }) => {
@@ -3677,8 +3677,8 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
     typeof v === 'number' ? (v >= 1000 ? Math.round(v).toString() : v.toFixed(dec)) : '—';
 
   const metricsLeft = [
-    { label: 'Moyenne', key: 'mean',   color: 'text-cyan-400' },
-    { label: 'Médiane', key: 'median', color: 'text-cyan-400' },
+    { label: 'Mean',    key: 'mean',   color: 'text-cyan-400' },
+    { label: 'Median',  key: 'median', color: 'text-cyan-400' },
     { label: 'P90',     key: 'p90',    color: 'text-amber-400' },
     { label: 'Max',     key: 'max',    color: 'text-red-400'  },
   ];
@@ -3709,7 +3709,7 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
           <div className="flex flex-col gap-2">
             {/* Metric pills */}
             <div className="p-2 rounded-xl border border-white/5 bg-cyan-500/5">
-              <div className="text-[7px] text-cyan-500/70 uppercase font-black mb-2 tracking-widest">Métriques NTU</div>
+              <div className="text-[7px] text-cyan-500/70 uppercase font-black mb-2 tracking-widest">NTU Metrics</div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                 {metricsLeft.map(m => (
                   <div key={m.key} className="flex flex-col">
@@ -3719,13 +3719,13 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
                 ))}
               </div>
               <div className="mt-2 pt-1 border-t border-white/5 text-[8px] text-gray-400 flex justify-between">
-                <span>Surface eau</span>
+                <span>Water surface</span>
                 <span className="text-emerald-400 font-mono font-bold">{fmt(stats.area_km2, 1)} km²</span>
               </div>
             </div>
             {/* Class distribution mini */}
             <div className="p-2 rounded-xl border border-white/5 bg-white/3">
-              <div className="text-[7px] text-gray-500 uppercase font-black mb-1.5 tracking-widest">Distribution WFD</div>
+              <div className="text-[7px] text-gray-500 uppercase font-black mb-1.5 tracking-widest">WFD Distribution</div>
               <div className="space-y-1">
                 {TURB_CLASSES.filter(tc => {
                   const d = classes[tc.label];
@@ -3753,7 +3753,7 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
             {/* Metrics panel */}
             <div className="p-3 rounded-xl border border-white/5 bg-cyan-500/5">
               <h5 className="text-[9px] font-black uppercase tracking-wider text-cyan-400 mb-3 border-b border-white/10 pb-1 flex justify-between items-center">
-                Métriques NTU
+                NTU Metrics
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-50" />
               </h5>
               <div className="space-y-1.5">
@@ -3764,11 +3764,11 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
                   </div>
                 ))}
                 <div className="flex justify-between items-center text-[10px] pt-1 border-t border-white/5 mt-1">
-                  <span className="text-gray-400">Surface eau</span>
+                  <span className="text-gray-400">Water surface</span>
                   <span className="font-mono font-bold text-emerald-400 bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{fmt(stats.area_km2, 1)} km²</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-gray-400">Pixels eau</span>
+                  <span className="text-gray-400">Water pixels</span>
                   <span className="font-mono font-bold text-gray-300 bg-black/20 px-1.5 py-0.5 rounded border border-white/5">{stats.count ? stats.count.toLocaleString() : '—'}</span>
                 </div>
               </div>
@@ -3776,7 +3776,7 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
             {/* WFD classes panel */}
             <div className="p-3 rounded-xl border border-white/5 bg-white/3">
               <h5 className="text-[9px] font-black uppercase tracking-wider text-amber-400 mb-3 border-b border-white/10 pb-1 flex justify-between items-center">
-                Distribution WFD
+                WFD Distribution
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 opacity-50" />
               </h5>
               <div className="space-y-2">
@@ -3804,7 +3804,7 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
           onClick={() => setExpanded(!expanded)}
           className="w-full py-2 mt-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2"
         >
-          {expanded ? 'Collapse View' : 'Distribution WFD'}
+          {expanded ? 'Collapse View' : 'WFD Distribution'}
           <BarChart2 size={10} />
         </button>
       </div>
