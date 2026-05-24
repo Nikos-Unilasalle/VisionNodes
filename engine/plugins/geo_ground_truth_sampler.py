@@ -159,7 +159,27 @@ class GroundTruthSamplerNode(NodeProcessor):
         in_bounds = (rows >= 0) & (rows < H) & (cols >= 0) & (cols < W)
         n_inbounds = int(in_bounds.sum())
         if n_inbounds == 0:
-            send_notification('GT Sampler: no points within raster bounds', level='error', notif_id=_NOTIF)
+            # Compute raster bbox in WGS84 for diagnosis
+            try:
+                from rasterio.transform import xy as _xy
+                from pyproj import Transformer as _T
+                _t = _T.from_crs(crs, 'EPSG:4326', always_xy=True)
+                _x0, _y0 = _xy(transform, 0, 0)
+                _x1, _y1 = _xy(transform, H - 1, W - 1)
+                _lon0, _lat0 = _t.transform(_x0, _y0)
+                _lon1, _lat1 = _t.transform(_x1, _y1)
+                _pts_lat = df[lat_col].values
+                _pts_lon = df[lon_col].values
+                send_notification(
+                    f'GT Sampler: 0/{len(df)} points in raster. '
+                    f'Raster bbox: lat[{min(_lat0,_lat1):.3f},{max(_lat0,_lat1):.3f}] '
+                    f'lon[{min(_lon0,_lon1):.3f},{max(_lon0,_lon1):.3f}]. '
+                    f'Points bbox: lat[{_pts_lat.min():.3f},{_pts_lat.max():.3f}] '
+                    f'lon[{_pts_lon.min():.3f},{_pts_lon.max():.3f}]',
+                    level='error', notif_id=_NOTIF,
+                )
+            except Exception:
+                send_notification('GT Sampler: no points within raster bounds', level='error', notif_id=_NOTIF)
             return {}
 
         df_in = df[in_bounds].copy()
