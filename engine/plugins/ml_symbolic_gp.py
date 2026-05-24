@@ -293,7 +293,13 @@ class SymbolicRegressorNode(NodeProcessor):
             features = [c for c in df.columns
                         if c not in _EXCLUDE and pd.api.types.is_numeric_dtype(df[c])]
         if not features:
-            send_notification('GP: no numeric features', level='error', notif_id=_NOTIF)
+            all_cols = list(df.columns)
+            send_notification(
+                f'GP: no numeric features. Columns received: {all_cols}. '
+                f'Expected band columns (Bleu/Vert/Rouge/NIR) from GT Sampler output. '
+                f'Check TRAIN_TABLE is connected to GT Sampler "train_table" port, not Naiades.',
+                level='error', notif_id=_NOTIF,
+            )
             return {}
 
         X_all = df[features].to_numpy(dtype=np.float32)
