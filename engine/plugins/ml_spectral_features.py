@@ -83,11 +83,9 @@ class SpectralFeaturesNode(NodeProcessor):
         import pandas as pd
 
         df = inputs.get('table')
-        print(f'[SpectralFeatures] inputs keys={list(inputs.keys())} table_type={type(df).__name__}')
         if df is None or not isinstance(df, pd.DataFrame):
             send_notification('SpectralFeatures: waiting for table input', notif_id=_NOTIF)
             return {}
-        print(f'[SpectralFeatures] cols_in={list(df.columns)[:10]} len={len(df)}')
 
         df = df.copy()
 

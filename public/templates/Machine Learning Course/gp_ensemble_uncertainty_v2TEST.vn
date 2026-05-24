@@ -148,7 +148,7 @@
       "data": {
         "label": "ACOLITE (training scene)",
         "params": {
-          "band_names": "Blue, Green, Red, NIR",
+          "band_names": "Blue,Green,Red,NIR",
           "dsf_aot_estimate": 0,
           "run": 0
         }
@@ -176,7 +176,7 @@
           "lat_col": "lat",
           "lon_col": "lon",
           "target_col": "label",
-          "band_names": "Blue, Green, Red,NIR",
+          "band_names": "Blue,Green,Red,NIR",
           "target_min": 0,
           "target_max": 500,
           "mask_radius": 3
@@ -236,7 +236,7 @@
       "data": {
         "label": "ACOLITE (inference scene)",
         "params": {
-          "band_names": "Bleu,Vert,Rouge,NIR",
+          "band_names": "Blue,Green,Red,NIR",
           "dsf_aot_estimate": 0,
           "run": 0
         }
@@ -285,7 +285,7 @@
       "data": {
         "label": "Bands → Table",
         "params": {
-          "band_names": "Bleu,Vert,Rouge,NIR",
+          "band_names": "Blue,Green,Red,NIR",
           "filter_nodata": true
         }
       },
@@ -473,7 +473,8 @@
         "params": {
           "blue_col": "Blue",
           "green_col": "Green",
-          "red_col": "Red"
+          "red_col": "Red",
+          "nir_col": "NIR"
         },
         "schema": {
           "type": "ml_spectral_features",

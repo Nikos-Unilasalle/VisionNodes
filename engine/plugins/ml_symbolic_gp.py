@@ -542,7 +542,6 @@ class EnsembleApplyNode(NodeProcessor):
 
         df     = inputs.get('table')
         models = inputs.get('models')
-        print(f'[Apply] inputs keys={list(inputs.keys())} table_type={type(df).__name__} models_type={type(models).__name__}')
         if df is None or not isinstance(df, pd.DataFrame):
             send_notification('Apply: waiting for pixel table (TABLE input)', notif_id=_NOTIF)
             return {}
