@@ -617,10 +617,11 @@ class EnsembleApplyNode(NodeProcessor):
         _, plt = _get_mpl()
         with plt.rc_context(_MPL_DARK):
             fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.0))
-            axes[0].hist(mean_pred, bins=50, color='#5b8def', alpha=0.85)
+            _bins = lambda arr: 50 if arr.max() > arr.min() else 1
+            axes[0].hist(mean_pred, bins=_bins(mean_pred), color='#5b8def', alpha=0.85)
             axes[0].set_title(f'Mean  μ={stats["mean_overall"]:.2f}', fontsize=10)
             axes[0].grid(True, alpha=0.25)
-            axes[1].hist(std_pred, bins=50, color='#f5a623', alpha=0.85)
+            axes[1].hist(std_pred, bins=_bins(std_pred), color='#f5a623', alpha=0.85)
             axes[1].set_title(f'Std-dev  μ={stats["std_mean"]:.2f}', fontsize=10)
             axes[1].grid(True, alpha=0.25)
             fig.suptitle(f'Ensemble Apply  ({n_ens} models × {n:,} pixels)',
