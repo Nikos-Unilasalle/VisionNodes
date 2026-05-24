@@ -100,9 +100,11 @@ class GroundTruthSamplerNode(NodeProcessor):
         tgt_col   = str(params.get('target_col', 'label')).strip()
 
         # Accept DataFrame from connected node (e.g. Naïades) or fall back to CSV file
+        csv_path = str(params.get('csv_path', '')).strip()
         in_table = inputs.get('table')
         if isinstance(in_table, pd.DataFrame):
             df = in_table.copy()
+            csv_path = '<connected table>'
             send_notification(f'GT Sampler: using connected table ({len(df)} rows)', progress=0.15, notif_id=_NOTIF)
         else:
             csv_path = str(params.get('csv_path', '')).strip()
