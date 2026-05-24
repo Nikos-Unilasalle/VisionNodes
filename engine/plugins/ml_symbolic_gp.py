@@ -264,12 +264,19 @@ class SymbolicRegressorNode(NodeProcessor):
 
         df = inputs.get('train_table')
         if df is None or not isinstance(df, pd.DataFrame):
+            send_notification('GP: waiting for TRAIN_TABLE input', notif_id=_NOTIF)
             return {}
 
         # ── Trigger gate: only retrain on explicit user click
         trig = int(params.get('run', 0))
         if trig == self._last_trigger and self._cached_out is not None:
             return self._cached_out
+        if trig == self._last_trigger and self._cached_out is None:
+            send_notification(
+                f'GP: {len(df)} rows ready — click "Train Ensemble" to train',
+                notif_id=_NOTIF,
+            )
+            return {}
 
         target = str(params.get('target_column', 'label')).strip()
         if target not in df.columns:
@@ -529,13 +536,17 @@ class EnsembleApplyNode(NodeProcessor):
 
         df     = inputs.get('table')
         models = inputs.get('models')
-        if df is None or not isinstance(df, pd.DataFrame) or not isinstance(models, dict):
+        if df is None or not isinstance(df, pd.DataFrame):
+            send_notification('Apply: waiting for pixel table (TABLE input)', notif_id=_NOTIF)
+            return {}
+        if not isinstance(models, dict):
+            send_notification('Apply: waiting for trained ensemble (MODELS input)', notif_id=_NOTIF)
             return {}
 
         estimators = models.get('estimators') or []
         features   = models.get('feature_cols') or []
         if not estimators or not features:
-            send_notification('Apply: empty ensemble or features', level='error', notif_id=_NOTIF)
+            send_notification('Apply: empty ensemble or features — train GP first', level='error', notif_id=_NOTIF)
             return {}
 
         missing = [f for f in features if f not in df.columns]
