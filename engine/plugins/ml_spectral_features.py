@@ -54,12 +54,15 @@ def _info_panel(lines, w=440, h=200, title=''):
         {'id': 'preview', 'color': 'image', 'label': 'Features added'},
     ],
     params=[
-        {'id': 'blue_col',  'type': 'string', 'default': 'Bleu',  'label': 'Blue column name'},
-        {'id': 'green_col', 'type': 'string', 'default': 'Vert',  'label': 'Green column name'},
-        {'id': 'red_col',   'type': 'string', 'default': 'Rouge', 'label': 'Red column name'},
-        {'id': 'nir_col',   'type': 'string', 'default': 'NIR',   'label': 'NIR column name'},
-        # Predefined indices
+        {'id': 'blue_col',   'type': 'string', 'default': 'Blue',  'label': 'Blue column name'},
+        {'id': 'green_col',  'type': 'string', 'default': 'Green', 'label': 'Green column name'},
+        {'id': 'red_col',    'type': 'string', 'default': 'Red',   'label': 'Red column name'},
+        {'id': 'nir_col',    'type': 'string', 'default': 'NIR',   'label': 'NIR column name'},
+        {'id': 'swir1_col',  'type': 'string', 'default': 'SWIR1', 'label': 'SWIR1 column (optional)'},
+        {'id': 'swir2_col',  'type': 'string', 'default': 'SWIR2', 'label': 'SWIR2 column (optional)'},
+        # Predefined VIS/NIR indices
         {'id': 'add_red_green',  'type': 'bool', 'default': True,  'label': 'Red/Green (turbidity proxy)'},
+        {'id': 'add_red_nir',    'type': 'bool', 'default': True,  'label': 'Red/NIR (high turbidity marker)'},
         {'id': 'add_blue_green', 'type': 'bool', 'default': True,  'label': 'Blue/Green'},
         {'id': 'add_blue_red',   'type': 'bool', 'default': False, 'label': 'Blue/Red'},
         {'id': 'add_blue_nir',   'type': 'bool', 'default': False, 'label': 'Blue/NIR'},
@@ -67,6 +70,12 @@ def _info_panel(lines, w=440, h=200, title=''):
         {'id': 'add_ndwi',       'type': 'bool', 'default': False, 'label': 'NDWI = (Green-NIR)/(Green+NIR)'},
         {'id': 'add_log_red',    'type': 'bool', 'default': True,  'label': 'log(Red+1)'},
         {'id': 'add_log_blue',   'type': 'bool', 'default': False, 'label': 'log(Blue+1)'},
+        # SWIR features (require Copernicus B11,B12 + matching column names)
+        {'id': 'add_nir_swir1',  'type': 'bool', 'default': False, 'label': 'NIR/SWIR1 (sediment)'},
+        {'id': 'add_red_swir1',  'type': 'bool', 'default': False, 'label': 'Red/SWIR1 (SPM > 50)'},
+        {'id': 'add_mndwi',      'type': 'bool', 'default': False, 'label': 'MNDWI = (Green-SWIR1)/(Green+SWIR1)'},
+        {'id': 'add_nbr',        'type': 'bool', 'default': False, 'label': 'NBR = (NIR-SWIR2)/(NIR+SWIR2)'},
+        {'id': 'add_log_swir1',  'type': 'bool', 'default': False, 'label': 'log(SWIR1+1)'},
         # Custom expressions (Python, use b=blue, g=green, r=red, n=nir)
         {'id': 'custom_expr', 'type': 'string', 'default': '',
          'label': 'Custom expr (e.g. r/g, log1p(b/r)) — use b,g,r,n'},
@@ -89,10 +98,12 @@ class SpectralFeaturesNode(NodeProcessor):
 
         df = df.copy()
 
-        b_col = str(params.get('blue_col',  'Bleu')).strip()
-        g_col = str(params.get('green_col', 'Vert')).strip()
-        r_col = str(params.get('red_col',   'Rouge')).strip()
+        b_col = str(params.get('blue_col',  'Blue')).strip()
+        g_col = str(params.get('green_col', 'Green')).strip()
+        r_col = str(params.get('red_col',   'Red')).strip()
         n_col = str(params.get('nir_col',   'NIR')).strip()
+        s1_col = str(params.get('swir1_col', 'SWIR1')).strip()
+        s2_col = str(params.get('swir2_col', 'SWIR2')).strip()
 
         missing = [c for c in (b_col, g_col, r_col, n_col) if c not in df.columns]
         if missing:
@@ -104,12 +115,20 @@ class SpectralFeaturesNode(NodeProcessor):
         g = df[g_col].to_numpy(dtype=np.float32)
         r = df[r_col].to_numpy(dtype=np.float32)
         n = df[n_col].to_numpy(dtype=np.float32)
+        has_swir1 = s1_col in df.columns
+        has_swir2 = s2_col in df.columns
+        s1 = df[s1_col].to_numpy(dtype=np.float32) if has_swir1 else None
+        s2 = df[s2_col].to_numpy(dtype=np.float32) if has_swir2 else None
 
         added = []
 
         if params.get('add_red_green', True):
             df['Red_Green'] = _safe_ratio(r, g)
             added.append('Red_Green')
+
+        if params.get('add_red_nir', True):
+            df['Red_NIR'] = _safe_ratio(r, n)
+            added.append('Red_NIR')
 
         if params.get('add_blue_green', True):
             df['Blue_Green'] = _safe_ratio(b, g)
@@ -139,16 +158,38 @@ class SpectralFeaturesNode(NodeProcessor):
             df['log_Blue'] = _safe_log(b)
             added.append('log_Blue')
 
+        # SWIR-dependent features
+        if has_swir1:
+            if params.get('add_nir_swir1', False):
+                df['NIR_SWIR1'] = _safe_ratio(n, s1)
+                added.append('NIR_SWIR1')
+            if params.get('add_red_swir1', False):
+                df['Red_SWIR1'] = _safe_ratio(r, s1)
+                added.append('Red_SWIR1')
+            if params.get('add_mndwi', False):
+                df['MNDWI'] = _safe_ratio(g - s1, g + s1)
+                added.append('MNDWI')
+            if params.get('add_log_swir1', False):
+                df['log_SWIR1'] = _safe_log(s1)
+                added.append('log_SWIR1')
+
+        if has_swir2 and params.get('add_nbr', False):
+            df['NBR'] = _safe_ratio(n - s2, n + s2)
+            added.append('NBR')
+
         # Custom expression
         expr = str(params.get('custom_expr', '')).strip()
         cname = str(params.get('custom_name', 'custom')).strip() or 'custom'
         if expr:
             try:
-                result = eval(expr, {'__builtins__': {}}, {  # noqa: S307
+                _env = {
                     'b': b, 'g': g, 'r': r, 'n': n,
                     'log1p': np.log1p, 'sqrt': np.sqrt,
                     'abs': np.abs, 'clip': np.clip,
-                })
+                }
+                if s1 is not None: _env['s1'] = s1
+                if s2 is not None: _env['s2'] = s2
+                result = eval(expr, {'__builtins__': {}}, _env)  # noqa: S307
                 df[cname] = np.asarray(result, dtype=np.float32)
                 added.append(cname)
             except Exception as e:
