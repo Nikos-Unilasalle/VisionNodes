@@ -108,20 +108,20 @@ class SpectralFeaturesNode(NodeProcessor):
         added = []
 
         if params.get('add_red_green', True):
-            df['Rouge_Vert'] = _safe_ratio(r, g)
-            added.append('Rouge_Vert')
+            df['Red_Green'] = _safe_ratio(r, g)
+            added.append('Red_Green')
 
         if params.get('add_blue_green', True):
-            df['Bleu_Vert'] = _safe_ratio(b, g)
-            added.append('Bleu_Vert')
+            df['Blue_Green'] = _safe_ratio(b, g)
+            added.append('Blue_Green')
 
         if params.get('add_blue_red', False):
-            df['Bleu_Rouge'] = _safe_ratio(b, r)
-            added.append('Bleu_Rouge')
+            df['Blue_Red'] = _safe_ratio(b, r)
+            added.append('Blue_Red')
 
         if params.get('add_blue_nir', False):
-            df['Bleu_NIR'] = _safe_ratio(b, n)
-            added.append('Bleu_NIR')
+            df['Blue_NIR'] = _safe_ratio(b, n)
+            added.append('Blue_NIR')
 
         if params.get('add_ndti', True):
             df['NDTI'] = _safe_ratio(r - g, r + g)
@@ -132,12 +132,12 @@ class SpectralFeaturesNode(NodeProcessor):
             added.append('NDWI')
 
         if params.get('add_log_red', True):
-            df['log_Rouge'] = _safe_log(r)
-            added.append('log_Rouge')
+            df['log_Red'] = _safe_log(r)
+            added.append('log_Red')
 
         if params.get('add_log_blue', False):
-            df['log_Bleu'] = _safe_log(b)
-            added.append('log_Bleu')
+            df['log_Blue'] = _safe_log(b)
+            added.append('log_Blue')
 
         # Custom expression
         expr = str(params.get('custom_expr', '')).strip()
