@@ -91,6 +91,8 @@ class GroundTruthSamplerNode(NodeProcessor):
 
         geo = inputs.get('geotiff')
         if not isinstance(geo, dict) or 'bands' not in geo:
+            send_notification('GT Sampler: waiting for GeoTIFF (connect ACOLITE/Copernicus output)',
+                              notif_id=_NOTIF)
             return {}
 
         lat_col   = str(params.get('lat_col', 'lat')).strip()
