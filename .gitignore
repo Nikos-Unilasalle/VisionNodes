@@ -43,3 +43,16 @@ engine/plugins/gee_cache/package-lock.json
 .opencode/
 .codebuddy/
 .claude-code/
+
+# Copernicus tile cache (large GeoTIFFs, not versioned)
+engine/plugins/copernicus_cache/*.tif
+engine/plugins/copernicus_cache/*.tiff
+
+# ACOLITE source clone (use: git clone https://github.com/acolite/acolite.git engine/plugins/acolite_src)
+engine/plugins/acolite_src/
+
+# Misc local scripts & literature
+test_download.py
+generate_footprint_vn.py
+litterature/
+1-s2.0-S2352340918301902-mmc3/

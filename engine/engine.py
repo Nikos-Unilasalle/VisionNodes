@@ -384,6 +384,18 @@ class VisionEngine:
             while not _notification_queue.empty():
                 try:
                     notif = _notification_queue.get_nowait()
+                    # '_wake_engine' sentinel: a background thread finished and wants a graph re-run
+                    if notif.get('_wake_engine'):
+                        # Optionally bust cache for nodes of a specific type so process() is called fresh
+                        node_type = notif.get('_node_type')
+                        if node_type:
+                            for cached_nid in list(self._node_cache.keys()):
+                                n = next((n for n in self.sorted_nodes if n['id'] == cached_nid), None)
+                                if n and n.get('type') == node_type:
+                                    del self._node_cache[cached_nid]
+                        if self._should_run():
+                            self._run_event.set()
+                        continue
                     notif_msg = json.dumps({"type": "notification", **notif})
                     if self.connected_clients:
                         await asyncio.gather(*[c.send(notif_msg) for c in list(self.connected_clients)], return_exceptions=True)
@@ -563,7 +575,12 @@ class VisionEngine:
                             if preview_img is not None: final_img = preview_img
                         elif not self.preview_node_id and ntype == 'output_display' and out.get('main') is not None:
                             final_img = out['main']
-                    except Exception as e: print(f"Error {nid}: {e}")
+                    except asyncio.CancelledError:
+                        raise  # propagate so task can be properly cancelled
+                    except BaseException as e:
+                        import traceback
+                        print(f"[Engine] Node error {nid} ({ntype}): {e}")
+                        traceback.print_exc()
             if final_img is None:
                 final_img = getattr(self, 'fallback_img', None)
                 if final_img is None:
@@ -637,6 +654,9 @@ class VisionEngine:
                         self.preview_node_id = d.get('node_id')
                         if self._should_run():
                             self._run_event.set()
+                    elif d.get('type') == 'cancel_notif':
+                        from registry import request_cancel
+                        request_cancel(d.get('notif_id', ''))
                     elif d.get('type') == 'export_py':
                         try:
                             from code_generator import generate_pipeline_script
@@ -670,12 +690,26 @@ async def main(engine_instance):
             close_timeout=60,
             max_size=2**24 # 16MB max message size for large graphs/images
         ):
-            await asyncio.gather(
-                engine_instance.run(),
-                engine_instance._drain_notifs_loop(),
-            )
+            while True:
+                try:
+                    await asyncio.gather(
+                        engine_instance.run(),
+                        engine_instance._drain_notifs_loop(),
+                    )
+                except asyncio.CancelledError:
+                    raise
+                except BaseException as e:
+                    import traceback
+                    print(f"[Engine] Processing loop crashed: {e} — restarting in 1s")
+                    traceback.print_exc()
+                    await asyncio.sleep(1.0)
+                    # Re-trigger graph if nodes present
+                    if engine_instance._should_run():
+                        engine_instance._run_event.set()
+    except asyncio.CancelledError:
+        pass
     except Exception as e:
-        print(f"Server Error: {e}")
+        print(f"[Engine] Server fatal error: {e}")
 
 def free_port(port):
     import signal
@@ -697,8 +731,16 @@ if __name__ == "__main__":
     cameras = list_available_cameras()
     print(f"[Engine] Available cameras: {cameras}")
 
-    engine = VisionEngine()
-    try:
-        asyncio.run(main(engine))
-    except KeyboardInterrupt:
-        print("\n[Engine] Stopped.")
+    while True:
+        engine = VisionEngine()
+        try:
+            asyncio.run(main(engine))
+            break  # clean exit (e.g. KeyboardInterrupt handled inside)
+        except KeyboardInterrupt:
+            print("\n[Engine] Stopped.")
+            break
+        except BaseException as e:
+            import traceback
+            print(f"\n[Engine] Fatal crash: {e} — restarting in 2s")
+            traceback.print_exc()
+            time.sleep(2)
