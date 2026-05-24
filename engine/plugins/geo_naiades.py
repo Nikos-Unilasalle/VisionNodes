@@ -126,14 +126,15 @@ class NaiadesNode(NodeProcessor):
         send_notification(f"Naiades: fetching code={code} bbox=[{lon_min},{lat_min}→{lon_max},{lat_max}]...",
                           progress=0.1, notif_id=_NOTIF)
 
-        url   = 'https://hubeau.eaufrance.fr/api/v1/qualite_rivieres/resultats'
+        url   = 'https://hubeau.eaufrance.fr/api/v2/qualite_rivieres/analyse_pc'
         payload = {
-            'code_parametre':      code,
-            'bbox':                f'{lon_min},{lat_min},{lon_max},{lat_max}',
+            'code_parametre':         code,
+            'bbox':                   f'{lon_min},{lat_min},{lon_max},{lat_max}',
             'date_debut_prelevement': d_min,
             'date_fin_prelevement':   d_max,
-            'size':                max_r,
-            'fields':              'code_station,libelle_station,latitude,longitude,date_prelevement,resultat,symbole_unite',
+            'code_remarque':          1,   # 1 = mesure réelle (exclut "Analyse non faite")
+            'size':                   max_r,
+            'fields':                 'code_station,libelle_station,latitude,longitude,date_prelevement,resultat,symbole_unite',
         }
 
         try:
