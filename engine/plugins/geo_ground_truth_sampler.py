@@ -82,6 +82,11 @@ def _info_panel(lines, w=460, h=240, title=''):
 )
 class GroundTruthSamplerNode(NodeProcessor):
 
+    def __init__(self):
+        super().__init__()
+        self._cache_key = None
+        self._cache_out = None
+
     def process(self, inputs, params):
         if not self.ensure_packages(['pandas', 'rasterio', 'pyproj'], notif_id=_NOTIF):
             return {}
@@ -94,6 +99,15 @@ class GroundTruthSamplerNode(NodeProcessor):
             send_notification('GT Sampler: waiting for GeoTIFF (connect ACOLITE/Copernicus output)',
                               notif_id=_NOTIF)
             return {}
+
+        # Cache: only re-run when inputs or params actually change
+        import hashlib, json as _json
+        in_table = inputs.get('table')
+        _tbl_hash = str(len(in_table)) if hasattr(in_table, '__len__') else 'none'
+        _geo_hash = str(geo['bands'].shape) + str(id(geo['bands']))
+        _key = hashlib.md5((_tbl_hash + _geo_hash + _json.dumps(params, sort_keys=True)).encode()).hexdigest()
+        if _key == self._cache_key and self._cache_out is not None:
+            return self._cache_out
 
         lat_col   = str(params.get('lat_col', 'lat')).strip()
         lon_col   = str(params.get('lon_col', 'lon')).strip()
@@ -235,10 +249,13 @@ class GroundTruthSamplerNode(NodeProcessor):
             progress=1.0, notif_id=_NOTIF,
         )
 
-        return {
+        result = {
             'train_table': sample_df,
             'sample_mask': sample_mask,
             'preview':     preview,
             'n_samples':   float(n_kept),
             'n_filtered':  float(n_filtered),
         }
+        self._cache_key = _key
+        self._cache_out = result
+        return result
