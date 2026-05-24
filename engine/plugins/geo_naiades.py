@@ -18,11 +18,23 @@ from registry import vision_node, NodeProcessor, send_notification
 _NOTIF = 'naiades'
 
 _PARAM_PRESETS = {
-    'Turbidite (NTU)': '1295',
-    'MES (mg/L)':      '1305',
-    'Chlorophylle-a':  '1433',
+    'Turbidity (NTU)': '1295',
+    'SPM (mg/L)':      '1305',
+    'Chlorophyll-a':   '1433',
     'DOC':             '1841',
-    'Personnalise':    '',
+    'Custom':          '',
+}
+
+# Region presets: (lon_min, lat_min, lon_max, lat_max)
+_REGION_PRESETS = {
+    'All France':              (-5.5, 41.0,  9.5, 51.5),
+    'Seine basin (Paris)':     ( 1.5, 48.5,  3.5, 49.2),
+    'Seine downstream/Rouen':  ( 0.0, 49.0,  1.5, 49.6),
+    'Seine estuary':           (-0.5, 49.2,  1.0, 49.7),
+    'Loire basin':             (-2.0, 47.0,  4.0, 48.5),
+    'Rhone basin':             ( 4.0, 43.5,  6.0, 46.0),
+    'Garonne basin':           (-1.5, 43.0,  2.0, 45.0),
+    'Custom bbox':             None,
 }
 
 
@@ -60,9 +72,11 @@ def _info_panel(lines: list, w: int = 480, h: int = 240, title: str = '') -> np.
     params=[
         {'id': 'parameter',   'label': 'Parameter',               'type': 'enum',
          'options': list(_PARAM_PRESETS.keys()), 'default': 0},
-        {'id': 'param_code',  'label': 'Custom code (if Personnalise)',
+        {'id': 'param_code',  'label': 'Custom code (if Custom)',
          'type': 'string', 'default': '1295'},
-        {'id': 'bbox_lon_min','label': 'Lon min (W)',  'type': 'float', 'default': -5.5,  'min': -5.5, 'max': 10.0},
+        {'id': 'region',      'label': 'Region preset',            'type': 'enum',
+         'options': list(_REGION_PRESETS.keys()), 'default': 0},
+        {'id': 'bbox_lon_min','label': 'Lon min (W)  [Custom only]',  'type': 'float', 'default': -5.5,  'min': -5.5, 'max': 10.0},
         {'id': 'bbox_lon_max','label': 'Lon max (E)',  'type': 'float', 'default':  9.5,  'min': -5.5, 'max': 10.0},
         {'id': 'bbox_lat_min','label': 'Lat min (S)',  'type': 'float', 'default': 41.0,  'min': 41.0, 'max': 52.0},
         {'id': 'bbox_lat_max','label': 'Lat max (N)',  'type': 'float', 'default': 51.5,  'min': 41.0, 'max': 52.0},
@@ -108,15 +122,21 @@ class NaiadesNode(NodeProcessor):
 
         # ── Resolve parameter code
         param_key = list(_PARAM_PRESETS.keys())[int(params.get('parameter', 0))]
-        if param_key == 'Personnalise':
+        if param_key == 'Custom':
             code = str(params.get('param_code', '1295')).strip()
         else:
             code = _PARAM_PRESETS[param_key]
 
-        lon_min = float(params.get('bbox_lon_min', -5.5))
-        lon_max = float(params.get('bbox_lon_max',  9.5))
-        lat_min = float(params.get('bbox_lat_min', 41.0))
-        lat_max = float(params.get('bbox_lat_max', 51.5))
+        # ── Resolve region (preset overrides custom bbox unless 'Custom bbox')
+        region_key = list(_REGION_PRESETS.keys())[int(params.get('region', 0))]
+        preset = _REGION_PRESETS[region_key]
+        if preset is not None:
+            lon_min, lat_min, lon_max, lat_max = preset
+        else:
+            lon_min = float(params.get('bbox_lon_min', -5.5))
+            lon_max = float(params.get('bbox_lon_max',  9.5))
+            lat_min = float(params.get('bbox_lat_min', 41.0))
+            lat_max = float(params.get('bbox_lat_max', 51.5))
         d_min   = str(params.get('date_min', '2017-01-01')).strip()
         d_max   = str(params.get('date_max', '2024-12-31')).strip()
         t_min   = float(params.get('target_min', 0.0))
