@@ -271,7 +271,7 @@ class DeglintNode(NodeProcessor):
                 send_notification(f'Déglint: {b_label} k={k:.2f} (fixe)…', progress=0.5 + i * 0.2, notif_id='deglint')
             bands[v_idx] = np.maximum(0.0, vis - k * nir_adj)
 
-        send_notification('Déglint: rendu aperçu…', progress=0.9, notif_id='deglint')
+        send_notification('Deglint: rendering preview…', progress=0.9, notif_id='deglint')
 
         def _stretch(b):
             p2, p98 = np.percentile(b[b > 0], (2, 98)) if np.any(b > 0) else (0, 1)
@@ -472,12 +472,12 @@ class TurbidityNechadNode(NodeProcessor):
 
 # WFD-inspired turbidity classes (NTU boundaries, BGR colors)
 _TURB_CLASSES = [
-    ('Cristal (0–1)',      0,    1,   (180, 120,  10)),  # gold
-    ('Clair (1–5)',        1,    5,   (200, 180,   0)),  # cyan-yellow
-    ('Légèrement turbide', 5,   15,   (120, 200,  40)),  # green-yellow
-    ('Turbide',           15,   50,   ( 20, 140, 200)),  # orange
-    ('Très turbide',      50,  200,   ( 10,  60, 180)),  # dark orange
-    ('Extrêmement turbide',200, 1e9,  ( 10,  20, 140)),  # dark red
+    ('Crystal (0-1)',       0,    1,   (180, 120,  10)),  # gold
+    ('Clear (1-5)',         1,    5,   (200, 180,   0)),  # cyan-yellow
+    ('Slightly turbid',     5,   15,   (120, 200,  40)),  # green-yellow
+    ('Turbid',             15,   50,   ( 20, 140, 200)),  # orange
+    ('Very turbid',        50,  200,   ( 10,  60, 180)),  # dark orange
+    ('Extremely turbid',  200, 1e9,    ( 10,  20, 140)),  # dark red
 ]
 
 
@@ -493,16 +493,16 @@ def _render_stats_card(stats, w=380, h=300):
 
     # Header
     cv2.rectangle(bg, (0, 0), (w, 28), (35, 28, 20), -1)
-    cv2.putText(bg, 'TURBIDITE  NTU', (8, 19), font, 0.48, CYAN, 1, cv2.LINE_AA)
+    cv2.putText(bg, 'TURBIDITY  NTU', (8, 19), font, 0.48, CYAN, 1, cv2.LINE_AA)
     area  = stats.get('area_km2', 0)
     cv2.putText(bg, f'{area:.1f} km2', (w - 85, 19), fontS, 1.0, GRAY, 1)
 
     # Key metrics with colored bars
     metrics = [
-        ('Moyenne',  stats.get('mean',   0), (120, 180,  80)),
-        ('Mediane',  stats.get('median', 0), (100, 160,  60)),
-        ('P90',      stats.get('p90',    0), ( 40, 140, 200)),
-        ('Max',      stats.get('max',    0), ( 20,  60, 180)),
+        ('Mean',    stats.get('mean',   0), (120, 180,  80)),
+        ('Median',  stats.get('median', 0), (100, 160,  60)),
+        ('P90',     stats.get('p90',    0), ( 40, 140, 200)),
+        ('Max',     stats.get('max',    0), ( 20,  60, 180)),
     ]
     max_val = max((m[1] for m in metrics), default=1.0) or 1.0
     bar_area_w = w - 130
@@ -701,12 +701,12 @@ class TurbidityStatsNode(NodeProcessor):
             }
         stats['classes'] = classes
 
-        send_notification('Turb Stats: rendu histogram…', progress=0.70, notif_id='turb_stats')
+        send_notification('Turb Stats: rendering histogram…', progress=0.70, notif_id='turb_stats')
 
         hist_max = float(params.get('hist_max', 100.0))
         histogram = _turb_histogram(vals, hist_max)
 
-        send_notification('Turb Stats: rendu class map…', progress=0.85, notif_id='turb_stats')
+        send_notification('Turb Stats: rendering class map…', progress=0.85, notif_id='turb_stats')
 
         # Class map: color each water pixel by turbidity class
         class_img = np.zeros((h_img, w_img, 3), dtype=np.uint8)
