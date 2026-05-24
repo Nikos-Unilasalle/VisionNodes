@@ -49,6 +49,26 @@ NODE_CLASS_REGISTRY: dict[str, type] = {}
 
 _notification_queue: queue.Queue = queue.Queue()
 
+# ── Cancel bus ────────────────────────────────────────────────────────────────
+import threading as _threading
+_cancel_flags: dict[str, _threading.Event] = {}
+
+def request_cancel(notif_id: str) -> None:
+    """Signal cancellation for a running operation identified by notif_id."""
+    flag = _cancel_flags.get(notif_id)
+    if flag is None:
+        _cancel_flags[notif_id] = _threading.Event()
+    _cancel_flags[notif_id].set()
+
+def is_cancelled(notif_id: str) -> bool:
+    """Return True if cancellation has been requested for notif_id."""
+    return _cancel_flags.get(notif_id, _threading.Event()).is_set()
+
+def clear_cancel(notif_id: str) -> None:
+    """Clear the cancel flag (call at start of a new operation)."""
+    if notif_id in _cancel_flags:
+        _cancel_flags[notif_id].clear()
+
 
 def send_notification(message, progress=None, level='info', notif_id=None):
     _notification_queue.put_nowait({

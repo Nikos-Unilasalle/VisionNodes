@@ -83,10 +83,12 @@ def _out_size(params, default_w=540, default_h=420, inputs=None):
         {'id': 'preview',     'color': 'image',  'label': 'Split info'},
     ],
     params=[
-        {'id': 'test_size',    'label': 'Test size (%)',   'type': 'int',    'default': 20,  'min': 5,  'max': 50},
-        {'id': 'stratify_col', 'label': 'Stratify by',    'type': 'string', 'default': ''},
-        {'id': 'random_state', 'label': 'Random seed',    'type': 'int',    'default': 42,  'min': 0,  'max': 9999},
-        {'id': 'shuffle',      'label': 'Shuffle',        'type': 'bool',   'default': True},
+        {'id': 'test_size',      'label': 'Test size (%)',              'type': 'int',    'default': 20,   'min': 5,  'max': 50},
+        {'id': 'stratify_col',   'label': 'Stratify by',                'type': 'string', 'default': ''},
+        {'id': 'random_state',   'label': 'Random seed',                'type': 'int',    'default': 42,   'min': 0,  'max': 9999},
+        {'id': 'shuffle',        'label': 'Shuffle',                    'type': 'bool',   'default': True},
+        {'id': 'filter_col',     'label': 'Filter column (blank=none)', 'type': 'string', 'default': 'label'},
+        {'id': 'filter_nodata',  'label': 'Exclude value (unlabeled)',  'type': 'float',  'default': -1.0},
     ],
     resizable=True,
     min_width=260,
@@ -102,6 +104,15 @@ class MLTrainTestSplitNode(NodeProcessor):
             return {}
 
         from sklearn.model_selection import train_test_split
+
+        # Filter out unlabeled rows (e.g. label == -1) before splitting
+        filter_col    = str(params.get('filter_col', 'label')).strip()
+        filter_nodata = float(params.get('filter_nodata', -1.0))
+        if filter_col and filter_col in df.columns:
+            df = df[df[filter_col] != filter_nodata].copy()
+            if len(df) == 0:
+                send_notification('Train/Test Split: no labeled rows after filter', level='warning', notif_id=_NOTIF_ID)
+                return {}
 
         test_size    = int(params.get('test_size', 20)) / 100.0
         stratify_col = str(params.get('stratify_col', '')).strip()

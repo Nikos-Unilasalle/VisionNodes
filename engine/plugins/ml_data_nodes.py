@@ -604,3 +604,144 @@ class MLSklearnDatasetNode(NodeProcessor):
             'col_count': float(len(df.columns)),
             'img_size':  [w, h],
         }
+
+
+# ─── DataFrame Join ───────────────────────────────────────────────────────────
+
+def _render_join_preview(dfs: list, result_df, join_key: str, join_type: str,
+                         w: int = 420, h: int = 200) -> np.ndarray:
+    """Info panel showing merge summary."""
+    img = np.full((h, w, 3), 22, dtype=np.uint8)
+    cv2.rectangle(img, (0, 0), (w, 26), (45, 45, 45), -1)
+    cv2.putText(img, 'DataFrame Join', (8, 17),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.42, (200, 200, 200), 1, cv2.LINE_AA)
+    cv2.line(img, (0, 26), (w, 26), (80, 80, 80), 1)
+
+    lines = [
+        f'{len(dfs)} tables merged  ({join_type} on "{join_key}")',
+        f'Result: {len(result_df):,} rows × {len(result_df.columns)} cols',
+        '',
+        'Input tables:',
+    ]
+    for i, d in enumerate(dfs):
+        lines.append(f'  [{i}] {d.shape[0]:,} rows × {d.shape[1]} cols')
+    lines.append('')
+    lines.append('Output columns:')
+    for c in list(result_df.columns)[:8]:
+        lines.append(f'  {c}')
+    if len(result_df.columns) > 8:
+        lines.append(f'  … +{len(result_df.columns) - 8} more')
+
+    for i, line in enumerate(lines[:(h - 44) // 16]):
+        color = (140, 200, 255) if i == 0 else (185, 185, 185)
+        cv2.putText(img, str(line)[:60], (8, 44 + i * 16),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.36, color, 1, cv2.LINE_AA)
+    return img
+
+
+@vision_node(
+    type_id='ml_dataframe_join',
+    label='DataFrame Join',
+    category='DataFrame',
+    icon='Merge',
+    description=(
+        "Merge multiple DataFrames into one by joining on a shared key column. "
+        "Default key is '__px_idx' (the pixel index produced by 'Bands → Table'), "
+        "which aligns tables from different raster sources (Sentinel-2, DEM, Kaggle…). "
+        "Accepts any number of 'data' inputs. "
+        "Join types: inner (keep only shared rows), outer (keep all, fill NaN), left."
+    ),
+    inputs=[
+        {'id': 'table_a', 'color': 'data', 'label': 'Table A (base)'},
+        {'id': 'table_b', 'color': 'data', 'label': 'Table B'},
+        {'id': 'table_c', 'color': 'data', 'label': 'Table C (optional)'},
+        {'id': 'table_d', 'color': 'data', 'label': 'Table D (optional)'},
+    ],
+    outputs=[
+        {'id': 'table',     'color': 'data',   'label': 'Merged DataFrame'},
+        {'id': 'preview',   'color': 'image',  'label': 'Summary'},
+        {'id': 'row_count', 'color': 'scalar', 'label': 'Rows'},
+        {'id': 'col_count', 'color': 'scalar', 'label': 'Columns'},
+    ],
+    params=[
+        {'id': 'join_key',  'label': 'Join key column',  'type': 'string', 'default': '__px_idx'},
+        {'id': 'join_type', 'label': 'Join type',        'type': 'enum',
+         'options': ['inner', 'outer', 'left'], 'default': 1},
+        {'id': 'drop_dupes','label': 'Drop duplicate columns', 'type': 'bool', 'default': True},
+    ],
+    resizable=True, min_width=260, min_height=180,
+)
+class MLDataFrameJoinNode(NodeProcessor):
+
+    def process(self, inputs, params):
+        if not self.ensure_packages(['pandas'], notif_id=_NOTIF_ID):
+            return {}
+        import pandas as pd
+
+        # Collect all connected DataFrames in order
+        slot_ids = ['table_a', 'table_b', 'table_c', 'table_d']
+        dfs = [inputs.get(s) for s in slot_ids if isinstance(inputs.get(s), pd.DataFrame)]
+
+        if len(dfs) == 0:
+            send_notification('DataFrame Join: no tables connected', level='warning', notif_id=_NOTIF_ID)
+            return {}
+        if len(dfs) == 1:
+            send_notification('DataFrame Join: only one table — connect at least two', level='warning', notif_id=_NOTIF_ID)
+            # Still return the single table so downstream nodes don't break
+            result = dfs[0]
+            preview = _render_join_preview(dfs, result, '__px_idx', 'n/a')
+            return {'table': result, 'preview': preview,
+                    'row_count': float(len(result)), 'col_count': float(len(result.columns))}
+
+        join_key  = str(params.get('join_key', '__px_idx')).strip() or '__px_idx'
+        jtype_idx = int(params.get('join_type', 1))
+        join_type = ['inner', 'outer', 'left'][jtype_idx] if 0 <= jtype_idx <= 2 else 'outer'
+        drop_dupes = bool(params.get('drop_dupes', True))
+
+        # ── Validate join key exists ──────────────────────────────────────────
+        missing = [i for i, d in enumerate(dfs) if join_key not in d.columns]
+        if missing:
+            send_notification(
+                f'DataFrame Join: key "{join_key}" missing in table(s) {missing}. '
+                f'Available: {list(dfs[missing[0]].columns)[:8]}',
+                level='error', notif_id=_NOTIF_ID,
+            )
+            return {}
+
+        # ── Iterative merge ───────────────────────────────────────────────────
+        result = dfs[0].copy()
+        suffix_counter = [1]
+
+        for i, right in enumerate(dfs[1:], start=1):
+            # Detect colliding columns (excluding join key) and add suffixes
+            left_cols  = set(result.columns) - {join_key}
+            right_cols = set(right.columns) - {join_key}
+            overlap    = left_cols & right_cols
+
+            if overlap and drop_dupes:
+                # Drop overlapping cols from right (keep left version)
+                right = right.drop(columns=list(overlap))
+            elif overlap:
+                # Add numeric suffix to right-side duplicates
+                rename_map = {c: f'{c}_{i}' for c in overlap}
+                right = right.rename(columns=rename_map)
+
+            result = pd.merge(result, right, on=join_key, how=join_type)
+
+        # ── Reorder: join_key first ────────────────────────────────────────────
+        cols = [join_key] + [c for c in result.columns if c != join_key]
+        result = result[cols]
+
+        send_notification(
+            f'DataFrame Join: {len(dfs)} tables → {len(result):,} rows × {len(result.columns)} cols',
+            notif_id=_NOTIF_ID,
+        )
+
+        preview = _render_join_preview(dfs, result, join_key, join_type)
+
+        return {
+            'table':     result,
+            'preview':   preview,
+            'row_count': float(len(result)),
+            'col_count': float(len(result.columns)),
+        }

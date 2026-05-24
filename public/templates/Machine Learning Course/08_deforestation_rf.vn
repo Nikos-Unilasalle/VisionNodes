@@ -3,8 +3,14 @@
     {
       "id": "titre",
       "type": "canvas_note",
-      "position": { "x": -120, "y": -230 },
-      "style": { "width": 1880, "height": 80 },
+      "position": {
+        "x": -120,
+        "y": -230
+      },
+      "style": {
+        "width": 1880,
+        "height": 80
+      },
       "data": {
         "label": "Note",
         "id": "titre",
@@ -18,12 +24,18 @@
       "height": 80,
       "selected": false
     },
-
     {
       "id": "fA",
       "type": "canvas_frame",
-      "position": { "x": -120, "y": -130 },
-      "style": { "width": 1880, "height": 540, "zIndex": -1 },
+      "position": {
+        "x": -120,
+        "y": -130
+      },
+      "style": {
+        "width": 1880,
+        "height": 540,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -38,8 +50,14 @@
     {
       "id": "nA1",
       "type": "canvas_note",
-      "position": { "x": -80, "y": -60 },
-      "style": { "width": 580, "height": 420 },
+      "position": {
+        "x": -80,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 420
+      },
       "data": {
         "label": "Note",
         "id": "nA1",
@@ -56,8 +74,14 @@
     {
       "id": "nA2",
       "type": "canvas_note",
-      "position": { "x": 540, "y": -60 },
-      "style": { "width": 580, "height": 420 },
+      "position": {
+        "x": 540,
+        "y": -60
+      },
+      "style": {
+        "width": 580,
+        "height": 420
+      },
       "data": {
         "label": "Note",
         "id": "nA2",
@@ -74,8 +98,14 @@
     {
       "id": "nA3",
       "type": "canvas_note",
-      "position": { "x": 1165, "y": -60 },
-      "style": { "width": 570, "height": 420 },
+      "position": {
+        "x": 1165,
+        "y": -60
+      },
+      "style": {
+        "width": 570,
+        "height": 420
+      },
       "data": {
         "label": "Note",
         "id": "nA3",
@@ -89,16 +119,22 @@
       "height": 420,
       "selected": false
     },
-
     {
       "id": "fB",
       "type": "canvas_frame",
-      "position": { "x": -120, "y": 430 },
-      "style": { "width": 1880, "height": 580, "zIndex": -1 },
+      "position": {
+        "x": -120,
+        "y": 430
+      },
+      "style": {
+        "width": 1880,
+        "height": 580,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
-          "title": "Acte 2 — Charger le raster Sentinel-2 et calculer le NDVI",
+          "title": "Acte 2 — Acquisition satellite Copernicus (Sentinel-2) et calcul du NDVI",
           "color_index": 2
         }
       },
@@ -109,13 +145,19 @@
     {
       "id": "nB1",
       "type": "canvas_note",
-      "position": { "x": -80, "y": 500 },
-      "style": { "width": 400, "height": 440 },
+      "position": {
+        "x": -80,
+        "y": 500
+      },
+      "style": {
+        "width": 400,
+        "height": 440
+      },
       "data": {
         "label": "Note",
         "id": "nB1",
         "params": {
-          "text": "## Acte 2 — Données\n\n**1.** Dans le node **GeoTIFF Reader**, saisir le chemin vers votre scène Sentinel-2 (fichier `.tif` multibande).\n\n**2.** Configurer les bandes :\n- Preview R → bande 3 (Rouge)\n- Preview G → bande 2 (Vert)\n- Preview B → bande 1 (Bleu)\n\n**3.** Dans **Spectral Index** :\n- Sensor → `S2/L8 (RGB+NIR)`\n- Preset → `NDVI (Vegetation)`\n- Colormap → `viridis`\n\n---\n\n**Questions :**\n1. Décrivez l'image en vraies couleurs. Quelles zones semblent être de la forêt ?\n2. Sur la carte NDVI, quelle plage de valeurs correspond à la forêt dense ?",
+          "text": "## Acte 2 — Données satellite\n\n**1.** Dans le node **Copernicus CDSE**, survoler → **Open Editor**.\n\n**2.** Dans l'éditeur :\n- Zoomer sur l'Amazonie (Para, Brésil)\n- Passer en **Drawing mode** et dessiner votre zone d'intérêt\n- Vérifier les bandes sélectionnées : **B04, B03, B02, B08, B8A**\n- Ajuster les dates (saison sèche : juil–sept 2023)\n- Cliquer **Fetch Image** → téléchargement avec barre de progression\n\n**3.** Le node sort un **GeoTIFF multibande** directement connecté au calcul NDVI.\n\n> 💡 Copernicus CDSE est gratuit avec un compte sur [dataspace.copernicus.eu](https://dataspace.copernicus.eu). Renseigner Client ID + Client Secret dans les paramètres du node.",
           "bg_color": "#dcfce7",
           "text_color": "#14532d"
         }
@@ -126,32 +168,54 @@
     },
     {
       "id": "reader",
-      "type": "geo_geotiff_reader",
-      "position": { "x": 380, "y": 500 },
+      "type": "geo_copernicus",
+      "position": {
+        "x": 380,
+        "y": 500
+      },
       "data": {
-        "label": "Sentinel-2 GeoTIFF",
+        "label": "Copernicus CDSE",
         "params": {
-          "file_path": "",
-          "r_band": 3,
-          "g_band": 2,
-          "b_band": 1,
-          "node_note": "Charger le GeoTIFF Sentinel-2 ici"
+          "client_id": "",
+          "client_secret": "",
+          "collection": 0,
+          "date_start": "2023-07-01",
+          "date_end": "2023-09-30",
+          "cloud_max": 15,
+          "resolution": 20,
+          "bands": "B04,B03,B02,B08,B8A",
+          "bbox": "-63.5,-11.0,-62.0,-9.5",
+          "max_tile_px": 2500,
+          "cache_dir": "copernicus_cache",
+          "fetch": 0
         }
+      },
+      "style": {
+        "width": 320,
+        "height": 260
       }
     },
     {
       "id": "d_preview",
       "type": "output_display",
-      "position": { "x": 680, "y": 500 },
+      "position": {
+        "x": 680,
+        "y": 500
+      },
       "data": {
         "label": "Vraies couleurs",
-        "params": { "node_note": "RGB Sentinel-2" }
+        "params": {
+          "node_note": "RGB Sentinel-2"
+        }
       }
     },
     {
       "id": "ndvi",
       "type": "geo_spectral_index",
-      "position": { "x": 380, "y": 720 },
+      "position": {
+        "x": 380,
+        "y": 720
+      },
       "data": {
         "label": "NDVI",
         "params": {
@@ -170,18 +234,29 @@
     {
       "id": "d_ndvi",
       "type": "output_display",
-      "position": { "x": 680, "y": 720 },
+      "position": {
+        "x": 680,
+        "y": 720
+      },
       "data": {
         "label": "NDVI (viridis)",
-        "params": { "node_note": "Vert clair = forêt dense" }
+        "params": {
+          "node_note": "Vert clair = forêt dense"
+        }
       }
     },
-
     {
       "id": "fC",
       "type": "canvas_frame",
-      "position": { "x": -120, "y": 1030 },
-      "style": { "width": 1880, "height": 620, "zIndex": -1 },
+      "position": {
+        "x": -120,
+        "y": 1030
+      },
+      "style": {
+        "width": 1880,
+        "height": 620,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -196,8 +271,14 @@
     {
       "id": "nC1",
       "type": "canvas_note",
-      "position": { "x": -80, "y": 1100 },
-      "style": { "width": 400, "height": 480 },
+      "position": {
+        "x": -80,
+        "y": 1100
+      },
+      "style": {
+        "width": 400,
+        "height": 480
+      },
       "data": {
         "label": "Note",
         "id": "nC1",
@@ -214,7 +295,10 @@
     {
       "id": "label_creator",
       "type": "logic_python",
-      "position": { "x": 380, "y": 1100 },
+      "position": {
+        "x": 380,
+        "y": 1100
+      },
       "data": {
         "label": "Label Mask (NDVI seuillage)",
         "params": {
@@ -226,16 +310,24 @@
     {
       "id": "d_label_pct",
       "type": "output_display",
-      "position": { "x": 680, "y": 1100 },
+      "position": {
+        "x": 680,
+        "y": 1100
+      },
       "data": {
         "label": "% pixels labellisés",
-        "params": { "node_note": "Fraction de pixels étiquetés" }
+        "params": {
+          "node_note": "Fraction de pixels étiquetés"
+        }
       }
     },
     {
       "id": "bands_table",
       "type": "geo_bands_to_table",
-      "position": { "x": 380, "y": 1340 },
+      "position": {
+        "x": 380,
+        "y": 1340
+      },
       "data": {
         "label": "Bands → Table",
         "params": {
@@ -251,27 +343,43 @@
     {
       "id": "d_bands_preview",
       "type": "output_display",
-      "position": { "x": 760, "y": 1340 },
+      "position": {
+        "x": 760,
+        "y": 1340
+      },
       "data": {
         "label": "Info table",
-        "params": { "node_note": "Résumé pixels / bandes" }
+        "params": {
+          "node_note": "Résumé pixels / bandes"
+        }
       }
     },
     {
       "id": "d_labeled_count",
       "type": "output_display",
-      "position": { "x": 760, "y": 1460 },
+      "position": {
+        "x": 760,
+        "y": 1460
+      },
       "data": {
         "label": "Pixels labellisés",
-        "params": { "node_note": "Nombre de pixels avec label" }
+        "params": {
+          "node_note": "Nombre de pixels avec label"
+        }
       }
     },
-
     {
       "id": "fD",
       "type": "canvas_frame",
-      "position": { "x": -120, "y": 1670 },
-      "style": { "width": 1880, "height": 600, "zIndex": -1 },
+      "position": {
+        "x": -120,
+        "y": 1670
+      },
+      "style": {
+        "width": 1880,
+        "height": 600,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -286,8 +394,14 @@
     {
       "id": "nD1",
       "type": "canvas_note",
-      "position": { "x": -80, "y": 1740 },
-      "style": { "width": 400, "height": 460 },
+      "position": {
+        "x": -80,
+        "y": 1740
+      },
+      "style": {
+        "width": 400,
+        "height": 460
+      },
       "data": {
         "label": "Note",
         "id": "nD1",
@@ -304,7 +418,10 @@
     {
       "id": "split",
       "type": "ml_train_test_split",
-      "position": { "x": 380, "y": 1740 },
+      "position": {
+        "x": 380,
+        "y": 1740
+      },
       "data": {
         "label": "Train / Test Split",
         "params": {
@@ -319,7 +436,10 @@
     {
       "id": "rf",
       "type": "ml_random_forest",
-      "position": { "x": 680, "y": 1740 },
+      "position": {
+        "x": 680,
+        "y": 1740
+      },
       "data": {
         "label": "Random Forest",
         "params": {
@@ -343,36 +463,57 @@
     {
       "id": "d_confusion",
       "type": "output_display",
-      "position": { "x": 1060, "y": 1740 },
+      "position": {
+        "x": 1060,
+        "y": 1740
+      },
       "data": {
         "label": "Matrice de confusion",
-        "params": { "node_note": "Forêt vs Non-forêt" }
+        "params": {
+          "node_note": "Forêt vs Non-forêt"
+        }
       }
     },
     {
       "id": "d_importance",
       "type": "output_display",
-      "position": { "x": 1380, "y": 1740 },
+      "position": {
+        "x": 1380,
+        "y": 1740
+      },
       "data": {
         "label": "Importance des features",
-        "params": { "node_note": "Quelles bandes comptent le plus ?" }
+        "params": {
+          "node_note": "Quelles bandes comptent le plus ?"
+        }
       }
     },
     {
       "id": "d_report",
       "type": "output_display",
-      "position": { "x": 1060, "y": 1980 },
+      "position": {
+        "x": 1060,
+        "y": 1980
+      },
       "data": {
         "label": "Rapport de classification",
-        "params": { "node_note": "Précision, rappel, F1" }
+        "params": {
+          "node_note": "Précision, rappel, F1"
+        }
       }
     },
-
     {
       "id": "fE",
       "type": "canvas_frame",
-      "position": { "x": -120, "y": 2290 },
-      "style": { "width": 1880, "height": 620, "zIndex": -1 },
+      "position": {
+        "x": -120,
+        "y": 2290
+      },
+      "style": {
+        "width": 1880,
+        "height": 620,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -387,8 +528,14 @@
     {
       "id": "nE1",
       "type": "canvas_note",
-      "position": { "x": -80, "y": 2360 },
-      "style": { "width": 420, "height": 480 },
+      "position": {
+        "x": -80,
+        "y": 2360
+      },
+      "style": {
+        "width": 420,
+        "height": 480
+      },
       "data": {
         "label": "Note",
         "id": "nE1",
@@ -405,7 +552,10 @@
     {
       "id": "to_raster",
       "type": "geo_table_to_raster",
-      "position": { "x": 400, "y": 2360 },
+      "position": {
+        "x": 400,
+        "y": 2360
+      },
       "data": {
         "label": "Table → Raster",
         "params": {
@@ -421,17 +571,28 @@
     {
       "id": "d_map",
       "type": "output_display",
-      "position": { "x": 780, "y": 2360 },
+      "position": {
+        "x": 780,
+        "y": 2360
+      },
       "data": {
         "label": "Carte de déforestation",
-        "params": { "node_note": "Vert = forêt  |  Rouge = non-forêt" }
+        "params": {
+          "node_note": "Vert = forêt  |  Rouge = non-forêt"
+        }
       },
-      "style": { "width": 400, "height": 360 }
+      "style": {
+        "width": 400,
+        "height": 360
+      }
     },
     {
       "id": "writer",
       "type": "geo_geotiff_writer",
-      "position": { "x": 400, "y": 2640 },
+      "position": {
+        "x": 400,
+        "y": 2640
+      },
       "data": {
         "label": "Export GeoTIFF",
         "params": {
@@ -441,7 +602,6 @@
       }
     }
   ],
-
   "edges": [
     {
       "id": "e_reader_preview",
@@ -476,7 +636,7 @@
       "source": "label_creator",
       "sourceHandle": "scalar__out_scalar",
       "target": "d_label_pct",
-      "targetHandle": "image__main"
+      "targetHandle": "any__flow_in"
     },
     {
       "id": "e_reader_bands_table",
@@ -511,12 +671,12 @@
       "source": "bands_table",
       "sourceHandle": "scalar__labeled_count",
       "target": "d_labeled_count",
-      "targetHandle": "image__main"
+      "targetHandle": "any__flow_in"
     },
     {
       "id": "e_train_table_split",
       "source": "bands_table",
-      "sourceHandle": "data__train_table",
+      "sourceHandle": "data__table",
       "target": "split",
       "targetHandle": "data__table"
     },
@@ -537,7 +697,7 @@
     {
       "id": "e_full_table_rf",
       "source": "bands_table",
-      "sourceHandle": "data__full_table",
+      "sourceHandle": "data__table",
       "target": "rf",
       "targetHandle": "data__predict_table"
     },
@@ -567,7 +727,7 @@
       "source": "rf",
       "sourceHandle": "data__predictions",
       "target": "to_raster",
-      "targetHandle": "data__predictions"
+      "targetHandle": "data__table"
     },
     {
       "id": "e_shape_raster",
