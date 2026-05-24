@@ -54,10 +54,10 @@ def _info_panel(lines, w=440, h=200, title=''):
         {'id': 'preview', 'color': 'image', 'label': 'Features added'},
     ],
     params=[
-        {'id': 'blue_col',  'type': 'string', 'default': 'Bleu',  'label': 'Blue band column'},
-        {'id': 'green_col', 'type': 'string', 'default': 'Vert',  'label': 'Green band column'},
-        {'id': 'red_col',   'type': 'string', 'default': 'Rouge', 'label': 'Red band column'},
-        {'id': 'nir_col',   'type': 'string', 'default': 'NIR',   'label': 'NIR band column'},
+        {'id': 'blue_col',  'type': 'string', 'default': 'Bleu',  'label': 'Blue column name'},
+        {'id': 'green_col', 'type': 'string', 'default': 'Vert',  'label': 'Green column name'},
+        {'id': 'red_col',   'type': 'string', 'default': 'Rouge', 'label': 'Red column name'},
+        {'id': 'nir_col',   'type': 'string', 'default': 'NIR',   'label': 'NIR column name'},
         # Predefined indices
         {'id': 'add_red_green',  'type': 'bool', 'default': True,  'label': 'Rouge/Vert (turbidity proxy)'},
         {'id': 'add_blue_green', 'type': 'bool', 'default': True,  'label': 'Bleu/Vert'},
