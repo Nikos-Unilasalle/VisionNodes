@@ -59,10 +59,13 @@ _S2_BAND_WL = {
     description=(
         "Full ACOLITE atmospheric correction (Dark Spectrum Fitting) for Sentinel-2 L1C. "
         "Produces Rrs [sr-1] directly comparable to GLORIA in-situ data. "
-        "Input: path to the unzipped .SAFE directory of an S2 L1C product. "
+        "GeoTIFF input: connect Copernicus output for fast DOS-1 correction (no .SAFE needed). "
+        ".SAFE path + Run trigger: full ACOLITE DSF (highest accuracy). "
         "Requires: pip install git+https://github.com/acolite/acolite.git"
     ),
-    inputs=[],
+    inputs=[
+        {'id': 'geotiff', 'color': 'geotiff', 'label': 'L1C bands (Copernicus) — enables fast DOS-1 mode'},
+    ],
     outputs=[
         {'id': 'geotiff',   'color': 'geotiff', 'label': 'Rrs geotiff [sr-1]'},
         {'id': 'preview',   'color': 'image',   'label': 'Processing log'},
@@ -97,13 +100,22 @@ class AcoliteFullNode(NodeProcessor):
         rising  = run_val != self._prev_run and run_val not in (False, 0, None)
         self._prev_run = run_val
 
-        # Return cached result while idle
+        geo_in = inputs.get('geotiff')
+        has_geotiff = isinstance(geo_in, dict) and 'bands' in geo_in
+
+        # Fast path: GeoTIFF connected → DOS-1 correction, no .SAFE needed
+        if has_geotiff and not rising:
+            if self._result is not None and not has_geotiff:
+                return self._result
+            return self._apply_dos1(geo_in, params)
+
+        # Return cached DSF result while idle (no geotiff connected)
         if not rising and self._result is not None:
             return self._result
 
         if not rising:
-            info = _info_panel(['Click Run ACOLITE to start processing.',
-                                 'Requires: S2 L1C .SAFE path',
+            info = _info_panel(['Connect GeoTIFF for fast DOS-1 mode.',
+                                 'Or set .SAFE path + click Run for full DSF.',
                                  'Install: pip install git+https://github.com/acolite/acolite.git'],
                                 title='ACOLITE (full DSF)')
             return {'preview': info}
@@ -112,19 +124,78 @@ class AcoliteFullNode(NodeProcessor):
             send_notification('ACOLITE: already running...', notif_id=_NOTIF)
             return self._result or {}
 
+        # If GeoTIFF connected and Run triggered → also run DOS-1 and cache
+        if has_geotiff:
+            result = self._apply_dos1(geo_in, params)
+            self._result = result
+            return result
+
         safe_path = str(params.get('safe_path', '')).strip()
         if not safe_path or not os.path.exists(safe_path):
             send_notification(f'ACOLITE: .SAFE path not found: {safe_path}',
                               level='error', notif_id=_NOTIF)
             return {}
 
-        # Launch in background thread to avoid blocking the engine
+        # Launch full DSF in background thread
         t = threading.Thread(target=self._run_acolite, args=(safe_path, dict(params)), daemon=True)
         self._running = True
         t.start()
         send_notification('ACOLITE: started DSF processing in background...',
                           progress=0.05, notif_id=_NOTIF)
         return {}
+
+    def _apply_dos1(self, geo_in: dict, params: dict) -> dict:
+        """DOS-1 + BOA/pi approximate Rrs from a raw DN or BOA GeoTIFF."""
+        import numpy as np
+        bands = geo_in['bands'].astype(np.float32)
+        if bands.ndim == 2:
+            bands = bands[np.newaxis]
+
+        # Auto-scale: if values look like DN (0-10000) divide by 10000
+        if bands.max() > 2.0:
+            bands = bands / 10000.0
+
+        # DOS-1: subtract per-band dark object (1st percentile)
+        for i in range(bands.shape[0]):
+            dark = float(np.percentile(bands[i][bands[i] > 0], 1)) if (bands[i] > 0).any() else 0.0
+            bands[i] = np.clip(bands[i] - dark, 0, None)
+
+        # BOA/pi → approximate Rrs
+        import math
+        rrs = bands / math.pi
+        rrs = np.clip(rrs, 0.0, 0.2)
+
+        rrs_min = float(np.nanmin(rrs))
+        rrs_max = float(np.nanmax(rrs))
+
+        band_str  = str(params.get('band_names', 'Bleu,Vert,Rouge,NIR')).strip()
+        band_list = [b.strip() for b in band_str.split(',') if b.strip()]
+
+        geo_out = {
+            'bands':     rrs,
+            'count':     rrs.shape[0],
+            'crs':       geo_in.get('crs'),
+            'transform': geo_in.get('transform'),
+        }
+
+        lines = [
+            'Mode: DOS-1 + BOA/pi (fast)',
+            f'Bands: {", ".join(band_list[:rrs.shape[0]])}',
+            f'Shape: {rrs.shape[1]}x{rrs.shape[2]} px',
+            f'Rrs range: [{rrs_min:.5f}, {rrs_max:.5f}]',
+            'Connect .SAFE + Run for full DSF accuracy',
+        ]
+        preview = _info_panel(lines, title='ACOLITE (DOS-1 mode)')
+
+        send_notification(f'ACOLITE DOS-1: Rrs [{rrs_min:.5f}, {rrs_max:.5f}]',
+                          progress=1.0, notif_id=_NOTIF)
+
+        return {
+            'geotiff': geo_out,
+            'preview': preview,
+            'rrs_min': rrs_min,
+            'rrs_max': rrs_max,
+        }
 
     def _run_acolite(self, safe_path: str, params: dict) -> None:
         try:
