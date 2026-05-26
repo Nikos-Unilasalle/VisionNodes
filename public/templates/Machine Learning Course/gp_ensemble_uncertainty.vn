@@ -4,8 +4,8 @@
       "id": "note_header",
       "type": "canvas_note",
       "position": {
-        "x": 640,
-        "y": 400
+        "x": 1480,
+        "y": -280
       },
       "data": {
         "label": "GP Ensemble v2 — Regional Training + ACOLITE",
@@ -13,15 +13,16 @@
           "text": "# GP Ensemble Turbidity v2 — Données régionales + ACOLITE DSF\n\n**Améliorations vs v1** :\n- 🇫🇷 Naïades Hub'eau → données turbidité françaises (lat/lon/NTU)\n- 🛰 Ground Truth Sampler → matchup Naïades × Sentinel-2 dans les mêmes unités Rrs\n- ⚗️ ACOLITE DSF → correction atmosphérique rigoureuse L1C → Rrs [sr⁻¹]\n- 💧 NDWI + TableMaskFilter → inférence eau seulement\n\n## Workflow\n🔵 TRAINING : Naïades (fetch) → GT Sampler (avec image L1C ACOLITE) → GP Ensemble\n🟠 INFÉRENCE : Copernicus L1C → ACOLITE → NDWI → Bands→Table → Filter → Apply → Rasters μ/σ\n\n⚠️ Copernicus : choisir **Sentinel-2 L1C** (pas L2A) pour ACOLITE.",
           "width": 1100,
           "height": 200,
-          "fontSize": 13
+          "fontSize": 13,
+          "color_index": 4
         }
       },
       "width": 640,
       "height": 320,
       "selected": false,
       "positionAbsolute": {
-        "x": 640,
-        "y": 400
+        "x": 1480,
+        "y": -280
       },
       "dragging": false
     },
@@ -29,8 +30,8 @@
       "id": "note_train",
       "type": "canvas_note",
       "position": {
-        "x": 40,
-        "y": -360
+        "x": 1040,
+        "y": -400
       },
       "data": {
         "label": "",
@@ -39,23 +40,27 @@
           "width": 520,
           "height": 110,
           "fontSize": 12
-        }
+        },
+        "minified": true
       },
-      "width": 490,
-      "height": 171,
+      "width": 62,
+      "height": 24,
       "selected": false,
       "positionAbsolute": {
-        "x": 40,
-        "y": -360
+        "x": 1040,
+        "y": -400
       },
-      "dragging": false
+      "dragging": false,
+      "style": {
+        "height": 24
+      }
     },
     {
       "id": "note_infer",
       "type": "canvas_note",
       "position": {
-        "x": 1940,
-        "y": -340
+        "x": 1520,
+        "y": 340
       },
       "data": {
         "label": "",
@@ -70,8 +75,8 @@
       "height": 150,
       "selected": false,
       "positionAbsolute": {
-        "x": 1940,
-        "y": -340
+        "x": 1520,
+        "y": 340
       },
       "dragging": false
     },
@@ -87,17 +92,19 @@
         "params": {
           "parameter": 0,
           "param_code": "1295",
-          "bbox_lon_min": -5.5,
-          "bbox_lon_max": 9.5,
-          "bbox_lat_min": 41,
-          "bbox_lat_max": 51.5,
-          "date_min": "2020-06-15",
-          "date_max": "2024-06-18",
+          "bbox_lon_min": -0.022545,
+          "bbox_lon_max": 2.887795,
+          "bbox_lat_min": 48.55833,
+          "bbox_lat_max": 49.646046,
+          "date_min": "2017-01-01",
+          "date_max": "2025-12-31",
           "target_min": 0,
           "target_max": 500,
-          "max_results": 5000,
-          "save_csv": "/Users/nikos/Desktop/VNStudio/engine/plugins/naiade.csv",
-          "fetch": 0
+          "max_results": 20000,
+          "save_csv": "",
+          "fetch": 1779727846696,
+          "region": 7,
+          "color_index": 3
         }
       },
       "width": 208,
@@ -119,18 +126,19 @@
       "data": {
         "label": "Copernicus L1C (training scene)",
         "params": {
-          "bbox": "0.864279,49.254690,1.287990,49.471294",
-          "bands": "B04,B03,B02,B08",
+          "bbox": "-0.022545,48.558330,2.887795,49.646046",
+          "bands": "B04,B03,B02,B08,B11,B12",
           "collection": "1",
-          "date_start": "2025-06-15",
-          "date_end": "2025-06-19",
-          "cloud_max": "5",
-          "resolution": "10",
-          "fetch": 1779637841654
+          "date_start": "2023-07-01",
+          "date_end": "2023-07-07",
+          "cloud_max": "10",
+          "resolution": "20",
+          "fetch": 1779726890980,
+          "color_index": 3
         }
       },
       "width": 208,
-      "height": 327,
+      "height": 286,
       "selected": false,
       "positionAbsolute": {
         "x": -440,
@@ -148,9 +156,10 @@
       "data": {
         "label": "ACOLITE (training scene)",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Blue,Green,Red,NIR,SWIR1,SWIR2",
           "dsf_aot_estimate": 0,
-          "run": 0
+          "run": 0,
+          "color_index": 2
         }
       },
       "width": 208,
@@ -166,8 +175,8 @@
       "id": "gt_sampler",
       "type": "geo_ground_truth_sampler",
       "position": {
-        "x": 240,
-        "y": -60
+        "x": 160,
+        "y": -360
       },
       "data": {
         "label": "Ground Truth Sampler",
@@ -176,10 +185,14 @@
           "lat_col": "lat",
           "lon_col": "lon",
           "target_col": "label",
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Blue,Green,Red,NIR,SWIR1,SWIR2",
           "target_min": 0,
           "target_max": 500,
-          "mask_radius": 3
+          "mask_radius": 3,
+          "image_date": "2023-07-04",
+          "date_window": 30,
+          "color_index": 2,
+          "sample_window": 5
         }
       },
       "width": 208,
@@ -187,16 +200,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 240,
-        "y": -60
+        "x": 160,
+        "y": -360
       }
     },
     {
       "id": "gp",
       "type": "ml_symbolic_regressor",
       "position": {
-        "x": 540,
-        "y": 40
+        "x": 700,
+        "y": -60
       },
       "data": {
         "label": "GP Symbolic Regressor (N=10)",
@@ -204,16 +217,17 @@
           "target_column": "label",
           "feature_columns": "",
           "n_ensemble": 10,
-          "population_size": 500,
-          "generations": 30,
-          "parsimony": 0.01,
+          "population_size": 1000,
+          "generations": 200,
+          "parsimony": 0.0001,
           "test_size": 0.2,
-          "log_transform": true,
+          "log_transform": false,
           "use_log": true,
           "use_sqrt": true,
           "use_div": true,
           "seed": 423,
-          "run": 0
+          "run": 0,
+          "color_index": 0
         },
         "rotated": false
       },
@@ -222,31 +236,32 @@
       "selected": true,
       "dragging": false,
       "positionAbsolute": {
-        "x": 540,
-        "y": 40
+        "x": 700,
+        "y": -60
       }
     },
     {
       "id": "acolite_infer",
       "type": "geo_acolite_full",
       "position": {
-        "x": 1200,
-        "y": -100
+        "x": -140,
+        "y": 500
       },
       "data": {
         "label": "ACOLITE (inference scene)",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
+          "band_names": "Blue,Green,Red,NIR,SWIR1,SWIR2",
           "dsf_aot_estimate": 0,
-          "run": 0
+          "run": 0,
+          "color_index": 2
         }
       },
       "width": 208,
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1200,
-        "y": -100
+        "x": -140,
+        "y": 500
       },
       "dragging": false
     },
@@ -254,24 +269,25 @@
       "id": "ndwi_mask",
       "type": "geo_ndwi_mask",
       "position": {
-        "x": 1460,
-        "y": 120
+        "x": 120,
+        "y": 720
       },
       "data": {
         "label": "Water Mask (NDWI)",
         "params": {
           "green_band": 2,
           "nir_band": 4,
-          "threshold": 0.05,
-          "erode_px": 2
+          "threshold": 0.1,
+          "erode_px": 2,
+          "color_index": 2
         }
       },
       "width": 208,
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1460,
-        "y": 120
+        "x": 120,
+        "y": 720
       },
       "dragging": false
     },
@@ -279,14 +295,15 @@
       "id": "bands_table",
       "type": "geo_bands_to_table",
       "position": {
-        "x": 1480,
-        "y": -180
+        "x": 120,
+        "y": 460
       },
       "data": {
         "label": "Bands → Table",
         "params": {
-          "band_names": "Blue,Green,Red,NIR",
-          "filter_nodata": true
+          "band_names": "Blue,Green,Red,NIR,SWIR1,SWIR2",
+          "filter_nodata": true,
+          "color_index": 2
         }
       },
       "width": 208,
@@ -294,44 +311,21 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1480,
-        "y": -180
+        "x": 120,
+        "y": 460
       }
     },
     {
       "id": "mask_filter",
       "type": "ml_table_mask_filter",
       "position": {
-        "x": 1740,
-        "y": 80
+        "x": 400,
+        "y": 680
       },
       "data": {
         "label": "Water Pixels Only",
-        "params": {}
-      },
-      "width": 208,
-      "height": 153,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1740,
-        "y": 80
-      }
-    },
-    {
-      "id": "apply",
-      "type": "ml_ensemble_apply",
-      "position": {
-        "x": 2080,
-        "y": 40
-      },
-      "data": {
-        "label": "Apply Ensemble → μ + σ",
         "params": {
-          "pred_column": "ntu",
-          "clip_min": 0,
-          "clip_max": 200,
-          "color_index": 3
+          "color_index": 2
         }
       },
       "width": 208,
@@ -339,16 +333,41 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 2080,
-        "y": 40
+        "x": 400,
+        "y": 680
+      }
+    },
+    {
+      "id": "apply",
+      "type": "ml_ensemble_apply",
+      "position": {
+        "x": 740,
+        "y": 640
+      },
+      "data": {
+        "label": "Apply Ensemble → μ + σ",
+        "params": {
+          "pred_column": "ntu",
+          "clip_min": 0,
+          "clip_max": 50,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 740,
+        "y": 640
       }
     },
     {
       "id": "raster_mean",
       "type": "geo_table_to_raster",
       "position": {
-        "x": 2580,
-        "y": -240
+        "x": 1240,
+        "y": 360
       },
       "data": {
         "label": "Mean NTU Raster (μ)",
@@ -367,16 +386,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 2580,
-        "y": -240
+        "x": 1240,
+        "y": 360
       }
     },
     {
       "id": "raster_std",
       "type": "geo_table_to_raster",
       "position": {
-        "x": 2580,
-        "y": -20
+        "x": 1240,
+        "y": 580
       },
       "data": {
         "label": "Uncertainty σ Raster",
@@ -395,8 +414,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 2580,
-        "y": -20
+        "x": 1240,
+        "y": 580
       }
     },
     {
@@ -408,7 +427,9 @@
       },
       "data": {
         "label": "Naïades stations",
-        "params": {},
+        "params": {
+          "color_index": 4
+        },
         "mainConnected": true
       },
       "width": 208,
@@ -421,51 +442,11 @@
       }
     },
     {
-      "id": "teleport_1779613642777_tw6y",
-      "type": "canvas_teleport",
-      "position": {
-        "x": 900,
-        "y": -20
-      },
-      "data": {
-        "label": "Copernicus L1C (training scene)",
-        "params": {
-          "source_id": "copernicus_train",
-          "source_type": "geo_copernicus"
-        },
-        "source_outputs": [
-          {
-            "id": "geotiff",
-            "color": "geotiff",
-            "label": "GeoTIFF"
-          },
-          {
-            "id": "preview",
-            "color": "image",
-            "label": "Preview RGB"
-          },
-          {
-            "id": "meta",
-            "color": "dict",
-            "label": "Meta"
-          }
-        ]
-      },
-      "width": 225,
-      "selected": false,
-      "height": 126,
-      "positionAbsolute": {
-        "x": 900,
-        "y": -20
-      },
-      "dragging": false
-    },
-    {
       "id": "node-1779636364705-y5q7jjadd",
       "type": "ml_spectral_features",
       "position": {
-        "x": 540,
-        "y": -80
+        "x": 420,
+        "y": -360
       },
       "style": {},
       "data": {
@@ -474,7 +455,19 @@
           "blue_col": "Blue",
           "green_col": "Green",
           "red_col": "Red",
-          "nir_col": "NIR"
+          "color_index": 2,
+          "add_mndwi": true,
+          "add_log_swir1": true,
+          "nir_col": "NIR",
+          "swir1_col": "SWIR1",
+          "swir2_col": "SWIR2",
+          "add_nir_swir1": true,
+          "add_red_swir1": true,
+          "add_red_green": true,
+          "add_red_nir": true,
+          "add_blue_green": true,
+          "add_ndti": true,
+          "add_log_red": true
         },
         "schema": {
           "type": "ml_spectral_features",
@@ -602,8 +595,8 @@
       "height": 90,
       "selected": false,
       "positionAbsolute": {
-        "x": 540,
-        "y": -80
+        "x": 420,
+        "y": -360
       },
       "dragging": false
     },
@@ -611,8 +604,8 @@
       "id": "node-1779636451110-dzfs1b9ym",
       "type": "ml_spectral_features",
       "position": {
-        "x": 1740,
-        "y": -20
+        "x": 400,
+        "y": 580
       },
       "style": {},
       "data": {
@@ -621,7 +614,19 @@
           "blue_col": "Blue",
           "green_col": "Green",
           "red_col": "Red",
-          "nir_col": "NIR"
+          "nir_col": "NIR",
+          "color_index": 3,
+          "add_log_swir1": true,
+          "add_mndwi": true,
+          "swir1_col": "SWIR1",
+          "swir2_col": "SWIR2",
+          "add_nir_swir1": true,
+          "add_red_swir1": true,
+          "add_red_green": true,
+          "add_red_nir": true,
+          "add_blue_green": true,
+          "add_ndti": true,
+          "add_log_red": true
         },
         "schema": {
           "type": "ml_spectral_features",
@@ -750,29 +755,31 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1740,
-        "y": -20
+        "x": 400,
+        "y": 580
       }
     },
     {
       "id": "node-1779638452627-n3vmfvdpy",
       "type": "output_display",
       "position": {
-        "x": 1200,
-        "y": 100
+        "x": -140,
+        "y": 700
       },
       "style": {},
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 4
+        },
         "mainConnected": true
       },
       "width": 208,
       "height": 153,
       "selected": false,
       "positionAbsolute": {
-        "x": 1200,
-        "y": 100
+        "x": -140,
+        "y": 700
       },
       "dragging": false
     },
@@ -780,8 +787,8 @@
       "id": "node-1779638565127-w8ac5esdg",
       "type": "output_display",
       "position": {
-        "x": 2580,
-        "y": 180
+        "x": 1240,
+        "y": 780
       },
       "style": {},
       "data": {
@@ -794,16 +801,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 2580,
-        "y": 180
+        "x": 1240,
+        "y": 780
       }
     },
     {
       "id": "ribbon-1779638626165",
       "type": "canvas_ribbon",
       "position": {
-        "x": 2420,
-        "y": -100
+        "x": 1080,
+        "y": 500
       },
       "data": {
         "label": "Ribbon",
@@ -821,8 +828,8 @@
       "height": 44,
       "selected": false,
       "positionAbsolute": {
-        "x": 2420,
-        "y": -100
+        "x": 1080,
+        "y": 500
       },
       "dragging": false
     },
@@ -830,8 +837,8 @@
       "id": "teleport_1779638726635_ue5q",
       "type": "canvas_teleport",
       "position": {
-        "x": 1740,
-        "y": 280
+        "x": 400,
+        "y": 880
       },
       "data": {
         "label": "GP Symbolic Regressor (N=10)",
@@ -866,8 +873,8 @@
       "selected": false,
       "height": 154,
       "positionAbsolute": {
-        "x": 1740,
-        "y": 280
+        "x": 400,
+        "y": 880
       },
       "dragging": false
     },
@@ -875,23 +882,23 @@
       "id": "node-1779638749367-adnz3lp7c",
       "type": "data_inspector",
       "position": {
-        "x": 2080,
-        "y": 300
+        "x": 1040,
+        "y": 780
       },
       "style": {
-        "width": 320,
-        "height": 220
+        "width": 180,
+        "height": 380
       },
       "data": {
         "label": "Inspector",
         "params": {}
       },
-      "width": 320,
-      "height": 220,
+      "width": 180,
+      "height": 380,
       "selected": false,
       "positionAbsolute": {
-        "x": 2080,
-        "y": 300
+        "x": 1040,
+        "y": 780
       },
       "dragging": false,
       "resizing": false
@@ -900,8 +907,8 @@
       "id": "ribbon-1779640740893",
       "type": "canvas_ribbon",
       "position": {
-        "x": 1780,
-        "y": -100
+        "x": 440,
+        "y": 500
       },
       "data": {
         "label": "Ribbon",
@@ -921,8 +928,8 @@
       "height": 44,
       "selected": false,
       "positionAbsolute": {
-        "x": 1780,
-        "y": -100
+        "x": 440,
+        "y": 500
       },
       "dragging": false
     },
@@ -930,8 +937,8 @@
       "id": "ribbon-1779640757164",
       "type": "canvas_ribbon",
       "position": {
-        "x": 2200,
-        "y": -100
+        "x": 860,
+        "y": 500
       },
       "data": {
         "label": "Ribbon",
@@ -951,9 +958,287 @@
       "height": 44,
       "selected": false,
       "positionAbsolute": {
-        "x": 2200,
-        "y": -100
+        "x": 860,
+        "y": 500
       },
+      "dragging": false
+    },
+    {
+      "id": "node-1779641775975-sliz1d5r2",
+      "type": "geo_turbidity_stats",
+      "position": {
+        "x": 1600,
+        "y": 680
+      },
+      "style": {},
+      "data": {
+        "label": "Turbidity Stats",
+        "params": {}
+      },
+      "width": 288,
+      "height": 330,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1600,
+        "y": 680
+      }
+    },
+    {
+      "id": "node-1779651653679-z1ikyqit1",
+      "type": "canvas_frame",
+      "position": {
+        "x": -720,
+        "y": -480
+      },
+      "style": {
+        "width": 1260,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "TRAINING",
+          "color_index": 3,
+          "collapsed": true,
+          "savedHeight": 400
+        }
+      },
+      "width": 1260,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -720,
+        "y": -480
+      },
+      "resizing": false
+    },
+    {
+      "id": "node-1779651710577-0.42548335089000566",
+      "type": "canvas_frame",
+      "position": {
+        "x": -720,
+        "y": 400
+      },
+      "style": {
+        "width": 1260,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "INFERENCE",
+          "color_index": 1,
+          "collapsed": true,
+          "savedHeight": 400
+        }
+      },
+      "width": 1260,
+      "height": 34,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -720,
+        "y": 400
+      },
+      "resizing": false
+    },
+    {
+      "id": "node-1779689858864-0.23384931275391463",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -460,
+        "y": 540
+      },
+      "data": {
+        "label": "Copernicus L1C (training scene)",
+        "params": {
+          "bbox": "0.952180,49.249854,1.262064,49.473428",
+          "bands": "B04,B03,B02,B08,B11,B12",
+          "collection": "1",
+          "date_start": "2023-07-01",
+          "date_end": "2023-07-07",
+          "cloud_max": "10",
+          "resolution": "10",
+          "fetch": 1779726898732,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 387,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -460,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779689960608-g8igz7zil",
+      "type": "data_inspector",
+      "position": {
+        "x": -700,
+        "y": 540
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 220,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -700,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779689971003-0.4904391627790007",
+      "type": "data_inspector",
+      "position": {
+        "x": -680,
+        "y": -60
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 220,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -680,
+        "y": -60
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779816781858-lemluzj4s",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 2220,
+        "y": 220
+      },
+      "style": {},
+      "data": {
+        "label": "Scatter Plot",
+        "params": {}
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2220,
+        "y": 220
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779817272397-vj9qnjir0",
+      "type": "ml_scatter_plot",
+      "position": {
+        "x": 700,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Scatter Plot",
+        "params": {
+          "x_col": "label",
+          "y_col": "ntu_pred",
+          "colormap": 3,
+          "alpha": 0.6,
+          "dot_size": 30,
+          "regression": true,
+          "max_points": 0,
+          "hue_col": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1779817500773-0.10816719678352948",
+      "type": "ml_ensemble_apply",
+      "position": {
+        "x": 700,
+        "y": 100
+      },
+      "data": {
+        "label": "Apply Ensemble → μ + σ",
+        "params": {
+          "pred_column": "ntu_pred",
+          "clip_min": 0,
+          "clip_max": 300,
+          "color_index": 0,
+          "node_note": "Apply train"
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 100
+      }
+    },
+    {
+      "id": "node-1779818401075-rbm8j7gc5",
+      "type": "logic_python",
+      "position": {
+        "x": 700,
+        "y": -360
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "import pandas as pd\nimport numpy as np\n\ndf = a # ou le nom que tu as donné au port\n\n# Paramètres de rééquilibrage\nTARGET_COL    = 'label'\nCLEAR_MAX     = 5.0       # seuil \"Clear\" (NTU)\nKEEP_FRAC     = 0.30      # garder 30% de la classe Clear\nRANDOM_SEED   = 42\n\n# Sépare classes\nclear_mask = df[TARGET_COL] < CLEAR_MAX\ndf_clear   = df[clear_mask]\ndf_turbid  = df[~clear_mask]\n\n# Sous-échantillonne Clear\nn_keep   = max(50, int(len(df_clear) * KEEP_FRAC))\ndf_clear_sub = df_clear.sample(n=min(n_keep, len(df_clear)),\n                                random_state=RANDOM_SEED)\n\n# Recombine + shuffle\ndf_bal = pd.concat([df_clear_sub, df_turbid], ignore_index=True)\ndf_bal = df_bal.sample(frac=1, random_state=RANDOM_SEED).reset_index(drop=True)\n\nprint(f\"Avant : {len(df)}  (Clear={clear_mask.sum()}, Turbid={(~clear_mask).sum()})\")\nprint(f\"Après : {len(df_bal)}  (Clear={(df_bal[TARGET_COL]<CLEAR_MAX).sum()}, Turbid={(df_bal[TARGET_COL]>=CLEAR_MAX).sum()})\")\n\nout_data = df_bal"
+        }
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1779818464469-95tl478v3",
+      "type": "logic_python",
+      "position": {
+        "x": 1120,
+        "y": -300
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "params": {}
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
       "dragging": false
     }
   ],
@@ -1097,14 +1382,6 @@
       }
     },
     {
-      "source": "teleport_1779613642777_tw6y",
-      "sourceHandle": "geotiff__geotiff",
-      "target": "acolite_infer",
-      "targetHandle": "geotiff__geotiff",
-      "id": "e-1779613651677",
-      "selected": false
-    },
-    {
       "source": "gt_sampler",
       "sourceHandle": "data__train_table",
       "target": "node-1779636364705-y5q7jjadd",
@@ -1128,34 +1405,11 @@
       "selected": false
     },
     {
-      "source": "node-1779636364705-y5q7jjadd",
-      "sourceHandle": "data__table",
-      "target": "gp",
-      "targetHandle": "data__train_table",
-      "id": "e-1779638083833"
-    },
-    {
       "source": "naiades",
       "sourceHandle": "data__csv_table",
       "target": "gt_sampler",
       "targetHandle": "data__table",
       "id": "e-1779638097001"
-    },
-    {
-      "id": "e-1779638452688-nxnpmi43s",
-      "source": "teleport_1779613642777_tw6y",
-      "target": "node-1779638452627-n3vmfvdpy",
-      "sourceHandle": "image__preview",
-      "targetHandle": "image__main",
-      "selected": false
-    },
-    {
-      "id": "e-1779638452689-qc715jl7d",
-      "source": "teleport_1779613642777_tw6y",
-      "target": "node-1779638452627-n3vmfvdpy",
-      "sourceHandle": "image__preview",
-      "targetHandle": "image__main",
-      "selected": false
     },
     {
       "id": "e-1779638565204-f7dn8bg3c",
@@ -1182,24 +1436,105 @@
       "selected": false
     },
     {
-      "source": "teleport_1779638726635_ue5q",
-      "sourceHandle": "string__formulas",
+      "source": "raster_mean",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "node-1779641775975-sliz1d5r2",
+      "targetHandle": "geotiff__turbidity",
+      "id": "e-1779651543662",
+      "selected": false
+    },
+    {
+      "source": "ndwi_mask",
+      "sourceHandle": "mask__mask",
+      "target": "node-1779641775975-sliz1d5r2",
+      "targetHandle": "mask__mask",
+      "id": "e-1779651561989",
+      "selected": false
+    },
+    {
+      "source": "node-1779689858864-0.23384931275391463",
+      "sourceHandle": "dict__meta",
+      "target": "node-1779689960608-g8igz7zil",
+      "targetHandle": "any__data",
+      "id": "e-1779689963943",
+      "selected": false
+    },
+    {
+      "source": "copernicus_train",
+      "sourceHandle": "dict__meta",
+      "target": "node-1779689971003-0.4904391627790007",
+      "targetHandle": "any__data",
+      "id": "e-1779689977012"
+    },
+    {
+      "source": "node-1779689858864-0.23384931275391463",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "acolite_infer",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-1779726953482",
+      "selected": false
+    },
+    {
+      "source": "node-1779689858864-0.23384931275391463",
+      "sourceHandle": "image__preview",
+      "target": "node-1779638452627-n3vmfvdpy",
+      "targetHandle": "image__main",
+      "id": "e-1779726955936",
+      "selected": false
+    },
+    {
+      "source": "apply",
+      "sourceHandle": "dict__stats",
       "target": "node-1779638749367-adnz3lp7c",
       "targetHandle": "any__data",
-      "id": "e-1779638752084",
-      "selected": false
+      "id": "e-1779814679001"
+    },
+    {
+      "source": "node-1779636364705-y5q7jjadd",
+      "sourceHandle": "data__table",
+      "target": "node-1779817500773-0.10816719678352948",
+      "targetHandle": "data__table",
+      "id": "e-1779817643604"
+    },
+    {
+      "source": "gp",
+      "sourceHandle": "dict__models",
+      "target": "node-1779817500773-0.10816719678352948",
+      "targetHandle": "dict__models",
+      "id": "e-1779817707293"
+    },
+    {
+      "source": "node-1779817500773-0.10816719678352948",
+      "sourceHandle": "data__mean_table",
+      "target": "node-1779817272397-vj9qnjir0",
+      "targetHandle": "data__table",
+      "id": "e-1779817772238"
+    },
+    {
+      "source": "node-1779636364705-y5q7jjadd",
+      "sourceHandle": "data__table",
+      "target": "node-1779818401075-rbm8j7gc5",
+      "targetHandle": "any__a",
+      "id": "e-1779818447590"
+    },
+    {
+      "source": "node-1779818401075-rbm8j7gc5",
+      "sourceHandle": "data__out_data",
+      "target": "gp",
+      "targetHandle": "data__train_table",
+      "id": "e-1779818519391"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 495.84375,
-      "h": 331
+      "w": 688.22265625,
+      "h": 507
     },
     "previewPos": {
-      "x": 117.86328125,
-      "y": 9.78515625
+      "x": 1050.89453125,
+      "y": -317.02734375
     },
-    "activePaletteIndex": 6,
-    "visualizedNodeId": "raster_std"
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "node-1779817272397-vj9qnjir0"
   }
 }

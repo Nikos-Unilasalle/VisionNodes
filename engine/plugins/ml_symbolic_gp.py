@@ -593,12 +593,25 @@ class EnsembleApplyNode(NodeProcessor):
         std_pred  = preds_stack.std(axis=0)
 
         # ── Build output tables (keep __px_idx for raster reconstruction)
+        # Also preserve non-feature columns from input (label, lat, lon, station_id…)
+        # so a training table fed through Apply yields a (label, prediction) pair
+        # ready for a predicted-vs-observed scatter.
         send_notification('Apply: building output tables…', progress=0.9, notif_id=_NOTIF)
         mean_df = pd.DataFrame({pred_col: mean_pred})
         std_df  = pd.DataFrame({pred_col: std_pred})
         if '__px_idx' in df.columns:
             mean_df['__px_idx'] = df['__px_idx'].values
             std_df['__px_idx']  = df['__px_idx'].values
+        # Carry over any non-feature, non-index column (avoid duplicating pred_col)
+        feature_set = set(features) | {pred_col, '__px_idx'}
+        for c in df.columns:
+            if c in feature_set:
+                continue
+            try:
+                mean_df[c] = df[c].values
+                std_df[c]  = df[c].values
+            except Exception:
+                pass
 
         # ── Stats
         cv = float(np.mean(std_pred / (np.abs(mean_pred) + 1e-6)))

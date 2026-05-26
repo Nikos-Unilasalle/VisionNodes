@@ -722,7 +722,7 @@ class TurbidityStatsNode(NodeProcessor):
             class_img[px_mask] = bgr
 
         mean_ntu = stats['mean']
-        dominant = max(classes.items(), key=lambda x: x[1]['pixels'])[0]
+        dominant = max(classes_detail.items(), key=lambda x: x[1]['pixels'])[0]
         send_notification(
             f'Turb Stats: OK — moy {mean_ntu:.1f} NTU | {area_km2:.1f} km² | dominant: {dominant}',
             progress=1.0, notif_id='turb_stats'
