@@ -1,0 +1,38 @@
+Loaded 563 matchups, features: ['Blue', 'Green', 'Red', 'NIR', 'SWIR1', 'SWIR2', 'Red_Green', 'Blue_Green', 'Red_NIR', 'NIR_SWIR1', 'Red_SWIR1', 'NDTI', 'MNDWI', 'log_Red', 'log_SWIR1']
+
+=== GP_baseline ===
+  R²=-0.051±0.043  RMSE=25.20  slope=0.019  time=232.9s
+
+=== GP_subsample_0.30 ===
+  R²=0.001±0.049  RMSE=24.57  slope=0.032  time=231.8s
+
+=== GP_subsample_0.50 ===
+  R²=-0.009±0.023  RMSE=24.72  slope=0.026  time=231.7s
+
+=== GP_sample_weight ===
+  R²=-0.087±0.041  RMSE=25.61  slope=0.011  time=229.8s
+
+=== Nechad_2010_published ===
+  R²=-181.826±134.130  RMSE=299.48  slope=-1.316  time=0.0s
+
+=== Nechad_2010_recalibrated ===
+  R²=-3.576±2.533  RMSE=49.14  slope=-0.112  time=0.2s
+
+=== RandomForest ===
+  R²=0.225±0.202  RMSE=21.56  slope=0.242  time=1.7s
+
+=== HistGradientBoosting ===
+  R²=0.203±0.202  RMSE=21.85  slope=0.277  time=8.8s
+
+=== SUMMARY ===
+                    name          R2     R2_std       RMSE       rho     slope  time_s
+             GP_baseline   -0.050697   0.042586  25.203197  0.148038  0.018822   232.9
+       GP_subsample_0.30    0.001082   0.048754  24.574169  0.148501  0.032217   231.8
+       GP_subsample_0.50   -0.009217   0.022813  24.715095  0.143605  0.026055   231.7
+        GP_sample_weight   -0.087390   0.041460  25.609971  0.132423  0.010892   229.8
+   Nechad_2010_published -181.826408 134.129579 299.481030 -0.105612 -1.315505     0.0
+Nechad_2010_recalibrated   -3.575740   2.532654  49.144026 -0.105183 -0.112058     0.2
+            RandomForest    0.225066   0.201726  21.557734  0.356894  0.242358     1.7
+    HistGradientBoosting    0.203132   0.202394  21.846827  0.343991  0.277095     8.8
+
+Saved /Users/nikos/Desktop/VNStudio/paper/experiments/out/model_compare.csv

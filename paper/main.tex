@@ -51,7 +51,7 @@
 
 % ─── Abstract ────────────────────────────────────────────────────────────────
 \begin{abstract}
-We present a \textbf{proof-of-concept} pipeline for estimating water turbidity (NTU) from Sentinel-2 surface reflectance using an ensemble of genetic-programming (GP) symbolic regressors. The pipeline is built as a visual node graph inside the open-source environment \textbf{VNStudio}, exposing every parameter on a connectable node and serializing the entire experiment to a single JSON file. Training uses 563 satellite--station matchups assembled from the French Hub'Eau Naïades network for the lower Seine basin (2017--2025); stratified subsampling of the Clear (<5\,NTU) class is required to prevent the GP search from collapsing to a near-constant predictor. Ten independent GP runs aggregate into a mean turbidity map ($\mu$) and a per-pixel ensemble-spread map ($\sigma$). Applied to a 10\,m July 2023 acquisition over the Rouen reach, the rebalanced model recovers a positive predicted-vs-observed slope (0.26, vs 0.02 without subsampling) and produces WFD turbidity-class proportions consistent with low-flow summer conditions. The best-of-ensemble symbolic expression spontaneously recombines a Blue/Red ratio with an NIR/SWIR contrast --- the structural skeleton of published bio-optical models for turbid water --- without those features being imposed, supporting their physical relevance. We position the work as a methodological demonstration of \emph{visual programming as a reproducibility primitive} for remote-sensing experimentation, and outline concrete next steps (sample weighting, larger spatial transfer, calibrated uncertainty) toward an operational version.
+We present a \textbf{proof-of-concept} pipeline for estimating water turbidity (NTU) from Sentinel-2 surface reflectance using interpretable models and an explicit ensemble uncertainty. The pipeline is built as a visual node graph inside the open-source environment \textbf{VNStudio}, exposing every parameter on a connectable node and serializing the entire experiment to a single JSON file. Training uses 563 satellite--station matchups assembled from the French Hub'Eau Naïades network for the lower Seine basin (2017--2025). We benchmark six model families (genetic-programming symbolic regression with and without rebalancing or sample weighting, RandomForest, HistGradientBoosting) under a unified 10-fold cross-validation. The GP family fails to generalise (out-of-fold R$^2 \le 0$ across every configuration); tree ensembles reach R$^2 \approx 0.22$ with a predicted-vs-observed slope of $\approx 0.24$. The best in-fold GP expression nonetheless rediscovers the Blue/Red ratio and NIR/SWIR contrast that anchor the published bio-optical models, supporting their physical relevance. Applied to a 10\,m July 2023 acquisition over the Rouen reach, the RandomForest field returns a median turbidity of 14\,NTU with a per-pixel tree-spread $\sigma$ providing operational uncertainty. We position the work as (i) a methodological demonstration of \emph{visual programming as a reproducibility primitive}, (ii) an honest diagnosis of class-imbalance brittleness in symbolic regression on long-tailed environmental targets, and (iii) a starting point for the improvements outlined in our future-work section.
 \end{abstract}
 
 \noindent\textbf{Keywords:} turbidity, Sentinel-2, symbolic regression, gplearn, ensemble uncertainty, Naïades, Seine, visual programming.
@@ -271,61 +271,77 @@ The best individual across the 10 GP runs converges on the compact expression
 \end{equation}
 (The $\exp$ wrapper inverts the log-target.) The three terms admit physical readings: $\text{Blue}/\text{Red}$ is the inverse Forel--Ule clarity index; $\text{NIR}/\text{SWIR1}$ captures residual reflectance in spectral regions where pure water absorbs strongly, so any signal indicates suspended particulate matter; the $-\mathrm{Green}$ term acts as a scene-brightness baseline. That this combination emerges from an unconstrained search --- without bands being labelled by their hydrological role --- is a tangible reproducibility check against the structural skeleton of the Nechad and Dogliotti models.
 
-\subsection{Inference over the Rouen reach}
-After NDWI masking, \num{112680} valid water pixels ($\approx \SI{11.3}{\kilo\metre\squared}$) entered inference. Ensemble statistics on the $\mu$-map:
+\subsection{Out-of-fold model comparison}
+\label{sec:compare}
+To bound what the present 563-row dataset can realistically support, we ran an out-of-fold model comparison (RepeatedKFold, 5 splits $\times$ 2 repeats $=$ 10 folds, same temporal subset, identical feature engineering). All targets were $\log(1+y)$-transformed before fitting. Results in Table~\ref{tab:modelcompare} expose a stark interpretability--generalisation trade-off.
 
 \begin{table}[h]
 \centering
-\caption{Ensemble mean ($\mu$) statistics over the inference scene, before vs after the stratified-subsampling rebalancing of \S\ref{sec:rebalance}.}
-\label{tab:mustats}
+\caption{Out-of-fold metrics (10 folds). \emph{Nechad\_2010\_published} uses the original A=228.1, B=0.1641, C=0.1724 constants (no training); \emph{Nechad\_2010\_recalibrated} re-fits A, B, C on each training fold but keeps the same hyperbolic structure. Slope = coefficient of the linear fit on predicted-vs-observed NTU.}
+\label{tab:modelcompare}
 \small
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrr}
 \toprule
-Metric & Baseline (NTU) & Rebalanced (NTU) \\
+Model & R$^2$ & RMSE (NTU) & Spearman $\rho$ & Slope \\
 \midrule
-Mean        & 5.07  & 21.81 \\
-Median      & 3.53  & 21.32 \\
-P90         & 6.21  & 31.40 \\
-Maximum     & 45.27 & 41.14 \\
+Nechad\_2010\_published    & $-$181.83 & 299.48 & $-$0.106 & $-$1.32 \\
+Nechad\_2010\_recalibrated &   $-$3.58 &  49.14 & $-$0.105 & $-$0.11 \\
+GP\_baseline               & $-$0.051 & 25.20 & 0.148 & 0.019 \\
+GP\_subsample\_0.30        &  \phantom{$-$}0.001 & 24.57 & 0.149 & 0.032 \\
+GP\_subsample\_0.50        & $-$0.009 & 24.72 & 0.144 & 0.026 \\
+GP\_sample\_weight         & $-$0.087 & 25.61 & 0.132 & 0.011 \\
+\textbf{RandomForest}      & \textbf{\phantom{$-$}0.225} & \textbf{21.56} & \textbf{0.357} & \textbf{0.242} \\
+HistGradientBoosting       &  \phantom{$-$}0.203 & 21.85 & 0.344 & 0.277 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Ensemble spread ($\sigma$) and dispersion:
+Three findings stand out. First, the \emph{published Nechad 2010 formula collapses} on our Rrs values (R$^2 = -182$, slope $-1.3$): the post-DOS-1 Red reflectance frequently approaches or exceeds the formula's pole at $\rho_w = C = 0.1724$, triggering numerical saturation against the safety clip. Recalibrating the three Nechad constants on each training fold does not rescue the model (R$^2 = -3.6$) --- a hyperbolic single-band formula cannot fit our heavy-tailed dataset. This is a diagnostic, not a verdict against Nechad: it shows that DOS-1 alone leaves enough residual atmospheric signal to push our Rrs out of the regime in which the published constants were calibrated. Switching to full ACOLITE DSF (\S\ref{sec:future}) should bring our Rrs back into the regime where the published formula behaves.
 
-\begin{center}
+Second, \emph{none of the four GP configurations beats the constant predictor} in held-out evaluation: cross-validated R$^2$ remains at or below zero, and rebalancing or sample-weighting does not fix the issue. The closed-form expressions evolved on the training fold lose their predictive value when applied to the held-out fold --- consistent with the diagnosis of overfitting to local quirks of a small, long-tailed dataset under a parsimony penalty.
+
+Third, tree-ensemble baselines (RandomForest, HistGradientBoosting) achieve a positive R$^2$ around 0.20--0.23 and a predicted-vs-observed slope of $\approx 0.25$, modest in absolute terms but a clear improvement over both the GP family, the Nechad baselines and the trivial constant.
+
+We therefore adopt the RandomForest model (300 trees, $\log(1+y)$-target, \texttt{min\_samples\_leaf}=2, all 15 engineered features) for the Rouen inference, while keeping the GP outputs as an interpretable companion that exposes the structural feature combination relevant to turbidity.
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}{0.49\linewidth}
+\includegraphics[width=\linewidth]{figs/scatter_gp.png}
+\caption{GP baseline (R$^2$=$-$0.05)}
+\end{subfigure}
+\begin{subfigure}{0.49\linewidth}
+\includegraphics[width=\linewidth]{figs/scatter_rf.png}
+\caption{RandomForest (R$^2$=0.23)}
+\end{subfigure}
+\caption{Out-of-fold predicted vs observed turbidity. Dashed grey: 1:1 line. Orange: linear fit. GP predictions collapse to a near-constant band ($\approx$5\,NTU) regardless of input. The tree ensemble captures more of the signal but still underestimates the upper tail.}
+\label{fig:scatter_compare}
+\end{figure}
+
+\subsection{Inference over the Rouen reach (RandomForest)}
+After NDWI masking and 2-px erosion, \num{132818} valid water pixels ($\approx \SI{13.3}{\kilo\metre\squared}$) entered inference. The RandomForest predicts both a mean turbidity field and a per-pixel standard deviation derived from the spread across its 300 trees:
+
+\begin{table}[h]
+\centering
+\caption{RandomForest inference statistics over the Rouen scene (2023-07-04, 10\,m).}
+\label{tab:rfinfer}
 \small
 \begin{tabular}{lr}
 \toprule
 Metric & Value \\
 \midrule
-Mean $\sigma$           & 3.78 NTU \\
-Maximum $\sigma$        & 21.41 NTU \\
-Coefficient of variation $\sigma/\mu$ & 0.87 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-WFD class distribution by water area (Table~\ref{tab:wfd}) confirms a low-flow summer regime: \SI{81}{\percent} of pixels classify as \emph{Clear} (1--5 NTU), with no \emph{Very turbid} or \emph{Extremely turbid} water.
-
-\begin{table}[h]
-\centering
-\caption{WFD-class proportions over the \SI{11.3}{\kilo\metre\squared} masked water surface.}
-\label{tab:wfd}
-\small
-\begin{tabular}{lrr}
-\toprule
-Class & NTU range & \% surface \\
-\midrule
-Crystal           & 0--1   & 4.7  \\
-\textbf{Clear}    & 1--5   & \textbf{80.9} \\
-Slightly turbid   & 5--15  & 9.5  \\
-Turbid            & 15--50 & 5.0  \\
-Very turbid       & 50--200& 0.0  \\
-Extremely turbid  & $>$200 & 0.0  \\
+Pixels         & 132{,}818 \\
+Water area     & $\approx$13.3 km$^2$ \\
+$\mu$ mean     & 37.2 NTU \\
+$\mu$ median   & 13.9 NTU \\
+$\mu$ max      & 86.2 NTU \\
+$\sigma$ mean  & 28.8 NTU \\
+$\sigma$ max   & 52.6 NTU \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The median ($\approx$14\,NTU) is the most physically defensible aggregate: the histogram is heavy-tailed (extreme bank-pixel predictions push the mean above the bulk), and the median sits inside the \emph{Slightly turbid} class, plausible for the lower Seine in early summer.
 
 \subsection{Figures}
 
@@ -336,50 +352,26 @@ Extremely turbid  & $>$200 & 0.0  \\
 \label{fig:naiadesmap}
 \end{figure}
 
-\paragraph{Training-set fit.} A predicted-vs-observed regression on the rebalanced training set ($n \approx 248$, see \S\ref{sec:rebalance}) yields a positive but shallow slope of \textbf{0.26} (intercept 7.17 NTU): the model captures the direction of the NTU gradient yet systematically underestimates the upper tail, with observations above 100\,NTU predicted in the 30--65\,NTU range. The baseline run without stratified subsampling produces a near-constant predictor (slope 0.02), so the rebalancing recovers most of the signal even if the residual variance remains large.
-
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figs/mu_raster.png}
-\caption{Ensemble mean turbidity ($\mu$) over the Rouen reach (10\,m, 2023-07-04). Color scale: 0--50 NTU, NDWI water mask applied. The navigable channel is uniformly \emph{Clear} (1--5 NTU); turbid pockets concentrate along shorelines and side-channels.}
-\label{fig:mumap}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{figs/sigma_raster.png}
-\caption{Ensemble standard deviation ($\sigma$) over the same scene. High-$\sigma$ pixels concentrate at land/water boundaries and near morphologically complex side-channels --- regions where individual GP models extrapolate differently.}
-\label{fig:sigmap}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{figs/histograms.png}
-\caption{Pixel-wise distribution of $\mu$ (left) and $\sigma$ (right) across the 112{,}680 water pixels of the inference scene.}
-\label{fig:hist}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.7\linewidth]{figs/wfd_distribution.png}
-\caption{WFD turbidity-class distribution: 81\% of the masked water surface is \emph{Clear} (1--5 NTU).}
-\label{fig:wfd}
+\includegraphics[width=\linewidth]{figs/rf_panel.png}
+\caption{RandomForest inference over the Rouen reach. \textbf{Left:} mean turbidity $\mu$ from the 300-tree ensemble. The Seine main channel sits in the 5--15\,NTU range; elevated NTU concentrates along banks, side-channels and at port basins (south-east). \textbf{Right:} per-pixel $\sigma$ taken as the across-tree standard deviation. High-$\sigma$ pixels coincide with high-$\mu$ pixels --- regions where individual trees disagree on the magnitude, signalling poor extrapolation rather than physical turbulence.}
+\label{fig:rfpanel}
 \end{figure}
 
 % ─── 5. Discussion ───────────────────────────────────────────────────────────
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Why ensemble matters}
-The coefficient of variation $\sigma/\mu \approx 0.87$ is the headline of the uncertainty analysis. Although the $\mu$-map (Fig.~\ref{fig:mumap}) appears spatially crisp, the ten ensemble members disagree by an amount comparable to the signal. Two factors plausibly drive this:
-\begin{enumerate}
-    \item \textbf{Residual training-set imbalance.} Even after the stratified subsampling of \S\ref{sec:rebalance}, the upper tail (NTU $>50$) is represented by fewer than 10 stations. Models extrapolate differently in that regime, producing the high-$\sigma$ pixels visible in Fig.~\ref{fig:hist} (right) and the systematic under-prediction of stations above 100 NTU reported in \S\ref{sec:results}.
-    \item \textbf{Search-time stability.} GP rewards models that minimize training residuals but does not penalize input sensitivity. Adding a stability term across band perturbations would likely collapse the ensemble spread, at the cost of expressiveness.
-\end{enumerate}
-In practice, the $\mu$-map should be read as a class-level estimate (``Clear vs not-Clear''), and the $\sigma$-map should be consulted before any pixel-precise NTU claim. This is consistent with the proof-of-concept framing of \S\ref{sec:intro}.
+\subsection{The interpretability--generalisation trade-off}
+The model-comparison study (Table~\ref{tab:modelcompare}, Fig.~\ref{fig:scatter_compare}) is the central empirical contribution of this proof-of-concept. GP symbolic regression, as configured here, fails to generalise: every variant produces an out-of-fold R$^2 \le 0$ on the 563-row matchup table, regardless of rebalancing or sample weighting. The closed-form expressions it returns are interpretable, but they encode noise on the training fold rather than physically transferable signal.
+
+Tree ensembles (RandomForest, HistGradientBoosting) achieve R$^2 \approx 0.2$ on the same dataset. The improvement is real but modest, and comes at the cost of interpretability: a forest of 300 trees does not produce a formula. The Rouen inference $\mu$-map (Fig.~\ref{fig:rfpanel}) demonstrates the operational consequence: the RandomForest recovers physically plausible spatial structure (main channel $\sim$5--15\,NTU, elevated bank/side-channel NTU), where GP would have returned a near-constant field.
+
+We read this not as a verdict against symbolic regression in general, but as a diagnosis of \emph{class-imbalance brittleness} on long-tailed environmental targets. The Naïades sample is dominated by Clear-class measurements; under a parsimony-penalised GP search, the local minimum at ``constant mean'' is too attractive. Strategies that should in principle break this --- subsampling, sample weighting --- did not in our cross-validated tests. Section~\ref{sec:future} lists the directions that may.
 
 \subsection{Rediscovery of physical structure}
-Equation~\ref{eq:bestmodel} is structurally close to Nechad's red-band formula and Dogliotti's blended Red/NIR estimator: both rely on a clarity-sensitive visible ratio and an SPM-sensitive infrared term. That the GP search recovers this structure without supervision is, at minimum, a sanity check on the data preparation chain. It also suggests that fixed bio-optical models occupy a local optimum that purely empirical methods naturally drift toward when given enough freedom.
+Despite its poor generalisation skill, the best in-fold GP expression (Eq.~\ref{eq:bestmodel}) is structurally close to Nechad's red-band formula and Dogliotti's blended Red/NIR estimator: both rely on a clarity-sensitive visible ratio and an SPM-sensitive infrared term. That this combination emerges from an unconstrained symbolic search --- without bands being labelled by their hydrological role --- is a tangible reproducibility check on the data preparation chain. It also suggests that fixed bio-optical models occupy a local optimum that purely empirical methods naturally drift toward when given enough freedom.
 
 \subsection{Visual programming as a reproducibility primitive}
 A common failure mode in remote-sensing experimentation is undocumented preprocessing: a Sentinel-2 scene is loaded, ``cleaned'', ``deglinted'', ``re-projected'', and by the time the regression is run the chain has accumulated ten implicit decisions that the manuscript does not record. A node-graph substrate forces every decision into a connector on a node, every parameter into a serializable field, and the whole graph into a single JSON file that can be re-opened and re-executed. We argue that this is not a UI niceness but a methodological prerequisite for the kind of multi-step, multi-source workflows that turbidity remote sensing entails.
@@ -392,7 +384,7 @@ A common failure mode in remote-sensing experimentation is undocumented preproce
     \item Naïades stations are biased toward monitored rivers; the model extrapolates poorly to estuarine plumes lying outside the training footprint.
     \item The $\pm\SI{30}{\day}$ temporal window is generous. Tightening to $\pm\SI{7}{\day}$ drops training to $\approx 100$ matchups but removes seasonal aliasing.
     \item GP \emph{best-of-ensemble} reporting hides multimodality: more than one expression family typically reaches near-equivalent test RMSE. Reporting only one obscures this.
-    \item The predicted-vs-observed slope of 0.26 (\S\ref{sec:results}) shows the model captures direction but underestimates magnitude in the upper tail. Predictions saturate around 40--65\,NTU while observations extend to 240\,NTU.
+    \item Cross-validated R$^2$ remains modest even for the best (tree-based) model ($\approx 0.23$ with $\sigma_{R^2} \approx 0.20$ across folds). Predictions saturate well below the upper observed range (240\,NTU), reflecting the imbalance in the in-situ pool rather than a model-class limit.
 \end{itemize}
 
 % ─── 6.5. Future work ────────────────────────────────────────────────────────
