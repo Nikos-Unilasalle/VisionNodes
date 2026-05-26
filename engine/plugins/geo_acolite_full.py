@@ -76,7 +76,7 @@ _S2_BAND_WL = {
         {'id': 'safe_path',   'label': 'S2 L1C .SAFE path',
          'type': 'string', 'default': ''},
         {'id': 'band_names',  'label': 'Band names (comma, S2 order)',
-         'type': 'string', 'default': 'Bleu,Vert,Rouge,NIR'},
+         'type': 'string', 'default': 'Blue,Green,Red,NIR'},
         {'id': 'limit_region','label': 'Limit to region (lat_min,lon_min,lat_max,lon_max or blank)',
          'type': 'string', 'default': ''},
         {'id': 'dsf_aot_estimate', 'label': 'AOT method',
@@ -151,13 +151,29 @@ class AcoliteFullNode(NodeProcessor):
         if bands.ndim == 2:
             bands = bands[np.newaxis]
 
-        # Auto-scale: if values look like DN (0-10000) divide by 10000
-        if bands.max() > 2.0:
-            bands = bands / 10000.0
+        # Auto-scale: use 99th percentile (robust to glint/edge outliers).
+        # Reflectance values: p99 < 2.0. DN values (S2 L1C raw): p99 ~3000-8000.
+        # max() alone trips on single saturated pixels → false divide → 100x too-small output.
+        finite = bands[np.isfinite(bands)]
+        if finite.size > 0:
+            p99 = float(np.percentile(finite, 99))
+            if p99 > 10.0:
+                bands = bands / 10000.0
 
-        # DOS-1: subtract per-band dark object (1st percentile)
+        # DOS-1: subtract per-band dark object.
+        # Use 0.1 percentile of positive pixels — the 1st percentile picks up water itself
+        # when the scene is water-dominated, zeroing the signal we want.
+        # Also cap dark at the band's lowest plausible reflectance to avoid over-subtraction.
         for i in range(bands.shape[0]):
-            dark = float(np.percentile(bands[i][bands[i] > 0], 1)) if (bands[i] > 0).any() else 0.0
+            pos = bands[i][bands[i] > 0]
+            if pos.size == 0:
+                continue
+            dark = float(np.percentile(pos, 0.1))
+            # Safety cap: dark must be substantially smaller than the median signal,
+            # else dark = water itself → skip subtraction.
+            med = float(np.median(pos))
+            if dark > 0.5 * med:
+                dark = 0.0
             bands[i] = np.clip(bands[i] - dark, 0, None)
 
         # BOA/pi → approximate Rrs
@@ -168,7 +184,7 @@ class AcoliteFullNode(NodeProcessor):
         rrs_min = float(np.nanmin(rrs))
         rrs_max = float(np.nanmax(rrs))
 
-        band_str  = str(params.get('band_names', 'Bleu,Vert,Rouge,NIR')).strip()
+        band_str  = str(params.get('band_names', 'Blue,Green,Red,NIR')).strip()
         band_list = [b.strip() for b in band_str.split(',') if b.strip()]
 
         geo_out = {
@@ -271,7 +287,7 @@ class AcoliteFullNode(NodeProcessor):
         send_notification(f'ACOLITE: reading {os.path.basename(nc_path)}...', progress=0.8, notif_id=_NOTIF)
 
         try:
-            band_str  = str(params.get('band_names', 'Bleu,Vert,Rouge,NIR')).strip()
+            band_str  = str(params.get('band_names', 'Blue,Green,Red,NIR')).strip()
             band_list = [b.strip() for b in band_str.split(',') if b.strip()]
 
             import netCDF4 as nc4

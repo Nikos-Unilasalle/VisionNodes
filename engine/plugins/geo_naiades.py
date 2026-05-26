@@ -144,35 +144,56 @@ class NaiadesNode(NodeProcessor):
         max_r   = min(int(params.get('max_results', 5000)), 20000)
 
         send_notification(f"Naiades: fetching code={code} bbox=[{lon_min},{lat_min}→{lon_max},{lat_max}]...",
-                          progress=0.1, notif_id=_NOTIF)
+                          progress=0.05, notif_id=_NOTIF)
 
-        url   = 'https://hubeau.eaufrance.fr/api/v2/qualite_rivieres/analyse_pc'
-        payload = {
-            'code_parametre':         code,
-            'bbox':                   f'{lon_min},{lat_min},{lon_max},{lat_max}',
-            'date_debut_prelevement': d_min,
-            'date_fin_prelevement':   d_max,
-            'code_remarque':          1,   # 1 = mesure réelle (exclut "Analyse non faite")
-            'size':                   max_r,
-            'fields':                 'code_station,libelle_station,latitude,longitude,date_prelevement,resultat,symbole_unite',
-        }
+        url = 'https://hubeau.eaufrance.fr/api/v2/qualite_rivieres/analyse_pc'
 
+        # API caps each query at size=20000 and returns oldest-first.
+        # Chunk by year to get coverage across the whole date range.
         try:
-            resp = requests.get(url, params=payload, timeout=30)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            send_notification(f'Naiades: API error — {e}', level='error', notif_id=_NOTIF)
+            y0 = int(d_min[:4])
+            y1 = int(d_max[:4])
+        except Exception:
+            y0, y1 = 2017, datetime.date.today().year
+        years = list(range(y0, y1 + 1))
+
+        per_year_cap = min(max_r, 20000)
+        all_records = []
+        for i, y in enumerate(years):
+            yd_min = f'{y}-01-01' if y > y0 else d_min
+            yd_max = f'{y}-12-31' if y < y1 else d_max
+            payload = {
+                'code_parametre':         code,
+                'bbox':                   f'{lon_min},{lat_min},{lon_max},{lat_max}',
+                'date_debut_prelevement': yd_min,
+                'date_fin_prelevement':   yd_max,
+                'code_remarque':          1,
+                'size':                   per_year_cap,
+                'fields':                 'code_station,libelle_station,latitude,longitude,date_prelevement,resultat,symbole_unite',
+            }
+            try:
+                resp = requests.get(url, params=payload, timeout=30)
+                resp.raise_for_status()
+                data = resp.json()
+            except Exception as e:
+                send_notification(f'Naiades: API error (year {y}) — {e}', level='warning', notif_id=_NOTIF)
+                continue
+            recs = data.get('data', [])
+            all_records.extend(recs)
+            send_notification(
+                f'Naiades: year {y} → {len(recs)} rows (total {len(all_records)})',
+                progress=0.05 + 0.55 * (i + 1) / len(years), notif_id=_NOTIF,
+            )
+
+        if not all_records:
+            send_notification('Naiades: no data returned (check bbox/dates/code)',
+                              level='error', notif_id=_NOTIF)
             return {}
 
-        records = data.get('data', [])
-        if not records:
-            send_notification('Naiades: no data returned (check bbox/dates/code)', level='error', notif_id=_NOTIF)
-            return {}
+        send_notification(f'Naiades: {len(all_records)} raw records — processing...',
+                          progress=0.65, notif_id=_NOTIF)
 
-        send_notification(f'Naiades: {len(records)} raw records — processing...', progress=0.6, notif_id=_NOTIF)
-
-        df = pd.DataFrame(records)
+        df = pd.DataFrame(all_records)
         df = df.rename(columns={
             'latitude':          'lat',
             'longitude':         'lon',
