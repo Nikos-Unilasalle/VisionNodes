@@ -3729,10 +3729,11 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
               <div className="space-y-1">
                 {TURB_CLASSES.filter(tc => {
                   const d = classes[tc.label];
-                  return d && d.pct > 0.5;
+                  const pct = typeof d === 'number' ? d : (d?.pct ?? 0);
+                  return pct > 0.5;
                 }).map(tc => {
-                  const d = classes[tc.label] || {};
-                  const pct = d.pct || 0;
+                  const raw = classes[tc.label];
+                  const pct = typeof raw === 'number' ? raw : (raw?.pct || 0);
                   return (
                     <div key={tc.label} className="flex items-center gap-2">
                       <span className={`text-[8px] font-bold w-12 shrink-0 ${tc.color}`}>{tc.short}</span>
@@ -3781,8 +3782,8 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
               </h5>
               <div className="space-y-2">
                 {TURB_CLASSES.map(tc => {
-                  const d = classes[tc.label] || {};
-                  const pct = d.pct || 0;
+                  const rawD = classes[tc.label];
+                  const pct = typeof rawD === 'number' ? rawD : (rawD?.pct || 0);
                   return (
                     <div key={tc.label} className="flex flex-col gap-0.5">
                       <div className="flex justify-between items-center text-[9px]">

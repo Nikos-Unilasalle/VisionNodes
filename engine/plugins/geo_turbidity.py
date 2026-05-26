@@ -481,8 +481,12 @@ _TURB_CLASSES = [
 ]
 
 
-def _render_stats_card(stats, w=380, h=300):
-    """Render a colored stats panel as BGR image for node thumbnail."""
+def _render_stats_card(stats, w=380, h=300, classes_detail: dict | None = None):
+    """Render a colored stats panel as BGR image for node thumbnail.
+
+    classes_detail: {label: {'pixels', 'area_km2', 'pct'}} — optional, for WFD bars.
+    Falls back to stats['classes'] if not provided (legacy / flat-pct format).
+    """
     bg    = np.full((h, w, 3), (18, 18, 28), dtype=np.uint8)
     WHITE = (230, 230, 230)
     GRAY  = (130, 130, 130)
@@ -520,18 +524,19 @@ def _render_stats_card(stats, w=380, h=300):
     cv2.line(bg, (8, y + 4), (w - 8, y + 4), (50, 50, 60), 1)
     y += 14
 
-    # Classes
+    # Classes — support both detailed {label: {pct, ...}} and flat {label: pct}
     cv2.putText(bg, 'CLASSES', (8, y + 8), fontS, 0.9, GRAY, 1)
     y += 16
 
-    classes = stats.get('classes', {})
-    total_px = sum(v.get('pixels', 0) for v in classes.values()) or 1
+    # Prefer explicit classes_detail, else fall back to stats['classes']
+    cls_src = classes_detail if classes_detail is not None else stats.get('classes', {})
 
     for cls_label, lo, hi, bgr in _TURB_CLASSES:
-        cls_data = classes.get(cls_label)
-        if cls_data is None:
+        raw = cls_src.get(cls_label)
+        if raw is None:
             continue
-        pct = cls_data.get('pct', 0)
+        # Support both dict and float formats
+        pct = raw.get('pct', 0) if isinstance(raw, dict) else float(raw)
         if pct < 0.5:
             continue
 
@@ -691,15 +696,17 @@ class TurbidityStatsNode(NodeProcessor):
         send_notification('Turb Stats: classification WFD…', progress=0.55, notif_id='turb_stats')
 
         # Classification per class
-        classes = {}
+        # Store detailed data locally for _thumb rendering only.
+        # `stats['classes']` must stay at depth ≤ 2 (engine _is_serializable limit):
+        # {label: pct_float} — flat, fully serializable.
+        classes_detail = {}
+        classes_flat   = {}
         for label, lo, hi, _ in _TURB_CLASSES:
-            px = int(np.sum((vals >= lo) & (vals < hi)))
-            classes[label] = {
-                'pixels':   px,
-                'area_km2': round(px * px_area, 4),
-                'pct':      round(px / vals.size * 100, 2),
-            }
-        stats['classes'] = classes
+            px  = int(np.sum((vals >= lo) & (vals < hi)))
+            pct = round(px / vals.size * 100, 2)
+            classes_detail[label] = {'pixels': px, 'area_km2': round(px * px_area, 4), 'pct': pct}
+            classes_flat[label]   = pct
+        stats['classes'] = classes_flat
 
         send_notification('Turb Stats: rendering histogram…', progress=0.70, notif_id='turb_stats')
 
@@ -721,7 +728,7 @@ class TurbidityStatsNode(NodeProcessor):
             progress=1.0, notif_id='turb_stats'
         )
 
-        card = _render_stats_card(stats)
+        card = _render_stats_card(stats, classes_detail=classes_detail)
         _, buf = cv2.imencode('.jpg', card, [cv2.IMWRITE_JPEG_QUALITY, 85])
         thumb_b64 = base64.b64encode(buf).decode('utf-8')
 

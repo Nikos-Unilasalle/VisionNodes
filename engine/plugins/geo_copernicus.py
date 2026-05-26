@@ -114,11 +114,14 @@ class GeoCopernicusNode(NodeProcessor):
 
     def __init__(self):
         super().__init__()
-        self._prev_fetch    = 0  # stores last fetch timestamp; any change = trigger
-        self._loading       = False
-        self._cache_data    = None   # (geo_dict, preview_bgr, thumb_b64)
-        self._thumb_dirty   = False
-        self._auto_tried    = False
+        self._prev_fetch      = 0
+        self._loading         = False
+        self._cache_data      = None   # (geo_dict, preview_bgr, thumb_b64)
+        self._thumb_dirty     = False
+        self._auto_tried      = False
+        self._prev_dl_key     = None   # hash of download-relevant params
+        # per-instance notif id so multiple Copernicus nodes don't share notifications
+        self._notif_id        = f'copernicus_{id(self)}'
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -188,6 +191,7 @@ class GeoCopernicusNode(NodeProcessor):
         date_start: str, date_end: str,
         cloud_max: int, has_cloud: bool,
         tile_path: str,
+        notif_id: str = _NOTIF,
     ) -> bool:
         """Download one tile to tile_path as float32 GeoTIFF. Returns True on success."""
         try:
@@ -227,7 +231,7 @@ class GeoCopernicusNode(NodeProcessor):
 
             result = request.get_data()
             if not result:
-                send_notification('Copernicus: empty response from API', level='warning', notif_id=_NOTIF)
+                send_notification('Copernicus: empty response from API', level='warning', notif_id=notif_id)
                 return False
 
             arr = result[0]   # (H, W, N_bands) float32
@@ -250,7 +254,7 @@ class GeoCopernicusNode(NodeProcessor):
             return True
 
         except Exception as e:
-            send_notification(f'Copernicus tile error: {e}', level='error', notif_id=_NOTIF)
+            send_notification(f'Copernicus tile error: {e}', level='error', notif_id=notif_id)
             return False
 
     # ── Main fetch logic ──────────────────────────────────────────────────────
@@ -259,7 +263,7 @@ class GeoCopernicusNode(NodeProcessor):
         try:
             self._do_fetch_impl(params, auto=auto)
         except BaseException as e:
-            send_notification(f'Copernicus: unexpected crash: {e}', level='error', notif_id=_NOTIF)
+            send_notification(f'Copernicus: unexpected crash: {e}', level='error', notif_id=self._notif_id)
         finally:
             self._loading = False
 
@@ -267,7 +271,7 @@ class GeoCopernicusNode(NodeProcessor):
         if not self.ensure_packages(
             ['sentinelhub', 'rasterio'],
             pip_names=['sentinelhub', 'rasterio'],
-            notif_id=_NOTIF,
+            notif_id=self._notif_id,
         ):
             return
 
@@ -291,7 +295,7 @@ class GeoCopernicusNode(NodeProcessor):
         if not client_id or not client_secret:
             send_notification(
                 'Copernicus: missing credentials — enter Client ID and Client Secret',
-                level='error', notif_id=_NOTIF,
+                level='error', notif_id=self._notif_id,
             )
             return
 
@@ -299,7 +303,7 @@ class GeoCopernicusNode(NodeProcessor):
         bbox_str    = str(params.get('bbox', '') or '').strip()
         if not bbox_str:
             send_notification('Copernicus: no bounding box — open editor to draw ROI',
-                              level='warning', notif_id=_NOTIF)
+                              level='warning', notif_id=self._notif_id)
             return
 
         try:
@@ -309,7 +313,7 @@ class GeoCopernicusNode(NodeProcessor):
             west, south, east, north = parts
         except Exception:
             send_notification(f'Copernicus: invalid bbox "{bbox_str}"',
-                              level='error', notif_id=_NOTIF)
+                              level='error', notif_id=self._notif_id)
             return
 
         col_names   = list(COLLECTIONS.keys())
@@ -338,7 +342,7 @@ class GeoCopernicusNode(NodeProcessor):
         os.makedirs(cache_dir, exist_ok=True)
 
         # Clear any leftover cancel flag from a previous operation
-        clear_cancel(_NOTIF)
+        clear_cancel(self._notif_id)
 
         if auto:
             # On auto-restore, only continue if a matching cache file can be found
@@ -366,7 +370,7 @@ class GeoCopernicusNode(NodeProcessor):
         except AttributeError:
             send_notification(
                 f'Copernicus: unknown DataCollection "{sh_id}" — update sentinelhub library',
-                level='error', notif_id=_NOTIF,
+                level='error', notif_id=self._notif_id,
             )
             return
 
@@ -387,7 +391,7 @@ class GeoCopernicusNode(NodeProcessor):
             f'Copernicus: {col_name} · {total_w}×{total_h} px '
             f'({tile_cols}×{tile_rows} tile{"s" if n_tiles > 1 else ""}) · '
             f'bands: {", ".join(bands)}',
-            progress=0.05, notif_id=_NOTIF,
+            progress=0.05, notif_id=self._notif_id,
         )
 
         lon_step = (east - west) / tile_cols
@@ -418,8 +422,8 @@ class GeoCopernicusNode(NodeProcessor):
                     return  # don't trigger auth on auto-restore
 
                 # Check cancellation before each tile download
-                if is_cancelled(_NOTIF):
-                    send_notification('Copernicus: download cancelled', level='warning', notif_id=_NOTIF)
+                if is_cancelled(self._notif_id):
+                    send_notification('Copernicus: download cancelled', level='warning', notif_id=self._notif_id)
                     return
 
                 tile_num = row * tile_cols + col + 1
@@ -427,7 +431,7 @@ class GeoCopernicusNode(NodeProcessor):
                     f'Copernicus: downloading tile {tile_num}/{n_tiles} '
                     f'({col+1},{row+1})…',
                     progress=0.10 + 0.75 * (tile_num - 1) / n_tiles,
-                    notif_id=_NOTIF,
+                    notif_id=self._notif_id,
                 )
 
                 success = self._download_tile(
@@ -437,18 +441,19 @@ class GeoCopernicusNode(NodeProcessor):
                     date_start, date_end,
                     cloud_max, col_cfg['has_cloud_filter'],
                     tile_path,
+                    notif_id=self._notif_id,
                 )
                 if not success:
                     return
 
         if all_cached:
-            send_notification('Copernicus: all tiles cached', progress=0.85, notif_id=_NOTIF)
+            send_notification('Copernicus: all tiles cached', progress=0.85, notif_id=self._notif_id)
 
         # ── Stitch tiles ──────────────────────────────────────────────────────
         if n_tiles == 1:
             final_path = tile_paths[0][2]
         else:
-            send_notification('Copernicus: stitching tiles…', progress=0.87, notif_id=_NOTIF)
+            send_notification('Copernicus: stitching tiles…', progress=0.87, notif_id=self._notif_id)
             stitch_key = hashlib.md5(
                 f'{col_name}|{west},{south},{east},{north}|{date_start}|{date_end}|'
                 f'{"-".join(bands)}|{resolution}|mosaic'.encode()
@@ -474,11 +479,11 @@ class GeoCopernicusNode(NodeProcessor):
                         with rasterio.open(final_path, 'w', **profile) as dst:
                             dst.write(mosaic)
                 except Exception as e:
-                    send_notification(f'Copernicus: stitch error: {e}', level='error', notif_id=_NOTIF)
+                    send_notification(f'Copernicus: stitch error: {e}', level='error', notif_id=self._notif_id)
                     return
 
         # ── Load final GeoTIFF ────────────────────────────────────────────────
-        send_notification('Copernicus: loading result…', progress=0.92, notif_id=_NOTIF)
+        send_notification('Copernicus: loading result…', progress=0.92, notif_id=self._notif_id)
         try:
             with rasterio.open(final_path) as src:
                 band_arr = src.read().astype(np.float32)
@@ -506,7 +511,7 @@ class GeoCopernicusNode(NodeProcessor):
                     '_cache_path': final_path,
                 }
         except Exception as e:
-            send_notification(f'Copernicus: load error: {e}', level='error', notif_id=_NOTIF)
+            send_notification(f'Copernicus: load error: {e}', level='error', notif_id=self._notif_id)
             return
 
         # ── Build preview (RGB true color) ────────────────────────────────────
@@ -536,14 +541,28 @@ class GeoCopernicusNode(NodeProcessor):
         self._thumb_dirty = True
         send_notification(
             f'Copernicus: ready — {geo["count"]} bands, {geo["width"]}×{geo["height"]} px',
-            progress=1.0, notif_id=_NOTIF,
+            progress=1.0, notif_id=self._notif_id,
         )
         # Wake static-graph engine, bust cache for this node type, so process() delivers results
-        _notification_queue.put_nowait({'_wake_engine': True, '_node_type': 'geo_copernicus'})
+        _notification_queue.put_nowait({'_wake_engine': True, '_node_type': 'geo_copernicus', '_notif_id': self._notif_id})
+
+    @staticmethod
+    def _dl_params_key(params: dict) -> str:
+        keys = ('bbox', 'date_start', 'date_end', 'bands', 'collection', 'resolution', 'cloud_max', 'cache_dir')
+        s = json.dumps({k: params.get(k) for k in keys}, sort_keys=True)
+        return hashlib.md5(s.encode()).hexdigest()
 
     # ── process ───────────────────────────────────────────────────────────────
 
     def process(self, inputs: dict, params: dict) -> dict:
+        # Clear stale internal cache when download-relevant params change
+        # (e.g. user duplicated node then changed bbox/dates without clicking Fetch)
+        dl_key = self._dl_params_key(params)
+        if dl_key != self._prev_dl_key:
+            self._prev_dl_key = dl_key
+            self._cache_data  = None
+            self._auto_tried  = False
+
         fetch_val = params.get('fetch', 0)
         rising = fetch_val != self._prev_fetch and fetch_val not in (False, 0, None)
         self._prev_fetch = fetch_val

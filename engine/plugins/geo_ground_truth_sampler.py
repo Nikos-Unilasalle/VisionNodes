@@ -66,17 +66,24 @@ def _info_panel(lines, w=460, h=240, title=''):
     params=[
         {'id': 'csv_path',    'type': 'string', 'default': '',
          'label': 'CSV path (lat, lon, target)'},
-        {'id': 'lat_col',     'type': 'string', 'default': 'lat',     'label': 'Latitude column'},
-        {'id': 'lon_col',     'type': 'string', 'default': 'lon',     'label': 'Longitude column'},
-        {'id': 'target_col',  'type': 'string', 'default': 'label', 'label': 'Target column (NTU → sortira comme "label")'},
-        {'id': 'band_names',  'type': 'string', 'default': 'Bleu,Vert,Rouge,NIR',
+        {'id': 'lat_col',     'type': 'string', 'default': 'lat',   'label': 'Latitude column'},
+        {'id': 'lon_col',     'type': 'string', 'default': 'lon',   'label': 'Longitude column'},
+        {'id': 'target_col',  'type': 'string', 'default': 'label', 'label': 'Target column'},
+        {'id': 'band_names',  'type': 'string', 'default': 'Blue,Green,Red,NIR',
          'label': 'Band names (comma, in raster order)'},
+        {'id': 'image_date',  'type': 'string', 'default': '',
+         'label': 'Image date (YYYY-MM-DD) — filters in-situ data to ±window days'},
+        {'id': 'date_col',    'type': 'string', 'default': 'date',  'label': 'Date column in table'},
+        {'id': 'date_window', 'type': 'int',    'default': 30, 'min': 1, 'max': 365,
+         'label': 'Date window (± days around image date)'},
         {'id': 'target_min',  'type': 'float',  'default': 0.0,
          'min': -1e9, 'max': 1e9, 'label': 'Target min (filter)'},
         {'id': 'target_max',  'type': 'float',  'default': 500.0,
          'min': -1e9, 'max': 1e9, 'label': 'Target max (filter)'},
         {'id': 'mask_radius', 'type': 'int',    'default': 5, 'min': 1, 'max': 30,
          'label': 'Sample mask radius (px, viz only)'},
+        {'id': 'sample_window', 'type': 'int', 'default': 3, 'min': 1, 'max': 11,
+         'label': 'Sample window (px, odd; takes nanmean of valid pixels)'},
     ],
     resizable=True, min_width=320, min_height=200,
 )
@@ -132,15 +139,40 @@ class GroundTruthSamplerNode(NodeProcessor):
             except Exception as e:
                 send_notification(f'GT Sampler: CSV read error: {e}', level='error', notif_id=_NOTIF)
                 return {}
-        band_str  = str(params.get('band_names', 'Bleu,Vert,Rouge,NIR')).strip()
-        t_min     = float(params.get('target_min', 0.0))
-        t_max     = float(params.get('target_max', 500.0))
-        m_radius  = max(1, int(params.get('mask_radius', 5)))
+        band_str    = str(params.get('band_names', 'Blue,Green,Red,NIR')).strip()
+        image_date  = str(params.get('image_date', '')).strip()
+        date_col    = str(params.get('date_col', 'date')).strip()
+        date_window = max(1, int(params.get('date_window', 30)))
+        t_min       = float(params.get('target_min', 0.0))
+        t_max       = float(params.get('target_max', 500.0))
+        m_radius    = max(1, int(params.get('mask_radius', 5)))
+        sample_win  = max(1, int(params.get('sample_window', 3)))
+        if sample_win % 2 == 0:
+            sample_win += 1
 
         bands     = geo['bands']
         if bands.ndim == 2:
             bands = bands[np.newaxis]
         count, H, W = bands.shape
+
+        # Diagnostic: report raster-wide band stats — if all zero, problem is upstream (ACOLITE/Copernicus)
+        try:
+            raster_max = float(np.nanmax(bands))
+            raster_min = float(np.nanmin(bands))
+            raster_mean = float(np.nanmean(bands))
+            if raster_max == 0.0:
+                send_notification(
+                    f'GT Sampler: WARNING — entire raster is zero/NaN ({count} bands, {H}x{W}). '
+                    f'Check ACOLITE/Copernicus output. Bypass ACOLITE to test.',
+                    level='warning', notif_id=_NOTIF,
+                )
+            else:
+                send_notification(
+                    f'GT Sampler: raster stats — min={raster_min:.4f} max={raster_max:.4f} mean={raster_mean:.4f}',
+                    progress=0.18, notif_id=_NOTIF,
+                )
+        except Exception:
+            pass
         crs       = geo.get('crs')
         transform = geo.get('transform')
         if transform is None or crs is None:
@@ -159,6 +191,36 @@ class GroundTruthSamplerNode(NodeProcessor):
         # ── Filter target range
         df = df[(df[tgt_col] >= t_min) & (df[tgt_col] <= t_max)].copy()
         df = df.dropna(subset=[lat_col, lon_col, tgt_col])
+
+        # ── Date filter: keep only rows within ±date_window days of image_date
+        if image_date and date_col in df.columns:
+            try:
+                import datetime
+                img_dt = pd.to_datetime(image_date)
+                df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+                delta = (df[date_col] - img_dt).abs()
+                before = len(df)
+                df = df[delta <= pd.Timedelta(days=date_window)].copy()
+                send_notification(
+                    f'GT Sampler: date filter ±{date_window}d around {image_date} '
+                    f'→ {len(df)}/{before} rows kept',
+                    progress=0.25, notif_id=_NOTIF,
+                )
+                if len(df) == 0:
+                    send_notification(
+                        f'GT Sampler: 0 rows after date filter. '
+                        f'Try wider date_window or check image_date format (YYYY-MM-DD).',
+                        level='error', notif_id=_NOTIF,
+                    )
+                    return {}
+            except Exception as e:
+                send_notification(f'GT Sampler: date filter error: {e}', level='error', notif_id=_NOTIF)
+        elif image_date and date_col not in df.columns:
+            send_notification(
+                f'GT Sampler: image_date set but column "{date_col}" not found — skipping date filter. '
+                f'Available: {list(df.columns)[:6]}',
+                notif_id=_NOTIF,
+            )
 
         # ── Reproject lat/lon (WGS84) → raster CRS
         send_notification(f'GT Sampler: reprojecting → {crs}…', progress=0.35, notif_id=_NOTIF)
@@ -209,9 +271,27 @@ class GroundTruthSamplerNode(NodeProcessor):
         band_names = [n.strip() for n in band_str.split(',') if n.strip()]
         band_names = (band_names + [f'band_{i+1}' for i in range(len(band_names), count)])[:count]
 
-        sample_df = pd.DataFrame({'__px_idx': (rows * W + cols).astype(np.int32)})
+        sample_df = pd.DataFrame({'__px_idx': (rows.astype(np.int64) * W + cols).astype(np.int64)})
+
+        # Sample using a window around each station — nanmean of valid (>0, non-NaN) pixels.
+        # Narrow rivers at coarse resolutions often land 1-px station coords on the bank,
+        # so a small window picks up the actual water pixel nearby.
+        half = sample_win // 2
+        n_pts = len(rows)
         for i, name in enumerate(band_names):
-            sample_df[name] = bands[i, rows, cols].astype(np.float32)
+            if sample_win == 1:
+                sample_df[name] = bands[i, rows, cols].astype(np.float32)
+                continue
+            vals = np.full(n_pts, np.nan, dtype=np.float32)
+            for j in range(n_pts):
+                r0 = max(0, rows[j] - half); r1 = min(H, rows[j] + half + 1)
+                c0 = max(0, cols[j] - half); c1 = min(W, cols[j] + half + 1)
+                patch = bands[i, r0:r1, c0:c1]
+                # Treat 0 and NaN as invalid; mean of remaining
+                mask = np.isfinite(patch) & (patch > 0)
+                if mask.any():
+                    vals[j] = float(patch[mask].mean())
+            sample_df[name] = vals
         sample_df['label']     = df_in[tgt_col].to_numpy(dtype=np.float32)
         sample_df['lat']       = df_in[lat_col].to_numpy(dtype=np.float64)
         sample_df['lon']       = df_in[lon_col].to_numpy(dtype=np.float64)
@@ -242,6 +322,8 @@ class GroundTruthSamplerNode(NodeProcessor):
             f'max={sample_df["label"].max():.2f}',
             f'Bands: {", ".join(band_names)}',
         ]
+        if image_date:
+            lines.insert(1, f'Date filter: {image_date} ± {date_window}d')
         preview = _info_panel(lines, w=480, h=220, title='Ground Truth Sampler')
 
         send_notification(
