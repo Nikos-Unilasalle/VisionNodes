@@ -68,22 +68,23 @@
 
     {
       "id": "n-s1-2024",
-      "type": "geo_planetary_s1_rtc",
+      "type": "geo_copernicus",
       "position": { "x": 40, "y": 260 },
       "style": {},
       "data": {
         "params": {
-          "node_note": "**2024 S1 backscatter** — annual median (12 scenes max) over the Sinnamary union BBOX. Output: VV, VH + VV/VH ratio in dB.",
+          "node_note": "**2024 S1 backscatter** — annual median over the Sinnamary union BBOX. Output: VV, VH + VV/VH ratio in dB. Collection 5 = Sentinel-1 RTC (Planetary), STAC backend, no auth.",
           "bbox": "-53.30,4.40,-52.60,5.50",
+          "collection": 5,
           "date_start": "2024-01-01",
           "date_end": "2024-12-31",
-          "polarization": 0,
-          "orbit": 0,
-          "composite": 0,
           "resolution": 20,
-          "to_db": true,
-          "max_scenes": 30,
-          "cache_dir": "planetary_cache",
+          "stac_polarization": 0,
+          "stac_orbit": 0,
+          "stac_composite": 0,
+          "stac_to_db": true,
+          "stac_max_scenes": 30,
+          "cache_dir": "copernicus_cache",
           "fetch": 0
         }
       },
@@ -107,7 +108,7 @@
           "pri": false,
           "dpsvi": true,
           "output_db": true,
-          "cache_dir": "planetary_cache"
+          "cache_dir": "copernicus_cache"
         }
       },
       "width": 320,
@@ -116,18 +117,18 @@
 
     {
       "id": "n-wc-2021",
-      "type": "geo_planetary_lulc",
+      "type": "geo_copernicus",
       "position": { "x": 380, "y": 260 },
       "style": {},
       "data": {
         "params": {
-          "node_note": "**Ground truth** — ESA WorldCover 2021 (10 m). Use the explicit `Mangroves` class (95) as the binary label for mangrove extent training/validation.",
+          "node_note": "**Ground truth** — ESA WorldCover 2021 (10 m, collection 6). Use the explicit `Mangroves` class (95) as the binary label for mangrove extent training/validation.",
           "bbox": "-53.30,4.40,-52.60,5.50",
-          "collection": 0,
+          "collection": 6,
           "date_start": "2021-01-01",
           "date_end": "2021-12-31",
           "resolution": 20,
-          "cache_dir": "planetary_cache",
+          "cache_dir": "copernicus_cache",
           "fetch": 0
         }
       },
@@ -137,18 +138,18 @@
 
     {
       "id": "n-iolulc-2017",
-      "type": "geo_planetary_lulc",
+      "type": "geo_copernicus",
       "position": { "x": 380, "y": 500 },
       "style": {},
       "data": {
         "params": {
-          "node_note": "**t₀ baseline** — io-lulc 2017 (annual). Will be the reference grid for change detection.",
+          "node_note": "**t₀ baseline** — io-lulc Annual 2017 (collection 7). Reference grid for change detection.",
           "bbox": "-53.30,4.40,-52.60,5.50",
-          "collection": 1,
+          "collection": 7,
           "date_start": "2017-01-01",
           "date_end": "2017-12-31",
           "resolution": 20,
-          "cache_dir": "planetary_cache",
+          "cache_dir": "copernicus_cache",
           "fetch": 0
         }
       },
@@ -158,18 +159,18 @@
 
     {
       "id": "n-iolulc-2024",
-      "type": "geo_planetary_lulc",
+      "type": "geo_copernicus",
       "position": { "x": 380, "y": 740 },
       "style": {},
       "data": {
         "params": {
-          "node_note": "**t₁ latest** — io-lulc 2024 (annual). Will be reprojected onto t₀'s grid by the time-align node.",
+          "node_note": "**t₁ latest** — io-lulc Annual 2024 (collection 7). Reprojected onto t₀'s grid by the time-align node.",
           "bbox": "-53.30,4.40,-52.60,5.50",
-          "collection": 1,
+          "collection": 7,
           "date_start": "2024-01-01",
           "date_end": "2024-12-31",
           "resolution": 20,
-          "cache_dir": "planetary_cache",
+          "cache_dir": "copernicus_cache",
           "fetch": 0
         }
       },
@@ -188,7 +189,7 @@
           "resampling": 0,
           "change_threshold": 0.5,
           "preview_band": "lulc_class",
-          "cache_dir": "planetary_cache"
+          "cache_dir": "copernicus_cache"
         }
       },
       "width": 340,

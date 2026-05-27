@@ -24,17 +24,23 @@ References
 
 Input contract
 --------------
-A `geotiff` dict from `geo_planetary_s1_rtc` (or any compatible producer):
+A canonical `geotiff` dict from `geo_copernicus` (S1 RTC backend) or any
+compatible producer:
     {
-      'path':       str,
-      'array':      np.ndarray,    # (B, H, W) float32
+      'bands':      np.ndarray,    # (B, H, W) float32
       'band_names': list[str],     # must contain 'vv' and 'vh'
-      'meta':       dict,          # carries `to_db` flag
+      'transform':  Affine,
+      'crs':        str,
+      ...
     }
+
+The optional `to_db` flag is read from `_dates` / source tags via
+`meta.get('to_db')` when present; otherwise inferred from band magnitudes
+(values < 0 → already in dB, values > 0 small → linear).
 
 Output
 ------
-A new geotiff dict where `array` is stacked with the requested features.
+A new geotiff dict where `bands` is stacked with the requested features.
 """
 from __future__ import annotations
 import os
@@ -204,10 +210,14 @@ class S1PolarizationFeaturesNode(NodeProcessor):
             )}
 
         band_names = list(geo.get('band_names', []))
-        arr = geo.get('array')
+        # Accept either canonical `bands` (geo_copernicus) or legacy `array`.
+        arr = geo.get('bands')
+        if arr is None:
+            arr = geo.get('array')
         if arr is None:
             return {'preview': self._info_panel(
-                ['Input geotiff has no `array` field.'], title='error')}
+                ['Input geotiff has no `bands` (or `array`) field.'],
+                title='error')}
 
         if 'vv' not in band_names or 'vh' not in band_names:
             return {'preview': self._info_panel(
@@ -215,7 +225,15 @@ class S1PolarizationFeaturesNode(NodeProcessor):
                 title='S1 Pol Features — missing bands')}
 
         in_meta = geo.get('meta', {}) or {}
-        in_db = str(in_meta.get('to_db', 'False')).lower() == 'true'
+        # `to_db` flag may live in meta (legacy) or be inferred from values
+        in_db = str(in_meta.get('to_db', '')).lower() == 'true'
+        if 'to_db' not in in_meta:
+            # Infer: dB values are typically in [-40, 30], linear power < ~1
+            vv_idx = band_names.index('vv')
+            sample = arr[vv_idx]
+            sample = sample[np.isfinite(sample)]
+            if sample.size > 0:
+                in_db = float(np.percentile(sample, 5)) < 0
 
         vv_band = arr[band_names.index('vv')].astype(np.float32)
         vh_band = arr[band_names.index('vh')].astype(np.float32)
@@ -281,15 +299,19 @@ class S1PolarizationFeaturesNode(NodeProcessor):
         })
 
         self._sig = sig
+        # Build canonical geotiff dict (matches geo_copernicus output schema)
+        # so downstream nodes consume `bands` directly.
+        out_geo = dict(geo)  # carry over crs/transform/bounds/width/height
+        out_geo.update({
+            'bands':       final_arr,
+            'band_names':  final_names,
+            'count':       final_arr.shape[0],
+            'meta':        meta_out,
+            '_cache_path': out_path or geo.get('_cache_path') or geo.get('path'),
+            '_bands':      final_names,
+        })
         self._result = {
-            'geotiff': {
-                'path': out_path or geo.get('path'),
-                'array': final_arr,
-                'band_names': final_names,
-                'transform': geo.get('transform'),
-                'crs': geo.get('crs'),
-                'meta': meta_out,
-            },
+            'geotiff': out_geo,
             'preview': self._preview(feats),
             'meta': {
                 'source': 's1_polarization_features',

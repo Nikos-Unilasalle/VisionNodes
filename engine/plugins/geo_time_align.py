@@ -54,18 +54,25 @@ def _info_panel(lines: list[str], title: str = '') -> np.ndarray:
 
 
 def _open(geo: dict):
-    """Return (rasterio dataset, src_array, src_band_names)."""
+    """Return (rasterio dataset, src_array, src_band_names).
+
+    Accepts canonical geo_copernicus dict (`bands` + `_cache_path`) or legacy
+    plugin format (`array` + `path`).
+    """
     import rasterio
-    path = geo.get('path')
+    path = geo.get('_cache_path') or geo.get('path')
     if path and os.path.exists(path):
         ds = rasterio.open(path)
         names = geo.get('band_names') or [f'b{i}' for i in range(1, ds.count + 1)]
         return ds, ds.read(), names
     # No path: fabricate dataset from in-memory array.
-    arr = geo.get('array')
+    arr = geo.get('bands')
     if arr is None:
-        raise ValueError('geotiff missing both path and array')
-    return None, np.asarray(arr), geo.get('band_names', [f'b{i}' for i in range(arr.shape[0])])
+        arr = geo.get('array')
+    if arr is None:
+        raise ValueError('geotiff missing both path/_cache_path and bands/array')
+    arr = np.asarray(arr)
+    return None, arr, geo.get('band_names', [f'b{i}' for i in range(arr.shape[0])])
 
 
 def _stretch(arr: np.ndarray) -> np.ndarray:
@@ -269,8 +276,8 @@ class GeoTimeAlignNode(NodeProcessor):
 
             meta = {
                 'source':       'geo_time_align',
-                't0_path':      t0.get('path'),
-                't1_path':      t1.get('path'),
+                't0_path':      t0.get('_cache_path') or t0.get('path'),
+                't1_path':      t1.get('_cache_path') or t1.get('path'),
                 'common_bands': common,
                 'resampling':   resamp_name,
                 'change_threshold': thr,
@@ -279,14 +286,22 @@ class GeoTimeAlignNode(NodeProcessor):
                 'diff_path':    diff_path,
             }
 
-            geotiff_aligned = {
-                'path': aligned_path, 'array': aligned_t1,
-                'band_names': common, 'meta': meta,
-            }
-            geotiff_diff = {
-                'path': diff_path, 'array': diff,
-                'band_names': [f'{n}_diff' for n in common], 'meta': meta,
-            }
+            # Build canonical geo_copernicus-compatible geotiff dicts so they
+            # chain cleanly into ml_*, geo_band_calc, geo_ground_truth_sampler.
+            def _geo(arr: np.ndarray, names: list[str], path: str) -> dict:
+                base = dict(t0)
+                base.update({
+                    'bands':       arr.astype(np.float32),
+                    'band_names':  names,
+                    'count':       arr.shape[0],
+                    '_cache_path': path,
+                    '_bands':      names,
+                    'meta':        meta,
+                })
+                return base
+
+            geotiff_aligned = _geo(aligned_t1, common, aligned_path)
+            geotiff_diff    = _geo(diff, [f'{n}_diff' for n in common], diff_path)
 
             self._sig = sig
             self._result = {
