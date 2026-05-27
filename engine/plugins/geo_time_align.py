@@ -13,10 +13,11 @@ Takes two GeoTIFFs (t0 = reference, t1 = later) covering overlapping areas
 Outputs are standard `geotiff` dicts so the downstream pipeline
 (ml_*, geo_band_calc, geo_geotiff_writer) works unchanged.
 
-Typical use cases for Phase 1 (Guyane):
-  - LULC class changes 2018 → 2024 (categorical diff)
-  - S1 backscatter shift between monthly composites (forest loss alerts)
-  - Mangrove-front migration (binary mask diff against GMW v3 baseline)
+Typical use cases:
+  - LULC class change between two years (categorical diff)
+  - SAR backscatter shift between monthly composites (forest loss, flooding)
+  - Vegetation index drop between seasons (drought, fire, harvest)
+  - Coastal-line migration (water mask diff)
 """
 from __future__ import annotations
 import os
@@ -86,9 +87,9 @@ def _stretch(arr: np.ndarray) -> np.ndarray:
     icon='Diff',
     description=(
         "Align two GeoTIFFs of the same area at different dates (t0 = reference, "
-        "t1 = later). Reprojects t1 onto t0's grid, computes per-band differences "
-        "and a binary change-mask. Outputs standard geotiff dicts. Use with the "
-        "LULC, S1-RTC, or Copernicus nodes for multi-year change detection."
+        "t1 = later) with possibly different CRS/resolution/extent. Reprojects t1 "
+        "onto t0's grid, computes per-band differences and a binary change-mask. "
+        "Generic primitive — works with LULC, SAR, optical, vegetation indices."
     ),
     inputs=[
         {'id': 't0_geotiff', 'color': 'geotiff', 'label': 't₀ (reference)'},

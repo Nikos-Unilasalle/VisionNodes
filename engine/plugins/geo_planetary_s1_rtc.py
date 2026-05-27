@@ -4,13 +4,15 @@ from Microsoft Planetary Computer STAC API.
 
 Why this node exists
 --------------------
-For cloud-prone regions (French Guiana, equatorial Africa, monsoon Asia), Sentinel-2
-optical scenes are scarce. Sentinel-1 SAR penetrates clouds and sees both water
-surface (smooth → dark) and flooded vegetation (double-bounce → very bright),
-making it essential for wetland / mangrove / flood mapping.
+For any cloud-prone region (equatorial forests, monsoon basins, polar winter),
+Sentinel-2 optical scenes are scarce. Sentinel-1 SAR penetrates clouds and
+sees both water surface (smooth → dark) and flooded vegetation (double-bounce →
+very bright), so it complements optical for wetland, flood, soil-moisture and
+deforestation mapping.
 
 The RTC collection on Microsoft Planetary Computer ships SAR scenes already
 preprocessed:
+
   - calibrated to sigma-0 (or gamma-0) linear power
   - orthorectified using a global DEM
   - radiometric terrain corrected to remove topographic distortion
@@ -18,6 +20,10 @@ preprocessed:
 
 This means we can skip the heavy ESA SNAP preprocessing chain and directly
 read windowed COGs into rasterio. No authentication required.
+
+Inputs / outputs are domain-agnostic: pass any valid BBOX and date range. The
+node returns a multi-band GeoTIFF compatible with the rest of the geo_*
+pipeline (band_calc, ndwi_mask, ground_truth_sampler, ml_*).
 
 Outputs
 -------
@@ -225,9 +231,9 @@ def _composite(stack: list[np.ndarray], method: str) -> np.ndarray:
     icon='Radio',
     description=(
         "Fetch Sentinel-1 RTC (Radiometric Terrain Corrected) SAR backscatter from "
-        "Microsoft Planetary Computer. No authentication required. Returns calibrated "
-        "VV/VH bands as a multi-band GeoTIFF — ideal for cloud-prone regions where "
-        "Sentinel-2 alone is insufficient (wetlands, mangroves, equatorial forests)."
+        "Microsoft Planetary Computer (no authentication). Returns calibrated VV/VH "
+        "bands as a multi-band GeoTIFF. Complements Sentinel-2 in cloud-prone or "
+        "night/winter scenes, and detects flooded vegetation via double-bounce."
     ),
     inputs=[],
     outputs=[
@@ -236,10 +242,10 @@ def _composite(stack: list[np.ndarray], method: str) -> np.ndarray:
         {'id': 'meta',    'color': 'dict',    'label': 'Meta'},
     ],
     params=[
-        {'id': 'bbox',          'type': 'string', 'default': '-53.30,4.40,-52.60,5.50',
+        {'id': 'bbox',          'type': 'string', 'default': '',
          'label': 'BBOX (lon_min,lat_min,lon_max,lat_max)'},
-        {'id': 'date_start',    'type': 'string', 'default': '2023-01-01', 'label': 'Start Date'},
-        {'id': 'date_end',      'type': 'string', 'default': '2023-12-31', 'label': 'End Date'},
+        {'id': 'date_start',    'type': 'string', 'default': '2024-01-01', 'label': 'Start Date'},
+        {'id': 'date_end',      'type': 'string', 'default': '2024-12-31', 'label': 'End Date'},
         {'id': 'polarization',  'type': 'enum',   'options': ['Both', 'VV', 'VH'],
          'default': 0, 'label': 'Polarization'},
         {'id': 'orbit',         'type': 'enum',   'options': ['Any', 'Ascending', 'Descending'],
