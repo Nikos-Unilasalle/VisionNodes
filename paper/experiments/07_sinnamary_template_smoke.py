@@ -19,9 +19,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "engine"))
 
-import plugins.geo_planetary_s1_rtc        as s1_mod
+import time
+import plugins.geo_copernicus              as gc_mod
 import plugins.s1_polarization_features    as pf_mod
-import plugins.geo_planetary_lulc          as lc_mod
 import plugins.geo_time_align              as ta_mod
 
 OUT = ROOT / "paper" / "experiments" / "out" / "sinnamary_panels"
@@ -35,19 +35,30 @@ def step(name: str):
     print(f"\n── {name} ──", flush=True)
 
 
+def _wait_async(node, params, max_wait_s: int = 600):
+    """geo_copernicus uses a background fetch thread — poll until result ready."""
+    node.process({}, params)
+    for _ in range(max_wait_s // 2):
+        time.sleep(2)
+        out = node.process({}, params)
+        if out.get("geotiff") is not None:
+            return out
+    return out
+
+
 def main():
-    # 1. S1 RTC 2024 — annual median
-    step("S1 RTC 2024")
-    s1 = s1_mod.GeoPlanetaryS1RTCNode()
-    s1_out = s1.process({}, {
-        "bbox": BBOX,
+    # 1. S1 RTC 2024 — annual median via geo_copernicus STAC backend (collection 5)
+    step("S1 RTC 2024  (geo_copernicus, collection 5)")
+    s1_node = gc_mod.GeoCopernicusNode()
+    s1_out = _wait_async(s1_node, {
+        "bbox": BBOX, "collection": 5,
         "date_start": "2024-01-01", "date_end": "2024-12-31",
-        "polarization": 0, "orbit": 0, "composite": 0,
-        "resolution": RES, "to_db": True, "max_scenes": 12,
-        "cache_dir": "planetary_cache", "fetch": 1,
+        "resolution": RES, "stac_polarization": 0, "stac_orbit": 0,
+        "stac_composite": 0, "stac_to_db": True, "stac_max_scenes": 12,
+        "cache_dir": "copernicus_cache", "fetch": 1,
     })
     print("  bands:", s1_out["geotiff"]["band_names"])
-    print("  shape:", s1_out["geotiff"]["array"].shape)
+    print("  shape:", s1_out["geotiff"]["bands"].shape)
 
     # 2. S1 polarization features
     step("S1 Polarization Features")
@@ -55,44 +66,56 @@ def main():
     pf_out = pf.process({"geotiff": s1_out["geotiff"]}, {
         "rvi": True, "span": True, "span_db": True,
         "nrpb": True, "pdi": True, "pri": False, "dpsvi": True,
-        "output_db": True, "cache_dir": "planetary_cache",
+        "output_db": True, "cache_dir": "copernicus_cache",
     })
     print("  bands:", pf_out["geotiff"]["band_names"])
     cv2.imwrite(str(OUT / "panel_1_s1_pol_rgb.png"), pf_out["preview"])
 
-    # 3. ESA WorldCover 2021 (ground truth)
-    step("ESA WorldCover 2021")
-    wc = lc_mod.GeoPlanetaryLULCNode()
-    wc_out = wc.process({}, {
-        "bbox": BBOX, "collection": 0,
+    def _lulc_summary(out: dict) -> dict:
+        """Compute per-class share for a LULC output."""
+        arr = out["geotiff"]["bands"][0].astype(np.int32)
+        vals, counts = np.unique(arr, return_counts=True)
+        total = arr.size
+        return {int(v): round(100.0 * c / total, 3) for v, c in zip(vals, counts)}
+
+    # 3. ESA WorldCover 2021 (ground truth) — geo_copernicus collection 6
+    step("ESA WorldCover 2021  (geo_copernicus, collection 6)")
+    wc_node = gc_mod.GeoCopernicusNode()
+    wc_out = _wait_async(wc_node, {
+        "bbox": BBOX, "collection": 6,
         "date_start": "2021-01-01", "date_end": "2021-12-31",
-        "resolution": RES, "cache_dir": "planetary_cache", "fetch": 1,
+        "resolution": RES, "stac_polarization": 0, "stac_orbit": 0,
+        "stac_composite": 0, "stac_to_db": True, "stac_max_scenes": 5,
+        "cache_dir": "copernicus_cache", "fetch": 1,
     })
-    classes = wc_out["meta"]["classes_present"]
-    print("  Mangroves %:", classes.get("Mangroves", 0.0))
-    print("  classes_present:", classes)
+    wc_shares = _lulc_summary(wc_out)
+    print("  Mangroves (class 95) %:", wc_shares.get(95, 0.0))
+    print("  classes_present:", wc_shares)
     cv2.imwrite(str(OUT / "panel_2_esa_wc_2021.png"), wc_out["preview"])
-    cv2.imwrite(str(OUT / "panel_2_esa_wc_2021_legend.png"), wc_out["legend"])
 
-    # 4. io-lulc 2017
-    step("io-lulc 2017 (t₀)")
-    lc17 = lc_mod.GeoPlanetaryLULCNode()
-    lc17_out = lc17.process({}, {
-        "bbox": BBOX, "collection": 1,
+    # 4. io-lulc 2017 — collection 7
+    step("io-lulc 2017 (t₀)  (geo_copernicus, collection 7)")
+    lc17_node = gc_mod.GeoCopernicusNode()
+    lc17_out = _wait_async(lc17_node, {
+        "bbox": BBOX, "collection": 7,
         "date_start": "2017-01-01", "date_end": "2017-12-31",
-        "resolution": RES, "cache_dir": "planetary_cache", "fetch": 1,
+        "resolution": RES, "stac_polarization": 0, "stac_orbit": 0,
+        "stac_composite": 0, "stac_to_db": True, "stac_max_scenes": 5,
+        "cache_dir": "copernicus_cache", "fetch": 1,
     })
-    print("  classes_present:", lc17_out["meta"]["classes_present"])
+    print("  classes_present:", _lulc_summary(lc17_out))
 
-    # 5. io-lulc 2024
-    step("io-lulc 2024 (t₁)")
-    lc24 = lc_mod.GeoPlanetaryLULCNode()
-    lc24_out = lc24.process({}, {
-        "bbox": BBOX, "collection": 1,
+    # 5. io-lulc 2024 — collection 7
+    step("io-lulc 2024 (t₁)  (geo_copernicus, collection 7)")
+    lc24_node = gc_mod.GeoCopernicusNode()
+    lc24_out = _wait_async(lc24_node, {
+        "bbox": BBOX, "collection": 7,
         "date_start": "2024-01-01", "date_end": "2024-12-31",
-        "resolution": RES, "cache_dir": "planetary_cache", "fetch": 1,
+        "resolution": RES, "stac_polarization": 0, "stac_orbit": 0,
+        "stac_composite": 0, "stac_to_db": True, "stac_max_scenes": 5,
+        "cache_dir": "copernicus_cache", "fetch": 1,
     })
-    print("  classes_present:", lc24_out["meta"]["classes_present"])
+    print("  classes_present:", _lulc_summary(lc24_out))
     cv2.imwrite(str(OUT / "panel_3_iolulc_2024.png"), lc24_out["preview"])
 
     # 6. Time-align change detection
@@ -105,7 +128,7 @@ def main():
         "resampling": 0,        # nearest (categorical)
         "change_threshold": 0.5,
         "preview_band": "lulc_class",
-        "cache_dir": "planetary_cache",
+        "cache_dir": "copernicus_cache",
     })
     print("  change_pct:", ch_out["meta"]["change_pct"], "%")
     cv2.imwrite(str(OUT / "panel_4_change_2017_2024.png"), ch_out["preview"])
@@ -128,7 +151,7 @@ def main():
     panel_size = (480, 640)
     titles = [
         ("S1 Pol RGB (RVI / NRPB / PDI)", pf_out["preview"]),
-        (f"ESA WC 2021  Mangroves={classes.get('Mangroves', 0):.2f}%",
+        (f"ESA WC 2021  Mangroves={wc_shares.get(95, 0):.2f}%",
          wc_out["preview"]),
         ("io-lulc 2024", lc24_out["preview"]),
         (f"Change 2017→2024  pct={ch_out['meta']['change_pct']:.2f}%",

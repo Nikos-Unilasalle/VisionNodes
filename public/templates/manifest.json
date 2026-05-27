@@ -141,7 +141,7 @@
   },
   {
     "name": "Sinnamary Mangrove Dynamics (Guyane Phase 1)",
-    "description": "Maps mangrove extent and multi-year change along the Sinnamary coast, French Guiana, using Sentinel-1 SAR + LULC fusion from Microsoft Planetary Computer (no auth). Demonstrates the new Phase 1 nodes: geo_planetary_s1_rtc, s1_polarization_features, geo_planetary_lulc, geo_time_align. Outputs a 4-panel result: S1 polarization RGB, ESA WorldCover 2021 mangrove ground truth, io-lulc 2024 land cover, change mask 2017→2024.",
+    "description": "Maps mangrove extent and multi-year change along the Sinnamary coast, French Guiana, using Sentinel-1 SAR + LULC fusion from Microsoft Planetary Computer (no auth). Demonstrates the Phase 1 nodes — geo_copernicus (STAC backend collections: Sentinel-1 RTC, ESA WorldCover, io-lulc Annual), s1_polarization_features, geo_time_align. Outputs a 4-panel result: S1 polarization RGB, ESA WorldCover 2021 mangrove ground truth, io-lulc 2024 land cover, change mask 2017→2024.",
     "file": "Guyane Phase 1/sinnamary_mangrove_dynamics.vn"
   }
 ]
