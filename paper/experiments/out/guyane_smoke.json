@@ -1,0 +1,137 @@
+{
+  "timestamp": "2026-05-27 14:40:16",
+  "bbox": {
+    "coast": [
+      -53.1,
+      5.1,
+      -52.5,
+      5.4
+    ],
+    "upstream": [
+      -53.3,
+      4.5,
+      -52.5,
+      5.3
+    ],
+    "all": [
+      -53.3,
+      4.5,
+      -52.5,
+      5.4
+    ]
+  },
+  "date_range": "2023-01-01/2023-12-31",
+  "checks": {
+    "s1_rtc_planetary": {
+      "ok": true,
+      "n_items": 171,
+      "first_date": "2023-12-27 09:13:15.046189+00:00",
+      "assets": [
+        "vh",
+        "vv",
+        "tilejson",
+        "rendered_preview"
+      ],
+      "polarizations": [
+        "vh",
+        "vv"
+      ]
+    },
+    "s2_l2a_planetary": {
+      "ok": true,
+      "n_items_lt30pct_cloud": 284,
+      "n_items_lt10pct_cloud": 80,
+      "first_date": "2023-12-25 14:07:01.024000+00:00"
+    },
+    "planetary_lulc_collections": {
+      "ok": true,
+      "candidates": [
+        "io-lulc-annual-v02",
+        "io-lulc",
+        "drcog-lulc",
+        "esa-cci-lc",
+        "esa-cci-lc-netcdf",
+        "io-lulc-9-class",
+        "esa-worldcover"
+      ]
+    },
+    "global_mangrove_watch": {
+      "ok": true,
+      "tested": [
+        {
+          "url": "https://zenodo.org/records/6894273",
+          "status": 200
+        },
+        {
+          "url": "https://data.unep-wcmc.org/datasets/45",
+          "error": "HTTPSConnectionPool(host='data.unep-wcmc.org', port=443): Max retries exceeded with url: /datasets/45 (Caused by SSLErro"
+        }
+      ]
+    },
+    "naiades_stations": {
+      "ok": true,
+      "n_stations": 36,
+      "sample": [
+        {
+          "code": "09110503",
+          "name": "Crique Petit",
+          "lat": 590087.0,
+          "lon": 267058.0
+        },
+        {
+          "code": "09110984",
+          "name": "Crique Eau Claire",
+          "lat": 569230.0,
+          "lon": 292548.0
+        },
+        {
+          "code": "09120711",
+          "name": "Crique Piste Saint Elie",
+          "lat": 581496.0,
+          "lon": 272188.0
+        },
+        {
+          "code": "09121003",
+          "name": "Crique Humus",
+          "lat": 543873.0,
+          "lon": 328464.0
+        },
+        {
+          "code": "09128002",
+          "name": "Crique Paracou",
+          "lat": 584704.0,
+          "lon": 288648.0
+        }
+      ]
+    },
+    "naiades_turbidity": {
+      "ok": true,
+      "n_rows": 313,
+      "n_stations": 16,
+      "years": [
+        "2018",
+        "2019",
+        "2020",
+        "2021",
+        "2022",
+        "2023",
+        "2024"
+      ],
+      "value_min": 0.17,
+      "value_max": 374.33
+    },
+    "mapbiomas_amazonia": {
+      "ok": true,
+      "tested": [
+        {
+          "url": "https://amazonia.mapbiomas.org/",
+          "status": 200
+        },
+        {
+          "url": "https://storage.googleapis.com/mapbiomas-public/initiatives/amazonia/collection5/",
+          "status": 404
+        }
+      ]
+    }
+  }
+}
