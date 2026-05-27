@@ -1,0 +1,295 @@
+{
+  "nodes": [
+    {
+      "id": "note-header",
+      "type": "canvas_note",
+      "position": { "x": 20, "y": -180 },
+      "data": {
+        "label": "Sinnamary Mangrove Dynamics — Phase 1",
+        "params": {
+          "text": "# Sinnamary Mangrove Dynamics — Phase 1\n\n**Goal:** Map mangrove extent and multi-year change along the Sinnamary coast (French Guiana) using **Sentinel-1 SAR + LULC fusion** — no atmospheric correction blockers, all sources free, no authentication required.\n\n**AOI:** lon [-53.30, -52.60], lat [4.40, 5.50] (~9 500 km², mangrove coast + Sinnamary watershed)\n\n## Pipeline\n🟦 **Data acquisition (left)** : Sentinel-1 RTC backscatter (Microsoft Planetary Computer, no auth) → 7 derived polarization features. ESA WorldCover 2021 (explicit `Mangroves` class = ground truth). io-lulc-annual-v02 for 2017 and 2024 (annual change basis).\n\n🟧 **Change detection (right)** : geo_time_align reprojects 2024 LULC onto 2017's grid and computes per-pixel class change + change mask.\n\n## Expected outputs\n- S1 polarization-feature preview (R=RVI, G=NRPB, B=PDI)\n- ESA WorldCover 2021 mangrove map\n- io-lulc 2024 land cover\n- Change mask 2017→2024 (mangrove expansion + forest loss)\n\n## Next phase\nTemplate #16 couples upstream orpaillage (io-lulc Bare ground) with downstream Sinnamary turbidity (Naïades stations).",
+          "width": 1340,
+          "height": 320,
+          "fontSize": 13,
+          "color_index": 4
+        }
+      },
+      "width": 1340,
+      "height": 320
+    },
+
+    {
+      "id": "frame-data",
+      "type": "canvas_frame",
+      "position": { "x": 20, "y": 180 },
+      "style": { "width": 700, "height": 880, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 2,
+          "title": "1 · Data acquisition (Planetary Computer, no auth)"
+        }
+      },
+      "width": 700,
+      "height": 880
+    },
+
+    {
+      "id": "frame-change",
+      "type": "canvas_frame",
+      "position": { "x": 760, "y": 180 },
+      "style": { "width": 660, "height": 880, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 6,
+          "title": "2 · Change detection 2017 → 2024"
+        }
+      },
+      "width": 660,
+      "height": 880
+    },
+
+    {
+      "id": "frame-out",
+      "type": "canvas_frame",
+      "position": { "x": 20, "y": 1100 },
+      "style": { "width": 1400, "height": 380, "zIndex": -1 },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 5,
+          "title": "3 · Visualisation"
+        }
+      },
+      "width": 1400,
+      "height": 380
+    },
+
+    {
+      "id": "n-s1-2024",
+      "type": "geo_planetary_s1_rtc",
+      "position": { "x": 40, "y": 260 },
+      "style": {},
+      "data": {
+        "label": "S1 RTC — 2024 (annual median)",
+        "params": {
+          "bbox": "-53.30,4.40,-52.60,5.50",
+          "date_start": "2024-01-01",
+          "date_end": "2024-12-31",
+          "polarization": 0,
+          "orbit": 0,
+          "composite": 0,
+          "resolution": 20,
+          "to_db": true,
+          "max_scenes": 30,
+          "cache_dir": "planetary_cache",
+          "fetch": 0
+        }
+      },
+      "width": 320,
+      "height": 260
+    },
+
+    {
+      "id": "n-s1-pol",
+      "type": "s1_polarization_features",
+      "position": { "x": 40, "y": 560 },
+      "style": {},
+      "data": {
+        "label": "S1 Pol Features (RVI, NRPB, PDI, Span)",
+        "params": {
+          "rvi": true,
+          "span": true,
+          "span_db": true,
+          "nrpb": true,
+          "pdi": true,
+          "pri": false,
+          "dpsvi": true,
+          "output_db": true,
+          "cache_dir": "planetary_cache"
+        }
+      },
+      "width": 320,
+      "height": 240
+    },
+
+    {
+      "id": "n-wc-2021",
+      "type": "geo_planetary_lulc",
+      "position": { "x": 380, "y": 260 },
+      "style": {},
+      "data": {
+        "label": "ESA WorldCover 2021 (ground truth)",
+        "params": {
+          "bbox": "-53.30,4.40,-52.60,5.50",
+          "collection": 0,
+          "date_start": "2021-01-01",
+          "date_end": "2021-12-31",
+          "resolution": 20,
+          "cache_dir": "planetary_cache",
+          "fetch": 0
+        }
+      },
+      "width": 320,
+      "height": 200
+    },
+
+    {
+      "id": "n-iolulc-2017",
+      "type": "geo_planetary_lulc",
+      "position": { "x": 380, "y": 500 },
+      "style": {},
+      "data": {
+        "label": "io-lulc 2017 (t₀)",
+        "params": {
+          "bbox": "-53.30,4.40,-52.60,5.50",
+          "collection": 1,
+          "date_start": "2017-01-01",
+          "date_end": "2017-12-31",
+          "resolution": 20,
+          "cache_dir": "planetary_cache",
+          "fetch": 0
+        }
+      },
+      "width": 320,
+      "height": 200
+    },
+
+    {
+      "id": "n-iolulc-2024",
+      "type": "geo_planetary_lulc",
+      "position": { "x": 380, "y": 740 },
+      "style": {},
+      "data": {
+        "label": "io-lulc 2024 (t₁)",
+        "params": {
+          "bbox": "-53.30,4.40,-52.60,5.50",
+          "collection": 1,
+          "date_start": "2024-01-01",
+          "date_end": "2024-12-31",
+          "resolution": 20,
+          "cache_dir": "planetary_cache",
+          "fetch": 0
+        }
+      },
+      "width": 320,
+      "height": 200
+    },
+
+    {
+      "id": "n-time-align",
+      "type": "geo_time_align",
+      "position": { "x": 780, "y": 620 },
+      "style": {},
+      "data": {
+        "label": "LULC Change 2017 → 2024",
+        "params": {
+          "resampling": 0,
+          "change_threshold": 0.5,
+          "preview_band": "lulc_class",
+          "cache_dir": "planetary_cache"
+        }
+      },
+      "width": 340,
+      "height": 240
+    },
+
+    {
+      "id": "note-narrative",
+      "type": "canvas_note",
+      "position": { "x": 780, "y": 280 },
+      "data": {
+        "label": "Method notes",
+        "params": {
+          "text": "## What this branch shows\n\n`geo_time_align` reprojects **io-lulc 2024** onto **io-lulc 2017**'s grid (nearest-neighbor for categorical), then computes per-pixel diff and a binary change mask.\n\n**Expected signal on Sinnamary union (smoke-tested):**\n- 2.75% of pixels changed class over 7 yr\n- Flooded vegetation: +1.1% (mangrove + estuarine wetland expansion)\n- Trees: −0.7% (forest loss, possibly orpaillage downstream)\n- Built area: +0.02% (Sinnamary + Kourou urban growth)\n\n## Paper claim addressed\nClaim #3 of `guyane_lit_notes.md` — **GMW v3 extension 2021 → 2024** using an io-lulc-trained signal, validated against ESA WorldCover 2021 (left branch).",
+          "width": 320,
+          "height": 300,
+          "fontSize": 11,
+          "color_index": 6
+        }
+      },
+      "width": 320,
+      "height": 300
+    },
+
+    {
+      "id": "n-display",
+      "type": "output_display",
+      "position": { "x": 460, "y": 1180 },
+      "style": {},
+      "data": {
+        "label": "Results — Sinnamary mangrove dynamics",
+        "params": {},
+        "ports": [
+          { "id": "image__0_polrgb", "color": "image", "label": "S1 Pol RGB" },
+          { "id": "image__1_wc2021", "color": "image", "label": "ESA WC 2021" },
+          { "id": "image__2_lulc24", "color": "image", "label": "io-lulc 2024" },
+          { "id": "image__3_change", "color": "image", "label": "Change 17→24" }
+        ],
+        "minified": false
+      },
+      "width": 520,
+      "height": 240
+    }
+  ],
+
+  "edges": [
+    {
+      "id": "e-s1-pol",
+      "source": "n-s1-2024",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-s1-pol",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-2017-time",
+      "source": "n-iolulc-2017",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-time-align",
+      "targetHandle": "geotiff__t0_geotiff"
+    },
+    {
+      "id": "e-2024-time",
+      "source": "n-iolulc-2024",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-time-align",
+      "targetHandle": "geotiff__t1_geotiff"
+    },
+    {
+      "id": "e-disp-pol",
+      "source": "n-s1-pol",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__0_polrgb"
+    },
+    {
+      "id": "e-disp-wc",
+      "source": "n-wc-2021",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__1_wc2021"
+    },
+    {
+      "id": "e-disp-lulc24",
+      "source": "n-iolulc-2024",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__2_lulc24"
+    },
+    {
+      "id": "e-disp-change",
+      "source": "n-time-align",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__3_change"
+    }
+  ],
+
+  "ui": {
+    "previewSize": { "w": 920, "h": 460 },
+    "previewPos": { "x": 460, "y": 1180 },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "n-display"
+  }
+}

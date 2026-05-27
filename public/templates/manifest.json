@@ -138,5 +138,10 @@
     "name": "Reaction Diffusion (Gray-Scott)",
     "description": "Two parallel pipelines: a modular generic implementation using Canvas, Feedback, and Python nodes for dU/dt and dV/dt equations; and a simplified all-in-one Gray-Scott node with coral preset for direct experimentation.",
     "file": "reaction_diffusion.vn"
+  },
+  {
+    "name": "Sinnamary Mangrove Dynamics (Guyane Phase 1)",
+    "description": "Maps mangrove extent and multi-year change along the Sinnamary coast, French Guiana, using Sentinel-1 SAR + LULC fusion from Microsoft Planetary Computer (no auth). Demonstrates the new Phase 1 nodes: geo_planetary_s1_rtc, s1_polarization_features, geo_planetary_lulc, geo_time_align. Outputs a 4-panel result: S1 polarization RGB, ESA WorldCover 2021 mangrove ground truth, io-lulc 2024 land cover, change mask 2017→2024.",
+    "file": "Guyane Phase 1/sinnamary_mangrove_dynamics.vn"
   }
 ]
