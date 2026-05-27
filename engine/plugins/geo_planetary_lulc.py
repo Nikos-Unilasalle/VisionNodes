@@ -6,17 +6,22 @@ Two collections, complementary:
 
   - **esa-worldcover**       2020 + 2021. Single global model, 11 classes
                              INCLUDING explicit `Mangroves` (95) and
-                             `Herbaceous wetland` (90). Best ground truth
-                             for mangrove extent at 10 m.
+                             `Herbaceous wetland` (90). Best for mangrove
+                             or wetland ground truth at 10 m.
 
   - **io-lulc-annual-v02**   Impact Observatory / Esri, 2017–2024 annual.
                              11 classes including `Flooded vegetation` (4),
-                             `Water` (1), `Built area` (7), `Bare ground` (8).
-                             Best for *change detection* and *orpaillage*
-                             (forest → bare ground inside Amazon).
+                             `Water` (1), `Built area` (7), `Bare ground` (8),
+                             `Trees` (2), `Rangeland` (11). Annual cadence
+                             makes it the right baseline for change detection
+                             (urban growth, forest loss, mining, agriculture
+                             expansion).
 
 The node fetches a single representative year (latest scene within the date
 range) and returns a categorical raster + per-class colormap legend.
+
+Inputs / outputs are domain-agnostic: pass any BBOX. Output GeoTIFF chains
+straight into geo_time_align, ml_ensemble_apply, geo_band_calc, etc.
 """
 from __future__ import annotations
 import os
@@ -145,10 +150,10 @@ def _colorize(class_raster: np.ndarray,
     icon='Map',
     description=(
         "Annual land-use/land-cover from Microsoft Planetary Computer (no auth). "
-        "ESA WorldCover (10 m, 2020-2021) is the best choice for mangrove + "
-        "wetland ground truth — it has an explicit `Mangroves` class. "
-        "io-lulc-annual-v02 (10 m, 2017-2024) is better for change detection: "
-        "track `Bare ground` inside forested zones to detect orpaillage."
+        "ESA WorldCover (10 m, 2020-2021): single global model with explicit "
+        "`Mangroves` and `Herbaceous wetland` classes — strong ground truth. "
+        "io-lulc-annual-v02 (10 m, 2017-2024 annual): right baseline for change "
+        "detection (forest loss, urban growth, agricultural expansion)."
     ),
     inputs=[],
     outputs=[
@@ -158,7 +163,7 @@ def _colorize(class_raster: np.ndarray,
         {'id': 'meta',    'color': 'dict',    'label': 'Meta'},
     ],
     params=[
-        {'id': 'bbox',          'type': 'string', 'default': '-53.30,4.40,-52.60,5.50',
+        {'id': 'bbox',          'type': 'string', 'default': '',
          'label': 'BBOX (lon_min,lat_min,lon_max,lat_max)'},
         {'id': 'collection',    'type': 'enum',
          'options': list(COLLECTION_DEFS.keys()), 'default': 0, 'label': 'Collection'},
