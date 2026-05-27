@@ -385,6 +385,7 @@ A common failure mode in remote-sensing experimentation is undocumented preproce
     \item The $\pm\SI{30}{\day}$ temporal window is generous. Tightening to $\pm\SI{7}{\day}$ drops training to $\approx 100$ matchups but removes seasonal aliasing.
     \item GP \emph{best-of-ensemble} reporting hides multimodality: more than one expression family typically reaches near-equivalent test RMSE. Reporting only one obscures this.
     \item Cross-validated R$^2$ remains modest even for the best (tree-based) model ($\approx 0.23$ with $\sigma_{R^2} \approx 0.20$ across folds). Predictions saturate well below the upper observed range (240\,NTU), reflecting the imbalance in the in-situ pool rather than a model-class limit.
+    \item A larger GP configuration (population 5\,000, 300 generations, 30 seeds, KDE-based continuous sample weighting, station-level \texttt{GroupKFold}) was designed to address the above failures. After one fold of ten, the run projected a wall-clock time of $\approx$\,108\,h on a single laptop CPU. The partial result (2 folds, R$^2 = 0.07$ and $-1.71$) showed no improvement over the baseline GP configurations in Table~\ref{tab:modelcompare}, confirming that the bottleneck is atmospheric correction quality and matchup-pool size rather than training budget.
 \end{itemize}
 
 % ─── 6.5. Future work ────────────────────────────────────────────────────────
@@ -394,7 +395,7 @@ A common failure mode in remote-sensing experimentation is undocumented preproce
 The proof-of-concept invites several concrete extensions, ordered roughly by expected effort:
 
 \paragraph{Sample weighting in place of subsampling.}
-The current rebalancing (\S\ref{sec:rebalance}) discards $\approx 70\%$ of the Clear-class rows. Passing a \texttt{sample\_weight} vector to \texttt{gplearn.SymbolicRegressor} (inverse class frequency, or a smooth density-based scheme) would preserve all training points and likely tighten the upper-tail predictions. This requires a small patch on \texttt{ml\_symbolic\_regressor} to accept a \texttt{weight\_col} parameter.
+The current rebalancing (\S\ref{sec:rebalance}) discards $\approx 70\%$ of the Clear-class rows. Passing a \texttt{sample\_weight} vector to \texttt{gplearn.SymbolicRegressor} (inverse class frequency, or a smooth kernel-density estimate) would preserve all training points and likely tighten the upper-tail predictions. We implemented this variant (\texttt{paper/experiments/05\_gp\_extended.py}: 30 seeds, population 5\,000, 300 generations, KDE weights clipped to $[0.05, 20]$, station-level \texttt{GroupKFold}) but the sequential single-threaded GP search projected $\approx$\,108\,h of wall-clock time for a full 10-fold CV on a modern laptop. Parallelising the 30-seed inner loop with \texttt{joblib.Parallel} and launching on a 32-core cloud VM (RunPod, $\approx$\$0.20/h) would reduce wall time to $\approx$\,4\,h at a cost of $<$\$1. This remains an open direction for future work.
 
 \paragraph{Tighter temporal matchups.}
 The current $\pm\SI{30}{\day}$ window introduces seasonal aliasing. A second pass at $\pm\SI{7}{\day}$ on a multi-year, multi-tile dataset would test whether the underestimation is genuine model bias or a temporal mismatch.

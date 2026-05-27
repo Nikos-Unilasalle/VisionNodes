@@ -1,0 +1,256 @@
+Extended GP run — 2026-05-27 07:20:52
+
+--- seed 423  (1458s)
+  gen   0  best=1.0422  mean=90970596820.4288
+  gen  25  best=0.9272  mean=2635.7605
+  gen  50  best=0.8810  mean=69193.6107
+  gen  75  best=0.8615  mean=311077.5548
+  gen 100  best=0.8056  mean=1843728.1836
+  gen 125  best=0.8013  mean=194858.5853
+  gen 150  best=0.7988  mean=410788.5104
+  gen 175  best=0.7968  mean=1019867.9034
+  gen 200  best=0.7840  mean=250712.8033
+  gen 225  best=0.7823  mean=800155.0475
+  gen 250  best=0.7634  mean=477763.7976
+  gen 275  best=0.7477  mean=1031928.6469
+  gen 299  best=0.7472  mean=534387.2259
+
+--- seed 424  (1289s)
+  gen   0  best=1.0579  mean=95305641.2012
+  gen  25  best=0.8462  mean=27.8960
+  gen  50  best=0.8550  mean=74.5712
+  gen  75  best=0.8366  mean=86.2283
+  gen 100  best=0.8375  mean=34.9239
+  gen 125  best=0.8266  mean=11.4198
+  gen 150  best=0.8310  mean=103.5869
+  gen 175  best=0.7053  mean=12.7245
+  gen 200  best=0.7010  mean=197.5495
+  gen 225  best=0.6816  mean=282.8367
+  gen 250  best=0.6796  mean=96.4488
+  gen 275  best=0.6626  mean=283.5018
+  gen 299  best=0.6606  mean=60.6877
+
+--- seed 425  (1772s)
+  gen   0  best=1.0607  mean=1004177198.3646
+  gen  25  best=0.9049  mean=228.7043
+  gen  50  best=0.8533  mean=10.3955
+  gen  75  best=0.8539  mean=13.2285
+  gen 100  best=0.8410  mean=211.5605
+  gen 125  best=0.8465  mean=11.4813
+  gen 150  best=0.8434  mean=14.2462
+  gen 175  best=0.8450  mean=9.9915
+  gen 200  best=0.8401  mean=6.9287
+  gen 225  best=0.8411  mean=12.9283
+  gen 250  best=0.8429  mean=6.6569
+  gen 275  best=0.8380  mean=17.3316
+  gen 299  best=0.8300  mean=147.6138
+
+--- seed 426  (1267s)
+  gen   0  best=1.0641  mean=1404009.0809
+  gen  25  best=0.8884  mean=190.0274
+  gen  50  best=0.8509  mean=38.5218
+  gen  75  best=0.8417  mean=9.5603
+  gen 100  best=0.8381  mean=113.7220
+  gen 125  best=0.8386  mean=131.2383
+  gen 150  best=0.8436  mean=4.8434
+  gen 175  best=0.8327  mean=50.2537
+  gen 200  best=0.8245  mean=5.8146
+  gen 225  best=0.8312  mean=5.4550
+  gen 250  best=0.8383  mean=11.9532
+  gen 275  best=0.8281  mean=103.8323
+  gen 299  best=0.8307  mean=133.6617
+
+--- seed 427  (1491s)
+  gen   0  best=1.0783  mean=1695378201.7044
+  gen  25  best=0.8986  mean=2.6752
+  gen  50  best=0.8597  mean=116.4470
+  gen  75  best=0.8275  mean=10.9515
+  gen 100  best=0.7797  mean=220.4058
+  gen 125  best=0.7695  mean=2.5582
+  gen 150  best=0.7672  mean=42.8855
+  gen 175  best=0.7645  mean=109.2979
+  gen 200  best=0.7451  mean=6.3778
+  gen 225  best=0.7255  mean=4.0594
+  gen 250  best=0.7562  mean=16.0947
+  gen 275  best=0.7498  mean=70.1678
+  gen 299  best=0.7447  mean=36.3717
+
+--- seed 428  (1112s)
+  gen   0  best=1.0696  mean=59129128.7714
+  gen  25  best=0.8082  mean=35.1876
+  gen  50  best=0.7641  mean=5.1753
+  gen  75  best=0.7494  mean=14.3117
+  gen 100  best=0.7510  mean=34.9534
+  gen 125  best=0.7497  mean=30.4951
+  gen 150  best=0.7309  mean=250.3932
+  gen 175  best=0.7415  mean=53.1436
+  gen 200  best=0.7228  mean=6.7655
+  gen 225  best=0.7216  mean=8.4944
+  gen 250  best=0.7272  mean=7.5029
+  gen 275  best=0.7304  mean=211.5179
+  gen 299  best=0.7300  mean=50.1767
+
+--- seed 429  (962s)
+  gen   0  best=1.0849  mean=4226641945.8099
+  gen  25  best=0.8774  mean=15.5689
+  gen  50  best=0.8354  mean=3.9521
+  gen  75  best=0.8491  mean=7.8624
+  gen 100  best=0.8623  mean=21.3607
+  gen 125  best=0.8673  mean=5.6391
+  gen 150  best=0.8647  mean=82.9138
+  gen 175  best=0.8488  mean=9.0516
+  gen 200  best=0.8541  mean=177.9001
+  gen 225  best=0.8654  mean=6.3277
+  gen 250  best=0.8586  mean=2.8717
+  gen 275  best=0.8669  mean=6.1696
+  gen 299  best=0.8647  mean=97.0479
+
+--- seed 430  (1048s)
+  gen   0  best=1.0625  mean=154448607036634.8125
+  gen  25  best=0.9903  mean=19.7710
+  gen  50  best=0.9135  mean=76.7013
+  gen  75  best=0.9030  mean=88.0553
+  gen 100  best=0.8768  mean=12.3265
+  gen 125  best=0.9073  mean=2.5422
+  gen 150  best=0.9005  mean=183.8769
+  gen 175  best=0.8859  mean=3.1241
+  gen 200  best=0.8982  mean=2.1455
+  gen 225  best=0.8983  mean=9.6482
+  gen 250  best=0.8941  mean=2.8111
+  gen 275  best=0.8815  mean=3.7010
+  gen 299  best=0.9006  mean=169.9021
+
+--- seed 431  (971s)
+  gen   0  best=1.0513  mean=135687580.9960
+  gen  25  best=0.9419  mean=307.0778
+  gen  50  best=0.9025  mean=31.2438
+  gen  75  best=0.8964  mean=5.0880
+  gen 100  best=0.8953  mean=117.6524
+  gen 125  best=0.8898  mean=3.3424
+  gen 150  best=0.9038  mean=35.5475
+  gen 175  best=0.9024  mean=7.7847
+  gen 200  best=0.8929  mean=2.4728
+  gen 225  best=0.8709  mean=33.9234
+  gen 250  best=0.8929  mean=42.8709
+  gen 275  best=0.8808  mean=126.7276
+  gen 299  best=0.9028  mean=16.9949
+
+--- seed 432  (1248s)
+  gen   0  best=1.0871  mean=1887621.4584
+  gen  25  best=0.9864  mean=185.4831
+  gen  50  best=0.9891  mean=8.3804
+  gen  75  best=0.8870  mean=12.5707
+  gen 100  best=0.8470  mean=295.2299
+  gen 125  best=0.8259  mean=44.0002
+  gen 150  best=0.8304  mean=13.3194
+  gen 175  best=0.8123  mean=42.2463
+  gen 200  best=0.7763  mean=9.5682
+  gen 225  best=0.7665  mean=34.6367
+  gen 250  best=0.7724  mean=7.9286
+  gen 275  best=0.7627  mean=18.4680
+  gen 299  best=0.7651  mean=65.7969
+
+--- seed 433  (1052s)
+  gen   0  best=1.0846  mean=125209660.5489
+  gen  25  best=0.9891  mean=107.2551
+  gen  50  best=0.9502  mean=21.9418
+  gen  75  best=0.9389  mean=52.4736
+  gen 100  best=0.8908  mean=56.8785
+  gen 125  best=0.9033  mean=43.4111
+  gen 150  best=0.8882  mean=676.5445
+  gen 175  best=0.8935  mean=27.9345
+  gen 200  best=0.8639  mean=483.5931
+  gen 225  best=0.8824  mean=29.2284
+  gen 250  best=0.8926  mean=48.6085
+  gen 275  best=0.8910  mean=70.3195
+  gen 299  best=0.8865  mean=43.8356
+
+--- seed 434  (1694s)
+  gen   0  best=1.0989  mean=813748.1860
+  gen  25  best=0.9286  mean=47.2430
+  gen  50  best=0.8913  mean=23.5314
+  gen  75  best=0.8411  mean=8.6759
+  gen 100  best=0.8113  mean=16.3824
+  gen 125  best=0.7971  mean=6.0494
+  gen 150  best=0.7957  mean=124.9458
+  gen 175  best=0.7787  mean=36.5793
+  gen 200  best=0.7748  mean=21.0536
+  gen 225  best=0.7718  mean=120.2954
+  gen 250  best=0.7689  mean=6.3250
+  gen 275  best=0.7723  mean=56.7310
+  gen 299  best=0.7653  mean=74.9640
+
+--- seed 435  (2230s)
+  gen   0  best=1.0800  mean=3510931.9872
+  gen  25  best=0.9395  mean=741.3386
+  gen  50  best=0.8418  mean=20028.1366
+  gen  75  best=0.8344  mean=7080.3124
+  gen 100  best=0.7922  mean=1268.3886
+  gen 125  best=0.7609  mean=215.1541
+  gen 150  best=0.7376  mean=374.2304
+  gen 175  best=0.7360  mean=241.7862
+  gen 200  best=0.6806  mean=416.9910
+  gen 225  best=0.6710  mean=456.7332
+  gen 250  best=0.6549  mean=1765.0798
+  gen 275  best=0.6591  mean=962.6175
+  gen 299  best=0.6518  mean=17284.6335
+
+--- seed 436  (1501s)
+  gen   0  best=1.0668  mean=305082993.0729
+  gen  25  best=0.9248  mean=40.5844
+  gen  50  best=0.7370  mean=96.2254
+  gen  75  best=0.7103  mean=193.0289
+  gen 100  best=0.7163  mean=99.4750
+  gen 125  best=0.7027  mean=4.5120
+  gen 150  best=0.6851  mean=10.0671
+  gen 175  best=0.7032  mean=23.7169
+  gen 200  best=0.7023  mean=26.8291
+  gen 225  best=0.7065  mean=94.6559
+  gen 250  best=0.6996  mean=117.7601
+  gen 275  best=0.6986  mean=85.4027
+  gen 299  best=0.6932  mean=197.0636
+
+--- seed 437  (759s)
+  gen   0  best=1.0674  mean=7713204.8464
+  gen  25  best=0.9821  mean=697.3123
+  gen  50  best=0.9409  mean=214.1329
+  gen  75  best=0.9380  mean=224.3810
+  gen 100  best=0.9259  mean=1506.9469
+  gen 125  best=0.9314  mean=698.3744
+  gen 150  best=0.9404  mean=291.9625
+  gen 175  best=0.9293  mean=118.9949
+  gen 200  best=0.9318  mean=78.3774
+  gen 225  best=0.9259  mean=3034.5935
+  gen 250  best=0.9297  mean=242.4797
+  gen 275  best=0.9352  mean=76.7708
+  gen 299  best=0.9310  mean=234.7435
+
+--- seed 438  (1537s)
+  gen   0  best=1.0379  mean=7841071423.3325
+  gen  25  best=0.8294  mean=32.5847
+  gen  50  best=0.7771  mean=32.5351
+  gen  75  best=0.7457  mean=8.4245
+  gen 100  best=0.7321  mean=7.4409
+  gen 125  best=0.7357  mean=5.0825
+  gen 150  best=0.7349  mean=6.9273
+  gen 175  best=0.7316  mean=4.4606
+  gen 200  best=0.7157  mean=59.8753
+  gen 225  best=0.7149  mean=7.6250
+  gen 250  best=0.7087  mean=26.5591
+  gen 275  best=0.7188  mean=9.5284
+  gen 299  best=0.7069  mean=29.2526
+
+--- seed 439  (1690s)
+  gen   0  best=1.0634  mean=84948002.6813
+  gen  25  best=0.9302  mean=91.0998
+  gen  50  best=0.8011  mean=2.1793
+  gen  75  best=0.7593  mean=1.4903
+  gen 100  best=0.7627  mean=1.4429
+  gen 125  best=0.7522  mean=17.1188
+  gen 150  best=0.7609  mean=1.6439
+  gen 175  best=0.7700  mean=2.4611
+  gen 200  best=0.7507  mean=3.3191
+  gen 225  best=0.7479  mean=1.6388
+  gen 250  best=0.7517  mean=1.2301
+  gen 275  best=0.7535  mean=1.2426
+  gen 299  best=0.7258  mean=1.6744
