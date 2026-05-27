@@ -60,3 +60,6 @@ engine/plugins/planetary_cache_smoke/
 engine/plugins/planetary_cache/
 paper/experiments/out/gp_extended_stdout.log
 paper/experiments/out/scatter_GP_extended.png
+planetary_cache_smoke/
+engine/plugins/planetary_cache/
+engine/plugins/planetary_cache_smoke/
