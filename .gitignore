@@ -56,3 +56,7 @@ test_download.py
 generate_footprint_vn.py
 litterature/
 1-s2.0-S2352340918301902-mmc3/
+engine/plugins/planetary_cache_smoke/
+engine/plugins/planetary_cache/
+paper/experiments/out/gp_extended_stdout.log
+paper/experiments/out/scatter_GP_extended.png
