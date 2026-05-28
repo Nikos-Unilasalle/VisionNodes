@@ -203,6 +203,41 @@ def _reproject_labels_onto(feat_geo: dict, lbl_geo: dict) -> np.ndarray:
                           interpolation=cv2.INTER_NEAREST).astype(lbl_2d.dtype)
 
 
+def _spatial_block_split(
+    indices: np.ndarray,
+    rows: np.ndarray,
+    cols: np.ndarray,
+    H: int,
+    W: int,
+    block_size: int,
+    test_frac: float,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Split sample indices into train/test by spatial blocks.
+
+    Assigns each pixel to a (block_row, block_col) grid cell, then randomly
+    assigns ~test_frac of blocks to the test set.  Ensures no pixel in the
+    test set is spatially adjacent to a training pixel within the same block.
+
+    Returns train_indices, test_indices (both 1-D int arrays).
+    """
+    n_bh = max(1, H // block_size)
+    n_bw = max(1, W // block_size)
+
+    block_row = np.minimum(rows // block_size, n_bh - 1)
+    block_col = np.minimum(cols // block_size, n_bw - 1)
+    block_id  = block_row * n_bw + block_col   # unique block int per sample
+
+    unique_blocks = np.unique(block_id)
+    n_test = max(1, int(round(len(unique_blocks) * test_frac)))
+
+    perm = rng.permutation(len(unique_blocks))
+    test_block_set = set(unique_blocks[perm[:n_test]].tolist())
+
+    is_test  = np.array([b in test_block_set for b in block_id.tolist()], dtype=bool)
+    return indices[~is_test], indices[is_test]
+
+
 _CMAPS = ['tab10', 'viridis', 'plasma', 'Set1', 'RdYlGn']
 
 
@@ -248,6 +283,11 @@ _CMAPS = ['tab10', 'viridis', 'plasma', 'Set1', 'RdYlGn']
          'label': 'Max samples per class'},
         {'id': 'test_fraction', 'type': 'float', 'default': 0.2, 'min': 0.05, 'max': 0.5,
          'label': 'Test fraction (0.2 = 20% held-out)'},
+        {'id': 'split_mode', 'type': 'enum', 'default': 1,
+         'options': ['Random pixels (biased)', 'Spatial blocks (recommended)'],
+         'label': 'Train/test split strategy'},
+        {'id': 'block_size_px', 'type': 'int', 'default': 50, 'min': 10, 'max': 500,
+         'label': 'Spatial block size (pixels) — for spatial split only'},
         {'id': 'node_note', 'type': 'string', 'default': '',
          'label': 'Note'},
         {'id': 'cache_dir', 'type': 'string', 'default': 'copernicus_cache',
@@ -302,6 +342,8 @@ class GeoRFClassifierNode(NodeProcessor):
         max_depth      = max_depth_raw if max_depth_raw > 0 else None
         max_spc        = max(100, int(params.get('max_samples_per_class', 5000)))
         test_frac      = float(params.get('test_fraction', 0.2))
+        split_mode     = int(params.get('split_mode', 1))
+        block_size_px  = max(10, int(params.get('block_size_px', 50)))
 
         # ── Feature array (C, H, W) → (H*W, C) ──────────────────────────────
         if feat_bands.ndim == 2:
@@ -364,11 +406,12 @@ class GeoRFClassifierNode(NodeProcessor):
         all_lbl = np.concatenate(sample_labels)
         n_total = len(all_idx)
 
-        # Filter NaN / Inf in features
+        # Filter NaN / Inf in features — keep flat pixel indices for spatial split
         X_s = X_all[all_idx]
         valid_mask = np.isfinite(X_s).all(axis=1)
-        X_s    = X_s[valid_mask]
-        all_lbl = all_lbl[valid_mask]
+        X_s         = X_s[valid_mask]
+        all_lbl     = all_lbl[valid_mask]
+        all_idx_valid = all_idx[valid_mask]   # flat pixel indices after NaN filter
         n_valid = len(X_s)
 
         if n_valid < 20:
@@ -386,11 +429,34 @@ class GeoRFClassifierNode(NodeProcessor):
         y_enc = le.fit_transform(all_lbl)
         classes_encoded = le.classes_   # original class values
 
-        X_tr, X_te, y_tr, y_te = train_test_split(
-            X_s, y_enc,
-            test_size=max(0.05, min(test_frac, 0.5)),
-            random_state=42,
-            stratify=y_enc,
+        rng = np.random.default_rng(42)
+
+        if split_mode == 1:
+            # Spatial block split — avoids spatial autocorrelation bias
+            # Recover (row, col) of each sampled pixel from its flat index
+            sample_rows  = all_idx_valid // fW
+            sample_cols  = all_idx_valid  % fW
+            arange       = np.arange(len(X_s))
+            tr_sel, te_sel = _spatial_block_split(
+                arange, sample_rows, sample_cols,
+                fH, fW, block_size_px, test_frac, rng,
+            )
+            X_tr, X_te = X_s[tr_sel], X_s[te_sel]
+            y_tr, y_te = y_enc[tr_sel], y_enc[te_sel]
+            split_label = f'spatial blocks ({block_size_px}px)'
+        else:
+            # Random pixel split (biased — spatial autocorrelation not removed)
+            X_tr, X_te, y_tr, y_te = train_test_split(
+                X_s, y_enc,
+                test_size=max(0.05, min(test_frac, 0.5)),
+                random_state=42,
+                stratify=y_enc,
+            )
+            split_label = 'random pixels'
+
+        send_notification(
+            f'RF Classifier: split={split_label}  train={len(X_tr):,}  test={len(X_te):,}',
+            progress=0.38, notif_id=_NOTIF,
         )
 
         rf = RandomForestClassifier(

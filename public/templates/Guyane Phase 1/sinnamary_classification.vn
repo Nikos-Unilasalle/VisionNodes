@@ -35,11 +35,19 @@
       "width": 520, "height": 740
     },
     {
+      "id": "frame-glcm",
+      "type": "canvas_frame",
+      "position": { "x": 20, "y": 880 },
+      "style": { "width": 440, "height": 300, "zIndex": -1 },
+      "data": { "label": "Frame", "params": { "color_index": 7, "title": "2b · GLCM texture (VH) — 4 bands" } },
+      "width": 440, "height": 300
+    },
+    {
       "id": "frame-stack",
       "type": "canvas_frame",
       "position": { "x": 1060, "y": 120 },
       "style": { "width": 500, "height": 360, "zIndex": -1 },
-      "data": { "label": "Frame", "params": { "color_index": 5, "title": "3 · S1+S2 fusion (9 bands)" } },
+      "data": { "label": "Frame", "params": { "color_index": 5, "title": "3 · S1+S2+GLCM fusion (16 bands)" } },
       "width": 500, "height": 360
     },
     {
@@ -107,6 +115,29 @@
     },
 
     {
+      "id": "n-glcm",
+      "type": "geo_glcm_features",
+      "position": { "x": 40, "y": 960 },
+      "data": {
+        "params": {
+          "node_note": "**GLCM texture on VH** — sliding window 9×9 px, stride=2, 64 levels. 4 features: contrast (roughness), homogeneity (smoothness → water/orpaillage), energy (uniformity), correlation (structure). Mangrove canopy = high contrast + low homogeneity vs equatorial forest. Connect VH from S1 geo_copernicus (band_index=1).",
+          "band_index": 1,
+          "window_size": 9,
+          "stride": 2,
+          "levels": 64,
+          "distances": "1,2",
+          "contrast": true,
+          "homogeneity": true,
+          "energy": true,
+          "correlation": true,
+          "dissimilarity": false,
+          "band_suffix": "VH"
+        }
+      },
+      "width": 380, "height": 300
+    },
+
+    {
       "id": "n-s2-2024",
       "type": "geo_copernicus",
       "position": { "x": 500, "y": 200 },
@@ -158,13 +189,28 @@
       "position": { "x": 1080, "y": 200 },
       "data": {
         "params": {
-          "node_note": "**12-band fused stack** — S1 pol features (6 bands) + S1 passthrough VV/VH/VV_VH_ratio (3 bands) — primary reference grid at 20 m. S2 index stack NDVI/MNDWI/EVI (3 bands, reprojected bilinear). Output is the feature input to the RF classifier.",
+          "node_note": "**16-band fused stack** — S1 pol (6) + S1 passthrough VV/VH/ratio (3) + S2 indices NDVI/MNDWI/EVI (3) + GLCM texture contrast/homogeneity/energy/correlation on VH (4). Primary grid = S1 at 20 m. Secondary stacks reprojected bilinear.",
           "resampling": 0,
           "prefix_secondary": false,
           "cache_dir": "copernicus_cache"
         }
       },
       "width": 460, "height": 240
+    },
+
+    {
+      "id": "n-stack-glcm",
+      "type": "geo_band_stack",
+      "position": { "x": 1080, "y": 840 },
+      "data": {
+        "params": {
+          "node_note": "**Add GLCM texture bands** — stacks 12-band S1+S2 (primary) + 4-band GLCM VH texture (secondary) → 16-band final feature stack for RF classifier.",
+          "resampling": 0,
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 460, "height": 200
     },
 
     {
@@ -193,12 +239,14 @@
       "data": {
         "params": {
           "node_note": "**RF Pixel Classifier** — trains on 9-band S1+S2 features using ESA WorldCover 2021 as labels. Stratified sampling (max 5 000 px/class), 100 trees, 20 % hold-out test. Predicts every pixel → classification map + confidence + feature importance.",
-          "band_names": "RVI,Span,Span_dB,NRPB,PDI,DPSVI,VV,VH,VV_VH_ratio,NDVI,MNDWI,EVI",
+          "band_names": "RVI,Span,Span_dB,NRPB,PDI,DPSVI,VV,VH,VV_VH_ratio,NDVI,MNDWI,EVI,contrast_VH,homogeneity_VH,energy_VH,correlation_VH",
           "include_classes": "10,60,80,90,95",
           "n_estimators": 100,
           "max_depth": 0,
           "max_samples_per_class": 5000,
           "test_fraction": 0.2,
+          "split_mode": 1,
+          "block_size_px": 50,
           "cache_dir": "copernicus_cache"
         }
       },
@@ -343,10 +391,13 @@
 
   "edges": [
     { "id": "e-s1-pol",      "source": "n-s1-2024",   "sourceHandle": "geotiff__geotiff", "target": "n-s1-pol",      "targetHandle": "geotiff__geotiff" },
+    { "id": "e-s1-glcm",    "source": "n-s1-2024",   "sourceHandle": "geotiff__geotiff", "target": "n-glcm",        "targetHandle": "geotiff__geotiff" },
     { "id": "e-s2-idx",     "source": "n-s2-2024",   "sourceHandle": "geotiff__geotiff", "target": "n-s2-idx",      "targetHandle": "geotiff__geotiff" },
-    { "id": "e-stk-final-p","source": "n-s1-pol",    "sourceHandle": "geotiff__geotiff", "target": "n-stack-final", "targetHandle": "geotiff__primary" },
-    { "id": "e-stk-final-s","source": "n-s2-idx",    "sourceHandle": "geotiff__stack",   "target": "n-stack-final", "targetHandle": "geotiff__secondary" },
-    { "id": "e-rf-feat",     "source": "n-stack-final", "sourceHandle": "geotiff__geotiff",    "target": "n-rf",          "targetHandle": "geotiff__features" },
+    { "id": "e-stk-final-p","source": "n-s1-pol",    "sourceHandle": "geotiff__geotiff", "target": "n-stack-final",  "targetHandle": "geotiff__primary" },
+    { "id": "e-stk-final-s","source": "n-s2-idx",    "sourceHandle": "geotiff__stack",   "target": "n-stack-final",  "targetHandle": "geotiff__secondary" },
+    { "id": "e-stk-glcm",   "source": "n-stack-final","sourceHandle": "geotiff__geotiff","target": "n-stack-glcm",   "targetHandle": "geotiff__primary" },
+    { "id": "e-stk-glcm2",  "source": "n-glcm",      "sourceHandle": "geotiff__geotiff", "target": "n-stack-glcm",   "targetHandle": "geotiff__secondary" },
+    { "id": "e-rf-feat",     "source": "n-stack-glcm",  "sourceHandle": "geotiff__geotiff",    "target": "n-rf",          "targetHandle": "geotiff__features" },
     { "id": "e-rf-lbl",      "source": "n-wc-2021",     "sourceHandle": "geotiff__geotiff",    "target": "n-rf",          "targetHandle": "geotiff__labels" },
     { "id": "e-rep-data",    "source": "n-rf",          "sourceHandle": "dict__report_data",   "target": "n-cls-report",  "targetHandle": "dict__report_data" },
     { "id": "e-rep-cm",      "source": "n-rf",          "sourceHandle": "data__conf_matrix",   "target": "n-cls-report",  "targetHandle": "data__conf_matrix" },
