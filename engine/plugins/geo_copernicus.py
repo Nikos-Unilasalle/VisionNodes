@@ -181,6 +181,10 @@ _CLASS_PALETTES = {
          'label': 'STAC: SAR → dB (10·log10)'},
         {'id': 'stac_max_scenes',   'type': 'int',  'default': 30, 'min': 1, 'max': 500,
          'label': 'STAC: Max scenes for composite'},
+        {'id': 'stac_scene_timeout', 'type': 'int', 'default': 60, 'min': 10, 'max': 300,
+         'label': 'STAC: Scene read timeout (s) — increase on slow connections'},
+        {'id': 'stac_min_ok',       'type': 'int',  'default': 3,  'min': 1, 'max': 100,
+         'label': 'STAC: Min scenes OK to accept result (else retry)'},
 
         {'id': 'fetch',         'type': 'trigger','default': 0,  'label': 'Fetch'},
     ],
@@ -646,6 +650,20 @@ class GeoCopernicusNode(NodeProcessor):
         ):
             return
 
+        # ── GDAL network reliability settings ─────────────────────────────────
+        # Must be set before any rasterio import or GDAL init.
+        _gdal_defaults = {
+            'GDAL_HTTP_TIMEOUT':              '30',   # per-request HTTP timeout (s)
+            'GDAL_HTTP_CONNECTTIMEOUT':       '10',   # TCP connect timeout (s)
+            'GDAL_HTTP_MAX_RETRY':            '3',    # retries per HTTP request
+            'GDAL_HTTP_RETRY_DELAY':          '2',    # back-off between retries (s)
+            'GDAL_DISABLE_READDIR_ON_OPEN':   'EMPTY_DIR',
+            'CPL_VSIL_CURL_ALLOWED_EXTENSIONS': '.tif',
+            'VSI_CURL_CACHE_SIZE':            '1048576',  # 1 MB VSICURL cache
+        }
+        for k, v in _gdal_defaults.items():
+            os.environ.setdefault(k, v)
+
         import pystac_client
         import planetary_computer
         import rasterio
@@ -675,10 +693,12 @@ class GeoCopernicusNode(NodeProcessor):
         polariz    = pol_opts[int(params.get('stac_polarization', 0))]
         orb_opts   = ['Any', 'Ascending', 'Descending']
         orbit      = orb_opts[int(params.get('stac_orbit', 0))]
-        comp_opts  = ['median', 'mean', 'first', 'min', 'max']
-        composite  = comp_opts[int(params.get('stac_composite', 0))]
-        to_db      = bool(params.get('stac_to_db', True))
-        max_scenes = max(1, int(params.get('stac_max_scenes', 30)))
+        comp_opts     = ['median', 'mean', 'first', 'min', 'max']
+        composite     = comp_opts[int(params.get('stac_composite', 0))]
+        to_db         = bool(params.get('stac_to_db', True))
+        max_scenes    = max(1, int(params.get('stac_max_scenes', 30)))
+        scene_timeout = max(10, int(params.get('stac_scene_timeout', 60)))
+        min_ok        = max(1, int(params.get('stac_min_ok', 3)))
 
         # ── Cache path ────────────────────────────────────────────────────────
         raw_cache = str(params.get('cache_dir', 'copernicus_cache') or 'copernicus_cache').strip()
@@ -761,52 +781,104 @@ class GeoCopernicusNode(NodeProcessor):
 
         # ── Read each item's chosen assets, reprojected to common grid ────────
         send_notification(
-            f'Copernicus[STAC]: reading {len(items)} scene(s)…',
+            f'Copernicus[STAC]: reading {len(items)} scene(s) '
+            f'(timeout={scene_timeout}s/scene)…',
             progress=0.25, notif_id=self._notif_id,
         )
 
         stacks: dict[str, list[np.ndarray]] = {a: [] for a in asset_keys}
-        is_cat = col_cfg.get('categorical', False)
-        resamp = Resampling.nearest if is_cat else Resampling.average
+        is_cat   = col_cfg.get('categorical', False)
+        resamp   = Resampling.nearest if is_cat else Resampling.average
+        n_ok     = 0   # scenes with at least one asset read successfully
+        n_timeout = 0
+        n_error   = 0
 
-        for i, item in enumerate(items):
-            for ak in asset_keys:
-                if ak not in item.assets:
-                    continue
-                try:
-                    with rasterio.open(item.assets[ak].href) as src:
-                        dst = np.full((out_h, out_w),
-                                      np.nan if not is_cat else 0,
-                                      dtype=('float32' if not is_cat else 'uint8'))
-                        reproject(
-                            source=rasterio.band(src, 1),
-                            destination=dst,
-                            src_transform=src.transform, src_crs=src.crs,
-                            dst_transform=dst_transform, dst_crs=dst_crs,
-                            resampling=resamp,
-                            src_nodata=src.nodata,
-                            dst_nodata=(np.nan if not is_cat else 0),
+        def _read_one(href: str) -> np.ndarray:
+            """Read + reproject one COG asset. Runs in a worker thread."""
+            with rasterio.open(href) as _src:
+                _dst = np.full(
+                    (out_h, out_w),
+                    np.nan if not is_cat else 0,
+                    dtype='float32' if not is_cat else 'uint8',
+                )
+                reproject(
+                    source=rasterio.band(_src, 1),
+                    destination=_dst,
+                    src_transform=_src.transform, src_crs=_src.crs,
+                    dst_transform=dst_transform,  dst_crs=dst_crs,
+                    resampling=resamp,
+                    src_nodata=_src.nodata,
+                    dst_nodata=np.nan if not is_cat else 0,
+                )
+            return _dst
+
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
+
+        # One worker: avoids saturating Planetary Computer with parallel range-reads.
+        with ThreadPoolExecutor(max_workers=1) as _pool:
+            for i, item in enumerate(items):
+
+                # Honour user cancel
+                if is_cancelled(self._notif_id):
+                    send_notification('Copernicus[STAC]: cancelled by user',
+                                      level='warning', notif_id=self._notif_id)
+                    break
+
+                scene_ok = False
+                for ak in asset_keys:
+                    if ak not in item.assets:
+                        continue
+                    href = item.assets[ak].href
+                    try:
+                        future = _pool.submit(_read_one, href)
+                        dst = future.result(timeout=scene_timeout)
+                        if not is_cat:
+                            dst = np.where(dst <= 0, np.nan, dst)
+                        stacks[ak].append(
+                            dst.astype('float32') if not is_cat else dst
                         )
-                    if not is_cat:
-                        # S1-RTC: 0 = nodata, convert to NaN for compositing
-                        dst = np.where(dst <= 0, np.nan, dst)
-                    stacks[ak].append(dst.astype('float32') if not is_cat else dst)
-                except Exception as e:
-                    send_notification(
-                        f'Copernicus[STAC]: scene {i} asset {ak} failed: {e}',
-                        level='warning', notif_id=self._notif_id,
-                    )
-                    continue
-            if (i + 1) % 5 == 0:
+                        scene_ok = True
+                    except _FutTimeout:
+                        n_timeout += 1
+                        future.cancel()
+                        send_notification(
+                            f'Copernicus[STAC]: scene {i+1} timed out after '
+                            f'{scene_timeout}s — skipping',
+                            level='warning', notif_id=self._notif_id,
+                        )
+                    except Exception as _e:
+                        n_error += 1
+                        send_notification(
+                            f'Copernicus[STAC]: scene {i+1} asset {ak} failed: {_e}',
+                            level='warning', notif_id=self._notif_id,
+                        )
+
+                if scene_ok:
+                    n_ok += 1
+
+                # Progress every scene
                 send_notification(
-                    f'Copernicus[STAC]: read {i + 1}/{len(items)} scenes',
+                    f'Copernicus[STAC]: {i+1}/{len(items)} scenes  '
+                    f'(ok={n_ok}  timeout={n_timeout}  err={n_error})',
                     progress=0.25 + 0.55 * (i + 1) / len(items),
                     notif_id=self._notif_id,
                 )
 
+        if n_ok < min_ok:
+            send_notification(
+                f'Copernicus[STAC]: only {n_ok}/{len(items)} scenes succeeded '
+                f'(min={min_ok}). Increase "Scene read timeout" or retry. '
+                f'(timeouts={n_timeout}, errors={n_error})',
+                level='error', notif_id=self._notif_id,
+            )
+            return
+
         if not any(stacks.values()):
-            send_notification('Copernicus[STAC]: all scenes empty for bbox',
-                              level='error', notif_id=self._notif_id)
+            send_notification(
+                f'Copernicus[STAC]: all bands empty for bbox. '
+                f'scenes ok={n_ok}, timeouts={n_timeout}, errors={n_error}',
+                level='error', notif_id=self._notif_id,
+            )
             return
 
         # ── Composite (or single take for LULC) ───────────────────────────────
