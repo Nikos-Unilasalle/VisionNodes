@@ -660,11 +660,15 @@ class GeoCopernicusNode(NodeProcessor):
         # GDAL config dict — applied via rasterio.Env() inside each COG read
         # (os.environ is too late: GDAL is already initialised by the time this runs)
         _GDAL_COG_CFG = {
-            'GDAL_HTTP_TIMEOUT':            30,
-            'GDAL_HTTP_CONNECTTIMEOUT':     10,
-            'GDAL_HTTP_MAX_RETRY':          3,
-            'GDAL_HTTP_RETRY_DELAY':        2,
-            'GDAL_DISABLE_READDIR_ON_OPEN': 'EMPTY_DIR',
+            'GDAL_HTTP_TIMEOUT':                  30,
+            'GDAL_HTTP_CONNECTTIMEOUT':           10,
+            'GDAL_HTTP_MAX_RETRY':                3,
+            'GDAL_HTTP_RETRY_DELAY':              2,
+            'GDAL_DISABLE_READDIR_ON_OPEN':       'EMPTY_DIR',
+            'GDAL_HTTP_MERGE_CONSECUTIVE_RANGES': 'YES',   # fewer HTTP round-trips
+            'GDAL_HTTP_MULTIPLEX':                'YES',   # HTTP/2 multiplexing
+            'CPL_VSIL_CURL_CHUNK_SIZE':           10485760, # 10 MB chunks
+            'GDAL_CACHEMAX':                      512,      # MB GDAL block cache
         }
 
         # ── BBOX ──────────────────────────────────────────────────────────────
@@ -867,18 +871,21 @@ class GeoCopernicusNode(NodeProcessor):
                     win = _wfb(sx0, sy0, sx1, sy1, transform=_src.transform)
                     win_transform = _src.window_transform(win)
 
-                    # Downsample to target output size using COG overviews.
-                    # Reading 8000×7500 full-res takes 30s+; reading at out_h×out_w
-                    # (~3500×4000) makes GDAL pick the right overview → 3-5s.
                     win_h = int(round(win.height))
                     win_w = int(round(win.width))
-                    # Slight oversample vs output (×1.5) to avoid aliasing in reproject.
-                    read_h = min(win_h, max(out_h, int(out_h * 1.5)))
-                    read_w = min(win_w, max(out_w, int(out_w * 1.5)))
+
+                    # Request exactly out_h×out_w pixels from the COG window.
+                    # When out_h ≈ win_h/2 (typical for 10m source → 20m target),
+                    # GDAL selects the 2× overview → downloads ¼ the pixels → ~4× faster.
+                    # The slight aspect mismatch (window ≠ output aspect) is fine:
+                    # reproject() handles the final pixel alignment precisely.
+                    read_h = out_h
+                    read_w = out_w
 
                     _log(f'    window: col_off={win.col_off:.0f} row_off={win.row_off:.0f} '
-                         f'w={win_w} h={win_h}  reading at {read_w}×{read_h} '
-                         f'(overview downsample)')
+                         f'w={win_w} h={win_h}  requesting out_shape={read_w}×{read_h} '
+                         f'(ratio w={read_w/win_w:.2f} h={read_h/win_h:.2f} — '
+                         f'overview 2x if ratio≤0.5)')
 
                     t1 = _t.time()
                     _log(f'    reading window at {read_w}×{read_h}…')
@@ -889,17 +896,16 @@ class GeoCopernicusNode(NodeProcessor):
                         fill_value=nodata_val if nodata_val is not None else 0,
                     ).astype('float32')
 
-                    # Adjust window_transform for the resampled pixel size
-                    if read_h != win_h or read_w != win_w:
-                        from rasterio.transform import Affine as _Aff
-                        win_transform = _Aff(
-                            win_transform.a * win_w / read_w,
-                            win_transform.b,
-                            win_transform.c,
-                            win_transform.d,
-                            win_transform.e * win_h / read_h,
-                            win_transform.f,
-                        )
+                    # Update window transform to match resampled pixel size
+                    from rasterio.transform import Affine as _Aff
+                    win_transform = _Aff(
+                        win_transform.a * win_w / read_w,
+                        win_transform.b,
+                        win_transform.c,
+                        win_transform.d,
+                        win_transform.e * win_h / read_h,
+                        win_transform.f,
+                    )
 
                     _log(f'    read done in {_t.time()-t1:.1f}s  '
                          f'shape={src_arr.shape}  '
