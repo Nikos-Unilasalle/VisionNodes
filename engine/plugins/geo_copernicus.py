@@ -714,13 +714,35 @@ class GeoCopernicusNode(NodeProcessor):
         if auto and not os.path.exists(final_path):
             return
 
+        import sys, traceback as _tb, time as _time
+
+        def _log(*args):
+            print('[STAC]', *args, file=sys.stderr, flush=True)
+
+        _log(f'=== START {col_name} ===')
+        _log(f'bbox={west:.3f},{south:.3f},{east:.3f},{north:.3f}  '
+             f'dates={date_start}→{date_end}  res={resolution}m  '
+             f'max_scenes={max_scenes}  timeout={scene_timeout}s')
+        _log(f'GDAL_COG_CFG = {_GDAL_COG_CFG}')
+
         # ── STAC search ───────────────────────────────────────────────────────
-        catalog = pystac_client.Client.open(
-            'https://planetarycomputer.microsoft.com/api/stac/v1',
-            modifier=planetary_computer.sign_inplace,
-        )
+        _log('Opening Planetary Computer catalog…')
+        try:
+            catalog = pystac_client.Client.open(
+                'https://planetarycomputer.microsoft.com/api/stac/v1',
+                modifier=planetary_computer.sign_inplace,
+            )
+            _log('Catalog OK')
+        except Exception as e:
+            _log(f'CATALOG OPEN FAILED: {e}')
+            _tb.print_exc(file=sys.stderr)
+            send_notification(f'Copernicus[STAC]: catalog open failed: {e}',
+                              level='error', notif_id=self._notif_id)
+            return
+
         send_notification(f'Copernicus[STAC]: querying {col_cfg["stac_id"]}…',
                           progress=0.1, notif_id=self._notif_id)
+        _log(f'Searching collection={col_cfg["stac_id"]}…')
         try:
             search = catalog.search(
                 collections=[col_cfg['stac_id']],
@@ -729,7 +751,10 @@ class GeoCopernicusNode(NodeProcessor):
                 limit=500,
             )
             items = list(search.items())
+            _log(f'Search returned {len(items)} items')
         except Exception as e:
+            _log(f'SEARCH FAILED: {e}')
+            _tb.print_exc(file=sys.stderr)
             send_notification(f'Copernicus[STAC]: search failed: {e}',
                               level='error', notif_id=self._notif_id)
             return
@@ -738,7 +763,9 @@ class GeoCopernicusNode(NodeProcessor):
         if orbit.lower() in ('ascending', 'descending'):
             items = [it for it in items
                      if str(it.properties.get('sat:orbit_state', '')).lower() == orbit.lower()]
+            _log(f'After orbit filter ({orbit}): {len(items)} items')
         if not items:
+            _log('ERROR: 0 items after filter')
             send_notification(f'Copernicus[STAC]: 0 scenes for bbox/date/orbit',
                               level='warning', notif_id=self._notif_id)
             return
@@ -751,6 +778,15 @@ class GeoCopernicusNode(NodeProcessor):
             idx = np.linspace(0, len(items) - 1, max_scenes).round().astype(int)
             items = [items[i] for i in idx]
 
+        _log(f'Will read {len(items)} scenes')
+        if items:
+            first = items[0]
+            _log(f'  First item: id={first.id}  dt={first.datetime}  '
+                 f'assets={list(first.assets.keys())}')
+            if first.assets:
+                first_ak = list(first.assets.keys())[0]
+                _log(f'  First asset href={first.assets[first_ak].href[:80]}…')
+
         # Pick asset keys based on polarization for S1
         all_assets = col_cfg['asset_keys']
         if col_cfg['stac_id'] == 'sentinel-1-rtc':
@@ -762,6 +798,7 @@ class GeoCopernicusNode(NodeProcessor):
                 asset_keys = ['vv', 'vh']
         else:
             asset_keys = all_assets
+        _log(f'asset_keys={asset_keys}')
 
         # ── Compute target shape from bbox in metres ──────────────────────────
         lat_mid  = 0.5 * (south + north)
@@ -774,6 +811,7 @@ class GeoCopernicusNode(NodeProcessor):
             0.0, -(north - south) / out_h, north,
         )
         dst_crs = 'EPSG:4326'
+        _log(f'Target grid: {out_w}x{out_h}px  crs={dst_crs}')
 
         # ── Read each item's chosen assets, reprojected to common grid ────────
         send_notification(
@@ -790,18 +828,18 @@ class GeoCopernicusNode(NodeProcessor):
         n_error   = 0
 
         def _read_one(href: str) -> np.ndarray:
-            """Windowed COG read + reproject for one asset.
-
-            Only downloads the tiles that cover the target bbox — a COG
-            scene can be hundreds of MB; windowed reads fetch only the
-            relevant portion (typically a few MB), making each scene read
-            finish in seconds instead of minutes.
-            """
+            """Windowed COG read + reproject for one asset."""
+            import sys as _sys, time as _t
             from rasterio.warp import transform_bounds as _tb
             from rasterio.windows import from_bounds as _wfb
 
+            _log(f'  → open {href[:90]}…')
+            t0 = _t.time()
             with rasterio.Env(**_GDAL_COG_CFG):
                 with rasterio.open(href) as _src:
+                    _log(f'    opened in {_t.time()-t0:.1f}s  '
+                         f'crs={_src.crs}  size={_src.width}x{_src.height}  '
+                         f'dtype={_src.dtypes[0]}  nodata={_src.nodata}')
                     nodata_val  = _src.nodata
                     src_crs     = _src.crs
 
@@ -809,30 +847,42 @@ class GeoCopernicusNode(NodeProcessor):
                     try:
                         sx0, sy0, sx1, sy1 = _tb(dst_crs, src_crs,
                                                   west, south, east, north)
-                    except Exception:
+                        _log(f'    bbox in src_crs: {sx0:.1f},{sy0:.1f},{sx1:.1f},{sy1:.1f}')
+                    except Exception as _ex:
+                        _log(f'    transform_bounds failed ({_ex}), using WGS84 bbox')
                         sx0, sy0, sx1, sy1 = west, south, east, north
 
-                    # Clip to source raster extent (avoid out-of-bounds reads)
+                    # Clip to source raster extent
                     b = _src.bounds
+                    _log(f'    src bounds: {b.left:.1f},{b.bottom:.1f},{b.right:.1f},{b.top:.1f}')
                     sx0 = max(sx0, b.left);  sx1 = min(sx1, b.right)
                     sy0 = max(sy0, b.bottom); sy1 = min(sy1, b.top)
 
                     if sx0 >= sx1 or sy0 >= sy1:
-                        # AOI doesn't overlap this scene
+                        _log(f'    NO OVERLAP — returning empty array')
                         return np.full((out_h, out_w),
                                        np.nan if not is_cat else 0,
                                        dtype='float32')
 
                     win = _wfb(sx0, sy0, sx1, sy1, transform=_src.transform)
                     win_transform = _src.window_transform(win)
+                    _log(f'    window: col_off={win.col_off:.0f} row_off={win.row_off:.0f} '
+                         f'w={win.width:.0f} h={win.height:.0f}')
 
-                    # Windowed read — only downloads the relevant COG tiles
+                    t1 = _t.time()
+                    _log(f'    reading window…')
                     src_arr = _src.read(
                         1, window=win, boundless=True,
                         fill_value=nodata_val if nodata_val is not None else 0,
                     ).astype('float32')
+                    _log(f'    read done in {_t.time()-t1:.1f}s  '
+                         f'shape={src_arr.shape}  '
+                         f'min={float(src_arr[np.isfinite(src_arr)].min()) if np.isfinite(src_arr).any() else "all-nan":.4f}  '
+                         f'valid_px={int(np.isfinite(src_arr).sum())}')
 
             # Reproject from in-memory window array
+            t2 = _t.time()
+            _log(f'    reprojecting…')
             _dst = np.full(
                 (out_h, out_w),
                 np.nan if not is_cat else 0,
@@ -847,6 +897,9 @@ class GeoCopernicusNode(NodeProcessor):
                 src_nodata=nodata_val,
                 dst_nodata=np.nan if not is_cat else 0,
             )
+            _log(f'    reproject done in {_t.time()-t2:.1f}s  '
+                 f'valid_px={int(np.isfinite(_dst).sum())}  '
+                 f'total={_t.time()-t0:.1f}s')
             return _dst
 
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
@@ -862,11 +915,14 @@ class GeoCopernicusNode(NodeProcessor):
                                       level='warning', notif_id=self._notif_id)
                     break
 
+                _log(f'Scene {i+1}/{len(items)}: id={item.id}  dt={item.datetime}')
                 scene_ok = False
                 for ak in asset_keys:
                     if ak not in item.assets:
+                        _log(f'  asset {ak} NOT in item.assets — available: {list(item.assets.keys())}')
                         continue
                     href = item.assets[ak].href
+                    _log(f'  Submitting {ak} read  href={href[:80]}…')
                     try:
                         future = _pool.submit(_read_one, href)
                         dst = future.result(timeout=scene_timeout)
@@ -876,9 +932,11 @@ class GeoCopernicusNode(NodeProcessor):
                             dst.astype('float32') if not is_cat else dst
                         )
                         scene_ok = True
+                        _log(f'  {ak} OK')
                     except _FutTimeout:
                         n_timeout += 1
                         future.cancel()
+                        _log(f'  {ak} TIMEOUT after {scene_timeout}s')
                         send_notification(
                             f'Copernicus[STAC]: scene {i+1} timed out after '
                             f'{scene_timeout}s — skipping',
@@ -886,6 +944,9 @@ class GeoCopernicusNode(NodeProcessor):
                         )
                     except Exception as _e:
                         n_error += 1
+                        import traceback as _tb2
+                        _log(f'  {ak} ERROR: {type(_e).__name__}: {_e}')
+                        _tb2.print_exc(file=sys.stderr)
                         send_notification(
                             f'Copernicus[STAC]: scene {i+1} asset {ak} failed: {_e}',
                             level='warning', notif_id=self._notif_id,
