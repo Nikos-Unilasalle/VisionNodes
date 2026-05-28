@@ -790,23 +790,49 @@ class GeoCopernicusNode(NodeProcessor):
         n_error   = 0
 
         def _read_one(href: str) -> np.ndarray:
-            """Read + reproject one COG asset. Runs in a worker thread.
+            """Windowed COG read + reproject for one asset.
 
-            Reads the full source band into a numpy array first, then
-            reprojects from memory. Avoids 'Chunk and warp failed' errors
-            that occur when reproject() uses a lazy rasterio.band() reference
-            on a remote COG — GDAL tries to fetch chunks during the warp and
-            fails on slow/flaky network connections.
+            Only downloads the tiles that cover the target bbox — a COG
+            scene can be hundreds of MB; windowed reads fetch only the
+            relevant portion (typically a few MB), making each scene read
+            finish in seconds instead of minutes.
             """
+            from rasterio.warp import transform_bounds as _tb
+            from rasterio.windows import from_bounds as _wfb
+
             with rasterio.Env(**_GDAL_COG_CFG):
                 with rasterio.open(href) as _src:
-                    # Eager read → numpy array in memory before any reproject
-                    nodata_val = _src.nodata
-                    src_arr = _src.read(1).astype('float32')
-                    src_transform = _src.transform
-                    src_crs = _src.crs
+                    nodata_val  = _src.nodata
+                    src_crs     = _src.crs
 
-            # Reproject from in-memory array — no lazy COG chunk fetching
+                    # Transform target bbox → source CRS to get the window
+                    try:
+                        sx0, sy0, sx1, sy1 = _tb(dst_crs, src_crs,
+                                                  west, south, east, north)
+                    except Exception:
+                        sx0, sy0, sx1, sy1 = west, south, east, north
+
+                    # Clip to source raster extent (avoid out-of-bounds reads)
+                    b = _src.bounds
+                    sx0 = max(sx0, b.left);  sx1 = min(sx1, b.right)
+                    sy0 = max(sy0, b.bottom); sy1 = min(sy1, b.top)
+
+                    if sx0 >= sx1 or sy0 >= sy1:
+                        # AOI doesn't overlap this scene
+                        return np.full((out_h, out_w),
+                                       np.nan if not is_cat else 0,
+                                       dtype='float32')
+
+                    win = _wfb(sx0, sy0, sx1, sy1, transform=_src.transform)
+                    win_transform = _src.window_transform(win)
+
+                    # Windowed read — only downloads the relevant COG tiles
+                    src_arr = _src.read(
+                        1, window=win, boundless=True,
+                        fill_value=nodata_val if nodata_val is not None else 0,
+                    ).astype('float32')
+
+            # Reproject from in-memory window array
             _dst = np.full(
                 (out_h, out_w),
                 np.nan if not is_cat else 0,
@@ -815,7 +841,7 @@ class GeoCopernicusNode(NodeProcessor):
             reproject(
                 source=src_arr,
                 destination=_dst,
-                src_transform=src_transform, src_crs=src_crs,
+                src_transform=win_transform, src_crs=src_crs,
                 dst_transform=dst_transform, dst_crs=dst_crs,
                 resampling=resamp,
                 src_nodata=nodata_val,
@@ -825,8 +851,9 @@ class GeoCopernicusNode(NodeProcessor):
 
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
 
-        # One worker: avoids saturating Planetary Computer with parallel range-reads.
-        with ThreadPoolExecutor(max_workers=1) as _pool:
+        # 2 workers: if one thread stalls (future timed out but thread still running),
+        # the next scene can start immediately rather than waiting in the queue.
+        with ThreadPoolExecutor(max_workers=2) as _pool:
             for i, item in enumerate(items):
 
                 # Honour user cancel
