@@ -791,24 +791,36 @@ class GeoCopernicusNode(NodeProcessor):
 
         def _read_one(href: str) -> np.ndarray:
             """Read + reproject one COG asset. Runs in a worker thread.
-            Uses rasterio.Env to apply GDAL network config — os.environ
-            is ineffective after GDAL is already initialised."""
+
+            Reads the full source band into a numpy array first, then
+            reprojects from memory. Avoids 'Chunk and warp failed' errors
+            that occur when reproject() uses a lazy rasterio.band() reference
+            on a remote COG — GDAL tries to fetch chunks during the warp and
+            fails on slow/flaky network connections.
+            """
             with rasterio.Env(**_GDAL_COG_CFG):
                 with rasterio.open(href) as _src:
-                    _dst = np.full(
-                        (out_h, out_w),
-                        np.nan if not is_cat else 0,
-                        dtype='float32' if not is_cat else 'uint8',
-                    )
-                    reproject(
-                        source=rasterio.band(_src, 1),
-                        destination=_dst,
-                        src_transform=_src.transform, src_crs=_src.crs,
-                        dst_transform=dst_transform,  dst_crs=dst_crs,
-                        resampling=resamp,
-                        src_nodata=_src.nodata,
-                        dst_nodata=np.nan if not is_cat else 0,
-                    )
+                    # Eager read → numpy array in memory before any reproject
+                    nodata_val = _src.nodata
+                    src_arr = _src.read(1).astype('float32')
+                    src_transform = _src.transform
+                    src_crs = _src.crs
+
+            # Reproject from in-memory array — no lazy COG chunk fetching
+            _dst = np.full(
+                (out_h, out_w),
+                np.nan if not is_cat else 0,
+                dtype='float32' if not is_cat else 'uint8',
+            )
+            reproject(
+                source=src_arr,
+                destination=_dst,
+                src_transform=src_transform, src_crs=src_crs,
+                dst_transform=dst_transform, dst_crs=dst_crs,
+                resampling=resamp,
+                src_nodata=nodata_val,
+                dst_nodata=np.nan if not is_cat else 0,
+            )
             return _dst
 
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
