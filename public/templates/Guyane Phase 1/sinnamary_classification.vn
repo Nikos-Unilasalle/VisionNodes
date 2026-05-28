@@ -311,7 +311,7 @@
       "data": {
         "label": "Class mapping — WorldCover → MapBiomas",
         "params": {
-          "text": "## Class mapping (WorldCover → MapBiomas)\n\n| Common | WorldCover | MapBiomas |\n|--------|-----------|----------|\n| **5 Mangrove** | 95 | 41 |\n| **2 Water** | 80 | 33 |\n| **3 Wetland** | 90 | 11 |\n| **1 Forest** | 10 | 3 + 6 |\n| **4 Bare** | 60 | 25 + 30 |\n\n**Note:** MapBiomas class 6 (Flooded Forest) mapped to common=1 (Forest). May underestimate wetland agreement — adjust `ref_mapping` if needed.\n\n**Target (paper):** κ ≥ 0.70 overall, agreement ≥ 0.80 on class 5 (Mangrove).",
+          "text": "## Class mapping — WorldCover → reference\n\n### MapBiomas Amazônia (preferred)\n`ref_mapping = 3=1,6=1,11=3,25=4,30=4,33=2,41=5`\n\n| Common | WorldCover | MapBiomas |\n|--------|-----------|----------|\n| **5 Mangrove** | 95 | **41** ✓ |\n| **2 Water** | 80 | 33 |\n| **3 Wetland** | 90 | 11 |\n| **1 Forest** | 10 | 3 + 6 |\n| **4 Bare** | 60 | 25 + 30 |\n\n### IO-LULC fallback (if MapBiomas unavailable)\n`ref_mapping = 2=1,1=2,4=3,8=4` — **no specific Mangrove class** (class 4 = Flooded veg covers mangroves + wetland). Collapse pred_mapping to 4 classes: `10=1,80=2,90=3,95=3,60=4`\n\n**Target (paper):** κ ≥ 0.70 overall, agreement ≥ 0.80 on Mangrove (MapBiomas only).",
           "width": 520,
           "height": 260,
           "fontSize": 11,
