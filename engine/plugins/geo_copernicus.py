@@ -866,18 +866,43 @@ class GeoCopernicusNode(NodeProcessor):
 
                     win = _wfb(sx0, sy0, sx1, sy1, transform=_src.transform)
                     win_transform = _src.window_transform(win)
+
+                    # Downsample to target output size using COG overviews.
+                    # Reading 8000×7500 full-res takes 30s+; reading at out_h×out_w
+                    # (~3500×4000) makes GDAL pick the right overview → 3-5s.
+                    win_h = int(round(win.height))
+                    win_w = int(round(win.width))
+                    # Slight oversample vs output (×1.5) to avoid aliasing in reproject.
+                    read_h = min(win_h, max(out_h, int(out_h * 1.5)))
+                    read_w = min(win_w, max(out_w, int(out_w * 1.5)))
+
                     _log(f'    window: col_off={win.col_off:.0f} row_off={win.row_off:.0f} '
-                         f'w={win.width:.0f} h={win.height:.0f}')
+                         f'w={win_w} h={win_h}  reading at {read_w}×{read_h} '
+                         f'(overview downsample)')
 
                     t1 = _t.time()
-                    _log(f'    reading window…')
+                    _log(f'    reading window at {read_w}×{read_h}…')
                     src_arr = _src.read(
                         1, window=win, boundless=True,
+                        out_shape=(read_h, read_w),
+                        resampling=Resampling.average,
                         fill_value=nodata_val if nodata_val is not None else 0,
                     ).astype('float32')
+
+                    # Adjust window_transform for the resampled pixel size
+                    if read_h != win_h or read_w != win_w:
+                        from rasterio.transform import Affine as _Aff
+                        win_transform = _Aff(
+                            win_transform.a * win_w / read_w,
+                            win_transform.b,
+                            win_transform.c,
+                            win_transform.d,
+                            win_transform.e * win_h / read_h,
+                            win_transform.f,
+                        )
+
                     _log(f'    read done in {_t.time()-t1:.1f}s  '
                          f'shape={src_arr.shape}  '
-                         f'min={float(src_arr[np.isfinite(src_arr)].min()) if np.isfinite(src_arr).any() else "all-nan":.4f}  '
                          f'valid_px={int(np.isfinite(src_arr).sum())}')
 
             # Reproject from in-memory window array
