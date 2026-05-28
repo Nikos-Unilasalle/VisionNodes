@@ -275,12 +275,16 @@ _CMAPS = ['tab10', 'viridis', 'plasma', 'Set1', 'RdYlGn']
          'label': 'Band names (comma-separated, in stack order)'},
         {'id': 'include_classes', 'type': 'string', 'default': '',
          'label': 'Classes to include (comma-sep values, empty = all non-zero)'},
+        {'id': 'class_merge', 'type': 'string', 'default': '',
+         'label': 'Class merge before training (e.g. "90=95" merges Wetland into Mangroves)'},
+        {'id': 'class_max_samples', 'type': 'string', 'default': '',
+         'label': 'Per-class sample override (e.g. "95=15000,60=8000"; falls back to max_samples_per_class)'},
         {'id': 'n_estimators', 'type': 'int', 'default': 100, 'min': 10, 'max': 500,
          'label': 'Number of trees'},
         {'id': 'max_depth', 'type': 'int', 'default': 0, 'min': 0, 'max': 30,
          'label': 'Max depth (0 = unlimited)'},
         {'id': 'max_samples_per_class', 'type': 'int', 'default': 5000, 'min': 100, 'max': 50000,
-         'label': 'Max samples per class'},
+         'label': 'Max samples per class (global default)'},
         {'id': 'test_fraction', 'type': 'float', 'default': 0.2, 'min': 0.05, 'max': 0.5,
          'label': 'Test fraction (0.2 = 20% held-out)'},
         {'id': 'split_mode', 'type': 'enum', 'default': 1,
@@ -340,10 +344,34 @@ class GeoRFClassifierNode(NodeProcessor):
         n_estimators   = max(10, int(params.get('n_estimators', 100)))
         max_depth_raw  = int(params.get('max_depth', 0))
         max_depth      = max_depth_raw if max_depth_raw > 0 else None
-        max_spc        = max(100, int(params.get('max_samples_per_class', 5000)))
-        test_frac      = float(params.get('test_fraction', 0.2))
-        split_mode     = int(params.get('split_mode', 1))
-        block_size_px  = max(10, int(params.get('block_size_px', 50)))
+        max_spc          = max(100, int(params.get('max_samples_per_class', 5000)))
+        test_frac        = float(params.get('test_fraction', 0.2))
+        split_mode       = int(params.get('split_mode', 1))
+        block_size_px    = max(10, int(params.get('block_size_px', 50)))
+
+        # ── Parse class_merge: "90=95,91=95" → {90: 95, 91: 95} ─────────────
+        merge_map: dict[int, int] = {}
+        merge_str = str(params.get('class_merge', '')).strip()
+        for item in merge_str.split(','):
+            item = item.strip()
+            if '=' in item:
+                try:
+                    src, dst = item.split('=', 1)
+                    merge_map[int(src.strip())] = int(dst.strip())
+                except ValueError:
+                    pass
+
+        # ── Parse class_max_samples: "95=15000,60=8000" → {95: 15000, …} ────
+        cls_max: dict[int, int] = {}
+        cms_str = str(params.get('class_max_samples', '')).strip()
+        for item in cms_str.split(','):
+            item = item.strip()
+            if '=' in item:
+                try:
+                    cls, cap = item.split('=', 1)
+                    cls_max[int(cls.strip())] = max(100, int(cap.strip()))
+                except ValueError:
+                    pass
 
         # ── Feature array (C, H, W) → (H*W, C) ──────────────────────────────
         if feat_bands.ndim == 2:
@@ -361,6 +389,16 @@ class GeoRFClassifierNode(NodeProcessor):
                           progress=0.2, notif_id=_NOTIF)
         label_2d = _reproject_labels_onto(feat_geo, lbl_geo)  # (fH, fW)
         label_flat = label_2d.ravel().astype(np.int32)
+
+        # ── Apply class merge (modifies label_flat in-place) ─────────────────
+        if merge_map:
+            for src_cls, dst_cls in merge_map.items():
+                label_flat[label_flat == src_cls] = dst_cls
+            merged_summary = ', '.join(f'{s}→{d}' for s, d in merge_map.items())
+            send_notification(
+                f'RF Classifier: class merge applied: {merged_summary}',
+                progress=0.22, notif_id=_NOTIF,
+            )
 
         # ── Determine which classes to use ────────────────────────────────────
         if include_str:
@@ -392,8 +430,9 @@ class GeoRFClassifierNode(NodeProcessor):
             idx = np.where(label_flat == cls)[0]
             if len(idx) == 0:
                 continue
-            if len(idx) > max_spc:
-                idx = np.random.choice(idx, max_spc, replace=False)
+            cap = cls_max.get(cls, max_spc)   # per-class override or global default
+            if len(idx) > cap:
+                idx = np.random.choice(idx, cap, replace=False)
             sample_indices.append(idx)
             sample_labels.append(np.full(len(idx), cls, dtype=np.int32))
 
