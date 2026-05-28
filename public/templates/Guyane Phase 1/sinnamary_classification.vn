@@ -240,10 +240,12 @@
         "params": {
           "node_note": "**RF Pixel Classifier** — trains on 9-band S1+S2 features using ESA WorldCover 2021 as labels. Stratified sampling (max 5 000 px/class), 100 trees, 20 % hold-out test. Predicts every pixel → classification map + confidence + feature importance.",
           "band_names": "RVI,Span,Span_dB,NRPB,PDI,DPSVI,VV,VH,VV_VH_ratio,NDVI,MNDWI,EVI,contrast_VH,homogeneity_VH,energy_VH,correlation_VH",
-          "include_classes": "10,60,80,90,95",
+          "include_classes": "10,60,80,95",
+          "class_merge": "90=95",
+          "class_max_samples": "95=15000,80=8000,10=8000,60=8000",
           "n_estimators": 100,
           "max_depth": 0,
-          "max_samples_per_class": 5000,
+          "max_samples_per_class": 8000,
           "test_fraction": 0.2,
           "split_mode": 1,
           "block_size_px": 50,
@@ -282,7 +284,7 @@
           "class_target_b": "60",
           "f1_threshold_high": 0.85,
           "f1_threshold_low": 0.75,
-          "class_labels": "10=Trees,60=Bare,80=Water,90=Wetland,95=Mangroves"
+          "class_labels": "10=Trees,60=Bare,80=Water,95=CoastalVeg(Mgr+Wet)"
         }
       },
       "width": 440, "height": 220
@@ -343,9 +345,9 @@
       "data": {
         "params": {
           "node_note": "**RF vs MapBiomas agreement.** WorldCover→common: 10=1,60=4,80=2,90=3,95=5. MapBiomas→common: 3=1,6=1,11=3,25=4,30=4,33=2,41=5. Common: 1=Forest, 2=Water, 3=Wetland, 4=Bare, 5=Mangrove. Outputs Cohen's κ + per-class agreement bar chart (Fig 6).",
-          "pred_mapping": "10=1,60=4,80=2,90=3,95=5",
-          "ref_mapping": "3=1,6=1,11=3,25=4,30=4,33=2,41=5",
-          "common_labels": "1=Forest,2=Water,3=Wetland,4=Bare,5=Mangrove",
+          "pred_mapping": "10=1,60=4,80=2,95=5",
+          "ref_mapping": "3=1,6=5,11=5,25=4,30=4,33=2,41=5",
+          "common_labels": "1=Forest,2=Water,4=Bare,5=CoastalVeg",
           "dpi": 110
         }
       },
