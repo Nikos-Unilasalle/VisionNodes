@@ -650,26 +650,22 @@ class GeoCopernicusNode(NodeProcessor):
         ):
             return
 
-        # ── GDAL network reliability settings ─────────────────────────────────
-        # Must be set before any rasterio import or GDAL init.
-        _gdal_defaults = {
-            'GDAL_HTTP_TIMEOUT':              '30',   # per-request HTTP timeout (s)
-            'GDAL_HTTP_CONNECTTIMEOUT':       '10',   # TCP connect timeout (s)
-            'GDAL_HTTP_MAX_RETRY':            '3',    # retries per HTTP request
-            'GDAL_HTTP_RETRY_DELAY':          '2',    # back-off between retries (s)
-            'GDAL_DISABLE_READDIR_ON_OPEN':   'EMPTY_DIR',
-            'CPL_VSIL_CURL_ALLOWED_EXTENSIONS': '.tif',
-            'VSI_CURL_CACHE_SIZE':            '1048576',  # 1 MB VSICURL cache
-        }
-        for k, v in _gdal_defaults.items():
-            os.environ.setdefault(k, v)
-
         import pystac_client
         import planetary_computer
         import rasterio
         from rasterio.warp import transform_bounds, reproject, Resampling
         from rasterio.windows import from_bounds
         from rasterio.transform import Affine
+
+        # GDAL config dict — applied via rasterio.Env() inside each COG read
+        # (os.environ is too late: GDAL is already initialised by the time this runs)
+        _GDAL_COG_CFG = {
+            'GDAL_HTTP_TIMEOUT':            30,
+            'GDAL_HTTP_CONNECTTIMEOUT':     10,
+            'GDAL_HTTP_MAX_RETRY':          3,
+            'GDAL_HTTP_RETRY_DELAY':        2,
+            'GDAL_DISABLE_READDIR_ON_OPEN': 'EMPTY_DIR',
+        }
 
         # ── BBOX ──────────────────────────────────────────────────────────────
         bbox_str = str(params.get('bbox', '') or '').strip()
@@ -794,22 +790,25 @@ class GeoCopernicusNode(NodeProcessor):
         n_error   = 0
 
         def _read_one(href: str) -> np.ndarray:
-            """Read + reproject one COG asset. Runs in a worker thread."""
-            with rasterio.open(href) as _src:
-                _dst = np.full(
-                    (out_h, out_w),
-                    np.nan if not is_cat else 0,
-                    dtype='float32' if not is_cat else 'uint8',
-                )
-                reproject(
-                    source=rasterio.band(_src, 1),
-                    destination=_dst,
-                    src_transform=_src.transform, src_crs=_src.crs,
-                    dst_transform=dst_transform,  dst_crs=dst_crs,
-                    resampling=resamp,
-                    src_nodata=_src.nodata,
-                    dst_nodata=np.nan if not is_cat else 0,
-                )
+            """Read + reproject one COG asset. Runs in a worker thread.
+            Uses rasterio.Env to apply GDAL network config — os.environ
+            is ineffective after GDAL is already initialised."""
+            with rasterio.Env(**_GDAL_COG_CFG):
+                with rasterio.open(href) as _src:
+                    _dst = np.full(
+                        (out_h, out_w),
+                        np.nan if not is_cat else 0,
+                        dtype='float32' if not is_cat else 'uint8',
+                    )
+                    reproject(
+                        source=rasterio.band(_src, 1),
+                        destination=_dst,
+                        src_transform=_src.transform, src_crs=_src.crs,
+                        dst_transform=dst_transform,  dst_crs=dst_crs,
+                        resampling=resamp,
+                        src_nodata=_src.nodata,
+                        dst_nodata=np.nan if not is_cat else 0,
+                    )
             return _dst
 
         from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
@@ -864,14 +863,22 @@ class GeoCopernicusNode(NodeProcessor):
                     notif_id=self._notif_id,
                 )
 
-        if n_ok < min_ok:
+        if n_ok == 0:
             send_notification(
-                f'Copernicus[STAC]: only {n_ok}/{len(items)} scenes succeeded '
-                f'(min={min_ok}). Increase "Scene read timeout" or retry. '
-                f'(timeouts={n_timeout}, errors={n_error})',
+                f'Copernicus[STAC]: 0/{len(items)} scenes succeeded '
+                f'(timeouts={n_timeout}, errors={n_error}). '
+                f'Check network / Planetary Computer availability.',
                 level='error', notif_id=self._notif_id,
             )
             return
+        if n_ok < min_ok:
+            send_notification(
+                f'Copernicus[STAC]: only {n_ok}/{len(items)} scenes ok '
+                f'(timeouts={n_timeout}, errors={n_error}) — '
+                f'below stac_min_ok={min_ok}, but producing output anyway.',
+                level='warning', notif_id=self._notif_id,
+            )
+            # fall through — composite what we have
 
         if not any(stacks.values()):
             send_notification(
