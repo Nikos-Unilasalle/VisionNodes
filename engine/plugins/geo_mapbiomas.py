@@ -168,7 +168,7 @@ def _try_mapbiomas_gcs(year: int, bbox: tuple, resolution: int, timeout: int) ->
 
 
 def _try_io_lulc(year: int, bbox: tuple, resolution: int, timeout: int) -> tuple[np.ndarray | None, str]:
-    """Fetch IO-LULC Annual v02 from Planetary Computer. Returns (array, source_label)."""
+    """Fetch IO-LULC Annual v02 from Planetary Computer. Tries all items until valid data found."""
     try:
         from pystac_client import Client
         import planetary_computer as pc
@@ -183,32 +183,35 @@ def _try_io_lulc(year: int, bbox: tuple, resolution: int, timeout: int) -> tuple
             collections=[_IO_LULC_COLL],
             bbox=list(bbox),
             datetime=f'{year}-01-01/{year}-12-31',
-            max_items=4,
+            max_items=10,   # more items — each covers one UTM zone tile
         )
         items = list(results.items())
         _log(f'IO-LULC: {len(items)} items found')
         if not items:
             return None, ''
 
-        # pick asset — IO-LULC uses 'data' key
-        item = items[0]
-        _log(f'  item={item.id}  assets={list(item.assets)}')
-        for key in ('data', 'supercell', 'rendered_preview'):
-            if key in item.assets:
-                href = item.assets[key].href
-                _log(f'  asset={key}  href={href[:100]}')
-                break
-        else:
-            href = item.assets[next(iter(item.assets))].href
+        # STAC returns all tiles whose bbox overlaps the query — each item is one UTM zone.
+        # French Guiana (lon ~-53) = UTM zone 22N. Loop until valid_px > 0.
+        for item in items:
+            _log(f'  item={item.id}  assets={list(item.assets)}')
+            for key in ('data', 'supercell', 'rendered_preview'):
+                if key in item.assets:
+                    href = item.assets[key].href
+                    break
+            else:
+                href = item.assets[next(iter(item.assets))].href
 
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(_read_cog, href, bbox, resolution)
-            try:
-                arr = future.result(timeout=timeout)
-                if arr is not None and arr.size > 0:
-                    return arr, 'IO-LULC Annual v02 (Planetary Computer)'
-            except FuturesTimeout:
-                _log(f'  IO-LULC timeout after {timeout}s')
+            _log(f'  asset href={href[:100]}')
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(_read_cog, href, bbox, resolution)
+                try:
+                    arr = future.result(timeout=timeout)
+                    if arr is not None and np.any(arr > 0):
+                        _log(f'  valid tile: {item.id}')
+                        return arr, 'IO-LULC Annual v02 (Planetary Computer)'
+                    _log(f'  valid_px=0 — skipping tile {item.id}')
+                except FuturesTimeout:
+                    _log(f'  timeout after {timeout}s on tile {item.id}')
 
     except Exception as e:
         _log(f'IO-LULC error: {e}')
