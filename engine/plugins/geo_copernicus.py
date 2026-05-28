@@ -718,6 +718,66 @@ class GeoCopernicusNode(NodeProcessor):
         if auto and not os.path.exists(final_path):
             return
 
+        # ── Cache hit: load existing GeoTIFF, skip re-download ───────────────
+        if os.path.exists(final_path):
+            _log_early = lambda *a: print('[STAC]', *a, file=sys.stderr, flush=True)
+            _log_early(f'cache hit → {final_path}')
+            try:
+                import rasterio as _rio
+                with _rio.open(final_path) as _src:
+                    arr_c      = _src.read().astype('float32')
+                    dst_crs_c  = _src.crs
+                    dst_tf_c   = _src.transform
+                    out_h_c, out_w_c = _src.height, _src.width
+                    bnames_c   = [_src.descriptions[i] or f'band_{i+1}'
+                                  for i in range(_src.count)]
+                    is_cat_c   = col_cfg.get('categorical', False)
+                    nodata_c   = 0 if is_cat_c else float('nan')
+
+                geo_c: dict = {
+                    'bands':       arr_c,
+                    'band_names':  bnames_c,
+                    'count':       arr_c.shape[0],
+                    'width':       out_w_c,
+                    'height':      out_h_c,
+                    'crs':         dst_crs_c,
+                    'transform':   dst_tf_c,
+                    'nodata':      nodata_c,
+                    'dtype':       'uint8' if is_cat_c else 'float32',
+                    'bounds':      {'west': west, 'south': south,
+                                    'east': east, 'north': north},
+                    '_source':     col_name,
+                    '_bands':      bnames_c,
+                    '_dates':      f'{date_start} → {date_end}',
+                    '_cache_path': final_path,
+                }
+                preview_c = self._stac_preview(arr_c, bnames_c, col_cfg)
+                h_c, w_c  = preview_c.shape[:2]
+                sc_c      = min(1.0, 120 / h_c)
+                import cv2 as _cv2, base64 as _b64
+                thumb_c   = _cv2.resize(preview_c,
+                                        (max(1, int(w_c * sc_c)),
+                                         max(1, int(h_c * sc_c))))
+                _, buf_c  = _cv2.imencode('.jpg', thumb_c,
+                                          [_cv2.IMWRITE_JPEG_QUALITY, 60])
+                thumb_b64_c = _b64.b64encode(buf_c).decode('utf-8')
+
+                self._cache_data  = (geo_c, preview_c, thumb_b64_c)
+                self._thumb_dirty = True
+                send_notification(
+                    f'Copernicus[STAC]: loaded from cache — '
+                    f'{arr_c.shape[0]} band(s), {out_w_c}×{out_h_c} px',
+                    progress=1.0, notif_id=self._notif_id,
+                )
+                _notification_queue.put_nowait({
+                    '_wake_engine': True, '_node_type': 'geo_copernicus',
+                    '_notif_id': self._notif_id,
+                })
+                return
+            except Exception as _e:
+                _log_early(f'cache load failed ({_e}) — re-fetching from STAC')
+                # fall through to full download
+
         import sys, traceback as _tb, time as _time
 
         def _log(*args):
