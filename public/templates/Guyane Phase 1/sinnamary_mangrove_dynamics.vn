@@ -290,7 +290,7 @@
 
   "ui": {
     "previewSize": { "w": 920, "h": 460 },
-    "previewPos": { "x": 460, "y": 1180 },
+    "previewPos": { "x": 0, "y": 0 },
     "activePaletteIndex": 6,
     "visualizedNodeId": "n-display"
   }

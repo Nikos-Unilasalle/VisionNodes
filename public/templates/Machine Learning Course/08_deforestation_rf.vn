@@ -211,7 +211,7 @@
     },
     {
       "id": "ndvi",
-      "type": "geo_spectral_index",
+      "type": "geo_spectral_indices",
       "position": {
         "x": 380,
         "y": 720
@@ -219,15 +219,24 @@
       "data": {
         "label": "NDVI",
         "params": {
-          "sensor": "S2/L8 (RGB+NIR)",
-          "index": "NDVI (Vegetation)",
+          "node_note": "NDVI : forêt = valeurs élevées",
+          "sensor": 0,
           "nir_band": 4,
           "red_band": 3,
           "green_band": 2,
           "blue_band": 1,
           "swir_band": 5,
+          "ndvi": true,
+          "ndwi": false,
+          "evi": false,
+          "mndwi": false,
+          "nbr": false,
+          "bsi": false,
+          "expr1_enable": false,
+          "expr2_enable": false,
           "colormap": "viridis",
-          "node_note": "NDVI : forêt = valeurs élevées"
+          "clamp_min": -1.0,
+          "clamp_max": 1.0
         }
       }
     },
@@ -620,14 +629,14 @@
     {
       "id": "e_ndvi_d",
       "source": "ndvi",
-      "sourceHandle": "image__colormap",
+      "sourceHandle": "image__ndvi",
       "target": "d_ndvi",
       "targetHandle": "image__main"
     },
     {
       "id": "e_ndvi_raw_label",
       "source": "ndvi",
-      "sourceHandle": "geotiff__raw",
+      "sourceHandle": "geotiff__stack",
       "target": "label_creator",
       "targetHandle": "any__a"
     },
@@ -648,7 +657,7 @@
     {
       "id": "e_ndvi_raw_bands_table",
       "source": "ndvi",
-      "sourceHandle": "geotiff__raw",
+      "sourceHandle": "geotiff__stack",
       "target": "bands_table",
       "targetHandle": "geotiff__indices"
     },
