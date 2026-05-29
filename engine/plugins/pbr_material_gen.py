@@ -21,7 +21,7 @@ _DEPTH_MODEL_ID = 'depth-anything/Depth-Anything-V2-Small-hf'
 @vision_node(
     type_id='pbr_material_gen',
     label='PBR Material Generator',
-    category='cv',
+    category='image',
     icon='Layers',
     description=(
         "Generates PBR material maps from a single image: Albedo, Normal Map, Roughness, "

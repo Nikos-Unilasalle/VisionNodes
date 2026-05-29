@@ -192,7 +192,7 @@ def _render_bar_report(
 @vision_node(
     type_id='geo_transition_map',
     label='Transition Map',
-    category='remote sensing',
+    category='geography',
     icon='ArrowRightLeft',
     description=(
         'Bi-temporal class transition detection. Takes two classification maps (T0, T1) '

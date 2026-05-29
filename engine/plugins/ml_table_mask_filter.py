@@ -15,7 +15,7 @@ _NOTIF = 'table_mask_filter'
 @vision_node(
     type_id='ml_table_mask_filter',
     label='Table Mask Filter',
-    category='ml',
+    category='Machine Learning',
     icon='Filter',
     description=(
         "Filter a pixel DataFrame using a binary spatial mask. "

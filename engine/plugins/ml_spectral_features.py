@@ -38,7 +38,7 @@ def _info_panel(lines, w=440, h=200, title=''):
 @vision_node(
     type_id='ml_spectral_features',
     label='Spectral Features',
-    category='ml',
+    category='Machine Learning',
     icon='GitBranch',
     description=(
         "Add spectral indices and band ratios to a pixel table. "

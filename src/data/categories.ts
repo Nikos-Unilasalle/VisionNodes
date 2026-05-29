@@ -2,7 +2,7 @@ import {
   Camera, Layers, Box, Move, Target, Eye, PenTool,
   Hash, Type, Zap, Maximize, Music, BarChart3, Globe, Mountain,
   Activity, Navigation, Scissors, Database, Settings, User,
-  Ruler, Palette, Grid3X3, Leaf, Layout, Waves, GitBranch
+  Ruler, Palette, Grid3X3, Leaf, Layout, Waves, GitBranch, Search
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -247,7 +247,6 @@ export const CATEGORIES: Category[] = [
     { type: 'sci_spectral_gain',      label: 'Spectral Gain',    description: 'Amplifies or attenuates specific frequency bands.' },
     { type: 'sci_analysis_report',    label: 'Analysis Report',  description: 'Generates a structured text report from measurement data.' },
     { type: 'feat_mask_stats',        label: 'Mask Statistics',  description: 'Computes area (px and %), center of gravity, and bounding box from a binary mask. Supports intensity-weighted centroid.' },
-    { type: 'forensic_footprint',     label: 'Footprint Forensics', description: 'Full footwear analysis: pressure zones, asymmetry score, and Staheli arch index. Connect geom_obb rotated outputs.' },
     { type: 'sci_export_particles',   label: 'Export Particles', description: 'Saves particle/region measurements to a file.' },
     { type: 'sci_kmeans_list',        label: 'K-Means (List)',   description: 'Clusters a list of values into k groups.' },
     { type: 'sci_cluster_heatmap',    label: 'Cluster Heatmap',  description: 'Visualizes cluster assignments as a heatmap.' },
@@ -414,4 +413,8 @@ export const CATEGORIES: Category[] = [
   { id: '3d', label: '3D / Géométrie', icon: Box, section: 'domain', nodes: [
     { type: 'obj_depth_map', label: 'OBJ Depth Map', description: 'Charge un fichier .obj 3D (drag & drop) et génère une carte de profondeur normalisée.' },
   ]},
+  { id: 'forensics', label: 'Forensics', icon: Search, section: 'domain', nodes: [
+    { type: 'forensic_footprint', label: 'Footprint Forensics', description: 'Full footwear analysis: pressure zones, asymmetry score, and Staheli arch index. Connect geom_obb rotated outputs.' },
+  ]},
+  { id: 'hematology', label: 'Hematology', icon: Activity, section: 'domain', nodes: []},
 ];

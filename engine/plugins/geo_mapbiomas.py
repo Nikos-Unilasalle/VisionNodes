@@ -222,7 +222,7 @@ def _try_io_lulc(year: int, bbox: tuple, resolution: int, timeout: int) -> tuple
 @vision_node(
     type_id='geo_mapbiomas',
     label='MapBiomas / IO-LULC',
-    category='remote sensing',
+    category='geography',
     icon='Map',
     description=(
         'Independent LULC reference map for cross-validating RF classifiers trained on WorldCover. '
