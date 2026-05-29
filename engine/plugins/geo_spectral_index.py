@@ -22,7 +22,8 @@ _CV2_COLORMAPS = {
         "• NDVI (Veg): (NIR−Red)/(NIR+Red)\n"
         "• NDWI (Water): (Green−NIR)/(Green+NIR)\n"
         "• NBR (Burn): (NIR−SWIR)/(NIR+SWIR)\n"
-        "• EVI (Enh. Veg): 2.5*(NIR−Red)/(NIR+6*Red−7.5*Blue+1)"
+        "• EVI (Enh. Veg): 2.5*(NIR−Red)/(NIR+6*Red−7.5*Blue+1)\n"
+        "• MNDWI (Mod. Water / turbidity): (Green−SWIR)/(Green+SWIR)"
     ),
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],
     outputs=[
@@ -31,7 +32,7 @@ _CV2_COLORMAPS = {
     ],
     params=[
         {'id': 'sensor',     'type': 'enum', 'options': ['Manual', 'S2/L8 (RGB+NIR)', 'S2 (All Bands)', 'L8 (All Bands)'], 'default': 'Manual', 'label': 'Sensor'},
-        {'id': 'index',      'type': 'enum', 'options': ['NDVI (Vegetation)', 'NDWI (Water)', 'NBR (Burn)', 'EVI (Enhanced Vegetation)', 'Manual (Custom)'], 'default': 'NDVI (Vegetation)', 'label': 'Preset'},
+        {'id': 'index',      'type': 'enum', 'options': ['NDVI (Vegetation)', 'NDWI (Water)', 'NBR (Burn)', 'EVI (Enhanced Vegetation)', 'MNDWI (Modified Water)', 'Manual (Custom)'], 'default': 'NDVI (Vegetation)', 'label': 'Preset'},
         {'id': 'nir_band',   'type': 'int',  'default': 4, 'min': 1, 'max': 20, 'label': 'NIR Band'},
         {'id': 'red_band',   'type': 'int',  'default': 1, 'min': 1, 'max': 20, 'label': 'Red Band'},
         {'id': 'green_band', 'type': 'int',  'default': 2, 'min': 1, 'max': 20, 'label': 'Green Band'},
@@ -79,7 +80,7 @@ class SpectralIndexNode(NodeProcessor):
             if isinstance(val, int): return val == idx
             return str(val).startswith(target)
 
-        if is_idx(index_name, 'NDVI', 0) or is_idx(index_name, 'Manual', 4):
+        if is_idx(index_name, 'NDVI', 0) or is_idx(index_name, 'Manual', 5):
             result = (nir - red) / (nir + red + eps)
         elif is_idx(index_name, 'NDWI', 1):
             result = (green - nir) / (green + nir + eps)
@@ -87,6 +88,8 @@ class SpectralIndexNode(NodeProcessor):
             result = (nir - swir) / (nir + swir + eps)
         elif is_idx(index_name, 'EVI', 3):
             result = 2.5 * (nir - red) / (nir + 6.0 * red - 7.5 * blue + 1.0 + eps)
+        elif is_idx(index_name, 'MNDWI', 4):
+            result = (green - swir) / (green + swir + eps)
         else:
             result = np.zeros_like(nir)
 

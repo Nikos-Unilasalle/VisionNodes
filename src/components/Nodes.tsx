@@ -3813,26 +3813,70 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
   );
 };
 
+// Params excluded from the on-node chip summary (internal / non-visual)
+const _HIDDEN_PARAMS = new Set([
+  'cache_dir', 'node_note', 'output_dir', 'file_path', 'model_path',
+  'expression', 'code', 'label', 'title', 'text',
+]);
+
 const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
   const IconCmp = getIcon(schema.icon, Box);
 
-  const outputs = data.dynamicColor 
+  const outputs = data.dynamicColor
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
     : schema.outputs;
 
   const preview = nd?.preview_b64 || (typeof nd?.preview === 'string' ? nd.preview : null);
 
+  // Build visible param chips: enum + bool params, excluding internal ones, max 4
+  const paramChips: { label: string; value: string }[] = React.useMemo(() => {
+    if (!schema?.params) return [];
+    const chips: { label: string; value: string }[] = [];
+    for (const p of schema.params) {
+      if (_HIDDEN_PARAMS.has(p.id)) continue;
+      if (p.type === 'enum') {
+        const raw = data.params?.[p.id];
+        const idx = typeof raw === 'number' ? raw : (p.options?.indexOf(raw) ?? -1);
+        const val = (idx >= 0 && p.options?.[idx]) ? p.options[idx] : (raw ?? p.default ?? '');
+        // Truncate long option names to 18 chars
+        chips.push({ label: p.label || p.id, value: String(val).slice(0, 22) });
+      } else if (p.type === 'bool' || p.type === 'toggle') {
+        const val = data.params?.[p.id] ?? p.default;
+        if (val === true || val === false) {
+          chips.push({ label: p.label || p.id, value: val ? 'on' : 'off' });
+        }
+      } else if (p.type === 'string' && !_HIDDEN_PARAMS.has(p.id)) {
+        const val = data.params?.[p.id] ?? p.default ?? '';
+        if (val && String(val).length <= 30) {
+          chips.push({ label: p.label || p.id, value: String(val).slice(0, 22) });
+        }
+      }
+      if (chips.length >= 4) break;
+    }
+    return chips;
+  }, [schema, data.params]);
+
   return (
     <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
       {preview && (
-        <div className="px-2 pb-2">
-          <img 
-            src={`data:image/jpeg;base64,${preview}`} 
-            alt="Node Preview" 
-            className="w-full h-auto max-h-32 object-cover rounded-lg border border-white/10" 
+        <div className="px-2 pb-1">
+          <img
+            src={`data:image/jpeg;base64,${preview}`}
+            alt="Node Preview"
+            className="w-full h-auto max-h-32 object-cover rounded-lg border border-white/10"
           />
+        </div>
+      )}
+      {paramChips.length > 0 && (
+        <div className="px-2 pb-2 flex flex-col gap-0.5">
+          {paramChips.map(chip => (
+            <div key={chip.label} className="flex items-center justify-between px-2 py-0.5 bg-black/20 rounded-md border border-white/5">
+              <span className="text-[7px] font-black uppercase tracking-widest text-gray-600 truncate mr-1">{chip.label}</span>
+              <span className="text-[8px] font-mono text-accent/80 truncate max-w-[120px]">{chip.value}</span>
+            </div>
+          ))}
         </div>
       )}
     </BaseNode>
@@ -4277,7 +4321,9 @@ const COPERNICUS_COLLECTIONS = [
 
 export const CopernicusNode = memo(({ selected, data }: any) => {
   const nd           = useNodeData(useNodeId());
-  const thumb        = nd?._thumb || data.params?._thumb_cache;
+  const thumbRef     = React.useRef<string | undefined>(undefined);
+  if (nd?._thumb) thumbRef.current = nd._thumb;
+  const thumb        = thumbRef.current;
   const onOpenEditor = data.onOpenEditor;
   const cachePath    = nd?.meta?.cache_path as string | undefined;
 

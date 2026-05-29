@@ -92,6 +92,21 @@ const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; 
     defaultBands:['DEM'],
     hasClouds: false,
   },
+  'Sentinel-1 RTC (Planetary)': {
+    allBands:    ['vv', 'vh', 'vv_vh_ratio'],
+    defaultBands:['vv', 'vh'],
+    hasClouds: false,
+  },
+  'ESA WorldCover (10m)': {
+    allBands:    ['lulc_class'],
+    defaultBands:['lulc_class'],
+    hasClouds: false,
+  },
+  'io-lulc Annual': {
+    allBands:    ['lulc_class'],
+    defaultBands:['lulc_class'],
+    hasClouds: false,
+  },
 };
 
 const COLLECTION_NAMES = Object.keys(COLLECTIONS);
