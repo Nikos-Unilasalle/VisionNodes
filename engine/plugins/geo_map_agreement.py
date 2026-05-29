@@ -241,7 +241,7 @@ def _render_report(
 @vision_node(
     type_id='geo_map_agreement',
     label='Map Agreement',
-    category='machine learning',
+    category='Machine Learning',
     icon='GitCompare',
     description=(
         'Compares two classification maps (predicted vs reference) remapped to a '

@@ -89,7 +89,7 @@ def _protected_exp(x1):
 @vision_node(
     type_id='ml_synthetic_regression_data',
     label='Synthetic Regression Data',
-    category='ml',
+    category='Machine Learning',
     icon='Sigma',
     description=(
         "Generate a synthetic training table from a known mathematical formula. "
@@ -198,7 +198,7 @@ class SyntheticRegressionDataNode(NodeProcessor):
 @vision_node(
     type_id='ml_symbolic_regressor',
     label='GP Symbolic Regressor',
-    category='ml',
+    category='Machine Learning',
     icon='GitBranch',
     description=(
         "Genetic Programming symbolic regression with bootstrap ensemble. "
@@ -504,7 +504,7 @@ class SymbolicRegressorNode(NodeProcessor):
 @vision_node(
     type_id='ml_ensemble_apply',
     label='Ensemble Apply (μ + σ)',
-    category='ml',
+    category='Machine Learning',
     icon='Layers',
     description=(
         "Apply a trained GP ensemble to a pixel table. Each ensemble member "

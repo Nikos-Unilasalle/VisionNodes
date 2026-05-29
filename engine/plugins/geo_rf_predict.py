@@ -48,7 +48,7 @@ def _colorize(class_map: np.ndarray, classes: list[int]) -> np.ndarray:
 @vision_node(
     type_id='geo_rf_predict',
     label='RF Predict',
-    category='machine learning',
+    category='Machine Learning',
     icon='Brain',
     description=(
         'Predict-only RF classifier — applies a model trained by geo_rf_classifier '

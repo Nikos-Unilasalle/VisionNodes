@@ -128,7 +128,7 @@ def _preview_band(arr: np.ndarray) -> np.ndarray:
 @vision_node(
     type_id='geo_glcm_features',
     label='GLCM Texture',
-    category='remote sensing',
+    category='geography',
     icon='Grid3x3',
     description=(
         'Computes GLCM texture features (contrast, homogeneity, energy, correlation, '

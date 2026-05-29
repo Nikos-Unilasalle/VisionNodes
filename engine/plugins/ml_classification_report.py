@@ -54,7 +54,7 @@ def _parse_label_map(s: str) -> dict[str, str]:
 @vision_node(
     type_id='ml_classification_report',
     label='Classification Report',
-    category='machine learning',
+    category='Machine Learning',
     icon='ClipboardList',
     description=(
         "Render a publication-quality classification report from sklearn outputs. "
