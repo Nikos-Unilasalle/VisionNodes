@@ -2587,8 +2587,10 @@ const GeoEarthEngineNode = memo(({ selected, data }: any) => {
   const IconCmp = getIcon('Map', Box);
   const outputs = schema?.outputs || [{ id: 'geotiff', color: 'geotiff' }, { id: 'preview', color: 'image' }, { id: 'meta', color: 'dict' }];
 
+  const inputs = schema?.inputs || [];
+
   return (
-    <BaseNode title="Earth Engine Source" icon={IconCmp} selected={selected} data={data} color="green" inputs={[]} outputs={outputs}>
+    <BaseNode title="Earth Engine Source" icon={IconCmp} selected={selected} data={data} color="green" inputs={inputs} outputs={outputs}>
       {thumb ? (
         <img src={`data:image/jpeg;base64,${thumb}`} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-[#4f5b6b]" />
       ) : (
@@ -4335,9 +4337,11 @@ export const CopernicusNode = memo(({ selected, data }: any) => {
   const bboxParts = bbox ? bbox.split(',').map(Number) : null;
   const hasBbox   = bboxParts && bboxParts.length === 4 && bboxParts.every(isFinite);
 
+  const inputs = data.schema?.inputs || [];
+
   return (
     <BaseNode title="Copernicus CDSE" icon={(LucideIcons as any).Satellite} selected={selected} data={data} color="blue"
-      inputs={[]}
+      inputs={inputs}
       outputs={[
         { id: 'geotiff', color: 'geotiff', label: 'GeoTIFF' },
         { id: 'preview', color: 'image',   label: 'Preview' },

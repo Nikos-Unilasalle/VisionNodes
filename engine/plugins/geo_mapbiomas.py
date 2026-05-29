@@ -39,7 +39,7 @@ _GDAL_COG_CFG: dict[str, object] = {
     'GDAL_DISABLE_READDIR_ON_OPEN': 'EMPTY_DIR',
     'GDAL_HTTP_MERGE_CONSECUTIVE_RANGES': 'YES',
     'GDAL_HTTP_MULTIPLEX': 'YES',
-    'CPL_VSIL_CURL_CHUNK_SIZE': 10485760,
+    'CPL_VSIL_CURL_CHUNK_SIZE': 1048576, # 1 MB chunks
     'GDAL_CACHEMAX': 512,
 }
 
@@ -232,7 +232,9 @@ def _try_io_lulc(year: int, bbox: tuple, resolution: int, timeout: int) -> tuple
         'Both sources are independent of ESA WorldCover. '
         'Connect to geo_map_agreement for Cohen\'s kappa (Fig 6).'
     ),
-    inputs=[],
+    inputs=[
+        {'id': 'bbox', 'color': 'string', 'label': 'BBox (str)'},
+    ],
     outputs=[
         {'id': 'geotiff',  'color': 'geotiff', 'label': 'LULC geo dict (1 band, class values)'},
         {'id': 'preview',  'color': 'image',   'label': 'Colorized LULC preview'},
@@ -275,6 +277,10 @@ class GeoMapBiomasNode(NodeProcessor):
         from rasterio.transform import from_bounds
 
         # ── Parse params ─────────────────────────────────────────────────────
+        params = params.copy()
+        if inputs.get('bbox') is not None:
+            params['bbox'] = inputs['bbox']
+            
         bbox_str   = str(params.get('bbox', '-53.30,4.40,-52.60,5.50')).strip()
         year       = int(params.get('year', 2023))
         source_idx = int(params.get('source', 0))

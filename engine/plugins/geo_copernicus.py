@@ -151,7 +151,11 @@ _CLASS_PALETTES = {
         "Draw your area of interest in the map editor (hover → Open Editor). "
         "Credentials: Client ID + Secret from shapps.dataspace.copernicus.eu."
     ),
-    inputs=[],
+    inputs=[
+        {'id': 'bbox',       'color': 'string', 'label': 'BBox (str)'},
+        {'id': 'date_start', 'color': 'string', 'label': 'Start Date'},
+        {'id': 'date_end',   'color': 'string', 'label': 'End Date'},
+    ],
     outputs=[
         {'id': 'geotiff', 'color': 'geotiff', 'label': 'GeoTIFF'},
         {'id': 'preview', 'color': 'image',   'label': 'Preview RGB'},
@@ -680,7 +684,7 @@ class GeoCopernicusNode(NodeProcessor):
             'GDAL_DISABLE_READDIR_ON_OPEN':       'EMPTY_DIR',
             'GDAL_HTTP_MERGE_CONSECUTIVE_RANGES': 'YES',   # fewer HTTP round-trips
             'GDAL_HTTP_MULTIPLEX':                'YES',   # HTTP/2 multiplexing
-            'CPL_VSIL_CURL_CHUNK_SIZE':           10485760, # 10 MB chunks
+            'CPL_VSIL_CURL_CHUNK_SIZE':           1048576,  # 1 MB chunks (7x speedup vs 10MB)
             'GDAL_CACHEMAX':                      512,      # MB GDAL block cache
         }
 
@@ -902,18 +906,19 @@ class GeoCopernicusNode(NodeProcessor):
         try:
             import time as _t_mod
             t_load = _t_mod.time()
-            ds = odc.stac.load(
-                items,
-                bands=asset_keys,
-                bbox=(west, south, east, north),
-                resolution=resolution,
-                crs=dst_crs,
-                chunks=None,                      # eager: fully materialize now
-                resampling='nearest' if is_cat else 'average',
-                fail_on_error=False,
-                dtype='float32' if not is_cat else 'uint8',
-                nodata=float('nan') if not is_cat else 0,
-            )
+            with rasterio.Env(**_GDAL_COG_CFG):
+                ds = odc.stac.load(
+                    items,
+                    bands=asset_keys,
+                    bbox=(west, south, east, north),
+                    resolution=resolution,
+                    crs=dst_crs,
+                    chunks={'x': 2048, 'y': 2048},    # Dask lazy loading (prevents OOM on large AOIs)
+                    resampling='nearest' if is_cat else 'average',
+                    fail_on_error=False,
+                    dtype='float32' if not is_cat else 'uint8',
+                    nodata=float('nan') if not is_cat else 0,
+                )
             _log(f'odc.stac.load returned in {_t_mod.time()-t_load:.1f}s  '
                  f'vars={list(ds.data_vars)}  sizes={dict(ds.sizes)}')
         except Exception as e:
@@ -1092,6 +1097,14 @@ class GeoCopernicusNode(NodeProcessor):
     # ── process ───────────────────────────────────────────────────────────────
 
     def process(self, inputs: dict, params: dict) -> dict:
+        params = params.copy()
+        if inputs.get('bbox') is not None:
+            params['bbox'] = inputs['bbox']
+        if inputs.get('date_start') is not None:
+            params['date_start'] = inputs['date_start']
+        if inputs.get('date_end') is not None:
+            params['date_end'] = inputs['date_end']
+
         # Clear stale internal cache when download-relevant params change
         # (e.g. user duplicated node then changed bbox/dates without clicking Fetch)
         dl_key = self._dl_params_key(params)

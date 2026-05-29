@@ -85,10 +85,20 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
   }, [val]);
 
   const handleChange = (s: string) => {
-    setTempVal(s);
-    const parsed = parseFloat(s);
+    const normalized = s.replace(/,/g, '.');
+    setTempVal(normalized);
+    if (normalized === '' || normalized === '-' || normalized === '.') {
+      return;
+    }
+    const parsed = parseFloat(normalized);
     if (!isNaN(parsed)) {
       onChange(parsed);
+    }
+  };
+
+  const handleBlur = () => {
+    if (tempVal === '' || tempVal === '-' || tempVal === '.') {
+      setTempVal(val.toString());
     }
   };
 
@@ -97,12 +107,25 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
       <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
       <input
         type="text" value={tempVal} onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
         onKeyDown={(e) => e.stopPropagation()}
         className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
       />
     </div>
   );
 };
+
+interface DateInputProps { label: string; val: string; onChange: (v: string) => void; }
+export const DateInput = ({ label, val, onChange }: DateInputProps) => (
+  <div className="space-y-4 group">
+    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <input
+      type="date" value={val} onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => e.stopPropagation()}
+      className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all cursor-pointer font-mono shadow-inner"
+    />
+  </div>
+);
 
 interface SelectInputProps { label: string; val: any; options: (string | { label: string; value: any })[]; onChange: (v: any) => void; }
 export const SelectInput = ({ label, val, options, onChange }: SelectInputProps) => (
@@ -929,7 +952,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
         const isEnum    = sp.type === 'enum' || sp.options;
         const isColor   = sp.type === 'color';
-        const isString  = sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string';
+        const isDate    = sp.type === 'date' || sp.id === 'date_start' || sp.id === 'date_end';
+        const isString  = (sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string') && !isDate;
         const isNumber  = sp.type === 'number' || sp.type === 'float' || typeof (p[sp.id] ?? sp.default) === 'number';
         const isBool    = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
 
@@ -963,22 +987,28 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
         } else if (sp.type === 'file_path') {
           inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} />;
+        } else if (isDate) {
+          inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isString) {
           inner = sp.id === 'code'
             ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
             : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
         } else if (isNumber) {
           const val = Number(p[sp.id] ?? sp.default ?? 0);
-          const min = sp.min ?? -10;
-          const max = sp.max ?? 100;
-          inner = <Slider 
-            label={sp.label || sp.id} 
-            val={val} 
-            min={min} 
-            max={max} 
-            step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
-            onChange={(v) => up({ [sp.id]: v })} 
-          />;
+          if (sp.min === undefined || sp.max === undefined) {
+            inner = <NumberInput label={sp.label || sp.id} val={val} onChange={(v) => up({ [sp.id]: v })} />;
+          } else {
+            const min = sp.min;
+            const max = sp.max;
+            inner = <Slider 
+              label={sp.label || sp.id} 
+              val={val} 
+              min={min} 
+              max={max} 
+              step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
+              onChange={(v) => up({ [sp.id]: v })} 
+            />;
+          }
         } else if (isBool) {
           inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
         } else {

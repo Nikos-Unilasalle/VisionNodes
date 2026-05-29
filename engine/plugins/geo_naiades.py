@@ -62,7 +62,11 @@ def _info_panel(lines: list, w: int = 480, h: int = 240, title: str = '') -> np.
         "Filter by bounding box, date range, and water quality parameter. "
         "Turbidity (NTU) code: 1295. Requires internet connection."
     ),
-    inputs=[],
+    inputs=[
+        {'id': 'bbox',       'color': 'string', 'label': 'BBox (str)'},
+        {'id': 'date_start', 'color': 'string', 'label': 'Start Date'},
+        {'id': 'date_end',   'color': 'string', 'label': 'End Date'},
+    ],
     outputs=[
         {'id': 'csv_table',   'color': 'data',   'label': 'Measurements table (lat/lon/label)'},
         {'id': 'preview',     'color': 'image',  'label': 'Download summary'},
@@ -130,15 +134,33 @@ class NaiadesNode(NodeProcessor):
         # ── Resolve region (preset overrides custom bbox unless 'Custom bbox')
         region_key = list(_REGION_PRESETS.keys())[int(params.get('region', 0))]
         preset = _REGION_PRESETS[region_key]
-        if preset is not None:
-            lon_min, lat_min, lon_max, lat_max = preset
+        
+        bbox_in = str(inputs.get('bbox', '') or '').strip()
+        if bbox_in:
+            try:
+                parts = [float(v) for v in bbox_in.split(',')]
+                if len(parts) == 4:
+                    lon_min, lat_min, lon_max, lat_max = parts
+                else:
+                    raise ValueError
+            except Exception:
+                lon_min, lat_min, lon_max, lat_max = preset if preset else (
+                    float(params.get('bbox_lon_min', -5.5)),
+                    float(params.get('bbox_lat_min', 41.0)),
+                    float(params.get('bbox_lon_max',  9.5)),
+                    float(params.get('bbox_lat_max', 51.5))
+                )
         else:
-            lon_min = float(params.get('bbox_lon_min', -5.5))
-            lon_max = float(params.get('bbox_lon_max',  9.5))
-            lat_min = float(params.get('bbox_lat_min', 41.0))
-            lat_max = float(params.get('bbox_lat_max', 51.5))
-        d_min   = str(params.get('date_min', '2017-01-01')).strip()
-        d_max   = str(params.get('date_max', '2024-12-31')).strip()
+            if preset is not None:
+                lon_min, lat_min, lon_max, lat_max = preset
+            else:
+                lon_min = float(params.get('bbox_lon_min', -5.5))
+                lon_max = float(params.get('bbox_lon_max',  9.5))
+                lat_min = float(params.get('bbox_lat_min', 41.0))
+                lat_max = float(params.get('bbox_lat_max', 51.5))
+                
+        d_min   = str(inputs.get('date_start') or params.get('date_min', '2017-01-01')).strip()
+        d_max   = str(inputs.get('date_end') or params.get('date_max', '2024-12-31')).strip()
         t_min   = float(params.get('target_min', 0.0))
         t_max   = float(params.get('target_max', 500.0))
         max_r   = min(int(params.get('max_results', 5000)), 20000)
