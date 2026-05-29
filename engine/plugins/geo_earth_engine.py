@@ -65,7 +65,11 @@ COLLECTIONS = {
     category='geography',
     icon='Map',
     description="Download satellite imagery from Google Earth Engine. Sentinel-2, Landsat-8, MODIS. Automatic local cache.",
-    inputs=[],
+    inputs=[
+        {'id': 'bbox',       'color': 'string', 'label': 'BBox (str)'},
+        {'id': 'date_start', 'color': 'string', 'label': 'Start Date'},
+        {'id': 'date_end',   'color': 'string', 'label': 'End Date'},
+    ],
     outputs=[
         {'id': 'geotiff', 'color': 'geotiff', 'label': 'GeoTIFF'},
         {'id': 'preview', 'color': 'image',   'label': 'Preview'},
@@ -246,7 +250,16 @@ class EarthEngineSourceNode(NodeProcessor):
             )
 
             # Pixel grid from bbox + scale
-            west, south, east, north = self._bbox(lat, lon, size_km)
+            bbox_str = str(params.get('bbox', '') or '').strip()
+            if bbox_str:
+                parts = [float(v) for v in bbox_str.split(',')]
+                if len(parts) == 4:
+                    west, south, east, north = parts
+                else:
+                    west, south, east, north = self._bbox(lat, lon, size_km)
+            else:
+                west, south, east, north = self._bbox(lat, lon, size_km)
+                
             lat_c = (south + north) / 2
             scale_lon_deg = scale_m / (111320.0 * math.cos(math.radians(lat_c)))
             scale_lat_deg = scale_m / 111320.0
@@ -472,6 +485,14 @@ class EarthEngineSourceNode(NodeProcessor):
     # ------------------------------------------------------------------ process
 
     def process(self, inputs, params):
+        params = params.copy()
+        if inputs.get('bbox') is not None:
+            params['bbox'] = inputs['bbox']
+        if inputs.get('date_start') is not None:
+            params['date_start'] = inputs['date_start']
+        if inputs.get('date_end') is not None:
+            params['date_end'] = inputs['date_end']
+
         fetch = bool(params.get('fetch', False))
         rising_edge = fetch and not self._prev_fetch
         self._prev_fetch = fetch

@@ -1,0 +1,844 @@
+{
+  "nodes": [
+    {
+      "id": "note-header",
+      "type": "canvas_note",
+      "position": {
+        "x": 20,
+        "y": -220
+      },
+      "data": {
+        "label": "Sinnamary S1+S2 Fusion — Phase 2",
+        "params": {
+          "text": "# Sinnamary S1+S2 Fusion — Phase 2\n\n**Goal:** Enrich the Phase 1 SAR-only baseline with Sentinel-2 spectral indices for better mangrove / orpaillage discrimination.\n\n**Why S2?** S1 alone confuses mangrove (double-bounce) with flooded non-mangrove wetlands, and bare orpaillage soil with natural river bars. S2 MNDWI + EVI break these ambiguities.\n\n## Pipeline\n🟦 **S1 branch (left):** S1 RTC 2024 → s1_polarization_features (6 radar indices)\n🟩 **S2 branch (centre):** S2 L2A 2024 → geo_spectral_indices (NDVI + MNDWI + EVI in one node) → 3-band stack\n🟧 **Fusion (right):** geo_band_stack merges S1 (6) + S2 (3) → 9-band feature raster\n🟥 **LULC change:** geo_time_align 2017→2024\n\n## Key simplification vs previous design\nThree separate `geo_spectral_index` nodes + two `geo_band_stack` chains replaced by **one `geo_spectral_indices` node** that outputs the 3-band `stack` directly.",
+          "width": 1540,
+          "height": 280,
+          "fontSize": 13,
+          "color_index": 4
+        }
+      },
+      "width": 1155,
+      "height": 336,
+      "selected": false
+    },
+    {
+      "id": "n-s1-2024",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -280,
+        "y": -20
+      },
+      "data": {
+        "params": {
+          "node_note": "**S1 RTC 2024** — annual median composite, Sinnamary union BBOX. VV + VH in dB. Collection 5 = Sentinel-1 RTC (Planetary Computer, no auth). 20 m resolution.",
+          "bbox": "-53.300000,4.400000,-52.600000,5.500000",
+          "collection": "5",
+          "date_start": "2024-01-01",
+          "date_end": "2024-12-31",
+          "resolution": "20",
+          "stac_polarization": 0,
+          "stac_orbit": 0,
+          "stac_composite": 0,
+          "stac_to_db": true,
+          "stac_max_scenes": 10,
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "bands": "vv,vh",
+          "cloud_max": "20"
+        }
+      },
+      "width": 208,
+      "height": 450,
+      "selected": true,
+      "positionAbsolute": {
+        "x": -280,
+        "y": -20
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-s1-pol",
+      "type": "s1_polarization_features",
+      "position": {
+        "x": 60,
+        "y": 240
+      },
+      "data": {
+        "params": {
+          "node_note": "**S1 polarization features** — 6 radar indices (RVI, NRPB, PDI, Span lin+dB, DPSVI). Primary input to the 9-band fusion stack.",
+          "rvi": true,
+          "span": true,
+          "span_db": true,
+          "nrpb": true,
+          "pdi": true,
+          "pri": false,
+          "dpsvi": true,
+          "output_db": true,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 138,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 60,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-s2-2024",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -280,
+        "y": 1020
+      },
+      "data": {
+        "params": {
+          "node_note": "**S2 L2A 2024** — cloud-filtered composite (< 30 % cloud). Bands B04 B03 B02 B08 B11 = Red(1) Green(2) Blue(3) NIR(4) SWIR1(5). Band order matches the spectral_indices band assignments.",
+          "bbox": "-53.300000,4.400000,-52.600000,5.500000",
+          "collection": "1",
+          "date_start": "2024-01-01",
+          "date_end": "2024-12-31",
+          "resolution": "20",
+          "bands": "B04,B03,B02,B08,B11",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "cloud_max": "20"
+        }
+      },
+      "width": 208,
+      "height": 474,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -280,
+        "y": 1020
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-s2-idx",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": 60,
+        "y": 420
+      },
+      "data": {
+        "params": {
+          "node_note": "**NDVI + MNDWI + EVI** — three indices in one node. `stack` output = 3-band geo dict (NDVI / MNDWI / EVI) feeding the S1+S2 fusion. Individual outputs (ndvi / mndwi / evi) go to the display panels.",
+          "sensor": 0,
+          "nir_band": 4,
+          "red_band": 1,
+          "green_band": 2,
+          "blue_band": 3,
+          "swir_band": 5,
+          "ndvi": true,
+          "ndwi": false,
+          "evi": true,
+          "mndwi": true,
+          "nbr": false,
+          "bsi": false,
+          "expr1_enable": false,
+          "expr2_enable": false,
+          "colormap": "viridis",
+          "clamp_min": -1,
+          "clamp_max": 1
+        }
+      },
+      "width": 208,
+      "height": 345,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 60,
+        "y": 420
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-stack-final",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 440,
+        "y": 280
+      },
+      "data": {
+        "params": {
+          "node_note": "**S1 (6 bands) + S2 (3 bands) → 9-band fused stack.** S1 pol features as primary (reference grid at 20 m). S2 index stack reprojects onto S1 grid (bilinear). Ready for geo_rf_classifier or other ml_* nodes.",
+          "resampling": 0,
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 440,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-wc-2021",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -920,
+        "y": 1740
+      },
+      "data": {
+        "params": {
+          "node_note": "**ESA WorldCover 2021** — 10 m ground truth, collection 6. Mangroves = class 95, Herbaceous wetland = 90. Validation reference for the fused stack.",
+          "bbox": "-53.30,4.40,-52.60,5.50",
+          "collection": 6,
+          "date_start": "2021-01-01",
+          "date_end": "2021-12-31",
+          "resolution": 20,
+          "cache_dir": "copernicus_cache",
+          "fetch": 0
+        }
+      },
+      "width": 208,
+      "height": 261,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -920,
+        "y": 1740
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-iolulc-2017",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -280,
+        "y": 480
+      },
+      "data": {
+        "params": {
+          "node_note": "**io-lulc 2017 (t₀)** — collection 7, change detection baseline.",
+          "bbox": "-53.300000,4.400000,-52.600000,5.500000",
+          "collection": "7",
+          "date_start": "2017-01-01",
+          "date_end": "2017-12-31",
+          "resolution": "20",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "bands": "lulc_class",
+          "cloud_max": "20"
+        }
+      },
+      "width": 208,
+      "height": 450,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -280,
+        "y": 480
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-iolulc-2024",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -280,
+        "y": 1560
+      },
+      "data": {
+        "params": {
+          "node_note": "**io-lulc 2024 (t₁)** — collection 7. Phase 1 result: +1.2 % Flooded veg, −0.77 % Trees over 7 years.",
+          "bbox": "-53.300000,4.400000,-52.600000,5.500000",
+          "collection": "7",
+          "date_start": "2024-01-01",
+          "date_end": "2024-12-31",
+          "resolution": "20",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "bands": "lulc_class",
+          "cloud_max": "20"
+        }
+      },
+      "width": 208,
+      "height": 450,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -280,
+        "y": 1560
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-time-align",
+      "type": "geo_time_align",
+      "position": {
+        "x": 720,
+        "y": 600
+      },
+      "data": {
+        "params": {
+          "node_note": "**Change detection 2017→2024** — nearest-neighbor reproject (categorical), per-pixel class diff, binary change mask.",
+          "resampling": 0,
+          "change_threshold": 0.5,
+          "preview_band": "lulc_class",
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 720,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-display",
+      "type": "output_display",
+      "position": {
+        "x": 1560,
+        "y": 280
+      },
+      "data": {
+        "params": {
+          "node_note": "**Results — S1+S2 fusion.** 6 panels: S1 polarization RGB, S2 NDVI, S2 MNDWI, S2 EVI, fused 9-band preview, LULC change 2017→2024."
+        },
+        "ports": [
+          {
+            "id": "image__0_s1pol",
+            "color": "image",
+            "label": "S1 Pol RGB"
+          },
+          {
+            "id": "image__1_ndvi",
+            "color": "image",
+            "label": "NDVI"
+          },
+          {
+            "id": "image__2_mndwi",
+            "color": "image",
+            "label": "MNDWI"
+          },
+          {
+            "id": "image__3_evi",
+            "color": "image",
+            "label": "EVI"
+          },
+          {
+            "id": "image__4_fused",
+            "color": "image",
+            "label": "S1+S2 Fused"
+          },
+          {
+            "id": "image__5_change",
+            "color": "image",
+            "label": "Change 17→24"
+          }
+        ],
+        "minified": false
+      },
+      "width": 208,
+      "height": 345,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1560,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780048042847-50huea94w",
+      "type": "geo_bbox",
+      "position": {
+        "x": -780,
+        "y": 360
+      },
+      "style": {},
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -53.3,
+          "lon_max": -52.6,
+          "lat_min": 4.4,
+          "lat_max": 5.5
+        },
+        "schema": {
+          "type": "geo_bbox",
+          "label": "Bounding Box",
+          "category": "geography",
+          "icon": "Square",
+          "description": "Defines a Region of Interest (ROI) bounding box to share across geography nodes.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "bbox",
+              "color": "string",
+              "label": "BBox (str)"
+            }
+          ],
+          "params": [
+            {
+              "id": "lon_min",
+              "label": "West (Lon Min)",
+              "type": "float",
+              "default": -5.5
+            },
+            {
+              "id": "lat_min",
+              "label": "South (Lat Min)",
+              "type": "float",
+              "default": 41
+            },
+            {
+              "id": "lon_max",
+              "label": "East (Lon Max)",
+              "type": "float",
+              "default": 9.5
+            },
+            {
+              "id": "lat_max",
+              "label": "North (Lat Max)",
+              "type": "float",
+              "default": 51.5
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -780,
+        "y": 360
+      }
+    },
+    {
+      "id": "node-1780048133422-9krtmx3uc",
+      "type": "geo_time_period",
+      "position": {
+        "x": -780,
+        "y": 200
+      },
+      "style": {},
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_end": "2024-12-31"
+        },
+        "schema": {
+          "type": "geo_time_period",
+          "label": "Time Period",
+          "category": "geography",
+          "icon": "Calendar",
+          "description": "Defines a time period (start and end dates) to share across geography nodes.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "date_start",
+              "color": "string",
+              "label": "Start Date"
+            },
+            {
+              "id": "date_end",
+              "color": "string",
+              "label": "End Date"
+            }
+          ],
+          "params": [
+            {
+              "id": "date_start",
+              "label": "Start Date (YYYY-MM-DD)",
+              "type": "string",
+              "default": "2024-01-01"
+            },
+            {
+              "id": "date_end",
+              "label": "End Date (YYYY-MM-DD)",
+              "type": "string",
+              "default": "2024-06-01"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -780,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1780048469795_ufze",
+      "type": "canvas_teleport",
+      "position": {
+        "x": -700,
+        "y": 1440
+      },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "source_id": "node-1780048042847-50huea94w",
+          "source_type": "geo_bbox"
+        },
+        "source_outputs": [
+          {
+            "id": "bbox",
+            "color": "string",
+            "label": "BBox (str)"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": false,
+      "height": 70,
+      "positionAbsolute": {
+        "x": -700,
+        "y": 1440
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780048519397-0.4015504616987301",
+      "type": "geo_time_period",
+      "position": {
+        "x": -780,
+        "y": 520
+      },
+      "style": {},
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_end": "2017-12-31",
+          "date_start": "2017-01-01"
+        },
+        "schema": {
+          "type": "geo_time_period",
+          "label": "Time Period",
+          "category": "geography",
+          "icon": "Calendar",
+          "description": "Defines a time period (start and end dates) to share across geography nodes.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "date_start",
+              "color": "string",
+              "label": "Start Date"
+            },
+            {
+              "id": "date_end",
+              "color": "string",
+              "label": "End Date"
+            }
+          ],
+          "params": [
+            {
+              "id": "date_start",
+              "label": "Start Date (YYYY-MM-DD)",
+              "type": "string",
+              "default": "2024-01-01"
+            },
+            {
+              "id": "date_end",
+              "label": "End Date (YYYY-MM-DD)",
+              "type": "string",
+              "default": "2024-06-01"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -780,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1780048559885_evhz",
+      "type": "canvas_teleport",
+      "position": {
+        "x": -700,
+        "y": 1320
+      },
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "source_id": "node-1780048133422-9krtmx3uc",
+          "source_type": "geo_time_period"
+        },
+        "source_outputs": [
+          {
+            "id": "date_start",
+            "color": "string",
+            "label": "Start Date"
+          },
+          {
+            "id": "date_end",
+            "color": "string",
+            "label": "End Date"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": false,
+      "height": 98,
+      "positionAbsolute": {
+        "x": -700,
+        "y": 1320
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-s1-pol",
+      "source": "n-s1-2024",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-s1-pol",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e-s2-idx",
+      "source": "n-s2-2024",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-s2-idx",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e-stk-final-p",
+      "source": "n-s1-pol",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stack-final",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e-stk-final-s",
+      "source": "n-s2-idx",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-stack-final",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e-ta-2017",
+      "source": "n-iolulc-2017",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-time-align",
+      "targetHandle": "geotiff__t0_geotiff",
+      "selected": false
+    },
+    {
+      "id": "e-ta-2024",
+      "source": "n-iolulc-2024",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-time-align",
+      "targetHandle": "geotiff__t1_geotiff",
+      "selected": false
+    },
+    {
+      "id": "e-disp-s1pol",
+      "source": "n-s1-pol",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__0_s1pol",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "id": "e-disp-ndvi",
+      "source": "n-s2-idx",
+      "sourceHandle": "image__ndvi",
+      "target": "n-display",
+      "targetHandle": "image__1_ndvi",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "id": "e-disp-mndwi",
+      "source": "n-s2-idx",
+      "sourceHandle": "image__mndwi",
+      "target": "n-display",
+      "targetHandle": "image__2_mndwi",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "id": "e-disp-evi",
+      "source": "n-s2-idx",
+      "sourceHandle": "image__evi",
+      "target": "n-display",
+      "targetHandle": "image__3_evi",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "id": "e-disp-fused",
+      "source": "n-stack-final",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__4_fused",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "id": "e-disp-change",
+      "source": "n-time-align",
+      "sourceHandle": "image__preview",
+      "target": "n-display",
+      "targetHandle": "image__5_change",
+      "data": {
+        "ribbonIds": []
+      },
+      "selected": false
+    },
+    {
+      "source": "node-1780048042847-50huea94w",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1-2024",
+      "targetHandle": "string__bbox",
+      "id": "e-1780048418058",
+      "selected": false
+    },
+    {
+      "source": "node-1780048133422-9krtmx3uc",
+      "sourceHandle": "string__date_start",
+      "target": "n-s1-2024",
+      "targetHandle": "string__date_start",
+      "id": "e-1780048453273",
+      "selected": false
+    },
+    {
+      "source": "node-1780048133422-9krtmx3uc",
+      "sourceHandle": "string__date_end",
+      "target": "n-s1-2024",
+      "targetHandle": "string__date_end",
+      "id": "e-1780048454604",
+      "selected": false
+    },
+    {
+      "source": "node-1780048042847-50huea94w",
+      "sourceHandle": "string__bbox",
+      "target": "n-iolulc-2017",
+      "targetHandle": "string__bbox",
+      "id": "e-1780048478805"
+    },
+    {
+      "source": "teleport_1780048469795_ufze",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2-2024",
+      "targetHandle": "string__bbox",
+      "id": "e-1780048487383",
+      "selected": false
+    },
+    {
+      "source": "teleport_1780048469795_ufze",
+      "sourceHandle": "string__bbox",
+      "target": "n-iolulc-2024",
+      "targetHandle": "string__bbox",
+      "id": "e-1780048490728",
+      "selected": false
+    },
+    {
+      "source": "node-1780048519397-0.4015504616987301",
+      "sourceHandle": "string__date_start",
+      "target": "n-iolulc-2017",
+      "targetHandle": "string__date_start",
+      "id": "e-1780048535840"
+    },
+    {
+      "source": "node-1780048519397-0.4015504616987301",
+      "sourceHandle": "string__date_end",
+      "target": "n-iolulc-2017",
+      "targetHandle": "string__date_end",
+      "id": "e-1780048537394"
+    },
+    {
+      "source": "teleport_1780048559885_evhz",
+      "sourceHandle": "string__date_start",
+      "target": "n-s2-2024",
+      "targetHandle": "string__date_start",
+      "id": "e-1780048568249",
+      "selected": false
+    },
+    {
+      "source": "teleport_1780048559885_evhz",
+      "sourceHandle": "string__date_end",
+      "target": "n-s2-2024",
+      "targetHandle": "string__date_end",
+      "id": "e-1780048570064",
+      "selected": false
+    },
+    {
+      "source": "teleport_1780048559885_evhz",
+      "sourceHandle": "string__date_start",
+      "target": "n-iolulc-2024",
+      "targetHandle": "string__date_start",
+      "id": "e-1780048609755",
+      "selected": false
+    },
+    {
+      "source": "teleport_1780048559885_evhz",
+      "sourceHandle": "string__date_end",
+      "target": "n-iolulc-2024",
+      "targetHandle": "string__date_end",
+      "id": "e-1780048611552",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 947.3984375,
+      "h": 632
+    },
+    "previewPos": {
+      "x": 372.98828125,
+      "y": -43.296875
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "n-s1-2024"
+  }
+}

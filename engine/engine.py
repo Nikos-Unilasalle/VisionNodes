@@ -684,7 +684,7 @@ async def main(engine_instance):
     try:
         # Increase timeouts and disable pings to be more resilient during heavy CPU/Network load (SAM Large)
         async with websockets.serve(
-            engine_instance.hdl, "localhost", 8765,
+            engine_instance.hdl, "127.0.0.1", 8765,
             ping_interval=None,
             ping_timeout=None,
             close_timeout=60,
