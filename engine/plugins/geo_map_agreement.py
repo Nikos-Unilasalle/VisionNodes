@@ -41,9 +41,12 @@ _MPL_DARK = {
     'grid.linewidth':    0.5,
 }
 
-_DEFAULT_PRED_MAPPING  = '10=1,60=4,80=2,90=3,95=5'
-_DEFAULT_REF_MAPPING   = '3=1,6=1,11=3,25=4,30=4,33=2,41=5'
-_DEFAULT_COMMON_LABELS = '1=Forest,2=Water,3=Wetland,4=Bare,5=Mangrove'
+# Defaults match the 4-class merged WorldCover model (95 = CoastalVeg = mangrove+wetland)
+# compared against IO-LULC Annual v02 (Planetary Computer fallback when MapBiomas COGs 404).
+# IO-LULC codes: 1=Water, 2=Trees, 4=FloodedVeg, 7=Built, 8=Bare, 11=Rangeland.
+_DEFAULT_PRED_MAPPING  = '10=1,60=4,80=2,95=5'
+_DEFAULT_REF_MAPPING   = '1=2,2=1,4=5,8=4,11=4'
+_DEFAULT_COMMON_LABELS = '1=Forest,2=Water,4=Bare,5=CoastalVeg'
 
 # BGR colors for agreement map
 _AGREE_COLOR    = (50,  200,  50)   # green — agree
@@ -177,7 +180,7 @@ def _render_report(
             ax_bar.set_xlim(0, 1.0)
             ax_bar.set_xlabel('Agreement (proportion)', fontsize=8)
             ax_bar.set_title(
-                'Per-class agreement: RF (WorldCover classes) vs MapBiomas',
+                'Per-class agreement: RF (WorldCover classes) vs Reference (IO-LULC)',
                 fontsize=8, pad=5,
             )
             ax_bar.axvline(0.85, color='#555', linestyle='--', linewidth=0.8)
@@ -210,10 +213,10 @@ def _render_report(
                 color='#888888',
                 transform=ax_kappa.transAxes,
             )
-            ax_kappa.set_title('Cohen\'s κ\nvs MapBiomas', fontsize=8, pad=5)
+            ax_kappa.set_title('Cohen\'s κ\nvs Reference (IO-LULC)', fontsize=8, pad=5)
 
             fig.suptitle(
-                f'Independent validation — RF (WorldCover-trained) vs MapBiomas  '
+                f'Independent validation — RF (WorldCover-trained) vs Reference (IO-LULC)  '
                 f'·  κ={kappa:.3f}  ·  OA={oa:.1%}',
                 fontsize=9, y=1.01,
             )
@@ -244,12 +247,12 @@ def _render_report(
         'Compares two classification maps (predicted vs reference) remapped to a '
         'common label space. Computes Cohen\'s kappa and per-class spatial agreement '
         'for independent accuracy assessment. Designed for RF (WorldCover classes) '
-        'vs MapBiomas cross-validation. '
+        'vs Reference (IO-LULC) cross-validation. '
         'Outputs: agreement RGB map, kappa scalar, report figure (Fig 6).'
     ),
     inputs=[
         {'id': 'classmap',  'color': 'geotiff', 'label': 'Predicted classmap (RF output)'},
-        {'id': 'reference', 'color': 'geotiff', 'label': 'Reference map (MapBiomas geo dict)'},
+        {'id': 'reference', 'color': 'geotiff', 'label': 'Reference map (IO-LULC or MapBiomas)'},
     ],
     outputs=[
         {'id': 'agreement', 'color': 'image',  'label': 'Agreement map (green=agree, red=disagree)'},
@@ -290,7 +293,7 @@ class GeoMapAgreementNode(NodeProcessor):
 
         if not isinstance(pred_geo, dict) or not isinstance(ref_geo, dict):
             send_notification(
-                'Map Agreement: connect classmap (RF) + reference (MapBiomas)',
+                'Map Agreement: connect classmap (RF) + reference (LULC)',
                 notif_id=_NOTIF,
             )
             return {}
