@@ -2,6 +2,13 @@ import { useCallback } from 'react';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, rename, readDir } from '@tauri-apps/plugin-fs';
 
+/** Guard against canvas-coordinate values accidentally stored as previewPos. */
+function _clampPreviewPos(pos: { x: number; y: number }): { x: number; y: number } {
+  const MAX = 800;
+  if (Math.abs(pos.x) > MAX || Math.abs(pos.y) > MAX) return { x: 0, y: 0 };
+  return pos;
+}
+
 export function useFileOperations({
   canvasNodes,
   canvasEdges,
@@ -124,7 +131,7 @@ export function useFileOperations({
       setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
       if (ui) {
         if (ui.previewSize) setPreviewSize(ui.previewSize);
-        if (ui.previewPos) setPreviewPos(ui.previewPos);
+        if (ui.previewPos) setPreviewPos(_clampPreviewPos(ui.previewPos));
         if (ui.activePaletteIndex !== undefined) setActivePaletteIndex(ui.activePaletteIndex);
         if (ui.visualizedNodeId !== undefined) { setVisualizedNodeId(ui.visualizedNodeId); setPreviewNode(ui.visualizedNodeId); }
       }
@@ -156,7 +163,7 @@ export function useFileOperations({
     setNodes(nodes); setEdges(edges);
     if (data.ui) {
       if (data.ui.previewSize) setPreviewSize(data.ui.previewSize);
-      if (data.ui.previewPos) setPreviewPos(data.ui.previewPos);
+      if (data.ui.previewPos) setPreviewPos(_clampPreviewPos(data.ui.previewPos));
       if (data.ui.activePaletteIndex !== undefined) setActivePaletteIndex(data.ui.activePaletteIndex);
       if (data.ui.visualizedNodeId !== undefined) { setVisualizedNodeId(data.ui.visualizedNodeId); setPreviewNode(data.ui.visualizedNodeId); }
     }
