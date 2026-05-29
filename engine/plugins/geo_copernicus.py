@@ -8,6 +8,7 @@ Tiling: large areas are split into tiles, downloaded in sequence, stitched.
 Cache:  each request is cached as a local GeoTIFF (MD5 key on all params).
 """
 import os
+import sys
 import json
 import math
 import hashlib
@@ -179,10 +180,10 @@ _CLASS_PALETTES = {
          'default': 0, 'label': 'STAC: Composite Method'},
         {'id': 'stac_to_db',        'type': 'bool', 'default': True,
          'label': 'STAC: SAR → dB (10·log10)'},
-        {'id': 'stac_max_scenes',   'type': 'int',  'default': 30, 'min': 1, 'max': 500,
-         'label': 'STAC: Max scenes for composite'},
-        {'id': 'stac_scene_timeout', 'type': 'int', 'default': 60, 'min': 10, 'max': 300,
-         'label': 'STAC: Scene read timeout (s) — increase on slow connections'},
+        {'id': 'stac_max_scenes',   'type': 'int',  'default': 12, 'min': 1, 'max': 500,
+         'label': 'STAC: Max scenes for composite (8-12 typical, more = slower)'},
+        {'id': 'stac_scene_timeout', 'type': 'int', 'default': 90, 'min': 10, 'max': 600,
+         'label': 'STAC: Scene read timeout (s) — bump to 120+ for large AOI'},
         {'id': 'stac_min_ok',       'type': 'int',  'default': 3,  'min': 1, 'max': 100,
          'label': 'STAC: Min scenes OK to accept result (else retry)'},
 
@@ -200,6 +201,8 @@ class GeoCopernicusNode(NodeProcessor):
         self._thumb_dirty     = False
         self._auto_tried      = False
         self._prev_dl_key     = None   # hash of download-relevant params
+        self._generation      = 0      # bumped on every Fetch — older threads' writes ignored
+        self._stop_event      = threading.Event()  # politely signal in-flight thread to stop
         # per-instance notif id so multiple Copernicus nodes don't share notifications
         self._notif_id        = f'copernicus_{id(self)}'
 
@@ -339,15 +342,20 @@ class GeoCopernicusNode(NodeProcessor):
 
     # ── Main fetch logic ──────────────────────────────────────────────────────
 
-    def _do_fetch(self, params: dict, auto: bool = False) -> None:
+    def _do_fetch(self, params: dict, auto: bool = False, my_gen: int = 0) -> None:
+        self._stop_event.clear()
         try:
-            self._do_fetch_impl(params, auto=auto)
+            self._do_fetch_impl(params, auto=auto, my_gen=my_gen)
         except BaseException as e:
-            send_notification(f'Copernicus: unexpected crash: {e}', level='error', notif_id=self._notif_id)
+            if self._generation == my_gen:
+                send_notification(f'Copernicus: unexpected crash: {e}', level='error', notif_id=self._notif_id)
         finally:
-            self._loading = False
+            # Only clear loading flag if WE are still the latest fetch.
+            # If a newer Fetch has bumped _generation, leave _loading alone — the new thread owns it.
+            if self._generation == my_gen:
+                self._loading = False
 
-    def _do_fetch_impl(self, params: dict, auto: bool = False) -> None:
+    def _do_fetch_impl(self, params: dict, auto: bool = False, my_gen: int = 0) -> None:
         # ── Dispatch by collection backend ─────────────────────────────────────
         col_names   = list(COLLECTIONS.keys())
         col_idx     = int(params.get('collection', 0))
@@ -356,7 +364,7 @@ class GeoCopernicusNode(NodeProcessor):
         backend     = col_cfg.get('backend', 'sh')
 
         if backend == 'stac':
-            self._do_fetch_stac(params, col_name, col_cfg, auto=auto)
+            self._do_fetch_stac(params, col_name, col_cfg, auto=auto, my_gen=my_gen)
             return
 
         if not self.ensure_packages(
@@ -508,7 +516,8 @@ class GeoCopernicusNode(NodeProcessor):
                     return  # don't trigger auth on auto-restore
 
                 # Check cancellation before each tile download
-                if is_cancelled(self._notif_id):
+                if (is_cancelled(self._notif_id) or self._stop_event.is_set()
+                        or self._generation != my_gen):
                     send_notification('Copernicus: download cancelled', level='warning', notif_id=self._notif_id)
                     return
 
@@ -623,6 +632,8 @@ class GeoCopernicusNode(NodeProcessor):
         _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 60])
         thumb_b64 = base64.b64encode(buf).decode('utf-8')
 
+        if self._generation != my_gen:
+            return  # superseded by newer Fetch — discard results
         self._cache_data  = (geo, preview, thumb_b64)
         self._thumb_dirty = True
         send_notification(
@@ -635,7 +646,7 @@ class GeoCopernicusNode(NodeProcessor):
     # ── STAC backend (Microsoft Planetary Computer, no auth) ──────────────────
 
     def _do_fetch_stac(self, params: dict, col_name: str, col_cfg: dict,
-                       auto: bool = False) -> None:
+                       auto: bool = False, my_gen: int = 0) -> None:
         """STAC fetch path for collections backed by Microsoft Planetary Computer.
 
         Reads the AOI via STAC + COG window reads (no SH OAuth), composites
@@ -644,8 +655,8 @@ class GeoCopernicusNode(NodeProcessor):
         an identical contract to downstream nodes.
         """
         if not self.ensure_packages(
-            ['rasterio', 'pystac_client', 'planetary_computer'],
-            pip_names=['rasterio', 'pystac-client', 'planetary-computer'],
+            ['rasterio', 'pystac_client', 'planetary_computer', 'odc.stac'],
+            pip_names=['rasterio', 'pystac-client', 'planetary-computer', 'odc-stac'],
             notif_id=self._notif_id,
         ):
             return
@@ -653,17 +664,19 @@ class GeoCopernicusNode(NodeProcessor):
         import pystac_client
         import planetary_computer
         import rasterio
-        from rasterio.warp import transform_bounds, reproject, Resampling
-        from rasterio.windows import from_bounds
-        from rasterio.transform import Affine
+        import odc.stac
 
         # GDAL config dict — applied via rasterio.Env() inside each COG read
         # (os.environ is too late: GDAL is already initialised by the time this runs)
+        # Timeouts tuned for S1-RTC AOI reads (~35MB compressed / asset over HTTPS):
+        # connect=15s, full transfer=120s, 3 retries with 3s delay.
         _GDAL_COG_CFG = {
-            'GDAL_HTTP_TIMEOUT':                  30,
-            'GDAL_HTTP_CONNECTTIMEOUT':           10,
+            'GDAL_HTTP_TIMEOUT':                  120,
+            'GDAL_HTTP_CONNECTTIMEOUT':           15,
             'GDAL_HTTP_MAX_RETRY':                3,
-            'GDAL_HTTP_RETRY_DELAY':              2,
+            'GDAL_HTTP_RETRY_DELAY':              3,
+            'GDAL_HTTP_LOW_SPEED_TIME':           30,       # drop conn if <1 byte/s for 30s
+            'GDAL_HTTP_LOW_SPEED_LIMIT':          1024,     # min 1 KB/s expected
             'GDAL_DISABLE_READDIR_ON_OPEN':       'EMPTY_DIR',
             'GDAL_HTTP_MERGE_CONSECUTIVE_RANGES': 'YES',   # fewer HTTP round-trips
             'GDAL_HTTP_MULTIPLEX':                'YES',   # HTTP/2 multiplexing
@@ -762,6 +775,8 @@ class GeoCopernicusNode(NodeProcessor):
                                           [_cv2.IMWRITE_JPEG_QUALITY, 60])
                 thumb_b64_c = _b64.b64encode(buf_c).decode('utf-8')
 
+                if self._generation != my_gen:
+                    return  # superseded
                 self._cache_data  = (geo_c, preview_c, thumb_b64_c)
                 self._thumb_dirty = True
                 send_notification(
@@ -778,7 +793,7 @@ class GeoCopernicusNode(NodeProcessor):
                 _log_early(f'cache load failed ({_e}) — re-fetching from STAC')
                 # fall through to full download
 
-        import sys, traceback as _tb, time as _time
+        import traceback as _tb, time as _time
 
         def _log(*args):
             print('[STAC]', *args, file=sys.stderr, flush=True)
@@ -864,241 +879,108 @@ class GeoCopernicusNode(NodeProcessor):
             asset_keys = all_assets
         _log(f'asset_keys={asset_keys}')
 
-        # ── Compute target shape from bbox in metres ──────────────────────────
-        lat_mid  = 0.5 * (south + north)
-        phys_w_m = (east - west) * 111_320.0 * float(math.cos(math.radians(lat_mid)))
-        phys_h_m = (north - south) * 110_540.0
-        out_w    = max(1, int(round(phys_w_m / resolution)))
-        out_h    = max(1, int(round(phys_h_m / resolution)))
-        dst_transform = Affine(
-            (east - west) / out_w, 0.0, west,
-            0.0, -(north - south) / out_h, north,
-        )
-        dst_crs = 'EPSG:4326'
-        _log(f'Target grid: {out_w}x{out_h}px  crs={dst_crs}')
+        # ── Target CRS: pick UTM zone from bbox centroid (so resolution=m is honoured) ──
+        lon_c   = 0.5 * (west + east)
+        lat_c   = 0.5 * (south + north)
+        utm_zone = int((lon_c + 180.0) / 6.0) + 1
+        utm_epsg = (32600 if lat_c >= 0 else 32700) + utm_zone
+        dst_crs  = f'EPSG:{utm_epsg}'
+        is_cat   = col_cfg.get('categorical', False)
+        _log(f'Target CRS: {dst_crs} (UTM zone {utm_zone}{"N" if lat_c>=0 else "S"}) '
+             f'@ {resolution}m')
 
-        # ── Read each item's chosen assets, reprojected to common grid ────────
+        # ── Load all scenes in parallel via odc.stac.load ─────────────────────
+        # Battle-tested: handles overview selection, parallel COG reads, reprojection.
+        # `chunks=None` = eager load (full materialization in current thread).
+        # We accept that .compute() can't be cancelled mid-stream — the abandonment
+        # strategy (generation guard before write) handles that case correctly.
         send_notification(
-            f'Copernicus[STAC]: reading {len(items)} scene(s) '
-            f'(timeout={scene_timeout}s/scene)…',
+            f'Copernicus[STAC]: loading {len(items)} scene(s) via odc.stac…',
             progress=0.25, notif_id=self._notif_id,
         )
-
-        stacks: dict[str, list[np.ndarray]] = {a: [] for a in asset_keys}
-        is_cat   = col_cfg.get('categorical', False)
-        resamp   = Resampling.nearest if is_cat else Resampling.average
-        n_ok     = 0   # scenes with at least one asset read successfully
-        n_timeout = 0
-        n_error   = 0
-
-        def _read_one(href: str) -> np.ndarray:
-            """Windowed COG read + reproject for one asset."""
-            import sys as _sys, time as _t
-            from rasterio.warp import transform_bounds as _tb
-            from rasterio.windows import from_bounds as _wfb
-
-            _log(f'  → open {href[:90]}…')
-            t0 = _t.time()
-            with rasterio.Env(**_GDAL_COG_CFG):
-                with rasterio.open(href) as _src:
-                    _log(f'    opened in {_t.time()-t0:.1f}s  '
-                         f'crs={_src.crs}  size={_src.width}x{_src.height}  '
-                         f'dtype={_src.dtypes[0]}  nodata={_src.nodata}')
-                    nodata_val  = _src.nodata
-                    src_crs     = _src.crs
-
-                    # Transform target bbox → source CRS to get the window
-                    try:
-                        sx0, sy0, sx1, sy1 = _tb(dst_crs, src_crs,
-                                                  west, south, east, north)
-                        _log(f'    bbox in src_crs: {sx0:.1f},{sy0:.1f},{sx1:.1f},{sy1:.1f}')
-                    except Exception as _ex:
-                        _log(f'    transform_bounds failed ({_ex}), using WGS84 bbox')
-                        sx0, sy0, sx1, sy1 = west, south, east, north
-
-                    # Clip to source raster extent
-                    b = _src.bounds
-                    _log(f'    src bounds: {b.left:.1f},{b.bottom:.1f},{b.right:.1f},{b.top:.1f}')
-                    sx0 = max(sx0, b.left);  sx1 = min(sx1, b.right)
-                    sy0 = max(sy0, b.bottom); sy1 = min(sy1, b.top)
-
-                    if sx0 >= sx1 or sy0 >= sy1:
-                        _log(f'    NO OVERLAP — returning empty array')
-                        return np.full((out_h, out_w),
-                                       np.nan if not is_cat else 0,
-                                       dtype='float32')
-
-                    win = _wfb(sx0, sy0, sx1, sy1, transform=_src.transform)
-                    win_transform = _src.window_transform(win)
-
-                    win_h = int(round(win.height))
-                    win_w = int(round(win.width))
-
-                    # Request exactly out_h×out_w pixels from the COG window.
-                    # When out_h ≈ win_h/2 (typical for 10m source → 20m target),
-                    # GDAL selects the 2× overview → downloads ¼ the pixels → ~4× faster.
-                    # The slight aspect mismatch (window ≠ output aspect) is fine:
-                    # reproject() handles the final pixel alignment precisely.
-                    read_h = out_h
-                    read_w = out_w
-
-                    _log(f'    window: col_off={win.col_off:.0f} row_off={win.row_off:.0f} '
-                         f'w={win_w} h={win_h}  requesting out_shape={read_w}×{read_h} '
-                         f'(ratio w={read_w/win_w:.2f} h={read_h/win_h:.2f} — '
-                         f'overview 2x if ratio≤0.5)')
-
-                    t1 = _t.time()
-                    _log(f'    reading window at {read_w}×{read_h}…')
-                    src_arr = _src.read(
-                        1, window=win, boundless=True,
-                        out_shape=(read_h, read_w),
-                        resampling=Resampling.average,
-                        fill_value=nodata_val if nodata_val is not None else 0,
-                    ).astype('float32')
-
-                    # Update window transform to match resampled pixel size
-                    from rasterio.transform import Affine as _Aff
-                    win_transform = _Aff(
-                        win_transform.a * win_w / read_w,
-                        win_transform.b,
-                        win_transform.c,
-                        win_transform.d,
-                        win_transform.e * win_h / read_h,
-                        win_transform.f,
-                    )
-
-                    _log(f'    read done in {_t.time()-t1:.1f}s  '
-                         f'shape={src_arr.shape}  '
-                         f'valid_px={int(np.isfinite(src_arr).sum())}')
-
-            # Reproject from in-memory window array
-            t2 = _t.time()
-            _log(f'    reprojecting…')
-            _dst = np.full(
-                (out_h, out_w),
-                np.nan if not is_cat else 0,
+        t_load = time.time() if 'time' in dir() else 0.0
+        try:
+            import time as _t_mod
+            t_load = _t_mod.time()
+            ds = odc.stac.load(
+                items,
+                bands=asset_keys,
+                bbox=(west, south, east, north),
+                resolution=resolution,
+                crs=dst_crs,
+                chunks=None,                      # eager: fully materialize now
+                resampling='nearest' if is_cat else 'average',
+                fail_on_error=False,
                 dtype='float32' if not is_cat else 'uint8',
+                nodata=float('nan') if not is_cat else 0,
             )
-            reproject(
-                source=src_arr,
-                destination=_dst,
-                src_transform=win_transform, src_crs=src_crs,
-                dst_transform=dst_transform, dst_crs=dst_crs,
-                resampling=resamp,
-                src_nodata=nodata_val,
-                dst_nodata=np.nan if not is_cat else 0,
-            )
-            _log(f'    reproject done in {_t.time()-t2:.1f}s  '
-                 f'valid_px={int(np.isfinite(_dst).sum())}  '
-                 f'total={_t.time()-t0:.1f}s')
-            return _dst
-
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutTimeout
-
-        # 2 workers: if one thread stalls (future timed out but thread still running),
-        # the next scene can start immediately rather than waiting in the queue.
-        with ThreadPoolExecutor(max_workers=2) as _pool:
-            for i, item in enumerate(items):
-
-                # Honour user cancel
-                if is_cancelled(self._notif_id):
-                    send_notification('Copernicus[STAC]: cancelled by user',
-                                      level='warning', notif_id=self._notif_id)
-                    break
-
-                _log(f'Scene {i+1}/{len(items)}: id={item.id}  dt={item.datetime}')
-                scene_ok = False
-                for ak in asset_keys:
-                    if ak not in item.assets:
-                        _log(f'  asset {ak} NOT in item.assets — available: {list(item.assets.keys())}')
-                        continue
-                    href = item.assets[ak].href
-                    _log(f'  Submitting {ak} read  href={href[:80]}…')
-                    try:
-                        future = _pool.submit(_read_one, href)
-                        dst = future.result(timeout=scene_timeout)
-                        if not is_cat:
-                            dst = np.where(dst <= 0, np.nan, dst)
-                        stacks[ak].append(
-                            dst.astype('float32') if not is_cat else dst
-                        )
-                        scene_ok = True
-                        _log(f'  {ak} OK')
-                    except _FutTimeout:
-                        n_timeout += 1
-                        future.cancel()
-                        _log(f'  {ak} TIMEOUT after {scene_timeout}s')
-                        send_notification(
-                            f'Copernicus[STAC]: scene {i+1} timed out after '
-                            f'{scene_timeout}s — skipping',
-                            level='warning', notif_id=self._notif_id,
-                        )
-                    except Exception as _e:
-                        n_error += 1
-                        import traceback as _tb2
-                        _log(f'  {ak} ERROR: {type(_e).__name__}: {_e}')
-                        _tb2.print_exc(file=sys.stderr)
-                        send_notification(
-                            f'Copernicus[STAC]: scene {i+1} asset {ak} failed: {_e}',
-                            level='warning', notif_id=self._notif_id,
-                        )
-
-                if scene_ok:
-                    n_ok += 1
-
-                # Progress every scene
-                send_notification(
-                    f'Copernicus[STAC]: {i+1}/{len(items)} scenes  '
-                    f'(ok={n_ok}  timeout={n_timeout}  err={n_error})',
-                    progress=0.25 + 0.55 * (i + 1) / len(items),
-                    notif_id=self._notif_id,
-                )
-
-        if n_ok == 0:
+            _log(f'odc.stac.load returned in {_t_mod.time()-t_load:.1f}s  '
+                 f'vars={list(ds.data_vars)}  sizes={dict(ds.sizes)}')
+        except Exception as e:
+            import traceback as _tb_e
+            _tb_e.print_exc(file=sys.stderr)
             send_notification(
-                f'Copernicus[STAC]: 0/{len(items)} scenes succeeded '
-                f'(timeouts={n_timeout}, errors={n_error}). '
-                f'Check network / Planetary Computer availability.',
-                level='error', notif_id=self._notif_id,
-            )
-            return
-        if n_ok < min_ok:
-            send_notification(
-                f'Copernicus[STAC]: only {n_ok}/{len(items)} scenes ok '
-                f'(timeouts={n_timeout}, errors={n_error}) — '
-                f'below stac_min_ok={min_ok}, but producing output anyway.',
-                level='warning', notif_id=self._notif_id,
-            )
-            # fall through — composite what we have
-
-        if not any(stacks.values()):
-            send_notification(
-                f'Copernicus[STAC]: all bands empty for bbox. '
-                f'scenes ok={n_ok}, timeouts={n_timeout}, errors={n_error}',
+                f'Copernicus[STAC]: odc.stac.load failed: {type(e).__name__}: {e}',
                 level='error', notif_id=self._notif_id,
             )
             return
 
-        # ── Composite (or single take for LULC) ───────────────────────────────
-        def _reduce(arrs: list[np.ndarray]) -> np.ndarray:
-            if not arrs:
-                return np.full((out_h, out_w), np.nan, dtype='float32')
-            if len(arrs) == 1 or is_cat:
-                return arrs[-1]
-            a = np.stack(arrs, axis=0)
-            return {
-                'median': np.nanmedian, 'mean': np.nanmean,
-                'first':  lambda x, axis: x[0],
-                'min':    np.nanmin,    'max':  np.nanmax,
-            }.get(composite, np.nanmedian)(a, axis=0)
+        # Cancel/supersession check before composite
+        if (is_cancelled(self._notif_id) or self._stop_event.is_set()
+                or self._generation != my_gen):
+            _log('cancelled/superseded after odc load — discarding')
+            return
+
+        # Grab the geobox for output transform + size
+        gbox          = ds.odc.geobox
+        out_h, out_w  = gbox.height, gbox.width
+        dst_transform = gbox.affine
+        # Normalize CRS to EPSG string for rasterio compatibility
+        try:
+            dst_crs = f'EPSG:{gbox.crs.epsg}'
+        except Exception:
+            dst_crs = str(gbox.crs)
+        _log(f'Output grid from odc: {out_w}x{out_h}px  crs={dst_crs}  '
+             f'transform={dst_transform}')
+
+        # ── Composite across time ─────────────────────────────────────────────
+        send_notification(
+            f'Copernicus[STAC]: compositing ({composite}) {len(items)} scene(s)…',
+            progress=0.85, notif_id=self._notif_id,
+        )
+        compose_fns = {
+            'median': lambda da: da.median(dim='time', skipna=True),
+            'mean':   lambda da: da.mean(dim='time',   skipna=True),
+            'first':  lambda da: da.isel(time=0),
+            'min':    lambda da: da.min(dim='time',    skipna=True),
+            'max':    lambda da: da.max(dim='time',    skipna=True),
+        }
+        compose_fn = compose_fns.get(composite, compose_fns['median'])
 
         out_bands: dict[str, np.ndarray] = {}
         for ak in asset_keys:
-            band = _reduce(stacks[ak])
-            if not is_cat and to_db:
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    band = 10.0 * np.log10(band)
-            out_bands[ak] = band.astype('uint8' if is_cat else 'float32')
+            band = compose_fn(ds[ak]).values  # → numpy
+            # Treat zeros as nodata for SAR (S1-RTC fills out-of-swath with 0)
+            if not is_cat:
+                band = np.where(band <= 0, np.nan, band)
+                if to_db:
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        band = 10.0 * np.log10(band)
+                band = band.astype('float32')
+            else:
+                band = band.astype('uint8')
+            out_bands[ak] = band
+
+        # Sanity check: did we get any non-NaN data?
+        valid_fraction = float(np.isfinite(next(iter(out_bands.values()))).mean()) if out_bands else 0.0
+        _log(f'Composite valid_fraction (first band): {valid_fraction:.1%}')
+        if valid_fraction < 0.001:
+            send_notification(
+                f'Copernicus[STAC]: composite is 0% valid for bbox. '
+                f'Try wider date range or different orbit.',
+                level='error', notif_id=self._notif_id,
+            )
+            return
 
         # VV/VH ratio for S1-RTC if both present
         band_names: list[str] = list(out_bands.keys())
@@ -1166,6 +1048,8 @@ class GeoCopernicusNode(NodeProcessor):
         _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 60])
         thumb_b64 = base64.b64encode(buf).decode('utf-8')
 
+        if self._generation != my_gen:
+            return  # superseded by newer Fetch — discard results
         self._cache_data  = (geo, preview, thumb_b64)
         self._thumb_dirty = True
         send_notification(
@@ -1220,15 +1104,31 @@ class GeoCopernicusNode(NodeProcessor):
         rising = fetch_val != self._prev_fetch and fetch_val not in (False, 0, None)
         self._prev_fetch = fetch_val
 
-        if rising and not self._loading:
-            self._loading = True
-            threading.Thread(target=self._do_fetch, args=(params,), daemon=True).start()
-
-        if self._cache_data is None and not self._loading and not self._auto_tried:
+        if rising:
+            # ABANDONMENT STRATEGY: always start fresh thread immediately.
+            # Bump generation → any in-flight thread's writes become no-ops (guarded by gen check).
+            # Set stop_event → it'll exit its scene loop at the next checkpoint.
+            # The old thread continues running as a zombie daemon — harmless, dies naturally.
+            self._generation += 1
+            self._stop_event.set()
+            my_gen = self._generation
+            self._loading = True   # OWNS the loading flag now (old thread won't touch it)
             self._auto_tried = True
+            threading.Thread(
+                target=self._do_fetch, args=(params,),
+                kwargs={'my_gen': my_gen}, daemon=True,
+            ).start()
+
+        elif self._cache_data is None and not self._loading and not self._auto_tried:
+            # Auto-restore on graph load: try loading cached file once without auth
+            self._auto_tried = True
+            self._generation += 1
+            my_gen = self._generation
             self._loading = True
-            threading.Thread(target=self._do_fetch, args=(params,),
-                             kwargs={'auto': True}, daemon=True).start()
+            threading.Thread(
+                target=self._do_fetch, args=(params,),
+                kwargs={'auto': True, 'my_gen': my_gen}, daemon=True,
+            ).start()
 
         if self._cache_data is None:
             return {'geotiff': None, 'preview': None, 'meta': None}
