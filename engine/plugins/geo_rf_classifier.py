@@ -269,6 +269,7 @@ _CMAPS = ['tab10', 'viridis', 'plasma', 'Set1', 'RdYlGn']
         {'id': 'report',         'color': 'image',   'label': 'Confusion matrix (normalized)'},
         {'id': 'report_data',    'color': 'dict',    'label': 'Classification report (dict)'},
         {'id': 'conf_matrix',    'color': 'data',    'label': 'Confusion matrix data (for ml_classification_report)'},
+        {'id': 'model',          'color': 'dict',    'label': 'Trained model bundle (for geo_rf_predict)'},
     ],
     params=[
         {'id': 'band_names', 'type': 'string', 'default': '',
@@ -595,6 +596,43 @@ class GeoRFClassifierNode(NodeProcessor):
         ]
         info_img = _info_panel(lines, w=500, h=180, title='RF Pixel Classifier')
 
+        # ── Persist trained model to .joblib for geo_rf_predict ───────────────
+        import os
+        import joblib
+        raw_cache = str(params.get('cache_dir', 'copernicus_cache') or 'copernicus_cache').strip()
+        _engine_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
+        os.makedirs(cache_dir, exist_ok=True)
+        # Hash on training-defining params so re-runs reuse the same path
+        model_sig = hashlib.md5(_json.dumps({
+            'classes':       [int(c) for c in classes_encoded],
+            'band_names':    band_names,
+            'n_estimators':  n_estimators,
+            'max_depth':     max_depth,
+            'n_train':       int(len(X_tr)),
+            'split_mode':    split_mode,
+        }, sort_keys=True).encode()).hexdigest()[:14]
+        model_path = os.path.join(cache_dir, f'rf_model_{model_sig}.joblib')
+        try:
+            joblib.dump(
+                {'rf': rf, 'label_encoder': le, 'band_names': band_names,
+                 'classes': [int(c) for c in classes_encoded]},
+                model_path, compress=3,
+            )
+        except Exception as e:
+            send_notification(f'RF Classifier: model save failed: {e}',
+                              level='warning', notif_id=_NOTIF)
+
+        model_bundle = {
+            'path':        model_path,
+            'classes':     [int(c) for c in classes_encoded],
+            'band_names':  band_names,
+            'n_features':  int(C),
+            'accuracy':    test_acc,
+            'n_trees':     int(n_estimators),
+            'created':     model_sig,
+        }
+
         # ── Build output geo dict ──────────────────────────────────────────────
         out_geo = {
             'bands':     class_map[np.newaxis].astype(np.float32),
@@ -623,6 +661,7 @@ class GeoRFClassifierNode(NodeProcessor):
             'report':         report_img,
             'report_data':    report_data,
             'conf_matrix':    conf_matrix_data,
+            'model':          model_bundle,
         }
         self._cache_key = _key
         self._cache_out = result
