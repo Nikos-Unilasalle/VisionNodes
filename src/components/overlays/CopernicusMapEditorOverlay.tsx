@@ -68,7 +68,7 @@ const fmtCoord = (v: number, d: 'lat' | 'lon') => {
 
 const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; hasClouds: boolean }> = {
   'Sentinel-2 L2A': {
-    allBands:    ['B01','B02','B03','B04','B05','B06','B07','B08','B8A','B09','B11','B12'],
+    allBands:    ['B01','B02','B03','B04','B05','B06','B07','B08','B8A','B09','B11','B12','SCL'],
     defaultBands:['B04','B03','B02','B08'],
     hasClouds: true,
   },
@@ -105,6 +105,21 @@ const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; 
   'io-lulc Annual': {
     allBands:    ['lulc_class'],
     defaultBands:['lulc_class'],
+    hasClouds: false,
+  },
+  'Sentinel-2 L2A (Planetary)': {
+    allBands:    ['B01','B02','B03','B04','B05','B06','B07','B08','B8A','B09','B11','B12','SCL'],
+    defaultBands:['B04','B03','B02','B08'],
+    hasClouds: true,
+  },
+  'Copernicus DEM GLO-30 (Planetary)': {
+    allBands:    ['data'],
+    defaultBands:['data'],
+    hasClouds: false,
+  },
+  'JRC Global Surface Water': {
+    allBands:    ['occurrence','seasonality','extent','transition','change','recurrence'],
+    defaultBands:['occurrence'],
     hasClouds: false,
   },
 };
@@ -169,6 +184,7 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
   const [dateStart,     setDateStart]     = useState<string>(params.date_start   ?? '2024-01-01');
   const [dateEnd,       setDateEnd]       = useState<string>(params.date_end     ?? '2024-06-01');
   const [cloudMax,      setCloudMax]      = useState<number>(parseInt(params.cloud_max ?? '20', 10));
+  const [mosaicMode,    setMosaicMode]    = useState<number>(parseInt(params.mosaic_mode ?? '0', 10));
   const [resolution,    setResolution]    = useState<number>(parseInt(params.resolution ?? '10', 10));
   const [selectedBands, setSelectedBands] = useState<string[]>(() => {
     const raw = (params.bands ?? '').split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -467,12 +483,13 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       collection: String(colIdx),
       date_start: dateStart,
       date_end:   dateEnd,
-      cloud_max:  String(cloudMax),
-      resolution: String(resolution),
-      fetch:      Date.now(),
+      cloud_max:   String(cloudMax),
+      mosaic_mode: String(mosaicMode),
+      resolution:  String(resolution),
+      fetch:       Date.now(),
     });
     onClose();
-  }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, resolution, node, onClose]);
+  }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, mosaicMode, resolution, node, onClose]);
 
   const handleSaveOnly = useCallback(() => {
     if (!bbox) return;
@@ -483,11 +500,12 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
       collection: String(colIdx),
       date_start: dateStart,
       date_end:   dateEnd,
-      cloud_max:  String(cloudMax),
-      resolution: String(resolution),
+      cloud_max:   String(cloudMax),
+      mosaic_mode: String(mosaicMode),
+      resolution:  String(resolution),
     });
     onClose();
-  }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, resolution, node, onClose]);
+  }, [bbox, selectedBands, colIdx, dateStart, dateEnd, cloudMax, mosaicMode, resolution, node, onClose]);
 
   // ── Dynamic cursor ────────────────────────────────────────────────────────
   const canvasCursor = shiftHeld
@@ -581,17 +599,50 @@ const CopernicusMapEditorOverlay: React.FC<Props> = ({ node, onClose }) => {
             </div>
           </div>
 
-          {/* Cloud cover */}
+          {/* Mosaic mode + cloud cover */}
           {colCfg.hasClouds && (
-            <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">
-                Max clouds: <span className="text-blue-400">{cloudMax}%</span>
-              </label>
-              <input
-                type="range" min={0} max={100} step={5} value={cloudMax}
-                onChange={e => setCloudMax(parseInt(e.target.value, 10))}
-                className="w-full accent-blue-500"
-              />
+            <div className="space-y-2">
+              {/* Mosaic mode toggle */}
+              <div>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                  Mosaic mode
+                </label>
+                <div className="flex rounded-lg overflow-hidden border border-white/10 text-[10px] font-semibold">
+                  {['SIMPLE', 'CLOUD FREE'].map((label, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMosaicMode(i)}
+                      className={`flex-1 py-1 transition-colors ${
+                        mosaicMode === i
+                          ? i === 1
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-blue-600 text-white'
+                          : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {mosaicMode === 1 && (
+                  <p className="text-[9px] text-emerald-400 mt-1">
+                    Best pixel per location via SCL — no cloud mask needed
+                  </p>
+                )}
+              </div>
+              {/* Cloud max slider — only relevant for SIMPLE mode */}
+              {mosaicMode === 0 && (
+                <div>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">
+                    Max clouds: <span className="text-blue-400">{cloudMax}%</span>
+                  </label>
+                  <input
+                    type="range" min={0} max={100} step={5} value={cloudMax}
+                    onChange={e => setCloudMax(parseInt(e.target.value, 10))}
+                    className="w-full accent-blue-500"
+                  />
+                </div>
+              )}
             </div>
           )}
 
