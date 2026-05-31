@@ -37,7 +37,7 @@ COLLECTIONS: dict[str, dict] = {
         'backend':      'sh',
         'sh_id':        'SENTINEL2_L2A',
         'all_bands':    ['B01','B02','B03','B04','B05','B06','B07',
-                         'B08','B8A','B09','B11','B12'],
+                         'B08','B8A','B09','B11','B12','SCL'],
         'default_bands':['B04','B03','B02','B08'],
         'rgb':          ['B04','B03','B02'],
         'units':        'REFLECTANCE',
@@ -116,6 +116,43 @@ COLLECTIONS: dict[str, dict] = {
         'categorical':  True,
         'class_palette':'io_lulc',
     },
+    # ── Free Planetary Computer collections (no auth, no processing units) ──
+    'Sentinel-2 L2A (Planetary)': {
+        'backend':      'stac',
+        'stac_id':      'sentinel-2-l2a',
+        'all_bands':    ['B01','B02','B03','B04','B05','B06','B07',
+                         'B08','B8A','B09','B11','B12','SCL'],
+        'default_bands':['B04','B03','B02','B08'],
+        'rgb':          ['B04','B03','B02'],
+        'units':        'REFLECTANCE',
+        'has_cloud_filter': True,
+        'asset_keys':   ['B04','B03','B02','B08'],
+        'categorical':  False,
+    },
+    'Copernicus DEM GLO-30 (Planetary)': {
+        'backend':      'stac',
+        'stac_id':      'cop-dem-glo-30',
+        'all_bands':    ['data'],
+        'default_bands':['data'],
+        'rgb':          ['data'],
+        'units':        None,
+        'has_cloud_filter': False,
+        'asset_keys':   ['data'],
+        'categorical':  False,
+        'ignore_date':  True,   # static product — no datetime filtering
+    },
+    'JRC Global Surface Water': {
+        'backend':      'stac',
+        'stac_id':      'jrc-gsw',
+        'all_bands':    ['occurrence','seasonality','extent','transition','change','recurrence'],
+        'default_bands':['occurrence'],
+        'rgb':          ['occurrence'],
+        'units':        None,
+        'has_cloud_filter': False,
+        'asset_keys':   ['occurrence'],
+        'categorical':  False,
+        'ignore_date':  True,   # static product — take latest item regardless of date
+    },
 }
 
 
@@ -167,7 +204,10 @@ _CLASS_PALETTES = {
         {'id': 'collection',    'type': 'enum',   'options': list(COLLECTIONS.keys()), 'default': 0, 'label': 'Collection'},
         {'id': 'date_start',    'type': 'string', 'default': '2024-01-01', 'label': 'Start Date'},
         {'id': 'date_end',      'type': 'string', 'default': '2024-06-01', 'label': 'End Date'},
-        {'id': 'cloud_max',     'type': 'int',    'default': 20, 'min': 0, 'max': 100, 'label': 'Max Clouds %'},
+        {'id': 'cloud_max',     'type': 'int',    'default': 20, 'min': 0, 'max': 100, 'label': 'Max Clouds % (SIMPLE only)'},
+        {'id': 'mosaic_mode',   'type': 'enum',   'default': 0,
+         'options': ['SIMPLE', 'CLOUD_FREE'],
+         'label': 'Mosaic mode'},
         {'id': 'resolution',    'type': 'int',    'default': 10, 'min': 1, 'max': 1000, 'label': 'Resolution (m/px)'},
         {'id': 'bands',         'type': 'string', 'default': 'B04,B03,B02,B08', 'label': 'Bands (set via editor)'},
         {'id': 'bbox',          'type': 'string', 'default': '', 'label': 'Bounding Box (set via editor)'},
@@ -263,10 +303,51 @@ class GeoCopernicusNode(NodeProcessor):
         )
 
     @staticmethod
+    def _make_evalscript_cloud_free(bands: list[str], units: str | None) -> str:
+        """ORBIT mosaicking evalscript: iterates all acquisitions, returns first
+        cloud-free pixel based on SCL.
+
+        SCL only supports DN units — it must be in a SEPARATE input entry from
+        spectral bands that use REFLECTANCE.  Both entries are merged by the API
+        into a single `samples` object, so s.SCL and s.B04 are both accessible.
+        """
+        out_bands   = [b for b in bands if b != 'SCL']
+        n_out       = len(out_bands)
+        # SCL only supports DN — cannot mix units in a single input entry.
+        # Solution: request ALL bands (spectral + SCL) without units → DN for everything.
+        # NDVI / MNDWI are ratios → scale-invariant, DN gives identical index values.
+        all_input   = out_bands + (['SCL'] if 'SCL' not in bands else [])
+        input_json  = json.dumps(all_input)
+        sample_vals = ', '.join(f's.{b}' for b in out_bands)
+
+        return (
+            f'//VERSION=3\n'
+            f'function setup() {{\n'
+            f'  return {{\n'
+            f'    input: [{{bands: {input_json}}}],\n'
+            f'    output: {{bands: {n_out}, sampleType: "FLOAT32"}},\n'
+            f'    mosaicking: "ORBIT"\n'
+            f'  }};\n'
+            f'}}\n'
+            f'function evaluatePixel(samples) {{\n'
+            f'  var BAD = [0,1,3,8,9,10,11];\n'
+            f'  for (var i = 0; i < samples.length; i++) {{\n'
+            f'    var s = samples[i];\n'
+            f'    if (BAD.indexOf(Math.round(s.SCL)) === -1) {{\n'
+            f'      return [{sample_vals}];\n'
+            f'    }}\n'
+            f'  }}\n'
+            f'  return new Array({n_out}).fill(0.0);\n'
+            f'}}\n'
+        )
+
+    @staticmethod
     def _cache_key(col_name: str, bbox: tuple, date_start: str, date_end: str,
                    bands: list[str], resolution: int,
-                   tile_row: int, tile_col: int) -> str:
-        s = f'{col_name}|{bbox}|{date_start}|{date_end}|{"-".join(bands)}|{resolution}|{tile_row}|{tile_col}'
+                   tile_row: int, tile_col: int,
+                   mosaic_mode: str = 'SIMPLE') -> str:
+        s = (f'{col_name}|{bbox}|{date_start}|{date_end}|{"-".join(bands)}'
+             f'|{resolution}|{tile_row}|{tile_col}|{mosaic_mode}')
         return hashlib.md5(s.encode()).hexdigest()[:14]
 
     # ── Tile download ─────────────────────────────────────────────────────────
@@ -279,6 +360,7 @@ class GeoCopernicusNode(NodeProcessor):
         cloud_max: int, has_cloud: bool,
         tile_path: str,
         notif_id: str = _NOTIF,
+        mosaic_mode: str = 'SIMPLE',
     ) -> bool:
         """Download one tile to tile_path as float32 GeoTIFF. Returns True on success."""
         try:
@@ -290,21 +372,19 @@ class GeoCopernicusNode(NodeProcessor):
 
             bbox = BBox([west, south, east, north], crs=CRS.WGS84)
 
-            # Build filter for cloud cover
-            extra_filter = None
-            if has_cloud:
-                try:
-                    from sentinelhub import filter_field_eq, filter_field_lt
-                    extra_filter = filter_field_lt('eo:cloud_cover', cloud_max)
-                except ImportError:
-                    pass
+            cloud_free = (mosaic_mode == 'CLOUD_FREE')
 
             input_data_kwargs: dict = {
                 'data_collection': data_collection,
                 'time_interval':   (date_start, date_end),
-                'mosaicking_order':'leastCC',
+                # CLOUD_FREE uses ORBIT mosaicking (defined in evalscript) —
+                # leastCC ordering puts clearest acquisitions first in the samples array.
+                # SIMPLE uses leastCC to pick the single least-cloudy composite.
+                'mosaicking_order': 'leastCC',
             }
-            if extra_filter is not None:
+            # For SIMPLE mode, apply cloud cover pre-filter to restrict API search.
+            # For CLOUD_FREE mode, allow all acquisitions through (per-pixel SCL filter handles it).
+            if has_cloud and not cloud_free:
                 input_data_kwargs['other_args'] = {'dataFilter': {'maxCloudCoverage': cloud_max}}
 
             request = SentinelHubRequest(
@@ -439,13 +519,23 @@ class GeoCopernicusNode(NodeProcessor):
         cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
         os.makedirs(cache_dir, exist_ok=True)
 
+        # ── Mosaic mode (parsed early — used by cache key below) ─────────────
+        _mosaic_opts = ['SIMPLE', 'CLOUD_FREE']
+        try:
+            mosaic_mode = _mosaic_opts[int(params.get('mosaic_mode', 0))]
+        except (ValueError, TypeError, IndexError):
+            mosaic_mode = 'SIMPLE'
+        if 'SCL' in bands and len(bands) == 1:
+            mosaic_mode = 'SIMPLE'
+
         # Clear any leftover cancel flag from a previous operation
         clear_cancel(self._notif_id)
 
         if auto:
             # On auto-restore, only continue if a matching cache file can be found
             test_key = self._cache_key(col_name, (west, south, east, north),
-                                       date_start, date_end, bands, resolution, 0, 0)
+                                       date_start, date_end, bands, resolution, 0, 0,
+                                       mosaic_mode)
             test_path = os.path.join(cache_dir, f'{test_key}.tif')
             if not os.path.exists(test_path):
                 return   # nothing cached — skip to avoid triggering auth on startup
@@ -472,7 +562,14 @@ class GeoCopernicusNode(NodeProcessor):
             )
             return
 
-        evalscript = self._make_evalscript(bands, col_cfg.get('units'))
+        # SCL has no reflectance units — drop units spec if SCL is in the band list
+        units = None if 'SCL' in bands else col_cfg.get('units')
+
+        if mosaic_mode == 'CLOUD_FREE' and col_cfg.get('has_cloud_filter'):
+            evalscript = self._make_evalscript_cloud_free(bands, units)
+        else:
+            mosaic_mode = 'SIMPLE'
+            evalscript  = self._make_evalscript(bands, units)
 
         # ── Compute grid ──────────────────────────────────────────────────────
         lat_c       = (south + north) / 2
@@ -488,7 +585,7 @@ class GeoCopernicusNode(NodeProcessor):
         send_notification(
             f'Copernicus: {col_name} · {total_w}×{total_h} px '
             f'({tile_cols}×{tile_rows} tile{"s" if n_tiles > 1 else ""}) · '
-            f'bands: {", ".join(bands)}',
+            f'bands: {", ".join(bands)} · {mosaic_mode}',
             progress=0.05, notif_id=self._notif_id,
         )
 
@@ -508,7 +605,8 @@ class GeoCopernicusNode(NodeProcessor):
                 t_north = south + (row + 1) * lat_step
 
                 key       = self._cache_key(col_name, (west, south, east, north),
-                                            date_start, date_end, bands, resolution, row, col)
+                                            date_start, date_end, bands, resolution, row, col,
+                                            mosaic_mode)
                 tile_path = os.path.join(cache_dir, f'{key}.tif')
                 tile_paths.append((row, col, tile_path))
 
@@ -541,6 +639,7 @@ class GeoCopernicusNode(NodeProcessor):
                     cloud_max, col_cfg['has_cloud_filter'],
                     tile_path,
                     notif_id=self._notif_id,
+                    mosaic_mode=mosaic_mode,
                 )
                 if not success:
                     return
@@ -704,6 +803,7 @@ class GeoCopernicusNode(NodeProcessor):
         date_start = str(params.get('date_start', '2024-01-01'))
         date_end   = str(params.get('date_end',   '2024-12-31'))
         resolution = max(1, int(params.get('resolution', 20)))
+        cloud_max  = int(params.get('cloud_max', 20))
 
         # STAC-only params
         pol_opts   = ['Both', 'VV', 'VH']
@@ -827,10 +927,11 @@ class GeoCopernicusNode(NodeProcessor):
                           progress=0.1, notif_id=self._notif_id)
         _log(f'Searching collection={col_cfg["stac_id"]}…')
         try:
+            dt_arg = None if col_cfg.get('ignore_date') else f'{date_start}/{date_end}'
             search = catalog.search(
                 collections=[col_cfg['stac_id']],
                 bbox=[west, south, east, north],
-                datetime=f'{date_start}/{date_end}',
+                datetime=dt_arg,
                 limit=500,
             )
             items = list(search.items())
@@ -854,6 +955,23 @@ class GeoCopernicusNode(NodeProcessor):
             return
 
         items = sorted(items, key=lambda i: i.datetime or 0)
+
+        # Cloud filter for STAC collections that carry eo:cloud_cover metadata (e.g. S2 PC)
+        if col_cfg.get('has_cloud_filter'):
+            before = len(items)
+            items = [
+                it for it in items
+                if float(it.properties.get('eo:cloud_cover', 0)) <= cloud_max
+            ]
+            _log(f'Cloud filter (eo:cloud_cover <= {cloud_max}%): {before} → {len(items)} items')
+            if not items:
+                send_notification(
+                    f'Copernicus[STAC]: 0 scenes with cloud_cover ≤ {cloud_max}% — '
+                    'try a wider date range or raise Max Clouds',
+                    level='warning', notif_id=self._notif_id,
+                )
+                return
+
         # For LULC: take the latest scene only (categorical, no composite).
         if col_cfg.get('categorical'):
             items = [items[-1]]
@@ -1089,8 +1207,8 @@ class GeoCopernicusNode(NodeProcessor):
     @staticmethod
     def _dl_params_key(params: dict) -> str:
         keys = ('bbox', 'date_start', 'date_end', 'bands', 'collection', 'resolution', 'cloud_max',
-                'cache_dir', 'stac_polarization', 'stac_orbit', 'stac_composite', 'stac_to_db',
-                'stac_max_scenes')
+                'mosaic_mode', 'cache_dir', 'stac_polarization', 'stac_orbit', 'stac_composite',
+                'stac_to_db', 'stac_max_scenes')
         s = json.dumps({k: params.get(k) for k in keys}, sort_keys=True)
         return hashlib.md5(s.encode()).hexdigest()
 
