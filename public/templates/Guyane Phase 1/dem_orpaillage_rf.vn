@@ -45,11 +45,11 @@
       },
       "data": {
         "params": {
-          "node_note": "**S2 L2A** — 5 bandes : rouge, vert, bleu, NIR, SWIR. Saison sèche 2024 (moins de nuages en Guyane).",
+          "node_note": "**S2 L2A T1 — 2024**. cloud_max=40 pour Guyane tropicale.",
           "collection": "8",
           "bands": "B04,B03,B02,B08,B11",
           "resolution": "20",
-          "cloud_max": "15",
+          "cloud_max": "40",
           "mosaic_mode": "0",
           "cache_dir": "copernicus_cache",
           "fetch": 0
@@ -366,8 +366,8 @@
       "position": { "x": -1700, "y": -540 },
       "data": {
         "params": {
-          "date_start": "2021-07-01",
-          "date_end":   "2021-09-30"
+          "date_start": "2021-04-01",
+          "date_end":   "2021-11-30"
         }
       },
       "width": 208, "height": 90
@@ -378,11 +378,11 @@
       "position": { "x": -1350, "y": -640 },
       "data": {
         "params": {
-          "node_note": "**S2 L2A T0 — 2021** (référence temporelle). Mêmes bandes que T1.",
+          "node_note": "**S2 L2A T0 — 2021** (référence temporelle). cloud_max=40 + plage élargie (avr–nov) pour Guyane tropicale.",
           "collection": "8",
           "bands": "B04,B03,B02,B08,B11",
           "resolution": "20",
-          "cloud_max": "15",
+          "cloud_max": "40",
           "mosaic_mode": "0",
           "cache_dir": "copernicus_cache",
           "fetch": 0
