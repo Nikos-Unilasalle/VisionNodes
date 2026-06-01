@@ -587,18 +587,15 @@
     },
     {
       "id": "n-turb-viz",
-      "type": "geo_band_calc",
+      "type": "logic_python",
       "position": { "x": 1300, "y": 2380 },
       "data": {
         "params": {
-          "node_note": "**Turbidité eau — NDTI (turbo)** — indice normalisé scale-invariant (robuste). Masque eau MNDWI=(B2−B5)/(B2+B5)>0 ; NDTI=(rouge−vert)/(rouge+vert) : eau claire bleu → eau turbide rouge. Non-eau→−0.3.",
-          "expression": "np.where((B2 - B5)/(B2 + B5 + 1e-6) > 0, (B1 - B2)/(B1 + B2 + 1e-6), -0.3)",
-          "clamp_min": -0.3,
-          "clamp_max": 0.3,
-          "colormap": "turbo"
+          "node_note": "**Turbidité eau — stretch auto (turbo)** — auto-étirement percentile 2-98 SUR l'eau seule = révèle la dynamique étroite que le clamp fixe écrasait. Eau claire bleu → turbide rouge. a = S2 normalisé.",
+          "code": "geo = a if isinstance(a, dict) else None\nif geo is None:\n    out_main = None\nelse:\n    bands = np.asarray(geo['bands'], dtype=np.float32)\n    if bands.ndim == 2:\n        bands = bands[None]\n    red   = bands[0]\n    green = bands[1]\n    swir  = bands[4] if bands.shape[0] > 4 else green\n    mndwi = (green - swir) / (green + swir + 1e-6)\n    water = mndwi > 0.0\n    H, W = red.shape\n    out = np.zeros((H, W, 3), dtype=np.uint8)\n    if int(water.sum()) > 10:\n        # turbidity proxy = red reflectance (sediments brighten red); stretch within water\n        wv = red[water]\n        lo, hi = np.percentile(wv, (2, 98))\n        if hi <= lo:\n            hi = lo + 1e-6\n        norm = np.clip((red - lo) / (hi - lo), 0.0, 1.0)\n        gray = (norm * 255).astype(np.uint8)\n        cmap = cv2.applyColorMap(gray, cv2.COLORMAP_TURBO)\n        out[water] = cmap[water]\n    out[~water] = (35, 45, 30)\n    out_main = out\n"
         }
       },
-      "width": 208, "height": 90
+      "width": 208, "height": 120
     },
     {
       "id": "n-disp-turbidity",
@@ -1253,12 +1250,12 @@
       "source": "n-turb-norm",
       "sourceHandle": "geotiff__geotiff",
       "target": "n-turb-viz",
-      "targetHandle": "geotiff__geotiff"
+      "targetHandle": "any__a"
     },
     {
       "id": "e-turb-8",
       "source": "n-turb-viz",
-      "sourceHandle": "image__colormap",
+      "sourceHandle": "image__main",
       "target": "n-disp-turbidity",
       "targetHandle": "image__1_viz"
     },
