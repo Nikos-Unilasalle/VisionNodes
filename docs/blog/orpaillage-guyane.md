@@ -1,16 +1,16 @@
-# Sur les traces de l'orpaillage illégal en Guyane : un carnet d'exploration par télédétection
+# Orpaillage en Guyane : un carnet d'exploration par télédétection
 
-*Comment j'ai détourné un studio de vision par nœuds pour partir à la recherche des chantiers clandestins, en deux temps : explorer le terrain, puis modéliser.*
+*Partir à la recherche des chantiers d'orpaillage clandestins, en deux temps : explorer le terrain, puis modéliser.*
 
 ---
 
 > **Disclaimer.** Je ne suis pas géographe, ni télédétecteur, ni spécialiste de la
-> Guyane. Je teste **VNStudio**, un outil que je construis, sur un cas réel et
+> Guyane. Je construis un outil de vision par ordinateur, **VNStudio**, sur un cas réel et
 > concret — parce qu'un vrai problème est le meilleur banc d'essai qui soit. Je
 > tâtonne, je me trompe, j'apprends en regardant. Je m'amuse, surtout. Et
 > j'espère qu'au bout du compte il en sortira quelque chose d'utile. Ce texte est
-> un carnet de bord honnête, pas une publication scientifique : prenez mes
-> conclusions pour ce qu'elles sont — celles d'un curieux qui bricole.
+> un carnet de bord amateur, pas une publication scientifique : prenez mes
+> conclusions pour ce qu'elles sont — celles d'un bricoleur.
 
 ---
 
