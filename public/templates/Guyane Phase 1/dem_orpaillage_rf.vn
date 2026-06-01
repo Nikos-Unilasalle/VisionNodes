@@ -117,7 +117,7 @@
       },
       "data": {
         "params": {
-          "node_note": "3 features spectrales : NDVI + BSI + **SWIR brut (B11)**. MNDWI retiré (importance=0.000 — redondant avec NDVI+BSI).",
+          "node_note": "2 features spectrales : **NDVI + BSI**. SWIR retiré (importance=0.000 — redondant avec BSI). Flow_acc log ajouté côté terrain.",
           "sensor": "1",
           "ndvi": true,
           "mndwi": false,
@@ -125,11 +125,9 @@
           "ndwi": false,
           "evi": false,
           "nbr": false,
-          "expr1_enable": true,
-          "expr1_label": "SWIR",
-          "expr1": "SWIR",
-          "clamp_min": 0,
-          "clamp_max": 0.5
+          "expr1_enable": false,
+          "clamp_min": -1,
+          "clamp_max": 1
         }
       },
       "width": 208,
@@ -284,9 +282,9 @@
       },
       "data": {
         "params": {
-          "node_note": "**Stack final** — indices spectraux (3b) + terrain (4b) → **7 bandes** prêtes pour le RF.",
+          "node_note": "**Stack A** — spectral (2b) + terrain+flow (5b) → 7b. Suivi de stk-S1 et stk-delta.",
           "resampling": "0",
-          "prefix_secondary": true,
+          "prefix_secondary": false,
           "cache_dir": "copernicus_cache"
         }
       },
@@ -297,15 +295,15 @@
       "id": "n-rf",
       "type": "geo_rf_classifier",
       "position": {
-        "x": 900,
-        "y": 400
+        "x": 1500,
+        "y": 360
       },
       "data": {
         "params": {
-          "node_note": "**RF Classifier** — labels WorldCover (classe 20 fusionnée en 30). Features : NDVI, SWIR, BSI, slope, TRI, HAND, TWI.",
-          "band_names": "NDVI,SWIR,BSI,sec_slope_degrees,sec_tri,sec_hand_m,sec_twi",
-          "n_estimators": 100,
-          "max_depth": 12,
+          "node_note": "**RF Classifier — 12 bandes** : NDVI, BSI, slope, TRI, HAND, TWI, flow_log + S1 VV/VH/ratio + ΔSpectral (NDVI/BSI 2021→2024).",
+          "band_names": "NDVI,BSI,slope_degrees,tri,hand_m,twi,flow_log,vv,vh,vv_vh_ratio,dNDVI,dBSI",
+          "n_estimators": 150,
+          "max_depth": 15,
           "samples_per_class": 500,
           "cache_dir": "copernicus_cache"
         }
@@ -361,6 +359,146 @@
       },
       "width": 208,
       "height": 185
+    },
+    {
+      "id": "n-time-t0",
+      "type": "geo_time_period",
+      "position": { "x": -1700, "y": -540 },
+      "data": {
+        "params": {
+          "date_start": "2021-07-01",
+          "date_end":   "2021-09-30"
+        }
+      },
+      "width": 208, "height": 90
+    },
+    {
+      "id": "n-s2-t0",
+      "type": "geo_copernicus",
+      "position": { "x": -1350, "y": -640 },
+      "data": {
+        "params": {
+          "node_note": "**S2 L2A T0 — 2021** (référence temporelle). Mêmes bandes que T1.",
+          "collection": "8",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "20",
+          "cloud_max": "15",
+          "mosaic_mode": "0",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0
+        }
+      },
+      "width": 208, "height": 259
+    },
+    {
+      "id": "n-si-t0",
+      "type": "geo_spectral_indices",
+      "position": { "x": -900, "y": -640 },
+      "data": {
+        "params": {
+          "node_note": "**Indices T0 (2021)** — NDVI + BSI sur l'image de référence.",
+          "sensor": "1",
+          "ndvi": true,
+          "mndwi": false,
+          "bsi": true,
+          "ndwi": false,
+          "evi": false,
+          "nbr": false,
+          "expr1_enable": false,
+          "clamp_min": -1,
+          "clamp_max": 1
+        }
+      },
+      "width": 208, "height": 345
+    },
+    {
+      "id": "n-spectral-change",
+      "type": "geo_spectral_change",
+      "position": { "x": -400, "y": -500 },
+      "data": {
+        "params": {
+          "node_note": "**Δ Spectral 2021→2024** — delta NDVI (perte végétation) + delta BSI (gain sol nu). Signature orpaillage : NDVI↓ + BSI↑.",
+          "rules": "NDVI<-0.1,BSI>0.1",
+          "min_pixels": 10
+        }
+      },
+      "width": 208, "height": 121
+    },
+    {
+      "id": "n-s1",
+      "type": "geo_copernicus",
+      "position": { "x": -1350, "y": 1700 },
+      "data": {
+        "params": {
+          "node_note": "**Sentinel-1 SAR** — VV + VH + ratio. Eau turbide (orpaillage) très visible en radar même sous nuages.",
+          "collection": "5",
+          "stac_polarization": "0",
+          "stac_composite": "0",
+          "stac_to_db": true,
+          "stac_max_scenes": 12,
+          "resolution": "20",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0
+        }
+      },
+      "width": 208, "height": 261
+    },
+    {
+      "id": "n-flow-log",
+      "type": "geo_band_calc",
+      "position": { "x": -700, "y": 860 },
+      "data": {
+        "params": {
+          "node_note": "**log₁₊(flow_acc)** — normalise l'accumulation hydrologique. Remplace SWIR (redondant avec BSI).",
+          "expression": "np.log1p(B1)",
+          "clamp_min": 0,
+          "clamp_max": 15,
+          "colormap": "0"
+        }
+      },
+      "width": 208, "height": 90
+    },
+    {
+      "id": "n-stk-flow",
+      "type": "geo_band_stack",
+      "position": { "x": 100, "y": 1480 },
+      "data": {
+        "params": {
+          "node_note": "**Stack terrain 5b** — (slope+TRI+HAND+TWI) + flow_log",
+          "resampling": "0",
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208, "height": 121
+    },
+    {
+      "id": "n-stk-s1",
+      "type": "geo_band_stack",
+      "position": { "x": 720, "y": 460 },
+      "data": {
+        "params": {
+          "node_note": "**Stack B** — spectral+terrain (7b) + S1 (3b) → **10 bandes**",
+          "resampling": "0",
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208, "height": 121
+    },
+    {
+      "id": "n-stk-delta",
+      "type": "geo_band_stack",
+      "position": { "x": 940, "y": 420 },
+      "data": {
+        "params": {
+          "node_note": "**Stack C (final)** — (7b+S1 3b) + Δspectral (2b) → **12 bandes**",
+          "resampling": "0",
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208, "height": 121
     },
     {
       "id": "n-reclass",
@@ -832,6 +970,27 @@
       "id": "e-051",
       "source": "n-stk3",
       "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk-flow",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-051b",
+      "source": "n-flow-log",
+      "sourceHandle": "geotiff__raw",
+      "target": "n-stk-flow",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-051c",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-flow-log",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-051d",
+      "source": "n-stk-flow",
+      "sourceHandle": "geotiff__geotiff",
       "target": "n-stk-final",
       "targetHandle": "geotiff__secondary"
     },
@@ -839,8 +998,99 @@
       "id": "e-060",
       "source": "n-stk-final",
       "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk-s1",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-060b",
+      "source": "n-s1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk-s1",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-060c",
+      "source": "n-stk-s1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk-delta",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-060d",
+      "source": "n-spectral-change",
+      "sourceHandle": "geotiff__delta_stack",
+      "target": "n-stk-delta",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-060e",
+      "source": "n-stk-delta",
+      "sourceHandle": "geotiff__geotiff",
       "target": "n-rf",
       "targetHandle": "geotiff__features"
+    },
+    {
+      "id": "e-t0-bbox",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2-t0",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-t0-start",
+      "source": "n-time-t0",
+      "sourceHandle": "string__date_start",
+      "target": "n-s2-t0",
+      "targetHandle": "string__date_start"
+    },
+    {
+      "id": "e-t0-end",
+      "source": "n-time-t0",
+      "sourceHandle": "string__date_end",
+      "target": "n-s2-t0",
+      "targetHandle": "string__date_end"
+    },
+    {
+      "id": "e-t0-si",
+      "source": "n-s2-t0",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-si-t0",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-chg-t0",
+      "source": "n-si-t0",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-spectral-change",
+      "targetHandle": "geotiff__spectral_t0"
+    },
+    {
+      "id": "e-chg-t1",
+      "source": "n-si",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-spectral-change",
+      "targetHandle": "geotiff__spectral_t1"
+    },
+    {
+      "id": "e-s1-bbox",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-s1-start",
+      "source": "n-time",
+      "sourceHandle": "string__date_start",
+      "target": "n-s1",
+      "targetHandle": "string__date_start"
+    },
+    {
+      "id": "e-s1-end",
+      "source": "n-time",
+      "sourceHandle": "string__date_end",
+      "target": "n-s1",
+      "targetHandle": "string__date_end"
     },
     {
       "id": "e-061",
