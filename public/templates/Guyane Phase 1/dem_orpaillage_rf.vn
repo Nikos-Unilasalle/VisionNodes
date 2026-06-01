@@ -542,6 +542,65 @@
       "width": 208, "height": 217
     },
     {
+      "id": "n-turb-norm",
+      "type": "geo_dn_normalize",
+      "position": { "x": 100, "y": 2120 },
+      "data": {
+        "params": {
+          "node_note": "**DN → réflectance** — S2 Planetary stocké en DN (0–10000). Nechad exige ρ∈[0,1]. Division par 10000.",
+          "quantification": 10000,
+          "offset": 0,
+          "clamp": true
+        }
+      },
+      "width": 208, "height": 90
+    },
+    {
+      "id": "n-turb-mask",
+      "type": "geo_water_mask_mndwi",
+      "position": { "x": 500, "y": 2120 },
+      "data": {
+        "params": {
+          "node_note": "**Masque eau (MNDWI)** — vert=B03 (idx 2), SWIR=B11 (idx 5). Restreint la turbidité aux surfaces en eau.",
+          "green_band": 2,
+          "swir_band": 5,
+          "threshold": 0.0,
+          "erode_size": 3,
+          "scl_band": 0
+        }
+      },
+      "width": 208, "height": 153
+    },
+    {
+      "id": "n-turbidity",
+      "type": "geo_turbidity_nechad",
+      "position": { "x": 900, "y": 2120 },
+      "data": {
+        "params": {
+          "node_note": "**Turbidité Nechad (NTU)** — rouge=B04 (idx 1). NTU = A·ρ/(1−ρ/C)+B. L'eau chargée de sédiments (orpaillage) ressort en rouge/jaune — distingue ce que ESA WorldCover ne capture pas.",
+          "red_band": 1,
+          "max_ntu": 50,
+          "gaussian": 3
+        }
+      },
+      "width": 208, "height": 153
+    },
+    {
+      "id": "n-disp-turbidity",
+      "type": "output_display",
+      "position": { "x": 1300, "y": 2120 },
+      "data": {
+        "label": "Turbidité 2024 (NTU)",
+        "params": {},
+        "mainConnected": true,
+        "ports": [
+          { "id": "image__0_ntu", "color": "image", "label": "turbidity NTU" },
+          { "id": "image__1_wm",  "color": "image", "label": "water mask"    }
+        ]
+      },
+      "width": 208, "height": 217
+    },
+    {
       "id": "n-hillshade",
       "type": "geo_dem_hillshade",
       "position": {
@@ -1130,6 +1189,48 @@
       "sourceHandle": "data__table",
       "target": "n-disp-sampler",
       "targetHandle": "data__1_tbl"
+    },
+    {
+      "id": "e-turb-1",
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-turb-norm",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-turb-2",
+      "source": "n-turb-norm",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-turb-mask",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-turb-3",
+      "source": "n-turb-norm",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-turbidity",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-turb-4",
+      "source": "n-turb-mask",
+      "sourceHandle": "mask__mask",
+      "target": "n-turbidity",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e-turb-5",
+      "source": "n-turbidity",
+      "sourceHandle": "image__colormap",
+      "target": "n-disp-turbidity",
+      "targetHandle": "image__0_ntu"
+    },
+    {
+      "id": "e-turb-6",
+      "source": "n-turb-mask",
+      "sourceHandle": "image__mndwi",
+      "target": "n-disp-turbidity",
+      "targetHandle": "image__1_wm"
     },
     {
       "id": "e-070",
