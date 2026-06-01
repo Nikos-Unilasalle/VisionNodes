@@ -47,7 +47,9 @@ def _stretch(arr: np.ndarray) -> np.ndarray:
     lo, hi = np.percentile(finite, (2, 98))
     if hi <= lo:
         return np.full(arr.shape, 128, dtype=np.uint8)
-    return np.clip((arr - lo) / (hi - lo) * 255, 0, 255).astype(np.uint8)
+    scaled = np.clip((arr - lo) / (hi - lo) * 255, 0, 255)
+    # NaN/Inf survive the clip → cast to uint8 warns and yields garbage. Zero them.
+    return np.nan_to_num(scaled, nan=0.0, posinf=255.0, neginf=0.0).astype(np.uint8)
 
 
 @vision_node(
