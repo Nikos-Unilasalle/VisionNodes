@@ -5,11 +5,11 @@
       "type": "canvas_note",
       "position": {
         "x": -2100,
-        "y": -200
+        "y": -240
       },
       "style": {
-        "width": 380,
-        "height": 280
+        "width": 440,
+        "height": 260
       },
       "data": {
         "label": "Note",
@@ -18,12 +18,12 @@
           "color_index": 2
         }
       },
-      "width": 380,
-      "height": 280,
+      "width": 440,
+      "height": 260,
       "selected": false,
       "positionAbsolute": {
         "x": -2100,
-        "y": -200
+        "y": -240
       },
       "dragging": false,
       "resizing": false
@@ -150,7 +150,7 @@
         }
       },
       "width": 208,
-      "height": 278,
+      "height": 254,
       "selected": false,
       "positionAbsolute": {
         "x": -1700,
@@ -181,7 +181,7 @@
         }
       },
       "width": 208,
-      "height": 278,
+      "height": 254,
       "selected": false,
       "positionAbsolute": {
         "x": -1700,
@@ -212,36 +212,11 @@
         }
       },
       "width": 208,
-      "height": 232,
+      "height": 208,
       "selected": false,
       "positionAbsolute": {
         "x": -1700,
         "y": 900
-      },
-      "dragging": false
-    },
-    {
-      "id": "hrp-ndwi",
-      "type": "geo_ndwi_mask",
-      "position": {
-        "x": -1280,
-        "y": 100
-      },
-      "data": {
-        "label": "Masque eau (rivières)",
-        "params": {
-          "green_band": "2",
-          "nir_band": "4",
-          "threshold": "0.1",
-          "erode_px": "1"
-        }
-      },
-      "width": 208,
-      "height": 153,
-      "selected": false,
-      "positionAbsolute": {
-        "x": -1280,
-        "y": 100
       },
       "dragging": false
     },
@@ -318,7 +293,7 @@
       },
       "width": 208,
       "height": 345,
-      "selected": true,
+      "selected": false,
       "positionAbsolute": {
         "x": 60,
         "y": 300
@@ -435,7 +410,7 @@
         "minified": false
       },
       "width": 208,
-      "height": 278,
+      "height": 254,
       "selected": false,
       "positionAbsolute": {
         "x": -1280,
@@ -467,7 +442,7 @@
         }
       },
       "width": 208,
-      "height": 278,
+      "height": 254,
       "selected": false,
       "positionAbsolute": {
         "x": -1280,
@@ -897,6 +872,210 @@
         "y": -60
       },
       "dragging": false
+    },
+    {
+      "id": "node-1780257239634-qipye2tcp",
+      "type": "geo_dem_slope",
+      "position": {
+        "x": -1400,
+        "y": 640
+      },
+      "style": {},
+      "data": {
+        "label": "DEM Slope",
+        "params": {
+          "band": 1,
+          "unit": 1,
+          "clamp_max": 1,
+          "colormap": 0
+        },
+        "schema": {
+          "type": "geo_dem_slope",
+          "label": "DEM Slope",
+          "category": "geography",
+          "icon": "TrendingUp",
+          "description": "Compute slope (pente) from a DEM using the Horn (1981) 3×3 weighted gradient. Works with both geographic (EPSG:4326) and projected (UTM) DEMs. Output unit: degrees, percent rise, or radians.",
+          "inputs": [
+            {
+              "id": "geotiff",
+              "color": "geotiff",
+              "label": "DEM"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "slope",
+              "color": "geotiff",
+              "label": "Slope"
+            },
+            {
+              "id": "colormap",
+              "color": "image",
+              "label": "Preview"
+            }
+          ],
+          "params": [
+            {
+              "id": "band",
+              "type": "int",
+              "default": 1,
+              "min": 1,
+              "max": 32,
+              "label": "DEM band index"
+            },
+            {
+              "id": "unit",
+              "type": "enum",
+              "options": [
+                "degrees",
+                "percent",
+                "radians"
+              ],
+              "default": 0,
+              "label": "Unit"
+            },
+            {
+              "id": "clamp_max",
+              "type": "float",
+              "default": 90,
+              "min": 1,
+              "max": 10000,
+              "label": "Clamp max (for display)"
+            },
+            {
+              "id": "colormap",
+              "type": "enum",
+              "options": [
+                "viridis",
+                "plasma",
+                "turbo",
+                "hot",
+                "gray"
+              ],
+              "default": 0,
+              "label": "Colormap"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1780257702745-gdw3y8f7r",
+      "type": "geo_dem_aspect",
+      "position": {
+        "x": -1400,
+        "y": 760
+      },
+      "style": {},
+      "data": {
+        "label": "DEM Aspect",
+        "params": {},
+        "schema": {
+          "type": "geo_dem_aspect",
+          "label": "DEM Aspect",
+          "category": "geography",
+          "icon": "Compass",
+          "description": "Compute aspect (exposition) from a DEM using the Horn (1981) 3×3 weighted gradient. Output: azimuth 0–360° clockwise from North (flat areas = -1). Preview uses a color wheel: N=red, E=cyan, S=teal, W=yellow.",
+          "inputs": [
+            {
+              "id": "geotiff",
+              "color": "geotiff",
+              "label": "DEM"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "aspect",
+              "color": "geotiff",
+              "label": "Aspect"
+            },
+            {
+              "id": "colormap",
+              "color": "image",
+              "label": "Preview"
+            }
+          ],
+          "params": [
+            {
+              "id": "band",
+              "type": "int",
+              "default": 1,
+              "min": 1,
+              "max": 32,
+              "label": "DEM band index"
+            },
+            {
+              "id": "unit",
+              "type": "enum",
+              "options": [
+                "degrees_north",
+                "radians"
+              ],
+              "default": 0,
+              "label": "Unit"
+            },
+            {
+              "id": "flat_value",
+              "type": "float",
+              "default": -1,
+              "min": -1,
+              "max": 0,
+              "label": "Flat area value"
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1400,
+        "y": 760
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780257731250-i6gxoknou",
+      "type": "plugin_blend_images",
+      "position": {
+        "x": -980,
+        "y": 700
+      },
+      "style": {},
+      "data": {
+        "label": "Blend Images",
+        "params": {}
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -980,
+        "y": 700
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -941,13 +1120,6 @@
       "target": "hrp-wc",
       "targetHandle": "string__date_end",
       "id": "e-timewc-wc-end"
-    },
-    {
-      "source": "hrp-s2",
-      "sourceHandle": "geotiff__geotiff",
-      "target": "hrp-ndwi",
-      "targetHandle": "geotiff__geotiff",
-      "id": "e-s2-ndwi"
     },
     {
       "source": "hrp-dem",
@@ -1040,13 +1212,6 @@
     },
     {
       "source": "hrp-time-s2",
-      "sourceHandle": "string__date_start",
-      "target": "node-1780250927620-0.09654009002376351",
-      "targetHandle": "string__date_start",
-      "id": "e-1780250937716"
-    },
-    {
-      "source": "hrp-time-s2",
       "sourceHandle": "string__date_end",
       "target": "node-1780250927620-0.09654009002376351",
       "targetHandle": "string__date_end",
@@ -1093,18 +1258,46 @@
       "target": "hrp-stack",
       "targetHandle": "geotiff__secondary",
       "id": "e-1780252289032"
+    },
+    {
+      "source": "hrp-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "node-1780257239634-qipye2tcp",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-1780257242539"
+    },
+    {
+      "source": "hrp-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "node-1780257702745-gdw3y8f7r",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-1780257707352"
+    },
+    {
+      "source": "node-1780257239634-qipye2tcp",
+      "sourceHandle": "image__colormap",
+      "target": "node-1780257731250-i6gxoknou",
+      "targetHandle": "image__image_a",
+      "id": "e-1780257739305"
+    },
+    {
+      "source": "node-1780257702745-gdw3y8f7r",
+      "sourceHandle": "image__colormap",
+      "target": "node-1780257731250-i6gxoknou",
+      "targetHandle": "image__image_b",
+      "id": "e-1780257744304"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 703.30078125,
-      "h": 369
+      "w": 976.91015625,
+      "h": 651
     },
     "previewPos": {
-      "x": 967.34375,
-      "y": -115.91796875
+      "x": 1231.8828125,
+      "y": -12.2265625
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "hrp-rf"
+    "visualizedNodeId": "hrp-ndwi"
   }
 }

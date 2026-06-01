@@ -290,8 +290,20 @@ interface ColorInputProps {
 }
 export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, isPicking }: ColorInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const swatchRef = useRef<HTMLButtonElement>(null);
   const currentVal = (val || '#ffffff').toUpperCase();
+
+  // Popover height ~290px. Flip above the swatch if not enough room below.
+  const POPOVER_H = 300;
+  const togglePicker = () => {
+    if (!isOpen && swatchRef.current) {
+      const rect = swatchRef.current.getBoundingClientRect();
+      setOpenUp(window.innerHeight - rect.bottom < POPOVER_H);
+    }
+    setIsOpen(v => !v);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -319,14 +331,15 @@ export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, is
             <Pipette size={14} />
           </button>
         )}
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
+        <button
+          ref={swatchRef}
+          onClick={togglePicker}
           className="relative w-10 h-6 rounded-md border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
           style={{ backgroundColor: currentVal }}
         />
-        
+
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3">
+          <div className={`absolute right-0 ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'} z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3`}>
             <div className="custom-color-wheel">
               <HexColorPicker color={currentVal} onChange={(newColor) => onChange(newColor.toUpperCase())} />
             </div>
@@ -383,7 +396,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
   const [editingLabel, setEditingLabel] = useState<{ nodeId: string; paramId: string; value: string } | null>(null);
+  const [collapsedSlots, setCollapsedSlots] = useState<Set<string>>(new Set());
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const toggleSlot = (slot: string) =>
+    setCollapsedSlots(prev => { const s = new Set(prev); s.has(slot) ? s.delete(slot) : s.add(slot); return s; });
 
   // Skip manual types to avoid duplication with schema-driven loop below
   const MANUAL_TYPES = new Set([
@@ -933,103 +950,144 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       )}
 
       {/* Schema-driven dynamic params (plugins) */}
-      {!MANUAL_TYPES.has(node.type) && node.data.schema?.params?.map((sp: ParamSpec) => {
-        if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
-          const mode = Number(p.mode ?? 0);
-          if (sp.id === 'scale'  && mode !== 0) return null;
-          if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
-          if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
-        }
-        if (node.type === 'filter_color_mask') {
-          const mode = Number(p.mode ?? 0);
-          if (mode === 0) { // HSV
-            if (sp.id === 'threshold') return null;
-          } else { // RGB
-            if (['h_tol', 's_tol', 'v_tol'].includes(sp.id)) return null;
-          }
-        }
-        const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
-        const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
-        const isEnum    = sp.type === 'enum' || sp.options;
-        const isColor   = sp.type === 'color';
-        const isDate    = sp.type === 'date' || sp.id === 'date_start' || sp.id === 'date_end';
-        const isString  = (sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string') && !isDate;
-        const isNumber  = sp.type === 'number' || sp.type === 'float' || typeof (p[sp.id] ?? sp.default) === 'number';
-        const isBool    = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
+      {!MANUAL_TYPES.has(node.type) && (() => {
+        const schemaParams: ParamSpec[] = node.data.schema?.params ?? [];
+        const connectedCount = 1 + ((node.data as any).ports?.length ?? 0);
 
-        let inner: React.ReactNode;
-        if (sp.type === 'trigger') {
-          const isSnapshotSave = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
-          const isSnapshotCapture = node.type === 'util_snapshot' && sp.id === 'capture';
-          inner = (
-            <div className="space-y-4 group">
-              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
-              <button
-                onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else if (isSnapshotCapture) { window.dispatchEvent(new CustomEvent('snapshot-to-node', { detail: { nodeId: node.id } })); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
-                className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
-              >
-                <Save size={14} /> {sp.label || 'Execute'}
-              </button>
+        // ── show_if checker ───────────────────────────────────────────────
+        const passesShowIf = (sp: ParamSpec): boolean => {
+          if (!sp.show_if) return true;
+          const cur = p[sp.show_if.param] ?? schemaParams.find(
+            (x: ParamSpec) => x.id === sp.show_if!.param
+          )?.default ?? 0;
+          return Number(cur) === Number(sp.show_if.value) || cur === sp.show_if.value;
+        };
+
+        // ── single param widget ───────────────────────────────────────────
+        const renderWidget = (sp: ParamSpec): React.ReactNode => {
+          const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
+          const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
+          const isEnum    = sp.type === 'enum' || sp.options;
+          const isColor   = sp.type === 'color';
+          const isDate    = sp.type === 'date' || sp.id === 'date_start' || sp.id === 'date_end';
+          const isString  = (sp.type === 'string' || typeof (p[sp.id] ?? sp.default) === 'string') && !isDate;
+          const isNumber  = sp.type === 'number' || sp.type === 'float' || typeof (p[sp.id] ?? sp.default) === 'number';
+          const isBool    = sp.type === 'toggle' || sp.type === 'bool' || sp.type === 'boolean' || typeof (p[sp.id] ?? sp.default) === 'boolean';
+
+          let inner: React.ReactNode;
+          if (sp.type === 'trigger') {
+            const isSnapshotSave    = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
+            const isSnapshotCapture = node.type === 'util_snapshot' && sp.id === 'capture';
+            inner = (
+              <div className="space-y-4 group">
+                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
+                <button
+                  onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else if (isSnapshotCapture) { window.dispatchEvent(new CustomEvent('snapshot-to-node', { detail: { nodeId: node.id } })); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
+                  className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <Save size={14} /> {sp.label || 'Execute'}
+                </button>
+              </div>
+            );
+          } else if (isEnum) {
+            const isFlowPreset = node.type === 'analysis_flow' && sp.id === 'preset';
+            inner = <SelectInput label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v) => {
+              if (isFlowPreset) { const idx = Number(v); const pv = FLOW_PRESETS[idx]; up(pv ? { preset: idx, ...pv } : { preset: idx }); }
+              else { up({ [sp.id]: v }); }
+            }} />;
+          } else if (isColor) {
+            inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
+          } else if (sp.type === 'file_path') {
+            inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} />;
+          } else if (isDate) {
+            inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+          } else if (isString) {
+            inner = sp.id === 'code'
+              ? <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
+              : <TextInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+          } else if (isNumber) {
+            const val = Number(p[sp.id] ?? sp.default ?? 0);
+            inner = (sp.min === undefined || sp.max === undefined)
+              ? <NumberInput label={sp.label || sp.id} val={val} onChange={(v) => up({ [sp.id]: v })} />
+              : <Slider label={sp.label || sp.id} val={val} min={sp.min} max={sp.max} step={sp.step || (sp.type === 'float' ? 0.01 : 1)} onChange={(v) => up({ [sp.id]: v })} />;
+          } else if (isBool) {
+            inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
+          } else {
+            inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
+          }
+
+          return (
+            <div key={sp.id} className={showEye ? 'relative group/param' : undefined}>
+              {inner}
+              {showEye && (
+                <button
+                  className={`absolute top-0 right-0 p-1 rounded transition-all duration-150 ${isExposed ? 'text-accent' : 'text-gray-600 opacity-0 group-hover/param:opacity-100'}`}
+                  onClick={(e) => { e.stopPropagation(); onToggleExposed!(node.id, sp.id); }}
+                  title={isExposed ? 'Retirer du groupe' : 'Exposer dans le groupe'}
+                >
+                  {isExposed ? <Eye size={10} /> : <EyeOff size={10} />}
+                </button>
+              )}
             </div>
           );
-        } else if (isEnum) {
-          const isFlowPreset = node.type === 'analysis_flow' && sp.id === 'preset';
-          inner = <SelectInput label={sp.label || sp.id} val={p[sp.id] ?? sp.default ?? 0} options={sp.options || []} onChange={(v) => {
-            if (isFlowPreset) {
-              const idx = Number(v);
-              const pv = FLOW_PRESETS[idx];
-              up(pv ? { preset: idx, ...pv } : { preset: idx });
-            } else {
-              up({ [sp.id]: v });
-            }
-          }} />;
-        } else if (isColor) {
-          inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
-        } else if (sp.type === 'file_path') {
-          inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} />;
-        } else if (isDate) {
-          inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
-        } else if (isString) {
-          inner = sp.id === 'code'
-            ? <CodeInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
-            : <TextInput  label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
-        } else if (isNumber) {
-          const val = Number(p[sp.id] ?? sp.default ?? 0);
-          if (sp.min === undefined || sp.max === undefined) {
-            inner = <NumberInput label={sp.label || sp.id} val={val} onChange={(v) => up({ [sp.id]: v })} />;
-          } else {
-            const min = sp.min;
-            const max = sp.max;
-            inner = <Slider 
-              label={sp.label || sp.id} 
-              val={val} 
-              min={min} 
-              max={max} 
-              step={sp.step || (sp.type === 'float' ? 0.01 : 1)} 
-              onChange={(v) => up({ [sp.id]: v })} 
-            />;
-          }
-        } else if (isBool) {
-          inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
-        } else {
-          inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
-        }
+        };
 
-        return (
-          <div key={sp.id} className={showEye ? 'relative group/param' : undefined}>
-            {inner}
-            {showEye && (
-              <button
-                className={`absolute top-0 right-0 p-1 rounded transition-all duration-150 ${isExposed ? 'text-accent' : 'text-gray-600 opacity-0 group-hover/param:opacity-100'}`}
-                onClick={(e) => { e.stopPropagation(); onToggleExposed!(node.id, sp.id); }}
-                title={isExposed ? 'Retirer du groupe' : 'Exposer dans le groupe'}
-              >
-                {isExposed ? <Eye size={10} /> : <EyeOff size={10} />}
-              </button>
-            )}
-          </div>
-        );
-      })}
+        // ── non-slot params (flat, existing logic) ────────────────────────
+        const nonSlotNodes = schemaParams
+          .filter(sp => !sp.slot)
+          .map((sp: ParamSpec) => {
+            if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
+              const mode = Number(p.mode ?? 0);
+              if (sp.id === 'scale'  && mode !== 0) return null;
+              if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
+              if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
+            }
+            if (node.type === 'filter_color_mask') {
+              const mode = Number(p.mode ?? 0);
+              if (mode === 0 && sp.id === 'threshold') return null;
+              if (mode !== 0 && ['h_tol', 's_tol', 'v_tol'].includes(sp.id)) return null;
+            }
+            if (!passesShowIf(sp)) return null;
+            return renderWidget(sp);
+          });
+
+        // ── slot-grouped params (collapsible) ─────────────────────────────
+        const hasSlotParams = schemaParams.some(sp => sp.slot);
+        const slotGroupNodes = !hasSlotParams ? [] :
+          Array.from('abcdefgh').slice(0, connectedCount).map(slot => {
+            const group = schemaParams.filter(sp => sp.slot === slot);
+            if (group.length === 0) return null;
+            const isCollapsed = collapsedSlots.has(slot);
+            const labelSp  = group.find(sp => sp.id === `${slot}_label`);
+            const colorSp  = group.find(sp => sp.id === `${slot}_color`);
+            const slotLabel = String(p[labelSp?.id ?? ''] ?? labelSp?.default ?? slot.toUpperCase());
+            const slotColor = String(p[colorSp?.id ?? ''] ?? colorSp?.default ?? '#888888');
+
+            return (
+              <div key={slot} className="rounded-lg overflow-hidden border border-white/5">
+                <button
+                  className="w-full flex items-center gap-2 px-2 py-1.5 bg-white/[0.03] hover:bg-white/[0.06] transition-colors text-left"
+                  onClick={() => toggleSlot(slot)}
+                >
+                  <span className="text-gray-500 text-[11px] font-mono w-3 shrink-0">
+                    {isCollapsed ? '›' : '∨'}
+                  </span>
+                  <span className="w-3 h-3 rounded-sm shrink-0 border border-white/10" style={{ backgroundColor: slotColor }} />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 truncate flex-1">
+                    {slot.toUpperCase()} — {slotLabel}
+                  </span>
+                </button>
+                {!isCollapsed && (
+                  <div className="px-2 pb-2 pt-1 flex flex-col gap-3 border-t border-white/5">
+                    {group.filter(passesShowIf).map(sp => renderWidget(sp))}
+                  </div>
+                )}
+              </div>
+            );
+          });
+
+        return <>{nonSlotNodes}{slotGroupNodes}</>;
+      })()}
 
     </div>
   );

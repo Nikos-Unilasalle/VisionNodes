@@ -12,6 +12,10 @@ export interface ParamSpec {
   max?: number;
   step?: number;
   options?: string[];
+  /** Hide this param unless another param matches a given value. */
+  show_if?: { param: string; value: number | string | boolean };
+  /** Slot key ('a'–'h') — hide this param if the slot is not connected. */
+  slot?: string;
 }
 
 export interface PortSpec {

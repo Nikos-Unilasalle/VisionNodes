@@ -3239,28 +3239,62 @@ const MLClassifierNodeUI = ({ data, selected }: { data: any; selected: boolean }
   );
 };
 
-export const GenericCustomNode = memo((props: any) => {
-  const { data } = props;
-  const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
+// ── Raster Colorizer ─────────────────────────────────────────────────────────
+export const RasterColorizerNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
 
-  if (schema.type === 'sci_plotter') return <ScientificPlotterNode {...props} />;
-  if (schema.type === 'plotter_pro') return <PlotterProNode {...props} />;
-  if (schema.type === 'sci_histogram') return <ScientificHistogramNode {...props} />;
-  if (schema.type === 'sci_stats') return <ScientificStatsNode {...props} />;
-  if (schema.type === 'draw_text') return <DrawTextNode {...props} />;
-  if (schema.type === 'util_csv_export') return <UtilCSVExportNode {...props} />;
-  if (schema.type === 'geo_geotiff_reader') return <GeoTIFFReaderNode {...props} />;
-  if (schema.type === 'geo_earth_engine') return <GeoEarthEngineNode {...props} />;
-  if (schema.type === 'geo_band_info') return <GeoBandInfoNode {...props} />;
-  if (schema.type === 'geo_land_cover') return <GeoLandCoverNode {...props} />;
-  if (schema.type === 'sci_matrix_dist') return <MatrixDistNode {...props} />;
-  if (schema.type === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
-  if (schema.type === 'geo_index') return <GeoIndexNode {...props} />;
-  if (schema.type === 'root_anatomy_report') return <RootAnatomyReportNodeUI {...props} />;
-  if (schema.type === 'geo_turbidity_stats') return <TurbidityStatsNodeUI {...props} />;
-  if (schema.type === 'ml_knn_classifier')  return <MLClassifierNodeUI {...props} />;
-  if (schema.type === 'ml_svm_classifier')  return <MLClassifierNodeUI {...props} />;
-  if (schema.type === 'ml_df_stats')        return <MLDfStatsNodeUI {...props} />;
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  const inputs = [
+    { id: 'a', color: 'any', label: 'A' },
+    ...ports.map((p: any) => {
+      const idx = p.id.indexOf('__');
+      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      return { id: shortId, color: p.color, label: p.label };
+    }),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any' },
+  ];
+
+  return (
+    <BaseNode
+      title={data.label || 'Raster Colorizer'}
+      icon={Palette}
+      selected={selected}
+      data={data}
+      color="accent"
+      inputs={inputs}
+      outputs={[{ id: 'main', color: 'image', label: 'Colorized image' }]}
+    />
+  );
+});
+
+export const GenericCustomNode = memo((props: any) => {
+  const { data, type: nodeType } = props;
+  const schema = data.schema || { label: 'Unknown Plugin', icon: 'Box', inputs: [], outputs: [] };
+  // Use the ReactFlow node type prop as the authoritative type — works even before schema loads.
+  const t = nodeType || schema.type;
+
+  if (t === 'sci_plotter') return <ScientificPlotterNode {...props} />;
+  if (t === 'plotter_pro') return <PlotterProNode {...props} />;
+  if (t === 'sci_histogram') return <ScientificHistogramNode {...props} />;
+  if (t === 'sci_stats') return <ScientificStatsNode {...props} />;
+  if (t === 'draw_text') return <DrawTextNode {...props} />;
+  if (t === 'util_csv_export') return <UtilCSVExportNode {...props} />;
+  if (t === 'geo_geotiff_reader') return <GeoTIFFReaderNode {...props} />;
+  if (t === 'geo_earth_engine') return <GeoEarthEngineNode {...props} />;
+  if (t === 'geo_band_info') return <GeoBandInfoNode {...props} />;
+  if (t === 'geo_land_cover') return <GeoLandCoverNode {...props} />;
+  if (t === 'sci_matrix_dist') return <MatrixDistNode {...props} />;
+  if (t === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
+  if (t === 'geo_index') return <GeoIndexNode {...props} />;
+  if (t === 'root_anatomy_report') return <RootAnatomyReportNodeUI {...props} />;
+  if (t === 'geo_turbidity_stats') return <TurbidityStatsNodeUI {...props} />;
+  if (t === 'ml_knn_classifier')  return <MLClassifierNodeUI {...props} />;
+  if (t === 'ml_svm_classifier')  return <MLClassifierNodeUI {...props} />;
+  if (t === 'ml_df_stats')        return <MLDfStatsNodeUI {...props} />;
+  if (t === 'raster_colorizer')   return <RasterColorizerNode {...props} />;
 
   return <GenericCustomNodeInternal {...props} schema={schema} />;
 });
@@ -3824,11 +3858,33 @@ const _HIDDEN_PARAMS = new Set([
 const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
+  const updateNodeInternals = useUpdateNodeInternals();
   const IconCmp = getIcon(schema.icon, Box);
+
+  // Dynamic ports (created by onConnect when dynamic_inputs=true)
+  const dynPorts: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  useEffect(() => {
+    if (nodeId) updateNodeInternals(nodeId);
+  }, [dynPorts.length, nodeId, updateNodeInternals]);
 
   const outputs = data.dynamicColor
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
     : schema.outputs;
+
+  // Build input list: static schema inputs + dynamic ports + factory handle (if dynamic_inputs).
+  // Fallback: if data.ports is non-empty but schema is not loaded yet, still show saved ports.
+  const inputs = React.useMemo(() => {
+    const staticInputs: any[] = schema.inputs ?? [];
+    const hasDynamic = schema.dynamic_inputs || dynPorts.length > 0;
+    if (!hasDynamic) return staticInputs;
+    const dynMapped = dynPorts.map((p: any) => {
+      const idx = p.id.indexOf('__');
+      const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      return { id: shortId, color: p.color, label: p.label };
+    });
+    return [...staticInputs, ...dynMapped, { id: 'DYNAMIC_NEW_HANDLE', color: 'any' }];
+  }, [schema.inputs, schema.dynamic_inputs, dynPorts]);
 
   const preview = nd?.preview_b64 || (typeof nd?.preview === 'string' ? nd.preview : null);
 
@@ -3861,7 +3917,7 @@ const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
   }, [schema, data.params]);
 
   return (
-    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={schema.inputs} outputs={outputs}>
+    <BaseNode title={data.label || schema.label} icon={IconCmp} selected={selected} data={data} color="accent" inputs={inputs} outputs={outputs}>
       {preview && (
         <div className="px-2 pb-1">
           <img
@@ -4307,6 +4363,152 @@ export const ManualPointsNode = memo(({ selected, data }: any) => {
           <span className="text-green-400/70">{points.filter(p => p.label === 1).length} FG</span>
           <span className="text-red-400/70">{points.filter(p => p.label === 0).length} BG</span>
         </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+// ── Geo Bbox Node ────────────────────────────────────────────────────────────
+
+export const GeoBboxNode = memo(({ selected, data }: any) => {
+  const onOpenEditor = data.onOpenEditor;
+  const p = data.params ?? {};
+  const lon_min = parseFloat(p.lon_min), lat_min = parseFloat(p.lat_min);
+  const lon_max = parseFloat(p.lon_max), lat_max = parseFloat(p.lat_max);
+  const hasBbox = [lon_min, lat_min, lon_max, lat_max].every(isFinite);
+  const SquareIcon = (LucideIcons as any).Square;
+  const MapIcon    = (LucideIcons as any).Map;
+
+  return (
+    <BaseNode title="Bounding Box" icon={SquareIcon} selected={selected} data={data} color="green"
+      inputs={[]}
+      outputs={[{ id: 'bbox', color: 'string', label: 'BBox (str)' }]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        <div className="relative bg-black/30 rounded-xl overflow-hidden border border-white/5 group/bbox">
+          {hasBbox ? (
+            <div className="px-3 py-3 font-mono text-[8px] leading-relaxed text-gray-400 space-y-0.5">
+              <div className="flex justify-between"><span className="text-gray-600">W</span><span>{lon_min.toFixed(5)}°</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">E</span><span>{lon_max.toFixed(5)}°</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">S</span><span>{lat_min.toFixed(5)}°</span></div>
+              <div className="flex justify-between"><span className="text-gray-600">N</span><span>{lat_max.toFixed(5)}°</span></div>
+            </div>
+          ) : (
+            <div className="w-full py-6 flex items-center justify-center text-gray-700">
+              <SquareIcon size={20} className="opacity-10" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/bbox:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <MapIcon size={11} /> Edit on Map
+            </button>
+          </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+// ── Geo Interactive Sampler Node ─────────────────────────────────────────────
+
+const GEO_SAMPLER_TYPE_COLORS: Record<number, string> = { 0: '#22dc50', 1: '#ff4444', 2: '#00d4ff' };
+const GEO_SAMPLER_TYPE_LABELS: Record<number, string> = { 0: 'A', 1: 'B', 2: 'C' };
+
+export const GeoInteractiveSamplerNode = memo(({ selected, data }: any) => {
+  const nd          = useNodeData(useNodeId());
+  const frame       = nd?.preview;
+  const bandNames: string[] = nd?.band_names ?? [];
+  const onOpenEditor = data.onOpenEditor;
+  const imgRef      = React.useRef<HTMLImageElement>(null);
+
+  const points: { x: number; y: number; type: number }[] = React.useMemo(() => {
+    try { const p = JSON.parse(data.params?.points || '[]'); return Array.isArray(p) ? p : []; }
+    catch { return []; }
+  }, [data.params?.points]);
+
+  const selectedIndices: string[] = React.useMemo(() => {
+    try { const i = JSON.parse(data.params?.indices || '[]'); return Array.isArray(i) ? i : []; }
+    catch { return []; }
+  }, [data.params?.indices]);
+
+  const counts = React.useMemo(() => ({
+    0: points.filter(p => p.type === 0).length,
+    1: points.filter(p => p.type === 1).length,
+    2: points.filter(p => p.type === 2).length,
+  }), [points]);
+
+  return (
+    <BaseNode title="Geo Interactive Sampler" icon={Crosshair} selected={selected} data={data} color="emerald"
+      inputs={[{ id: 'geotiff', color: 'geotiff', label: 'Feature stack' }, { id: 'image', color: 'image', label: 'Preview (opt)' }]}
+      outputs={[{ id: 'table', color: 'data', label: 'Samples table' }, { id: 'preview', color: 'image', label: 'Annotated' }]}
+    >
+      <div className="flex flex-col gap-2 nodrag">
+        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/gs shadow-inner">
+          {frame ? (
+            <img ref={imgRef} src={`data:image/jpeg;base64,${frame}`} className="w-full h-auto block opacity-80" alt="Sampler Preview" />
+          ) : (
+            <div className="w-full aspect-video flex items-center justify-center text-gray-800">
+              <Crosshair size={24} className="opacity-10" />
+            </div>
+          )}
+          {/* SVG point overlay */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox={imgRef.current?.naturalWidth ? `0 0 ${imgRef.current.naturalWidth} ${imgRef.current.naturalHeight}` : '0 0 1 1'}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {points.map((p, i) => {
+              const nw = imgRef.current?.naturalWidth || 1;
+              const nh = imgRef.current?.naturalHeight || 1;
+              const r  = Math.min(nw, nh) * 0.025;
+              const cx = p.x * nw;
+              const cy = p.y * nh;
+              return (
+                <g key={i}>
+                  <circle cx={cx} cy={cy} r={r} fill={GEO_SAMPLER_TYPE_COLORS[p.type] ?? '#fff'} opacity={0.9} />
+                  <circle cx={cx} cy={cy} r={r + Math.min(nw, nh) * 0.005} fill="none" stroke="white" strokeWidth={Math.max(1, Math.min(nw, nh) * 0.003)} opacity={0.8} />
+                  <text x={cx} y={cy} dy={-(r + Math.min(nw, nh) * 0.015)} textAnchor="middle" fill="white" fontSize={Math.max(10, Math.min(nw, nh) * 0.022)} fontWeight="bold" opacity={0.9}>
+                    {GEO_SAMPLER_TYPE_LABELS[p.type] ?? '?'}{i + 1}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/gs:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl shadow-2xl transition-all font-black text-[10px] uppercase tracking-widest scale-90 active:scale-95 flex items-center gap-2">
+              <Crosshair size={12} /> Edit Points
+            </button>
+          </div>
+        </div>
+
+        {/* Type counts */}
+        <div className="grid grid-cols-3 gap-1">
+          {([0, 1, 2] as const).map(t => (
+            <div key={t} className="flex items-center justify-between px-2 py-1 bg-black/20 rounded-lg border border-white/5">
+              <span className="text-[8px] font-black uppercase" style={{ color: GEO_SAMPLER_TYPE_COLORS[t] }}>
+                {GEO_SAMPLER_TYPE_LABELS[t]}
+              </span>
+              <span className="text-[8px] font-mono text-gray-400">{counts[t]}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Selected indices */}
+        {selectedIndices.length > 0 && (
+          <div className="flex flex-wrap gap-1 px-1">
+            {selectedIndices.map(idx => (
+              <span key={idx} className="px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/25 rounded text-[8px] font-black text-emerald-400 uppercase">
+                {idx}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {bandNames.length === 0 && (
+          <p className="text-[8px] text-gray-600 text-center font-mono px-2">Connect geo_spectral_indices</p>
+        )}
       </div>
     </BaseNode>
   );

@@ -38,6 +38,8 @@ import CropEditorOverlay from './components/overlays/CropEditorOverlay';
 import AnnotatorOverlay from './components/overlays/AnnotatorOverlay';
 import IndexPainterOverlay from './components/overlays/IndexPainterOverlay';
 import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorOverlay';
+import GeoInteractiveSamplerEditorOverlay from './components/overlays/GeoInteractiveSamplerEditorOverlay';
+import GeoBboxEditorOverlay from './components/overlays/GeoBboxEditorOverlay';
 import CopernicusMapEditorOverlay from './components/overlays/CopernicusMapEditorOverlay';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
@@ -154,6 +156,8 @@ function App() {
   const [annotatorEditingId, setAnnotatorEditingId] = useState<string | null>(null);
   const [indexPainterEditingId, setIndexPainterEditingId] = useState<string | null>(null);
   const [manualPointsEditingId, setManualPointsEditingId] = useState<string | null>(null);
+  const [geoSamplerEditingId, setGeoSamplerEditingId]     = useState<string | null>(null);
+  const [geoBboxEditingId, setGeoBboxEditingId]           = useState<string | null>(null);
   const [copernicusEditingId,   setCopernicusEditingId]   = useState<string | null>(null);
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
@@ -436,6 +440,10 @@ function App() {
             ? () => setIndexPainterEditingId(node.id)
             : node.type === 'manual_points'
             ? () => setManualPointsEditingId(node.id)
+            : node.type === 'geo_interactive_sampler'
+            ? () => setGeoSamplerEditingId(node.id)
+            : node.type === 'geo_bbox'
+            ? () => setGeoBboxEditingId(node.id)
             : node.type === 'geo_copernicus'
             ? () => setCopernicusEditingId(node.id)
             : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
@@ -1606,6 +1614,18 @@ function App() {
                  node={nodesWithData.find(n => n.id === manualPointsEditingId)}
                  nodesData={nodesData}
                  onClose={() => setManualPointsEditingId(null)}
+               />
+            )}
+            {geoBboxEditingId && (
+               <GeoBboxEditorOverlay
+                 node={nodesWithData.find(n => n.id === geoBboxEditingId)}
+                 onClose={() => setGeoBboxEditingId(null)}
+               />
+            )}
+            {geoSamplerEditingId && (
+               <GeoInteractiveSamplerEditorOverlay
+                 node={nodesWithData.find(n => n.id === geoSamplerEditingId)}
+                 onClose={() => setGeoSamplerEditingId(null)}
                />
             )}
             {copernicusEditingId && (

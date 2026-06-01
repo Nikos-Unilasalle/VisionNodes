@@ -44,9 +44,8 @@ engine/plugins/gee_cache/package-lock.json
 .codebuddy/
 .claude-code/
 
-# Copernicus tile cache (large GeoTIFFs, not versioned)
-engine/plugins/copernicus_cache/*.tif
-engine/plugins/copernicus_cache/*.tiff
+# Copernicus tile cache (large GeoTIFFs + trained models, not versioned)
+engine/plugins/copernicus_cache/
 
 # ACOLITE source clone (use: git clone https://github.com/acolite/acolite.git engine/plugins/acolite_src)
 engine/plugins/acolite_src/
@@ -63,3 +62,6 @@ paper/experiments/out/scatter_GP_extended.png
 planetary_cache_smoke/
 engine/plugins/planetary_cache/
 engine/plugins/planetary_cache_smoke/
+
+# Large screen captures
+public/templates/**/capture_n-display_*.png

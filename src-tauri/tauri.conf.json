@@ -15,7 +15,7 @@
         "title": "VisionNodes",
         "width": 1280,
         "height": 800,
-        "theme": "Dark",
+        "theme": "Light",
         "devtools": true
       }
     ],
