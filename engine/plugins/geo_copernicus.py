@@ -378,10 +378,16 @@ class GeoCopernicusNode(NodeProcessor):
 
             cloud_free = (mosaic_mode == 'CLOUD_FREE')
 
+            # leastCC (least cloud cover) is only valid for optical collections.
+            # SAR (S1) and DEM have no cloud metadata → SentinelHub rejects leastCC.
+            safe_order = mosaicking_order
+            if not has_cloud and safe_order == 'leastCC':
+                safe_order = 'mostRecent'
+
             input_data_kwargs: dict = {
                 'data_collection': data_collection,
                 'time_interval':   (date_start, date_end),
-                'mosaicking_order': mosaicking_order,
+                'mosaicking_order': safe_order,
             }
             # For SIMPLE mode, apply cloud cover pre-filter to restrict API search.
             # For CLOUD_FREE mode, allow all acquisitions through (per-pixel SCL filter handles it).
