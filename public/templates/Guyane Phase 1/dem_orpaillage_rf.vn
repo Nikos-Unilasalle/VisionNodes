@@ -300,8 +300,8 @@
       },
       "data": {
         "params": {
-          "node_note": "**RF Classifier — 12 bandes** : NDVI, BSI, slope, TRI, HAND, TWI, flow_log + S1 VV/VH/ratio + ΔSpectral (NDVI/BSI 2021→2024).",
-          "band_names": "NDVI,BSI,slope_degrees,tri,hand_m,twi,flow_log,vv,vh,vv_vh_ratio,dNDVI,dBSI",
+          "node_note": "**RF Classifier — 11 bandes** : NDVI, BSI, slope, TRI, HAND, TWI, flow_log + S1 GRD (VV/VH) + ΔSpectral (ΔNDVI/ΔBSI 2021→2024).",
+          "band_names": "NDVI,BSI,slope_degrees,tri,hand_m,twi,flow_log,vv,vh,dNDVI,dBSI",
           "n_estimators": 150,
           "max_depth": 15,
           "samples_per_class": 500,
@@ -430,12 +430,9 @@
       "position": { "x": -1350, "y": 1700 },
       "data": {
         "params": {
-          "node_note": "**Sentinel-1 SAR** — VV + VH + ratio. Eau turbide (orpaillage) très visible en radar même sous nuages.",
-          "collection": "5",
-          "stac_polarization": "0",
-          "stac_composite": "0",
-          "stac_to_db": true,
-          "stac_max_scenes": 12,
+          "node_note": "**Sentinel-1 GRD (CDSE)** — VV + VH. Nécessite credentials CDSE. Eau turbide orpaillage visible radar sous nuages. ⚠ Si 0 % valid : S1 RTC Planetary ne couvre pas Guyane — passer à collection 'Sentinel-1 GRD' (index 2) avec Client ID/Secret.",
+          "collection": "2",
+          "bands": "VV,VH",
           "resolution": "20",
           "cache_dir": "copernicus_cache",
           "fetch": 0
@@ -478,7 +475,7 @@
       "position": { "x": 720, "y": 460 },
       "data": {
         "params": {
-          "node_note": "**Stack B** — spectral+terrain (7b) + S1 (3b) → **10 bandes**",
+          "node_note": "**Stack B** — spectral+terrain (7b) + S1 GRD VV/VH (2b) → **9 bandes**",
           "resampling": "0",
           "prefix_secondary": false,
           "cache_dir": "copernicus_cache"
@@ -492,7 +489,7 @@
       "position": { "x": 940, "y": 420 },
       "data": {
         "params": {
-          "node_note": "**Stack C (final)** — (7b+S1 3b) + Δspectral (2b) → **12 bandes**",
+          "node_note": "**Stack C (final)** — (9b) + Δspectral (2b) → **11 bandes**",
           "resampling": "0",
           "prefix_secondary": false,
           "cache_dir": "copernicus_cache"
