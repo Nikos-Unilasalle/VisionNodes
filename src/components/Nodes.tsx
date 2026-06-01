@@ -1598,7 +1598,7 @@ export const PythonNode = memo(({ selected, data }: any) => {
 
   return (
     <BaseNode title="Python Script" icon={Zap} selected={selected} data={data} color="red"
-              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}]}
+              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}, {id: 'e', color: 'any'}]}
               outputs={[{id: 'main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}, {id: 'out_data', color: 'data', label: 'DataFrame'}, {id: 'out_e', color: 'string', label: 'Error'}]}>
       {displayLine && (
         <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/10 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
