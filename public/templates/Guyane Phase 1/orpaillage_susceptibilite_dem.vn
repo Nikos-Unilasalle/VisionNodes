@@ -1,0 +1,626 @@
+{
+  "nodes": [
+    {
+      "id": "f-setup",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1520,
+        "y": 200
+      },
+      "data": {
+        "label": "Zone d'étude",
+        "params": {}
+      },
+      "style": {
+        "width": 340,
+        "height": 260
+      },
+      "width": 340,
+      "height": 260,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1520,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "f-data",
+      "type": "canvas_frame",
+      "position": {
+        "x": -980,
+        "y": 100
+      },
+      "data": {
+        "label": "DEM · Copernicus GLO-30",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 420
+      },
+      "width": 380,
+      "height": 420,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -980,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "f-terrain",
+      "type": "canvas_frame",
+      "position": {
+        "x": -460,
+        "y": -60
+      },
+      "data": {
+        "label": "Analyse Terrain",
+        "params": {}
+      },
+      "style": {
+        "width": 360,
+        "height": 1700
+      },
+      "width": 360,
+      "height": 1700,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -460,
+        "y": -60
+      },
+      "dragging": false
+    },
+    {
+      "id": "f-analyse",
+      "type": "canvas_frame",
+      "position": {
+        "x": 580,
+        "y": 400
+      },
+      "data": {
+        "label": "Susceptibilité Orpaillage",
+        "params": {}
+      },
+      "style": {
+        "width": 820,
+        "height": 560
+      },
+      "width": 820,
+      "height": 560,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 580,
+        "y": 400
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-note-setup",
+      "type": "canvas_note",
+      "position": {
+        "x": -1500,
+        "y": 210
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Définir la zone d'étude.\nMême BBox que les templates phase 2."
+        }
+      },
+      "width": 208,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1500,
+        "y": 210
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -1500,
+        "y": 280
+      },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -52.4714863233136,
+          "lon_max": -52.22395830182485,
+          "lat_min": 3.085074708775358,
+          "lat_max": 3.266230173559066
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1500,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-note-dem",
+      "type": "canvas_note",
+      "position": {
+        "x": -960,
+        "y": 110
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Copernicus GLO-30 · résolution 30 m\nProduit statique (~2011–2015)"
+        }
+      },
+      "width": 208,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -960,
+        "y": 110
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -960,
+        "y": 180
+      },
+      "data": {
+        "label": "DEM GLO-30",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "mosaic_mode": "0",
+          "node_note": "Copernicus DEM GLO-30 · statique"
+        }
+      },
+      "width": 300,
+      "height": 260,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -960,
+        "y": 180
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-note-terrain",
+      "type": "canvas_note",
+      "position": {
+        "x": -440,
+        "y": -50
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Hillshade · Flow · Pente · HAND · TWI"
+        }
+      },
+      "width": 208,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": -50
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-hillshade",
+      "type": "geo_dem_hillshade",
+      "position": {
+        "x": -440,
+        "y": 60
+      },
+      "data": {
+        "label": "Hillshade",
+        "params": {
+          "azimuth": 315,
+          "altitude": 45,
+          "z_factor": 1.5,
+          "node_note": "Référence visuelle du relief"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": {
+        "x": -440,
+        "y": 340
+      },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "Réseau de drainage → HAND + TWI"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-slope",
+      "type": "geo_dem_slope",
+      "position": {
+        "x": -440,
+        "y": 620
+      },
+      "data": {
+        "label": "Slope (°)",
+        "params": {
+          "node_note": "Pente en degrés · orpaillage < 8°"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": 620
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": {
+        "x": -440,
+        "y": 900
+      },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "node_note": "HAND · seuil 1000 cellules = 0.9 km² → rivières et criques principales",
+          "threshold": 1000,
+          "clamp_max": 15.0
+        }
+      },
+      "width": 208,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": 900
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-twi",
+      "type": "geo_dem_twi",
+      "position": {
+        "x": -440,
+        "y": 1180
+      },
+      "data": {
+        "label": "TWI",
+        "params": {
+          "node_note": "Topographic Wetness Index\nhumidité cumulée → zones d'accumulation"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -440,
+        "y": 1180
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-hs",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": 60
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_hs",
+            "color": "image",
+            "label": "Hillshade"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-flow",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": 340
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_flow",
+            "color": "image",
+            "label": "Flow Acc"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-hand",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": 900
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_hand",
+            "color": "image",
+            "label": "HAND"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 100,
+        "y": 900
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-note-suscept",
+      "type": "canvas_note",
+      "position": {
+        "x": 590,
+        "y": 410
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Indice composite : 0.5×HAND + 0.3×Pente + 0.2×TWI\nRouge = forte susceptibilité orpaillage"
+        }
+      },
+      "width": 208,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 590,
+        "y": 410
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-suscept",
+      "type": "logic_python",
+      "position": {
+        "x": 590,
+        "y": 480
+      },
+      "data": {
+        "label": "Susceptibilité",
+        "params": {
+          "code": "# ── Susceptibilité orpaillage · HAND + Pente + TWI ───────────────────────────\n# a = HAND  (Height Above Nearest Drainage, mètres)\n# b = Slope (degrés)\n# c = TWI   (Topographic Wetness Index)\n#\n# out_any  → geotiff susceptibilité [0–1] masqué corridor → Colorizer\n# ─────────────────────────────────────────────────────────────────────────────\nhand_max  = 5.0   # m — limite corridor fluvial\nslope_max = 8.0   # °\ntwi_min   = 7.0\n\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nhand  = _band(a)\nslope = _band(b)\ntwi   = _band(c)\n\nif hand is None:\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'HAND non branché (port a)'}\nelse:\n    H, W = hand.shape\n    ones = np.ones((H, W), dtype=np.float32)\n\n    in_corridor = hand <= hand_max\n\n    s_hand  = np.clip(1.0 - hand  / hand_max,  0, 1)\n    s_slope = np.clip(1.0 - (slope / slope_max if slope is not None else ones), 0, 1)\n    s_twi   = np.clip((twi - twi_min) / 6.0    if twi   is not None else ones, 0, 1)\n    suscept = 0.5 * s_hand + 0.3 * s_slope + 0.2 * s_twi\n\n    # Masque : hors corridor → 0 (nodata)\n    suscept_masked = np.where(in_corridor, suscept, 0.0).astype(np.float32)\n\n    # Geotiff brut → port out_any → Colorizer\n    geo_ref = a if isinstance(a, dict) else {}\n    out_any = {**geo_ref, 'bands': suscept_masked[np.newaxis],\n               'count': 1, 'band_names': ['susceptibilite'], 'dtype': 'float32'}\n\n    # Preview simple (niveaux de gris)\n    norm = (suscept_masked * 255).clip(0, 255).astype(np.uint8)\n    out_main = cv2.cvtColor(norm, cv2.COLOR_GRAY2BGR)\n\n    out_dict = {\n        'hand_max_m':    hand_max,\n        'px_corridor':   int(in_corridor.sum()),\n        'pct_corridor':  round(float(in_corridor.mean() * 100), 2),\n        'suscept_moy':   round(float(suscept[in_corridor].mean()), 3) if in_corridor.any() else 0,\n    }",
+          "node_note": "Masque : HAND ≤ hand_max | JET dans corridor, sombre hors corridor"
+        }
+      },
+      "width": 208,
+      "height": 280,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 590,
+        "y": 480
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-suscept",
+      "type": "output_display",
+      "position": {
+        "x": 1150,
+        "y": 480
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_suscept",
+            "color": "image",
+            "label": "Susceptibilité"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1150,
+        "y": 480
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-inspector",
+      "type": "data_inspector",
+      "position": {
+        "x": 1150,
+        "y": 750
+      },
+      "data": {
+        "label": "Stats Susceptibilité",
+        "params": {}
+      },
+      "width": 500,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1150,
+        "y": 750
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-bbox-dem",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-dem-hs",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hillshade",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-flow",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-slope",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-slope",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-hand",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-twi",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-twi",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-flow-hand",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-flow-twi",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-twi",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-hs-disp",
+      "source": "n-hillshade",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-hs",
+      "targetHandle": "image__0_hs"
+    },
+    {
+      "id": "e-flow-disp",
+      "source": "n-flow",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-flow",
+      "targetHandle": "image__0_flow"
+    },
+    {
+      "id": "e-hand-disp",
+      "source": "n-hand",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-hand",
+      "targetHandle": "image__0_hand"
+    },
+    {
+      "id": "e-hand-suscept",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-suscept",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-slope-suscept",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-suscept",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-twi-suscept",
+      "source": "n-twi",
+      "sourceHandle": "geotiff__twi",
+      "target": "n-suscept",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e-suscept-disp",
+      "source": "n-suscept",
+      "sourceHandle": "image__main",
+      "target": "n-disp-suscept",
+      "targetHandle": "image__0_suscept"
+    },
+    {
+      "id": "e-suscept-inspector",
+      "source": "n-suscept",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-inspector",
+      "targetHandle": "data__table"
+    }
+  ]
+}

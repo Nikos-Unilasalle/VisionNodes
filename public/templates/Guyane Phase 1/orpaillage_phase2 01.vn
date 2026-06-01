@@ -207,8 +207,8 @@
           "ndwi": false,
           "evi": false,
           "nbr": false,
-          "bsi": false,
-          "node_note": "NDVI + MNDWI · T₀ 2017"
+          "bsi": true,
+          "node_note": "NDVI + MNDWI + BSI · T₀ 2017"
         }
       },
       "width": 208,
@@ -236,8 +236,8 @@
           "ndwi": false,
           "evi": false,
           "nbr": false,
-          "bsi": false,
-          "node_note": "NDVI + MNDWI · T₁ 2024"
+          "bsi": true,
+          "node_note": "NDVI + MNDWI + BSI · T₁ 2024"
         }
       },
       "width": 208,
@@ -667,7 +667,7 @@
           "primary_dir": 0,
           "secondary_enable": true,
           "secondary_band": 1,
-          "secondary_thr": 0.0,
+          "secondary_thr": 0,
           "secondary_dir": 0,
           "node_note": ""
         }
@@ -811,7 +811,7 @@
       "data": {
         "label": "Python Node",
         "params": {
-          "code": "# ── Carte de changement 4 couleurs + masque nuages ───────────────────────────\n# a = geotiff stack T0  (bande 0: NDVI, bande 1: MNDWI)\n# b = geotiff stack T1  (bande 0: NDVI, bande 1: MNDWI)\n# c = masque validité T0 (geotiff, bande 0: 1=valide  0=exclu)\n# d = masque validité T1 (geotiff, bande 0: 1=valide  0=exclu)\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  = 0.12   # seuil forêt\nwater_thr = 0.0    # seuil eau/turbidité MNDWI\n\nt0 = a.get('bands') if isinstance(a, dict) else None\nt1 = b.get('bands') if isinstance(b, dict) else None\nif t0 is None or t1 is None:\n    out_main = None\nelse:\n    t0 = np.asarray(t0, dtype=np.float32)\n    t1 = np.asarray(t1, dtype=np.float32)\n    if t0.ndim == 2: t0 = t0[np.newaxis]\n    if t1.ndim == 2: t1 = t1[np.newaxis]\n    ndvi_t0  = t0[0]\n    ndvi_t1  = t1[0]\n    mndwi_t1 = t1[1] if t1.shape[0] > 1 else np.zeros_like(ndvi_t1)\n    H, W = ndvi_t0.shape\n    # Masques validité — fallback tout-valide si non branchés\n    def _cm(x):\n        if not isinstance(x, dict): return np.ones((H, W), dtype=bool)\n        b = np.asarray(x['bands'], dtype=np.float32)\n        if b.ndim == 3: b = b[0]\n        return b > 0\n    v0 = _cm(c)\n    v1 = _cm(d)\n    # Classification\n    rgb = np.full((H, W, 3), 40, dtype=np.uint8)\n    water  = mndwi_t1 > water_thr\n    stable = (ndvi_t0 > ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    regrow = (ndvi_t0 < ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    defor  = (ndvi_t0 > ndvi_thr) & (ndvi_t1 < ndvi_thr) & ~water\n    rgb[stable] = (34, 100, 34)\n    rgb[regrow] = (100, 200, 100)\n    rgb[defor]  = (30, 80, 140)\n    norm = np.clip((mndwi_t1 - water_thr) / (1.0 - water_thr + 1e-9), 0, 1)\n    r_ch = (255 * (1 - norm)).astype(np.uint8)\n    b_ch = (255 * norm).astype(np.uint8)\n    wrgb = np.zeros((H, W, 3), dtype=np.uint8)\n    wrgb[:, :, 0] = r_ch\n    wrgb[:, :, 1] = 20\n    wrgb[:, :, 2] = b_ch\n    rgb[water] = wrgb[water]\n    # Pixels exclus — écraser la classification en dernier\n    rgb[~v0 &  v1] = (180, 180, 180)  # exclu T0 seul : gris clair\n    rgb[ v0 & ~v1] = (100, 100, 100)  # exclu T1 seul : gris foncé\n    rgb[~v0 & ~v1] = (60,  60,  60)   # exclu T0+T1   : presque noir\n    out_main = rgb"
+          "code": "# ── Carte de changement robuste ── BSI + distance eau ────────────────────────\n# a = geotiff stack T0  (B0: NDVI, B1: MNDWI, B2: BSI)\n# b = geotiff stack T1  (B0: NDVI, B1: MNDWI, B2: BSI)\n# c = geotiff Copernicus T0 — bande 0 > 0 = valide (nodata=0 en CLOUD_FREE)\n# d = geotiff Copernicus T1 — bande 0 > 0 = valide (nodata=0 en CLOUD_FREE)\n# e = distance à l'eau T0 (geotiff, mètres) — optionnel\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  = 0.12    # seuil forêt\nwater_thr = 0.0     # seuil MNDWI — revenu à 0 (évite sur-détection zones humides côtières)\nbsi_delta = 0.05    # hausse min BSI (abaissé : orpaillage = sol humide/boueux)\ndist_max  = 250.0   # m — rayon max chantier/cours d'eau (optionnel si e branché)\n\nt0 = a.get('bands') if isinstance(a, dict) else None\nt1 = b.get('bands') if isinstance(b, dict) else None\nif t0 is None or t1 is None:\n    out_main = None\nelse:\n    t0 = np.asarray(t0, dtype=np.float32)\n    t1 = np.asarray(t1, dtype=np.float32)\n    if t0.ndim == 2: t0 = t0[np.newaxis]\n    if t1.ndim == 2: t1 = t1[np.newaxis]\n    ndvi_t0  = t0[0]\n    ndvi_t1  = t1[0]\n    mndwi_t1 = t1[1] if t1.shape[0] > 1 else np.zeros_like(ndvi_t1)\n    bsi_t0   = t0[2] if t0.shape[0] > 2 else np.zeros_like(ndvi_t0)\n    bsi_t1   = t1[2] if t1.shape[0] > 2 else np.zeros_like(ndvi_t1)\n    H, W = ndvi_t0.shape\n    # Masques validité — fallback tout-valide si non branchés\n    def _cm(x):\n        if not isinstance(x, dict): return np.ones((H, W), dtype=bool)\n        bnd = np.asarray(x['bands'], dtype=np.float32)\n        if bnd.ndim == 3: bnd = bnd[0]\n        return bnd > 0\n    v0 = _cm(c)\n    v1 = _cm(d)\n    # Eau — seuil abaissé pour couvrir l'eau chargée de sédiments\n    water = mndwi_t1 > water_thr\n    # Déforestation confirmée : chute NDVI ET hausse BSI (ombres de nuages éliminées)\n    defor_spectral = (ndvi_t0 > ndvi_thr) & (ndvi_t1 < ndvi_thr) & ((bsi_t1 - bsi_t0) > bsi_delta)\n    # Filtrage géographique optionnel — proximité réseau hydrographique à T0\n    if isinstance(e, dict) and 'bands' in e:\n        dist = np.asarray(e['bands'], dtype=np.float32)\n        if dist.ndim == 3: dist = dist[0]\n        defor = defor_spectral & (dist < dist_max) & ~water\n    else:\n        defor = defor_spectral & ~water\n    stable = (ndvi_t0 > ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    regrow = (ndvi_t0 < ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    # Rendu RGB\n    rgb = np.full((H, W, 3), 40, dtype=np.uint8)\n    rgb[stable] = (34, 100, 34)\n    rgb[regrow] = (100, 200, 100)\n    rgb[defor]  = (255, 180, 0)   # orange vif — distinct de l'eau bleue\n    norm = np.clip((mndwi_t1 - water_thr) / (1.0 - water_thr + 1e-9), 0, 1)\n    r_ch = (255 * (1 - norm)).astype(np.uint8)\n    b_ch = (255 * norm).astype(np.uint8)\n    wrgb = np.zeros((H, W, 3), dtype=np.uint8)\n    wrgb[:, :, 0] = r_ch\n    wrgb[:, :, 1] = 20\n    wrgb[:, :, 2] = b_ch\n    rgb[water] = wrgb[water]\n    # Pixels exclus — écraser la classification en dernier\n    rgb[~v0 &  v1] = (180, 180, 180)  # exclu T0 seul : gris clair\n    rgb[ v0 & ~v1] = (100, 100, 100)  # exclu T1 seul : gris foncé\n    rgb[~v0 & ~v1] = (60,  60,  60)   # exclu T0+T1   : presque noir\n    out_main = rgb"
         }
       },
       "width": 208,
@@ -1367,6 +1367,60 @@
       "height": 121,
       "selected": false,
       "dragging": false
+    },
+    {
+      "id": "p2-mndwi-t0-extract",
+      "type": "geo_band_calc",
+      "position": {
+        "x": -100,
+        "y": 780
+      },
+      "data": {
+        "label": "MNDWI T0 (geotiff)",
+        "params": {
+          "expression": "B2",
+          "clamp_min": -1,
+          "clamp_max": 1,
+          "colormap": "viridis",
+          "node_note": "Extrait MNDWI (bande 2) de la stack T0 → Distance eau"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -100,
+        "y": 780
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-dist-water",
+      "type": "geo_distance_to_class",
+      "position": {
+        "x": 400,
+        "y": 960
+      },
+      "data": {
+        "label": "Distance eau T0",
+        "params": {
+          "mode": 1,
+          "target_class": 1,
+          "threshold_value": 0.0,
+          "threshold_value_le": 0.5,
+          "pixel_size_m": 10.0,
+          "max_dist_m": 500,
+          "node_note": "MNDWI≥0 = eau T0 · résolution 10m · filtre chantiers vs déboisement agricole"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 400,
+        "y": 960
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -1607,18 +1661,53 @@
       "target": "node-1780211481560-61lcmxpm9",
       "targetHandle": "mask__0_qi3l",
       "id": "e-1780211503656"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "geotiff__stack",
+      "target": "p2-mndwi-t0-extract",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-sit0-mndwi-extract"
+    },
+    {
+      "source": "p2-mndwi-t0-extract",
+      "sourceHandle": "geotiff__raw",
+      "target": "p2-dist-water",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-mndwi-extract-dist"
+    },
+    {
+      "source": "p2-dist-water",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-classif-script",
+      "targetHandle": "any__e",
+      "id": "e-p2-dist-classif-script"
+    },
+    {
+      "source": "p2-s2-t0",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-classif-script",
+      "targetHandle": "any__c",
+      "id": "e-p2-s2t0-classif-script-c"
+    },
+    {
+      "source": "p2-s2-t1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-classif-script",
+      "targetHandle": "any__d",
+      "id": "e-p2-s2t1-classif-script-d"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 680.578125,
-      "h": 499
+      "w": 500.609375,
+      "h": 367
     },
     "previewPos": {
-      "x": 1390.87890625,
-      "y": -239.62890625
+      "x": 815.87890625,
+      "y": -436.05078125
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "node-1780211481560-61lcmxpm9"
+    "visualizedNodeId": "p2-classif-script"
   }
 }

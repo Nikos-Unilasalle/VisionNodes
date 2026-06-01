@@ -97,6 +97,7 @@ out_data   = None
                  {'id': 'b', 'color': 'any'},
                  {'id': 'c', 'color': 'any'},
                  {'id': 'd', 'color': 'any'},
+                 {'id': 'e', 'color': 'any'},
              ],
              outputs=[
                  {'id': 'main',       'color': 'image'},
@@ -132,6 +133,7 @@ class PythonNode(NodeProcessor):
             'b':     inputs.get('b'),
             'c':     inputs.get('c'),
             'd':     inputs.get('d'),
+            'e':     inputs.get('e'),
             'out_main':   None,
             'out_scalar': 0.0,
             'out_list':   [],
