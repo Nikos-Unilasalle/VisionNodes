@@ -32,22 +32,22 @@ def test_state_persists_across_frames():
 
 def test_error_does_not_crash():
     out = _run("raise ValueError('test error')")
-    assert 'Error' in str(out.get('out_any', ''))
+    assert 'error' in out.get('out_e', '').lower()
 
 
 def test_blocked_open():
     out = _run("open('/tmp/pwned', 'w')")
-    assert 'Error' in str(out.get('out_any', ''))
+    assert 'not defined' in out.get('out_e', '')
 
 
 def test_blocked_import():
     out = _run("import os; out_any = os.getcwd()")
-    assert out.get('out_any') is None or 'Error' in str(out.get('out_any', ''))
+    assert 'blocked' in out.get('out_e', '').lower()
 
 
 def test_blocked_dunder_import():
     out = _run("__import__('os').system('echo pwned')")
-    assert 'Error' in str(out.get('out_any', ''))
+    assert 'blocked' in out.get('out_e', '').lower()
 
 
 def test_numpy_available():
