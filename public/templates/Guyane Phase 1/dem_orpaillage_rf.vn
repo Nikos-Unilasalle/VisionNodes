@@ -542,20 +542,6 @@
       "width": 208, "height": 217
     },
     {
-      "id": "n-turb-norm",
-      "type": "geo_dn_normalize",
-      "position": { "x": 100, "y": 2120 },
-      "data": {
-        "params": {
-          "node_note": "**DN → réflectance** — S2 Planetary stocké en DN (0–10000). Nechad exige ρ∈[0,1]. Division par 10000.",
-          "quantification": 10000,
-          "offset": 0,
-          "clamp": true
-        }
-      },
-      "width": 208, "height": 90
-    },
-    {
       "id": "n-turb-mask",
       "type": "geo_water_mask_mndwi",
       "position": { "x": 500, "y": 2120 },
@@ -577,9 +563,9 @@
       "position": { "x": 900, "y": 2120 },
       "data": {
         "params": {
-          "node_note": "**Turbidité Nechad (NTU)** — rouge=B04 (idx 1). NTU = A·ρ/(1−ρ/C)+B. L'eau chargée de sédiments (orpaillage) ressort en rouge/jaune — distingue ce que ESA WorldCover ne capture pas.",
+          "node_note": "**Turbidité Nechad (NTU)** — rouge=B04 (idx 1). NTU = A·ρ/(1−ρ/C)+B. S2 STAC déjà en réflectance → branché direct (pas de DN normalize). max_ntu=15 pour contraster. ⚠ Si l'image sature en rouge uniforme → S2 en DN : intercaler geo_dn_normalize (÷10000).",
           "red_band": 1,
-          "max_ntu": 50,
+          "max_ntu": 15,
           "gaussian": 3
         }
       },
@@ -1191,22 +1177,15 @@
       "targetHandle": "data__1_tbl"
     },
     {
-      "id": "e-turb-1",
-      "source": "n-s2",
-      "sourceHandle": "geotiff__geotiff",
-      "target": "n-turb-norm",
-      "targetHandle": "geotiff__geotiff"
-    },
-    {
       "id": "e-turb-2",
-      "source": "n-turb-norm",
+      "source": "n-s2",
       "sourceHandle": "geotiff__geotiff",
       "target": "n-turb-mask",
       "targetHandle": "geotiff__geotiff"
     },
     {
       "id": "e-turb-3",
-      "source": "n-turb-norm",
+      "source": "n-s2",
       "sourceHandle": "geotiff__geotiff",
       "target": "n-turbidity",
       "targetHandle": "geotiff__geotiff"
