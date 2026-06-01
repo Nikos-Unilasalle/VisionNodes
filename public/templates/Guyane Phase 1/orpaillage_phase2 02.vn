@@ -1,0 +1,1190 @@
+{
+  "nodes": [
+    {
+      "id": "p2-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -1600,
+        "y": 300
+      },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -54.09828290824112,
+          "lon_max": -53.96252338356966,
+          "lat_min": 3.309944749301467,
+          "lat_max": 3.422668967950672
+        }
+      },
+      "width": 208,
+      "height": 136,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1600,
+        "y": 300
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-time-t0",
+      "type": "geo_time_period",
+      "position": {
+        "x": -1600,
+        "y": 460
+      },
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_start": "2017-07-01",
+          "date_end": "2017-09-30"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1600,
+        "y": 460
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-time-t1",
+      "type": "geo_time_period",
+      "position": {
+        "x": -1600,
+        "y": 600
+      },
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_start": "2024-07-01",
+          "date_end": "2024-09-30"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1600,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-note-t0",
+      "type": "canvas_note",
+      "position": {
+        "x": -1100,
+        "y": 60
+      },
+      "style": {
+        "width": 200,
+        "height": 60
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**2017 — Saison sèche (T₀)**",
+          "color_index": 3
+        }
+      },
+      "width": 200,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 60
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-note-t1",
+      "type": "canvas_note",
+      "position": {
+        "x": -1100,
+        "y": 500
+      },
+      "style": {
+        "width": 200,
+        "height": 60
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**2024 — Saison sèche (T₁)**",
+          "color_index": 4
+        }
+      },
+      "width": 200,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 500
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-s2-t0",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1100,
+        "y": 130
+      },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "node_note": "S2 L2A — 2017 — bandes spectrales",
+          "bands": "B04,B03,B02,B08,B11",
+          "collection": "0",
+          "fetch": 0,
+          "resolution": "20",
+          "cloud_max": "20",
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 289,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 130
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-s2-t1",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1100,
+        "y": 570
+      },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "node_note": "S2 L2A — 2024 — bandes spectrales",
+          "bands": "B04,B03,B02,B08,B11",
+          "collection": "0",
+          "fetch": 0,
+          "resolution": "20",
+          "cloud_max": "20",
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 289,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 570
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-scl-t0",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1100,
+        "y": 980
+      },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "node_note": "SCL — 2017 — masque nuages",
+          "bands": "SCL",
+          "collection": "0",
+          "fetch": 0,
+          "resolution": "20",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 289,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 980
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-scl-t1",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1100,
+        "y": 1340
+      },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "node_note": "SCL — 2024 — masque nuages",
+          "bands": "SCL",
+          "collection": "0",
+          "fetch": 0,
+          "resolution": "20",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache"
+        }
+      },
+      "width": 208,
+      "height": 289,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1100,
+        "y": 1340
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-si-t0",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": -600,
+        "y": 130
+      },
+      "data": {
+        "label": "Spectral Indices",
+        "params": {
+          "sensor": 1,
+          "ndvi": true,
+          "mndwi": true,
+          "ndwi": false,
+          "evi": false,
+          "nbr": false,
+          "bsi": false,
+          "node_note": "NDVI + MNDWI · T₀ 2017"
+        }
+      },
+      "width": 208,
+      "height": 345,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": 130
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-si-t1",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": -600,
+        "y": 570
+      },
+      "data": {
+        "label": "Spectral Indices",
+        "params": {
+          "sensor": 1,
+          "ndvi": true,
+          "mndwi": true,
+          "ndwi": false,
+          "evi": false,
+          "nbr": false,
+          "bsi": false,
+          "node_note": "NDVI + MNDWI · T₁ 2024"
+        }
+      },
+      "width": 208,
+      "height": 345,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": 570
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-cm-t0",
+      "type": "geo_cloud_mask",
+      "position": {
+        "x": -600,
+        "y": 980
+      },
+      "data": {
+        "label": "Cloud Mask",
+        "params": {
+          "scl_exclude": "0,1,2,3,8,9,10,11",
+          "ndvi_min": 0,
+          "dilate_px": 5,
+          "node_note": "Masque nuages T₀ 2017"
+        }
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": 980
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-cm-t1",
+      "type": "geo_cloud_mask",
+      "position": {
+        "x": -600,
+        "y": 1340
+      },
+      "data": {
+        "label": "Cloud Mask",
+        "params": {
+          "scl_exclude": "0,1,2,3,8,9,10,11",
+          "ndvi_min": 0,
+          "dilate_px": 5,
+          "node_note": "Masque nuages T₁ 2024"
+        }
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": 1340
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-frame-voir",
+      "type": "canvas_frame",
+      "position": {
+        "x": -600,
+        "y": -300
+      },
+      "style": {
+        "width": 1400,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "VOIR — Comparer les indices bi-temporels",
+          "color_index": 1,
+          "collapsed": true,
+          "savedHeight": 280
+        }
+      },
+      "width": 1400,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": -300
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-note-voir",
+      "type": "canvas_note",
+      "position": {
+        "x": -600,
+        "y": -260
+      },
+      "style": {
+        "width": 400,
+        "height": 80
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**VOIR** · Comparer NDVI et MNDWI entre les deux dates.\nMême saison (juil-sept) → variations = changement réel, pas phénologie.",
+          "color_index": 1
+        }
+      },
+      "width": 400,
+      "height": 80,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -600,
+        "y": -260
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-display-voir",
+      "type": "output_display",
+      "position": {
+        "x": -100,
+        "y": -260
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_ndvi0",
+            "color": "image",
+            "label": "NDVI 2017"
+          },
+          {
+            "id": "image__1_ndvi1",
+            "color": "image",
+            "label": "NDVI 2024"
+          },
+          {
+            "id": "image__2_mndwi0",
+            "color": "image",
+            "label": "MNDWI 2017"
+          },
+          {
+            "id": "image__3_mndwi1",
+            "color": "image",
+            "label": "MNDWI 2024"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 281,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -100,
+        "y": -260
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-frame-mesurer",
+      "type": "canvas_frame",
+      "position": {
+        "x": -130,
+        "y": 100
+      },
+      "style": {
+        "width": 1600,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "MESURER — Détection du changement spectral",
+          "color_index": 0,
+          "collapsed": false,
+          "savedHeight": 620
+        }
+      },
+      "width": 1600,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -130,
+        "y": 100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-note-mesurer",
+      "type": "canvas_note",
+      "position": {
+        "x": -100,
+        "y": 140
+      },
+      "style": {
+        "width": 560,
+        "height": 100
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**CALIBRATION** · Brancher `delta_stack` sur l'échantillonneur. Placer des points sur :\n- **Sites orpaillage connus** (L-click → NDVI) → valeurs attendues : -0.15 à -0.25\n- **Forêt stable** (R-click → NDVI) → valeurs attendues : -0.05 à +0.05\nAjuster `rules` dans Spectral Change selon les clusters mesurés.",
+          "color_index": 0
+        }
+      },
+      "width": 560,
+      "height": 100,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -100,
+        "y": 140
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-change",
+      "type": "geo_spectral_change",
+      "position": {
+        "x": -100,
+        "y": 300
+      },
+      "data": {
+        "label": "Spectral Change",
+        "params": {
+          "rules": "NDVI<-0.04",
+          "combine": "AND",
+          "min_pixels": 20,
+          "node_note": "Ajuster le seuil après calibration avec l'échantillonneur"
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -100,
+        "y": 300
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-sampler",
+      "type": "geo_interactive_sampler",
+      "position": {
+        "x": 360,
+        "y": 280
+      },
+      "data": {
+        "label": "Geo Interactive Sampler",
+        "params": {
+          "points": "[{\"x\":0.23213378622530506,\"y\":0.7276514576924554,\"type\":0},{\"x\":0.2307392481660372,\"y\":0.6656022984566797,\"type\":0},{\"x\":0.23864163050188844,\"y\":0.5962861205716691,\"type\":0},{\"x\":0.3581070575791691,\"y\":0.5946091162679994,\"type\":0},{\"x\":0.45340049162914003,\"y\":0.5828700861423122,\"type\":0},{\"x\":0.44782233939206856,\"y\":0.6952293744881762,\"type\":0},{\"x\":0.5017444776837594,\"y\":0.7170304304358812,\"type\":0},{\"x\":0.5663580744298373,\"y\":0.7360364792108035,\"type\":0},{\"x\":0.6491006659463975,\"y\":0.6259131966031656,\"type\":0},{\"x\":0.5412563893630157,\"y\":0.5655410416710595,\"type\":0},{\"x\":0.2490841582909704,\"y\":0.8027782849351159,\"type\":1},{\"x\":0.2614166510384753,\"y\":0.7734329030841586,\"type\":1},{\"x\":0.25957989679948523,\"y\":0.7503983560398587,\"type\":1},{\"x\":0.25931750333677234,\"y\":0.7210529741889014,\"type\":1},{\"x\":0.2622038314266139,\"y\":0.6961251767026042,\"type\":1},{\"x\":0.26981324184528716,\"y\":0.666464253111314,\"type\":1},{\"x\":0.2792594065029505,\"y\":0.6500560826140045,\"type\":1},{\"x\":0.17372524835614137,\"y\":0.9027496851822839,\"type\":1},{\"x\":0.14194647805511432,\"y\":0.9001010779181238,\"type\":0},{\"x\":0.2017283231758583,\"y\":0.8932903735245691,\"type\":0},{\"x\":0.2281581915450293,\"y\":0.9286681991244224,\"type\":0},{\"x\":0.23917063669885058,\"y\":0.8883715314625574,\"type\":0},{\"x\":0.23036068057579356,\"y\":0.88496617926578,\"type\":0},{\"x\":0.25883571733067423,\"y\":0.9019929402496667,\"type\":1},{\"x\":0.24672202766147086,\"y\":0.873425819043368,\"type\":1},{\"x\":0.2386986747636868,\"y\":0.8234806534906338,\"type\":1},{\"x\":0.23995723992412352,\"y\":0.8164807628639248,\"type\":1}]",
+          "indices": "[\"NDVI\",\"MNDWI\"]",
+          "point_radius": 8
+        }
+      },
+      "width": 208,
+      "height": 215,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-display-mesurer",
+      "type": "output_display",
+      "position": {
+        "x": 1280,
+        "y": 280
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": true,
+        "ports": [
+          {
+            "id": "image__0_centroids",
+            "color": "image",
+            "label": "centroids"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1280,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-frame-localiser",
+      "type": "canvas_frame",
+      "position": {
+        "x": 360,
+        "y": 580
+      },
+      "style": {
+        "width": 1160,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "LOCALISER — Centroids des sites détectés",
+          "color_index": 2,
+          "collapsed": false,
+          "savedHeight": 340
+        }
+      },
+      "width": 1160,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 580
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-note-localiser",
+      "type": "canvas_note",
+      "position": {
+        "x": 380,
+        "y": 620
+      },
+      "style": {
+        "width": 300,
+        "height": 60
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**LOCALISER** · Table lat/lon de chaque site détecté.",
+          "color_index": 2
+        }
+      },
+      "width": 300,
+      "height": 60,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 620
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-centroids",
+      "type": "geo_centroids",
+      "position": {
+        "x": 380,
+        "y": 700
+      },
+      "data": {
+        "label": "Geo Centroids",
+        "params": {
+          "min_area": 25,
+          "max_area": 100000
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 700
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-inspector",
+      "type": "data_inspector",
+      "position": {
+        "x": 700,
+        "y": 700
+      },
+      "style": {
+        "width": 720,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 720,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 700
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-frame-classif",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1600,
+        "y": 80
+      },
+      "style": {
+        "width": 1280,
+        "height": 640,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "CLASSIFIER — Carte de changement 4 couleurs",
+          "color_index": 5,
+          "collapsed": false,
+          "savedHeight": 640
+        }
+      },
+      "width": 1280,
+      "height": 640,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1600,
+        "y": 80
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-note-classif",
+      "type": "canvas_note",
+      "position": {
+        "x": 1630,
+        "y": 120
+      },
+      "style": {
+        "width": 380,
+        "height": 120
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**CLASSIFIER** · Carte bi-temporelle en 4 couleurs :\n🟢 Vert foncé — forêt stable (NDVI T0 > 0.5 ET T1 > 0.5)\n🟩 Vert clair — repousse / site abandonné\n🟤 Marron — déboisement (forêt → sol nu)\n🔵→🔴 Bleu→Rouge — eau (turbidité via MNDWI T1)\nAjuster `ndvi_thr` et `water_thr` dans le code.",
+          "color_index": 5
+        }
+      },
+      "width": 380,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1630,
+        "y": 120
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "p2-classif",
+      "type": "logic_python",
+      "position": {
+        "x": 1740,
+        "y": 460
+      },
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# ── Carte de changement 4 couleurs + masque nuages ───────────────────────────\n# a = geotiff stack T0  (bande 0: NDVI, bande 1: MNDWI)\n# b = geotiff stack T1  (bande 0: NDVI, bande 1: MNDWI)\n# c = cloud mask T0     (geotiff, bande 0: 1=valide  0=nuage)\n# d = cloud mask T1     (geotiff, bande 0: 1=valide  0=nuage)\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  = 0.5   # seuil forêt\nwater_thr = 0.0   # seuil eau/turbidité MNDWI\n\nt0 = a.get('bands') if isinstance(a, dict) else None\nt1 = b.get('bands') if isinstance(b, dict) else None\nif t0 is None or t1 is None:\n    out_main = None\nelse:\n    t0 = np.asarray(t0, dtype=np.float32)\n    t1 = np.asarray(t1, dtype=np.float32)\n    if t0.ndim == 2: t0 = t0[np.newaxis]\n    if t1.ndim == 2: t1 = t1[np.newaxis]\n    ndvi_t0  = t0[0]\n    ndvi_t1  = t1[0]\n    mndwi_t1 = t1[1] if t1.shape[0] > 1 else np.zeros_like(ndvi_t1)\n    H, W = ndvi_t0.shape\n    # Cloud masks (1=valid, 0=cloud) — graceful fallback if not connected\n    def _get_cm(x):\n        if not isinstance(x, dict): return np.ones((H, W), dtype=bool)\n        b = np.asarray(x['bands'], dtype=np.float32)\n        if b.ndim == 3: b = b[0]\n        return b > 0\n    valid_t0 = _get_cm(c)\n    valid_t1 = _get_cm(d)\n    # Classification\n    rgb = np.full((H, W, 3), 40, dtype=np.uint8)\n    water  = mndwi_t1 > water_thr\n    stable = (ndvi_t0 > ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    regrow = (ndvi_t0 < ndvi_thr) & (ndvi_t1 > ndvi_thr)\n    defor  = (ndvi_t0 > ndvi_thr) & (ndvi_t1 < ndvi_thr) & ~water\n    rgb[stable] = (34, 100, 34)\n    rgb[regrow] = (100, 200, 100)\n    rgb[defor]  = (30, 80, 140)\n    norm = np.clip((mndwi_t1 - water_thr) / (1.0 - water_thr + 1e-9), 0, 1)\n    r_ch = (255 * (1 - norm)).astype(np.uint8)\n    b_ch = (255 * norm).astype(np.uint8)\n    wrgb = np.zeros((H, W, 3), dtype=np.uint8)\n    wrgb[:, :, 0] = r_ch\n    wrgb[:, :, 1] = 20\n    wrgb[:, :, 2] = b_ch\n    rgb[water] = wrgb[water]\n    # Masquer les nuages en dernier (écrase la classification)\n    rgb[~valid_t0 &  valid_t1] = (180, 180, 180)  # nuage T0 seulement : gris clair\n    rgb[ valid_t0 & ~valid_t1] = (100, 100, 100)  # nuage T1 seulement : gris foncé\n    rgb[~valid_t0 & ~valid_t1] = (60,  60,  60)   # nuage T0 + T1 : presque noir\n    out_main = rgb"
+        }
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1740,
+        "y": 460
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-legend",
+      "type": "image_legend",
+      "position": {
+        "x": 2100,
+        "y": 280
+      },
+      "data": {
+        "label": "Image Legend",
+        "params": {
+          "entries": "Forêt stable:#226422\nRepousse / site abandonné:#64C864\nDéboisement:#8C501E\nEau claire:#0000FF\nEau turbide:#FF1400\nDégradé avant T₀:#282828\nNuage T0:#B4B4B4\nNuage T1:#646464\nNuage T0+T1:#3C3C3C",
+          "position": "bottom-left",
+          "font_scale": 0.5,
+          "swatch_size": 16,
+          "bg_alpha": 0.55,
+          "padding": 8
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2100,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "p2-display-classif",
+      "type": "output_display",
+      "position": {
+        "x": 2440,
+        "y": 340
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": true,
+        "ports": []
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2440,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780153289865-dge3nkl7d",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 620,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "DF Stats",
+        "params": {}
+      },
+      "width": 608,
+      "height": 279,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 620,
+        "y": 260
+      }
+    },
+    {
+      "id": "node-1780153546290-0.8177588603558137",
+      "type": "geo_cloud_mask",
+      "position": {
+        "x": 20,
+        "y": 820
+      },
+      "data": {
+        "label": "Cloud Mask",
+        "params": {
+          "scl_exclude": "0,1,2,3,8,9,10,11",
+          "ndvi_min": 0,
+          "dilate_px": 5,
+          "node_note": "Masque nuages T₀ 2017"
+        }
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 20,
+        "y": 820
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780153602700-0.6197625597218195",
+      "type": "geo_cloud_mask",
+      "position": {
+        "x": 0,
+        "y": 600
+      },
+      "data": {
+        "label": "Cloud Mask",
+        "params": {
+          "scl_exclude": "0,1,2,3,8,9,10,11",
+          "ndvi_min": 0,
+          "dilate_px": 5,
+          "node_note": "Masque nuages T₀ 2017"
+        }
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 0,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780153653830-b6c7s2ohg",
+      "type": "geo_mask",
+      "position": {
+        "x": 320,
+        "y": 900
+      },
+      "style": {},
+      "data": {
+        "label": "Geo Mask",
+        "params": {}
+      },
+      "width": 208,
+      "height": 90,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 320,
+        "y": 900
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "p2-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "p2-s2-t0",
+      "targetHandle": "string__bbox",
+      "id": "e-p2-bbox-s2t0"
+    },
+    {
+      "source": "p2-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "p2-s2-t1",
+      "targetHandle": "string__bbox",
+      "id": "e-p2-bbox-s2t1"
+    },
+    {
+      "source": "p2-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "p2-scl-t0",
+      "targetHandle": "string__bbox",
+      "id": "e-p2-bbox-sclt0"
+    },
+    {
+      "source": "p2-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "p2-scl-t1",
+      "targetHandle": "string__bbox",
+      "id": "e-p2-bbox-sclt1"
+    },
+    {
+      "source": "p2-time-t0",
+      "sourceHandle": "string__date_start",
+      "target": "p2-s2-t0",
+      "targetHandle": "string__date_start",
+      "id": "e-p2-timet0-s2t0-start"
+    },
+    {
+      "source": "p2-time-t0",
+      "sourceHandle": "string__date_end",
+      "target": "p2-s2-t0",
+      "targetHandle": "string__date_end",
+      "id": "e-p2-timet0-s2t0-end"
+    },
+    {
+      "source": "p2-time-t0",
+      "sourceHandle": "string__date_start",
+      "target": "p2-scl-t0",
+      "targetHandle": "string__date_start",
+      "id": "e-p2-timet0-sclt0-start"
+    },
+    {
+      "source": "p2-time-t0",
+      "sourceHandle": "string__date_end",
+      "target": "p2-scl-t0",
+      "targetHandle": "string__date_end",
+      "id": "e-p2-timet0-sclt0-end"
+    },
+    {
+      "source": "p2-time-t1",
+      "sourceHandle": "string__date_start",
+      "target": "p2-s2-t1",
+      "targetHandle": "string__date_start",
+      "id": "e-p2-timet1-s2t1-start"
+    },
+    {
+      "source": "p2-time-t1",
+      "sourceHandle": "string__date_end",
+      "target": "p2-s2-t1",
+      "targetHandle": "string__date_end",
+      "id": "e-p2-timet1-s2t1-end"
+    },
+    {
+      "source": "p2-time-t1",
+      "sourceHandle": "string__date_start",
+      "target": "p2-scl-t1",
+      "targetHandle": "string__date_start",
+      "id": "e-p2-timet1-sclt1-start"
+    },
+    {
+      "source": "p2-time-t1",
+      "sourceHandle": "string__date_end",
+      "target": "p2-scl-t1",
+      "targetHandle": "string__date_end",
+      "id": "e-p2-timet1-sclt1-end"
+    },
+    {
+      "source": "p2-s2-t0",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-si-t0",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-s2t0-sit0"
+    },
+    {
+      "source": "p2-s2-t1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-si-t1",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-s2t1-sit1"
+    },
+    {
+      "source": "p2-scl-t0",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-cm-t0",
+      "targetHandle": "geotiff__scl",
+      "id": "e-p2-sclt0-cmt0"
+    },
+    {
+      "source": "p2-scl-t1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "p2-cm-t1",
+      "targetHandle": "geotiff__scl",
+      "id": "e-p2-sclt1-cmt1"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "geotiff__stack",
+      "target": "p2-change",
+      "targetHandle": "geotiff__spectral_t0",
+      "id": "e-p2-sit0-change"
+    },
+    {
+      "source": "p2-si-t1",
+      "sourceHandle": "geotiff__stack",
+      "target": "p2-change",
+      "targetHandle": "geotiff__spectral_t1",
+      "id": "e-p2-sit1-change"
+    },
+    {
+      "source": "p2-cm-t0",
+      "sourceHandle": "geotiff__mask",
+      "target": "p2-change",
+      "targetHandle": "geotiff__valid_mask_t0",
+      "id": "e-p2-cmt0-change"
+    },
+    {
+      "source": "p2-cm-t1",
+      "sourceHandle": "geotiff__mask",
+      "target": "p2-change",
+      "targetHandle": "geotiff__valid_mask_t1",
+      "id": "e-p2-cmt1-change"
+    },
+    {
+      "source": "p2-change",
+      "sourceHandle": "geotiff__delta_stack",
+      "target": "p2-sampler",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-change-sampler"
+    },
+    {
+      "source": "p2-change",
+      "sourceHandle": "image__preview",
+      "target": "p2-display-mesurer",
+      "targetHandle": "image__main",
+      "id": "e-p2-change-display-preview"
+    },
+    {
+      "source": "p2-change",
+      "sourceHandle": "geotiff__change_mask",
+      "target": "p2-centroids",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-p2-change-centroids"
+    },
+    {
+      "source": "p2-centroids",
+      "sourceHandle": "image__preview",
+      "target": "p2-display-mesurer",
+      "targetHandle": "image__0_centroids",
+      "id": "e-p2-centroids-display"
+    },
+    {
+      "source": "p2-centroids",
+      "sourceHandle": "data__table",
+      "target": "p2-inspector",
+      "targetHandle": "data__table",
+      "id": "e-p2-centroids-inspector"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "image__ndvi",
+      "target": "p2-display-voir",
+      "targetHandle": "image__0_ndvi0",
+      "id": "e-p2-sit0-voir-ndvi"
+    },
+    {
+      "source": "p2-si-t1",
+      "sourceHandle": "image__ndvi",
+      "target": "p2-display-voir",
+      "targetHandle": "image__1_ndvi1",
+      "id": "e-p2-sit1-voir-ndvi"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "image__mndwi",
+      "target": "p2-display-voir",
+      "targetHandle": "image__2_mndwi0",
+      "id": "e-p2-sit0-voir-mndwi"
+    },
+    {
+      "source": "p2-si-t1",
+      "sourceHandle": "image__mndwi",
+      "target": "p2-display-voir",
+      "targetHandle": "image__3_mndwi1",
+      "id": "e-p2-sit1-voir-mndwi"
+    },
+    {
+      "source": "p2-classif",
+      "sourceHandle": "image__main",
+      "target": "p2-legend",
+      "targetHandle": "image__image",
+      "id": "e-p2-classif-legend"
+    },
+    {
+      "source": "p2-legend",
+      "sourceHandle": "image__main",
+      "target": "p2-display-classif",
+      "targetHandle": "image__main",
+      "id": "e-p2-legend-display"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "image__ndwi",
+      "target": "p2-sampler",
+      "targetHandle": "image__image",
+      "id": "e-1780153276480"
+    },
+    {
+      "source": "p2-sampler",
+      "sourceHandle": "data__table",
+      "target": "node-1780153289865-dge3nkl7d",
+      "targetHandle": "data__table",
+      "id": "e-1780153292742"
+    },
+    {
+      "source": "p2-si-t1",
+      "sourceHandle": "geotiff__stack",
+      "target": "node-1780153546290-0.8177588603558137",
+      "targetHandle": "geotiff__scl",
+      "id": "e-1780153562798"
+    },
+    {
+      "source": "node-1780153546290-0.8177588603558137",
+      "sourceHandle": "geotiff__mask",
+      "target": "p2-classif",
+      "targetHandle": "any__b",
+      "id": "e-1780153570022"
+    },
+    {
+      "source": "p2-si-t0",
+      "sourceHandle": "geotiff__stack",
+      "target": "node-1780153602700-0.6197625597218195",
+      "targetHandle": "geotiff__scl",
+      "id": "e-1780153612596"
+    },
+    {
+      "source": "node-1780153602700-0.6197625597218195",
+      "sourceHandle": "geotiff__mask",
+      "target": "p2-classif",
+      "targetHandle": "any__a",
+      "id": "e-1780153614860"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 859.99609375,
+      "h": 715
+    },
+    "previewPos": {
+      "x": 932.7265625,
+      "y": 75.91796875
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "p2-display-classif"
+  }
+}
