@@ -586,6 +586,21 @@
       "width": 208, "height": 153
     },
     {
+      "id": "n-turb-viz",
+      "type": "geo_band_calc",
+      "position": { "x": 1300, "y": 2380 },
+      "data": {
+        "params": {
+          "node_note": "**Turbidité brute colorée (viridis)** — scène entière, sans masque eau. Les taches jaune-vert vif = forte réflectance rouge = **sol nu perturbé** (clairières, chantiers). Proxy orpaillage visible que le masque eau cachait.",
+          "expression": "B1",
+          "clamp_min": 0,
+          "clamp_max": 50,
+          "colormap": "viridis"
+        }
+      },
+      "width": 208, "height": 90
+    },
+    {
       "id": "n-disp-turbidity",
       "type": "output_display",
       "position": { "x": 1300, "y": 2120 },
@@ -594,11 +609,12 @@
         "params": {},
         "mainConnected": true,
         "ports": [
-          { "id": "image__0_ntu", "color": "image", "label": "turbidity NTU" },
-          { "id": "image__1_wm",  "color": "image", "label": "water mask"    }
+          { "id": "image__0_ntu", "color": "image", "label": "NTU eau (masqué)" },
+          { "id": "image__1_viz", "color": "image", "label": "turbidité scène (viridis)" },
+          { "id": "image__2_wm",  "color": "image", "label": "water mask"    }
         ]
       },
-      "width": 208, "height": 217
+      "width": 208, "height": 240
     },
     {
       "id": "n-hillshade",
@@ -1230,7 +1246,21 @@
       "source": "n-turb-mask",
       "sourceHandle": "image__mndwi",
       "target": "n-disp-turbidity",
-      "targetHandle": "image__1_wm"
+      "targetHandle": "image__2_wm"
+    },
+    {
+      "id": "e-turb-7",
+      "source": "n-turbidity",
+      "sourceHandle": "geotiff__turbidity",
+      "target": "n-turb-viz",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-turb-8",
+      "source": "n-turb-viz",
+      "sourceHandle": "image__colormap",
+      "target": "n-disp-turbidity",
+      "targetHandle": "image__1_viz"
     },
     {
       "id": "e-070",
