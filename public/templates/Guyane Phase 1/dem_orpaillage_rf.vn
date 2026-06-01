@@ -3,22 +3,29 @@
     {
       "id": "n-bbox",
       "type": "geo_bbox",
-      "position": { "x": -1700, "y": 60 },
+      "position": {
+        "x": -1700,
+        "y": 60
+      },
       "data": {
         "label": "Bounding Box",
         "params": {
           "lon_min": -53.15,
           "lat_min": 4.85,
-          "lon_max": -52.90,
+          "lon_max": -52.9,
           "lat_max": 5.05
         }
       },
-      "width": 208, "height": 136
+      "width": 208,
+      "height": 136
     },
     {
       "id": "n-time",
       "type": "geo_time_period",
-      "position": { "x": -1700, "y": 260 },
+      "position": {
+        "x": -1700,
+        "y": 260
+      },
       "data": {
         "label": "Time Period",
         "params": {
@@ -26,12 +33,16 @@
           "date_end": "2024-09-30"
         }
       },
-      "width": 208, "height": 90
+      "width": 208,
+      "height": 90
     },
     {
       "id": "n-s2",
       "type": "geo_copernicus",
-      "position": { "x": -1350, "y": 0 },
+      "position": {
+        "x": -1350,
+        "y": 0
+      },
       "data": {
         "params": {
           "node_note": "**S2 L2A** — 5 bandes : rouge, vert, bleu, NIR, SWIR. Saison sèche 2024 (moins de nuages en Guyane).",
@@ -44,12 +55,16 @@
           "fetch": 0
         }
       },
-      "width": 208, "height": 261
+      "width": 208,
+      "height": 259
     },
     {
       "id": "n-dem",
       "type": "geo_copernicus",
-      "position": { "x": -1350, "y": 720 },
+      "position": {
+        "x": -1350,
+        "y": 720
+      },
       "data": {
         "params": {
           "node_note": "**Copernicus DEM GLO-30** — MNT à ~30 m. Produit statique, pas de filtre de dates.",
@@ -60,12 +75,16 @@
           "fetch": 0
         }
       },
-      "width": 208, "height": 261
+      "width": 208,
+      "height": 259
     },
     {
       "id": "n-lulc",
       "type": "geo_copernicus",
-      "position": { "x": -1350, "y": 1500 },
+      "position": {
+        "x": -1280,
+        "y": 1980
+      },
       "data": {
         "params": {
           "node_note": "**ESA WorldCover 10 m** — carte de référence pour l'entraînement RF. Classes utiles : 10=Forêt, 20=Arbustes, 60=Sol nu, 80=Eau.",
@@ -74,46 +93,71 @@
           "resolution": "20",
           "cache_dir": "copernicus_cache",
           "fetch": 0
-        }
+        },
+        "minified": true
       },
-      "width": 208, "height": 261
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -1280,
+        "y": 1980
+      },
+      "style": {
+        "height": 24
+      }
     },
     {
       "id": "n-si",
       "type": "geo_spectral_indices",
-      "position": { "x": -900, "y": 0 },
+      "position": {
+        "x": -900,
+        "y": 0
+      },
       "data": {
         "params": {
-          "node_note": "3 indices S2 → 3 bandes de features spectrales.",
+          "node_note": "3 features spectrales : NDVI + BSI + **SWIR brut (B11)**. MNDWI retiré (importance=0.000 — redondant avec NDVI+BSI).",
           "sensor": "1",
           "ndvi": true,
-          "mndwi": true,
+          "mndwi": false,
           "bsi": true,
           "ndwi": false,
           "evi": false,
           "nbr": false,
-          "clamp_min": -1,
-          "clamp_max": 1
+          "expr1_enable": true,
+          "expr1_label": "SWIR",
+          "expr1": "B5",
+          "clamp_min": 0,
+          "clamp_max": 0.5
         }
       },
-      "width": 208, "height": 345
+      "width": 208,
+      "height": 345
     },
     {
       "id": "n-flow",
       "type": "geo_dem_flow",
-      "position": { "x": -900, "y": 720 },
+      "position": {
+        "x": -900,
+        "y": 720
+      },
       "data": {
         "params": {
           "node_note": "D8 flow direction + accumulation. La flow acc identifie le réseau de drainage.",
           "band": 1
         }
       },
-      "width": 208, "height": 90
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-slope",
       "type": "geo_dem_slope",
-      "position": { "x": -400, "y": 720 },
+      "position": {
+        "x": -400,
+        "y": 720
+      },
       "data": {
         "params": {
           "band": 1,
@@ -122,12 +166,16 @@
           "colormap": "0"
         }
       },
-      "width": 208, "height": 90
+      "width": 208,
+      "height": 98
     },
     {
       "id": "n-tri",
       "type": "geo_dem_tri",
-      "position": { "x": -400, "y": 940 },
+      "position": {
+        "x": -400,
+        "y": 940
+      },
       "data": {
         "params": {
           "band": 1,
@@ -135,12 +183,16 @@
           "colormap": "0"
         }
       },
-      "width": 208, "height": 90
+      "width": 208,
+      "height": 90
     },
     {
       "id": "n-hand",
       "type": "geo_dem_hand",
-      "position": { "x": -400, "y": 1160 },
+      "position": {
+        "x": -400,
+        "y": 1160
+      },
       "data": {
         "params": {
           "band": 1,
@@ -149,12 +201,16 @@
           "colormap": "0"
         }
       },
-      "width": 208, "height": 120
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-twi",
       "type": "geo_dem_twi",
-      "position": { "x": -400, "y": 1420 },
+      "position": {
+        "x": -400,
+        "y": 1420
+      },
       "data": {
         "params": {
           "band": 1,
@@ -162,12 +218,16 @@
           "colormap": "0"
         }
       },
-      "width": 208, "height": 90
+      "width": 208,
+      "height": 90
     },
     {
       "id": "n-stk1",
       "type": "geo_band_stack",
-      "position": { "x": 100, "y": 820 },
+      "position": {
+        "x": 100,
+        "y": 820
+      },
       "data": {
         "params": {
           "node_note": "**Stack 1/3** — slope + TRI → 2 bandes terrain morpho",
@@ -176,12 +236,16 @@
           "cache_dir": "copernicus_cache"
         }
       },
-      "width": 208, "height": 121
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-stk2",
       "type": "geo_band_stack",
-      "position": { "x": 100, "y": 1060 },
+      "position": {
+        "x": 100,
+        "y": 1060
+      },
       "data": {
         "params": {
           "node_note": "**Stack 2/3** — (slope+TRI) + HAND → 3 bandes terrain",
@@ -190,12 +254,16 @@
           "cache_dir": "copernicus_cache"
         }
       },
-      "width": 208, "height": 121
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-stk3",
       "type": "geo_band_stack",
-      "position": { "x": 100, "y": 1300 },
+      "position": {
+        "x": 100,
+        "y": 1300
+      },
       "data": {
         "params": {
           "node_note": "**Stack 3/3** — (slope+TRI+HAND) + TWI → 4 bandes terrain",
@@ -204,12 +272,16 @@
           "cache_dir": "copernicus_cache"
         }
       },
-      "width": 208, "height": 121
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-stk-final",
       "type": "geo_band_stack",
-      "position": { "x": 500, "y": 500 },
+      "position": {
+        "x": 500,
+        "y": 500
+      },
       "data": {
         "params": {
           "node_note": "**Stack final** — indices spectraux (3b) + terrain (4b) → **7 bandes** prêtes pour le RF.",
@@ -218,87 +290,184 @@
           "cache_dir": "copernicus_cache"
         }
       },
-      "width": 208, "height": 121
+      "width": 208,
+      "height": 121
     },
     {
       "id": "n-rf",
       "type": "geo_rf_classifier",
-      "position": { "x": 900, "y": 400 },
+      "position": {
+        "x": 900,
+        "y": 400
+      },
       "data": {
         "params": {
-          "node_note": "**RF Classifier** — entraîné sur WorldCover (labels). Features : NDVI, MNDWI, BSI, slope, TRI, HAND, TWI.",
-          "band_names": "NDVI,MNDWI,BSI,sec_slope_degrees,sec_tri,sec_hand_m,sec_twi",
+          "node_note": "**RF Classifier** — labels WorldCover (classe 20 fusionnée en 30). Features : NDVI, SWIR, BSI, slope, TRI, HAND, TWI.",
+          "band_names": "NDVI,SWIR,BSI,sec_slope_degrees,sec_tri,sec_hand_m,sec_twi",
           "n_estimators": 100,
           "max_depth": 12,
           "samples_per_class": 500,
           "cache_dir": "copernicus_cache"
         }
       },
-      "width": 208, "height": 200
+      "width": 208,
+      "height": 345
     },
     {
       "id": "n-disp-cls",
       "type": "output_display",
-      "position": { "x": 1300, "y": 320 },
+      "position": {
+        "x": 1300,
+        "y": 320
+      },
       "data": {
         "label": "Classification",
         "params": {},
-        "mainConnected": true,
+        "mainConnected": false,
         "ports": [
-          { "id": "image__0_cls", "color": "image", "label": "classification" },
-          { "id": "image__1_imp", "color": "image", "label": "importance" }
+          {
+            "id": "image__0_cls",
+            "color": "image",
+            "label": "classification"
+          },
+          {
+            "id": "image__1_imp",
+            "color": "image",
+            "label": "importance"
+          }
         ]
       },
-      "width": 208, "height": 217
+      "width": 208,
+      "height": 217
     },
     {
       "id": "n-disp-hs",
       "type": "output_display",
-      "position": { "x": 1300, "y": 660 },
+      "position": {
+        "x": 1300,
+        "y": 660
+      },
       "data": {
         "label": "Rapport",
         "params": {},
         "mainConnected": false,
         "ports": [
-          { "id": "image__0_rep", "color": "image", "label": "confusion matrix" }
+          {
+            "id": "image__0_rep",
+            "color": "image",
+            "label": "confusion matrix"
+          }
         ]
       },
-      "width": 208, "height": 185
+      "width": 208,
+      "height": 185
     },
     {
-      "id": "n-hillshade",
-      "type": "geo_dem_hillshade",
-      "position": { "x": -400, "y": -100 },
+      "id": "n-reclass",
+      "type": "geo_band_calc",
+      "position": { "x": -500, "y": 1980 },
       "data": {
         "params": {
-          "band": 1,
-          "azimuth": 315,
-          "altitude": 45,
-          "z_factor": 1.5
+          "node_note": "**Fusion classe 20→30** — Shrubland (0 % recall) reclassifiée en Grassland. `np.where(B1==20, 30, B1)`",
+          "expression": "np.where(B1 == 20, 30, B1)",
+          "clamp_min": 0,
+          "clamp_max": 100,
+          "colormap": "0"
         }
       },
       "width": 208, "height": 90
     },
     {
-      "id": "n-disp-dem",
-      "type": "output_display",
-      "position": { "x": 100, "y": -100 },
+      "id": "n-sampler",
+      "type": "geo_interactive_sampler",
+      "position": { "x": 500, "y": -320 },
       "data": {
-        "label": "Hillshade (visualisation)",
+        "params": {
+          "node_note": "**Exploration features** — clic gauche sur un pixel suspect → inspecte NDVI/SWIR/BSI/slope. Identifier les signatures spectrales d'orpaillage avant d'annoter.",
+          "points": "[]",
+          "indices": "[\"NDVI\",\"SWIR\",\"BSI\"]",
+          "point_radius": 8
+        }
+      },
+      "width": 208, "height": 215
+    },
+    {
+      "id": "n-disp-sampler",
+      "type": "output_display",
+      "position": { "x": 900, "y": -320 },
+      "data": {
+        "label": "Sampler",
         "params": {},
-        "mainConnected": true,
+        "mainConnected": false,
         "ports": [
-          { "id": "image__0_hs", "color": "image", "label": "hillshade" },
-          { "id": "image__1_s2", "color": "image", "label": "S2 preview" }
+          { "id": "image__0_smp", "color": "image", "label": "sampler preview" },
+          { "id": "data__1_tbl",  "color": "data",  "label": "samples table"  }
         ]
       },
       "width": 208, "height": 217
     },
     {
+      "id": "n-hillshade",
+      "type": "geo_dem_hillshade",
+      "position": {
+        "x": -480,
+        "y": 180
+      },
+      "data": {
+        "params": {
+          "band": 1,
+          "azimuth": 315,
+          "altitude": 45,
+          "z_factor": 100
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -480,
+        "y": 180
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-disp-dem",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": -100
+      },
+      "data": {
+        "label": "Hillshade (visualisation)",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_hs",
+            "color": "image",
+            "label": "hillshade"
+          },
+          {
+            "id": "image__1_s2",
+            "color": "image",
+            "label": "S2 preview"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 217
+    },
+    {
       "id": "note-sources",
       "type": "canvas_note",
-      "position": { "x": -1720, "y": -80 },
-      "style": { "width": 260, "height": 56 },
+      "position": {
+        "x": -1720,
+        "y": 400
+      },
+      "style": {
+        "width": 260,
+        "height": 76
+      },
       "data": {
         "label": "Note",
         "params": {
@@ -306,27 +475,57 @@
           "color_index": 3
         }
       },
-      "width": 260, "height": 56
+      "width": 260,
+      "height": 76,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1720,
+        "y": 400
+      },
+      "dragging": false,
+      "resizing": false
     },
     {
       "id": "note-features",
       "type": "canvas_note",
-      "position": { "x": -940, "y": -80 },
-      "style": { "width": 600, "height": 56 },
+      "position": {
+        "x": -860,
+        "y": 400
+      },
+      "style": {
+        "width": 680,
+        "height": 76
+      },
       "data": {
         "label": "Note",
         "params": {
           "text": "**② Features** — 3 indices spectraux (NDVI/MNDWI/BSI) + 4 dérivés DEM (slope/TRI/HAND/TWI) = **7 bandes**",
           "color_index": 2
-        }
+        },
+        "minified": false,
+        "savedHeight": 76
       },
-      "width": 600, "height": 56
+      "width": 680,
+      "height": 76,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -860,
+        "y": 400
+      },
+      "dragging": false,
+      "resizing": false
     },
     {
       "id": "note-stack",
       "type": "canvas_note",
-      "position": { "x": 60, "y": 700 },
-      "style": { "width": 300, "height": 56 },
+      "position": {
+        "x": 80,
+        "y": 1500
+      },
+      "style": {
+        "width": 400,
+        "height": 96
+      },
       "data": {
         "label": "Note",
         "params": {
@@ -334,13 +533,27 @@
           "color_index": 1
         }
       },
-      "width": 300, "height": 56
+      "width": 400,
+      "height": 96,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 80,
+        "y": 1500
+      },
+      "dragging": false,
+      "resizing": false
     },
     {
       "id": "note-rf",
       "type": "canvas_note",
-      "position": { "x": 860, "y": 300 },
-      "style": { "width": 300, "height": 56 },
+      "position": {
+        "x": 760,
+        "y": 840
+      },
+      "style": {
+        "width": 540,
+        "height": 96
+      },
       "data": {
         "label": "Note",
         "params": {
@@ -348,95 +561,375 @@
           "color_index": 4
         }
       },
-      "width": 300, "height": 56
+      "width": 540,
+      "height": 96,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 760,
+        "y": 840
+      },
+      "dragging": false,
+      "resizing": false
     },
     {
       "id": "frame-sources",
       "type": "canvas_frame",
-      "position": { "x": -1740, "y": -100 },
-      "style": { "width": 820, "height": 1900, "zIndex": -1 },
+      "position": {
+        "x": -1740,
+        "y": -100
+      },
+      "style": {
+        "width": 820,
+        "height": 34,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
-        "params": { "title": "Sources", "color_index": 3, "collapsed": false }
+        "params": {
+          "title": "Sources",
+          "color_index": 3,
+          "collapsed": true,
+          "savedHeight": 1900
+        }
       },
-      "width": 820, "height": 1900
+      "width": 820,
+      "height": 34,
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "frame-features",
       "type": "canvas_frame",
-      "position": { "x": -940, "y": -100 },
-      "style": { "width": 760, "height": 1700, "zIndex": -1 },
+      "position": {
+        "x": -920,
+        "y": -100
+      },
+      "style": {
+        "width": 760,
+        "height": 34,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
-        "params": { "title": "Feature Engineering", "color_index": 2, "collapsed": false }
+        "params": {
+          "title": "Feature Engineering",
+          "color_index": 2,
+          "collapsed": true,
+          "savedHeight": 1700
+        }
       },
-      "width": 760, "height": 1700
+      "width": 760,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -920,
+        "y": -100
+      },
+      "dragging": false
     },
     {
       "id": "frame-stack",
       "type": "canvas_frame",
-      "position": { "x": 60, "y": 680 },
-      "style": { "width": 360, "height": 800, "zIndex": -1 },
+      "position": {
+        "x": 60,
+        "y": 680
+      },
+      "style": {
+        "width": 360,
+        "height": 34,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
-        "params": { "title": "Band Stack (chaîné)", "color_index": 1, "collapsed": false }
+        "params": {
+          "title": "Band Stack (chaîné)",
+          "color_index": 1,
+          "collapsed": true,
+          "savedHeight": 800
+        }
       },
-      "width": 360, "height": 800
+      "width": 360,
+      "height": 34,
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "frame-rf",
       "type": "canvas_frame",
-      "position": { "x": 460, "y": 280 },
-      "style": { "width": 1100, "height": 600, "zIndex": -1 },
+      "position": {
+        "x": 460,
+        "y": 280
+      },
+      "style": {
+        "width": 1100,
+        "height": 34,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
-        "params": { "title": "Classification RF", "color_index": 4, "collapsed": false }
+        "params": {
+          "title": "Classification RF",
+          "color_index": 4,
+          "collapsed": true,
+          "savedHeight": 600
+        }
       },
-      "width": 1100, "height": 600
+      "width": 1100,
+      "height": 34,
+      "selected": false,
+      "dragging": false
     }
   ],
   "edges": [
-    { "id": "e-001", "source": "n-bbox",  "sourceHandle": "string__bbox",       "target": "n-s2",   "targetHandle": "string__bbox" },
-    { "id": "e-002", "source": "n-bbox",  "sourceHandle": "string__bbox",       "target": "n-dem",  "targetHandle": "string__bbox" },
-    { "id": "e-003", "source": "n-bbox",  "sourceHandle": "string__bbox",       "target": "n-lulc", "targetHandle": "string__bbox" },
-    { "id": "e-004", "source": "n-time",  "sourceHandle": "string__date_start", "target": "n-s2",   "targetHandle": "string__date_start" },
-    { "id": "e-005", "source": "n-time",  "sourceHandle": "string__date_end",   "target": "n-s2",   "targetHandle": "string__date_end" },
-
-    { "id": "e-010", "source": "n-s2",    "sourceHandle": "geotiff__geotiff",   "target": "n-si",   "targetHandle": "geotiff__geotiff" },
-
-    { "id": "e-020", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-flow",  "targetHandle": "geotiff__geotiff" },
-    { "id": "e-021", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-slope", "targetHandle": "geotiff__geotiff" },
-    { "id": "e-022", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-tri",   "targetHandle": "geotiff__geotiff" },
-    { "id": "e-023", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-hand",  "targetHandle": "geotiff__geotiff" },
-    { "id": "e-024", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-twi",   "targetHandle": "geotiff__geotiff" },
-    { "id": "e-025", "source": "n-dem",   "sourceHandle": "geotiff__geotiff",   "target": "n-hillshade", "targetHandle": "geotiff__geotiff" },
-
-    { "id": "e-030", "source": "n-flow",  "sourceHandle": "geotiff__flow_acc",  "target": "n-hand",  "targetHandle": "geotiff__flow_acc" },
-    { "id": "e-031", "source": "n-flow",  "sourceHandle": "geotiff__flow_acc",  "target": "n-twi",   "targetHandle": "geotiff__flow_acc" },
-
-    { "id": "e-040", "source": "n-slope", "sourceHandle": "geotiff__slope",     "target": "n-stk1",  "targetHandle": "geotiff__primary" },
-    { "id": "e-041", "source": "n-tri",   "sourceHandle": "geotiff__tri",       "target": "n-stk1",  "targetHandle": "geotiff__secondary" },
-
-    { "id": "e-042", "source": "n-stk1",  "sourceHandle": "geotiff__geotiff",   "target": "n-stk2",  "targetHandle": "geotiff__primary" },
-    { "id": "e-043", "source": "n-hand",  "sourceHandle": "geotiff__hand",      "target": "n-stk2",  "targetHandle": "geotiff__secondary" },
-
-    { "id": "e-044", "source": "n-stk2",  "sourceHandle": "geotiff__geotiff",   "target": "n-stk3",  "targetHandle": "geotiff__primary" },
-    { "id": "e-045", "source": "n-twi",   "sourceHandle": "geotiff__twi",       "target": "n-stk3",  "targetHandle": "geotiff__secondary" },
-
-    { "id": "e-050", "source": "n-si",    "sourceHandle": "geotiff__stack",     "target": "n-stk-final", "targetHandle": "geotiff__primary" },
-    { "id": "e-051", "source": "n-stk3",  "sourceHandle": "geotiff__geotiff",   "target": "n-stk-final", "targetHandle": "geotiff__secondary" },
-
-    { "id": "e-060", "source": "n-stk-final", "sourceHandle": "geotiff__geotiff", "target": "n-rf",  "targetHandle": "geotiff__features" },
-    { "id": "e-061", "source": "n-lulc",  "sourceHandle": "geotiff__geotiff",   "target": "n-rf",    "targetHandle": "geotiff__labels" },
-
-    { "id": "e-070", "source": "n-rf",    "sourceHandle": "image__preview",     "target": "n-disp-cls", "targetHandle": "image__0_cls" },
-    { "id": "e-071", "source": "n-rf",    "sourceHandle": "image__importance",  "target": "n-disp-cls", "targetHandle": "image__1_imp" },
-    { "id": "e-072", "source": "n-rf",    "sourceHandle": "image__report",      "target": "n-disp-hs",  "targetHandle": "image__0_rep" },
-
-    { "id": "e-080", "source": "n-hillshade", "sourceHandle": "image__preview", "target": "n-disp-dem", "targetHandle": "image__0_hs" },
-    { "id": "e-081", "source": "n-s2",    "sourceHandle": "image__preview",     "target": "n-disp-dem", "targetHandle": "image__1_s2" }
+    {
+      "id": "e-001",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-002",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-003",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-lulc",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-004",
+      "source": "n-time",
+      "sourceHandle": "string__date_start",
+      "target": "n-s2",
+      "targetHandle": "string__date_start"
+    },
+    {
+      "id": "e-005",
+      "source": "n-time",
+      "sourceHandle": "string__date_end",
+      "target": "n-s2",
+      "targetHandle": "string__date_end"
+    },
+    {
+      "id": "e-010",
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-si",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-020",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-021",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-slope",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-022",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-tri",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-023",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-024",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-twi",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-025",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hillshade",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-030",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-031",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-twi",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-040",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-stk1",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-041",
+      "source": "n-tri",
+      "sourceHandle": "geotiff__tri",
+      "target": "n-stk1",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-042",
+      "source": "n-stk1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk2",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-043",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-stk2",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-044",
+      "source": "n-stk2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk3",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-045",
+      "source": "n-twi",
+      "sourceHandle": "geotiff__twi",
+      "target": "n-stk3",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-050",
+      "source": "n-si",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-stk-final",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e-051",
+      "source": "n-stk3",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-stk-final",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e-060",
+      "source": "n-stk-final",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-rf",
+      "targetHandle": "geotiff__features"
+    },
+    {
+      "id": "e-061",
+      "source": "n-lulc",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-reclass",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-061b",
+      "source": "n-reclass",
+      "sourceHandle": "geotiff__raw",
+      "target": "n-rf",
+      "targetHandle": "geotiff__labels"
+    },
+    {
+      "id": "e-090",
+      "source": "n-stk-final",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-sampler",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-091",
+      "source": "n-s2",
+      "sourceHandle": "image__preview",
+      "target": "n-sampler",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-092",
+      "source": "n-sampler",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-sampler",
+      "targetHandle": "image__0_smp"
+    },
+    {
+      "id": "e-093",
+      "source": "n-sampler",
+      "sourceHandle": "data__table",
+      "target": "n-disp-sampler",
+      "targetHandle": "data__1_tbl"
+    },
+    {
+      "id": "e-070",
+      "source": "n-rf",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-cls",
+      "targetHandle": "image__0_cls"
+    },
+    {
+      "id": "e-071",
+      "source": "n-rf",
+      "sourceHandle": "image__importance",
+      "target": "n-disp-cls",
+      "targetHandle": "image__1_imp"
+    },
+    {
+      "id": "e-072",
+      "source": "n-rf",
+      "sourceHandle": "image__report",
+      "target": "n-disp-hs",
+      "targetHandle": "image__0_rep"
+    },
+    {
+      "id": "e-080",
+      "source": "n-hillshade",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-dem",
+      "targetHandle": "image__0_hs"
+    },
+    {
+      "id": "e-081",
+      "source": "n-s2",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-dem",
+      "targetHandle": "image__1_s2"
+    }
   ],
   "ui": {
-    "activePaletteIndex": 0
+    "previewSize": {
+      "w": 273.33984375,
+      "h": 218
+    },
+    "previewPos": {
+      "x": 119.10546875,
+      "y": -66.82421875
+    },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": "n-hillshade"
   }
 }
