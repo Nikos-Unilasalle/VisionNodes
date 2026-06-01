@@ -591,10 +591,10 @@
       "position": { "x": 1300, "y": 2380 },
       "data": {
         "params": {
-          "node_note": "**Turbidité eau colorée (turbo)** — tout-en-un sur S2 normalisé. MNDWI=(B2−B5)/(B2+B5) isole l'eau ; Nechad NTU sur le rouge B1 ; non-eau→0. Colormap turbo (bleu=clair → rouge=turbide).",
-          "expression": "np.where((B2 - B5)/(B2 + B5 + 1e-6) > 0, 228.1*np.clip(B1,0,0.171)/(1 - np.clip(B1,0,0.171)/0.1724) + 0.16, 0)",
-          "clamp_min": 0,
-          "clamp_max": 15,
+          "node_note": "**Turbidité eau — NDTI (turbo)** — indice normalisé scale-invariant (robuste). Masque eau MNDWI=(B2−B5)/(B2+B5)>0 ; NDTI=(rouge−vert)/(rouge+vert) : eau claire bleu → eau turbide rouge. Non-eau→−0.3.",
+          "expression": "np.where((B2 - B5)/(B2 + B5 + 1e-6) > 0, (B1 - B2)/(B1 + B2 + 1e-6), -0.3)",
+          "clamp_min": -0.3,
+          "clamp_max": 0.3,
           "colormap": "turbo"
         }
       },
