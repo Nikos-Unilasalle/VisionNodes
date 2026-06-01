@@ -59,9 +59,10 @@ COLLECTIONS: dict[str, dict] = {
         'all_bands':        ['VV', 'VH'],
         'default_bands':    ['VV', 'VH'],
         'rgb':              ['VV', 'VH', 'VV'],
-        'units':            'DB',
+        'units':            'LINEAR_POWER',  # SH rejects 'DB' as input unit
+        'to_db':            True,            # convert to dB inside evalscript
         'has_cloud_filter': False,
-        'mosaicking_order': 'mostRecent',  # leastCC unsupported for SAR
+        'mosaicking_order': 'mostRecent',    # leastCC unsupported for SAR
     },
     'Copernicus DEM GLO-30': {
         'backend':      'sh',
@@ -287,10 +288,18 @@ class GeoCopernicusNode(NodeProcessor):
         return np.clip((band - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
 
     @staticmethod
-    def _make_evalscript(bands: list[str], units: str | None) -> str:
+    def _make_evalscript(bands: list[str], units: str | None,
+                         to_db: bool = False) -> str:
         band_json   = json.dumps(bands)
         n           = len(bands)
-        sample_vals = ', '.join(f'sample.{b}' for b in bands)
+        if to_db:
+            # SAR: convert linear power → dB, clamped at -30 dB floor to avoid -Inf
+            sample_vals = ', '.join(
+                f'(10.0 * Math.log(Math.max(sample.{b}, 1e-10)) / Math.LN10)'
+                for b in bands
+            )
+        else:
+            sample_vals = ', '.join(f'sample.{b}' for b in bands)
         if units:
             input_spec = f'{{bands: {band_json}, units: "{units}"}}'
         else:
@@ -576,7 +585,7 @@ class GeoCopernicusNode(NodeProcessor):
             evalscript = self._make_evalscript_cloud_free(bands, units)
         else:
             mosaic_mode = 'SIMPLE'
-            evalscript  = self._make_evalscript(bands, units)
+            evalscript  = self._make_evalscript(bands, units, to_db=col_cfg.get('to_db', False))
 
         # ── Compute grid ──────────────────────────────────────────────────────
         lat_c       = (south + north) / 2
