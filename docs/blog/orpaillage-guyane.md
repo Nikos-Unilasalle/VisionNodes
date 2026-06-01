@@ -250,6 +250,19 @@ se nourrit de ce regard permanent. Les meilleures décisions de cette pipeline (
 le radar, ajouter le bi-temporel, abandonner HAND) sont venues de l'observation, pas
 du calcul.
 
+Un épisode illustre ce point à lui seul. La première carte de turbidité produite
+semblait **uniformément plate** : un bleu monotone, décevant. Le réflexe a été non
+pas de croire le rendu, mais de **sonder la donnée elle-même** — en branchant la
+sortie brute sur l'outil d'échantillonnage interactif. Surprise : les valeurs
+étaient en réalité **richement nuancées**. Le rendu par défaut, en masquant les
+terres et en étalant une eau de réservoir homogène, *écrasait* un signal pourtant
+bien présent. Mieux : les valeurs élevées se concentraient sur des **taches de sol
+nu** — clairières, pistes, chantiers potentiels — exactement la signature
+recherchée. C'est en *regardant la donnée par une autre fenêtre* qu'on a compris
+qu'il fallait changer la colormap et le masque, transformant une visualisation
+muette en révélateur de zones perturbées. Aucune statistique agrégée n'aurait
+soufflé cette correction ; le contact visuel direct, si.
+
 ### 7.2 Graphe de nœuds vs. empilement de couches
 
 L'approche dominante en SIG (ArcGIS, QGIS) raisonne en **couches** et en **boîtes à

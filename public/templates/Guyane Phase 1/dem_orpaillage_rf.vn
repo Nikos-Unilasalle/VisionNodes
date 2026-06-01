@@ -591,11 +591,11 @@
       "position": { "x": 1300, "y": 2380 },
       "data": {
         "params": {
-          "node_note": "**Turbidité brute colorée (viridis)** — scène entière, sans masque eau. Les taches jaune-vert vif = forte réflectance rouge = **sol nu perturbé** (clairières, chantiers). Proxy orpaillage visible que le masque eau cachait.",
-          "expression": "B1",
+          "node_note": "**Turbidité eau colorée (turbo)** — tout-en-un sur S2 normalisé. MNDWI=(B2−B5)/(B2+B5) isole l'eau ; Nechad NTU sur le rouge B1 ; non-eau→0. Colormap turbo (bleu=clair → rouge=turbide).",
+          "expression": "np.where((B2 - B5)/(B2 + B5 + 1e-6) > 0, 228.1*np.clip(B1,0,0.171)/(1 - np.clip(B1,0,0.171)/0.1724) + 0.16, 0)",
           "clamp_min": 0,
-          "clamp_max": 50,
-          "colormap": "viridis"
+          "clamp_max": 15,
+          "colormap": "turbo"
         }
       },
       "width": 208, "height": 90
@@ -1250,8 +1250,8 @@
     },
     {
       "id": "e-turb-7",
-      "source": "n-turbidity",
-      "sourceHandle": "geotiff__turbidity",
+      "source": "n-turb-norm",
+      "sourceHandle": "geotiff__geotiff",
       "target": "n-turb-viz",
       "targetHandle": "geotiff__geotiff"
     },
