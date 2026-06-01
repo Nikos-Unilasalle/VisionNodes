@@ -98,7 +98,7 @@ const GeoInteractiveSamplerEditorOverlay = ({ node, onClose }: Props) => {
     }
 
     if (!selectedIndices[1]) return;
-    const next = [...points, { x: pos.x, y: pos.y, type: 1 }];
+    const next: SamplePoint[] = [...points, { x: pos.x, y: pos.y, type: 1 }];
     setPoints(next);
     pushParams(next, selectedIndices);
   }, [getRelPos, points, selectedIndices, zoom, pushParams]);
