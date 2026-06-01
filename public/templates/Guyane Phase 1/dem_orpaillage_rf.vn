@@ -127,7 +127,7 @@
           "nbr": false,
           "expr1_enable": true,
           "expr1_label": "SWIR",
-          "expr1": "B5",
+          "expr1": "SWIR",
           "clamp_min": 0,
           "clamp_max": 0.5
         }
