@@ -54,13 +54,14 @@ COLLECTIONS: dict[str, dict] = {
         'has_cloud_filter': True,
     },
     'Sentinel-1 GRD': {
-        'backend':      'sh',
-        'sh_id':        'SENTINEL1_IW',
-        'all_bands':    ['VV', 'VH'],
-        'default_bands':['VV', 'VH'],
-        'rgb':          ['VV', 'VH', 'VV'],
-        'units':        'DB',
+        'backend':          'sh',
+        'sh_id':            'SENTINEL1_IW',
+        'all_bands':        ['VV', 'VH'],
+        'default_bands':    ['VV', 'VH'],
+        'rgb':              ['VV', 'VH', 'VV'],
+        'units':            'DB',
         'has_cloud_filter': False,
+        'mosaicking_order': 'mostRecent',  # leastCC unsupported for SAR
     },
     'Copernicus DEM GLO-30': {
         'backend':      'sh',
@@ -363,6 +364,7 @@ class GeoCopernicusNode(NodeProcessor):
         tile_path: str,
         notif_id: str = _NOTIF,
         mosaic_mode: str = 'SIMPLE',
+        mosaicking_order: str = 'leastCC',
     ) -> bool:
         """Download one tile to tile_path as float32 GeoTIFF. Returns True on success."""
         try:
@@ -379,10 +381,7 @@ class GeoCopernicusNode(NodeProcessor):
             input_data_kwargs: dict = {
                 'data_collection': data_collection,
                 'time_interval':   (date_start, date_end),
-                # CLOUD_FREE uses ORBIT mosaicking (defined in evalscript) —
-                # leastCC ordering puts clearest acquisitions first in the samples array.
-                # SIMPLE uses leastCC to pick the single least-cloudy composite.
-                'mosaicking_order': 'leastCC',
+                'mosaicking_order': mosaicking_order,
             }
             # For SIMPLE mode, apply cloud cover pre-filter to restrict API search.
             # For CLOUD_FREE mode, allow all acquisitions through (per-pixel SCL filter handles it).
@@ -642,6 +641,7 @@ class GeoCopernicusNode(NodeProcessor):
                     tile_path,
                     notif_id=self._notif_id,
                     mosaic_mode=mosaic_mode,
+                    mosaicking_order=col_cfg.get('mosaicking_order', 'leastCC'),
                 )
                 if not success:
                     return
