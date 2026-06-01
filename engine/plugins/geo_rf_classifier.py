@@ -520,8 +520,11 @@ class GeoRFClassifierNode(NodeProcessor):
         y_te_pred  = rf.predict(X_te)
         class_strs = [str(int(c)) for c in classes_encoded]
 
-        # Normalized confusion matrix (row-norm = recall on diagonal)
-        cm_int  = sk_cm(y_te, y_te_pred)
+        # Normalized confusion matrix (row-norm = recall on diagonal).
+        # Pass explicit labels so matrix is always n×n even when a class is absent from
+        # the test split (otherwise sk_cm produces a smaller matrix → index error).
+        all_encoded_labels = list(range(len(classes_encoded)))
+        cm_int  = sk_cm(y_te, y_te_pred, labels=all_encoded_labels)
         row_sum = cm_int.sum(axis=1, keepdims=True)
         cm_norm = cm_int.astype(float) / np.where(row_sum == 0, 1, row_sum)
 
