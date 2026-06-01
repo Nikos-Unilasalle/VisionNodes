@@ -103,6 +103,7 @@ COLLECTIONS: dict[str, dict] = {
         'asset_keys':   ['map'],
         'categorical':  True,
         'class_palette':'worldcover',
+        'ignore_date':  True,   # static product — only 2020/2021 on Planetary Computer
     },
     'io-lulc Annual': {
         'backend':      'stac',
@@ -115,6 +116,7 @@ COLLECTIONS: dict[str, dict] = {
         'asset_keys':   ['data'],
         'categorical':  True,
         'class_palette':'io_lulc',
+        'ignore_date':  True,   # covers 2017–2022 only — ignore user date range
     },
     # ── Free Planetary Computer collections (no auth, no processing units) ──
     'Sentinel-2 L2A (Planetary)': {
