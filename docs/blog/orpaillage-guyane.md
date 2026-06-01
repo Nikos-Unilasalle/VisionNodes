@@ -184,6 +184,32 @@ l'importance : l'intuition de fusionner optique, radar et temporel est confirmé
 En résumé : **nous avons saturé ce que les features peuvent apporter.** Aucune
 variable supplémentaire ne corrigera l'absence de vérité terrain adéquate.
 
+### 5.4 La turbidité, révélateur de ce que les labels ignorent
+
+Pour rendre cette limite **tangible**, nous avons ajouté à la pipeline une branche
+de visualisation dédiée : une **carte de turbidité** de l'eau en 2024, calculée par
+le modèle de Nechad et al. (2010) à partir de la bande rouge de Sentinel-2 et
+restreinte aux surfaces en eau (masque MNDWI).
+
+Le principe physique est direct : l'orpaillage **draine le lit des rivières et
+remet les sédiments en suspension**. Cette charge particulaire augmente fortement la
+réflectance dans le rouge, donc la turbidité mesurée (en NTU). Une rivière
+forestière intacte apparaît en bleu sombre (eau claire, peu réfléchissante) ; un
+cours d'eau perturbé par un chantier ressort en **jaune-rouge vif**.
+
+Or c'est précisément cette distinction que ESA WorldCover **efface** : sa classe
+« eau » (80) regroupe indistinctement l'eau claire et l'eau chargée. La carte de
+turbidité montre, à l'œil nu, le **sous-ensemble suspect** que le classifieur ne
+peut pas isoler faute de label dédié. Elle ne remplace pas la vérité terrain — la
+turbidité a d'autres causes naturelles (crues, estuaires) — mais elle **matérialise
+la frontière manquante** et guide l'intuition : *voilà ce qu'il faudra apprendre au
+modèle à reconnaître.*
+
+C'est aussi une piste de feature future : un seuil de turbidité, ou son évolution
+bi-temporelle le long du réseau hydrographique (croisé avec l'accumulation de flux
+déjà calculée), constituerait un indicateur d'orpaillage bien plus spécifique que
+le « sol nu » générique.
+
 ## 6. La prochaine étape
 
 La conclusion oriente clairement la suite : **construire un jeu de vérité terrain
@@ -198,6 +224,62 @@ spécifique à l'orpaillage.**
 
 La chaîne de features (spectral + terrain + radar + bi-temporel) est déjà en place
 et **prête à accueillir ces nouveaux labels** dès qu'ils seront disponibles.
+
+## 7. Note de méthode : concevoir une pipeline par le regard
+
+Au-delà du résultat, la manière dont cette pipeline a été *construite* mérite un
+mot — car elle illustre un parti pris d'outillage.
+
+### 7.1 Le feedback visuel comme moteur d'intuition
+
+Chaque étape de notre traitement — chaque indice, chaque dérivé de terrain, chaque
+composite radar — **affiche son propre aperçu en direct**, sur le nœud lui-même.
+Nous ne lisons pas une statistique après coup : nous *voyons* immédiatement ce que
+produit chaque opération.
+
+Cette boucle de retour courte change la nature du travail. Quand le MNDWI dessine
+mal les berges, on le voit. Quand le hillshade révèle un relief plat, on comprend
+sur-le-champ pourquoi le HAND sera inutile (cf. §5.3). Quand la carte de turbidité
+fait surgir une rivière en rouge, une hypothèse naît — *et si c'était un chantier ?*
+L'analyse cesse d'être une exécution aveugle de scripts pour devenir un **dialogue
+visuel** avec la donnée. L'ajout de la branche turbidité (§5.4) est né exactement de
+ce réflexe : « il manque une image qui rende la limite visible. »
+
+L'intuition du concepteur — savoir quelle variable ajouter, laquelle abandonner —
+se nourrit de ce regard permanent. Les meilleures décisions de cette pipeline (fusionner
+le radar, ajouter le bi-temporel, abandonner HAND) sont venues de l'observation, pas
+du calcul.
+
+### 7.2 Graphe de nœuds vs. empilement de couches
+
+L'approche dominante en SIG (ArcGIS, QGIS) raisonne en **couches** et en **boîtes à
+outils** : on empile des rasters, on lance un outil qui écrit un fichier de sortie,
+puis un autre qui le relit. Le flux de données est implicite, dispersé dans une
+succession d'étapes et de fichiers intermédiaires.
+
+Une conception **par graphe de nœuds** inverse la logique : le flux de données *est*
+le document. Les avantages observés sur ce projet :
+
+- **Traçabilité totale.** Le chemin d'un pixel — du téléchargement Copernicus
+  jusqu'à la prédiction RF — se lit d'un coup d'œil sur le graphe. Aucune étape
+  cachée, aucun fichier temporaire oublié.
+- **Inspectabilité à chaud.** N'importe quel nœud intermédiaire est visualisable
+  instantanément, sans avoir à ré-exécuter ou exporter. On « sonde » la pipeline
+  comme on poserait une sonde sur un circuit.
+- **Réutilisation et modularité.** Le bloc de dérivés DEM, la fusion de bandes, le
+  classifieur sont des briques génériques recombinables. La branche turbidité a été
+  greffée en quelques nœuds sans toucher au reste.
+- **Itération non destructive.** Brancher/débrancher une feature pour tester son
+  apport est l'affaire d'un lien — là où le paradigme par couches impose souvent de
+  reconstruire une chaîne de géotraitement entière.
+- **Parallélisme lisible.** Les branches indépendantes (optique, radar, terrain,
+  bi-temporel) cohabitent visuellement et convergent explicitement vers la fusion.
+
+En somme, le graphe de nœuds ne fait pas qu'exécuter un traitement : il **expose la
+pensée** derrière ce traitement. Pour un travail exploratoire comme la recherche
+d'une signature d'orpaillage — où l'on ne sait pas d'avance quelles variables
+porteront le signal — cette transparence est un accélérateur d'intuition plus qu'un
+simple confort d'interface.
 
 ---
 
@@ -233,6 +315,10 @@ et **prête à accueillir ces nouveaux labels** dès qu'ils seront disponibles.
   Plains with ERTS.* — Définition originelle du NDVI.
 - **Rikimaru, A., Roy, P. S., & Miyatake, S. (2002).** *Tropical forest cover
   density mapping.* Tropical Ecology, 43(1). — Famille des indices de sol nu (BSI).
+- **Nechad, B., Ruddick, K. G., & Park, Y. (2010).** *Calibration and validation of
+  a generic multisensor algorithm for mapping of total suspended matter in turbid
+  waters.* Remote Sensing of Environment, 114(4), 854–866. — Modèle de turbidité /
+  matière en suspension utilisé pour la carte de turbidité (§5.4).
 - **Zanaga, D., et al. (2021).** *ESA WorldCover 10 m 2020 v100.* — Produit
   d'occupation du sol utilisé comme source de labels.
 - **Programme Copernicus / ESA** — Sentinel-1 (SAR) et Sentinel-2 (optique),
