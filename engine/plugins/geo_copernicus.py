@@ -130,7 +130,7 @@ COLLECTIONS: dict[str, dict] = {
         'rgb':          ['B04','B03','B02'],
         'units':        'REFLECTANCE',
         'has_cloud_filter': True,
-        'asset_keys':   ['B04','B03','B02','B08'],
+        'asset_keys':   ['B04','B03','B02','B08','B11'],  # incl. SWIR for BSI/MNDWI/turbidity
         'categorical':  False,
     },
     'Copernicus DEM GLO-30 (Planetary)': {
@@ -845,6 +845,7 @@ class GeoCopernicusNode(NodeProcessor):
             'd0': date_start, 'd1': date_end,
             'res': resolution, 'pol': polariz, 'orb': orbit,
             'comp': composite, 'db': to_db, 'maxs': max_scenes,
+            'assets': col_cfg.get('asset_keys'),  # bust cache when band set changes
         }, sort_keys=True)
         sig_key = hashlib.md5(sig.encode()).hexdigest()[:14]
         final_path = os.path.join(cache_dir, f'stac_{sig_key}.tif')
