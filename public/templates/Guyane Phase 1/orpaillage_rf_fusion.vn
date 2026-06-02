@@ -370,14 +370,14 @@
       "data": {
         "label": "S1 Polarization Features",
         "params": {
-          "rvi": true,
+          "rvi": false,
           "span": false,
-          "nrpb": true,
-          "pdi": true,
+          "nrpb": false,
+          "pdi": false,
           "pri": false,
           "dpsvi": false,
           "output_db": true,
-          "node_note": "T1 · VV VH RVI NRPB PDI"
+          "node_note": "VV + VH (dB) uniquement — RVI/NRPB/PDI désactivés (importance < 0.03)"
         }
       },
       "width": 380,
@@ -452,14 +452,14 @@
       "data": {
         "label": "S1 Polarization Features",
         "params": {
-          "rvi": true,
+          "rvi": false,
           "span": false,
-          "nrpb": true,
-          "pdi": true,
+          "nrpb": false,
+          "pdi": false,
           "pri": false,
           "dpsvi": false,
           "output_db": true,
-          "node_note": "T2 · VV VH RVI NRPB PDI"
+          "node_note": "VV + VH (dB) uniquement — RVI/NRPB/PDI désactivés (importance < 0.03)"
         }
       },
       "width": 380,
@@ -724,7 +724,7 @@
           "resampling": "0",
           "prefix_secondary": false,
           "cache_dir": "copernicus_cache",
-          "node_note": "(S2+DEM 7b) + S1_T2(5b) → 12b"
+          "node_note": "(S2+DEM 7b) + S1_T2(2b: VV VH) → 9b"
         }
       },
       "width": 280,
@@ -749,7 +749,7 @@
           "resampling": "0",
           "prefix_secondary": false,
           "cache_dir": "copernicus_cache",
-          "node_note": "(12b) + ΔVH(1b) → 13b final"
+          "node_note": "(9b) + ΔVH(1b) → 10b final"
         }
       },
       "width": 280,
@@ -877,13 +877,13 @@
       "data": {
         "label": "RF Classifier",
         "params": {
-          "band_names": "ndvi,ndwi,mndwi,bsi,slope_degrees,hand_m,twi,vv,vh,rvi,nrpb,pdi_db,delta_vh",
+          "band_names": "ndvi,ndwi,mndwi,bsi,slope_degrees,hand_m,twi,vv,vh,delta_vh",
           "n_estimators": 200,
           "max_depth": 20,
           "max_samples_per_class": 3000,
           "test_fraction": 0.2,
           "cache_dir": "copernicus_cache",
-          "node_note": "13 features · max_samples_per_class=3000 · érosion désactivée"
+          "node_note": "10 features : NDVI/NDWI/MNDWI/BSI + slope/HAND/TWI + VV/VH + ΔVH\nRVI/NRPB/PDI supprimés (Gini < 0.03 à 20m)"
         }
       },
       "width": 600,
