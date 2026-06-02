@@ -157,6 +157,69 @@ COLLECTIONS: dict[str, dict] = {
         'categorical':  False,
         'ignore_date':  True,   # static product — take latest item regardless of date
     },
+    'Google Satellite': {
+        'backend':      'basemap',
+        'url_template': 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Google Hybrid': {
+        'backend':      'basemap',
+        'url_template': 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Google Roadmap': {
+        'backend':      'basemap',
+        'url_template': 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Google Terrain': {
+        'backend':      'basemap',
+        'url_template': 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'OpenStreetMap': {
+        'backend':      'basemap',
+        'url_template': 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Carto Positron': {
+        'backend':      'basemap',
+        'url_template': 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
+    'Carto Dark Matter': {
+        'backend':      'basemap',
+        'url_template': 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'all_bands':    ['R', 'G', 'B'],
+        'default_bands':['R', 'G', 'B'],
+        'rgb':          ['R', 'G', 'B'],
+        'units':        None,
+        'has_cloud_filter': False,
+    },
 }
 
 
@@ -465,6 +528,10 @@ class GeoCopernicusNode(NodeProcessor):
 
         if backend == 'stac':
             self._do_fetch_stac(params, col_name, col_cfg, auto=auto, my_gen=my_gen)
+            return
+
+        if backend == 'basemap':
+            self._do_fetch_basemap(params, col_name, col_cfg, auto=auto, my_gen=my_gen)
             return
 
         if not self.ensure_packages(
@@ -1221,6 +1288,347 @@ class GeoCopernicusNode(NodeProcessor):
         g = self._stretch(arr[1]) if arr.shape[0] >= 2 else r
         b = self._stretch(arr[2]) if arr.shape[0] >= 3 else r
         return cv2.merge([b, g, r])
+
+    @staticmethod
+    def _latlon_to_tile(lon: float, lat: float, z: int) -> tuple[int, int]:
+        lat_rad = math.radians(lat)
+        n = 2.0 ** z
+        xtile = int((lon + 180.0) / 360.0 * n)
+        ytile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
+        return xtile, ytile
+
+    @staticmethod
+    def _tile_bounds_3857(x: int, y: int, z: int) -> tuple[float, float, float, float]:
+        origin_shift = 20037508.342789244
+        n = 2.0 ** z
+        tile_size = (2.0 * origin_shift) / n
+        xmin = -origin_shift + x * tile_size
+        xmax = xmin + tile_size
+        ymax = origin_shift - y * tile_size
+        ymin = ymax - tile_size
+        return xmin, ymin, xmax, ymax
+
+    def _do_fetch_basemap(self, params: dict, col_name: str, col_cfg: dict,
+                          auto: bool = False, my_gen: int = 0) -> None:
+        """Downloads, cache, stitch, and reprojects XYZ tiles (Google Maps / OSM / CartoDB)
+        to target bbox in WGS84 EPSG:4326.
+        """
+        if not self.ensure_packages(
+            ['rasterio'],
+            pip_names=['rasterio'],
+            notif_id=self._notif_id,
+        ):
+            return
+
+        import rasterio
+        from rasterio.warp import reproject, Resampling
+        from rasterio.transform import from_bounds
+        import urllib.request
+        import urllib.error
+        import time
+
+        # ── BBOX ──────────────────────────────────────────────────────────────
+        bbox_str = str(params.get('bbox', '') or '').strip()
+        if not bbox_str:
+            send_notification('Copernicus[Basemap]: no bounding box — open editor to draw ROI',
+                               level='warning', notif_id=self._notif_id)
+            return
+        try:
+            west, south, east, north = (float(v) for v in bbox_str.split(','))
+        except Exception:
+            send_notification(f'Copernicus[Basemap]: invalid bbox "{bbox_str}"',
+                               level='error', notif_id=self._notif_id)
+            return
+
+        resolution = max(1, int(params.get('resolution', 10)))
+
+        # ── Cache path ────────────────────────────────────────────────────────
+        raw_cache = str(params.get('cache_dir', 'copernicus_cache') or 'copernicus_cache').strip()
+        _engine_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
+        os.makedirs(cache_dir, exist_ok=True)
+
+        sig = json.dumps({
+            'col': col_name, 'bbox': [west, south, east, north],
+            'res': resolution
+        }, sort_keys=True)
+        sig_key = hashlib.md5(sig.encode()).hexdigest()[:14]
+        final_path = os.path.join(cache_dir, f'basemap_{sig_key}.tif')
+
+        if auto and not os.path.exists(final_path):
+            return
+
+        # ── Cache hit: load existing GeoTIFF, skip re-download ───────────────
+        if os.path.exists(final_path):
+            try:
+                with rasterio.open(final_path) as _src:
+                    arr_c      = _src.read().astype('float32')
+                    dst_crs_c  = _src.crs
+                    dst_tf_c   = _src.transform
+                    out_h_c, out_w_c = _src.height, _src.width
+                    bnames_c   = [_src.descriptions[i] or f'band_{i+1}'
+                                  for i in range(_src.count)]
+
+                geo_c: dict = {
+                    'bands':       arr_c,
+                    'band_names':  bnames_c,
+                    'count':       arr_c.shape[0],
+                    'width':       out_w_c,
+                    'height':      out_h_c,
+                    'crs':         str(dst_crs_c) if dst_crs_c else 'EPSG:4326',
+                    'transform':   dst_tf_c,
+                    'nodata':      None,
+                    'dtype':       'float32',
+                    'bounds':      {'west': west, 'south': south,
+                                    'east': east, 'north': north},
+                    '_source':     col_name,
+                    '_bands':      bnames_c,
+                    '_dates':      'N/A',
+                    '_cache_path': final_path,
+                }
+                
+                r_ch_c = np.clip(arr_c[0], 0, 255).astype(np.uint8)
+                g_ch_c = np.clip(arr_c[1], 0, 255).astype(np.uint8)
+                b_ch_c = np.clip(arr_c[2], 0, 255).astype(np.uint8)
+                preview_c = cv2.merge([b_ch_c, g_ch_c, r_ch_c])
+
+                h_c, w_c  = preview_c.shape[:2]
+                sc_c      = min(1.0, 120 / h_c)
+                thumb_c   = cv2.resize(preview_c,
+                                        (max(1, int(w_c * sc_c)),
+                                         max(1, int(h_c * sc_c))))
+                _, buf_c  = _cv2.imencode('.jpg', thumb_c,
+                                          [_cv2.IMWRITE_JPEG_QUALITY, 60])
+                thumb_b64_c = _b64.b64encode(buf_c).decode('utf-8')
+
+                if self._generation != my_gen:
+                    return  # superseded
+                self._cache_data  = (geo_c, preview_c, thumb_b64_c)
+                self._thumb_dirty = True
+                send_notification(
+                    f'Copernicus[Basemap]: loaded from cache — '
+                    f'{arr_c.shape[0]} band(s), {out_w_c}×{out_h_c} px',
+                    progress=1.0, notif_id=self._notif_id,
+                )
+                _notification_queue.put_nowait({
+                    '_wake_engine': True, '_node_type': 'geo_copernicus',
+                    '_notif_id': self._notif_id,
+                })
+                return
+            except Exception:
+                pass # fall through to download
+
+        # ── Tile Coordinate Calculations ──────────────────────────────────────
+        lat_c = (south + north) / 2.0
+        val = (156543.03392 * math.cos(math.radians(lat_c))) / resolution
+        z = max(0, min(20, round(math.log2(val))))
+
+        x_min_t, y_min_t = self._latlon_to_tile(west, north, z)
+        x_max_t, y_max_t = self._latlon_to_tile(east, south, z)
+
+        x_start, x_end = min(x_min_t, x_max_t), max(x_min_t, x_max_t)
+        y_start, y_end = min(y_min_t, y_max_t), max(y_min_t, y_max_t)
+
+        # Apply safety limit and automatically adjust zoom to prevent downloading too many tiles
+        n_limit = 2**z
+        x_start = max(0, min(n_limit - 1, x_start))
+        x_end = max(0, min(n_limit - 1, x_end))
+        y_start = max(0, min(n_limit - 1, y_start))
+        y_end = max(0, min(n_limit - 1, y_end))
+
+        num_x = x_end - x_start + 1
+        num_y = y_end - y_start + 1
+        total_tiles = num_x * num_y
+
+        while total_tiles > 150 and z > 0:
+            z -= 1
+            n_limit = 2**z
+            x_min_t, y_min_t = self._latlon_to_tile(west, north, z)
+            x_max_t, y_max_t = self._latlon_to_tile(east, south, z)
+            x_start = max(0, min(n_limit - 1, min(x_min_t, x_max_t)))
+            x_end = max(0, min(n_limit - 1, max(x_min_t, x_max_t)))
+            y_start = max(0, min(n_limit - 1, min(y_min_t, y_max_t)))
+            y_end = max(0, min(n_limit - 1, max(y_min_t, y_max_t)))
+            num_x = x_end - x_start + 1
+            num_y = y_end - y_start + 1
+            total_tiles = num_x * num_y
+
+        # Clear cancellation flag
+        clear_cancel(self._notif_id)
+
+        send_notification(
+            f'Copernicus[Basemap]: {col_name} · zoom {z} · {total_tiles} tile{"s" if total_tiles > 1 else ""}',
+            progress=0.05, notif_id=self._notif_id,
+        )
+
+        stitched_w = num_x * 256
+        stitched_h = num_y * 256
+        stitched = np.zeros((stitched_h, stitched_w, 3), dtype=np.uint8)
+
+        tiles_cache_dir = os.path.join(cache_dir, 'tiles')
+        os.makedirs(tiles_cache_dir, exist_ok=True)
+
+        def download_tile_image(url: str, tile_cache_path: str) -> np.ndarray | None:
+            if os.path.exists(tile_cache_path):
+                try:
+                    img = cv2.imread(tile_cache_path)
+                    if img is not None and img.shape == (256, 256, 3):
+                        return img
+                except Exception:
+                    pass
+
+            os.makedirs(os.path.dirname(tile_cache_path), exist_ok=True)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            req = urllib.request.Request(url, headers=headers)
+            for attempt in range(3):
+                try:
+                    with urllib.request.urlopen(req, timeout=10) as response:
+                        data = response.read()
+                        with open(tile_cache_path, 'wb') as f:
+                            f.write(data)
+                        nparr = np.frombuffer(data, np.uint8)
+                        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                        if img is not None and img.shape == (256, 256, 3):
+                            return img
+                except urllib.error.HTTPError as e:
+                    if e.code == 404:
+                        break
+                    time.sleep(0.5)
+                except Exception:
+                    time.sleep(0.5)
+            return None
+
+        # ── Download & Stitch tiles ───────────────────────────────────────────
+        for i_y, y in enumerate(range(y_start, y_end + 1)):
+            for i_x, x in enumerate(range(x_start, x_end + 1)):
+                if (is_cancelled(self._notif_id) or self._stop_event.is_set()
+                        or self._generation != my_gen):
+                    send_notification('Copernicus[Basemap]: cancelled', level='warning', notif_id=self._notif_id)
+                    return
+
+                tile_num = i_y * num_x + i_x + 1
+                send_notification(
+                    f'Copernicus[Basemap]: downloading tile {tile_num}/{total_tiles}…',
+                    progress=0.10 + 0.70 * tile_num / total_tiles,
+                    notif_id=self._notif_id,
+                )
+
+                url = col_cfg['url_template'].format(x=x, y=y, z=z)
+                escaped_provider = col_name.replace(' ', '_').lower()
+                tile_cache_path = os.path.join(tiles_cache_dir, f'{escaped_provider}_{z}_{x}_{y}.png')
+
+                tile_img = download_tile_image(url, tile_cache_path)
+                if tile_img is None:
+                    tile_img = np.full((256, 256, 3), 240, dtype=np.uint8)
+
+                row_offset = i_y * 256
+                col_offset = i_x * 256
+                stitched[row_offset:row_offset+256, col_offset:col_offset+256] = tile_img
+
+        # ── Stitch Bounds and Transform in EPSG:3857 ──────────────────────────
+        xmin_start, _, _, _ = self._tile_bounds_3857(x_start, y_start, z)
+        _, _, xmax_end, _ = self._tile_bounds_3857(x_end, y_start, z)
+        _, ymin_end, _, _ = self._tile_bounds_3857(x_start, y_end, z)
+        _, _, _, ymax_start = self._tile_bounds_3857(x_start, y_start, z)
+
+        xmin_3857 = xmin_start
+        xmax_3857 = xmax_end
+        ymin_3857 = ymin_end
+        ymax_3857 = ymax_start
+
+        transform_3857 = from_bounds(xmin_3857, ymin_3857, xmax_3857, ymax_3857, stitched_w, stitched_h)
+
+        # ── Target Grid in EPSG:4326 ──────────────────────────────────────────
+        width_m = abs(east - west) * 111320.0 * math.cos(math.radians(lat_c))
+        height_m = abs(north - south) * 111320.0
+        total_w = max(1, round(width_m / resolution))
+        total_h = max(1, round(height_m / resolution))
+
+        dst_transform = from_bounds(west, south, east, north, total_w, total_h)
+
+        # ── Reproject from EPSG:3857 to EPSG:4326 ──────────────────────────────
+        send_notification('Copernicus[Basemap]: reprojecting to WGS84…', progress=0.85, notif_id=self._notif_id)
+
+        # Convert stitched BGR to RGB and transpose to CHW
+        src_rgb = cv2.cvtColor(stitched, cv2.COLOR_BGR2RGB)
+        src_chw = src_rgb.transpose(2, 0, 1).astype(np.float32)
+
+        dst_data = np.zeros((3, total_h, total_w), dtype=np.float32)
+
+        reproject(
+            source=src_chw,
+            destination=dst_data,
+            src_transform=transform_3857,
+            src_crs='EPSG:3857',
+            dst_transform=dst_transform,
+            dst_crs='EPSG:4326',
+            resampling=Resampling.bilinear
+        )
+
+        # ── Write final GeoTIFF ───────────────────────────────────────────────
+        send_notification('Copernicus[Basemap]: writing GeoTIFF…', progress=0.90, notif_id=self._notif_id)
+        with rasterio.open(
+            final_path, 'w', driver='GTiff',
+            height=total_h, width=total_w, count=3,
+            dtype='float32', crs='EPSG:4326', transform=dst_transform,
+            compress='lzw', nodata=None
+        ) as dst:
+            dst.write(dst_data)
+            dst.set_band_description(1, 'R')
+            dst.set_band_description(2, 'G')
+            dst.set_band_description(3, 'B')
+            dst.update_tags(
+                source=col_name,
+                zoom=str(z),
+                resolution_m=str(resolution),
+                bbox=bbox_str
+            )
+
+        # ── Build geo dict + preview ──────────────────────────────────────────
+        geo: dict = {
+            'bands':       dst_data,
+            'band_names':  ['R', 'G', 'B'],
+            'count':       3,
+            'width':       total_w,
+            'height':      total_h,
+            'crs':         'EPSG:4326',
+            'transform':   dst_transform,
+            'nodata':      None,
+            'dtype':       'float32',
+            'bounds':      {'west': west, 'south': south, 'east': east, 'north': north},
+            '_source':     col_name,
+            '_bands':      ['R', 'G', 'B'],
+            '_dates':      'N/A',
+            '_cache_path': final_path,
+        }
+
+        r_ch = np.clip(dst_data[0], 0, 255).astype(np.uint8)
+        g_ch = np.clip(dst_data[1], 0, 255).astype(np.uint8)
+        b_ch = np.clip(dst_data[2], 0, 255).astype(np.uint8)
+        preview = cv2.merge([b_ch, g_ch, r_ch])
+
+        # Thumbnail
+        h, w = preview.shape[:2]
+        sc   = min(1.0, 120 / h)
+        thumb = cv2.resize(preview, (max(1, int(w * sc)), max(1, int(h * sc))))
+        _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 60])
+        thumb_b64 = base64.b64encode(buf).decode('utf-8')
+
+        if self._generation != my_gen:
+            return  # superseded by newer Fetch — discard results
+        self._cache_data  = (geo, preview, thumb_b64)
+        self._thumb_dirty = True
+        send_notification(
+            f'Copernicus[Basemap]: ready — 3 bands, {total_w}×{total_h} px',
+            progress=1.0, notif_id=self._notif_id,
+        )
+        _notification_queue.put_nowait({
+            '_wake_engine': True,
+            '_node_type': 'geo_copernicus',
+            '_notif_id': self._notif_id,
+        })
 
     @staticmethod
     def _dl_params_key(params: dict) -> str:

@@ -4521,6 +4521,9 @@ const COPERNICUS_COLLECTIONS = [
   'Sentinel-2 L2A', 'Sentinel-2 L1C', 'Sentinel-1 GRD',
   'Copernicus DEM GLO-30', 'Copernicus DEM GLO-90',
   'Sentinel-1 RTC (Planetary)', 'ESA WorldCover (10m)', 'io-lulc Annual',
+  'Sentinel-2 L2A (Planetary)', 'Copernicus DEM GLO-30 (Planetary)', 'JRC Global Surface Water',
+  'Google Satellite', 'Google Hybrid', 'Google Roadmap', 'Google Terrain',
+  'OpenStreetMap', 'Carto Positron', 'Carto Dark Matter',
 ] as const;
 
 export const CopernicusNode = memo(({ selected, data }: any) => {
