@@ -1,160 +1,17 @@
 {
   "nodes": [
     {
-      "id": "f-setup",
-      "type": "canvas_frame",
-      "position": {
-        "x": -1620,
-        "y": 140
-      },
-      "data": {
-        "label": "Zone d'étude",
-        "params": {}
-      },
-      "style": {
-        "width": 440,
-        "height": 280
-      },
-      "width": 440,
-      "height": 280,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": -1620,
-        "y": 140
-      }
-    },
-    {
-      "id": "f-s2",
-      "type": "canvas_frame",
-      "position": {
-        "x": -1060,
-        "y": 60
-      },
-      "data": {
-        "label": "Données · Sentinel-2",
-        "params": {}
-      },
-      "style": {
-        "width": 440,
-        "height": 660
-      },
-      "width": 440,
-      "height": 660,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": -1060,
-        "y": 60
-      }
-    },
-    {
-      "id": "f-idx",
-      "type": "canvas_frame",
-      "position": {
-        "x": -500,
-        "y": 60
-      },
-      "data": {
-        "label": "Indices spectraux",
-        "params": {}
-      },
-      "style": {
-        "width": 420,
-        "height": 660
-      },
-      "width": 420,
-      "height": 660,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": -500,
-        "y": 60
-      }
-    },
-    {
-      "id": "f-detect",
-      "type": "canvas_frame",
-      "position": {
-        "x": 40,
-        "y": 40
-      },
-      "data": {
-        "label": "Détection orpaillage · S2",
-        "params": {}
-      },
-      "style": {
-        "width": 600,
-        "height": 880
-      },
-      "width": 600,
-      "height": 880,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 40,
-        "y": 40
-      }
-    },
-    {
-      "id": "f-gt",
-      "type": "canvas_frame",
-      "position": {
-        "x": 760,
-        "y": 40
-      },
-      "data": {
-        "label": "Ground Truth · OAM",
-        "params": {}
-      },
-      "style": {
-        "width": 460,
-        "height": 880
-      },
-      "width": 460,
-      "height": 880,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 760,
-        "y": 40
-      }
-    },
-    {
-      "id": "f-valid",
-      "type": "canvas_frame",
-      "position": {
-        "x": 1340,
-        "y": 40
-      },
-      "data": {
-        "label": "Validation · Métriques",
-        "params": {}
-      },
-      "style": {
-        "width": 900,
-        "height": 1100
-      },
-      "width": 900,
-      "height": 1100,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1340,
-        "y": 40
-      }
-    },
-    {
       "id": "n-note-setup",
       "type": "canvas_note",
       "position": {
-        "x": -1600,
-        "y": 150
+        "x": -1500,
+        "y": 60
       },
       "data": {
         "label": "Note",
         "params": {
-          "text": "Zone Dorlin / Haut-Inini\nSite orpaillage notoire · relief de collines (criques aurifères)\nAjuster bbox pour votre zone d'intérêt"
+          "text": "Zone Dorlin / Haut-Inini\nSite orpaillage notoire · relief de collines (criques aurifères)\nAjuster bbox pour votre zone d'intérêt",
+          "color_index": 0
         }
       },
       "width": 208,
@@ -162,16 +19,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": -1600,
-        "y": 150
+        "x": -1500,
+        "y": 60
       }
     },
     {
       "id": "n-bbox",
       "type": "geo_bbox",
       "position": {
-        "x": -1600,
-        "y": 240
+        "x": -1460,
+        "y": 220
       },
       "data": {
         "label": "Bounding Box",
@@ -187,8 +44,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": -1600,
-        "y": 240
+        "x": -1460,
+        "y": 220
       }
     },
     {
@@ -201,7 +58,8 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "Sentinel-2 L2A · téléchargement automatique via Copernicus CDSE\nBands : B03 Green · B04 Red · B08 NIR · B11 SWIR\nCollection 0 (CDSE) ou 8 (Planetary, sans credentials)"
+          "text": "Sentinel-2 L2A · téléchargement automatique via Copernicus CDSE\nBands : B03 Green · B04 Red · B08 NIR · B11 SWIR\nCollection 0 (CDSE) ou 8 (Planetary, sans credentials)",
+          "color_index": 1
         }
       },
       "width": 400,
@@ -232,12 +90,13 @@
           "date_end": "2023-10-01",
           "cache_dir": "copernicus_cache",
           "max_tile_px": "2500",
-          "node_note": "S2 L2A · bands B04 R / B03 G / B02 B / B08 NIR / B11 SWIR · preview = couleurs naturelles"
+          "node_note": "S2 L2A · bands B04 R / B03 G / B02 B / B08 NIR / B11 SWIR · preview = couleurs naturelles",
+          "fetch": 0
         }
       },
-      "width": 380,
-      "height": 320,
-      "selected": false,
+      "width": 208,
+      "height": 293,
+      "selected": true,
       "dragging": false,
       "positionAbsolute": {
         "x": -1040,
@@ -249,7 +108,7 @@
       "type": "output_display",
       "position": {
         "x": -1040,
-        "y": 480
+        "y": 738
       },
       "data": {
         "label": "Display",
@@ -269,7 +128,7 @@
       "dragging": false,
       "positionAbsolute": {
         "x": -1040,
-        "y": 480
+        "y": 720
       }
     },
     {
@@ -282,7 +141,8 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "Indices spectraux calculés depuis les bandes S2\nNDVI · NDWI · BSI · MNDWI utilisés pour la détection"
+          "text": "Indices spectraux calculés depuis les bandes S2\nNDVI · NDWI · BSI · MNDWI utilisés pour la détection",
+          "color_index": 2
         }
       },
       "width": 380,
@@ -331,8 +191,8 @@
       "id": "n-disp-idx",
       "type": "output_display",
       "position": {
-        "x": -480,
-        "y": 490
+        "x": -500,
+        "y": 738
       },
       "data": {
         "label": "Display",
@@ -351,8 +211,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": -480,
-        "y": 490
+        "x": -500,
+        "y": 740
       }
     },
     {
@@ -365,7 +225,8 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "Seuillage multi-indices · BSI>−0.05 & NDVI<0.25 → sol nu (chantier)\nMNDWI>0.10 → eau turbide (bassin de décantation)\nAjuster les seuils selon la date et la couverture nuageuse"
+          "text": "Seuillage multi-indices · BSI>−0.05 & NDVI<0.25 → sol nu (chantier)\nMNDWI>0.10 → eau turbide (bassin de décantation)\nAjuster les seuils selon la date et la couverture nuageuse",
+          "color_index": 3
         }
       },
       "width": 560,
@@ -409,7 +270,7 @@
       "type": "output_display",
       "position": {
         "x": 60,
-        "y": 740
+        "y": 756
       },
       "data": {
         "label": "Display",
@@ -442,7 +303,8 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "OAM · Surfaces exploitées par l'activité minière (Licence Ouverte V2.0)\nSource : GéoGuyane / EMOPI · MAJ annuelle\nWFS 2022/2023 téléchargé automatiquement · ou fournir .gpkg local"
+          "text": "OAM · Surfaces exploitées par l'activité minière (Licence Ouverte V2.0)\nSource : GéoGuyane / EMOPI · MAJ annuelle\nWFS 2022/2023 téléchargé automatiquement · ou fournir .gpkg local",
+          "color_index": 4
         }
       },
       "width": 420,
@@ -495,8 +357,8 @@
       "id": "n-disp-oam",
       "type": "output_display",
       "position": {
-        "x": 780,
-        "y": 660
+        "x": 760,
+        "y": 756
       },
       "data": {
         "label": "Display",
@@ -515,8 +377,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 780,
-        "y": 660
+        "x": 760,
+        "y": 740
       }
     },
     {
@@ -529,7 +391,8 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "Validation croisée : détection S2 (seuillage) vs OAM (vérité terrain)\ngeo_map_agreement → κ de Cohen + accord spatial\nlogic_python → Précision / Rappel / F1 / IoU"
+          "text": "Validation croisée : détection S2 (seuillage) vs OAM (vérité terrain)\ngeo_map_agreement → κ de Cohen + accord spatial\nlogic_python → Précision / Rappel / F1 / IoU",
+          "color_index": 0
         }
       },
       "width": 860,
@@ -551,11 +414,11 @@
       "data": {
         "label": "Map Agreement",
         "params": {
-          "pred_mapping": "1=1",
-          "ref_mapping": "1=1,2=1,3=1",
-          "common_labels": "1=Impact minier",
+          "pred_mapping": "0=2,1=1",
+          "ref_mapping": "0=2,1=1,2=1,3=1",
+          "common_labels": "1=Impact minier,2=Non impacté",
           "dpi": 110,
-          "node_note": "Détection binaire vs OAM (toutes classes → 1) · κ de Cohen + accord spatial"
+          "node_note": "0→classe 2 (forêt/fond) · 1→classe 1 (impact) · tous pixels valides"
         }
       },
       "width": 380,
@@ -659,7 +522,7 @@
       "type": "output_display",
       "position": {
         "x": 1800,
-        "y": 680
+        "y": 756
       },
       "data": {
         "label": "Display",
@@ -679,15 +542,15 @@
       "dragging": false,
       "positionAbsolute": {
         "x": 1800,
-        "y": 680
+        "y": 780
       }
     },
     {
       "id": "n-inspec",
       "type": "data_inspector",
       "position": {
-        "x": 1360,
-        "y": 1020
+        "x": 1300,
+        "y": 756
       },
       "data": {
         "label": "Inspector",
@@ -698,8 +561,8 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1360,
-        "y": 1020
+        "x": 1300,
+        "y": 780
       }
     }
   ],
@@ -730,14 +593,16 @@
       "source": "n-s2",
       "sourceHandle": "image__preview",
       "target": "n-disp-s2",
-      "targetHandle": "image__0_s2preview"
+      "targetHandle": "image__0_s2preview",
+      "selected": false
     },
     {
       "id": "e-idx-disp",
       "source": "n-indices",
       "sourceHandle": "image__preview",
       "target": "n-disp-idx",
-      "targetHandle": "image__0_idxprev"
+      "targetHandle": "image__0_idxprev",
+      "selected": false
     },
     {
       "id": "e-idx-stack-detect",
@@ -751,14 +616,16 @@
       "source": "n-detect",
       "sourceHandle": "image__main",
       "target": "n-disp-detect",
-      "targetHandle": "image__0_detprev"
+      "targetHandle": "image__0_detprev",
+      "selected": false
     },
     {
       "id": "e-oam-disp",
       "source": "n-oam",
       "sourceHandle": "image__preview",
       "target": "n-disp-oam",
-      "targetHandle": "image__0_oamprev"
+      "targetHandle": "image__0_oamprev",
+      "selected": false
     },
     {
       "id": "e-detect-agreement",
@@ -807,16 +674,28 @@
       "source": "n-metrics",
       "sourceHandle": "image__main",
       "target": "n-disp-errormap",
-      "targetHandle": "image__0_errmap"
+      "targetHandle": "image__0_errmap",
+      "selected": false
     },
     {
       "id": "e-metrics-inspec",
       "source": "n-metrics",
       "sourceHandle": "dict__out_dict",
       "target": "n-inspec",
-      "targetHandle": "data__table"
+      "targetHandle": "data__table",
+      "selected": false
     }
   ],
-  "canvas_note": "",
-  "canvas_frame": {}
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 340
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": null
+  }
 }
