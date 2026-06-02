@@ -830,8 +830,8 @@
       "data": {
         "label": "Python Node",
         "params": {
-          "code": "# ── Labels 2 classes depuis OAM ──────────────────────────────────────────────\n# a = OAM geotiff (float32 · 1.0 = impact minier)\n# Classe 1 : pixels mining (érodés → labels propres)\n# Classe 2 : pixels forêt loin des polygones (buffer exclusion)\n# Classe 0 : ignoré (zone de transition)\nbuf_iter  = 6   # px exclusion autour des polygones OAM\nerode_iter = 2  # px érosion intérieure des polygones\n\nif not isinstance(a, dict):\n    out_any = None; out_dict = {'erreur': 'Brancher a=OAM geotiff'}\nelse:\n    arr = np.asarray(a['bands'], dtype=np.float32)\n    oam = arr[0] if arr.ndim == 3 else arr\n    oam_bin = (oam > 0).astype(np.uint8)\n    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))\n    mining   = cv2.erode(oam_bin,  k, iterations=erode_iter)\n    exclusion = cv2.dilate(oam_bin, k, iterations=buf_iter)\n    non_mining = (1 - exclusion).astype(np.uint8)\n    labels = np.zeros_like(oam, dtype=np.float32)\n    labels[mining    == 1] = 1.0\n    labels[non_mining == 1] = 2.0\n    out_any = {**a, 'bands': labels[np.newaxis], 'count':1,\n               'dtype':'float32', 'band_names':['labels']}\n    out_main = None\n    out_dict = {\n        'n_mining':     int(mining.sum()),\n        'n_non_mining': int(non_mining.sum()),\n        'ratio_1:2':    round(float(non_mining.sum())/(mining.sum()+1e-6), 1),\n    }",
-          "node_note": "classe 1=mining(érodé) · classe 2=forêt(buffered) · 0=ignoré"
+          "code": "# ── Labels 2 classes depuis OAM ──────────────────────────────────────────────\n# a = OAM geotiff (float32 · 1.0 = impact minier)\n# Classe 1 : pixels mining (érodés → labels propres)\n# Classe 2 : pixels forêt loin des polygones (buffer exclusion)\n# Classe 0 : ignoré (zone de transition)\nbuf_iter  = 2   # px exclusion autour des polygones OAM\nerode_iter = 0  # px érosion intérieure des polygones\n\nif not isinstance(a, dict):\n    out_any = None; out_dict = {'erreur': 'Brancher a=OAM geotiff'}\nelse:\n    arr = np.asarray(a['bands'], dtype=np.float32)\n    oam = arr[0] if arr.ndim == 3 else arr\n    oam_bin = (oam > 0).astype(np.uint8)\n    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))\n    mining   = cv2.erode(oam_bin,  k, iterations=erode_iter)\n    exclusion = cv2.dilate(oam_bin, k, iterations=buf_iter)\n    non_mining = (1 - exclusion).astype(np.uint8)\n    labels = np.zeros_like(oam, dtype=np.float32)\n    labels[mining    == 1] = 1.0\n    labels[non_mining == 1] = 2.0\n    out_any = {**a, 'bands': labels[np.newaxis], 'count':1,\n               'dtype':'float32', 'band_names':['labels']}\n    out_main = None\n    out_dict = {\n        'n_mining':     int(mining.sum()),\n        'n_non_mining': int(non_mining.sum()),\n        'ratio_1:2':    round(float(non_mining.sum())/(mining.sum()+1e-6), 1),\n    }",
+          "node_note": "20m résolution — pas d'érosion, buffer 2px seulement"
         }
       },
       "width": 420,
@@ -880,10 +880,10 @@
           "band_names": "ndvi,ndwi,mndwi,bsi,slope_degrees,hand_m,twi,vv,vh,rvi,nrpb,pdi_db,delta_vh",
           "n_estimators": 200,
           "max_depth": 20,
-          "max_samples_per_class": 1500,
+          "max_samples_per_class": 3000,
           "test_fraction": 0.2,
           "cache_dir": "copernicus_cache",
-          "node_note": "13 features : S2(4) + DEM(3) + S1_T2(5) + ΔVH(1)"
+          "node_note": "13 features · max_samples_per_class=3000 · érosion désactivée"
         }
       },
       "width": 600,
