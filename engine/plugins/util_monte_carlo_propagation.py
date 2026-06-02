@@ -13,7 +13,7 @@ _NOTIF = 'gen_monte_carlo'
 @vision_node(
     type_id='util_monte_carlo_propagation',
     label='Monte Carlo Propagation (Generic)',
-    category='utility',
+    category='Machine Learning',
     icon='Activity',
     description=(
         "Simulates stochastic propagation/expansion of a state from a seed mask. "
