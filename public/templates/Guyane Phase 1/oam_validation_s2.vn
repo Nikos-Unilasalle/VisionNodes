@@ -169,7 +169,13 @@
           "b_red": "2",
           "b_nir": "3",
           "b_swir1": "4",
-          "node_note": "S2 : Green=B3(1), Red=B4(2), NIR=B8(3), SWIR=B11(4)"
+          "ndvi": true,
+          "ndwi": true,
+          "mndwi": true,
+          "bsi": true,
+          "evi": false,
+          "nbr": false,
+          "node_note": "S2 bands : Green=B03(1) Red=B04(2) NIR=B08(3) SWIR=B11(4) · stack order : NDVI/NDWI/MNDWI/BSI"
         }
       },
       "width": 380, "height": 300,
@@ -213,7 +219,7 @@
       "data": {
         "label": "Détection (seuillage)",
         "params": {
-          "code": "# ── Détection orpaillage par seuillage multi-indices ────────────────────────\n# Sol nu (BSI élevé) + végétation faible (NDVI bas)\n# + eau turbide optionnelle (MNDWI positif pour bassins de décantation)\n# Calibré pour forêt tropicale dense guyanaise.\n#\n# Entrées :\n#   a = NDWI  (geo_spectral_indices · ndwi)\n#   b = BSI   (geo_spectral_indices · bsi)\n#   c = NDVI  (geo_spectral_indices · ndvi)\n#   d = MNDWI (geo_spectral_indices · mndwi)\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  = 0.25    # < seuil → sol nu / végétation dégradée\nbsi_thr   = -0.05   # > seuil → sol nu exposé\nmndwi_thr =  0.10   # > seuil → eau turbide / bassin de décantation\n\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nndwi  = _band(a)\nbsi   = _band(b)\nndvi  = _band(c)\nmndwi = _band(d)\ngeo_ref = a if isinstance(a, dict) else {}\n\nif ndvi is None and bsi is None:\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher a=NDWI, b=BSI, c=NDVI, d=MNDWI'}\nelse:\n    ref   = ndvi if ndvi is not None else bsi\n    H, W  = ref.shape\n\n    m_bare    = bsi   >  bsi_thr   if bsi   is not None else np.zeros((H,W), bool)\n    m_low_veg = ndvi  <  ndvi_thr  if ndvi  is not None else np.zeros((H,W), bool)\n    m_water   = mndwi >  mndwi_thr if mndwi is not None else np.zeros((H,W), bool)\n\n    detected = (m_bare & m_low_veg) | m_water\n\n    # Nettoyage morphologique (ouverture 3×3 → supprime pixels isolés)\n    kernel  = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n    cleaned = cv2.morphologyEx(\n        detected.astype(np.uint8), cv2.MORPH_OPEN, kernel\n    ).astype(bool)\n\n    # Sortie geotiff binaire alignée sur le référentiel S2\n    out_any = {\n        **geo_ref,\n        'bands': cleaned.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32',\n    }\n\n    # Visualisation : rouge = impact détecté\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[cleaned] = (40, 40, 220)\n    out_main = vis\n\n    out_dict = {\n        'pct_detecte':  round(float(cleaned.mean() * 100), 2),\n        'n_pixels': int(cleaned.sum()),\n    }",
+          "code": "# ── Détection orpaillage par seuillage multi-indices ────────────────────────\n# Entrée : a = geo_spectral_indices · stack (geotiff float32)\n# Stack order (indices activés dans l'ordre) :\n#   band 0 = NDVI   band 1 = NDWI   band 2 = MNDWI   band 3 = BSI\n# Seuils calibrés pour forêt tropicale dense guyanaise.\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  =  0.25   # < seuil → sol nu / végétation dégradée (forêt ~ 0.7+)\nbsi_thr   = -0.05   # > seuil → sol nu exposé\nmndwi_thr =  0.10   # > seuil → eau turbide / bassin de décantation\n\nif not isinstance(a, dict) or 'bands' not in a:\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher geo_spectral_indices · stack → a'}\nelse:\n    stk = np.asarray(a['bands'], dtype=np.float32)  # (N, H, W)\n    N, H, W = stk.shape\n\n    ndvi  = stk[0] if N > 0 else None\n    ndwi  = stk[1] if N > 1 else None\n    mndwi = stk[2] if N > 2 else None\n    bsi   = stk[3] if N > 3 else None\n\n    zeros = np.zeros((H, W), dtype=bool)\n    m_bare    = (bsi   > bsi_thr)   if bsi   is not None else zeros\n    m_low_veg = (ndvi  < ndvi_thr)  if ndvi  is not None else zeros\n    m_water   = (mndwi > mndwi_thr) if mndwi is not None else zeros\n\n    detected = (m_bare & m_low_veg) | m_water\n\n    # Nettoyage morphologique (ouverture 3×3 → supprime pixels isolés)\n    kernel  = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n    cleaned = cv2.morphologyEx(\n        detected.astype(np.uint8), cv2.MORPH_OPEN, kernel\n    ).astype(bool)\n\n    # Sortie geotiff binaire (1.0 = impact détecté)\n    out_any = {\n        **a,\n        'bands': cleaned.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32',\n    }\n\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[cleaned] = (40, 40, 220)   # rouge BGR = impact\n    out_main = vis\n\n    out_dict = {\n        'pct_detecte': round(float(cleaned.mean() * 100), 2),\n        'n_pixels':    int(cleaned.sum()),\n    }",
           "node_note": "Seuillage BSI + NDVI + MNDWI → masque binaire impact minier"
         }
       },
@@ -259,6 +265,7 @@
       "data": {
         "label": "OAM Ground Truth",
         "params": {
+          "fetch": 0,
           "source": "WFS 2023",
           "file_path": "",
           "layer_name": "",
@@ -437,32 +444,11 @@
       "targetHandle": "image__0_idxprev"
     },
     {
-      "id": "e-idx-ndwi-detect",
+      "id": "e-idx-stack-detect",
       "source": "n-indices",
-      "sourceHandle": "geotiff__ndwi",
+      "sourceHandle": "geotiff__stack",
       "target": "n-detect",
       "targetHandle": "any__a"
-    },
-    {
-      "id": "e-idx-bsi-detect",
-      "source": "n-indices",
-      "sourceHandle": "geotiff__bsi",
-      "target": "n-detect",
-      "targetHandle": "any__b"
-    },
-    {
-      "id": "e-idx-ndvi-detect",
-      "source": "n-indices",
-      "sourceHandle": "geotiff__ndvi",
-      "target": "n-detect",
-      "targetHandle": "any__c"
-    },
-    {
-      "id": "e-idx-mndwi-detect",
-      "source": "n-indices",
-      "sourceHandle": "geotiff__mndwi",
-      "target": "n-detect",
-      "targetHandle": "any__d"
     },
     {
       "id": "e-detect-disp",
