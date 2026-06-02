@@ -122,6 +122,41 @@ const COLLECTIONS: Record<string, { allBands: string[]; defaultBands: string[]; 
     defaultBands:['occurrence'],
     hasClouds: false,
   },
+  'Google Satellite': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'Google Hybrid': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'Google Roadmap': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'Google Terrain': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'OpenStreetMap': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'Carto Positron': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
+  'Carto Dark Matter': {
+    allBands:    ['R', 'G', 'B'],
+    defaultBands:['R', 'G', 'B'],
+    hasClouds: false,
+  },
 };
 
 const COLLECTION_NAMES = Object.keys(COLLECTIONS);
