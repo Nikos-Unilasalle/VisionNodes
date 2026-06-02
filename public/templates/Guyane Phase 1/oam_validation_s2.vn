@@ -98,7 +98,7 @@
       "data": {
         "label": "Note",
         "params": {
-          "text": "Sentinel-2 L2A · renseigner les chemins vers les bandes\nB2=Blue B3=Green B4=Red B8=NIR B11=SWIR\nTélécharger via Copernicus Browser (scihub.copernicus.eu)"
+          "text": "Sentinel-2 L2A · téléchargement automatique via Copernicus CDSE\nBands : B03 Green · B04 Red · B08 NIR · B11 SWIR\nCollection 0 (CDSE) ou 8 (Planetary, sans credentials)"
         }
       },
       "width": 400, "height": 70,
@@ -107,21 +107,24 @@
     },
     {
       "id": "n-s2",
-      "type": "geo_s2_loader",
+      "type": "geo_copernicus",
       "position": { "x": -1040, "y": 160 },
       "data": {
-        "label": "Sentinel-2",
+        "label": "Sentinel-2 L2A",
         "params": {
-          "img_data_path": "",
-          "b3_path": "",
-          "b4_path": "",
-          "b8_path": "",
-          "b11_path": "",
-          "b2_path": "",
-          "scl_path": ""
+          "collection": "0",
+          "bands": "B03,B04,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "mosaic_mode": "0",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "max_tile_px": "2500",
+          "node_note": "B03=Green B04=Red B08=NIR B11=SWIR · → indices NDVI/BSI/NDWI/MNDWI"
         }
       },
-      "width": 380, "height": 280,
+      "width": 380, "height": 320,
       "selected": false, "dragging": false,
       "positionAbsolute": { "x": -1040, "y": 160 }
     },
@@ -398,6 +401,13 @@
     }
   ],
   "edges": [
+    {
+      "id": "e-bbox-s2",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox"
+    },
     {
       "id": "e-s2-idx",
       "source": "n-s2",
