@@ -1,8 +1,15 @@
 """geo_dem_flow.py — D8 flow direction + flow accumulation from a DEM.
 
-Algorithm: Horn gradient → steepest descent D8, with iterative pit filling.
-Flow accumulation in cells (high→low topological sort).
+Algorithm: Priority-Flood + ε depression filling (Barnes et al. 2014) → steepest
+descent D8 → flow accumulation in cells (high→low topological order).
+
+The ε-gradient fill guarantees every cell has a strictly descending path to the
+DEM border, so no flat/sink cells stall the flow network — essential on
+low-relief DEMs (e.g. coastal plains) where naive pit filling leaves plateaus
+that fragment the drainage and cap accumulation far below true values.
 """
+import heapq
+
 import numpy as np
 import cv2
 import base64
@@ -25,20 +32,45 @@ def _pix_m(transform, crs_str: str, height: int) -> tuple[float, float]:
     return px, py
 
 
-def _fill_pits(dem: np.ndarray, iters: int = 30) -> np.ndarray:
-    """Raise single-cell and shallow pits to the minimum neighbour elevation."""
-    filled = dem.copy()
-    for _ in range(iters):
-        pad   = np.pad(filled, 1, mode='edge')
-        nbrs  = np.stack([pad[:-2,:-2], pad[:-2,1:-1], pad[:-2,2:],
-                          pad[1:-1,:-2],               pad[1:-1,2:],
-                          pad[2:,:-2],  pad[2:,1:-1],  pad[2:,2:]], axis=-1)
-        min_n = nbrs.min(axis=-1)
-        prev  = filled.copy()
-        filled = np.where(filled < min_n, min_n + 1e-4, filled)
-        if np.allclose(filled, prev, atol=1e-6):
-            break
-    return filled
+def _priority_flood_eps(dem: np.ndarray, eps: float = 1e-4) -> np.ndarray:
+    """Priority-Flood + ε depression filling (Barnes, Lehman & Mulla 2014).
+
+    Floods the DEM inward from its border using a min-priority queue. Each cell
+    is raised to at least its lowest already-processed neighbour plus ``eps``,
+    yielding a hydrologically-conditioned surface with a strictly descending path
+    from every cell to the border — no flats, no internal sinks. ``eps`` is kept
+    tiny (1e-4 m) so cumulative rise across long flats stays negligible relative
+    to real relief.
+    """
+    h, w   = dem.shape
+    out    = dem.astype(np.float64).copy()
+    closed = np.zeros((h, w), dtype=bool)
+    heap: list[tuple[float, int, int]] = []
+
+    # Seed the queue with all border cells (the natural outlets).
+    for r in range(h):
+        for c in (0, w - 1):
+            if not closed[r, c]:
+                closed[r, c] = True
+                heapq.heappush(heap, (out[r, c], r, c))
+    for c in range(w):
+        for r in (0, h - 1):
+            if not closed[r, c]:
+                closed[r, c] = True
+                heapq.heappush(heap, (out[r, c], r, c))
+
+    while heap:
+        e, r, c = heapq.heappop(heap)
+        for dr, dc in _D8:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < h and 0 <= nc < w and not closed[nr, nc]:
+                closed[nr, nc] = True
+                ne = out[nr, nc]
+                if ne <= e:
+                    ne = e + eps          # impose strictly increasing inward gradient
+                out[nr, nc] = ne
+                heapq.heappush(heap, (ne, nr, nc))
+    return out
 
 
 def _d8_fdir(dem: np.ndarray, cx: float, cy: float) -> np.ndarray:
@@ -132,8 +164,9 @@ class DemFlowNode(NodeProcessor):
         else:
             cx, cy = _pix_m(transform, geo.get('crs', ''), dem.shape[0])
 
-        send_notification('DEM Flow: filling pits…', progress=0.1, notif_id=_NOTIF)
-        filled = _fill_pits(dem.astype(np.float32))
+        send_notification('DEM Flow: filling depressions (priority-flood)…',
+                          progress=0.1, notif_id=_NOTIF)
+        filled = _priority_flood_eps(dem)
 
         send_notification('DEM Flow: computing flow direction…', progress=0.4, notif_id=_NOTIF)
         fdir = _d8_fdir(filled.astype(np.float64), cx, cy)
