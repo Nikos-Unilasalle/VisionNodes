@@ -1,0 +1,368 @@
+{
+  "nodes": [
+    {
+      "id": "f-setup",
+      "type": "canvas_frame",
+      "position": { "x": -1620, "y": 140 },
+      "data": { "label": "Zone d'étude", "params": {} },
+      "style": { "width": 440, "height": 300 },
+      "width": 440, "height": 300,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1620, "y": 140 }
+    },
+    {
+      "id": "f-t1",
+      "type": "canvas_frame",
+      "position": { "x": -1060, "y": 60 },
+      "data": { "label": "SAR · T1 (référence)", "params": {} },
+      "style": { "width": 440, "height": 780 },
+      "width": 440, "height": 780,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1060, "y": 60 }
+    },
+    {
+      "id": "f-t2",
+      "type": "canvas_frame",
+      "position": { "x": -500, "y": 60 },
+      "data": { "label": "SAR · T2 (post-événement)", "params": {} },
+      "style": { "width": 440, "height": 780 },
+      "width": 440, "height": 780,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -500, "y": 60 }
+    },
+    {
+      "id": "f-change",
+      "type": "canvas_frame",
+      "position": { "x": 60, "y": 60 },
+      "data": { "label": "Détection de changement · ΔVH / ΔRVI", "params": {} },
+      "style": { "width": 680, "height": 780 },
+      "width": 680, "height": 780,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 60, "y": 60 }
+    },
+    {
+      "id": "n-note-setup",
+      "type": "canvas_note",
+      "position": { "x": -1600, "y": 150 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Zone Dorlin / Haut-Inini · Guyane\nS1 GRD · 12 jours de revisite · VV + VH\nΔVH < 0 dB = perte de rétrodiffusion de volume → défrichement probable"
+        }
+      },
+      "width": 400, "height": 65,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1600, "y": 150 }
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": { "x": -1600, "y": 240 },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208, "height": 185,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1600, "y": 240 }
+    },
+    {
+      "id": "n-tp1",
+      "type": "geo_time_period",
+      "position": { "x": -1040, "y": 80 },
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_start": "2023-01-01",
+          "date_end": "2023-01-24",
+          "node_note": "T1 · période de référence — 1 passage S1 (12 j)"
+        }
+      },
+      "width": 208, "height": 160,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1040, "y": 80 }
+    },
+    {
+      "id": "n-s1t1",
+      "type": "geo_copernicus",
+      "position": { "x": -1040, "y": 270 },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "collection": "2",
+          "bands": "VV,VH",
+          "resolution": "20",
+          "cloud_max": "100",
+          "mosaic_mode": "1",
+          "cache_dir": "copernicus_cache",
+          "max_tile_px": "2500",
+          "fetch": 0,
+          "node_note": "S1 GRD · VV + VH · T1 référence"
+        }
+      },
+      "width": 380, "height": 320,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1040, "y": 270 }
+    },
+    {
+      "id": "n-feat1",
+      "type": "s1_polarization_features",
+      "position": { "x": -1040, "y": 620 },
+      "data": {
+        "label": "S1 Polarization Features",
+        "params": {
+          "rvi": true,
+          "span": false,
+          "span_db": false,
+          "nrpb": true,
+          "pdi": true,
+          "pri": false,
+          "dpsvi": false,
+          "output_db": true,
+          "node_note": "T1 · VV(dB) VH(dB) RVI NRPB PDI"
+        }
+      },
+      "width": 380, "height": 200,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1040, "y": 620 }
+    },
+    {
+      "id": "n-disp-t1",
+      "type": "output_display",
+      "position": { "x": -630, "y": 620 },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "image__0_prevt1", "color": "image", "label": "T1 preview" }
+        ]
+      },
+      "width": 208, "height": 200,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -630, "y": 620 }
+    },
+    {
+      "id": "n-tp2",
+      "type": "geo_time_period",
+      "position": { "x": -480, "y": 80 },
+      "data": {
+        "label": "Time Period",
+        "params": {
+          "date_start": "2023-02-04",
+          "date_end": "2023-02-28",
+          "node_note": "T2 · période post-événement — 12 j après T1"
+        }
+      },
+      "width": 208, "height": 160,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -480, "y": 80 }
+    },
+    {
+      "id": "n-s1t2",
+      "type": "geo_copernicus",
+      "position": { "x": -480, "y": 270 },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "collection": "2",
+          "bands": "VV,VH",
+          "resolution": "20",
+          "cloud_max": "100",
+          "mosaic_mode": "1",
+          "cache_dir": "copernicus_cache",
+          "max_tile_px": "2500",
+          "fetch": 0,
+          "node_note": "S1 GRD · VV + VH · T2 post-événement"
+        }
+      },
+      "width": 380, "height": 320,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -480, "y": 270 }
+    },
+    {
+      "id": "n-feat2",
+      "type": "s1_polarization_features",
+      "position": { "x": -480, "y": 620 },
+      "data": {
+        "label": "S1 Polarization Features",
+        "params": {
+          "rvi": true,
+          "span": false,
+          "span_db": false,
+          "nrpb": true,
+          "pdi": true,
+          "pri": false,
+          "dpsvi": false,
+          "output_db": true,
+          "node_note": "T2 · VV(dB) VH(dB) RVI NRPB PDI"
+        }
+      },
+      "width": 380, "height": 200,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -480, "y": 620 }
+    },
+    {
+      "id": "n-disp-t2",
+      "type": "output_display",
+      "position": { "x": -70, "y": 620 },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "image__0_prevt2", "color": "image", "label": "T2 preview" }
+        ]
+      },
+      "width": 208, "height": 200,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -70, "y": 620 }
+    },
+    {
+      "id": "n-change",
+      "type": "logic_python",
+      "position": { "x": 80, "y": 80 },
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# ── Détection de changement SAR · log-ratio bi-temporel ─────────────────────\n# a = S1 features T1 (geotiff · bandes : VV VH RVI NRPB PDI)\n# b = S1 features T2 (geotiff · mêmes bandes)\n#\n# Log-ratio VH (dB) = VH_T2 - VH_T1\n#   < -2 dB : perte rétrodiffusion → défrichement / perturbation\n#   > +2 dB : gain → inondation / régénération\n# ΔRVI = RVI_T2 - RVI_T1 (proxy perte de canopée)\n# ─────────────────────────────────────────────────────────────────────────────\nth_change_db  = 2.0   # seuil absolu de changement significatif (dB)\nth_rvi_loss   = 0.1   # seuil perte RVI\n\ndef _get(geo, name):\n    \"\"\"Extraire une bande par son nom depuis un geotiff dict.\"\"\"\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    if name in names:\n        return arr[names.index(name)]\n    return None\n\nif not isinstance(a, dict) or not isinstance(b, dict):\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher a=T1 features, b=T2 features'}\nelse:\n    vv1 = _get(a, 'vv');  vh1 = _get(a, 'vh');  rvi1 = _get(a, 'rvi')\n    vv2 = _get(b, 'vv');  vh2 = _get(b, 'vh');  rvi2 = _get(b, 'rvi')\n\n    if vv1 is None or vh1 is None:\n        out_main = None\n        out_any  = None\n        out_dict = {'erreur': 'Bandes VV/VH introuvables — vérifier output_db=True'}\n    else:\n        H, W = vv1.shape\n\n        delta_vv  = vv2  - vv1  if vv2  is not None else np.zeros((H,W), np.float32)\n        delta_vh  = vh2  - vh1  if vh2  is not None else np.zeros((H,W), np.float32)\n        delta_rvi = rvi2 - rvi1 if (rvi1 is not None and rvi2 is not None) else np.zeros((H,W), np.float32)\n\n        # Masques de changement\n        loss   = delta_vh < -th_change_db   # perte rétrodiffusion VH\n        gain   = delta_vh >  th_change_db   # gain rétrodiffusion VH\n        rvi_loss = delta_rvi < -th_rvi_loss  # perte végétation\n\n        # Changement fort = perte VH ET perte RVI (signe défrichement)\n        deforest = loss & rvi_loss\n\n        # Carte de changement\n        vis = np.zeros((H, W, 3), dtype=np.uint8)\n        vis[loss  & ~deforest] = (40, 80, 200)   # perte VH seule (bleu)\n        vis[gain]              = (40, 200, 40)    # gain VH (vert)\n        vis[deforest]          = (40, 40, 220)    # perte VH+RVI → défrichement (rouge)\n        out_main = vis\n\n        # Geotiff change : delta_VH (dB) aligné sur T2\n        out_any = {\n            **b,\n            'bands': delta_vh[np.newaxis],\n            'count': 1, 'dtype': 'float32',\n            'band_names': ['delta_vh_db'],\n        }\n\n        out_dict = {\n            'delta_vh_mean':  round(float(delta_vh.mean()), 3),\n            'delta_vv_mean':  round(float(delta_vv.mean()), 3),\n            'delta_rvi_mean': round(float(delta_rvi.mean()), 3),\n            'pct_loss_vh':    round(float(loss.mean()   * 100), 2),\n            'pct_gain_vh':    round(float(gain.mean()   * 100), 2),\n            'pct_deforest':   round(float(deforest.mean() * 100), 2),\n        }\n        out_scalar = round(float(deforest.mean() * 100), 2)",
+          "node_note": "rouge=défrichement(ΔVH<−2dB & ΔRVI<−0.1) · bleu=perte VH · vert=gain"
+        }
+      },
+      "width": 640, "height": 540,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 80, "y": 80 },
+      "style": { "width": 640, "height": 540 }
+    },
+    {
+      "id": "n-disp-change",
+      "type": "output_display",
+      "position": { "x": 80, "y": 660 },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "image__0_changemap", "color": "image", "label": "Carte changement" }
+        ]
+      },
+      "width": 260, "height": 160,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 80, "y": 660 }
+    },
+    {
+      "id": "n-inspec",
+      "type": "data_inspector",
+      "position": { "x": 380, "y": 660 },
+      "data": { "label": "Inspector", "params": {} },
+      "width": 340, "height": 140,
+      "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 380, "y": 660 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-bbox-s1t1",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1t1",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-bbox-s1t2",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1t2",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-tp1-start",
+      "source": "n-tp1",
+      "sourceHandle": "string__date_start",
+      "target": "n-s1t1",
+      "targetHandle": "string__date_start"
+    },
+    {
+      "id": "e-tp1-end",
+      "source": "n-tp1",
+      "sourceHandle": "string__date_end",
+      "target": "n-s1t1",
+      "targetHandle": "string__date_end"
+    },
+    {
+      "id": "e-tp2-start",
+      "source": "n-tp2",
+      "sourceHandle": "string__date_start",
+      "target": "n-s1t2",
+      "targetHandle": "string__date_start"
+    },
+    {
+      "id": "e-tp2-end",
+      "source": "n-tp2",
+      "sourceHandle": "string__date_end",
+      "target": "n-s1t2",
+      "targetHandle": "string__date_end"
+    },
+    {
+      "id": "e-s1t1-feat1",
+      "source": "n-s1t1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-feat1",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-s1t2-feat2",
+      "source": "n-s1t2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-feat2",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-feat1-disp",
+      "source": "n-feat1",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-t1",
+      "targetHandle": "image__0_prevt1"
+    },
+    {
+      "id": "e-feat2-disp",
+      "source": "n-feat2",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-t2",
+      "targetHandle": "image__0_prevt2"
+    },
+    {
+      "id": "e-feat1-change",
+      "source": "n-feat1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-change",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-feat2-change",
+      "source": "n-feat2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-change",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-change-disp",
+      "source": "n-change",
+      "sourceHandle": "image__main",
+      "target": "n-disp-change",
+      "targetHandle": "image__0_changemap"
+    },
+    {
+      "id": "e-change-inspec",
+      "source": "n-change",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-inspec",
+      "targetHandle": "data__table"
+    }
+  ]
+}
