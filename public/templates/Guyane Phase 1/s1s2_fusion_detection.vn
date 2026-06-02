@@ -29,7 +29,7 @@
       "type": "canvas_frame",
       "position": {
         "x": -1140,
-        "y": 60
+        "y": -320
       },
       "data": {
         "label": "Optique · Sentinel-2",
@@ -37,15 +37,15 @@
       },
       "style": {
         "width": 440,
-        "height": 720
+        "height": 1100
       },
       "width": 440,
-      "height": 720,
+      "height": 1100,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
         "x": -1140,
-        "y": 60
+        "y": -320
       }
     },
     {
@@ -460,8 +460,8 @@
       "data": {
         "label": "Python Node",
         "params": {
-          "node_note": "bleu=S1abs · vert=S2 · rouge=S1Δ · jaune=S2+S1abs · blanc=tous 3",
-          "code": "# ── Fusion S1+S2 · détection orpaillage ─────────────────────────────────────\n# a = S2 stack (geotiff · NDVI[0] NDWI[1] MNDWI[2] BSI[3])\n# b = S1 T1 features (geotiff · VV VH RVI NRPB PDI en dB)\n# c = S1 T2 features (même structure)\n#\n# 3 branches complémentaires (OR logique) :\n#   S2   : BSI > 0.05 AND NDVI < 0.20  → sol nu optique (saison sèche)\n#   S1Δ  : ΔVH < -2 dB AND ΔRVI < -0.08 → nouveau défrichement bi-temporel\n#   S1abs: VH_T2 < -15 dB              → site actif actuel (sol nu / bassin)\n# ─────────────────────────────────────────────────────────────────────────────\n# Seuils S2\nndvi_thr  =  0.20\nbsi_thr   =  0.05\nmndwi_thr =  0.15\n# Seuils S1 bi-temporel\nth_vh_db  =  2.0\nth_rvi    =  0.08\n# Seuil S1 absolu (forêt ~ -8/-12 dB · sol nu ~ -15/-20 dB · eau ~ -22/-25 dB)\nvh_abs_thr = -15.0\n# Filtrage speckle\nkernel_size = 7\n\ndef _get_s2(geo, idx):\n    if not isinstance(geo, dict): return None\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    stk = arr if arr.ndim == 3 else arr[np.newaxis]\n    return stk[idx] if stk.shape[0] > idx else None\n\ndef _get_s1(geo, name):\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    names = [n.lower() for n in names]\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[names.index(name)] if name in names else None\n\ndef _smooth(x):\n    k = (kernel_size | 1)\n    return cv2.blur(x, (k, k))\n\nif not isinstance(a, dict) or not isinstance(b, dict) or not isinstance(c, dict):\n    out_main = None; out_any = None; out_scalar = 0.0\n    out_dict = {'erreur': 'Brancher a=S2 stack, b=S1 T1, c=S1 T2'}\nelse:\n    # ── Branche S2 : sol nu optique ───────────────────────────────────────────\n    ndvi  = _get_s2(a, 0); mndwi = _get_s2(a, 2); bsi = _get_s2(a, 3)\n    geo_ref = a\n    H = (ndvi if ndvi is not None else bsi).shape[0]\n    W = (ndvi if ndvi is not None else bsi).shape[1]\n    zeros = np.zeros((H, W), bool)\n    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n\n    s2_bare   = (bsi  > bsi_thr)   if bsi   is not None else zeros\n    s2_lowveg = (ndvi < ndvi_thr)  if ndvi  is not None else zeros\n    s2_water  = (mndwi > mndwi_thr) if mndwi is not None else zeros\n    s2_det = cv2.morphologyEx(\n        ((s2_bare & s2_lowveg) | s2_water).astype(np.uint8),\n        cv2.MORPH_OPEN, k3).astype(bool)\n\n    # ── Branche S1Δ : changement bi-temporel ─────────────────────────────────\n    vh1 = _get_s1(b, 'vh'); rvi1 = _get_s1(b, 'rvi')\n    vh2 = _get_s1(c, 'vh'); rvi2 = _get_s1(c, 'rvi')\n\n    if vh1 is not None and vh2 is not None:\n        dvh  = _smooth(vh2) - _smooth(vh1)\n        drvi = (_smooth(rvi2) - _smooth(rvi1)) if rvi1 is not None and rvi2 is not None                else np.zeros((H, W), np.float32)\n        dvh  -= np.median(dvh)\n        drvi -= np.median(drvi)\n        s1d_det = cv2.morphologyEx(\n            ((dvh < -th_vh_db) & (drvi < -th_rvi)).astype(np.uint8),\n            cv2.MORPH_OPEN, k3).astype(bool)\n    else:\n        s1d_det = zeros\n\n    # ── Branche S1abs : seuillage absolu VH T2 ────────────────────────────────\n    if vh2 is not None:\n        vh2s = _smooth(vh2)\n        s1a_det = cv2.morphologyEx(\n            (vh2s < vh_abs_thr).astype(np.uint8),\n            cv2.MORPH_OPEN, k3).astype(bool)\n    else:\n        s1a_det = zeros\n\n    # ── Fusion OR ─────────────────────────────────────────────────────────────\n    fused = s2_det | s1d_det | s1a_det\n\n    # Visualisation : chaque branche = couleur\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[s1a_det & ~s2_det & ~s1d_det] = (200, 100,  40)  # S1abs seul  (bleu)\n    vis[s2_det  & ~s1a_det & ~s1d_det] = ( 40, 200,  40)  # S2 seul     (vert)\n    vis[s1d_det & ~s2_det & ~s1a_det] = ( 40,  40, 200)  # S1Δ seul    (rouge)\n    vis[s2_det & s1a_det]             = (220, 220,  40)  # S2+S1abs    (jaune)\n    vis[s1d_det & s1a_det]            = (220,  40, 220)  # S1Δ+S1abs   (magenta)\n    vis[s2_det & s1d_det & s1a_det]   = (220, 220, 220)  # tous 3      (blanc)\n    out_main = vis\n\n    out_any = {\n        **geo_ref,\n        'bands': fused.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32', 'band_names': ['fused'],\n    }\n    out_scalar = round(float(fused.mean() * 100), 2)\n    out_dict = {\n        'pct_s2':      round(float(s2_det.mean()  * 100), 2),\n        'pct_s1_delta':round(float(s1d_det.mean() * 100), 2),\n        'pct_s1_abs':  round(float(s1a_det.mean() * 100), 2),\n        'pct_fused':   round(float(fused.mean()   * 100), 2),\n        'pct_s2_AND_s1abs': round(float((s2_det & s1a_det).mean() * 100), 3),\n    }"
+          "node_note": "bleu=S1abs · vert=S2 · rouge=S1Δ · jaune=S2+S1abs · masque HAND<8m",
+          "code": "# ── Fusion S1+S2 · détection orpaillage ─────────────────────────────────────\n# a = S2 stack (geotiff · NDVI[0] NDWI[1] MNDWI[2] BSI[3])\n# b = S1 T1 features (geotiff · VV VH RVI NRPB PDI en dB)\n# c = S1 T2 features (même structure)\n#\n# 3 branches complémentaires (OR logique) :\n#   S2   : BSI > 0.05 AND NDVI < 0.20  → sol nu optique (saison sèche)\n#   S1Δ  : ΔVH < -2 dB AND ΔRVI < -0.08 → nouveau défrichement bi-temporel\n#   S1abs: VH_T2 < -15 dB              → site actif actuel (sol nu / bassin)\n# ─────────────────────────────────────────────────────────────────────────────\n# Seuils S2\nndvi_thr  =  0.20\nbsi_thr   =  0.05\nmndwi_thr =  0.15\n# Seuils S1 bi-temporel\nth_vh_db  =  2.0\nth_rvi    =  0.08\n# Seuil S1 absolu (forêt ~ -8/-12 dB · sol nu ~ -15/-20 dB · eau ~ -22/-25 dB)\nvh_abs_thr = -15.0\n# Filtrage speckle\nkernel_size = 7\n# Masque géomorphologique\nhand_thr = 8.0   # m — plaine alluviale (orpaillage alluvionnaire < 8 m)\n\ndef _get_s2(geo, idx):\n    if not isinstance(geo, dict): return None\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    stk = arr if arr.ndim == 3 else arr[np.newaxis]\n    return stk[idx] if stk.shape[0] > idx else None\n\ndef _get_s1(geo, name):\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    names = [n.lower() for n in names]\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[names.index(name)] if name in names else None\n\ndef _get_band(geo):\n    if not isinstance(geo, dict): return None\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\ndef _smooth(x):\n    k = (kernel_size | 1)\n    return cv2.blur(x, (k, k))\n\nif not isinstance(a, dict) or not isinstance(b, dict) or not isinstance(c, dict):\n    out_main = None; out_any = None; out_scalar = 0.0\n    out_dict = {'erreur': 'Brancher a=S2 stack, b=S1 T1, c=S1 T2'}\nelse:\n    # ── Branche S2 : sol nu optique ───────────────────────────────────────────\n    ndvi  = _get_s2(a, 0); mndwi = _get_s2(a, 2); bsi = _get_s2(a, 3)\n    geo_ref = a\n    H = (ndvi if ndvi is not None else bsi).shape[0]\n    W = (ndvi if ndvi is not None else bsi).shape[1]\n    zeros = np.zeros((H, W), bool)\n    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n\n    s2_bare   = (bsi  > bsi_thr)   if bsi   is not None else zeros\n    s2_lowveg = (ndvi < ndvi_thr)  if ndvi  is not None else zeros\n    s2_water  = (mndwi > mndwi_thr) if mndwi is not None else zeros\n    s2_det = cv2.morphologyEx(\n        ((s2_bare & s2_lowveg) | s2_water).astype(np.uint8),\n        cv2.MORPH_OPEN, k3).astype(bool)\n\n    # ── Branche S1Δ : changement bi-temporel ─────────────────────────────────\n    vh1 = _get_s1(b, 'vh'); rvi1 = _get_s1(b, 'rvi')\n    vh2 = _get_s1(c, 'vh'); rvi2 = _get_s1(c, 'rvi')\n\n    if vh1 is not None and vh2 is not None:\n        dvh  = _smooth(vh2) - _smooth(vh1)\n        drvi = (_smooth(rvi2) - _smooth(rvi1)) if rvi1 is not None and rvi2 is not None                else np.zeros((H, W), np.float32)\n        dvh  -= np.median(dvh)\n        drvi -= np.median(drvi)\n        s1d_det = cv2.morphologyEx(\n            ((dvh < -th_vh_db) & (drvi < -th_rvi)).astype(np.uint8),\n            cv2.MORPH_OPEN, k3).astype(bool)\n    else:\n        s1d_det = zeros\n\n    # ── Branche S1abs : seuillage absolu VH T2 ────────────────────────────────\n    if vh2 is not None:\n        vh2s = _smooth(vh2)\n        s1a_det = cv2.morphologyEx(\n            (vh2s < vh_abs_thr).astype(np.uint8),\n            cv2.MORPH_OPEN, k3).astype(bool)\n    else:\n        s1a_det = zeros\n\n    # ── Masque HAND : filtre zones hors plaine alluviale ────────────────────────\n    hand_arr = _get_band(d)\n    if hand_arr is not None:\n        # Resize HAND to match S2/S1 grid if needed (DEM at 30m)\n        if hand_arr.shape != (H, W):\n            hand_arr = cv2.resize(hand_arr, (W, H), interpolation=cv2.INTER_LINEAR)\n        hand_mask = hand_arr < hand_thr   # True = plaine alluviale = zone à risque\n        s1a_det   = s1a_det & hand_mask\n        s2_det    = s2_det  & hand_mask\n\n    # ── Fusion OR ─────────────────────────────────────────────────────────────\n    fused = s2_det | s1d_det | s1a_det\n\n    # Visualisation : chaque branche = couleur\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[s1a_det & ~s2_det & ~s1d_det] = (200, 100,  40)  # S1abs seul  (bleu)\n    vis[s2_det  & ~s1a_det & ~s1d_det] = ( 40, 200,  40)  # S2 seul     (vert)\n    vis[s1d_det & ~s2_det & ~s1a_det] = ( 40,  40, 200)  # S1Δ seul    (rouge)\n    vis[s2_det & s1a_det]             = (220, 220,  40)  # S2+S1abs    (jaune)\n    vis[s1d_det & s1a_det]            = (220,  40, 220)  # S1Δ+S1abs   (magenta)\n    vis[s2_det & s1d_det & s1a_det]   = (220, 220, 220)  # tous 3      (blanc)\n    out_main = vis\n\n    out_any = {\n        **geo_ref,\n        'bands': fused.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32', 'band_names': ['fused'],\n    }\n    out_scalar = round(float(fused.mean() * 100), 2)\n    out_dict = {\n        'pct_s2':      round(float(s2_det.mean()  * 100), 2),\n        'pct_s1_delta':round(float(s1d_det.mean() * 100), 2),\n        'pct_s1_abs':  round(float(s1a_det.mean() * 100), 2),\n        'pct_fused':   round(float(fused.mean()   * 100), 2),\n        'pct_s2_AND_s1abs': round(float((s2_det & s1a_det).mean() * 100), 3),\n    }"
         }
       },
       "width": 640,
@@ -686,6 +686,80 @@
         "x": -1120,
         "y": -120
       }
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1120,
+        "y": -300
+      },
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "mosaic_mode": "0",
+          "cache_dir": "copernicus_cache",
+          "max_tile_px": "2500",
+          "fetch": 0,
+          "node_note": "DEM GLO-30 · 30m · même bbox que S1/S2"
+        }
+      },
+      "width": 380,
+      "height": 280,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -1120,
+        "y": -300
+      }
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": {
+        "x": -1120,
+        "y": 0
+      },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "Priority-Flood · réseau de drainage"
+        }
+      },
+      "width": 300,
+      "height": 160,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -1120,
+        "y": 0
+      }
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": {
+        "x": -1120,
+        "y": 190
+      },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "node_note": "Height Above Nearest Drainage · seuil 8m = plaine alluviale"
+        }
+      },
+      "width": 300,
+      "height": 180,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -1120,
+        "y": 190
+      }
     }
   ],
   "edges": [
@@ -856,6 +930,41 @@
       "sourceHandle": "string__date_end",
       "target": "n-s2",
       "targetHandle": "string__date_end"
+    },
+    {
+      "id": "e-bbox-dem",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-dem-flow",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-hand",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-flow-hand",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-hand-fus",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-fusion",
+      "targetHandle": "any__d"
     }
   ]
 }
