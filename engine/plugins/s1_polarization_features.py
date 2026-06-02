@@ -209,7 +209,7 @@ class S1PolarizationFeaturesNode(NodeProcessor):
                 title='S1 Polarization Features',
             )}
 
-        band_names = list(geo.get('band_names', []))
+        band_names = [n.lower() for n in geo.get('band_names', [])]
         # Accept either canonical `bands` (geo_copernicus) or legacy `array`.
         arr = geo.get('bands')
         if arr is None:
