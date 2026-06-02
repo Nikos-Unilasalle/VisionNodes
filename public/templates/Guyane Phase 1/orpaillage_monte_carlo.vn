@@ -1,0 +1,288 @@
+{
+  "nodes": [
+    {
+      "id": "f-setup",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1520,
+        "y": 200
+      },
+      "data": {
+        "label": "Configuration Zone d'étude",
+        "params": {}
+      },
+      "style": {
+        "width": 340,
+        "height": 260
+      },
+      "width": 340,
+      "height": 260
+    },
+    {
+      "id": "n-note-setup",
+      "type": "canvas_note",
+      "position": {
+        "x": -1500,
+        "y": 210
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Zone Dorlin / Haut-Inini\nInitialisation de la simulation Monte-Carlo stochastique."
+        }
+      },
+      "width": 208,
+      "height": 60
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -1500,
+        "y": 280
+      },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1100,
+        "y": 200
+      },
+      "data": {
+        "label": "DEM GLO-30",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "mosaic_mode": "0",
+          "node_note": "Cliquez sur Fetch pour charger le DEM de Dorlin."
+        }
+      },
+      "width": 300,
+      "height": 260
+    },
+    {
+      "id": "n-slope",
+      "type": "geo_dem_slope",
+      "position": {
+        "x": -750,
+        "y": 50
+      },
+      "data": {
+        "label": "Pente",
+        "params": {
+          "node_note": "Pente géomorphologique en degrés.",
+          "colormap": 2,
+          "clamp_max": 15.0
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": {
+        "x": -750,
+        "y": 250
+      },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "Réseau de drainage (accumulation)."
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": {
+        "x": -450,
+        "y": 250
+      },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "node_note": "Hauteur au-dessus du réseau de drainage.",
+          "threshold": 1000,
+          "clamp_max": 5.0,
+          "colormap": 1
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "n-seed",
+      "type": "logic_python",
+      "position": {
+        "x": -750,
+        "y": 450
+      },
+      "data": {
+        "label": "Mine Seed Generator (T0)",
+        "params": {
+          "code": "# Génère une graine de mine active fictive au centre de l'image\nif not isinstance(a, dict):\n    out_any = None\nelse:\n    arr = a['bands'][0]\n    H, W = arr.shape\n    seed = np.zeros((H, W), dtype=np.float32)\n    # Graine active de 4x4 pixels au centre de la zone\n    seed[H//2-2:H//2+2, W//2-2:W//2+2] = 1.0\n    out_any = {\n        **a,\n        'bands': seed[np.newaxis],\n        'count': 1,\n        'dtype': 'float32',\n        'band_names': ['active']\n    }"
+        }
+      },
+      "width": 260,
+      "height": 340
+    },
+    {
+      "id": "n-montecarlo",
+      "type": "geo_monte_carlo_propagation",
+      "position": {
+        "x": -100,
+        "y": 250
+      },
+      "data": {
+        "label": "Monte Carlo Propagation",
+        "params": {
+          "n_simulations": 100,
+          "n_steps": 10,
+          "prob_threshold": 0.5,
+          "hand_max": 10.0,
+          "slope_max": 15.0
+        }
+      },
+      "width": 260,
+      "height": 340
+    },
+    {
+      "id": "n-disp-preview",
+      "type": "output_display",
+      "position": {
+        "x": 250,
+        "y": 150
+      },
+      "data": {
+        "label": "Display Risk Map",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_risk",
+            "color": "image",
+            "label": "Risk Map"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-stats",
+      "type": "data_inspector",
+      "position": {
+        "x": 250,
+        "y": 380
+      },
+      "data": {
+        "label": "Risk Statistics",
+        "params": {}
+      },
+      "width": 500,
+      "height": 200
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-bbox-dem",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-dem-slope",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-slope",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-flow",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-hand",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-flow-hand",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-dem-seed",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-seed",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-seed-monte",
+      "source": "n-seed",
+      "sourceHandle": "any__out_any",
+      "target": "n-montecarlo",
+      "targetHandle": "geotiff__active"
+    },
+    {
+      "id": "e-slope-monte",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-montecarlo",
+      "targetHandle": "geotiff__slope"
+    },
+    {
+      "id": "e-hand-monte",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-montecarlo",
+      "targetHandle": "geotiff__hand"
+    },
+    {
+      "id": "e-monte-disp",
+      "source": "n-montecarlo",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-preview",
+      "targetHandle": "image__0_risk"
+    },
+    {
+      "id": "e-monte-stats",
+      "source": "n-montecarlo",
+      "sourceHandle": "dict__stats",
+      "target": "n-stats",
+      "targetHandle": "data__table"
+    }
+  ],
+  "ui": {
+    "activePaletteIndex": 0,
+    "visualizedNodeId": "n-montecarlo"
+  }
+}
