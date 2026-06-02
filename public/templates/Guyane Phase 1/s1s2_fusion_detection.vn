@@ -1,0 +1,246 @@
+{
+  "nodes": [
+    { "id": "f-setup", "type": "canvas_frame",
+      "position": { "x": -1700, "y": 140 },
+      "data": { "label": "Zone d'étude", "params": {} },
+      "style": { "width": 440, "height": 300 },
+      "width": 440, "height": 300, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1700, "y": 140 } },
+
+    { "id": "f-s2", "type": "canvas_frame",
+      "position": { "x": -1140, "y": 60 },
+      "data": { "label": "Optique · Sentinel-2", "params": {} },
+      "style": { "width": 440, "height": 720 },
+      "width": 440, "height": 720, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1140, "y": 60 } },
+
+    { "id": "f-t1", "type": "canvas_frame",
+      "position": { "x": -580, "y": 60 },
+      "data": { "label": "SAR · T1", "params": {} },
+      "style": { "width": 440, "height": 720 },
+      "width": 440, "height": 720, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -580, "y": 60 } },
+
+    { "id": "f-t2", "type": "canvas_frame",
+      "position": { "x": -20, "y": 60 },
+      "data": { "label": "SAR · T2", "params": {} },
+      "style": { "width": 440, "height": 720 },
+      "width": 440, "height": 720, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -20, "y": 60 } },
+
+    { "id": "f-fusion", "type": "canvas_frame",
+      "position": { "x": 540, "y": 60 },
+      "data": { "label": "Fusion S1+S2 · Détection", "params": {} },
+      "style": { "width": 680, "height": 720 },
+      "width": 680, "height": 720, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 540, "y": 60 } },
+
+    { "id": "f-oam", "type": "canvas_frame",
+      "position": { "x": 1340, "y": 60 },
+      "data": { "label": "Validation · OAM", "params": {} },
+      "style": { "width": 680, "height": 720 },
+      "width": 680, "height": 720, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1340, "y": 60 } },
+
+    { "id": "n-note", "type": "canvas_note",
+      "position": { "x": -1680, "y": 150 },
+      "data": { "label": "Note", "params": {
+        "text": "Fusion S1 GRD bi-temporel + S2 L2A\nS2 : BSI+NDVI (sol nu optique)\nS1 : ΔVH + ΔRVI (perte rétrodiffusion radar)\nFusion OR logique → meilleure couverture (nuages S2 ↔ S1)"
+      }},
+      "width": 400, "height": 70, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1680, "y": 150 } },
+
+    { "id": "n-bbox", "type": "geo_bbox",
+      "position": { "x": -1680, "y": 250 },
+      "data": { "label": "Bounding Box", "params": {
+        "lon_min": -53.78, "lon_max": -53.58, "lat_min": 3.55, "lat_max": 3.72
+      }},
+      "width": 208, "height": 185, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1680, "y": 250 } },
+
+    { "id": "n-s2", "type": "geo_copernicus",
+      "position": { "x": -1120, "y": 80 },
+      "data": { "label": "Copernicus CDSE", "params": {
+        "collection": "0", "bands": "B04,B03,B02,B08,B11",
+        "resolution": "20", "cloud_max": "20", "mosaic_mode": "0",
+        "date_start": "2023-01-01", "date_end": "2023-03-31",
+        "cache_dir": "copernicus_cache", "max_tile_px": "2500", "fetch": 0,
+        "node_note": "S2 L2A · même période que T1/T2 SAR · 20m"
+      }},
+      "width": 380, "height": 320, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1120, "y": 80 } },
+
+    { "id": "n-indices", "type": "geo_spectral_indices",
+      "position": { "x": -1120, "y": 430 },
+      "data": { "label": "Spectral Indices", "params": {
+        "red_band": 1, "green_band": 2, "blue_band": 3,
+        "nir_band": 4, "swir_band": 5,
+        "ndvi": true, "ndwi": true, "mndwi": true, "bsi": true,
+        "evi": false, "nbr": false,
+        "node_note": "stack : NDVI[0] NDWI[1] MNDWI[2] BSI[3]"
+      }},
+      "width": 380, "height": 280, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -1120, "y": 430 } },
+
+    { "id": "n-disp-s2", "type": "output_display",
+      "position": { "x": -710, "y": 430 },
+      "data": { "label": "Display", "params": {}, "mainConnected": false,
+        "ports": [{ "id": "image__0_s2prev", "color": "image", "label": "S2 preview" }]
+      },
+      "width": 208, "height": 200, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -710, "y": 430 } },
+
+    { "id": "n-tp1", "type": "geo_time_period",
+      "position": { "x": -560, "y": 80 },
+      "data": { "label": "Time Period", "params": {
+        "date_start": "2023-01-01", "date_end": "2023-01-24",
+        "node_note": "T1 · référence SAR"
+      }},
+      "width": 208, "height": 160, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -560, "y": 80 } },
+
+    { "id": "n-s1t1", "type": "geo_copernicus",
+      "position": { "x": -560, "y": 270 },
+      "data": { "label": "Copernicus CDSE", "params": {
+        "collection": "2", "bands": "VV,VH", "resolution": "20",
+        "cloud_max": "100", "mosaic_mode": "1",
+        "cache_dir": "copernicus_cache", "max_tile_px": "2500", "fetch": 0,
+        "node_note": "S1 GRD · T1"
+      }},
+      "width": 380, "height": 320, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -560, "y": 270 } },
+
+    { "id": "n-feat1", "type": "s1_polarization_features",
+      "position": { "x": -560, "y": 620 },
+      "data": { "label": "S1 Polarization Features", "params": {
+        "rvi": true, "span": false, "span_db": false,
+        "nrpb": true, "pdi": true, "pri": false, "dpsvi": false,
+        "output_db": true, "node_note": "T1"
+      }},
+      "width": 380, "height": 140, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": -560, "y": 620 } },
+
+    { "id": "n-tp2", "type": "geo_time_period",
+      "position": { "x": 0, "y": 80 },
+      "data": { "label": "Time Period", "params": {
+        "date_start": "2023-02-04", "date_end": "2023-02-28",
+        "node_note": "T2 · post-événement SAR"
+      }},
+      "width": 208, "height": 160, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 0, "y": 80 } },
+
+    { "id": "n-s1t2", "type": "geo_copernicus",
+      "position": { "x": 0, "y": 270 },
+      "data": { "label": "Copernicus CDSE", "params": {
+        "collection": "2", "bands": "VV,VH", "resolution": "20",
+        "cloud_max": "100", "mosaic_mode": "1",
+        "cache_dir": "copernicus_cache", "max_tile_px": "2500", "fetch": 0,
+        "node_note": "S1 GRD · T2"
+      }},
+      "width": 380, "height": 320, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 0, "y": 270 } },
+
+    { "id": "n-feat2", "type": "s1_polarization_features",
+      "position": { "x": 0, "y": 620 },
+      "data": { "label": "S1 Polarization Features", "params": {
+        "rvi": true, "span": false, "span_db": false,
+        "nrpb": true, "pdi": true, "pri": false, "dpsvi": false,
+        "output_db": true, "node_note": "T2"
+      }},
+      "width": 380, "height": 140, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 0, "y": 620 } },
+
+    { "id": "n-fusion", "type": "logic_python",
+      "position": { "x": 560, "y": 80 },
+      "data": { "label": "Python Node", "params": {
+        "node_note": "OR logique S2 (BSI+NDVI) | S1 (ΔVH+ΔRVI) · fusion complémentaire",
+        "code": "# ── Fusion S1+S2 · détection orpaillage ─────────────────────────────────────\n# a = S2 stack (geotiff · NDVI[0] NDWI[1] MNDWI[2] BSI[3])\n# b = S1 T1 features (geotiff · VV VH RVI NRPB PDI en dB)\n# c = S1 T2 features (même structure)\n#\n# Fusion OR : détecté SI (S2_bare AND S2_low_veg) OR (S1_delta_vh AND S1_delta_rvi)\n# Avantage : S2 aveugle sous nuages ↔ S1 cloud-proof\n# ─────────────────────────────────────────────────────────────────────────────\n# Seuils S2\nndvi_thr  =  0.20\nbsi_thr   =  0.05\nmndwi_thr =  0.15\n# Seuils S1\nth_vh_db  =  2.0\nth_rvi    =  0.08\n# Filtrage speckle\nkernel_size = 7\n\ndef _get_s2(geo, idx):\n    if not isinstance(geo, dict): return None\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    stk = arr if arr.ndim == 3 else arr[np.newaxis]\n    return stk[idx] if stk.shape[0] > idx else None\n\ndef _get_s1(geo, name):\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    names = [n.lower() for n in names]\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[names.index(name)] if name in names else None\n\ndef _smooth(x):\n    k = (kernel_size | 1)\n    return cv2.blur(x, (k, k))\n\nif not isinstance(a, dict) or not isinstance(b, dict) or not isinstance(c, dict):\n    out_main = None; out_any = None; out_scalar = 0.0\n    out_dict = {'erreur': 'Brancher a=S2 stack, b=S1 T1, c=S1 T2'}\nelse:\n    # ── S2 features ──────────────────────────────────────────────────────────\n    ndvi  = _get_s2(a, 0); ndwi  = _get_s2(a, 1)\n    mndwi = _get_s2(a, 2); bsi   = _get_s2(a, 3)\n    geo_ref = a\n\n    H = (ndvi if ndvi is not None else bsi).shape[0]\n    W = (ndvi if ndvi is not None else bsi).shape[1]\n    zeros = np.zeros((H, W), bool)\n\n    s2_bare    = (bsi   > bsi_thr)   if bsi   is not None else zeros\n    s2_low_veg = (ndvi  < ndvi_thr)  if ndvi  is not None else zeros\n    s2_water   = (mndwi > mndwi_thr) if mndwi is not None else zeros\n    s2_detect  = (s2_bare & s2_low_veg) | s2_water\n    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n    s2_detect  = cv2.morphologyEx(s2_detect.astype(np.uint8), cv2.MORPH_OPEN, k3).astype(bool)\n\n    # ── S1 change features ───────────────────────────────────────────────────\n    vh1 = _get_s1(b, 'vh'); rvi1 = _get_s1(b, 'rvi')\n    vh2 = _get_s1(c, 'vh'); rvi2 = _get_s1(c, 'rvi')\n\n    if vh1 is not None and vh2 is not None:\n        delta_vh  = _smooth(vh2)  - _smooth(vh1)\n        delta_rvi = (_smooth(rvi2) - _smooth(rvi1)) if rvi1 is not None and rvi2 is not None \\\n                    else np.zeros((H, W), np.float32)\n        delta_vh  -= np.median(delta_vh)\n        delta_rvi -= np.median(delta_rvi)\n        s1_loss    = delta_vh  < -th_vh_db\n        s1_rvi_los = delta_rvi < -th_rvi\n        s1_detect  = cv2.morphologyEx((s1_loss & s1_rvi_los).astype(np.uint8),\n                                      cv2.MORPH_OPEN, k3).astype(bool)\n    else:\n        s1_detect = zeros\n\n    # ── Fusion OR ────────────────────────────────────────────────────────────\n    fused = s2_detect | s1_detect\n\n    # Visualisation : vert=S2 seul, bleu=S1 seul, blanc=S1+S2\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[s2_detect & ~s1_detect] = (40, 200, 40)    # S2 seul  (vert)\n    vis[s1_detect & ~s2_detect] = (200, 80, 40)    # S1 seul  (bleu)\n    vis[s2_detect &  s1_detect] = (220, 220, 220)  # les deux (blanc)\n    out_main = vis\n\n    out_any = {\n        **geo_ref,\n        'bands': fused.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32', 'band_names': ['fused'],\n    }\n    out_scalar = round(float(fused.mean() * 100), 2)\n    out_dict = {\n        'pct_s2_detect':  round(float(s2_detect.mean() * 100), 2),\n        'pct_s1_detect':  round(float(s1_detect.mean() * 100), 2),\n        'pct_fused':      round(float(fused.mean()     * 100), 2),\n        'pct_s1_and_s2':  round(float((s2_detect & s1_detect).mean() * 100), 3),\n    }\n    out_e = None"
+      }},
+      "width": 640, "height": 560, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 560, "y": 80 },
+      "style": { "width": 640, "height": 560 } },
+
+    { "id": "n-disp-fusion", "type": "output_display",
+      "position": { "x": 560, "y": 670 },
+      "data": { "label": "Display", "params": {}, "mainConnected": false,
+        "ports": [{ "id": "image__0_fusprev", "color": "image", "label": "Fusion S1+S2" }]
+      },
+      "width": 260, "height": 160, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 560, "y": 670 } },
+
+    { "id": "n-inspec-fus", "type": "data_inspector",
+      "position": { "x": 860, "y": 670 },
+      "data": { "label": "Inspector", "params": {} },
+      "width": 320, "height": 120, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 860, "y": 670 } },
+
+    { "id": "n-oam", "type": "geo_oam_loader",
+      "position": { "x": 1360, "y": 80 },
+      "data": { "label": "OAM Ground Truth", "params": {
+        "fetch": 0, "source": "WFS 2023", "output_field": "binary",
+        "legality": "All", "mining_type": "All",
+        "year_min": 2000, "year_max": 2025,
+        "all_touched": false, "cache_dir": "copernicus_cache",
+        "node_note": "référence = S2 geotiff"
+      }},
+      "width": 380, "height": 460, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1360, "y": 80 },
+      "style": { "width": 380, "height": 460 } },
+
+    { "id": "n-disp-oam", "type": "output_display",
+      "position": { "x": 1770, "y": 80 },
+      "data": { "label": "Display", "params": {}, "mainConnected": false,
+        "ports": [{ "id": "image__0_oamfus", "color": "image", "label": "OAM" }]
+      },
+      "width": 208, "height": 200, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1770, "y": 80 } },
+
+    { "id": "n-metrics", "type": "logic_python",
+      "position": { "x": 1360, "y": 570 },
+      "data": { "label": "Python Node", "params": {
+        "node_note": "P/R/F1/IoU · TP=vert FP=orange FN=rouge",
+        "code": "# ── Validation binaire : fusion S1+S2 vs OAM ────────────────────────────\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\ndet = _band(a)\noam = _band(b)\n\nif det is None or oam is None:\n    out_main = None; out_scalar = 0.0\n    out_dict = {'erreur': 'Brancher a=fused (out_any), b=OAM geotiff'}\nelse:\n    det_bin = (det > 0).astype(np.uint8)\n    oam_bin = (oam > 0).astype(np.uint8)\n    TP = int(np.sum((det_bin==1) & (oam_bin==1)))\n    FP = int(np.sum((det_bin==1) & (oam_bin==0)))\n    FN = int(np.sum((det_bin==0) & (oam_bin==1)))\n    TN = int(np.sum((det_bin==0) & (oam_bin==0)))\n    eps = 1e-9\n    precision = TP / (TP + FP + eps)\n    recall    = TP / (TP + FN + eps)\n    f1        = 2 * precision * recall / (precision + recall + eps)\n    iou       = TP / (TP + FP + FN + eps)\n    H, W = det_bin.shape\n    vis  = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[(det_bin==1) & (oam_bin==1)] = (40, 200, 40)\n    vis[(det_bin==1) & (oam_bin==0)] = (40, 140, 220)\n    vis[(det_bin==0) & (oam_bin==1)] = (40,  40, 200)\n    out_main = vis; out_any = None\n    out_scalar = round(float(f1), 3)\n    out_dict = {\n        'precision': round(float(precision), 3),\n        'recall':    round(float(recall), 3),\n        'f1':        round(float(f1), 3),\n        'iou':       round(float(iou), 3),\n        'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN,\n    }"
+      }},
+      "width": 560, "height": 130, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1360, "y": 570 },
+      "style": { "width": 560, "height": 130 } },
+
+    { "id": "n-disp-metr", "type": "output_display",
+      "position": { "x": 1360, "y": 720 },
+      "data": { "label": "Display", "params": {}, "mainConnected": false,
+        "ports": [{ "id": "image__0_metrfus", "color": "image", "label": "TP/FP/FN" }]
+      },
+      "width": 208, "height": 140, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1360, "y": 720 } },
+
+    { "id": "n-inspec", "type": "data_inspector",
+      "position": { "x": 1600, "y": 720 },
+      "data": { "label": "Inspector", "params": {} },
+      "width": 340, "height": 120, "selected": false, "dragging": false,
+      "positionAbsolute": { "x": 1600, "y": 720 } }
+  ],
+  "edges": [
+    { "id": "e-bbox-s2",    "source": "n-bbox",    "sourceHandle": "string__bbox",         "target": "n-s2",       "targetHandle": "string__bbox" },
+    { "id": "e-bbox-s1t1",  "source": "n-bbox",    "sourceHandle": "string__bbox",         "target": "n-s1t1",     "targetHandle": "string__bbox" },
+    { "id": "e-bbox-s1t2",  "source": "n-bbox",    "sourceHandle": "string__bbox",         "target": "n-s1t2",     "targetHandle": "string__bbox" },
+    { "id": "e-s2-idx",     "source": "n-s2",      "sourceHandle": "geotiff__geotiff",     "target": "n-indices",  "targetHandle": "geotiff__geotiff" },
+    { "id": "e-s2-disp",    "source": "n-s2",      "sourceHandle": "image__preview",       "target": "n-disp-s2",  "targetHandle": "image__0_s2prev" },
+    { "id": "e-tp1-start",  "source": "n-tp1",     "sourceHandle": "string__date_start",   "target": "n-s1t1",     "targetHandle": "string__date_start" },
+    { "id": "e-tp1-end",    "source": "n-tp1",     "sourceHandle": "string__date_end",     "target": "n-s1t1",     "targetHandle": "string__date_end" },
+    { "id": "e-tp2-start",  "source": "n-tp2",     "sourceHandle": "string__date_start",   "target": "n-s1t2",     "targetHandle": "string__date_start" },
+    { "id": "e-tp2-end",    "source": "n-tp2",     "sourceHandle": "string__date_end",     "target": "n-s1t2",     "targetHandle": "string__date_end" },
+    { "id": "e-s1t1-f1",    "source": "n-s1t1",   "sourceHandle": "geotiff__geotiff",     "target": "n-feat1",    "targetHandle": "geotiff__geotiff" },
+    { "id": "e-s1t2-f2",    "source": "n-s1t2",   "sourceHandle": "geotiff__geotiff",     "target": "n-feat2",    "targetHandle": "geotiff__geotiff" },
+    { "id": "e-idx-fusion",  "source": "n-indices", "sourceHandle": "geotiff__stack",      "target": "n-fusion",   "targetHandle": "any__a" },
+    { "id": "e-f1-fusion",   "source": "n-feat1",  "sourceHandle": "geotiff__geotiff",     "target": "n-fusion",   "targetHandle": "any__b" },
+    { "id": "e-f2-fusion",   "source": "n-feat2",  "sourceHandle": "geotiff__geotiff",     "target": "n-fusion",   "targetHandle": "any__c" },
+    { "id": "e-fusion-disp", "source": "n-fusion",  "sourceHandle": "image__main",         "target": "n-disp-fusion", "targetHandle": "image__0_fusprev" },
+    { "id": "e-fusion-ins",  "source": "n-fusion",  "sourceHandle": "dict__out_dict",      "target": "n-inspec-fus",  "targetHandle": "data__table" },
+    { "id": "e-s2-oam",      "source": "n-s2",      "sourceHandle": "geotiff__geotiff",   "target": "n-oam",      "targetHandle": "geotiff__reference" },
+    { "id": "e-oam-disp",    "source": "n-oam",     "sourceHandle": "image__preview",      "target": "n-disp-oam", "targetHandle": "image__0_oamfus" },
+    { "id": "e-fus-metr",    "source": "n-fusion",  "sourceHandle": "any__out_any",        "target": "n-metrics",  "targetHandle": "any__a" },
+    { "id": "e-oam-metr",    "source": "n-oam",     "sourceHandle": "geotiff__geotiff",    "target": "n-metrics",  "targetHandle": "any__b" },
+    { "id": "e-metr-disp",   "source": "n-metrics", "sourceHandle": "image__main",         "target": "n-disp-metr","targetHandle": "image__0_metrfus" },
+    { "id": "e-metr-ins",    "source": "n-metrics", "sourceHandle": "dict__out_dict",      "target": "n-inspec",   "targetHandle": "data__table" }
+  ]
+}

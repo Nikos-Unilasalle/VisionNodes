@@ -377,7 +377,7 @@
       "data": {
         "label": "Python Node",
         "params": {
-          "code": "# ── Détection de changement SAR · log-ratio bi-temporel ─────────────────────\n# a = S1 features T1  (geotiff · VV VH RVI NRPB PDI en dB)\n# b = S1 features T2  (même structure)\n#\n# Filtre boxcar appliqué en domaine dB AVANT calcul du delta → supprime speckle.\n# Log-ratio VH (dB) = boxcar(VH_T2) - boxcar(VH_T1)\n#   < -th : perte rétrodiffusion → défrichement / perturbation\n#   > +th : gain → inondation / régénération végétale\n# ─────────────────────────────────────────────────────────────────────────────\nth_change_db = 2.0    # seuil changement significatif (dB)\nth_rvi_loss  = 0.08   # seuil perte RVI\nkernel_size  = 7      # boxcar anti-speckle (px) — augmenter pour plus de lissage\n\ndef _get(geo, name):\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    names = [n.lower() for n in names]\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[names.index(name)] if name in names else None\n\ndef _smooth(band):\n    # Boxcar uniforme pour réduction du speckle SAR.\n    k = (kernel_size | 1)  # forcer impair\n    return cv2.blur(band, (k, k))\n\nif not isinstance(a, dict) or not isinstance(b, dict):\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher a=T1 features, b=T2 features'}\nelse:\n    vv1 = _get(a, 'vv');  vh1 = _get(a, 'vh');  rvi1 = _get(a, 'rvi')\n    vv2 = _get(b, 'vv');  vh2 = _get(b, 'vh');  rvi2 = _get(b, 'rvi')\n\n    if vv1 is None or vh1 is None:\n        out_main = None\n        out_any  = None\n        out_dict = {'erreur': 'Bandes VV/VH introuvables'}\n    else:\n        H, W = vv1.shape\n\n        # Filtrage anti-speckle (boxcar en domaine dB)\n        vv1s = _smooth(vv1);  vh1s = _smooth(vh1)\n        vv2s = _smooth(vv2) if vv2 is not None else vv1s\n        vh2s = _smooth(vh2) if vh2 is not None else vh1s\n\n        delta_vv  = vv2s - vv1s\n        delta_vh  = vh2s - vh1s\n        delta_rvi = (_smooth(rvi2) - _smooth(rvi1)) if (rvi1 is not None and rvi2 is not None)                     else np.zeros((H, W), np.float32)\n\n        # Normalisation médiane : supprime le biais systématique inter-passe\n        delta_vh  = delta_vh  - np.median(delta_vh)\n        delta_vv  = delta_vv  - np.median(delta_vv)\n        delta_rvi = delta_rvi - np.median(delta_rvi)\n\n        loss      = delta_vh < -th_change_db\n        gain      = delta_vh >  th_change_db\n        rvi_loss  = delta_rvi < -th_rvi_loss\n        deforest  = loss & rvi_loss\n\n        vis = np.zeros((H, W, 3), dtype=np.uint8)\n        vis[loss & ~deforest] = (200, 80, 40)    # perte VH seule (bleu-gris)\n        vis[gain]             = (40, 200, 40)    # gain VH (vert)\n        vis[deforest]         = (40, 40, 220)    # défrichement (rouge)\n        out_main = vis\n\n        out_any = {\n            **b,\n            'bands': delta_vh[np.newaxis],\n            'count': 1, 'dtype': 'float32',\n            'band_names': ['delta_vh_db'],\n        }\n        out_scalar = round(float(deforest.mean() * 100), 2)\n        out_dict = {\n            'delta_vh_mean':  round(float(delta_vh.mean()), 3),\n            'delta_vv_mean':  round(float(delta_vv.mean()), 3),\n            'delta_rvi_mean': round(float(delta_rvi.mean()), 3),\n            'pct_loss_vh':    round(float(loss.mean()      * 100), 2),\n            'pct_gain_vh':    round(float(gain.mean()      * 100), 2),\n            'pct_deforest':   round(float(deforest.mean()  * 100), 2),\n        }",
+          "code": "# ── Détection de changement SAR · log-ratio bi-temporel ─────────────────────\n# a = S1 features T1  (geotiff · VV VH RVI NRPB PDI en dB)\n# b = S1 features T2  (même structure)\n#\n# Filtre boxcar appliqué en domaine dB AVANT calcul du delta → supprime speckle.\n# Log-ratio VH (dB) = boxcar(VH_T2) - boxcar(VH_T1)\n#   < -th : perte rétrodiffusion → défrichement / perturbation\n#   > +th : gain → inondation / régénération végétale\n# ─────────────────────────────────────────────────────────────────────────────\nth_change_db = 2.0    # seuil changement significatif (dB)\nth_rvi_loss  = 0.08   # seuil perte RVI\nkernel_size  = 7      # boxcar anti-speckle (px) — augmenter pour plus de lissage\n\ndef _get(geo, name):\n    if not isinstance(geo, dict): return None\n    names = geo.get('band_names', [])\n    if isinstance(names, str): names = names.split(',')\n    names = [n.lower() for n in names]\n    arr = np.asarray(geo['bands'], dtype=np.float32)\n    return arr[names.index(name)] if name in names else None\n\ndef _smooth(band):\n    # Boxcar uniforme pour réduction du speckle SAR.\n    k = (kernel_size | 1)  # forcer impair\n    return cv2.blur(band, (k, k))\n\nif not isinstance(a, dict) or not isinstance(b, dict):\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher a=T1 features, b=T2 features'}\nelse:\n    vv1 = _get(a, 'vv');  vh1 = _get(a, 'vh');  rvi1 = _get(a, 'rvi')\n    vv2 = _get(b, 'vv');  vh2 = _get(b, 'vh');  rvi2 = _get(b, 'rvi')\n\n    if vv1 is None or vh1 is None:\n        out_main = None\n        out_any  = None\n        out_dict = {'erreur': 'Bandes VV/VH introuvables'}\n    else:\n        H, W = vv1.shape\n\n        # Filtrage anti-speckle (boxcar en domaine dB)\n        vv1s = _smooth(vv1);  vh1s = _smooth(vh1)\n        vv2s = _smooth(vv2) if vv2 is not None else vv1s\n        vh2s = _smooth(vh2) if vh2 is not None else vh1s\n\n        delta_vv  = vv2s - vv1s\n        delta_vh  = vh2s - vh1s\n        delta_rvi = (_smooth(rvi2) - _smooth(rvi1)) if (rvi1 is not None and rvi2 is not None)                     else np.zeros((H, W), np.float32)\n\n        # Normalisation médiane : supprime le biais systématique inter-passe\n        delta_vh  = delta_vh  - np.median(delta_vh)\n        delta_vv  = delta_vv  - np.median(delta_vv)\n        delta_rvi = delta_rvi - np.median(delta_rvi)\n\n        loss      = delta_vh < -th_change_db\n        gain      = delta_vh >  th_change_db\n        rvi_loss  = delta_rvi < -th_rvi_loss\n        deforest  = loss & rvi_loss\n\n        # Ouverture morphologique → supprime isolés 1-2px (speckle résiduel)\n        k3       = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n        loss     = cv2.morphologyEx(loss.astype(np.uint8),     cv2.MORPH_OPEN, k3).astype(bool)\n        gain     = cv2.morphologyEx(gain.astype(np.uint8),     cv2.MORPH_OPEN, k3).astype(bool)\n        rvi_loss = cv2.morphologyEx(rvi_loss.astype(np.uint8), cv2.MORPH_OPEN, k3).astype(bool)\n        deforest = loss & rvi_loss\n\n        vis = np.zeros((H, W, 3), dtype=np.uint8)\n        vis[loss & ~deforest] = (200, 80, 40)    # perte VH seule (bleu-gris)\n        vis[gain]             = (40, 200, 40)    # gain VH (vert)\n        vis[deforest]         = (40, 40, 220)    # défrichement (rouge)\n        out_main = vis\n\n        # out_any = masque binaire défrichement (pour validation OAM)\n        out_any = {\n            **b,\n            'bands': deforest.astype(np.float32)[np.newaxis],\n            'count': 1, 'dtype': 'float32',\n            'band_names': ['deforest'],\n        }\n        out_scalar = round(float(deforest.mean() * 100), 2)\n        out_dict = {\n            'delta_vh_mean':  round(float(delta_vh.mean()), 3),\n            'delta_vv_mean':  round(float(delta_vv.mean()), 3),\n            'delta_rvi_mean': round(float(delta_rvi.mean()), 3),\n            'pct_loss_vh':    round(float(loss.mean()      * 100), 2),\n            'pct_gain_vh':    round(float(gain.mean()      * 100), 2),\n            'pct_deforest':   round(float(deforest.mean()  * 100), 2),\n        }",
           "node_note": "boxcar 7px + normalisation médiane · rouge=défrichement · vert=gain VH anormal"
         }
       },
@@ -440,6 +440,168 @@
       "positionAbsolute": {
         "x": 380,
         "y": 660
+      }
+    },
+    {
+      "id": "f-oam",
+      "type": "canvas_frame",
+      "position": {
+        "x": 860,
+        "y": 60
+      },
+      "data": {
+        "label": "Validation · OAM",
+        "params": {}
+      },
+      "style": {
+        "width": 680,
+        "height": 780
+      },
+      "width": 680,
+      "height": 780,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 860,
+        "y": 60
+      }
+    },
+    {
+      "id": "n-oam",
+      "type": "geo_oam_loader",
+      "position": {
+        "x": 880,
+        "y": 80
+      },
+      "data": {
+        "label": "OAM Ground Truth",
+        "params": {
+          "fetch": 0,
+          "source": "WFS 2023",
+          "output_field": "binary",
+          "legality": "All",
+          "mining_type": "All",
+          "year_min": 2000,
+          "year_max": 2025,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "binary : 1=impact · référence = S1 T2"
+        }
+      },
+      "width": 380,
+      "height": 460,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 880,
+        "y": 80
+      },
+      "style": {
+        "width": 380,
+        "height": 460
+      }
+    },
+    {
+      "id": "n-disp-oam",
+      "type": "output_display",
+      "position": {
+        "x": 1290,
+        "y": 80
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_oamsar",
+            "color": "image",
+            "label": "OAM preview"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 200,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1290,
+        "y": 80
+      }
+    },
+    {
+      "id": "n-metrics",
+      "type": "logic_python",
+      "position": {
+        "x": 880,
+        "y": 580
+      },
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# ── Validation binaire : détection SAR vs polygones OAM ──────────────────\n# a = masque défrichement S1 (geotiff float32, 1.0 = détecté)\n# b = OAM geotiff         (float32, 1.0 = impact minier)\n# ─────────────────────────────────────────────────────────────────────────\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\ndet = _band(a)\noam = _band(b)\n\nif det is None or oam is None:\n    out_main = None; out_scalar = 0.0\n    out_dict = {'erreur': 'Brancher a=out_any (changement), b=OAM geotiff'}\nelse:\n    det_bin = (det > 0).astype(np.uint8)\n    oam_bin = (oam > 0).astype(np.uint8)\n\n    TP = int(np.sum((det_bin==1) & (oam_bin==1)))\n    FP = int(np.sum((det_bin==1) & (oam_bin==0)))\n    FN = int(np.sum((det_bin==0) & (oam_bin==1)))\n    TN = int(np.sum((det_bin==0) & (oam_bin==0)))\n\n    eps = 1e-9\n    precision = TP / (TP + FP + eps)\n    recall    = TP / (TP + FN + eps)\n    f1        = 2 * precision * recall / (precision + recall + eps)\n    iou       = TP / (TP + FP + FN + eps)\n\n    H, W = det_bin.shape\n    vis  = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[(det_bin==1) & (oam_bin==1)] = (40, 200, 40)\n    vis[(det_bin==1) & (oam_bin==0)] = (40, 140, 220)\n    vis[(det_bin==0) & (oam_bin==1)] = (40,  40, 200)\n    out_main   = vis\n    out_scalar = round(float(f1), 3)\n    out_dict   = {\n        'precision': round(float(precision), 3),\n        'recall':    round(float(recall), 3),\n        'f1':        round(float(f1), 3),\n        'iou':       round(float(iou), 3),\n        'TP': TP, 'FP': FP, 'FN': FN, 'TN': TN,\n    }\n    out_any = None",
+          "node_note": "P/R/F1/IoU · TP=vert FP=orange FN=rouge"
+        }
+      },
+      "width": 560,
+      "height": 140,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 880,
+        "y": 580
+      },
+      "style": {
+        "width": 560,
+        "height": 140
+      }
+    },
+    {
+      "id": "n-disp-metrics",
+      "type": "output_display",
+      "position": {
+        "x": 880,
+        "y": 740
+      },
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_metrsar",
+            "color": "image",
+            "label": "TP/FP/FN"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 160,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 880,
+        "y": 740
+      }
+    },
+    {
+      "id": "n-inspec2",
+      "type": "data_inspector",
+      "position": {
+        "x": 1120,
+        "y": 740
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 340,
+      "height": 120,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1120,
+        "y": 740
       }
     }
   ],
@@ -540,6 +702,48 @@
       "source": "n-change",
       "sourceHandle": "dict__out_dict",
       "target": "n-inspec",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e-feat2-oam",
+      "source": "n-s1t2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-oam",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e-oam-disp",
+      "source": "n-oam",
+      "sourceHandle": "image__preview",
+      "target": "n-disp-oam",
+      "targetHandle": "image__0_oamsar"
+    },
+    {
+      "id": "e-change-metr",
+      "source": "n-change",
+      "sourceHandle": "any__out_any",
+      "target": "n-metrics",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-oam-metr",
+      "source": "n-oam",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-metrics",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-metr-disp",
+      "source": "n-metrics",
+      "sourceHandle": "image__main",
+      "target": "n-disp-metrics",
+      "targetHandle": "image__0_metrsar"
+    },
+    {
+      "id": "e-metr-inspec",
+      "source": "n-metrics",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-inspec2",
       "targetHandle": "data__table"
     }
   ]
