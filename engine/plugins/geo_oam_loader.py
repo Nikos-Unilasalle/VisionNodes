@@ -20,6 +20,7 @@ Schema (table oam_surf_expl_aaaa_s):
   source_2  : satellite source (S2, SPOT5, …)
 """
 from __future__ import annotations
+import threading
 import numpy as np
 import cv2
 from registry import vision_node, NodeProcessor, send_notification
@@ -46,7 +47,6 @@ _TYPE_CODES = {
 }
 _TYPE_INT = {'ALLUVIONNAIRE': 1, 'PRIMAIRE': 2, 'CAMPEMENT': 3, 'PISTE': 4, 'AUTRE': 5}
 
-# Preview palette: legal=green, illegal=red, hors titre=orange, other=gray
 _CLASS_COLORS_BGR = {1: (40, 180, 40), 2: (40, 40, 220), 3: (30, 140, 230)}
 
 
@@ -57,20 +57,21 @@ _CLASS_COLORS_BGR = {1: (40, 180, 40), 2: (40, 40, 220), 3: (30, 140, 230)}
     icon='ShieldAlert',
     description=(
         "Loads OAM (Observatoire de l'Activité Minière) deforestation polygons "
-        "from GéoGuyane WFS or a local GeoPackage. Rasterizes onto the reference "
-        "grid. Outputs: binary mask, class map (legal/illegal/hors-titre), "
-        "exploitation type map, age map (years since date_expl), and RGB preview."
+        "from GéoGuyane WFS or a local GeoPackage. Press Fetch to download. "
+        "Rasterizes onto the reference grid. "
+        "Outputs: binary mask, class map (legal/illegal/hors-titre), RGB preview."
     ),
     inputs=[
         {'id': 'reference', 'color': 'geotiff', 'label': 'Reference raster (defines grid)'},
     ],
     outputs=[
-        {'id': 'mask',      'color': 'mask',    'label': 'Binary mask (any impact=255)'},
-        {'id': 'geotiff',   'color': 'geotiff', 'label': 'Burned values (geo dict)'},
-        {'id': 'preview',   'color': 'image',   'label': 'Preview (green=legal, red=illegal)'},
-        {'id': 'n_feat',    'color': 'scalar',  'label': 'Feature count'},
+        {'id': 'mask',    'color': 'mask',   'label': 'Binary mask (any impact=255)'},
+        {'id': 'geotiff', 'color': 'geotiff','label': 'Burned values (geo dict)'},
+        {'id': 'preview', 'color': 'image',  'label': 'Preview (green=legal, red=illegal)'},
+        {'id': 'n_feat',  'color': 'scalar', 'label': 'Feature count'},
     ],
     params=[
+        {'id': 'fetch', 'type': 'trigger', 'default': 0, 'label': 'Fetch'},
         {'id': 'source', 'type': 'enum', 'default': 'WFS 2023',
          'options': ['WFS 2023', 'WFS 2022', 'Local GeoPackage'],
          'label': 'Data source'},
@@ -103,130 +104,160 @@ _CLASS_COLORS_BGR = {1: (40, 180, 40), 2: (40, 40, 220), 3: (30, 140, 230)}
 )
 class OAMLoaderNode(NodeProcessor):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self._cache_key: str | None = None
-        self._cache_out: dict | None = None
+        self._prev_fetch: int   = 0
+        self._loading:    bool  = False
+        self._fetch_gen:  int   = 0
+        self._raster_key: str | None = None
+        self._raster_out: dict | None = None
+
+    # ── WFS download (runs in background thread) ──────────────────────────────
+
+    def _do_download(self, url: str, cache_file: str, my_gen: int) -> None:
+        try:
+            import requests as _req
+            send_notification('OAM Loader: téléchargement WFS…',
+                              progress=0.1, notif_id=_NOTIF)
+            resp = _req.get(url, timeout=180)
+            resp.raise_for_status()
+            with open(cache_file, 'wb') as f:
+                f.write(resp.content)
+            send_notification(
+                f'OAM Loader: {len(resp.content) // 1024} KB reçus → {cache_file}',
+                progress=0.4, notif_id=_NOTIF,
+            )
+        except Exception as exc:
+            send_notification(f'OAM Loader: échec WFS — {exc}',
+                              level='error', notif_id=_NOTIF)
+        finally:
+            if my_gen == self._fetch_gen:
+                self._loading = False
+
+    # ── Main process ──────────────────────────────────────────────────────────
 
     def process(self, inputs: dict, params: dict) -> dict:
+        import os, hashlib
+
         ref_geo = inputs.get('reference')
         if not isinstance(ref_geo, dict) or 'bands' not in ref_geo:
-            send_notification('OAM Loader: connect a reference raster', notif_id=_NOTIF)
+            send_notification('OAM Loader: connecter un raster de référence',
+                              notif_id=_NOTIF)
             return {}
 
         ref_crs       = ref_geo.get('crs')
         ref_transform = ref_geo.get('transform')
         if ref_crs is None or ref_transform is None:
-            send_notification('OAM Loader: reference has no CRS/transform',
+            send_notification('OAM Loader: raster sans CRS/transform',
                               level='error', notif_id=_NOTIF)
             return {}
 
-        source       = str(params.get('source', 'WFS 2023'))
+        source    = str(params.get('source', 'WFS 2023'))
+        cache_dir = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
+
+        # ── Fetch trigger (rising edge) ───────────────────────────────────────
+        fetch_val = params.get('fetch', 0)
+        rising    = fetch_val != self._prev_fetch and fetch_val not in (False, 0, None)
+        self._prev_fetch = fetch_val
+
+        if rising and source in _LAYERS:
+            layer_name = _LAYERS[source]
+            year_tag   = source.split()[-1]
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_file = os.path.join(cache_dir, f'oam_{year_tag}.gml')
+            # Force re-download: delete existing cache
+            if os.path.isfile(cache_file):
+                os.unlink(cache_file)
+            self._raster_key = None   # invalidate rasterized cache
+            self._raster_out = None
+            self._loading  = True
+            self._fetch_gen += 1
+            url = (
+                f'{_WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature'
+                f'&typeName={layer_name}'
+            )
+            threading.Thread(
+                target=self._do_download,
+                args=(url, cache_file, self._fetch_gen),
+                daemon=True,
+            ).start()
+            return {}
+
+        # ── Resolve vector path ───────────────────────────────────────────────
+        if source in _LAYERS:
+            year_tag   = source.split()[-1]
+            cache_file = os.path.join(cache_dir, f'oam_{year_tag}.gml')
+            if self._loading:
+                send_notification('OAM Loader: téléchargement en cours…',
+                                  progress=0.2, notif_id=_NOTIF)
+                return {}
+            if not os.path.isfile(cache_file):
+                send_notification(
+                    f'OAM Loader: cliquer Fetch pour télécharger {source}',
+                    level='warning', notif_id=_NOTIF,
+                )
+                return {}
+            fiona_path  = cache_file
+            fiona_layer = None
+        else:
+            fiona_path  = str(params.get('file_path', '')).strip()
+            fiona_layer = str(params.get('layer_name', '')).strip() or None
+            if not fiona_path:
+                send_notification('OAM Loader: renseigner file_path',
+                                  level='warning', notif_id=_NOTIF)
+                return {}
+            if not os.path.isfile(fiona_path):
+                send_notification(f'OAM Loader: fichier introuvable: {fiona_path}',
+                                  level='error', notif_id=_NOTIF)
+                return {}
+
+        # ── Rasterization cache key ───────────────────────────────────────────
         output_field = str(params.get('output_field', 'class (crois_clan)'))
         legality_key = str(params.get('legality', 'All'))
         type_key     = str(params.get('mining_type', 'All'))
         year_min     = int(params.get('year_min', 2000))
         year_max     = int(params.get('year_max', 2025))
         all_touched  = bool(params.get('all_touched', False))
-        cache_dir    = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
 
-        import hashlib, json as _json
-        ref_bands = ref_geo['bands']
-        _key = hashlib.md5((
-            f'{ref_bands.shape}:{source}:{output_field}:{legality_key}:'
-            f'{type_key}:{year_min}:{year_max}:{all_touched}'
-            + (str(params.get('file_path', '')) if source == 'Local GeoPackage' else '')
+        ref_b = ref_geo['bands']
+        rkey  = hashlib.md5((
+            f'{ref_b.shape}:{fiona_path}:{os.path.getmtime(fiona_path):.0f}:'
+            f'{output_field}:{legality_key}:{type_key}:{year_min}:{year_max}:{all_touched}'
         ).encode()).hexdigest()
-        if _key == self._cache_key and self._cache_out is not None:
-            return self._cache_out
 
+        if rkey == self._raster_key and self._raster_out is not None:
+            return self._raster_out
+
+        # ── Packages ─────────────────────────────────────────────────────────
         if not self.ensure_packages(
-            ['fiona', 'rasterio', 'pyproj', 'shapely', 'requests'],
-            pip_names=['fiona', 'rasterio', 'pyproj', 'shapely', 'requests'],
+            ['fiona', 'rasterio', 'pyproj', 'shapely'],
+            pip_names=['fiona', 'rasterio', 'pyproj', 'shapely'],
             notif_id=_NOTIF,
         ):
             return {}
 
-        import os, tempfile
         import fiona
-        import rasterio
-        from rasterio.features import rasterize
+        from rasterio.features import rasterize as _rasterize
         from pyproj import Transformer
         from shapely.geometry import shape
         from shapely.ops import transform as shp_transform
+        import datetime
 
-        ref_b = ref_geo['bands']
         H, W = (ref_b.shape[-2], ref_b.shape[-1]) if ref_b.ndim == 3 else ref_b.shape
-
         legality_filter = _LEGALITY_CODES.get(legality_key)
         type_filter     = _TYPE_CODES.get(type_key)
+        current_year    = datetime.datetime.now().year
 
-        # -- Resolve vector source --
-        tmp_file: str | None = None
-        fiona_path: str
-        fiona_layer: str | None = None
-
-        if source in _LAYERS:
-            import requests as _req
-            layer_name = _LAYERS[source]
-            year_tag = source.split()[-1]
-            os.makedirs(cache_dir, exist_ok=True)
-            cache_file = os.path.join(cache_dir, f'oam_{year_tag}.gml')
-
-            if not os.path.isfile(cache_file):
-                url = (
-                    f'{_WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature'
-                    f'&typeName={layer_name}'
-                )
-                send_notification(f'OAM Loader: downloading {source} from WFS…',
-                                  progress=0.1, notif_id=_NOTIF)
-                try:
-                    resp = _req.get(url, timeout=120)
-                    resp.raise_for_status()
-                    with open(cache_file, 'wb') as f:
-                        f.write(resp.content)
-                    send_notification(f'OAM Loader: cached {len(resp.content)//1024} KB → {cache_file}',
-                                      progress=0.3, notif_id=_NOTIF)
-                except Exception as e:
-                    send_notification(f'OAM Loader: WFS download failed: {e}',
-                                      level='error', notif_id=_NOTIF)
-                    return {}
-            else:
-                send_notification(f'OAM Loader: using cached {source}',
-                                  progress=0.3, notif_id=_NOTIF)
-            fiona_path = cache_file
-
-        else:
-            fiona_path = str(params.get('file_path', '')).strip()
-            layer_raw  = str(params.get('layer_name', '')).strip()
-            fiona_layer = layer_raw or None
-            if not fiona_path:
-                send_notification('OAM Loader: set file_path for Local GeoPackage',
-                                  level='warning', notif_id=_NOTIF)
-                return {}
-            if not os.path.isfile(fiona_path):
-                send_notification(f'OAM Loader: file not found: {fiona_path}',
-                                  level='error', notif_id=_NOTIF)
-                return {}
-            send_notification(f'OAM Loader: reading {os.path.basename(fiona_path)}…',
-                              progress=0.3, notif_id=_NOTIF)
-
-        import datetime
-        current_year = datetime.datetime.now().year
-
+        # ── Read + reproject vector features ─────────────────────────────────
         try:
-            open_kwargs: dict = {}
-            if fiona_layer:
-                open_kwargs['layer'] = fiona_layer
-
+            open_kwargs: dict = {'layer': fiona_layer} if fiona_layer else {}
             with fiona.open(fiona_path, **open_kwargs) as src:
                 src_crs_str = src.crs_wkt if hasattr(src, 'crs_wkt') else str(src.crs)
                 n_total = len(src)
                 send_notification(
-                    f'OAM Loader: {n_total} total features, CRS={src_crs_str[:50]}…',
-                    progress=0.45, notif_id=_NOTIF,
+                    f'OAM Loader: {n_total} features · reprojection…',
+                    progress=0.5, notif_id=_NOTIF,
                 )
-
                 try:
                     transformer = Transformer.from_crs(src_crs_str, ref_crs, always_xy=True)
                     need_reproject = True
@@ -239,7 +270,6 @@ class OAMLoaderNode(NodeProcessor):
                 for feat in src:
                     props = feat.get('properties') or {}
 
-                    # Year filter
                     raw_year = props.get('date_expl')
                     try:
                         feat_year = int(str(raw_year)[:4]) if raw_year else 0
@@ -249,21 +279,17 @@ class OAMLoaderNode(NodeProcessor):
                         n_skipped += 1
                         continue
 
-                    # Legality filter
                     if legality_filter is not None:
-                        clan = props.get('crois_clan')
                         try:
-                            clan_int = int(clan) if clan is not None else None
+                            clan_int = int(props.get('crois_clan') or 0)
                         except (ValueError, TypeError):
-                            clan_int = None
+                            clan_int = 0
                         if clan_int != legality_filter:
                             n_skipped += 1
                             continue
 
-                    # Mining type filter
                     if type_filter is not None:
-                        feat_type = str(props.get('type_expl') or '').upper()
-                        if feat_type != type_filter:
+                        if str(props.get('type_expl') or '').upper() != type_filter:
                             n_skipped += 1
                             continue
 
@@ -278,7 +304,6 @@ class OAMLoaderNode(NodeProcessor):
                             n_skipped += 1
                             continue
 
-                    # Burn value
                     if output_field == 'binary':
                         val = 1.0
                     elif output_field == 'class (crois_clan)':
@@ -287,8 +312,7 @@ class OAMLoaderNode(NodeProcessor):
                         except (ValueError, TypeError):
                             val = 0.0
                     elif output_field == 'type (type_expl)':
-                        feat_type_str = str(props.get('type_expl') or '').upper()
-                        val = float(_TYPE_INT.get(feat_type_str, 0))
+                        val = float(_TYPE_INT.get(str(props.get('type_expl') or '').upper(), 0))
                     elif output_field == 'age (years)':
                         val = float(current_year - feat_year) if feat_year else 0.0
                     else:
@@ -296,26 +320,21 @@ class OAMLoaderNode(NodeProcessor):
 
                     shapes_values.append((geom.__geo_interface__, val))
 
-        except Exception as e:
-            send_notification(f'OAM Loader: error reading vector: {e}',
+        except Exception as exc:
+            send_notification(f'OAM Loader: erreur lecture vecteur — {exc}',
                               level='error', notif_id=_NOTIF)
             return {}
 
-        if tmp_file and os.path.isfile(tmp_file):
-            os.unlink(tmp_file)
-
-        n_burned = len(shapes_values)
         if not shapes_values:
             send_notification(
-                f'OAM Loader: 0 features after filters (skipped {n_skipped})',
+                f'OAM Loader: 0 features après filtres (ignorés: {n_skipped})',
                 level='warning', notif_id=_NOTIF,
             )
             return {}
 
-        send_notification(f'OAM Loader: rasterizing {n_burned} features…',
-                          progress=0.7, notif_id=_NOTIF)
-
-        from rasterio.features import rasterize as _rasterize
+        # ── Rasterize ─────────────────────────────────────────────────────────
+        send_notification(f'OAM Loader: rasterisation {len(shapes_values)} features…',
+                          progress=0.75, notif_id=_NOTIF)
         burned = _rasterize(
             shapes_values,
             out_shape=(H, W),
@@ -327,25 +346,18 @@ class OAMLoaderNode(NodeProcessor):
 
         mask_u8 = (burned > 0).astype(np.uint8) * 255
 
-        # RGB preview: class-colored overlay
         preview = np.zeros((H, W, 3), dtype=np.uint8)
         if output_field == 'class (crois_clan)':
             for code, bgr in _CLASS_COLORS_BGR.items():
-                m = burned == float(code)
-                preview[m] = bgr
+                preview[burned == float(code)] = bgr
         else:
             preview[burned > 0] = (40, 200, 40)
 
-        out_geo = {
-            **ref_geo,
-            'bands': burned[np.newaxis],
-            'count': 1,
-            'dtype': 'float32',
-        }
+        out_geo = {**ref_geo, 'bands': burned[np.newaxis], 'count': 1, 'dtype': 'float32'}
 
         send_notification(
-            f'OAM Loader: {n_burned} features → '
-            f'{int((burned > 0).sum()):,} pixels  |  skipped {n_skipped}',
+            f'OAM Loader: {len(shapes_values)} features → {int((burned > 0).sum()):,} px '
+            f'| ignorés: {n_skipped}',
             progress=1.0, notif_id=_NOTIF,
         )
 
@@ -353,8 +365,8 @@ class OAMLoaderNode(NodeProcessor):
             'mask':    mask_u8,
             'geotiff': out_geo,
             'preview': preview,
-            'n_feat':  float(n_burned),
+            'n_feat':  float(len(shapes_values)),
         }
-        self._cache_key = _key
-        self._cache_out = result
+        self._raster_key = rkey
+        self._raster_out = result
         return result
