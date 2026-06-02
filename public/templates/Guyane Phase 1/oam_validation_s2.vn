@@ -36,7 +36,8 @@
           "lon_min": -53.78,
           "lon_max": -53.58,
           "lat_min": 3.55,
-          "lat_max": 3.72
+          "lat_max": 3.72,
+          "color_index": 0
         }
       },
       "width": 208,
@@ -91,12 +92,13 @@
           "cache_dir": "copernicus_cache",
           "max_tile_px": "2500",
           "node_note": "S2 L2A · bands B04 R / B03 G / B02 B / B08 NIR / B11 SWIR · preview = couleurs naturelles",
-          "fetch": 0
+          "fetch": 0,
+          "color_index": 1
         }
       },
       "width": 208,
       "height": 293,
-      "selected": true,
+      "selected": false,
       "dragging": false,
       "positionAbsolute": {
         "x": -1040,
@@ -112,7 +114,9 @@
       },
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 3
+        },
         "mainConnected": false,
         "ports": [
           {
@@ -175,7 +179,8 @@
           "bsi": true,
           "evi": false,
           "nbr": false,
-          "node_note": "B04=R(1) B03=G(2) B02=B(3) B08=NIR(4) B11=SWIR(5) · stack : NDVI[0] NDWI[1] MNDWI[2] BSI[3]"
+          "node_note": "B04=R(1) B03=G(2) B02=B(3) B08=NIR(4) B11=SWIR(5) · stack : NDVI[0] NDWI[1] MNDWI[2] BSI[3]",
+          "color_index": 2
         }
       },
       "width": 380,
@@ -196,7 +201,9 @@
       },
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 3
+        },
         "mainConnected": false,
         "ports": [
           {
@@ -249,7 +256,8 @@
         "label": "Python Node",
         "params": {
           "code": "# ── Détection orpaillage par seuillage multi-indices ────────────────────────\n# Entrée : a = geo_spectral_indices · stack (geotiff float32)\n# Stack order (indices activés dans l'ordre) :\n#   band 0 = NDVI   band 1 = NDWI   band 2 = MNDWI   band 3 = BSI\n# Seuils calibrés pour forêt tropicale dense guyanaise.\n# ─────────────────────────────────────────────────────────────────────────────\nndvi_thr  =  0.20   # < seuil → sol nu / dégradé (forêt dense Guyane ~ 0.7-0.9)\nbsi_thr   =  0.05   # > seuil → sol nu confirmé (valeur positive exigée)\nmndwi_thr =  0.15   # > seuil → eau turbide / bassin décantation\n\nif not isinstance(a, dict) or 'bands' not in a:\n    out_main = None\n    out_any  = None\n    out_dict = {'erreur': 'Brancher geo_spectral_indices · stack → a'}\nelse:\n    stk = np.asarray(a['bands'], dtype=np.float32)  # (N, H, W)\n    N, H, W = stk.shape\n\n    ndvi  = stk[0] if N > 0 else None\n    ndwi  = stk[1] if N > 1 else None\n    mndwi = stk[2] if N > 2 else None\n    bsi   = stk[3] if N > 3 else None\n\n    zeros = np.zeros((H, W), dtype=bool)\n    m_bare    = (bsi   > bsi_thr)   if bsi   is not None else zeros\n    m_low_veg = (ndvi  < ndvi_thr)  if ndvi  is not None else zeros\n    m_water   = (mndwi > mndwi_thr) if mndwi is not None else zeros\n\n    detected = (m_bare & m_low_veg) | m_water\n\n    # Nettoyage morphologique (ouverture 3×3 → supprime pixels isolés)\n    kernel  = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))\n    cleaned = cv2.morphologyEx(\n        detected.astype(np.uint8), cv2.MORPH_OPEN, kernel\n    ).astype(bool)\n\n    # Sortie geotiff binaire (1.0 = impact détecté)\n    out_any = {\n        **a,\n        'bands': cleaned.astype(np.float32)[np.newaxis],\n        'count': 1, 'dtype': 'float32',\n    }\n\n    vis = np.zeros((H, W, 3), dtype=np.uint8)\n    vis[cleaned] = (40, 40, 220)   # rouge BGR = impact\n    out_main = vis\n\n    out_dict = {\n        'pct_detecte': round(float(cleaned.mean() * 100), 2),\n        'n_pixels':    int(cleaned.sum()),\n    }",
-          "node_note": "Seuillage BSI+NDVI+MNDWI → masque binaire impact minier · ajuster seuils selon image"
+          "node_note": "Seuillage BSI+NDVI+MNDWI → masque binaire impact minier · ajuster seuils selon image",
+          "color_index": 3
         }
       },
       "width": 560,
@@ -274,7 +282,9 @@
       },
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 3
+        },
         "mainConnected": false,
         "ports": [
           {
@@ -337,7 +347,8 @@
           "year_max": 2025,
           "all_touched": false,
           "cache_dir": "copernicus_cache",
-          "node_note": "1=légal · 2=illégal · 3=hors titre"
+          "node_note": "1=légal · 2=illégal · 3=hors titre",
+          "color_index": 4
         }
       },
       "width": 420,
@@ -362,7 +373,9 @@
       },
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 3
+        },
         "mainConnected": false,
         "ports": [
           {
@@ -379,59 +392,6 @@
       "positionAbsolute": {
         "x": 760,
         "y": 740
-      }
-    },
-    {
-      "id": "n-note-valid",
-      "type": "canvas_note",
-      "position": {
-        "x": 1360,
-        "y": 52
-      },
-      "data": {
-        "label": "Note",
-        "params": {
-          "text": "Validation croisée : détection S2 (seuillage) vs OAM (vérité terrain)\ngeo_map_agreement → κ de Cohen + accord spatial\nlogic_python → Précision / Rappel / F1 / IoU",
-          "color_index": 0
-        }
-      },
-      "width": 860,
-      "height": 60,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1360,
-        "y": 52
-      }
-    },
-    {
-      "id": "n-agreement",
-      "type": "geo_map_agreement",
-      "position": {
-        "x": 1360,
-        "y": 140
-      },
-      "data": {
-        "label": "Map Agreement",
-        "params": {
-          "pred_mapping": "0=2,1=1",
-          "ref_mapping": "0=2,1=1,2=1,3=1",
-          "common_labels": "1=Impact minier,2=Non impacté",
-          "dpi": 110,
-          "node_note": "0→classe 2 (forêt/fond) · 1→classe 1 (impact) · tous pixels valides"
-        }
-      },
-      "width": 380,
-      "height": 280,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1360,
-        "y": 140
-      },
-      "style": {
-        "width": 380,
-        "height": 280
       }
     },
     {
@@ -462,71 +422,17 @@
       }
     },
     {
-      "id": "n-disp-agree",
-      "type": "output_display",
-      "position": {
-        "x": 1800,
-        "y": 140
-      },
-      "data": {
-        "label": "Display",
-        "params": {},
-        "mainConnected": false,
-        "ports": [
-          {
-            "id": "image__0_agreemap",
-            "color": "image",
-            "label": "Accord spatial"
-          }
-        ]
-      },
-      "width": 260,
-      "height": 220,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1800,
-        "y": 140
-      }
-    },
-    {
-      "id": "n-disp-report",
-      "type": "output_display",
-      "position": {
-        "x": 1800,
-        "y": 400
-      },
-      "data": {
-        "label": "Display",
-        "params": {},
-        "mainConnected": false,
-        "ports": [
-          {
-            "id": "image__0_kappareport",
-            "color": "image",
-            "label": "Rapport κ"
-          }
-        ]
-      },
-      "width": 380,
-      "height": 240,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 1800,
-        "y": 400
-      }
-    },
-    {
       "id": "n-disp-errormap",
       "type": "output_display",
       "position": {
-        "x": 1800,
-        "y": 756
+        "x": 2113.3333333333335,
+        "y": 740
       },
       "data": {
         "label": "Display",
-        "params": {},
+        "params": {
+          "color_index": 3
+        },
         "mainConnected": false,
         "ports": [
           {
@@ -541,28 +447,30 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1800,
-        "y": 780
+        "x": 2120,
+        "y": 740
       }
     },
     {
       "id": "n-inspec",
       "type": "data_inspector",
       "position": {
-        "x": 1300,
-        "y": 756
+        "x": 1320,
+        "y": 820
       },
       "data": {
         "label": "Inspector",
-        "params": {}
+        "params": {
+          "color_index": 3
+        }
       },
       "width": 500,
       "height": 100,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 1300,
-        "y": 780
+        "x": 1320,
+        "y": 820
       }
     }
   ],
@@ -628,20 +536,6 @@
       "selected": false
     },
     {
-      "id": "e-detect-agreement",
-      "source": "n-detect",
-      "sourceHandle": "any__out_any",
-      "target": "n-agreement",
-      "targetHandle": "geotiff__classmap"
-    },
-    {
-      "id": "e-oam-agreement",
-      "source": "n-oam",
-      "sourceHandle": "geotiff__geotiff",
-      "target": "n-agreement",
-      "targetHandle": "geotiff__reference"
-    },
-    {
       "id": "e-detect-metrics",
       "source": "n-detect",
       "sourceHandle": "any__out_any",
@@ -654,20 +548,6 @@
       "sourceHandle": "geotiff__geotiff",
       "target": "n-metrics",
       "targetHandle": "any__b"
-    },
-    {
-      "id": "e-agreement-disp",
-      "source": "n-agreement",
-      "sourceHandle": "image__agreement",
-      "target": "n-disp-agree",
-      "targetHandle": "image__0_agreemap"
-    },
-    {
-      "id": "e-agreement-report",
-      "source": "n-agreement",
-      "sourceHandle": "image__report",
-      "target": "n-disp-report",
-      "targetHandle": "image__0_kappareport"
     },
     {
       "id": "e-metrics-disp",
@@ -695,7 +575,7 @@
       "x": 0,
       "y": 0
     },
-    "activePaletteIndex": 6,
+    "activePaletteIndex": 5,
     "visualizedNodeId": null
   }
 }
