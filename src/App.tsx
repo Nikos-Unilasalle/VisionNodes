@@ -53,6 +53,14 @@ import logo from './assets/logo.svg';
 
 const RIBBON_EDGE_TYPES = { ribbon: RibbonEdge };
 
+const PythonEditorModal = React.lazy(() =>
+  import('./components/PythonEditorModal').then(m => ({ default: m.PythonEditorModal }))
+);
+
+const DataFrameEditorModal = React.lazy(() =>
+  import('./components/DataFrameEditorModal').then(m => ({ default: m.DataFrameEditorModal }))
+);
+
 function App() {
   const [canvases, setCanvases] = useState<Canvas[]>(makeInitialCanvases);
   const [activeCanvasId, setActiveCanvasId] = useState('c1');
@@ -159,6 +167,8 @@ function App() {
   const [geoSamplerEditingId, setGeoSamplerEditingId]     = useState<string | null>(null);
   const [geoBboxEditingId, setGeoBboxEditingId]           = useState<string | null>(null);
   const [copernicusEditingId,   setCopernicusEditingId]   = useState<string | null>(null);
+  const [pythonEditingId,       setPythonEditingId]       = useState<string | null>(null);
+  const [dfEditingId,           setDfEditingId]           = useState<string | null>(null);
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
@@ -446,6 +456,10 @@ function App() {
             ? () => setGeoBboxEditingId(node.id)
             : node.type === 'geo_copernicus'
             ? () => setCopernicusEditingId(node.id)
+            : node.type === 'logic_python'
+            ? () => setPythonEditingId(node.id)
+            : node.type === 'df_editor'
+            ? () => setDfEditingId(node.id)
             : (node.type === 'feat_visual_size_gate' || node.type === 'sci_visual_measure')
             ? () => setLineEditingId(node.id)
             : undefined,
@@ -596,6 +610,24 @@ function App() {
       setSelectedNodeLiveData(nodesDataStore.getNode(selectedNodeId));
     });
   }, [selectedNodeId, nodesDataStore]);
+
+  const [pythonNodeLiveData, setPythonNodeLiveData] = useState<Record<string, any>>({});
+  useEffect(() => {
+    if (!pythonEditingId) { setPythonNodeLiveData({}); return; }
+    setPythonNodeLiveData(nodesDataStore.getNode(pythonEditingId) || {});
+    return nodesDataStore.subscribe(pythonEditingId, () => {
+      setPythonNodeLiveData(nodesDataStore.getNode(pythonEditingId) || {});
+    });
+  }, [pythonEditingId, nodesDataStore]);
+
+  const [dfNodeLiveData, setDfNodeLiveData] = useState<Record<string, any>>({});
+  useEffect(() => {
+    if (!dfEditingId) { setDfNodeLiveData({}); return; }
+    setDfNodeLiveData(nodesDataStore.getNode(dfEditingId) || {});
+    return nodesDataStore.subscribe(dfEditingId, () => {
+      setDfNodeLiveData(nodesDataStore.getNode(dfEditingId) || {});
+    });
+  }, [dfEditingId, nodesDataStore]);
 
   const exposedGroupParams = useMemo((): ExposedParam[] => {
     if (selectedNode?.type !== 'group_node') return [];
@@ -1634,6 +1666,41 @@ function App() {
                  onClose={() => setCopernicusEditingId(null)}
                />
             )}
+            {pythonEditingId && (
+              <React.Suspense fallback={null}>
+                <PythonEditorModal
+                  label={nodesWithData.find(n => n.id === pythonEditingId)?.data?.label || "Python Script"}
+                  value={nodesWithData.find(n => n.id === pythonEditingId)?.data?.params?.code ?? nodesWithData.find(n => n.id === pythonEditingId)?.data?.schema?.params?.find((p: any) => p.id === 'code')?.default ?? ''}
+                  liveError={pythonNodeLiveData?.out_e || undefined}
+                  onChange={(v) => {
+                    setViewNodes(nds => nds.map(n => n.id === pythonEditingId ? { ...n, data: { ...n.data, params: { ...n.data.params, code: v } } } : n));
+                  }}
+                  onClose={() => setPythonEditingId(null)}
+                />
+              </React.Suspense>
+            )}
+            {dfEditingId && (() => {
+              const node = nodesWithData.find(n => n.id === dfEditingId);
+              const editsRaw = node?.data?.params?.edits || '[]';
+              let edits = [];
+              try {
+                edits = typeof editsRaw === 'string' ? JSON.parse(editsRaw) : editsRaw;
+              } catch (e) {}
+              const dfMeta = dfNodeLiveData?.df_meta;
+              return (
+                <React.Suspense fallback={null}>
+                  <DataFrameEditorModal
+                    label={node?.data?.label || "DF Editor"}
+                    dfMeta={dfMeta}
+                    edits={Array.isArray(edits) ? edits : []}
+                    onChange={(newEdits) => {
+                      setViewNodes(nds => nds.map(n => n.id === dfEditingId ? { ...n, data: { ...n.data, params: { ...n.data.params, edits: JSON.stringify(newEdits) } } } : n));
+                    }}
+                    onClose={() => setDfEditingId(null)}
+                  />
+                </React.Suspense>
+              );
+            })()}
             {lineEditingId && (
               <LineEditorOverlay
                 node={nodesWithData.find(n => n.id === lineEditingId)}

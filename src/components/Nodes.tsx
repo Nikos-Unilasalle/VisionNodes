@@ -1595,16 +1595,75 @@ export const PythonNode = memo(({ selected, data }: any) => {
   const lines = code.split('\n').map(l => l.trim());
   const firstComment = lines.find(l => l.startsWith('#'));
   const displayLine = firstComment || lines.find(l => l !== '') || '';
+  const onOpenEditor = data.onOpenEditor;
 
   return (
     <BaseNode title="Python Script" icon={Zap} selected={selected} data={data} color="red"
               inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}, {id: 'e', color: 'any'}]}
               outputs={[{id: 'main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}, {id: 'out_data', color: 'data', label: 'DataFrame'}, {id: 'out_e', color: 'string', label: 'Error'}]}>
-      {displayLine && (
-        <div className="self-center w-fit max-w-[140px] flex items-center justify-center bg-black/10 rounded-lg px-3 py-2 border border-white/5 shadow-inner">
-          <div className="text-[7px] font-mono text-emerald-400/70 truncate text-center italic">{displayLine}</div>
+      <div 
+        className="relative group nodrag flex flex-col items-center justify-center min-h-[56px] w-full bg-black/10 rounded-xl p-3 border border-white/5 shadow-inner overflow-hidden cursor-pointer"
+        onDoubleClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+      >
+        <div className="text-[8px] font-mono text-emerald-400/70 truncate text-center italic w-full group-hover:opacity-0 transition-opacity duration-200">
+          {displayLine || "# Double-click to edit"}
         </div>
-      )}
+        
+        {/* Hover overlay — open editor */}
+        <div className="absolute inset-0 bg-red-950/20 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center backdrop-blur-[2px]">
+          <button
+            onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-xl shadow-2xl transition-all font-black text-[9px] uppercase tracking-widest flex items-center gap-1.5"
+          >
+            <LucideIcons.FileCode size={11} /> Edit Script
+          </button>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
+
+
+export const DataFrameEditorNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
+  const dfMeta = nd?.df_meta;
+  const onOpenEditor = data.onOpenEditor;
+
+  const summaryText = useMemo(() => {
+    if (dfMeta && Array.isArray(dfMeta.shape)) {
+      const [rows, cols] = dfMeta.shape;
+      return `${rows.toLocaleString()} rows × ${cols} cols`;
+    }
+    return "No DataFrame connected";
+  }, [dfMeta]);
+
+  return (
+    <BaseNode title="DF Editor" icon={LucideIcons.Table} selected={selected} data={data} color="orange"
+              inputs={[{id: 'table', color: 'data', label: 'DataFrame'}]}
+              outputs={[
+                {id: 'table', color: 'data', label: 'DataFrame'},
+                {id: 'df_meta', color: 'dict', label: 'DF Metadata'},
+                {id: 'preview', color: 'image', label: 'Preview'}
+              ]}>
+      <div 
+        className="relative group nodrag flex flex-col items-center justify-center min-h-[56px] w-full bg-black/10 rounded-xl p-3 border border-white/5 shadow-inner overflow-hidden cursor-pointer"
+        onDoubleClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+      >
+        <div className="text-[9px] font-mono text-orange-300 font-semibold truncate text-center w-full group-hover:opacity-0 transition-opacity duration-200">
+          {summaryText}
+        </div>
+        
+        {/* Hover overlay — open editor */}
+        <div className="absolute inset-0 bg-orange-950/20 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center backdrop-blur-[2px]">
+          <button
+            onClick={e => { e.stopPropagation(); onOpenEditor?.(); }}
+            className="bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded-xl shadow-2xl transition-all font-black text-[9px] uppercase tracking-widest flex items-center gap-1.5"
+          >
+            <LucideIcons.Edit3 size={11} /> Edit Data
+          </button>
+        </div>
+      </div>
     </BaseNode>
   );
 });

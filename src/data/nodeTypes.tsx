@@ -155,6 +155,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   geo_interactive_sampler:    N.GeoInteractiveSamplerNode,
   geo_copernicus:             N.CopernicusNode,
   raster_colorizer:           N.RasterColorizerNode,
+  df_editor:                  N.DataFrameEditorNode,
 };
 
 export const nodeTypes: Record<string, React.ComponentType<any>> = Object.fromEntries(
