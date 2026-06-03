@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    {
+      "id": "downloader",
+      "type": "geo_copernicus_marine",
+      "position": { "x": 50, "y": 100 },
+      "width": 240,
+      "height": 180,
+      "data": {
+        "label": "Copernicus Marine Downloader",
+        "params": {
+          "username": "my_username",
+          "password": "my_password",
+          "dataset_id": "cmems_mod_glo_phy_anfc_0.083deg_PT1D-m",
+          "variable": "thetao",
+          "date_start": "2023-01-01",
+          "date_end": "2023-01-07",
+          "bbox": "-53.5,4.5,-51.5,6.5",
+          "depth_idx": 0,
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_grid_pca",
+      "position": { "x": 350, "y": 100 },
+      "width": 260,
+      "height": 200,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 5,
+          "standardize": true,
+          "colormap": 3
+        }
+      }
+    },
+    {
+      "id": "compare",
+      "type": "viz_grid_compare",
+      "position": { "x": 670, "y": 100 },
+      "width": 280,
+      "height": 220,
+      "data": {
+        "label": "Grid Compare Dashboard",
+        "params": {
+          "frame_idx": 0,
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "inspector",
+      "type": "data_inspector",
+      "position": { "x": 1000, "y": 280 },
+      "width": 180,
+      "height": 120,
+      "data": {
+        "label": "PSNR Inspector",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "downloader",
+      "target": "pca",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__grids"
+    },
+    {
+      "id": "e2",
+      "source": "downloader",
+      "target": "compare",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__original"
+    },
+    {
+      "id": "e3",
+      "source": "pca",
+      "target": "compare",
+      "sourceHandle": "any__reconstructed",
+      "targetHandle": "any__reconstructed"
+    },
+    {
+      "id": "e4",
+      "source": "compare",
+      "target": "inspector",
+      "sourceHandle": "scalar__frame_psnr",
+      "targetHandle": "any__data"
+    }
+  ]
+}
