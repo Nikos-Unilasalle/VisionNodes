@@ -94,3 +94,54 @@ def test_copernicus_marine_downloader(mock_sub, tmp_path):
     output_fn = mock_sub.call_args[1]['output_filename']
     if os.path.exists(output_fn):
         os.remove(output_fn)
+
+def mock_subset_advanced(*args, **kwargs):
+    import xarray as xr
+    import pandas as pd
+
+    times = pd.date_range("2023-01-01", periods=2)
+    lats = np.linspace(4.5, 6.5, 4)
+    lons = np.linspace(-53.5, -51.5, 4)
+
+    data = np.random.rand(2, 4, 4)
+    ds = xr.Dataset(
+        {kwargs['variables'][0]: (["time", "latitude", "longitude"], data)},
+        coords={
+            "time": times,
+            "latitude": lats,
+            "longitude": lons,
+        }
+    )
+    ds.to_netcdf(kwargs['output_filename'])
+
+@patch('copernicusmarine.subset', side_effect=mock_subset_advanced)
+def test_copernicus_marine_downloader_advanced(mock_sub, tmp_path):
+    node = GeoCopernicusMarineNode()
+    params = {
+        'username': 'mock_user',
+        'password': 'mock_password',
+        'dataset_id': 'cmems_mod_glo_phy_anfc_0.083deg_PT1D-m',
+        'variable': 'thetao',
+        'date_start': '2023-01-01',
+        'date_end': '2023-01-02',
+        'bbox': '-53.5,4.5,-51.5,6.5',
+        'min_depth': 2.5,
+        'max_depth': 15.0,
+        'service': 3,  # 'opendap'
+        'colormap': 0
+    }
+
+    res = node.process({}, params)
+    assert res is not None
+    assert res['grids'].shape == (2, 4, 4)
+
+    # Verify mock was called with depth limits and service setting
+    called_kwargs = mock_sub.call_args[1]
+    assert called_kwargs['minimum_depth'] == 2.5
+    assert called_kwargs['maximum_depth'] == 15.0
+    assert called_kwargs['service'] == 'opendap'
+
+    output_fn = called_kwargs['output_filename']
+    if os.path.exists(output_fn):
+        os.remove(output_fn)
+

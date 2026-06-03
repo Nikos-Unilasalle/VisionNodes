@@ -49,3 +49,31 @@ def test_spatial_pca():
     # Verify modes have NaNs preserved on the land
     assert np.isnan(modes[:, 0:3, 0:3]).all()
     assert not np.isnan(modes[:, 3:, 3:]).any()
+
+def test_spatial_pca_advanced():
+    grids = np.random.rand(10, 6, 6)
+    grids[:, 0, 0] = np.nan
+
+    node = SpatialGridPCANode()
+    meta = {'lat_min': -30.0, 'lat_max': -20.0}
+
+    # Test with detrend='Linear', cos_lat=True, solver='randomized'
+    res = node.process({
+        'grids': grids,
+        'meta': meta
+    }, {
+        'n_components': 2,
+        'standardize': True,
+        'detrend': 2,       # 'Linear'
+        'cos_lat': True,
+        'solver': 3,        # 'randomized'
+        'colormap': 0
+    })
+
+    assert res is not None
+    assert 'reconstructed' in res
+    assert 'modes' in res
+    assert res['reconstructed'].shape == (10, 6, 6)
+    assert res['modes'].shape == (2, 6, 6)
+    assert np.isnan(res['reconstructed'][:, 0, 0]).all()
+
