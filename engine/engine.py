@@ -569,9 +569,13 @@ class VisionEngine:
                         if self.preview_node_id and (nid == self.preview_node_id or nid.endswith('::' + self.preview_node_id)):
                             preview_img = out.get('main')
                             if preview_img is None:
+                                preview_img = out.get('preview')
+                            if preview_img is None:
                                 for _v in out.values():
                                     if isinstance(_v, np.ndarray) and len(_v.shape) >= 2:
-                                        preview_img = _v; break
+                                        # Only accept 2D arrays, or 3D arrays with 1, 3, or 4 channels in the last dimension
+                                        if len(_v.shape) == 2 or (len(_v.shape) == 3 and _v.shape[2] in (1, 3, 4)):
+                                            preview_img = _v; break
                             if preview_img is not None: final_img = preview_img
                         elif not self.preview_node_id and ntype == 'output_display' and out.get('main') is not None:
                             final_img = out['main']
