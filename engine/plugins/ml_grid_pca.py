@@ -212,12 +212,14 @@ class SpatialGridPCANode(NodeProcessor):
                 if p98 == p2:
                     mode1_vis = np.zeros_like(mode1, dtype=np.uint8)
                 else:
-                    mode1_vis = np.clip((mode1 - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
+                    mode1_vis = np.clip((mode1 - p2) / (p98 - p2) * 255, 0, 255)
             else:
                 mode1_vis = np.zeros((H, W), dtype=np.uint8)
 
             nan_mask = np.isnan(mode1)
-            mode1_vis[nan_mask] = 0
+            if mode1_vis.dtype != np.uint8:
+                mode1_vis[nan_mask] = 0
+                mode1_vis = mode1_vis.astype(np.uint8)
 
             cmaps = [
                 cv2.COLORMAP_VIRIDIS,

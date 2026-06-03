@@ -55,11 +55,13 @@ class NetCDFGridReaderNode(NodeProcessor):
         if p98 == p2:
             stretched = np.zeros_like(grid, dtype=np.uint8)
         else:
-            stretched = np.clip((grid - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
+            stretched = np.clip((grid - p2) / (p98 - p2) * 255, 0, 255)
         
         # Handle NaNs in the final image (render as dark grey/black)
         mask_nan = np.isnan(grid)
-        stretched[mask_nan] = 0
+        if stretched.dtype != np.uint8:
+            stretched[mask_nan] = 0
+            stretched = stretched.astype(np.uint8)
 
         cmaps = [
             cv2.COLORMAP_VIRIDIS,

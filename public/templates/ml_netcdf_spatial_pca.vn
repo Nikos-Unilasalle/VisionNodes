@@ -3,30 +3,39 @@
     {
       "id": "downloader",
       "type": "geo_copernicus_marine",
-      "position": { "x": 50, "y": 50 },
-      "width": 240,
-      "height": 180,
+      "position": {
+        "x": 50,
+        "y": 50
+      },
+      "width": 208,
+      "height": 138,
       "data": {
         "label": "Copernicus Marine Downloader",
         "params": {
-          "username": "",
-          "password": "",
-          "dataset_id": "cmems_mod_glo_phy_anfc_0.083deg_PT1D-m",
+          "username": "npriniotakis",
+          "password": "P0mp!dou2@50",
+          "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
           "variable": "thetao",
           "date_start": "2023-01-01",
           "date_end": "2023-01-07",
           "bbox": "-53.5,4.5,-51.5,6.5",
           "depth_idx": 0,
-          "colormap": 0
+          "colormap": 0,
+          "fetch": 0
         }
-      }
+      },
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "reader",
       "type": "geo_netcdf_reader",
-      "position": { "x": 50, "y": 270 },
-      "width": 240,
-      "height": 180,
+      "position": {
+        "x": 50,
+        "y": 270
+      },
+      "width": 208,
+      "height": 138,
       "data": {
         "label": "Local NetCDF Reader",
         "params": {
@@ -41,9 +50,12 @@
     {
       "id": "pca",
       "type": "ml_grid_pca",
-      "position": { "x": 380, "y": 150 },
-      "width": 260,
-      "height": 200,
+      "position": {
+        "x": 380,
+        "y": 280
+      },
+      "width": 208,
+      "height": 153,
       "data": {
         "label": "Spatial PCA (EOF)",
         "params": {
@@ -51,32 +63,66 @@
           "standardize": true,
           "colormap": 3
         }
+      },
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 280
       }
     },
     {
       "id": "compare",
       "type": "viz_grid_compare",
-      "position": { "x": 700, "y": 150 },
-      "width": 280,
-      "height": 220,
+      "position": {
+        "x": 700,
+        "y": 150
+      },
+      "width": 208,
+      "height": 121,
       "data": {
         "label": "Grid Compare Dashboard",
         "params": {
           "frame_idx": 0,
           "colormap": 0
         }
-      }
+      },
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "inspector",
       "type": "data_inspector",
-      "position": { "x": 1030, "y": 330 },
+      "position": {
+        "x": 1030,
+        "y": 330
+      },
       "width": 180,
       "height": 120,
       "data": {
         "label": "PSNR Inspector",
         "params": {}
-      }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "node-1780492713686-ja5l93pqh",
+      "type": "output_display",
+      "position": {
+        "x": 700,
+        "y": 460
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
     }
   ],
   "edges": [
@@ -107,6 +153,32 @@
       "target": "inspector",
       "sourceHandle": "scalar__frame_psnr",
       "targetHandle": "any__data"
+    },
+    {
+      "id": "e-1780492713846-gwgu3zoxm",
+      "source": "pca",
+      "target": "node-1780492713686-ja5l93pqh",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-1780492713846-swyjvwhdd",
+      "source": "pca",
+      "target": "node-1780492713686-ja5l93pqh",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
     }
-  ]
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 213
+    },
+    "previewPos": {
+      "x": 125.53515625,
+      "y": -241.1953125
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1780492713686-ja5l93pqh"
+  }
 }

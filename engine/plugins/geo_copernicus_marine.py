@@ -235,7 +235,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
                     'start_datetime': f"{date_start}T00:00:00",
                     'end_datetime': f"{date_end}T23:59:59",
                     'output_filename': nc_file_path,
-                    'force_download': True
+                    'overwrite': True
                 }
 
                 if min_depth != 0.0 or max_depth != 0.0:
@@ -321,9 +321,9 @@ class GeoCopernicusMarineNode(NodeProcessor):
             if p98 == p2:
                 stretched = np.zeros_like(f_arr, dtype=np.uint8)
             else:
-                stretched = np.clip((f_arr - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
-            
-            stretched[~valid_mask] = 0
+                stretched = np.clip((f_arr - p2) / (p98 - p2) * 255, 0, 255)
+                stretched[~valid_mask] = 0
+                stretched = stretched.astype(np.uint8)
             
             cmaps = [
                 cv2.COLORMAP_VIRIDIS,
