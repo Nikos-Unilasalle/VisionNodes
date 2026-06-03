@@ -144,101 +144,110 @@ export function PythonEditorModal({ label, value, liveError, onChange, onClose }
   const hasError = !!liveError;
 
   const modal = (
-    <div
-      className="fixed inset-0 z-[9999] flex flex-col bg-[#0d1117]"
-      style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
-    >
-      {/* ── Top bar ────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 h-11 bg-[#161b22] border-b border-white/10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]" />
-          <span className="text-[11px] text-gray-300 font-semibold tracking-wide">{label}</span>
-          <span className="text-[9px] text-gray-600 bg-white/5 border border-white/10 px-2 py-0.5 rounded">Python 3.x · Sandboxed</span>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-12 pointer-events-none select-none">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto cursor-pointer"
+        onClick={onClose}
+      />
+      
+      {/* Modal Content */}
+      <div
+        className="w-full h-full max-w-[1400px] max-h-[900px] flex flex-col bg-[#0d1117] rounded-2xl border border-white/10 shadow-2xl overflow-hidden pointer-events-auto relative z-10"
+        style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+      >
+        {/* ── Top bar ────────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-4 h-11 bg-[#161b22] border-b border-white/10 shrink-0 select-none">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]" />
+            <span className="text-[11px] text-gray-300 font-semibold tracking-wide">{label}</span>
+            <span className="text-[9px] text-gray-600 bg-white/5 border border-white/10 px-2 py-0.5 rounded">Python 3.x · Sandboxed</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setWordWrap(w => w === 'on' ? 'off' : 'on')}
+              className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded hover:bg-white/5"
+              title="Toggle word wrap (Alt+Z)"
+            >
+              wrap: {wordWrap}
+            </button>
+            <span className="text-[9px] text-gray-600 px-2">Cmd+S or Esc → close</span>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setWordWrap(w => w === 'on' ? 'off' : 'on')}
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded hover:bg-white/5"
-            title="Toggle word wrap (Alt+Z)"
-          >
-            wrap: {wordWrap}
-          </button>
-          <span className="text-[9px] text-gray-600 px-2">Cmd+S or Esc → close</span>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded text-gray-500 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <X size={16} />
-          </button>
+        {/* ── Editor ─────────────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-hidden">
+          <Editor
+            language="python"
+            theme="vs-dark"
+            value={value}
+            onChange={(v) => onChange(v ?? '')}
+            onMount={handleMount}
+            options={{
+              minimap:             { enabled: true },
+              fontSize:            13,
+              lineHeight:          22,
+              fontFamily:          'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              fontLigatures:       true,
+              tabSize:             4,
+              insertSpaces:        true,
+              wordWrap,
+              scrollBeyondLastLine: false,
+              automaticLayout:     true,
+              padding:             { top: 16, bottom: 16 },
+              cursorBlinking:      'smooth',
+              cursorSmoothCaretAnimation: 'on',
+              smoothScrolling:     true,
+              bracketPairColorization: { enabled: true },
+              guides: {
+                bracketPairs:  true,
+                indentation:   true,
+              },
+              suggest: {
+                showKeywords:  true,
+                showSnippets:  true,
+              },
+              quickSuggestions: { strings: false, comments: false, other: true },
+              parameterHints:  { enabled: true },
+              formatOnPaste:   true,
+              formatOnType:    false,
+              renderWhitespace: 'boundary',
+              renderLineHighlight: 'gutter',
+            }}
+          />
         </div>
-      </div>
 
-      {/* ── Editor ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-hidden">
-        <Editor
-          language="python"
-          theme="vs-dark"
-          value={value}
-          onChange={(v) => onChange(v ?? '')}
-          onMount={handleMount}
-          options={{
-            minimap:             { enabled: true },
-            fontSize:            13,
-            lineHeight:          22,
-            fontFamily:          'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-            fontLigatures:       true,
-            tabSize:             4,
-            insertSpaces:        true,
-            wordWrap,
-            scrollBeyondLastLine: false,
-            automaticLayout:     true,
-            padding:             { top: 16, bottom: 16 },
-            cursorBlinking:      'smooth',
-            cursorSmoothCaretAnimation: 'on',
-            smoothScrolling:     true,
-            bracketPairColorization: { enabled: true },
-            guides: {
-              bracketPairs:  true,
-              indentation:   true,
-            },
-            suggest: {
-              showKeywords:  true,
-              showSnippets:  true,
-            },
-            quickSuggestions: { strings: false, comments: false, other: true },
-            parameterHints:  { enabled: true },
-            formatOnPaste:   true,
-            formatOnType:    false,
-            renderWhitespace: 'boundary',
-            renderLineHighlight: 'gutter',
-          }}
-        />
-      </div>
-
-      {/* ── Status bar ──────────────────────────────────────────────────── */}
-      <div className={`flex items-center justify-between px-4 h-7 shrink-0 border-t text-[10px] transition-colors ${
-        hasError
-          ? 'bg-red-950/60 border-red-900/40'
-          : 'bg-[#161b22] border-white/10'
-      }`}>
-        <div className="flex items-center gap-3">
-          {hasError ? (
-            <div className="flex items-center gap-1.5 text-red-400">
-              <AlertCircle size={11} />
-              <span className="truncate max-w-[600px]">{liveError}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-green-500">
-              <CheckCircle2 size={11} />
-              <span>No errors</span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-4 text-gray-600">
-          <span>Ln {statusLine.line}, Col {statusLine.col}</span>
-          <span>·</span>
-          <span>np · cv2 · pd · state · out_*</span>
+        {/* ── Status bar ──────────────────────────────────────────────────── */}
+        <div className={`flex items-center justify-between px-4 h-7 shrink-0 border-t text-[10px] transition-colors ${
+          hasError
+            ? 'bg-red-950/60 border-red-900/40'
+            : 'bg-[#161b22] border-white/10'
+        }`}>
+          <div className="flex items-center gap-3">
+            {hasError ? (
+              <div className="flex items-center gap-1.5 text-red-400">
+                <AlertCircle size={11} />
+                <span className="truncate max-w-[600px]">{liveError}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-green-500">
+                <CheckCircle2 size={11} />
+                <span>No errors</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-gray-600">
+            <span>Ln {statusLine.line}, Col {statusLine.col}</span>
+            <span>·</span>
+            <span>np · cv2 · pd · state · out_*</span>
+          </div>
         </div>
       </div>
     </div>

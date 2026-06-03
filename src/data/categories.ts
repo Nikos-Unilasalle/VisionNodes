@@ -389,6 +389,7 @@ export const CATEGORIES: Category[] = [
     { type: 'df_export', label: 'DF Export', description: 'Save a DataFrame to CSV, Excel, JSON or Parquet.' },
     { type: 'df_fillna', label: 'DF Fill NA', description: 'Handle missing values.' },
     { type: 'ml_df_filter', label: 'DF Filter', description: 'Filter rows of a DataFrame.' },
+    { type: 'df_editor', label: 'DF Editor', description: 'Interactive cell-by-cell DataFrame editor.' },
     { type: 'df_groupby', label: 'DF GroupBy', description: 'Group rows by a column and aggregate.' },
     { type: 'df_merge', label: 'DF Merge', description: 'Merge two DataFrames.' },
     { type: 'df_new_col', label: 'DF New Column', description: 'Add a computed column.' },
