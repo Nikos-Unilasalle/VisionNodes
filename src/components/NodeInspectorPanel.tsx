@@ -1,10 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2 } from 'lucide-react';
 import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 import { HexColorPicker } from 'react-colorful';
 import { MarkdownToolbar } from './MarkdownToolbar';
+const PythonEditorModal = React.lazy(() =>
+  import('./PythonEditorModal').then(m => ({ default: m.PythonEditorModal }))
+);
 
 const FLOW_PRESETS: Record<number, Record<string, number>> = {
   0: { pyr_scale: 0.5, levels: 3, winsize: 15, iterations: 3, poly_n: 5, poly_sigma: 1.2 },
@@ -24,7 +27,7 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
       <input
         type="number"
         min={min} max={max} step={step} value={val}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) onChange(v); }}
         className="bg-black/40 border border-[#4f5b6b] rounded-lg px-3 py-2 text-accent font-black font-mono text-center w-32 outline-none focus:border-accent/60 transition-all text-[13px] shadow-inner"
       />
     </div>
@@ -199,7 +202,7 @@ const highlightPython = (code: string): string => {
   return code.split('\n').map(processLine).join('\n');
 };
 
-interface CodeInputProps { label: string; val: string; onChange: (v: string) => void; }
+interface CodeInputProps { label: string; val: string; onChange: (v: string) => void; liveError?: string; }
 const CODE_GUTTER = 32;  // px — matches w-8
 const CODE_PAD_Y  = 12;  // px — matches py-3
 const CODE_PAD_R  = 16;  // px — matches pr-4
@@ -216,66 +219,89 @@ const codeAreaStyle: React.CSSProperties = {
   fontFamily:    'ui-monospace, SFMono-Regular, Menlo, monospace',
 };
 
-export const CodeInput = ({ label, val, onChange }: CodeInputProps) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const highlightRef = useRef<HTMLDivElement>(null);
-  const syncScroll = () => {
-    if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop  = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  };
-  const lineCount = (val || '').split('\n').length;
+export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) => {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  // Preview: first 8 lines
+  const previewLines = (val || '').split('\n').slice(0, 8);
+  const totalLines   = (val || '').split('\n').length;
+  const hasMore      = totalLines > 8;
+  const hasError     = !!liveError;
+
   return (
-    <div className="space-y-2 group">
+    <div className="space-y-2">
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-        <div className="text-[8px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</div>
+        <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">{label}</label>
+        <div className="flex items-center gap-1.5">
+          {hasError && (
+            <span className="text-[8px] text-red-400 bg-red-950/60 border border-red-900/40 px-2 py-0.5 rounded truncate max-w-[140px]" title={liveError}>
+              Error
+            </span>
+          )}
+          <span className="text-[8px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</span>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1 text-[9px] text-gray-400 hover:text-accent bg-white/5 hover:bg-accent/10 border border-white/10 hover:border-accent/40 px-2 py-1 rounded transition-all duration-200"
+            title="Open full-screen editor"
+          >
+            <Maximize2 size={10} />
+            <span>Open</span>
+          </button>
+        </div>
       </div>
-      <div className="relative rounded-xl overflow-hidden border border-[#4f5b6b] group-hover:border-accent/40 transition-all shadow-inner bg-[#1e2530]">
+
+      {/* ── Code preview ───────────────────────────────────────────────── */}
+      <div
+        className={`relative rounded-xl overflow-hidden border transition-all shadow-inner bg-[#1e2530] cursor-pointer hover:border-accent/40 ${
+          hasError ? 'border-red-900/50' : 'border-[#4f5b6b]'
+        }`}
+        onClick={() => setModalOpen(true)}
+        title="Click to open editor"
+      >
+        {/* Line numbers */}
         <div
           className="absolute inset-y-0 left-0 bg-black/15 border-r border-white/5 flex flex-col items-center text-gray-600 select-none pointer-events-none z-10 overflow-hidden"
           style={{ width: CODE_GUTTER, paddingTop: CODE_PAD_Y, paddingBottom: CODE_PAD_Y, fontSize: 8, fontFamily: codeAreaStyle.fontFamily }}
         >
-          {Array.from({ length: lineCount }, (_, i) => (
+          {previewLines.map((_, i) => (
             <div key={i} style={{ height: CODE_LINE_H, lineHeight: `${CODE_LINE_H}px` }} className="flex items-center">{i + 1}</div>
           ))}
         </div>
+        {/* Highlighted preview */}
         <div
-          ref={highlightRef}
           aria-hidden="true"
-          className="absolute inset-0 overflow-hidden pointer-events-none whitespace-pre select-none"
-          style={codeAreaStyle}
-          dangerouslySetInnerHTML={{ __html: highlightPython(val || '') + '\n' }}
+          className="overflow-hidden pointer-events-none whitespace-pre select-none"
+          style={{ ...codeAreaStyle, paddingBottom: hasMore ? 0 : CODE_PAD_Y }}
+          dangerouslySetInnerHTML={{ __html: previewLines.map(l => highlightPython(l)).join('\n') }}
         />
-        <textarea
-          ref={textareaRef}
-          value={val}
-          onChange={(e) => onChange(e.target.value)}
-          onScroll={syncScroll}
-          onKeyDown={(e) => {
-            if (e.key === 'Tab') {
-              e.preventDefault();
-              e.stopPropagation();
-              const ta = e.currentTarget;
-              const start = ta.selectionStart ?? 0;
-              const end   = ta.selectionEnd   ?? 0;
-              const indent = '    ';
-              onChange(val.substring(0, start) + indent + val.substring(end));
-              requestAnimationFrame(() => {
-                ta.selectionStart = ta.selectionEnd = start + indent.length;
-              });
-            }
-          }}
-          spellCheck={false}
-          className="relative w-full h-80 bg-transparent text-transparent caret-white outline-none resize-none scrollbar-hide z-[1]"
-          placeholder="Write your script here..."
-          style={{ ...codeAreaStyle, color: 'transparent', caretColor: '#fff' }}
-        />
+        {/* "N more lines" fade */}
+        {hasMore && (
+          <div className="flex items-end justify-center h-8 bg-gradient-to-t from-[#1e2530] to-transparent">
+            <span className="text-[8px] text-gray-600 pb-1">{totalLines - 8} more lines…</span>
+          </div>
+        )}
       </div>
-      <div className="text-[8px] text-gray-500 italic px-1">
-        Inputs: <span className="text-pink-400">a, b, c, d</span> · Persistence: <span className="text-pink-400">state['key']</span> · Outputs: <span className="text-blue-400">out_main, out_scalar, out_list, out_dict, out_any, out_data, out_e</span>
-      </div>
+
+      {/* ── Error detail ───────────────────────────────────────────────── */}
+      {hasError && (
+        <div className="text-[8px] text-red-400 bg-red-950/30 border border-red-900/30 rounded-lg px-3 py-2 font-mono break-all">
+          {liveError}
+        </div>
+      )}
+
+      {/* ── Modal (lazy-loaded chunk — Monaco only loads on first open) ── */}
+      {modalOpen && (
+        <React.Suspense fallback={null}>
+          <PythonEditorModal
+            label={label}
+            value={val}
+            liveError={liveError}
+            onChange={onChange}
+            onClose={() => setModalOpen(false)}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };
@@ -1003,7 +1029,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isString) {
             inner = sp.id === 'code'
-              ? <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />
+              ? <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} liveError={liveData?.out_e || undefined} />
               : <TextInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isNumber) {
             const val = Number(p[sp.id] ?? sp.default ?? 0);
