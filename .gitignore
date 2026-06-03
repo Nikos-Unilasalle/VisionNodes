@@ -46,6 +46,7 @@ engine/plugins/gee_cache/package-lock.json
 
 # Copernicus tile cache (large GeoTIFFs + trained models, not versioned)
 engine/plugins/copernicus_cache/
+engine/plugins/copernicus_marine_cache/
 
 # ACOLITE source clone (use: git clone https://github.com/acolite/acolite.git engine/plugins/acolite_src)
 engine/plugins/acolite_src/
