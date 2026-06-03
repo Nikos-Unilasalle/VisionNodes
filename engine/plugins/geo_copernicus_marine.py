@@ -51,7 +51,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
         super().__init__()
         self._prev_fetch      = 0
         self._loading         = False
-        self._cache_data      = None   # (grids, preview_img, meta)
+        self._cache_data      = None   # (grids, meta)
         self._auto_tried      = False
         self._prev_dl_key     = None   # hash of download-relevant params
         self._generation      = 0      # bumped on every Fetch — older threads' writes ignored
@@ -82,7 +82,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
     @staticmethod
     def _dl_params_key(params: dict) -> str:
         keys = ('dataset_id', 'variable', 'bbox', 'date_start', 'date_end',
-                'min_depth', 'max_depth', 'depth_idx', 'service', 'colormap', 'cache_dir')
+                'min_depth', 'max_depth', 'depth_idx', 'service', 'cache_dir')
         s = json.dumps({k: params.get(k) for k in keys}, sort_keys=True)
         return hashlib.md5(s.encode()).hexdigest()
 
@@ -130,7 +130,29 @@ class GeoCopernicusMarineNode(NodeProcessor):
         if self._cache_data is None:
             return {'grids': None, 'preview': None, 'meta': None}
 
-        grids, preview_img, meta = self._cache_data
+        grids, meta = self._cache_data
+        colormap_idx = int(params.get('colormap', 0))
+        T, H, W = grids.shape
+        f_arr = grids[0]
+        valid_mask = ~np.isnan(f_arr)
+        valid_pixels = f_arr[valid_mask]
+
+        if valid_pixels.size == 0:
+            preview_img = np.zeros((H, W, 3), dtype=np.uint8)
+        else:
+            p2, p98 = np.percentile(valid_pixels, (2, 98))
+            if p98 == p2:
+                stretched = np.zeros_like(f_arr, dtype=np.uint8)
+            else:
+                stretched = np.clip((f_arr - p2) / (p98 - p2) * 255, 0, 255)
+                stretched[~valid_mask] = 0
+                stretched = stretched.astype(np.uint8)
+            cmaps = [cv2.COLORMAP_VIRIDIS, cv2.COLORMAP_PLASMA, cv2.COLORMAP_JET, cv2.COLORMAP_INFERNO]
+            cmap = cmaps[min(colormap_idx, len(cmaps) - 1)]
+            color_img = cv2.applyColorMap(stretched, cmap)
+            color_img[~valid_mask] = [40, 40, 40]
+            preview_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
+
         return {
             'grids': grids,
             'preview': preview_img,
@@ -171,7 +193,6 @@ class GeoCopernicusMarineNode(NodeProcessor):
         max_depth = float(params.get('max_depth', 0.0))
         depth_idx = int(params.get('depth_idx', 0))
         service_idx = int(params.get('service', 0))
-        colormap_idx = int(params.get('colormap', 0))
         raw_cache = str(params.get('cache_dir', 'copernicus_marine_cache') or 'copernicus_marine_cache').strip()
 
         if not dataset_id or not variable:
@@ -309,33 +330,6 @@ class GeoCopernicusMarineNode(NodeProcessor):
 
         T, H, W = grids.shape
 
-        # Build preview of first frame
-        f_arr = grids[0]
-        valid_mask = ~np.isnan(f_arr)
-        valid_pixels = f_arr[valid_mask]
-
-        if valid_pixels.size == 0:
-            preview_img = np.zeros((H, W, 3), dtype=np.uint8)
-        else:
-            p2, p98 = np.percentile(valid_pixels, (2, 98))
-            if p98 == p2:
-                stretched = np.zeros_like(f_arr, dtype=np.uint8)
-            else:
-                stretched = np.clip((f_arr - p2) / (p98 - p2) * 255, 0, 255)
-                stretched[~valid_mask] = 0
-                stretched = stretched.astype(np.uint8)
-            
-            cmaps = [
-                cv2.COLORMAP_VIRIDIS,
-                cv2.COLORMAP_PLASMA,
-                cv2.COLORMAP_JET,
-                cv2.COLORMAP_INFERNO
-            ]
-            cmap = cmaps[min(colormap_idx, len(cmaps) - 1)]
-            color_img = cv2.applyColorMap(stretched, cmap)
-            color_img[~valid_mask] = [40, 40, 40]  # Land mask
-            preview_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2RGB)
-
         meta = {
             'dataset_id': dataset_id,
             'variable': variable,
@@ -354,7 +348,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
         if self._generation != my_gen or is_cancelled(self._notif_id):
             return
 
-        self._cache_data = (grids, preview_img, meta)
+        self._cache_data = (grids, meta)
         send_notification(f"Copernicus Marine: Prêt !", progress=1.0, notif_id=self._notif_id)
 
         # Wake static-graph engine

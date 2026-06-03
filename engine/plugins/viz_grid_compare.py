@@ -57,6 +57,11 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     ]
 )
 class GridCompareDashboardNode(NodeProcessor):
+    def __init__(self):
+        super().__init__()
+        self._cache_key = None
+        self._cache_result = None
+
     def process(self, inputs, params):
         orig = inputs.get('original')
         recon = inputs.get('reconstructed')
@@ -76,6 +81,10 @@ class GridCompareDashboardNode(NodeProcessor):
         frame_idx = int(params.get('frame_idx', 0))
         frame_idx = max(0, min(frame_idx, T - 1))
         colormap_idx = int(params.get('colormap', 0))
+
+        cache_key = (id(orig), id(recon), frame_idx, colormap_idx)
+        if cache_key == self._cache_key and self._cache_result is not None:
+            return self._cache_result
 
         # Extract frames
         f_orig = orig[frame_idx]
@@ -148,32 +157,39 @@ class GridCompareDashboardNode(NodeProcessor):
         diff_rgb = cv2.cvtColor(diff_colored, cv2.COLOR_BGR2RGB)
 
         _, plt = _get_mpl()
-        with plt.rc_context(_MPL_DARK):
-            fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 3.5))
+        fig = None
+        try:
+            with plt.rc_context(_MPL_DARK):
+                fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 3.5))
 
-            ax1.imshow(orig_rgb)
-            ax1.set_title('Original Grid', fontsize=9)
-            ax1.axis('off')
+                ax1.imshow(orig_rgb)
+                ax1.set_title('Original Grid', fontsize=9)
+                ax1.axis('off')
 
-            ax2.imshow(recon_rgb)
-            ax2.set_title('Reconstructed Grid', fontsize=9)
-            ax2.axis('off')
+                ax2.imshow(recon_rgb)
+                ax2.set_title('Reconstructed Grid', fontsize=9)
+                ax2.axis('off')
 
-            ax3.imshow(diff_rgb)
-            ax3.set_title('Absolute Error Map', fontsize=9)
-            ax3.axis('off')
+                ax3.imshow(diff_rgb)
+                ax3.set_title('Absolute Error Map', fontsize=9)
+                ax3.axis('off')
 
-            fig.suptitle(
-                f"Comparaison Frame {frame_idx}/{T-1}  |  "
-                f"MSE: {frame_mse:.5f}  |  PSNR: {frame_psnr:.2f} dB",
-                fontsize=10
-            )
-            fig.tight_layout()
-            preview_img = _fig_to_bgr(fig, dpi=100)
-            plt.close(fig)
+                fig.suptitle(
+                    f"Comparaison Frame {frame_idx}/{T-1}  |  "
+                    f"MSE: {frame_mse:.5f}  |  PSNR: {frame_psnr:.2f} dB",
+                    fontsize=10
+                )
+                fig.tight_layout()
+                preview_img = _fig_to_bgr(fig, dpi=100)
+        finally:
+            if fig is not None:
+                plt.close(fig)
 
-        return {
+        result = {
             'preview': preview_img,
             'frame_mse': frame_mse,
             'frame_psnr': frame_psnr,
         }
+        self._cache_key = cache_key
+        self._cache_result = result
+        return result

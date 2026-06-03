@@ -44,6 +44,7 @@ class NetCDFGridReaderNode(NodeProcessor):
         self._cache_path = None
         self._cache_data = None
         self._pending_thumb = None
+        self._preview_cache = None  # (colormap_idx, preview_img)
 
     def _apply_colormap(self, grid, colormap_idx):
         # Drop NaNs for stretching
@@ -258,6 +259,7 @@ class NetCDFGridReaderNode(NodeProcessor):
                 }
                 self._cache_path = cache_key
                 self._pending_thumb = True
+                self._preview_cache = None
                 send_notification(f"NetCDF: {grids.shape[0]} frames de taille {grids.shape[1]}x{grids.shape[2]} chargées.", progress=1.0, notif_id=_NOTIF_ID)
 
             except Exception as e:
@@ -267,9 +269,12 @@ class NetCDFGridReaderNode(NodeProcessor):
         grids = self._cache_data['grids']
         meta = self._cache_data['meta']
 
-        # Generate preview (Frame 0)
-        first_frame = grids[0]
-        preview = self._apply_colormap(first_frame, colormap_idx)
+        # Generate preview (Frame 0) — cached by colormap
+        if self._preview_cache is None or self._preview_cache[0] != colormap_idx:
+            preview = self._apply_colormap(grids[0], colormap_idx)
+            self._preview_cache = (colormap_idx, preview)
+        else:
+            preview = self._preview_cache[1]
 
         # Base64 thumbnail for flow preview
         out_thumb = None

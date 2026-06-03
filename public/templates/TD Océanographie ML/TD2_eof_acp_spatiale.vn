@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 320 },
+      "width": 208, "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_grid_pca",
+      "position": { "x": 360, "y": 260 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 5,
+          "standardize": true,
+          "detrend": 1,
+          "cos_lat": false,
+          "solver": 0,
+          "colormap": 3,
+          "node_note": "Faites varier n_components de 1 a 50. Defi : PSNR > 30 dB !"
+        }
+      }
+    },
+    {
+      "id": "compare",
+      "type": "viz_grid_compare",
+      "position": { "x": 700, "y": 170 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": {
+          "frame_idx": 0,
+          "colormap": 0,
+          "node_note": "Changez frame_idx pour explorer differents pas de temps"
+        }
+      }
+    },
+    {
+      "id": "psnr_inspect",
+      "type": "data_inspector",
+      "position": { "x": 1020, "y": 170 },
+      "width": 240, "height": 180,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Qualite de reconstruction en dB. Objectif : PSNR > 30 dB" }
+      }
+    },
+    {
+      "id": "display_compare",
+      "type": "output_display",
+      "position": { "x": 700, "y": 400 },
+      "width": 320, "height": 240,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Original / Reconstruit / Erreur absolue" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "display_modes",
+      "type": "output_display",
+      "position": { "x": 360, "y": 480 },
+      "width": 280, "height": 200,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "EOF1 = structure spatiale principale de variabilite" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "compression_py",
+      "type": "logic_python",
+      "position": { "x": 1020, "y": 420 },
+      "width": 260, "height": 153,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 2 — calcul du taux de compression PCA",
+          "code": "# TD2 : Calcul du Taux de Compression PCA\n# Entree a = meta (dict depuis geo_netcdf_reader)\n\nmeta = a\n\n# Modifiez k pour qu'il corresponde a n_components du noeud PCA !\nk = 5\n\nif meta is None:\n    out_dict = {'statut': 'Branchez meta depuis le lecteur NetCDF'}\nelse:\n    shape = meta.get('shape', [0, 0, 0])  # [T, H, W]\n    T, H, W = shape[0], shape[1], shape[2]\n\n    # Taille originale\n    taille_orig = T * H * W\n\n    # Taille avec k composantes PCA\n    # On stocke : k scores temporels (T*k) + k cartes spatiales (k*H*W)\n    taille_pca = T * k + k * H * W\n\n    ratio = taille_orig / taille_pca if taille_pca > 0 else 0\n\n    out_dict = {\n        'original_T_x_H_x_W': f'{T} x {H} x {W} = {taille_orig:,}',\n        'stockage_PCA':        taille_pca,\n        'taux_compression':    f'1:{round(ratio, 1)}',\n        'reduction_pct':       f'{round((1 - 1/ratio) * 100, 1)} %',\n    }\n    out_scalar = round(ratio, 2)"
+        }
+      }
+    },
+    {
+      "id": "ratio_inspect",
+      "type": "data_inspector",
+      "position": { "x": 1300, "y": 420 },
+      "width": 240, "height": 180,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Rapport de compression vs qualite de reconstruction" }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "reader",        "target": "pca",            "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
+    { "id": "e2", "source": "reader",        "target": "pca",            "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
+    { "id": "e3", "source": "reader",        "target": "compare",        "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e4", "source": "pca",           "target": "compare",        "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
+    { "id": "e5", "source": "compare",       "target": "display_compare","sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e6", "source": "compare",       "target": "psnr_inspect",   "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" },
+    { "id": "e7", "source": "pca",           "target": "display_modes",  "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e8", "source": "reader",        "target": "compression_py", "sourceHandle": "dict__meta",         "targetHandle": "any__a" },
+    { "id": "e9", "source": "compression_py","target": "ratio_inspect",  "sourceHandle": "dict__out_dict",     "targetHandle": "any__data" }
+  ],
+  "ui": {
+    "previewSize": { "w": 460, "h": 260 },
+    "previewPos":  { "x": 80, "y": -300 },
+    "activePaletteIndex": 3,
+    "visualizedNodeId": "display_compare"
+  }
+}

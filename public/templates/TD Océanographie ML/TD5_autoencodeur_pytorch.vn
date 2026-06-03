@@ -1,0 +1,156 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 370 },
+      "width": 208, "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca_ref",
+      "type": "ml_grid_pca",
+      "position": { "x": 360, "y": 80 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 10,
+          "standardize": true,
+          "detrend": 1,
+          "colormap": 3,
+          "node_note": "Reference lineaire k=10 — a battre avec l'autoencodeur !"
+        }
+      }
+    },
+    {
+      "id": "autoencoder_py",
+      "type": "logic_python",
+      "position": { "x": 360, "y": 530 },
+      "width": 280, "height": 180,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Autoencodeur PyTorch — modifiez latent_dim et n_epochs. Premier run = entrainement (~30s).",
+          "code": "# TD5 : Autoencodeur Lineaire (PyTorch)\n# Un autoencodeur apprend une representation compressee non-lineaire.\n# Encodeur : D dimensions -> couche cachee -> latent_dim\n# Decodeur : latent_dim  -> couche cachee -> D dimensions\n#\n# Entree a = grids (T x H x W)\n# Sorties : out_any = grids reconstruites, out_scalar = MSE, out_dict = metriques\n\ngrids = a\nif grids is None:\n    out_dict = {'statut': 'En attente des donnees...'}\nelse:\n    grids_id = id(grids)\n    if state.get('grids_id') == grids_id:\n        out_any    = state['recon']\n        out_scalar = state['mse']\n        out_dict   = state['metrics']\n    else:\n        import torch\n        import torch.nn as nn\n\n        T, H, W = grids.shape\n\n        # Pretraitement\n        X     = grids.reshape(T, H * W).astype('float32')\n        valid = ~np.isnan(X).any(axis=0)\n        Xv    = X[:, valid]\n        mu    = Xv.mean(axis=0)\n        sig   = Xv.std(axis=0) + 1e-6\n        Xn    = torch.tensor((Xv - mu) / sig)\n        D     = Xn.shape[1]\n\n        # Hyperparametres (modifiez !)\n        latent_dim = 10    # dimension de l'espace latent\n        hidden_dim = 64    # taille couche cachee\n        n_epochs   = 300   # iterations d'entrainement\n        lr         = 5e-3  # taux d'apprentissage\n\n        # Architecture\n        class AE(nn.Module):\n            def __init__(self):\n                super().__init__()\n                self.enc = nn.Sequential(\n                    nn.Linear(D, hidden_dim), nn.ReLU(),\n                    nn.Linear(hidden_dim, latent_dim)\n                )\n                self.dec = nn.Sequential(\n                    nn.Linear(latent_dim, hidden_dim), nn.ReLU(),\n                    nn.Linear(hidden_dim, D)\n                )\n            def forward(self, x):\n                return self.dec(self.enc(x))\n\n        model  = AE()\n        opt    = torch.optim.Adam(model.parameters(), lr=lr)\n        losses = []\n        for epoch in range(n_epochs):\n            opt.zero_grad()\n            loss = ((model(Xn) - Xn) ** 2).mean()\n            loss.backward()\n            opt.step()\n            if epoch % 50 == 0:\n                losses.append(round(float(loss), 6))\n\n        # Reconstruction\n        with torch.no_grad():\n            Xr = model(Xn).numpy() * sig + mu\n        recon = np.full((T, H * W), np.nan)\n        recon[:, valid] = Xr\n        recon = recon.reshape(T, H, W)\n        mse   = float(np.nanmean((grids - recon) ** 2))\n\n        state.update({\n            'grids_id': grids_id, 'recon': recon, 'mse': mse,\n            'metrics': {\n                'MSE_autoencodeur':  round(mse, 6),\n                'latent_dim':        latent_dim,\n                'taux_compression':  f'1:{round(D / latent_dim)}',\n                'courbe_loss':       losses,\n                'nb_parametres_PyTorch': sum(p.numel() for p in model.parameters()),\n            }\n        })\n        out_any    = state['recon']\n        out_scalar = state['mse']\n        out_dict   = state['metrics']"
+        }
+      }
+    },
+    {
+      "id": "compare_pca",
+      "type": "viz_grid_compare",
+      "position": { "x": 720, "y": 80 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": { "frame_idx": 0, "colormap": 0, "node_note": "Qualite reference ACP k=10" }
+      }
+    },
+    {
+      "id": "compare_ae",
+      "type": "viz_grid_compare",
+      "position": { "x": 720, "y": 530 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": { "frame_idx": 0, "colormap": 0, "node_note": "Qualite autoencodeur" }
+      }
+    },
+    {
+      "id": "display_pca",
+      "type": "output_display",
+      "position": { "x": 720, "y": 240 },
+      "width": 320, "height": 220,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "ACP : Original vs Reconstruit" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "display_ae",
+      "type": "output_display",
+      "position": { "x": 720, "y": 690 },
+      "width": 320, "height": 220,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Autoencodeur : Original vs Reconstruit" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "psnr_pca",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 80 },
+      "width": 240, "height": 140,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "PSNR reference ACP" }
+      }
+    },
+    {
+      "id": "ae_metrics",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 530 },
+      "width": 240, "height": 200,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Metriques autoencodeur : MSE, taux compression, courbe de loss" }
+      }
+    },
+    {
+      "id": "bilan_py",
+      "type": "logic_python",
+      "position": { "x": 1040, "y": 270 },
+      "width": 260, "height": 153,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 5 — bilan ACP vs Autoencodeur",
+          "code": "# TD5 : Bilan Comparatif ACP vs Autoencodeur\n# a = PSNR depuis viz_grid_compare (ACP)\n# b = MSE  depuis autoencodeur (logic_python out_scalar)\n\nimport math\npsnr_pca = a\nmse_ae   = b\n\nif psnr_pca is None or mse_ae is None:\n    out_dict = {'statut': 'Branchez les sorties PSNR et MSE'}\nelse:\n    psnr_ae = round(10 * math.log10(1.0 / (mse_ae + 1e-10)), 2)\n\n    out_dict = {\n        'PSNR_ACP_dB':          round(float(psnr_pca), 2),\n        'PSNR_Autoencodeur_dB': psnr_ae,\n        'gagnant':              'Autoencodeur' if psnr_ae > float(psnr_pca) else 'ACP',\n        'ecart_dB':             round(abs(psnr_ae - float(psnr_pca)), 2),\n    }\n    # Exercice :\n    # 1. Augmentez latent_dim -> MSE diminue, compression aussi\n    # 2. Qu'est-ce qui limite l'autoencodeur ?\n    # 3. Essayez d'augmenter n_epochs ou de changer le lr\n    # 4. Comparez le nb de parametres PyTorch vs nb de coefficients ACP"
+        }
+      }
+    },
+    {
+      "id": "bilan_inspect",
+      "type": "data_inspector",
+      "position": { "x": 1320, "y": 270 },
+      "width": 240, "height": 180,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Resultat final : qui gagne et de combien ?" }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1",  "source": "reader",          "target": "pca_ref",       "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
+    { "id": "e2",  "source": "reader",          "target": "pca_ref",       "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
+    { "id": "e3",  "source": "reader",          "target": "autoencoder_py","sourceHandle": "any__grids",         "targetHandle": "any__a" },
+    { "id": "e4",  "source": "reader",          "target": "compare_pca",   "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e5",  "source": "pca_ref",         "target": "compare_pca",   "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
+    { "id": "e6",  "source": "reader",          "target": "compare_ae",    "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e7",  "source": "autoencoder_py",  "target": "compare_ae",    "sourceHandle": "any__out_any",       "targetHandle": "any__reconstructed" },
+    { "id": "e8",  "source": "compare_pca",     "target": "display_pca",   "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e9",  "source": "compare_ae",      "target": "display_ae",    "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e10", "source": "compare_pca",     "target": "psnr_pca",      "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" },
+    { "id": "e11", "source": "autoencoder_py",  "target": "ae_metrics",    "sourceHandle": "dict__out_dict",     "targetHandle": "any__data" },
+    { "id": "e12", "source": "compare_pca",     "target": "bilan_py",      "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__a" },
+    { "id": "e13", "source": "autoencoder_py",  "target": "bilan_py",      "sourceHandle": "scalar__out_scalar", "targetHandle": "any__b" },
+    { "id": "e14", "source": "bilan_py",        "target": "bilan_inspect", "sourceHandle": "dict__out_dict",     "targetHandle": "any__data" }
+  ],
+  "ui": {
+    "previewSize": { "w": 460, "h": 260 },
+    "previewPos":  { "x": 80, "y": -280 },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "display_ae"
+  }
+}
