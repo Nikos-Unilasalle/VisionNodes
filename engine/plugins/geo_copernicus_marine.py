@@ -1,9 +1,10 @@
 import os
 import json
 import hashlib
+import threading
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel
+from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel, _notification_queue
 
 _NOTIF_ID = 'copernicus_marine'
 _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
@@ -41,10 +42,22 @@ _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
         {'id': 'depth_idx',     'label': 'Index Profondeur (4D)',   'type': 'int',    'default': 0, 'min': 0, 'max': 100},
         {'id': 'service',       'label': 'Service / Protocole',     'type': 'enum',   'options': ['auto', 'arco-geo-series', 'arco-time-series', 'opendap', 'motu'], 'default': 0},
         {'id': 'colormap',      'label': 'Palette Couleur',          'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
+        {'id': 'cache_dir',     'label': 'Dossier Cache',           'type': 'string', 'default': 'copernicus_marine_cache'},
         {'id': 'fetch',         'label': 'Télécharger',             'type': 'trigger', 'default': 0},
     ]
 )
 class GeoCopernicusMarineNode(NodeProcessor):
+    def __init__(self):
+        super().__init__()
+        self._prev_fetch      = 0
+        self._loading         = False
+        self._cache_data      = None   # (grids, preview_img, meta)
+        self._auto_tried      = False
+        self._prev_dl_key     = None   # hash of download-relevant params
+        self._generation      = 0      # bumped on every Fetch — older threads' writes ignored
+        self._stop_event      = threading.Event()  # signal in-flight thread to stop
+        self._notif_id        = f'copernicus_marine_{id(self)}'
+
     @staticmethod
     def _load_secrets() -> dict:
         try:
@@ -66,12 +79,76 @@ class GeoCopernicusMarineNode(NodeProcessor):
         except Exception:
             pass
 
+    @staticmethod
+    def _dl_params_key(params: dict) -> str:
+        keys = ('dataset_id', 'variable', 'bbox', 'date_start', 'date_end',
+                'min_depth', 'max_depth', 'depth_idx', 'service', 'colormap', 'cache_dir')
+        s = json.dumps({k: params.get(k) for k in keys}, sort_keys=True)
+        return hashlib.md5(s.encode()).hexdigest()
+
     def process(self, inputs, params):
         # Determine parameters (inputs override params if connected)
-        bbox_val = inputs.get('bbox') or params.get('bbox')
-        date_start = inputs.get('date_start') or params.get('date_start')
-        date_end = inputs.get('date_end') or params.get('date_end')
+        params = params.copy()
+        if inputs.get('bbox') is not None:
+            params['bbox'] = inputs['bbox']
+        if inputs.get('date_start') is not None:
+            params['date_start'] = inputs['date_start']
+        if inputs.get('date_end') is not None:
+            params['date_end'] = inputs['date_end']
 
+        dl_key = self._dl_params_key(params)
+        if dl_key != self._prev_dl_key:
+            self._prev_dl_key = dl_key
+            self._cache_data  = None
+            self._auto_tried  = False
+
+        fetch_val = params.get('fetch', 0)
+        rising = fetch_val != self._prev_fetch and fetch_val not in (False, 0, None)
+        self._prev_fetch = fetch_val
+
+        if rising:
+            self._generation += 1
+            self._stop_event.set()
+            my_gen = self._generation
+            self._loading = True
+            self._auto_tried = True
+            threading.Thread(
+                target=self._do_fetch, args=(params,),
+                kwargs={'my_gen': my_gen}, daemon=True,
+            ).start()
+
+        elif self._cache_data is None and not self._loading and not self._auto_tried:
+            self._auto_tried = True
+            self._generation += 1
+            my_gen = self._generation
+            self._loading = True
+            threading.Thread(
+                target=self._do_fetch, args=(params,),
+                kwargs={'auto': True, 'my_gen': my_gen}, daemon=True,
+            ).start()
+
+        if self._cache_data is None:
+            return {'grids': None, 'preview': None, 'meta': None}
+
+        grids, preview_img, meta = self._cache_data
+        return {
+            'grids': grids,
+            'preview': preview_img,
+            'meta': meta
+        }
+
+    def _do_fetch(self, params: dict, auto: bool = False, my_gen: int = 0) -> None:
+        self._stop_event.clear()
+        try:
+            self._do_fetch_impl(params, auto=auto, my_gen=my_gen)
+        except BaseException as e:
+            if self._generation == my_gen:
+                send_notification(f"Copernicus Marine: unexpected crash: {e}", level='error', notif_id=self._notif_id)
+        finally:
+            if self._generation == my_gen:
+                self._loading = False
+
+    def _do_fetch_impl(self, params: dict, auto: bool = False, my_gen: int = 0) -> None:
         username = params.get('username', '').strip()
         password = params.get('password', '').strip()
         secrets = self._load_secrets()
@@ -87,19 +164,25 @@ class GeoCopernicusMarineNode(NodeProcessor):
 
         dataset_id = params.get('dataset_id', '').strip()
         variable = params.get('variable', '').strip()
+        bbox_val = params.get('bbox', '').strip()
+        date_start = params.get('date_start', '').strip()
+        date_end = params.get('date_end', '').strip()
         min_depth = float(params.get('min_depth', 0.0))
         max_depth = float(params.get('max_depth', 0.0))
         depth_idx = int(params.get('depth_idx', 0))
         service_idx = int(params.get('service', 0))
         colormap_idx = int(params.get('colormap', 0))
+        raw_cache = str(params.get('cache_dir', 'copernicus_marine_cache') or 'copernicus_marine_cache').strip()
 
         if not dataset_id or not variable:
-            send_notification("Copernicus Marine: Dataset ID et Variable requis", level='warning', notif_id=_NOTIF_ID)
-            return {}
+            if not auto:
+                send_notification("Copernicus Marine: Dataset ID et Variable requis", level='warning', notif_id=self._notif_id)
+            return
 
         if not bbox_val:
-            send_notification("Copernicus Marine: Bounding box manquante", level='warning', notif_id=_NOTIF_ID)
-            return {}
+            if not auto:
+                send_notification("Copernicus Marine: Bounding box manquante", level='warning', notif_id=self._notif_id)
+            return
 
         # Parse bbox: 'lon_min,lat_min,lon_max,lat_max'
         try:
@@ -108,26 +191,35 @@ class GeoCopernicusMarineNode(NodeProcessor):
                 raise ValueError("Format invalide")
             min_lon, min_lat, max_lon, max_lat = coords
         except Exception:
-            send_notification(f"Copernicus Marine: BBox invalide '{bbox_val}'", level='error', notif_id=_NOTIF_ID)
-            return {}
-
-        if not self.ensure_packages(['copernicusmarine', 'xarray', 'netCDF4'], notif_id=_NOTIF_ID):
-            return {}
+            if not auto:
+                send_notification(f"Copernicus Marine: BBox invalide '{bbox_val}'", level='error', notif_id=self._notif_id)
+            return
 
         # Caching logic based on params hash
         cache_str = f"{dataset_id}_{variable}_{bbox_val}_{date_start}_{date_end}_{min_depth}_{max_depth}_{service_idx}"
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()
-        cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'copernicus_marine_cache')
+        _engine_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_dir = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
         os.makedirs(cache_dir, exist_ok=True)
         nc_file_path = os.path.join(cache_dir, f"{cache_hash}.nc")
 
+        if auto:
+            if not os.path.exists(nc_file_path):
+                return
+
         if not os.path.exists(nc_file_path):
             if not username or not password:
-                send_notification("Copernicus Marine: Identifiants (Username/Password) requis pour télécharger", level='error', notif_id=_NOTIF_ID)
-                return {}
+                send_notification("Copernicus Marine: Identifiants (Username/Password) requis pour télécharger", level='error', notif_id=self._notif_id)
+                return
 
-            send_notification(f"Copernicus Marine: Téléchargement en cours...", progress=0.1, notif_id=_NOTIF_ID)
+            if not self.ensure_packages(['copernicusmarine', 'xarray', 'netCDF4'], notif_id=self._notif_id):
+                return
+
+            send_notification(f"Copernicus Marine: Téléchargement en cours...", progress=0.1, notif_id=self._notif_id)
             
+            if self._generation != my_gen or is_cancelled(self._notif_id):
+                return
+
             import copernicusmarine
             try:
                 # Prepare subset arguments
@@ -157,7 +249,11 @@ class GeoCopernicusMarineNode(NodeProcessor):
 
                 # Run subset download
                 copernicusmarine.subset(**subset_kwargs)
-                send_notification(f"Copernicus Marine: Téléchargement terminé !", progress=0.9, notif_id=_NOTIF_ID)
+                if self._generation != my_gen or is_cancelled(self._notif_id):
+                    if os.path.exists(nc_file_path):
+                        os.remove(nc_file_path)
+                    return
+                send_notification(f"Copernicus Marine: Téléchargement terminé !", progress=0.9, notif_id=self._notif_id)
             except Exception as e:
                 # Clean up incomplete file if any
                 if os.path.exists(nc_file_path):
@@ -165,20 +261,24 @@ class GeoCopernicusMarineNode(NodeProcessor):
                         os.remove(nc_file_path)
                     except:
                         pass
-                send_notification(f"Copernicus Marine: Erreur de téléchargement: {e}", level='error', notif_id=_NOTIF_ID)
-                return {}
+                send_notification(f"Copernicus Marine: Erreur de téléchargement: {e}", level='error', notif_id=self._notif_id)
+                return
+
+        if not self.ensure_packages(['xarray', 'netCDF4'], notif_id=self._notif_id):
+            return
 
         # Load file using xarray
         import xarray as xr
         try:
             ds = xr.open_dataset(nc_file_path)
         except Exception as e:
-            send_notification(f"Copernicus Marine: Erreur d'ouverture du fichier NetCDF: {e}", level='error', notif_id=_NOTIF_ID)
-            return {}
+            send_notification(f"Copernicus Marine: Erreur d'ouverture du fichier NetCDF: {e}", level='error', notif_id=self._notif_id)
+            return
 
         if variable not in ds.variables:
-            send_notification(f"Copernicus Marine: Variable '{variable}' non trouvée dans le dataset", level='error', notif_id=_NOTIF_ID)
-            return {}
+            send_notification(f"Copernicus Marine: Variable '{variable}' non trouvée dans le dataset", level='error', notif_id=self._notif_id)
+            ds.close()
+            return
 
         ds_var = ds[variable]
 
@@ -245,13 +345,21 @@ class GeoCopernicusMarineNode(NodeProcessor):
             'lat_min': float(ds_var.latitude.min()) if 'latitude' in ds_var.coords else min_lat,
             'lat_max': float(ds_var.latitude.max()) if 'latitude' in ds_var.coords else max_lat,
             'time_len': T,
+            'cache_path': nc_file_path,
         }
 
         # Keep dataset closed to allow cleanup/re-download
         ds.close()
 
-        return {
-            'grids': grids,
-            'preview': preview_img,
-            'meta': meta
-        }
+        if self._generation != my_gen or is_cancelled(self._notif_id):
+            return
+
+        self._cache_data = (grids, preview_img, meta)
+        send_notification(f"Copernicus Marine: Prêt !", progress=1.0, notif_id=self._notif_id)
+
+        # Wake static-graph engine
+        _notification_queue.put_nowait({
+            '_wake_engine': True,
+            '_node_type': 'geo_copernicus_marine',
+            '_notif_id': self._notif_id
+        })

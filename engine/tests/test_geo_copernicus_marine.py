@@ -26,9 +26,29 @@ def clear_cache():
         shutil.rmtree(cache_dir)
 
 
+import time
+
+def run_node_and_wait(node, inputs, params):
+    params = params.copy()
+    params['fetch'] = 1
+    
+    # Ensure rising edge detection triggers
+    node._prev_fetch = 0
+    
+    # First call triggers the background thread
+    node.process(inputs, params)
+    
+    # Wait for the thread to complete
+    start_t = time.time()
+    while node._loading and time.time() - start_t < 10.0:
+        time.sleep(0.01)
+        
+    # Second call gets the cached results
+    return node.process(inputs, params)
+
 def mock_subset(dataset_id, username, password, variables, minimum_longitude, maximum_longitude,
-                minimum_latitude, maximum_latitude, start_datetime, end_datetime, output_filename,
-                force_download=True):
+                 minimum_latitude, maximum_latitude, start_datetime, end_datetime, output_filename,
+                 force_download=True):
     # When called, write a dummy NetCDF file with expected structure
     import xarray as xr
     import pandas as pd
@@ -68,8 +88,8 @@ def test_copernicus_marine_downloader(mock_sub, tmp_path):
         'colormap': 0
     }
 
-    # Execute process
-    res = node.process({}, params)
+    # Execute process using the async runner helper
+    res = run_node_and_wait(node, {}, params)
 
     assert res is not None
     assert 'grids' in res
@@ -143,7 +163,7 @@ def test_copernicus_marine_downloader_advanced(mock_sub, tmp_path):
         'colormap': 0
     }
 
-    res = node.process({}, params)
+    res = run_node_and_wait(node, {}, params)
     assert res is not None
     assert res['grids'].shape == (2, 4, 4)
 
@@ -177,7 +197,7 @@ def test_copernicus_marine_credentials_storage(mock_sub, tmp_path):
             'bbox': '-53.5,4.5,-51.5,6.5',
             'colormap': 0
         }
-        res = node.process({}, params)
+        res = run_node_and_wait(node, {}, params)
         assert res is not None
         
         # Verify it was saved to the temp secrets file
@@ -207,7 +227,7 @@ def test_copernicus_marine_credentials_storage(mock_sub, tmp_path):
         if os.path.exists(cache_dir):
             shutil.rmtree(cache_dir)
         
-        res_blank = node.process({}, params_blank)
+        res_blank = run_node_and_wait(node, {}, params_blank)
         assert res_blank is not None
         
         # Verify the subset was called with the stored credentials
