@@ -108,8 +108,9 @@ class GridCompareDashboardNode(NodeProcessor):
             if amax == 0:
                 diff_vis = np.zeros_like(abs_diff, dtype=np.uint8)
             else:
-                diff_vis = np.clip(abs_diff / amax * 255, 0, 255).astype(np.uint8)
-            diff_vis[~valid_mask] = 0
+                diff_vis = np.clip(abs_diff / amax * 255, 0, 255)
+                diff_vis[~valid_mask] = 0
+                diff_vis = diff_vis.astype(np.uint8)
 
         # Colorspace helper for original and reconstructed
         def make_color(grid):
@@ -120,10 +121,12 @@ class GridCompareDashboardNode(NodeProcessor):
             if p98 == p2:
                 stretched = np.zeros_like(grid, dtype=np.uint8)
             else:
-                stretched = np.clip((grid - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
+                stretched = np.clip((grid - p2) / (p98 - p2) * 255, 0, 255)
             
             nan_mask = np.isnan(grid)
-            stretched[nan_mask] = 0
+            if stretched.dtype != np.uint8:
+                stretched[nan_mask] = 0
+                stretched = stretched.astype(np.uint8)
 
             cmaps = [
                 cv2.COLORMAP_VIRIDIS,

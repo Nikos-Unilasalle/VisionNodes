@@ -48,7 +48,7 @@ def run_node_and_wait(node, inputs, params):
 
 def mock_subset(dataset_id, username, password, variables, minimum_longitude, maximum_longitude,
                  minimum_latitude, maximum_latitude, start_datetime, end_datetime, output_filename,
-                 force_download=True):
+                 overwrite=True):
     # When called, write a dummy NetCDF file with expected structure
     import xarray as xr
     import pandas as pd
@@ -119,7 +119,7 @@ def test_copernicus_marine_downloader(mock_sub, tmp_path):
         start_datetime='2023-01-01T00:00:00',
         end_datetime='2023-01-03T23:59:59',
         output_filename=mock_sub.call_args[1]['output_filename'],
-        force_download=True
+        overwrite=True
     )
 
     # Cleanup downloaded temp nc file
