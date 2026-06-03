@@ -155,13 +155,8 @@
     "file": "Guyane Phase 1/sinnamary_classification.vn"
   },
   {
-    "name": "Geoscientific PCA on Local NetCDF",
-    "description": "Loads space-time grid data from a local NetCDF file, applies Spatial PCA (EOF analysis) to reduce dimensions, and compares the reconstructed grid side-by-side with original data.",
+    "name": "Oceanography ML Workshop: Spatial PCA",
+    "description": "Workshop template showcasing space-time oceanographic grid analysis. Supports both Copernicus Marine Service remote downloader and local NetCDF file reading, followed by Spatial PCA (EOF analysis) and side-by-side reconstruction error comparison.",
     "file": "ml_netcdf_spatial_pca.vn"
-  },
-  {
-    "name": "Copernicus Marine Space-Time EOF",
-    "description": "Downloads marine grid data from Copernicus Marine Service, performs Spatial PCA / EOF decomposition, and displays a side-by-side reconstruction error comparison.",
-    "file": "ml_copernicus_marine_pca.vn"
   }
 ]
