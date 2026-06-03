@@ -1,10 +1,12 @@
 import os
+import json
 import hashlib
 import numpy as np
 import cv2
 from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel
 
 _NOTIF_ID = 'copernicus_marine'
+_SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
 
 @vision_node(
     type_id='geo_copernicus_marine',
@@ -43,6 +45,27 @@ _NOTIF_ID = 'copernicus_marine'
     ]
 )
 class GeoCopernicusMarineNode(NodeProcessor):
+    @staticmethod
+    def _load_secrets() -> dict:
+        try:
+            if os.path.exists(_SECRETS_PATH):
+                with open(_SECRETS_PATH) as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {}
+
+    @staticmethod
+    def _save_secrets(data: dict) -> None:
+        os.makedirs(os.path.dirname(_SECRETS_PATH), exist_ok=True)
+        try:
+            existing = GeoCopernicusMarineNode._load_secrets()
+            existing.update(data)
+            with open(_SECRETS_PATH, 'w') as f:
+                json.dump(existing, f)
+        except Exception:
+            pass
+
     def process(self, inputs, params):
         # Determine parameters (inputs override params if connected)
         bbox_val = inputs.get('bbox') or params.get('bbox')
@@ -51,6 +74,17 @@ class GeoCopernicusMarineNode(NodeProcessor):
 
         username = params.get('username', '').strip()
         password = params.get('password', '').strip()
+        secrets = self._load_secrets()
+
+        if username:
+            self._save_secrets({
+                'copernicus_marine_username': username,
+                'copernicus_marine_password': password
+            })
+        else:
+            username = secrets.get('copernicus_marine_username', '')
+            password = secrets.get('copernicus_marine_password', '')
+
         dataset_id = params.get('dataset_id', '').strip()
         variable = params.get('variable', '').strip()
         min_depth = float(params.get('min_depth', 0.0))

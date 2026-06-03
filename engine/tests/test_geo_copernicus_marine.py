@@ -3,6 +3,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import numpy as np
 import importlib.util
+import pytest
+import shutil
 from unittest.mock import patch
 from registry import NODE_CLASS_REGISTRY
 
@@ -13,6 +15,16 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 
 GeoCopernicusMarineNode = NODE_CLASS_REGISTRY['geo_copernicus_marine']
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'plugins', 'copernicus_marine_cache')
+    if os.path.exists(cache_dir):
+        shutil.rmtree(cache_dir)
+    yield
+    if os.path.exists(cache_dir):
+        shutil.rmtree(cache_dir)
+
 
 def mock_subset(dataset_id, username, password, variables, minimum_longitude, maximum_longitude,
                 minimum_latitude, maximum_latitude, start_datetime, end_datetime, output_filename,
@@ -144,4 +156,66 @@ def test_copernicus_marine_downloader_advanced(mock_sub, tmp_path):
     output_fn = called_kwargs['output_filename']
     if os.path.exists(output_fn):
         os.remove(output_fn)
+
+@patch('copernicusmarine.subset', side_effect=mock_subset)
+def test_copernicus_marine_credentials_storage(mock_sub, tmp_path):
+    # Patch the secrets path to a temporary one to avoid messing with the user's home folder
+    temp_secrets_file = str(tmp_path / 'secrets.json')
+    original_path = _mod._SECRETS_PATH
+    _mod._SECRETS_PATH = temp_secrets_file
+    try:
+        node = GeoCopernicusMarineNode()
+        
+        # 1. Run with username/password to save it
+        params = {
+            'username': 'saved_user',
+            'password': 'saved_password',
+            'dataset_id': 'cmems_mod_glo_phy_anfc_0.083deg_PT1D-m',
+            'variable': 'thetao',
+            'date_start': '2023-01-01',
+            'date_end': '2023-01-03',
+            'bbox': '-53.5,4.5,-51.5,6.5',
+            'colormap': 0
+        }
+        res = node.process({}, params)
+        assert res is not None
+        
+        # Verify it was saved to the temp secrets file
+        import json
+        with open(temp_secrets_file) as f:
+            data = json.load(f)
+        assert data.get('copernicus_marine_username') == 'saved_user'
+        assert data.get('copernicus_marine_password') == 'saved_password'
+        
+        # 2. Run with blank username/password to load from saved secrets
+        params_blank = {
+            'username': '',
+            'password': '',
+            'dataset_id': 'cmems_mod_glo_phy_anfc_0.083deg_PT1D-m',
+            'variable': 'thetao',
+            'date_start': '2023-01-01',
+            'date_end': '2023-01-03',
+            'bbox': '-53.5,4.5,-51.5,6.5',
+            'colormap': 0
+        }
+        
+        # Reset mock
+        mock_sub.reset_mock()
+        
+        # Clear cache to force a download and check credential usage
+        cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'plugins', 'copernicus_marine_cache')
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+        
+        res_blank = node.process({}, params_blank)
+        assert res_blank is not None
+        
+        # Verify the subset was called with the stored credentials
+        mock_sub.assert_called_once()
+        called_kwargs = mock_sub.call_args[1]
+        assert called_kwargs['username'] == 'saved_user'
+        assert called_kwargs['password'] == 'saved_password'
+    finally:
+        _mod._SECRETS_PATH = original_path
+
 
