@@ -1,0 +1,91 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 100 },
+      "width": 240,
+      "height": 180,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "-35,-31",
+          "lon_range": "-35,-31",
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_grid_pca",
+      "position": { "x": 350, "y": 100 },
+      "width": 260,
+      "height": 200,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 5,
+          "standardize": true,
+          "colormap": 3
+        }
+      }
+    },
+    {
+      "id": "compare",
+      "type": "viz_grid_compare",
+      "position": { "x": 670, "y": 100 },
+      "width": 280,
+      "height": 220,
+      "data": {
+        "label": "Grid Compare Dashboard",
+        "params": {
+          "frame_idx": 0,
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "inspector",
+      "type": "data_inspector",
+      "position": { "x": 1000, "y": 280 },
+      "width": 180,
+      "height": 120,
+      "data": {
+        "label": "PSNR Inspector",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "reader",
+      "target": "pca",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__grids"
+    },
+    {
+      "id": "e2",
+      "source": "reader",
+      "target": "compare",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__original"
+    },
+    {
+      "id": "e3",
+      "source": "pca",
+      "target": "compare",
+      "sourceHandle": "any__reconstructed",
+      "targetHandle": "any__reconstructed"
+    },
+    {
+      "id": "e4",
+      "source": "compare",
+      "target": "inspector",
+      "sourceHandle": "scalar__frame_psnr",
+      "targetHandle": "any__data"
+    }
+  ]
+}

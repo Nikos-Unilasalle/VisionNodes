@@ -153,5 +153,15 @@
     "name": "Sinnamary RF Pixel Classification (Guyane Phase 3)",
     "description": "Supervised pixel classification of the Sinnamary coast using a Random Forest trained on the 9-band S1+S2 fused stack (6 S1 polarization features + NDVI + MNDWI + EVI) with ESA WorldCover 2021 as ground truth labels. Classes: Mangroves (95), Herbaceous wetland (90), Tree cover (10), Permanent water (80), Bare/orpaillage (60). Outputs classification map, per-pixel confidence, and feature importance ranking.",
     "file": "Guyane Phase 1/sinnamary_classification.vn"
+  },
+  {
+    "name": "Geoscientific PCA on Local NetCDF",
+    "description": "Loads space-time grid data from a local NetCDF file, applies Spatial PCA (EOF analysis) to reduce dimensions, and compares the reconstructed grid side-by-side with original data.",
+    "file": "ml_netcdf_spatial_pca.vn"
+  },
+  {
+    "name": "Copernicus Marine Space-Time EOF",
+    "description": "Downloads marine grid data from Copernicus Marine Service, performs Spatial PCA / EOF decomposition, and displays a side-by-side reconstruction error comparison.",
+    "file": "ml_copernicus_marine_pca.vn"
   }
 ]
