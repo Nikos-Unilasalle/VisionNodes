@@ -156,10 +156,10 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   geo_copernicus:             N.CopernicusNode,
   raster_colorizer:           N.RasterColorizerNode,
   df_editor:                  N.DataFrameEditorNode,
-  geo_netcdf_reader:          withNodeResizer(N.GenericCustomNode, 240, 180),
-  ml_grid_pca:                withNodeResizer(N.GenericCustomNode, 260, 200),
-  viz_grid_compare:           withNodeResizer(N.GenericCustomNode, 280, 220),
-  geo_copernicus_marine:      withNodeResizer(N.GenericCustomNode, 240, 180),
+  geo_netcdf_reader:          N.GenericCustomNode,
+  ml_grid_pca:                N.GenericCustomNode,
+  viz_grid_compare:           N.GenericCustomNode,
+  geo_copernicus_marine:      N.GenericCustomNode,
 };
 
 export const nodeTypes: Record<string, React.ComponentType<any>> = Object.fromEntries(
