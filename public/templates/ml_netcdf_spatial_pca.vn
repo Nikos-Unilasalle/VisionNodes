@@ -12,8 +12,8 @@
       "data": {
         "label": "Copernicus Marine Downloader",
         "params": {
-          "username": "npriniotakis",
-          "password": "P0mp!dou2@50",
+          "username": "",
+          "password": "",
           "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
           "variable": "thetao",
           "date_start": "2023-01-01",
@@ -37,12 +37,12 @@
       "width": 208,
       "height": 138,
       "data": {
-        "label": "Local NetCDF Reader",
+        "label": "Local NetCDF Reader (alternative)",
         "params": {
           "path": "samples/ocean_temperature.nc",
           "variable": "thetao",
-          "lat_range": "-35,-31",
-          "lon_range": "-35,-31",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
           "colormap": 0
         }
       }
@@ -64,12 +64,8 @@
           "colormap": 3
         }
       },
-      "selected": true,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 380,
-        "y": 280
-      }
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "compare",
@@ -155,14 +151,7 @@
       "targetHandle": "any__data"
     },
     {
-      "id": "e-1780492713846-gwgu3zoxm",
-      "source": "pca",
-      "target": "node-1780492713686-ja5l93pqh",
-      "sourceHandle": "image__preview",
-      "targetHandle": "image__main"
-    },
-    {
-      "id": "e-1780492713846-swyjvwhdd",
+      "id": "e5",
       "source": "pca",
       "target": "node-1780492713686-ja5l93pqh",
       "sourceHandle": "image__preview",

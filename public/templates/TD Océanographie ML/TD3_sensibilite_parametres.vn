@@ -1,0 +1,183 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 380 },
+      "width": 208, "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca_low",
+      "type": "ml_grid_pca",
+      "position": { "x": 360, "y": 80 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 3,
+          "standardize": true,
+          "detrend": 1,
+          "cos_lat": false,
+          "colormap": 3,
+          "node_note": "k=3 composantes — forte compression"
+        }
+      }
+    },
+    {
+      "id": "pca_high",
+      "type": "ml_grid_pca",
+      "position": { "x": 360, "y": 550 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 20,
+          "standardize": true,
+          "detrend": 1,
+          "cos_lat": false,
+          "colormap": 3,
+          "node_note": "k=20 composantes — meilleure qualite"
+        }
+      }
+    },
+    {
+      "id": "compare_low",
+      "type": "viz_grid_compare",
+      "position": { "x": 700, "y": 80 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": { "frame_idx": 0, "colormap": 0, "node_note": "Resultat k=3" }
+      }
+    },
+    {
+      "id": "compare_high",
+      "type": "viz_grid_compare",
+      "position": { "x": 700, "y": 550 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": { "frame_idx": 0, "colormap": 0, "node_note": "Resultat k=20" }
+      }
+    },
+    {
+      "id": "display_low",
+      "type": "output_display",
+      "position": { "x": 700, "y": 240 },
+      "width": 320, "height": 220,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Comparaison k=3" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "display_high",
+      "type": "output_display",
+      "position": { "x": 700, "y": 700 },
+      "width": 320, "height": 220,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Comparaison k=20" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "psnr_low",
+      "type": "data_inspector",
+      "position": { "x": 1020, "y": 80 },
+      "width": 240, "height": 150,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "PSNR avec k=3 composantes" }
+      }
+    },
+    {
+      "id": "psnr_high",
+      "type": "data_inspector",
+      "position": { "x": 1020, "y": 550 },
+      "width": 240, "height": 150,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "PSNR avec k=20 composantes" }
+      }
+    },
+    {
+      "id": "bilan_py",
+      "type": "logic_python",
+      "position": { "x": 1020, "y": 270 },
+      "width": 260, "height": 153,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 3 — bilan comparatif qualite vs compression",
+          "code": "# TD3 : Comparaison Quantitative des Configurations ACP\n# a = MSE  avec k=3  (scalar depuis viz_grid_compare)\n# b = MSE  avec k=20 (scalar depuis viz_grid_compare)\n# c = meta (dict depuis geo_netcdf_reader)\n\nimport math\n\nmse_low  = a\nmse_high = b\nmeta     = c\n\nif mse_low is None or mse_high is None:\n    out_dict = {'statut': 'Branchez les sorties MSE des deux comparateurs'}\nelse:\n    psnr_low  = round(10 * math.log10(1.0 / (mse_low  + 1e-10)), 2)\n    psnr_high = round(10 * math.log10(1.0 / (mse_high + 1e-10)), 2)\n    gain      = round(psnr_high - psnr_low, 2)\n\n    shape = (meta or {}).get('shape', [0, 0, 0])\n    T, H, W = shape[0], shape[1], shape[2]\n    ratio_low  = round((T * H * W) / (T * 3  + 3  * H * W), 1) if T else 0\n    ratio_high = round((T * H * W) / (T * 20 + 20 * H * W), 1) if T else 0\n\n    out_dict = {\n        'PSNR_k3_dB':      psnr_low,\n        'PSNR_k20_dB':     psnr_high,\n        'gain_PSNR_dB':    gain,\n        'compression_k3':  f'1:{ratio_low}x',\n        'compression_k20': f'1:{ratio_high}x',\n    }\n    out_scalar = gain\n\n    # Exercice : tracez PSNR en fonction de k (de 1 a 50).\n    # Quelle valeur de k correspond au 'coude' de la courbe ?"
+        }
+      }
+    },
+    {
+      "id": "bilan_inspect",
+      "type": "data_inspector",
+      "position": { "x": 1300, "y": 270 },
+      "width": 240, "height": 200,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Lequel offre le meilleur compromis qualite/compression ?" }
+      }
+    },
+    {
+      "id": "plotter",
+      "type": "sci_plotter",
+      "position": { "x": 1300, "y": 520 },
+      "width": 340, "height": 220,
+      "data": {
+        "label": "Plotter",
+        "params": {
+          "buffer_size": 200,
+          "auto_scale": true,
+          "node_note": "MSE k=3 vs MSE k=20 en temps reel"
+        },
+        "ports": [
+          { "id": "any__0_mse_low",  "color": "any", "label": "MSE k=3" },
+          { "id": "any__1_mse_high", "color": "any", "label": "MSE k=20" }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1",  "source": "reader",       "target": "pca_low",      "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
+    { "id": "e2",  "source": "reader",       "target": "pca_low",      "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
+    { "id": "e3",  "source": "reader",       "target": "pca_high",     "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
+    { "id": "e4",  "source": "reader",       "target": "pca_high",     "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
+    { "id": "e5",  "source": "reader",       "target": "compare_low",  "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e6",  "source": "reader",       "target": "compare_high", "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e7",  "source": "pca_low",      "target": "compare_low",  "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
+    { "id": "e8",  "source": "pca_high",     "target": "compare_high", "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
+    { "id": "e9",  "source": "compare_low",  "target": "display_low",  "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e10", "source": "compare_high", "target": "display_high", "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e11", "source": "compare_low",  "target": "psnr_low",     "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" },
+    { "id": "e12", "source": "compare_high", "target": "psnr_high",    "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" },
+    { "id": "e13", "source": "compare_low",  "target": "bilan_py",     "sourceHandle": "scalar__frame_mse",  "targetHandle": "any__a" },
+    { "id": "e14", "source": "compare_high", "target": "bilan_py",     "sourceHandle": "scalar__frame_mse",  "targetHandle": "any__b" },
+    { "id": "e15", "source": "reader",       "target": "bilan_py",     "sourceHandle": "dict__meta",         "targetHandle": "any__c" },
+    { "id": "e16", "source": "bilan_py",     "target": "bilan_inspect","sourceHandle": "dict__out_dict",     "targetHandle": "any__data" },
+    { "id": "e17", "source": "compare_low",  "target": "plotter",      "sourceHandle": "scalar__frame_mse",  "targetHandle": "any__0_mse_low" },
+    { "id": "e18", "source": "compare_high", "target": "plotter",      "sourceHandle": "scalar__frame_mse",  "targetHandle": "any__1_mse_high" }
+  ],
+  "ui": {
+    "previewSize": { "w": 460, "h": 260 },
+    "previewPos":  { "x": 80, "y": -280 },
+    "activePaletteIndex": 2,
+    "visualizedNodeId": "display_low"
+  }
+}

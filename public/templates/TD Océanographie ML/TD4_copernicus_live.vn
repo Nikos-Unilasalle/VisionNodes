@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "id": "downloader",
+      "type": "geo_copernicus_marine",
+      "position": { "x": 50, "y": 150 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Copernicus Marine",
+        "params": {
+          "username": "",
+          "password": "",
+          "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
+          "variable": "thetao",
+          "date_start": "2023-01-01",
+          "date_end": "2023-01-31",
+          "bbox": "-53.5,4.5,-51.5,6.5",
+          "depth_idx": 0,
+          "colormap": 0,
+          "fetch": 0,
+          "node_note": "Entrez vos identifiants CMEMS puis cliquez Telecharger. Les credentials sont memorises automatiquement."
+        }
+      }
+    },
+    {
+      "id": "meta_inspect",
+      "type": "data_inspector",
+      "position": { "x": 380, "y": 50 },
+      "width": 240, "height": 200,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Verifiez la zone geographique, la resolution et le nb de pas de temps" }
+      }
+    },
+    {
+      "id": "display_preview",
+      "type": "output_display",
+      "position": { "x": 380, "y": 290 },
+      "width": 300, "height": 220,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Apercu du premier pas de temps telecharge" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_grid_pca",
+      "position": { "x": 380, "y": 560 },
+      "width": 240, "height": 153,
+      "data": {
+        "label": "Spatial PCA (EOF)",
+        "params": {
+          "n_components": 5,
+          "standardize": true,
+          "detrend": 1,
+          "cos_lat": false,
+          "colormap": 3,
+          "node_note": "Combien de composantes pour ce mois complet ? Comparez avec d'autres regions."
+        }
+      }
+    },
+    {
+      "id": "compare",
+      "type": "viz_grid_compare",
+      "position": { "x": 720, "y": 430 },
+      "width": 240, "height": 121,
+      "data": {
+        "label": "Grid Compare",
+        "params": { "frame_idx": 0, "colormap": 0 }
+      }
+    },
+    {
+      "id": "display_compare",
+      "type": "output_display",
+      "position": { "x": 720, "y": 590 },
+      "width": 340, "height": 240,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Original vs Reconstruit vs Erreur" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "psnr_inspect",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 430 },
+      "width": 240, "height": 150,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "PSNR de reconstruction" }
+      }
+    },
+    {
+      "id": "regions_py",
+      "type": "logic_python",
+      "position": { "x": 50, "y": 500 },
+      "width": 260, "height": 153,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 4 — copiez une bbox et re-telechargez pour comparer des regions",
+          "code": "# TD4 : Regions Oceaniques Predefinies\n# Copiez une des bbox ci-dessous dans le noeud Copernicus Marine\n# puis cliquez Telecharger.\n\nregions = {\n    'Guyane (defaut)':        '-53.5,4.5,-51.5,6.5',\n    'Atlantique tropical N':  '-35.0,0.0,-15.0,20.0',\n    'Mediterranee occ.':      '0.0,36.0,10.0,44.0',\n    'Mer des Caraibes':       '-80.0,10.0,-60.0,25.0',\n    'Pacifique El Nino':      '-170.0,-5.0,-120.0,5.0',\n    'Ocean Indien NW':        '50.0,5.0,70.0,25.0',\n}\n\nout_dict = regions\n\n# Exercice :\n# 1. Telechargez deux regions differentes\n# 2. Comparez leur k_opt (nb de composantes pour PSNR > 30 dB)\n# 3. Quelle region est la plus 'compressible' ? Pourquoi ?\n#    (Indice : pensez a la complexite spatiale des structures oceaniques)"
+        }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "downloader", "target": "meta_inspect",    "sourceHandle": "dict__meta",         "targetHandle": "any__data" },
+    { "id": "e2", "source": "downloader", "target": "display_preview", "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e3", "source": "downloader", "target": "pca",             "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
+    { "id": "e4", "source": "downloader", "target": "pca",             "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
+    { "id": "e5", "source": "downloader", "target": "compare",         "sourceHandle": "any__grids",         "targetHandle": "any__original" },
+    { "id": "e6", "source": "pca",        "target": "compare",         "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
+    { "id": "e7", "source": "compare",    "target": "display_compare", "sourceHandle": "image__preview",     "targetHandle": "image__main" },
+    { "id": "e8", "source": "compare",    "target": "psnr_inspect",    "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" }
+  ],
+  "ui": {
+    "previewSize": { "w": 460, "h": 260 },
+    "previewPos":  { "x": 50, "y": -280 },
+    "activePaletteIndex": 4,
+    "visualizedNodeId": "display_compare"
+  }
+}

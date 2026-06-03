@@ -1,0 +1,107 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 280 },
+      "width": 208, "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 0,
+          "node_note": "Chemin vers votre fichier .nc GLORYS12 (variable thetao = température)"
+        }
+      }
+    },
+    {
+      "id": "display_viridis",
+      "type": "output_display",
+      "position": { "x": 360, "y": 50 },
+      "width": 260, "height": 200,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Palette Viridis" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "reader_plasma",
+      "type": "geo_netcdf_reader",
+      "position": { "x": 50, "y": 530 },
+      "width": 208, "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 1,
+          "node_note": "Memes donnees, palette Plasma — comparez l'effet visuel"
+        }
+      }
+    },
+    {
+      "id": "display_plasma",
+      "type": "output_display",
+      "position": { "x": 360, "y": 290 },
+      "width": 260, "height": 200,
+      "data": {
+        "label": "Display",
+        "params": { "node_note": "Palette Plasma" },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "meta_inspect",
+      "type": "data_inspector",
+      "position": { "x": 360, "y": 530 },
+      "width": 260, "height": 200,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Metadonnees geographiques du fichier NetCDF" }
+      }
+    },
+    {
+      "id": "stats_py",
+      "type": "logic_python",
+      "position": { "x": 680, "y": 280 },
+      "width": 260, "height": 153,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 1 — completez le code pour calculer la variance temporelle",
+          "code": "# TD1 : Statistiques Descriptives des SST\n# Entrees :\n#   a = grids  (numpy T x H x W  — temperatures en degres C)\n#   b = meta   (dict avec coordonnees geographiques)\n# Sorties :\n#   out_dict   -> connecter au Data Inspector\n#   out_scalar -> variance max (exercice)\n\ngrids = a\nmeta  = b\n\nif grids is None:\n    out_dict = {'statut': 'Chargez un fichier NetCDF...'}\nelse:\n    T, H, W    = grids.shape\n    frame0     = grids[0]\n    ocean_mask = ~np.isnan(frame0)\n    all_valid  = grids[~np.isnan(grids)]\n\n    out_dict = {\n        'nb_pas_de_temps_T': T,\n        'hauteur_H': H,\n        'largeur_W': W,\n        'pct_ocean': round(100.0 * float(ocean_mask.sum()) / (H * W), 1),\n        'T_min_C':   round(float(np.nanmin(all_valid)), 2),\n        'T_max_C':   round(float(np.nanmax(all_valid)), 2),\n        'T_moy_C':   round(float(np.nanmean(all_valid)), 2),\n        'T_std_C':   round(float(np.nanstd(all_valid)), 3),\n        'nb_pixels_NaN': int(np.sum(np.isnan(frame0))),\n    }\n\n    # Exercice 1 : calculez la carte de variance temporelle pixel par pixel.\n    # Quel pixel est le plus variable dans le temps ?\n    # Decommentez et completez :\n    # var_map    = np.nanvar(grids, axis=0)   # shape (H, W)\n    # out_scalar = float(np.nanmax(var_map))  # variance maximale\n\n    # Exercice 2 : calculez la tendance temporelle (warming/cooling) en deg C/an.\n    # Indice : utilisez np.polyfit sur la dimension temporelle."
+        }
+      }
+    },
+    {
+      "id": "stats_inspect",
+      "type": "data_inspector",
+      "position": { "x": 990, "y": 280 },
+      "width": 260, "height": 200,
+      "data": {
+        "label": "Data Inspector",
+        "params": { "node_note": "Resultats des statistiques descriptives SST" }
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "reader",      "target": "display_viridis", "sourceHandle": "image__preview",   "targetHandle": "image__main" },
+    { "id": "e2", "source": "reader_plasma","target": "display_plasma",  "sourceHandle": "image__preview",   "targetHandle": "image__main" },
+    { "id": "e3", "source": "reader_plasma","target": "meta_inspect",    "sourceHandle": "dict__meta",       "targetHandle": "any__data" },
+    { "id": "e4", "source": "reader",       "target": "stats_py",        "sourceHandle": "any__grids",       "targetHandle": "any__a" },
+    { "id": "e5", "source": "reader",       "target": "stats_py",        "sourceHandle": "dict__meta",       "targetHandle": "any__b" },
+    { "id": "e6", "source": "stats_py",     "target": "stats_inspect",   "sourceHandle": "dict__out_dict",   "targetHandle": "any__data" }
+  ],
+  "ui": {
+    "previewSize": { "w": 420, "h": 236 },
+    "previewPos":  { "x": 0, "y": -280 },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": "display_viridis"
+  }
+}

@@ -158,5 +158,30 @@
     "name": "Oceanography ML Workshop: Spatial PCA",
     "description": "Workshop template showcasing space-time oceanographic grid analysis. Supports both Copernicus Marine Service remote downloader and local NetCDF file reading, followed by Spatial PCA (EOF analysis) and side-by-side reconstruction error comparison.",
     "file": "ml_netcdf_spatial_pca.vn"
+  },
+  {
+    "name": "TD1 — Exploration des SST",
+    "description": "Séance 1 (1h30) : Charger et visualiser les données de température de surface de la mer (SST) depuis GLORYS12. Explorer les métadonnées NetCDF, comparer deux palettes de couleurs, calculer les statistiques descriptives (min, max, moyenne, std, % océan) via un nœud Python.",
+    "file": "TD Océanographie ML/TD1_exploration_sst.vn"
+  },
+  {
+    "name": "TD2 — ACP Spatiale & Modes EOF",
+    "description": "Séance 2 (2h) : Introduction à la décomposition en Fonctions Orthogonales Empiriques (EOF = ACP spatiale). Faire varier n_components (1→50), observer les modes EOF, mesurer PSNR et calculer le taux de compression. Défi : atteindre PSNR > 30 dB avec le moins de composantes possible.",
+    "file": "TD Océanographie ML/TD2_eof_acp_spatiale.vn"
+  },
+  {
+    "name": "TD3 — Sensibilité aux Paramètres",
+    "description": "Séance 3 (2h) : Comparaison visuelle côte à côte de deux configurations ACP (k=3 vs k=20). Pipeline parallèle avec bilan quantitatif (PSNR, MSE, taux de compression) et plotter temps réel. Exercice sur la courbe PSNR(k) et le point de coude optimal.",
+    "file": "TD Océanographie ML/TD3_sensibilite_parametres.vn"
+  },
+  {
+    "name": "TD4 — Données Copernicus en Direct",
+    "description": "Séance 4 (2h30) : Téléchargement de vraies données CMEMS/GLORYS12 via l'API Copernicus Marine. Choisir sa propre région géographique (Guyane, Caraïbes, Méditerranée, El Niño…), appliquer l'ACP et comparer la compressibilité entre régions. Les credentials sont mémorisés.",
+    "file": "TD Océanographie ML/TD4_copernicus_live.vn"
+  },
+  {
+    "name": "TD5 — Autoencodeur PyTorch",
+    "description": "Séance 5 (3h) : Introduction au deep learning pour la compression. Autoencodeur linéaire PyTorch implémenté dans un nœud Python (encodeur→espace latent→décodeur). Comparaison directe avec la référence ACP : même latent_dim, même taux de compression. Exercices : modifier l'architecture, ajouter des couches, analyser la courbe de loss.",
+    "file": "TD Océanographie ML/TD5_autoencodeur_pytorch.vn"
   }
 ]
