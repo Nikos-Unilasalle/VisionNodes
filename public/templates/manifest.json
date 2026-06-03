@@ -140,21 +140,6 @@
     "file": "reaction_diffusion.vn"
   },
   {
-    "name": "Sinnamary Mangrove Dynamics (Guyane Phase 1)",
-    "description": "Maps mangrove extent and multi-year change along the Sinnamary coast, French Guiana, using Sentinel-1 SAR + LULC fusion from Microsoft Planetary Computer (no auth). Demonstrates the Phase 1 nodes — geo_copernicus (STAC backend collections: Sentinel-1 RTC, ESA WorldCover, io-lulc Annual), s1_polarization_features, geo_time_align. Outputs a 4-panel result: S1 polarization RGB, ESA WorldCover 2021 mangrove ground truth, io-lulc 2024 land cover, change mask 2017→2024.",
-    "file": "Guyane Phase 1/sinnamary_mangrove_dynamics.vn"
-  },
-  {
-    "name": "Sinnamary S1+S2 Fusion (Guyane Phase 2)",
-    "description": "Enriches the Phase 1 SAR baseline with Sentinel-2 spectral indices for improved mangrove / orpaillage discrimination. Fuses 6 S1 polarization features (RVI, NRPB, PDI, Span, DPSVI) with 3 S2 indices (NDVI, MNDWI, EVI) into a 9-band stack via geo_band_stack. Includes LULC change detection 2017→2024. Expected gain: +8–15% F1 on mangrove classification, ÷3 orpaillage false positives.",
-    "file": "Guyane Phase 1/sinnamary_s1s2_fusion.vn"
-  },
-  {
-    "name": "Sinnamary RF Pixel Classification (Guyane Phase 3)",
-    "description": "Supervised pixel classification of the Sinnamary coast using a Random Forest trained on the 9-band S1+S2 fused stack (6 S1 polarization features + NDVI + MNDWI + EVI) with ESA WorldCover 2021 as ground truth labels. Classes: Mangroves (95), Herbaceous wetland (90), Tree cover (10), Permanent water (80), Bare/orpaillage (60). Outputs classification map, per-pixel confidence, and feature importance ranking.",
-    "file": "Guyane Phase 1/sinnamary_classification.vn"
-  },
-  {
     "name": "Oceanography ML Workshop: Spatial PCA",
     "description": "Workshop template showcasing space-time oceanographic grid analysis. Supports both Copernicus Marine Service remote downloader and local NetCDF file reading, followed by Spatial PCA (EOF analysis) and side-by-side reconstruction error comparison.",
     "file": "ml_netcdf_spatial_pca.vn"
