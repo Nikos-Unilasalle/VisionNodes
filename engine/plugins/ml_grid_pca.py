@@ -44,6 +44,7 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     ),
     inputs=[
         {'id': 'grids',       'color': 'any',    'label': 'Grids (T x H x W)'},
+        {'id': 'meta',        'color': 'dict',   'label': 'Meta (optional)'},
     ],
     outputs=[
         {'id': 'reconstructed', 'color': 'any',    'label': 'Reconstructed'},
@@ -54,12 +55,16 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     params=[
         {'id': 'n_components',  'label': 'Composantes principales (k)',  'type': 'int',    'default': 10, 'min': 1, 'max': 100},
         {'id': 'standardize',   'label': 'Centrer et Réduire',           'type': 'bool',   'default': True},
+        {'id': 'detrend',       'label': 'Dé-tendance temporelle',      'type': 'enum',   'options': ['None', 'Constant (mean)', 'Linear'], 'default': 1},
+        {'id': 'cos_lat',       'label': 'Pondération Latitude (cos lat)','type': 'bool',   'default': False},
+        {'id': 'solver',        'label': 'Solveur PCA',                 'type': 'enum',   'options': ['auto', 'full', 'arpack', 'randomized'], 'default': 0},
         {'id': 'colormap',      'label': 'Palette Couleur (Modes)',      'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 3},
     ]
 )
 class SpatialGridPCANode(NodeProcessor):
     def process(self, inputs, params):
         grids = inputs.get('grids')
+        meta = inputs.get('meta')
         if grids is None:
             return {}
 
@@ -75,7 +80,16 @@ class SpatialGridPCANode(NodeProcessor):
 
         n_components = int(params.get('n_components', 10))
         standardize = bool(params.get('standardize', True))
+        detrend_idx = int(params.get('detrend', 1))
+        cos_lat_weighting = bool(params.get('cos_lat', False))
+        solver_idx = int(params.get('solver', 0))
         colormap_idx = int(params.get('colormap', 3))
+
+        detrend_opts = ['None', 'Constant (mean)', 'Linear']
+        detrend_val = detrend_opts[min(detrend_idx, len(detrend_opts) - 1)]
+
+        solver_opts = ['auto', 'full', 'arpack', 'randomized']
+        solver_val = solver_opts[min(solver_idx, len(solver_opts) - 1)]
 
         T, H, W = grids.shape
         n_components = min(n_components, T, H * W)
@@ -91,26 +105,73 @@ class SpatialGridPCANode(NodeProcessor):
             send_notification("Spatial PCA: Aucun pixel valide (non-NaN) trouvé", level='error', notif_id=_NOTIF_ID)
             return {}
 
-        X_valid = X_flat[:, valid_pixel_mask]
+        X_valid = X_flat[:, valid_pixel_mask].copy()
 
-        # 3. Fit PCA
+        # 3. Apply latitude cosine weighting if enabled
+        lat_min = None
+        lat_max = None
+        if meta and isinstance(meta, dict):
+            lat_min = meta.get('lat_min')
+            lat_max = meta.get('lat_max')
+
+        if cos_lat_weighting and lat_min is not None and lat_max is not None:
+            # Reconstruct the latitude vector for height H
+            lat_vector = np.linspace(lat_min, lat_max, H)
+            weights = np.sqrt(np.cos(np.radians(lat_vector)))
+            weights_2d = np.tile(weights[:, np.newaxis], (1, W))
+            weights_flat = weights_2d.flatten()[valid_pixel_mask]
+            # Avoid division by zero
+            weights_flat = np.maximum(weights_flat, 1e-5)
+        else:
+            weights_flat = np.ones(n_valid)
+
+        # 4. Detrending
+        trends = None
+        means = np.mean(X_valid, axis=0)
+
+        if detrend_val == 'Constant (mean)':
+            X_detrend = X_valid - means
+        elif detrend_val == 'Linear':
+            t_axis = np.arange(T)
+            A = np.vstack([t_axis, np.ones(T)]).T
+            coefs, _, _, _ = np.linalg.lstsq(A, X_valid, rcond=None)
+            trends = A @ coefs
+            X_detrend = X_valid - trends
+        else:
+            X_detrend = X_valid.copy()
+
+        # 5. Standardize
         scaler = None
         if standardize:
             scaler = StandardScaler()
-            X_proc = scaler.fit_transform(X_valid)
+            X_proc = scaler.fit_transform(X_detrend)
         else:
-            X_proc = X_valid
+            X_proc = X_detrend.copy()
 
-        pca = PCA(n_components=n_components, random_state=42)
-        X_proj = pca.fit_transform(X_proc)
+        # Apply weights to standardized data before PCA
+        X_weighted = X_proc * weights_flat
 
-        # 4. Reconstruct
-        X_recon_proc = pca.inverse_transform(X_proj)
+        # 6. Fit PCA
+        pca = PCA(n_components=n_components, svd_solver=solver_val, random_state=42)
+        X_proj = pca.fit_transform(X_weighted)
+
+        # 7. Reconstruct
+        X_recon_weighted = pca.inverse_transform(X_proj)
         
+        # Remove weights
+        X_recon_proc = X_recon_weighted / weights_flat
+
         if standardize and scaler is not None:
-            X_recon_valid = scaler.inverse_transform(X_recon_proc)
+            X_recon_detrend = scaler.inverse_transform(X_recon_proc)
         else:
-            X_recon_valid = X_recon_proc
+            X_recon_detrend = X_recon_proc
+
+        if detrend_val == 'Constant (mean)':
+            X_recon_valid = X_recon_detrend + means
+        elif detrend_val == 'Linear' and trends is not None:
+            X_recon_valid = X_recon_detrend + trends
+        else:
+            X_recon_valid = X_recon_detrend
 
         # Rebuild full 2D grids (maintaining land NaNs)
         grids_recon = np.full((T, H * W), np.nan)
@@ -126,7 +187,7 @@ class SpatialGridPCANode(NodeProcessor):
         modes[:, valid_pixel_mask] = components
         modes = modes.reshape(n_components, H, W)
 
-        # 5. Visualisation (Explained Variance + PC1 spatial mode)
+        # 8. Visualisation (Explained Variance + PC1 spatial mode)
         var_ratio = pca.explained_variance_ratio_
         _, plt = _get_mpl()
 
@@ -145,7 +206,6 @@ class SpatialGridPCANode(NodeProcessor):
 
             # Right plot: EOF Mode 1 map
             mode1 = modes[0]
-            # Normalize mode1 to 0-255 for visualization
             valid_m1 = mode1[~np.isnan(mode1)]
             if valid_m1.size > 0:
                 p2, p98 = np.percentile(valid_m1, (2, 98))
@@ -167,9 +227,8 @@ class SpatialGridPCANode(NodeProcessor):
             ]
             cmap = cmaps[min(colormap_idx, len(cmaps) - 1)]
             mode1_colored = cv2.applyColorMap(mode1_vis, cmap)
-            mode1_colored[nan_mask] = [40, 40, 40]  # land mask
+            mode1_colored[nan_mask] = [40, 40, 40]
 
-            # Convert BGR to RGB for matplotlib
             mode1_rgb = cv2.cvtColor(mode1_colored, cv2.COLOR_BGR2RGB)
             ax2.imshow(mode1_rgb)
             ax2.set_title('Mode spatial 1 (EOF1)', fontsize=9)

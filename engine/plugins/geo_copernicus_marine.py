@@ -34,7 +34,10 @@ _NOTIF_ID = 'copernicus_marine'
         {'id': 'date_start',    'label': 'Start Date (YYYY-MM-DD)', 'type': 'string', 'default': '2023-01-01'},
         {'id': 'date_end',      'label': 'End Date (YYYY-MM-DD)',   'type': 'string', 'default': '2023-01-07'},
         {'id': 'bbox',          'label': 'BBox (lon_min,lat_min,lon_max,lat_max)', 'type': 'string', 'default': '-53.5,4.5,-51.5,6.5'},
+        {'id': 'min_depth',     'label': 'Profondeur Min (m)',      'type': 'float',  'default': 0.0},
+        {'id': 'max_depth',     'label': 'Profondeur Max (m)',      'type': 'float',  'default': 0.0},
         {'id': 'depth_idx',     'label': 'Index Profondeur (4D)',   'type': 'int',    'default': 0, 'min': 0, 'max': 100},
+        {'id': 'service',       'label': 'Service / Protocole',     'type': 'enum',   'options': ['auto', 'arco-geo-series', 'arco-time-series', 'opendap', 'motu'], 'default': 0},
         {'id': 'colormap',      'label': 'Palette Couleur',          'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
         {'id': 'fetch',         'label': 'Télécharger',             'type': 'trigger', 'default': 0},
     ]
@@ -50,7 +53,10 @@ class GeoCopernicusMarineNode(NodeProcessor):
         password = params.get('password', '').strip()
         dataset_id = params.get('dataset_id', '').strip()
         variable = params.get('variable', '').strip()
+        min_depth = float(params.get('min_depth', 0.0))
+        max_depth = float(params.get('max_depth', 0.0))
         depth_idx = int(params.get('depth_idx', 0))
+        service_idx = int(params.get('service', 0))
         colormap_idx = int(params.get('colormap', 0))
 
         if not dataset_id or not variable:
@@ -75,7 +81,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
             return {}
 
         # Caching logic based on params hash
-        cache_str = f"{dataset_id}_{variable}_{bbox_val}_{date_start}_{date_end}"
+        cache_str = f"{dataset_id}_{variable}_{bbox_val}_{date_start}_{date_end}_{min_depth}_{max_depth}_{service_idx}"
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()
         cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'copernicus_marine_cache')
         os.makedirs(cache_dir, exist_ok=True)
@@ -90,21 +96,33 @@ class GeoCopernicusMarineNode(NodeProcessor):
             
             import copernicusmarine
             try:
+                # Prepare subset arguments
+                subset_kwargs = {
+                    'dataset_id': dataset_id,
+                    'username': username,
+                    'password': password,
+                    'variables': [variable],
+                    'minimum_longitude': min_lon,
+                    'maximum_longitude': max_lon,
+                    'minimum_latitude': min_lat,
+                    'maximum_latitude': max_lat,
+                    'start_datetime': f"{date_start}T00:00:00",
+                    'end_datetime': f"{date_end}T23:59:59",
+                    'output_filename': nc_file_path,
+                    'force_download': True
+                }
+
+                if min_depth != 0.0 or max_depth != 0.0:
+                    subset_kwargs['minimum_depth'] = min_depth
+                    subset_kwargs['maximum_depth'] = max_depth
+
+                service_opts = ['auto', 'arco-geo-series', 'arco-time-series', 'opendap', 'motu']
+                service_val = service_opts[min(service_idx, len(service_opts) - 1)]
+                if service_val != 'auto':
+                    subset_kwargs['service'] = service_val
+
                 # Run subset download
-                copernicusmarine.subset(
-                    dataset_id=dataset_id,
-                    username=username,
-                    password=password,
-                    variables=[variable],
-                    minimum_longitude=min_lon,
-                    maximum_longitude=max_lon,
-                    minimum_latitude=min_lat,
-                    maximum_latitude=max_lat,
-                    start_datetime=f"{date_start}T00:00:00",
-                    end_datetime=f"{date_end}T23:59:59",
-                    output_filename=nc_file_path,
-                    force_download=True
-                )
+                copernicusmarine.subset(**subset_kwargs)
                 send_notification(f"Copernicus Marine: Téléchargement terminé !", progress=0.9, notif_id=_NOTIF_ID)
             except Exception as e:
                 # Clean up incomplete file if any

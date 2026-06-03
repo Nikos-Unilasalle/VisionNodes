@@ -69,3 +69,29 @@ def test_netcdf_reader_single_file(dummy_nc_file):
     assert meta['variable_selected'] == 'thetao'
     assert 'lat_min' in meta
     assert 'lon_min' in meta
+
+def test_netcdf_reader_advanced(dummy_nc_file):
+    node = NetCDFGridReaderNode()
+    # Test time_slice='1:4', spatial_stride=2, scale_factor=2.0, add_offset=10.0
+    res = node.process({}, {
+        'path': dummy_nc_file,
+        'variable': 'thetao',
+        'time_slice': '1:4',
+        'spatial_stride': 2,
+        'scale_factor': 2.0,
+        'add_offset': 10.0,
+        'colormap': 1
+    })
+
+    assert res is not None
+    grids = res['grids']
+    # 4 - 1 = 3 frames
+    assert grids.shape[0] == 3
+    # 10 / 2 = 5 height and width
+    assert grids.shape[1] == 5
+    assert grids.shape[2] == 5
+
+    # Check value transformation: val * 2.0 + 10.0 should be >= 10.0
+    valid_vals = grids[~np.isnan(grids)]
+    assert (valid_vals >= 10.0).all()
+
