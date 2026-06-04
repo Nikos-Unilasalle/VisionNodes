@@ -1573,6 +1573,83 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
 
 // --- LOGIC & MATH ---
 
+export const ScalarInputNode = memo(({ selected, data }: any) => {
+  const format = data.params?.format ?? 1; // 0 = Integer, 1 = Float
+  const val = Number(data.params?.value ?? 0.0);
+  const minVal = Number(data.params?.min ?? 0.0);
+  const maxVal = Number(data.params?.max ?? 100.0);
+  const stepVal = Number(data.params?.step ?? (format === 0 ? 1 : 0.01));
+
+  const actualMin = Math.min(minVal, maxVal);
+  const actualMax = Math.max(minVal, maxVal);
+
+  const [localVal, setLocalVal] = useState(String(val));
+
+  useEffect(() => {
+    setLocalVal(String(val));
+  }, [val]);
+
+  const handleValueChange = (newVal: number) => {
+    const clamped = Math.max(actualMin, Math.min(actualMax, newVal));
+    const finalVal = format === 0 ? Math.round(clamped) : clamped;
+    data.onChangeParams?.({ value: finalVal });
+  };
+
+  return (
+    <BaseNode title={data.label || "Number"} icon={Hash} selected={selected} data={data} color="accent" outputs={[{ id: 'value', color: 'scalar' }]}>
+      <div className="flex flex-col gap-2 p-1 nodrag">
+        {/* Input box */}
+        <div className="flex items-center gap-1.5 bg-black/25 rounded-lg px-2 py-1 border border-white/5 shadow-inner">
+          <input
+            type="number"
+            value={localVal}
+            step={stepVal}
+            onChange={(e) => {
+              setLocalVal(e.target.value);
+              const num = parseFloat(e.target.value);
+              if (!isNaN(num)) {
+                handleValueChange(num);
+              }
+            }}
+            onBlur={() => {
+              const num = parseFloat(localVal);
+              if (!isNaN(num)) {
+                handleValueChange(num);
+              } else {
+                setLocalVal(String(val));
+              }
+            }}
+            className="w-full bg-transparent text-[11px] font-mono text-accent font-bold outline-none border-none text-center"
+          />
+          <span className="text-[7px] text-gray-500 font-mono tracking-tighter uppercase shrink-0">
+            {format === 0 ? 'Int' : 'Float'}
+          </span>
+        </div>
+
+        {/* Slider control */}
+        <div className="flex flex-col gap-0.5 px-1">
+          <input
+            type="range"
+            min={actualMin}
+            max={actualMax}
+            step={stepVal}
+            value={val}
+            onChange={(e) => {
+              const num = parseFloat(e.target.value);
+              handleValueChange(num);
+            }}
+            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent"
+          />
+          <div className="flex justify-between text-[7px] text-gray-500 font-mono">
+            <span>{actualMin}</span>
+            <span>{actualMax}</span>
+          </div>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
 export const MathNode = memo(({ selected, data }: any) => {
   const schema = data.schema || { label: 'Math', icon: 'Calculator', inputs: [], outputs: [] };
   const IconCmp = getIcon(schema.icon, Calculator);

@@ -1,0 +1,225 @@
+{
+  "nodes": [
+    {
+      "id": "h",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Détecteur ④ — Texture (GLCM)\nMine = forte hétérogénéité texturale (bassins+sol+machines) vs canopée lisse.\nExport → detect_4_texture.tif",
+          "color_index": 4
+        }
+      },
+      "width": 1000,
+      "height": 65
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -2060,
+        "y": 160
+      },
+      "data": {
+        "label": "Zone · Dorlin",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 136
+    },
+    {
+      "id": "n-s2",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 120
+      },
+      "data": {
+        "label": "Sentinel-2 L2A — 2023",
+        "params": {
+          "collection": "0",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "1",
+          "fetch": 0,
+          "node_note": "Fetch → S2 CLOUD_FREE (composite sans nuage)"
+        }
+      },
+      "width": 208,
+      "height": 293
+    },
+    {
+      "id": "n-glcm",
+      "type": "geo_glcm_features",
+      "position": {
+        "x": -1500,
+        "y": 120
+      },
+      "data": {
+        "label": "GLCM Texture",
+        "params": {
+          "band_index": 3,
+          "window_size": 9,
+          "stride": 2,
+          "levels": 64,
+          "distances": "1,2",
+          "contrast": true,
+          "homogeneity": false,
+          "energy": false,
+          "correlation": false,
+          "dissimilarity": false,
+          "node_note": "band_index 3 = NIR (B08)"
+        }
+      },
+      "width": 208,
+      "height": 300
+    },
+    {
+      "id": "n-det",
+      "type": "logic_python",
+      "position": {
+        "x": -1180,
+        "y": 120
+      },
+      "data": {
+        "label": "Détecteur texture",
+        "params": {
+          "code": "import numpy as np, cv2\ndef _num(x,dv):\n    try: return float(x) if isinstance(x,(int,float)) else dv\n    except: return dv\ndef _band(x,i=0):\n    if not isinstance(x,dict): return None\n    A=np.asarray(x['bands'],dtype=np.float32)\n    return (A[i] if A.shape[0]>i else A[0]) if A.ndim==3 else A\ndef _morph(m,k=3):\n    ker=cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(k,k))\n    return cv2.morphologyEx(m.astype(np.uint8),cv2.MORPH_OPEN,ker)>0\n# a=GLCM  b=CONTRAST_PCTL(Number)\nCONTRAST_PCTL=_num(b,92.0); MORPH_K=3\ntry:\n    geo=a if isinstance(a,dict) else None\n    if geo is None: out_main=None; out_any=None; out_dict={'erreur':'Brancher GLCM (a)'}\n    else:\n        contrast=_band(a,0); H,W=contrast.shape; npx=H*W\n        c=np.where(np.isfinite(contrast),contrast,0.0)\n        thr=float(np.percentile(c,CONTRAST_PCTL))\n        anom=_morph(c>thr,MORPH_K)\n        cn=np.clip((c-thr)/(c.max()-thr+1e-9),0,1)\n        det=np.where(anom,cn,0.0).astype(np.float32)\n        u8=(np.clip(det,0,1)*255).astype(np.uint8)\n        prev=cv2.applyColorMap(u8,cv2.COLORMAP_INFERNO); prev[det<0.05]=[0,0,0]\n        out_main=prev\n        out_any={**geo,'bands':det[np.newaxis],'count':1,'dtype':'float32','band_names':['detection'],'_bands':['detection']}\n        out_dict={'CONTRAST_PCTL':round(CONTRAST_PCTL,1),'thr':round(thr,3),\n                  'detect_pct':round(float((det>0.05).sum())/npx*100,3)}\nexcept Exception as _e:\n    out_main=None; out_any=None; out_dict={'exception':str(_e),'type':type(_e).__name__}\n",
+          "node_note": "a=GLCM → détection"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "n-wr",
+      "type": "geo_geotiff_writer",
+      "position": {
+        "x": -880,
+        "y": 120
+      },
+      "data": {
+        "label": "Export GeoTIFF",
+        "params": {
+          "save": 0,
+          "file_path": "copernicus_cache/detect_4_texture.tif",
+          "compression": "lzw",
+          "node_note": "Cliquer Save pour exporter"
+        }
+      },
+      "width": 208,
+      "height": 150
+    },
+    {
+      "id": "n-disp",
+      "type": "output_display",
+      "position": {
+        "x": -880,
+        "y": 320
+      },
+      "data": {
+        "label": "Texture anormale",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_t",
+            "color": "image",
+            "label": "out"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-num-pctl",
+      "type": "scalar_input",
+      "position": {
+        "x": -1500,
+        "y": 460
+      },
+      "data": {
+        "label": "CONTRAST_PCTL (seuil anomalie)",
+        "params": {
+          "format": 0,
+          "value": 92,
+          "min": 50,
+          "max": 99,
+          "step": 1
+        }
+      },
+      "width": 208,
+      "height": 160
+    }
+  ],
+  "edges": [
+    {
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox",
+      "id": "e1"
+    },
+    {
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-glcm",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e2"
+    },
+    {
+      "source": "n-glcm",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-det",
+      "targetHandle": "any__a",
+      "id": "e3"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "any__out_any",
+      "target": "n-wr",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e4"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "image__main",
+      "target": "n-disp",
+      "targetHandle": "image__0_t",
+      "id": "e5"
+    },
+    {
+      "id": "epctl",
+      "source": "n-num-pctl",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__b"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 339
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": null
+  }
+}
