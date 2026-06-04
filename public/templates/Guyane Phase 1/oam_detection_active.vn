@@ -1,0 +1,817 @@
+{
+  "nodes": [
+    {
+      "id": "n-header",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Détection active orpaillage — Dorlin\nSignal 1 : Susceptibilité terrain (MCDA)  ·  Signal 2 : Changement SAR (Sentinel-1, cloud-proof)  ·  Signal 3 : Turbidité fluviale (Sentinel-2)\nFusion pondérée → carte de risque combiné",
+          "color_index": 0
+        }
+      },
+      "width": 960,
+      "height": 65
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -2060,
+        "y": 160
+      },
+      "data": {
+        "label": "Zone · Dorlin",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 136
+    },
+    {
+      "id": "f-terrain",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1800,
+        "y": 80
+      },
+      "data": {
+        "label": "Signal 1 — Susceptibilité terrain (MCDA)",
+        "params": {}
+      },
+      "style": {
+        "width": 1120,
+        "height": 500
+      },
+      "width": 1120,
+      "height": 500
+    },
+    {
+      "id": "n-note-terrain",
+      "type": "canvas_note",
+      "position": {
+        "x": -1780,
+        "y": 90
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "DEM → Pente + Drainage + HAND → score MCDA 0-100\nPoids optimisés (upstream exclu — réfuté, 180/182 sites hors portée)",
+          "color_index": 1
+        }
+      },
+      "width": 680,
+      "height": 65
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 200
+      },
+      "data": {
+        "label": "DEM GLO-30",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "mosaic_mode": "0",
+          "node_note": "Fetch → DEM Dorlin"
+        }
+      },
+      "width": 208,
+      "height": 268
+    },
+    {
+      "id": "n-slope",
+      "type": "geo_dem_slope",
+      "position": {
+        "x": -1480,
+        "y": 200
+      },
+      "data": {
+        "label": "Slope (°)",
+        "params": {
+          "colormap": 2,
+          "clamp_max": 12
+        }
+      },
+      "width": 208,
+      "height": 98
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": {
+        "x": -1480,
+        "y": 360
+      },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "flow_acc + flow_dir"
+        }
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": {
+        "x": -1200,
+        "y": 200
+      },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "threshold": 1000,
+          "clamp_max": 8,
+          "colormap": 1
+        }
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "n-mcda",
+      "type": "logic_python",
+      "position": {
+        "x": -900,
+        "y": 200
+      },
+      "data": {
+        "label": "MCDA Susceptibilité",
+        "params": {
+          "code": "# MCDA terrain susceptibility — orpaillage alluvial\n# a=Slope(°)  b=HAND(m)  c=Flow accumulation\n# Poids calés sur RF importance (colmatage fuites) : flow>slope>hand\nW_FLOW, W_SLOPE, W_HAND = 0.50, 0.30, 0.20\nSLOPE_MAX, HAND_MAX = 12.0, 8.0\n\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nslope, hand, flow = _band(a), _band(b), _band(c)\nref = a if isinstance(a, dict) else None\nif ref is None or slope is None:\n    out_main = None; out_any = None\n    out_dict = {'erreur': 'Brancher Slope(a) HAND(b) Flow(c)'}\nelse:\n    H, W = slope.shape\n    def fit(x, fill=0.0):\n        if x is None: return np.full((H, W), fill, dtype=np.float32)\n        if x.shape != (H, W):\n            x = cv2.resize(x, (W, H), interpolation=cv2.INTER_LINEAR)\n        return np.where(np.isfinite(x), x, fill).astype(np.float32)\n    slope_f = fit(slope, SLOPE_MAX + 1)\n    hand_f  = fit(hand,  HAND_MAX + 1)\n    flow_f  = fit(flow)\n    fl = np.log1p(flow_f.clip(0)); s_flow = fl / (fl.max() + 1e-9)\n    s_slope = np.exp(-slope_f / 8.0)\n    s_hand  = np.exp(-hand_f  / 5.0)\n    score = W_FLOW * s_flow + W_SLOPE * s_slope + W_HAND * s_hand\n    score[slope_f > SLOPE_MAX] = 0.0\n    score[hand_f  > HAND_MAX]  = 0.0\n    score_pct = (score * 100.0).astype(np.float32)\n    out_any = {**ref, 'bands': score_pct[np.newaxis], 'count': 1, 'dtype': 'float32',\n               'band_names': ['susceptibility'], '_bands': ['susceptibility']}\n    sc_u8 = score_pct.clip(0, 100).astype(np.uint8) * 2\n    prev = cv2.applyColorMap(sc_u8.clip(0, 255).astype(np.uint8), cv2.COLORMAP_INFERNO)\n    prev[score_pct < 1.0] = [0, 0, 0]\n    out_main = prev\n    out_dict = {'high_pct': round(float((score_pct > 60).sum()) / (H * W) * 100, 2),\n                'weights': {'flow': W_FLOW, 'slope': W_SLOPE, 'hand': W_HAND}}",
+          "node_note": "a=slope b=hand c=flow → suscept 0-100"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-sar",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1800,
+        "y": 640
+      },
+      "data": {
+        "label": "Signal 2 — Changement SAR (Sentinel-1 GRD, cloud-proof)",
+        "params": {}
+      },
+      "style": {
+        "width": 1120,
+        "height": 460
+      },
+      "width": 1120,
+      "height": 460
+    },
+    {
+      "id": "n-note-sar",
+      "type": "canvas_note",
+      "position": {
+        "x": -1780,
+        "y": 650
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "S1 GRD T0 (2022) vs T1 (2023) · VV dB · Diminution → déboisement / création de mare\nPasse à travers les nuages guyanais — signal le plus opérationnel",
+          "color_index": 3
+        }
+      },
+      "width": 680,
+      "height": 65
+    },
+    {
+      "id": "n-s1t0",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 760
+      },
+      "data": {
+        "label": "Sentinel-1 T0 — 2022 (référence)",
+        "params": {
+          "collection": "2",
+          "bands": "VV",
+          "resolution": "10",
+          "cloud_max": "100",
+          "date_start": "2022-01-01",
+          "date_end": "2022-12-31",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "0",
+          "fetch": 0,
+          "node_note": "Fetch → S1 VV 2022 (baseline)"
+        }
+      },
+      "width": 208,
+      "height": 293
+    },
+    {
+      "id": "n-s1t1",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1480,
+        "y": 760
+      },
+      "data": {
+        "label": "Sentinel-1 T1 — 2023 (détection)",
+        "params": {
+          "collection": "2",
+          "bands": "VV",
+          "resolution": "10",
+          "cloud_max": "100",
+          "date_start": "2023-01-01",
+          "date_end": "2023-12-31",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "0",
+          "fetch": 0,
+          "node_note": "Fetch → S1 VV 2023 (détection)"
+        }
+      },
+      "width": 208,
+      "height": 293
+    },
+    {
+      "id": "n-sar-change",
+      "type": "logic_python",
+      "position": {
+        "x": -1150,
+        "y": 760
+      },
+      "data": {
+        "label": "SAR Change (VV delta)",
+        "params": {
+          "code": "# SAR Change Detection — Sentinel-1 VV T0→T1\nTHR_DB   = -5.0\nSCALE_DB = 13.0\ntry:\n    def _band(x):\n        if not isinstance(x, dict): return None\n        arr = np.asarray(x['bands'], dtype=np.float32)\n        if arr.ndim == 3: arr = arr[0]\n        elif arr.ndim == 2: pass\n        else: return None\n        return arr\n    vv0, vv1 = _band(a), _band(b)\n    ref = a if isinstance(a, dict) else None\n    if vv0 is None or vv1 is None or ref is None:\n        out_main = None; out_any = None\n        out_dict = {'erreur': 'données absentes', 'a_type': str(type(a)), 'b_type': str(type(b))}\n    else:\n        H, W = vv0.shape[-2], vv0.shape[-1] if vv0.ndim > 1 else (vv0.shape[0], 1)\n        H, W = int(vv0.shape[0]), int(vv0.shape[1])\n        def fit(x):\n            if x.shape[0] != H or x.shape[1] != W:\n                x = cv2.resize(x, (W, H), interpolation=cv2.INTER_LINEAR)\n            return np.where(np.isfinite(x), x, 0.0).astype(np.float32)\n        vv0f, vv1f = fit(vv0), fit(vv1)\n        delta = vv1f - vv0f\n        change_score = np.clip((-delta + THR_DB) / SCALE_DB * 100.0, 0.0, 100.0)\n        out_any = {**ref, 'bands': change_score[np.newaxis], 'count': 1, 'dtype': 'float32',\n                   'band_names': ['sar_change'], '_bands': ['sar_change']}\n        sc_u8 = (change_score.clip(0, 100) * 2).astype(np.uint8)\n        prev = cv2.applyColorMap(sc_u8, cv2.COLORMAP_HOT)\n        prev[change_score < 5.0] = [0, 0, 0]\n        out_main = prev\n        out_dict = {'changed_pct': round(float((change_score > 20).sum()) / (H * W) * 100, 2),\n                    'delta_mean_db': round(float(np.nanmean(delta)), 2),\n                    'vv0_shape': str(vv0.shape), 'vv1_shape': str(vv1.shape)}\nexcept Exception as _e:\n    out_main = None; out_any = None\n    out_dict = {'exception': str(_e), 'type': type(_e).__name__}",
+          "node_note": "a=S1-T0 b=S1-T1 → delta VV score 0-100"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-turb",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1800,
+        "y": 1160
+      },
+      "data": {
+        "label": "Signal 3 — Turbidité fluviale (Sentinel-2)",
+        "params": {}
+      },
+      "style": {
+        "width": 1120,
+        "height": 560
+      },
+      "width": 1120,
+      "height": 560
+    },
+    {
+      "id": "n-note-turb",
+      "type": "canvas_note",
+      "position": {
+        "x": -1780,
+        "y": 1170
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "S2 L2A → MNDWI → masque eau → turbidité proxy (NDWI bas sur eau = sédiments en suspension)\nSignal très discriminant : panache caractéristique même pour des petits sites",
+          "color_index": 2
+        }
+      },
+      "width": 680,
+      "height": 65
+    },
+    {
+      "id": "n-s2",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 1280
+      },
+      "data": {
+        "label": "Sentinel-2 L2A — 2023",
+        "params": {
+          "collection": "0",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "0",
+          "fetch": 0,
+          "node_note": "Fetch → S2 2023 saison sèche"
+        }
+      },
+      "width": 208,
+      "height": 293
+    },
+    {
+      "id": "n-ndvi",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": -1480,
+        "y": 1280
+      },
+      "data": {
+        "label": "Indices spectraux",
+        "params": {
+          "red_band": 1,
+          "green_band": 2,
+          "blue_band": 3,
+          "nir_band": 4,
+          "swir_band": 5,
+          "ndvi": true,
+          "ndwi": true,
+          "mndwi": true,
+          "bsi": false,
+          "evi": false,
+          "nbr": false,
+          "node_note": "stack = NDVI,NDWI,MNDWI"
+        }
+      },
+      "width": 208,
+      "height": 345
+    },
+    {
+      "id": "n-watermask",
+      "type": "geo_water_mask_mndwi",
+      "position": {
+        "x": -1480,
+        "y": 1540
+      },
+      "data": {
+        "label": "Masque eau (MNDWI)",
+        "params": {
+          "green_band": 2,
+          "swir_band": 5,
+          "threshold": 0.0,
+          "erode_size": 3,
+          "scl_band": 0
+        }
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "n-turbidity",
+      "type": "logic_python",
+      "position": {
+        "x": -1150,
+        "y": 1280
+      },
+      "data": {
+        "label": "Turbidité fluviale",
+        "params": {
+          "code": "# Turbidité fluviale — normalisation percentile sur pixels eau\n# a = stack spectral (geo_spectral_indices : NDVI=0 NDWI=1 MNDWI=2)\n# b = water mask (geo_water_mask_mndwi, optionnel)\n# Rivières amazoniennes toutes turbides → seuil fixe inutile → percentile\n\ndef _arr(x, i=0):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    if arr.ndim == 3:\n        return arr[i] if arr.shape[0] > i else arr[0]\n    return arr\n\nref_geo = a if isinstance(a, dict) else None\nif ref_geo is None:\n    out_main = None; out_any = None\n    out_dict = {'erreur': 'Brancher stack spectral S2 (a)'}\nelse:\n    ndwi  = _arr(a, 1)\n    mndwi = _arr(a, 2)\n    H, W = ndwi.shape\n    if b is not None:\n        wm = np.asarray(b['bands'] if isinstance(b, dict) else b, dtype=np.float32)\n        if wm.ndim == 3: wm = wm[0]\n        if wm.shape != (H, W):\n            wm = cv2.resize(wm, (W, H), interpolation=cv2.INTER_NEAREST)\n        water = wm > 0\n    else:\n        water = (mndwi > -0.1) if mndwi is not None else np.zeros((H, W), dtype=bool)\n    ndwi_c = np.where(np.isfinite(ndwi), ndwi, np.nan)\n    ndwi_w = ndwi_c[water]\n    turb = np.zeros((H, W), dtype=np.float32)\n    if ndwi_w.size > 10:\n        # Percentile stretch DANS les pixels eau uniquement\n        # NDWI faible = eau turbide ; NDWI élevé = eau claire\n        p_lo = float(np.nanpercentile(ndwi_w, 5))   # le plus turbide\n        p_hi = float(np.nanpercentile(ndwi_w, 95))  # le plus clair\n        rng = max(p_hi - p_lo, 0.05)\n        score_w = np.clip((p_hi - ndwi_c) / rng * 100.0, 0.0, 100.0)\n        turb = np.where(water, score_w, 0.0).astype(np.float32)\n    out_any = {**ref_geo, 'bands': turb[np.newaxis], 'count': 1, 'dtype': 'float32',\n               'band_names': ['turbidity'], '_bands': ['turbidity']}\n    sc_u8 = turb.clip(0, 100).astype(np.uint8) * 2\n    prev = cv2.applyColorMap(sc_u8.clip(0, 255).astype(np.uint8), cv2.COLORMAP_COOL)\n    prev[~water] = [0, 0, 0]\n    out_main = prev\n    n_water = int(water.sum())\n    out_dict = {'water_pct': round(n_water / (H * W) * 100, 2),\n                'ndwi_p5': round(float(np.nanpercentile(ndwi_c[water], 5)) if n_water > 10 else 0, 3),\n                'ndwi_p95': round(float(np.nanpercentile(ndwi_c[water], 95)) if n_water > 10 else 0, 3),\n                'turbid_top25pct': round(float((turb > 75).sum()) / max(n_water, 1) * 100, 2)}",
+          "node_note": "a=stack spectral b=masque eau → turb 0-100"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-fusion",
+      "type": "canvas_frame",
+      "position": {
+        "x": -550,
+        "y": 640
+      },
+      "data": {
+        "label": "Fusion — Risque détection combiné",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 540
+      },
+      "width": 380,
+      "height": 540
+    },
+    {
+      "id": "n-note-fusion",
+      "type": "canvas_note",
+      "position": {
+        "x": -530,
+        "y": 650
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "SAR dominant (cloud-proof) · turbidité confirmation · susceptibilité prior\nBonus : SAR ET turbidité simultanément élevés",
+          "color_index": 0
+        }
+      },
+      "width": 346,
+      "height": 65
+    },
+    {
+      "id": "n-fusion",
+      "type": "raster_colorizer",
+      "position": {
+        "x": -530,
+        "y": 760
+      },
+      "data": {
+        "label": "Composite (Raster Colorizer)",
+        "params": {
+          "background": "#000000",
+          "a_mode": 1,
+          "a_label": "Susceptibilité",
+          "a_color": "#FF8800",
+          "a_color_min": "#000000",
+          "a_opacity": 0.45,
+          "a_threshold": 0.5,
+          "b_mode": 0,
+          "b_label": "SAR change",
+          "b_color": "#FF2200",
+          "b_color_min": "#000000",
+          "b_opacity": 1.0,
+          "b_threshold": 0.15,
+          "c_mode": 0,
+          "c_label": "Turbidité",
+          "c_color": "#00FFFF",
+          "c_color_min": "#000000",
+          "c_opacity": 1.0,
+          "c_threshold": 0.15
+        },
+        "ports": [
+          {
+            "id": "any__1_sar",
+            "color": "any",
+            "label": "SAR change"
+          },
+          {
+            "id": "any__2_turb",
+            "color": "any",
+            "label": "Turbidité"
+          }
+        ]
+      },
+      "width": 240,
+      "height": 420
+    },
+    {
+      "id": "f-out",
+      "type": "canvas_frame",
+      "position": {
+        "x": -100,
+        "y": 80
+      },
+      "data": {
+        "label": "Résultats détection",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 1700
+      },
+      "width": 380,
+      "height": 1700
+    },
+    {
+      "id": "n-disp-risk",
+      "type": "output_display",
+      "position": {
+        "x": -80,
+        "y": 130
+      },
+      "data": {
+        "label": "Risque combiné",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_risk",
+            "color": "image",
+            "label": "Risque"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-susc",
+      "type": "output_display",
+      "position": {
+        "x": -80,
+        "y": 380
+      },
+      "data": {
+        "label": "Susceptibilité terrain (MCDA)",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_susc",
+            "color": "image",
+            "label": "Susceptibilité"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-sar",
+      "type": "output_display",
+      "position": {
+        "x": -80,
+        "y": 630
+      },
+      "data": {
+        "label": "Changement SAR (VV delta)",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_sar",
+            "color": "image",
+            "label": "SAR change"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-turb",
+      "type": "output_display",
+      "position": {
+        "x": -80,
+        "y": 880
+      },
+      "data": {
+        "label": "Turbidité fluviale",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_turb",
+            "color": "image",
+            "label": "Turbidité"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-stats-sar",
+      "type": "data_inspector",
+      "position": {
+        "x": -80,
+        "y": 1130
+      },
+      "data": {
+        "label": "Stats SAR",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "n-stats-turb",
+      "type": "data_inspector",
+      "position": {
+        "x": -80,
+        "y": 1360
+      },
+      "data": {
+        "label": "Stats turbidité",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "n-stats-risk",
+      "type": "data_inspector",
+      "position": {
+        "x": -80,
+        "y": 1580
+      },
+      "data": {
+        "label": "Stats risque combiné",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-bbox-dem",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-bbox-s1t0",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1t0",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-bbox-s1t1",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s1t1",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-bbox-s2",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e-dem-slope",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-slope",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-flow",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-dem-hand",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-flow-hand",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e-slope-mcda",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-mcda",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-hand-mcda",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-mcda",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-flow-mcda",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-mcda",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e-s1t0-sar",
+      "source": "n-s1t0",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-sar-change",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-s1t1-sar",
+      "source": "n-s1t1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-sar-change",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-s2-ndvi",
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-ndvi",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-s2-water",
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-watermask",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e-ndvi-turb",
+      "source": "n-ndvi",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-turbidity",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-water-turb",
+      "source": "n-watermask",
+      "sourceHandle": "mask__mask",
+      "target": "n-turbidity",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e-mcda-fusion",
+      "source": "n-mcda",
+      "sourceHandle": "any__out_any",
+      "target": "n-fusion",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e-sar-fusion",
+      "source": "n-sar-change",
+      "sourceHandle": "any__out_any",
+      "target": "n-fusion",
+      "targetHandle": "any__1_sar"
+    },
+    {
+      "id": "e-turb-fusion",
+      "source": "n-turbidity",
+      "sourceHandle": "any__out_any",
+      "target": "n-fusion",
+      "targetHandle": "any__2_turb"
+    },
+    {
+      "id": "e-fusion-risk",
+      "source": "n-fusion",
+      "sourceHandle": "image__main",
+      "target": "n-disp-risk",
+      "targetHandle": "image__0_risk"
+    },
+    {
+      "id": "e-mcda-susc",
+      "source": "n-mcda",
+      "sourceHandle": "image__main",
+      "target": "n-disp-susc",
+      "targetHandle": "image__0_susc"
+    },
+    {
+      "id": "e-sar-disp",
+      "source": "n-sar-change",
+      "sourceHandle": "image__main",
+      "target": "n-disp-sar",
+      "targetHandle": "image__0_sar"
+    },
+    {
+      "id": "e-turb-disp",
+      "source": "n-turbidity",
+      "sourceHandle": "image__main",
+      "target": "n-disp-turb",
+      "targetHandle": "image__0_turb"
+    },
+    {
+      "id": "e-sar-stats",
+      "source": "n-sar-change",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-stats-sar",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e-turb-stats",
+      "source": "n-turbidity",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-stats-turb",
+      "targetHandle": "data__table"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 339
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": null
+  }
+}

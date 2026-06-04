@@ -1,0 +1,281 @@
+{
+  "nodes": [
+    {
+      "id": "h",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Détecteur ① — Couleur turquoise\nEau d'orpaillage = turquoise laiteux (kaolinite). Eau naturelle = noire/brune.\nExport → detect_1_turquoise.tif",
+          "color_index": 0
+        }
+      },
+      "width": 474,
+      "height": 107,
+      "selected": false
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -2060,
+        "y": 160
+      },
+      "data": {
+        "label": "Zone · Dorlin",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 136,
+      "selected": false
+    },
+    {
+      "id": "n-s2",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 120
+      },
+      "data": {
+        "label": "Sentinel-2 L2A — 2023",
+        "params": {
+          "collection": "0",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "1",
+          "fetch": 0,
+          "node_note": "Fetch → S2 CLOUD_FREE (composite sans nuage)"
+        }
+      },
+      "width": 208,
+      "height": 293,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "nd",
+      "type": "canvas_note",
+      "position": {
+        "x": -1500,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Signature de teinte : vert+bleu élevés, NIR faible, non-végétation.\nSeuils ajustables en tête de code.",
+          "color_index": 2
+        }
+      },
+      "width": 419,
+      "height": 86,
+      "selected": false
+    },
+    {
+      "id": "n-det",
+      "type": "logic_python",
+      "position": {
+        "x": -1500,
+        "y": 120
+      },
+      "data": {
+        "label": "Détecteur turquoise",
+        "params": {
+          "code": "import numpy as np, cv2\n# Détecteur ① turquoise — masque eau + clarté laiteuse (kaolinite)\nNIR_MAX=b      # eau = NIR faible (forêt NIR~0.32)\nP_LO,P_HI=30,98   # stretch percentile DANS l'eau\nMORPH_K=c\ndef _morph(m,k=3):\n    ker=cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(k,k))\n    return cv2.morphologyEx(m.astype(np.uint8),cv2.MORPH_OPEN,ker)>0\ntry:\n    geo=a if isinstance(a,dict) else None\n    if geo is None:\n        out_main=None; out_any=None; out_dict={'erreur':'Brancher S2 (a)'}\n    else:\n        b=np.asarray(geo['bands'],dtype=np.float32)\n        if float(np.nanmax(b))>10.0: b=b/10000.0\n        R,Gr,B,NIR,SWIR=b[0],b[1],b[2],b[3],b[4]\n        H,W=R.shape; npx=H*W\n        water=_morph(NIR<NIR_MAX,MORPH_K)\n        # turquoise-ité = clarté vert+bleu au-dessus du rouge (laiteux, pas brun ni noir)\n        turq=((Gr+B)*0.5 - R*0.5)\n        det=np.zeros((H,W),dtype=np.float32)\n        tw=turq[water]\n        if tw.size>20:\n            lo=float(np.nanpercentile(tw,P_LO)); hi=float(np.nanpercentile(tw,P_HI))\n            rng=max(hi-lo,1e-4)\n            s=np.clip((turq-lo)/rng,0,1)\n            det=np.where(water,s,0.0).astype(np.float32)\n        u8=(np.clip(det,0,1)*255).astype(np.uint8)\n        prev=cv2.applyColorMap(u8,cv2.COLORMAP_OCEAN); prev[det<0.05]=[0,0,0]\n        out_main=prev\n        out_any={**geo,'bands':det[np.newaxis],'count':1,'dtype':'float32','band_names':['detection'],'_bands':['detection']}\n        out_dict={'water_pct':round(float(water.sum())/npx*100,2),\n                  'turq_lo':round(float(np.nanpercentile(turq[water],P_LO)) if water.sum()>20 else 0,3),\n                  'turq_hi':round(float(np.nanpercentile(turq[water],P_HI)) if water.sum()>20 else 0,3),\n                  'detect_pct':round(float((det>0.5).sum())/npx*100,3),'method':'turquoise_milkiness'}\nexcept Exception as _e:\n    out_main=None; out_any=None; out_dict={'exception':str(_e),'type':type(_e).__name__}\n",
+          "node_note": "a=S2 → détection 0-1"
+        }
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n-wr",
+      "type": "geo_geotiff_writer",
+      "position": {
+        "x": -1180,
+        "y": 120
+      },
+      "data": {
+        "label": "Export GeoTIFF",
+        "params": {
+          "save": 0,
+          "file_path": "copernicus_cache/detect_1_turquoise.tif",
+          "compression": "lzw",
+          "node_note": "Cliquer Save pour exporter"
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "n-disp",
+      "type": "output_display",
+      "position": {
+        "x": -1180,
+        "y": 320
+      },
+      "data": {
+        "label": "Turquoise détecté",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_t",
+            "color": "image",
+            "label": "out"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n-diag",
+      "type": "data_inspector",
+      "position": {
+        "x": -1180,
+        "y": 540
+      },
+      "data": {
+        "label": "Diagnostics bandes",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false
+    },
+    {
+      "id": "node-1780550205107-h8q3r0l3d",
+      "type": "scalar_input",
+      "position": {
+        "x": -1500,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "Number",
+        "params": {
+          "max": 1,
+          "step": 0.01,
+          "color_index": 3,
+          "value": 0.13
+        }
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1500,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780550506448-0.6729886789994517",
+      "type": "scalar_input",
+      "position": {
+        "x": -1500,
+        "y": 500
+      },
+      "style": {},
+      "data": {
+        "label": "Number",
+        "params": {
+          "max": 10,
+          "step": 1,
+          "color_index": 3,
+          "value": 5,
+          "format": 0
+        }
+      },
+      "width": 208,
+      "height": 111,
+      "selected": true,
+      "positionAbsolute": {
+        "x": -1500,
+        "y": 500
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox",
+      "id": "e1"
+    },
+    {
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-det",
+      "targetHandle": "any__a",
+      "id": "e2"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "any__out_any",
+      "target": "n-wr",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e3"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "image__main",
+      "target": "n-disp",
+      "targetHandle": "image__0_t",
+      "id": "e4"
+    },
+    {
+      "id": "ediag",
+      "source": "n-det",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-diag",
+      "targetHandle": "data__table"
+    },
+    {
+      "source": "node-1780550205107-h8q3r0l3d",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__b",
+      "id": "e-1780550214282"
+    },
+    {
+      "source": "node-1780550506448-0.6729886789994517",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__c",
+      "id": "e-1780550529699"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 550.4296875,
+      "h": 468
+    },
+    "previewPos": {
+      "x": 31.84765625,
+      "y": -92.578125
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "n-det"
+  }
+}

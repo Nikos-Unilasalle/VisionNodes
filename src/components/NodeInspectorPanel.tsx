@@ -1033,9 +1033,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               : <TextInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isNumber) {
             const val = Number(p[sp.id] ?? sp.default ?? 0);
-            inner = (sp.min === undefined || sp.max === undefined)
+            let minVal = sp.min;
+            let maxVal = sp.max;
+            let stepVal = sp.step;
+
+            if (node.type === 'scalar_input' && sp.id === 'value') {
+              minVal = p.min !== undefined ? Number(p.min) : 0.0;
+              maxVal = p.max !== undefined ? Number(p.max) : 100.0;
+              stepVal = p.step !== undefined ? Number(p.step) : (p.format === 0 ? 1 : 0.01);
+            }
+
+            inner = (minVal === undefined || maxVal === undefined)
               ? <NumberInput label={sp.label || sp.id} val={val} onChange={(v) => up({ [sp.id]: v })} />
-              : <Slider label={sp.label || sp.id} val={val} min={sp.min} max={sp.max} step={sp.step || (sp.type === 'float' ? 0.01 : 1)} onChange={(v) => up({ [sp.id]: v })} />;
+              : <Slider label={sp.label || sp.id} val={val} min={minVal} max={maxVal} step={stepVal || (sp.type === 'float' ? 0.01 : 1)} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isBool) {
             inner = <ToggleInput label={sp.label || sp.id} val={!!(p[sp.id] ?? sp.default)} onChange={(v) => up({ [sp.id]: v })} />;
           } else {

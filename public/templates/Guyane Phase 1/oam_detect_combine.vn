@@ -1,0 +1,229 @@
+{
+  "nodes": [
+    {
+      "id": "h",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Composition — superposition des 4 détecteurs\nImporte les 4 rasters exportés, superpose via Raster Colorizer (seuils/couleurs ajustables).\nCyan=turquoise · Magenta=eau hors-place · Rouge=co-occurrence · Jaune=texture",
+          "color_index": 0
+        }
+      },
+      "width": 1100,
+      "height": 65
+    },
+    {
+      "id": "n-r1",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": -2060,
+        "y": 160
+      },
+      "data": {
+        "label": "① Turquoise",
+        "params": {
+          "file_path": "copernicus_cache/detect_1_turquoise.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "node_note": "raster détecteur"
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "n-r2",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": -2060,
+        "y": 400
+      },
+      "data": {
+        "label": "② Eau hors-place",
+        "params": {
+          "file_path": "copernicus_cache/detect_2_water_outofplace.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "node_note": "raster détecteur"
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "n-r3",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": -2060,
+        "y": 640
+      },
+      "data": {
+        "label": "③ Co-occurrence",
+        "params": {
+          "file_path": "copernicus_cache/detect_3_cooccurrence.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "node_note": "raster détecteur"
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "n-r4",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": -2060,
+        "y": 880
+      },
+      "data": {
+        "label": "④ Texture",
+        "params": {
+          "file_path": "copernicus_cache/detect_4_texture.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "node_note": "raster détecteur"
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "n-comp",
+      "type": "raster_colorizer",
+      "position": {
+        "x": -1700,
+        "y": 300
+      },
+      "data": {
+        "label": "Superposition détecteurs",
+        "params": {
+          "background": "#000000",
+          "a_mode": 0,
+          "a_label": "Turquoise",
+          "a_color": "#00FFFF",
+          "a_color_min": "#000000",
+          "a_opacity": 1.0,
+          "a_threshold": 0.3,
+          "b_mode": 0,
+          "b_label": "Eau hors-place",
+          "b_color": "#FF00FF",
+          "b_color_min": "#000000",
+          "b_opacity": 1.0,
+          "b_threshold": 0.3,
+          "c_mode": 0,
+          "c_label": "Co-occurrence",
+          "c_color": "#FF2200",
+          "c_color_min": "#000000",
+          "c_opacity": 1.0,
+          "c_threshold": 0.3,
+          "d_mode": 0,
+          "d_label": "Texture",
+          "d_color": "#FFDD00",
+          "d_color_min": "#000000",
+          "d_opacity": 1.0,
+          "d_threshold": 0.3
+        },
+        "ports": [
+          {
+            "id": "any__1_b",
+            "color": "any",
+            "label": "② Eau"
+          },
+          {
+            "id": "any__2_c",
+            "color": "any",
+            "label": "③ Cooc"
+          },
+          {
+            "id": "any__3_d",
+            "color": "any",
+            "label": "④ Texture"
+          }
+        ]
+      },
+      "width": 260,
+      "height": 480
+    },
+    {
+      "id": "n-disp",
+      "type": "output_display",
+      "position": {
+        "x": -1380,
+        "y": 300
+      },
+      "data": {
+        "label": "Carte combinée détecteurs",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_c",
+            "color": "image",
+            "label": "out"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    }
+  ],
+  "edges": [
+    {
+      "source": "n-r1",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-comp",
+      "targetHandle": "any__a",
+      "id": "e1"
+    },
+    {
+      "source": "n-r2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-comp",
+      "targetHandle": "any__1_b",
+      "id": "e2"
+    },
+    {
+      "source": "n-r3",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-comp",
+      "targetHandle": "any__2_c",
+      "id": "e3"
+    },
+    {
+      "source": "n-r4",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-comp",
+      "targetHandle": "any__3_d",
+      "id": "e4"
+    },
+    {
+      "source": "n-comp",
+      "sourceHandle": "image__main",
+      "target": "n-disp",
+      "targetHandle": "image__0_c",
+      "id": "e5"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 339
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": null
+  }
+}

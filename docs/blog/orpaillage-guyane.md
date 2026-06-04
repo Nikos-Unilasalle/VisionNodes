@@ -277,6 +277,11 @@ l'orpaillage.**
 Toute la chaîne de variables (spectral + terrain + radar + bi-temporel) est déjà
 construite et **prête à accueillir ces labels** dès que je les aurai.
 
+> **Suite.** Ces labels, je les ai finalement obtenus (les données OAM de
+> GéoGuyane). La tentative de **prédire** l'émergence de nouveaux sites — avec ses
+> deux fuites méthodologiques et son verdict honnête — fait l'objet d'un second
+> carnet : [Prédire l'orpaillage : enquête sur un signal qui se dérobe](orpaillage-guyane-prediction.md).
+
 ## 9. Note de méthode : concevoir une pipeline par le regard
 
 Au-delà du résultat, la manière dont j'ai *construit* ces graphes mérite un mot —

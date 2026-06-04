@@ -1,0 +1,263 @@
+{
+  "nodes": [
+    {
+      "id": "h",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Détecteur ③ — Co-occurrence eau + sol nu\nSol nu seul ou eau seule = faux positifs. Les deux côte à côte, en forêt = quasi-certitude.\nExport → detect_3_cooccurrence.tif",
+          "color_index": 1
+        }
+      },
+      "width": 1000,
+      "height": 65
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -2060,
+        "y": 160
+      },
+      "data": {
+        "label": "Zone · Dorlin",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 136
+    },
+    {
+      "id": "n-s2",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1780,
+        "y": 120
+      },
+      "data": {
+        "label": "Sentinel-2 L2A — 2023",
+        "params": {
+          "collection": "0",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "mosaic_mode": "1",
+          "fetch": 0,
+          "node_note": "Fetch → S2 CLOUD_FREE (composite sans nuage)"
+        }
+      },
+      "width": 208,
+      "height": 293
+    },
+    {
+      "id": "nd",
+      "type": "canvas_note",
+      "position": {
+        "x": -1500,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "BSI (sol nu) dilaté ∩ MNDWI (eau), réciproque. Voisinage DILATE_K.",
+          "color_index": 2
+        }
+      },
+      "width": 640,
+      "height": 65
+    },
+    {
+      "id": "n-det",
+      "type": "logic_python",
+      "position": {
+        "x": -1500,
+        "y": 120
+      },
+      "data": {
+        "label": "Détecteur co-occurrence",
+        "params": {
+          "code": "import numpy as np, cv2\ndef _num(x,dv):\n    try: return float(x) if isinstance(x,(int,float)) else dv\n    except: return dv\ndef _morph(m,k=3):\n    ker=cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(k,k))\n    return cv2.morphologyEx(m.astype(np.uint8),cv2.MORPH_OPEN,ker)>0\n# a=S2  b=BSI_THR(Number) c=MILK_FLOOR(Number) d=DILATE_K(Number)\nBSI_THR=_num(b,0.0); MILK_FLOOR=_num(c,0.055); DILATE_K=max(1,int(_num(d,7)))\nCLOUD_B=0.15; NIR_MAX=0.14; MORPH_K=3\ntry:\n    geo=a if isinstance(a,dict) else None\n    if geo is None: out_main=None; out_any=None; out_dict={'erreur':'Brancher S2 (a)'}\n    else:\n        bd=np.asarray(geo['bands'],dtype=np.float32)\n        if float(np.nanmax(bd))>10.0: bd=bd/10000.0\n        R,Gr,B,NIR,SWIR=bd[0],bd[1],bd[2],bd[3],bd[4]\n        H,W=R.shape; npx=H*W\n        cloud=B>CLOUD_B\n        bsi=((SWIR+R)-(NIR+B))/((SWIR+R)+(NIR+B)+1e-6)\n        bare=((bsi>BSI_THR)&(~cloud)&(NIR>NIR_MAX)).astype(np.uint8)   # sol nu = pas eau, pas nuage\n        water=((NIR<NIR_MAX)&((Gr+B)>MILK_FLOOR)&(~cloud)).astype(np.uint8)  # eau laiteuse\n        ker=cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(DILATE_K,DILATE_K))\n        bare_d=cv2.dilate(bare,ker); water_d=cv2.dilate(water,ker)\n        cooc=_morph(((bare_d>0)&(water>0))|((water_d>0)&(bare>0)),MORPH_K)\n        det=cooc.astype(np.float32)\n        u8=(np.clip(det,0,1)*255).astype(np.uint8)\n        prev=cv2.applyColorMap(u8,cv2.COLORMAP_HOT); prev[det<0.05]=[0,0,0]\n        out_main=prev\n        out_any={**geo,'bands':det[np.newaxis],'count':1,'dtype':'float32','band_names':['detection'],'_bands':['detection']}\n        out_dict={'BSI_THR':round(BSI_THR,3),'MILK_FLOOR':round(MILK_FLOOR,3),'DILATE_K':DILATE_K,\n                  'cloud_pct':round(float(cloud.sum())/npx*100,2),\n                  'bare_pct':round(float(bare.sum())/npx*100,2),'water_pct':round(float(water.sum())/npx*100,2),\n                  'detect_pct':round(float(cooc.sum())/npx*100,3)}\nexcept Exception as _e:\n    out_main=None; out_any=None; out_dict={'exception':str(_e),'type':type(_e).__name__}\n",
+          "node_note": "a=S2 → détection"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "n-wr",
+      "type": "geo_geotiff_writer",
+      "position": {
+        "x": -1180,
+        "y": 120
+      },
+      "data": {
+        "label": "Export GeoTIFF",
+        "params": {
+          "save": 0,
+          "file_path": "copernicus_cache/detect_3_cooccurrence.tif",
+          "compression": "lzw",
+          "node_note": "Cliquer Save pour exporter"
+        }
+      },
+      "width": 208,
+      "height": 150
+    },
+    {
+      "id": "n-disp",
+      "type": "output_display",
+      "position": {
+        "x": -1180,
+        "y": 320
+      },
+      "data": {
+        "label": "Co-occurrence",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_t",
+            "color": "image",
+            "label": "out"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-num-bsi",
+      "type": "scalar_input",
+      "position": {
+        "x": -1780,
+        "y": 460
+      },
+      "data": {
+        "label": "BSI_THR (sol nu)",
+        "params": {
+          "format": 1,
+          "value": 0.0,
+          "min": -0.3,
+          "max": 0.5,
+          "step": 0.05
+        }
+      },
+      "width": 208,
+      "height": 160
+    },
+    {
+      "id": "n-num-mndwi",
+      "type": "scalar_input",
+      "position": {
+        "x": -1780,
+        "y": 640
+      },
+      "data": {
+        "label": "MILK_FLOOR (clarté eau)",
+        "params": {
+          "format": 1,
+          "value": 0.055,
+          "min": 0.0,
+          "max": 0.2,
+          "step": 0.005
+        }
+      },
+      "width": 208,
+      "height": 160
+    },
+    {
+      "id": "n-num-dil",
+      "type": "scalar_input",
+      "position": {
+        "x": -1780,
+        "y": 820
+      },
+      "data": {
+        "label": "DILATE_K (voisinage)",
+        "params": {
+          "format": 0,
+          "value": 7,
+          "min": 1,
+          "max": 21,
+          "step": 2
+        }
+      },
+      "width": 208,
+      "height": 160
+    }
+  ],
+  "edges": [
+    {
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox",
+      "id": "e1"
+    },
+    {
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-det",
+      "targetHandle": "any__a",
+      "id": "e2"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "any__out_any",
+      "target": "n-wr",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e3"
+    },
+    {
+      "source": "n-det",
+      "sourceHandle": "image__main",
+      "target": "n-disp",
+      "targetHandle": "image__0_t",
+      "id": "e4"
+    },
+    {
+      "id": "ebsi",
+      "source": "n-num-bsi",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "emnd",
+      "source": "n-num-mndwi",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "edil",
+      "source": "n-num-dil",
+      "sourceHandle": "scalar__value",
+      "target": "n-det",
+      "targetHandle": "any__d"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 339
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 0,
+    "visualizedNodeId": null
+  }
+}
