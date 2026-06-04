@@ -43,9 +43,10 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         "Models download automatically on first use."
     ),
     inputs=[
-        {'id': 'image', 'color': 'image'},
-        {'id': 'box',   'color': 'dict', 'label': 'Box (from YOLO)'},
+        {'id': 'image',  'color': 'image'},
+        {'id': 'box',    'color': 'dict', 'label': 'Box (from YOLO)'},
         {'id': 'points', 'color': 'list', 'label': 'Points List'},
+        {'id': 'boxes',  'color': 'list', 'label': 'Boxes List (Grounding DINO)'},
     ],
     outputs=[
         {'id': 'main',      'color': 'image',  'label': 'Overlay'},
@@ -64,9 +65,13 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         {'id': 'model', 'label': 'Model', 'type': 'enum',
          'options': _MODEL_NAMES, 'default': 0},
 
+        # ── Trigger ──
+        {'id': 'segment', 'label': 'Segment', 'type': 'trigger', 'default': False},
+
         # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
-         'options': ['Box Input Port', 'Points List Input Port', 'Automatic (Grid)'],
+         'options': ['Box Input Port', 'Points List Input Port', 'Automatic (Grid)',
+                     'Boxes List (Grounding DINO)'],
          'default': 0},
 
         # ── Automatic Mode Settings ──
@@ -291,6 +296,13 @@ class SAMSegmenterNode(NodeProcessor):
         if self.predictor is None:
             return empty(f'Loading {model_name}…')
 
+        # ── Trigger gate ──
+        triggered = bool(params.get('segment', False))
+        if not triggered:
+            if getattr(self, '_cache_result', None) is not None:
+                return self._cache_result
+            return empty('Press Segment to run')
+
         h, w = image.shape[:2]
 
         # ── 2. Determine prompt ──
@@ -302,11 +314,12 @@ class SAMSegmenterNode(NodeProcessor):
         pts_in = inputs.get('points')
         
         box_hash = tuple(sorted(box_in.items())) if isinstance(box_in, dict) else None
-        
-        # for list of dicts (pts_in), stringify it safely
-        pts_hash = str(pts_in) if isinstance(pts_in, list) else None
 
-        prompt_key = (prompt_mode, box_hash, pts_hash,
+        pts_hash   = str(pts_in)                 if isinstance(pts_in, list) else None
+        boxes_in   = inputs.get('boxes')
+        boxes_hash = str(boxes_in)               if isinstance(boxes_in, list) else None
+
+        prompt_key = (prompt_mode, box_hash, pts_hash, boxes_hash,
                       params.get('multimask'), params.get('mask_select', 0),
                       params.get('overlay_opacity', 50),
                       params.get('points_per_side', 32),
@@ -430,7 +443,102 @@ class SAMSegmenterNode(NodeProcessor):
                 self._cache_result = result
                 return result
 
-            # ── 4b. Prompted Mode (Box/Points) ──
+            # ── 4b. Boxes List mode (Grounding DINO → SAM batch) ──
+            if prompt_mode == 3:
+                boxes_input = inputs.get('boxes')
+                if not isinstance(boxes_input, list) or len(boxes_input) == 0:
+                    return empty('No boxes list — connect Grounding DINO boxes_list → boxes port')
+
+                pixel_boxes = []
+                for b in boxes_input:
+                    if not isinstance(b, dict):
+                        continue
+                    xmin = float(b.get('xmin', 0))
+                    ymin = float(b.get('ymin', 0))
+                    bw   = float(b.get('width',  0))
+                    bh   = float(b.get('height', 0))
+                    x1 = int(max(0, xmin * w))
+                    y1 = int(max(0, ymin * h))
+                    x2 = int(min(w, (xmin + bw) * w))
+                    y2 = int(min(h, (ymin + bh) * h))
+                    if x2 > x1 and y2 > y1:
+                        pixel_boxes.append([x1, y1, x2, y2])
+
+                if not pixel_boxes:
+                    return empty('Boxes list empty or invalid format')
+
+                n_boxes = len(pixel_boxes)
+                self.report_progress(0.6, f'SAM: Segmenting {n_boxes} objects…')
+
+                all_boxes_np = np.array(pixel_boxes)  # (N, 4) pixel xyxy
+
+                with torch.inference_mode():
+                    if self.device == 'cuda':
+                        with torch.autocast(self.device, dtype=torch.bfloat16):
+                            masks, scores_batch, _ = self.predictor.predict(
+                                box=all_boxes_np,
+                                multimask_output=False,
+                            )
+                    else:
+                        masks, scores_batch, _ = self.predictor.predict(
+                            box=all_boxes_np,
+                            multimask_output=False,
+                        )
+
+                # SAM2 returns (N, 1, H, W) when multimask_output=False with batch boxes
+                if masks.ndim == 4:
+                    masks = masks[:, 0]   # → (N, H, W)
+                if hasattr(masks, 'cpu'):
+                    masks = masks.detach().cpu().numpy()
+
+                opacity = float(params.get('overlay_opacity', 50)) / 100.0
+                label_map    = np.zeros((h, w, 3), dtype=np.uint8)
+                combined_mask = np.zeros((h, w), dtype=np.uint8)
+                areas, centroids, all_contours = [], [], []
+
+                for i, mask in enumerate(masks):
+                    mask_bool = mask > 0
+                    color = [
+                        int((i * 67  + 40) % 200 + 55),
+                        int((i * 137 + 80) % 200 + 55),
+                        int((i * 197 + 120) % 200 + 55),
+                    ]
+                    label_map[mask_bool] = color
+                    combined_mask[mask_bool] = 255
+                    areas.append(float(np.sum(mask_bool)))
+
+                    m_u8 = mask_bool.astype(np.uint8) * 255
+                    cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    if cnts:
+                        M = cv2.moments(m_u8)
+                        cx = float(M['m10'] / M['m00']) if M['m00'] != 0 else 0.0
+                        cy = float(M['m01'] / M['m00']) if M['m00'] != 0 else 0.0
+                        centroids.append([cx, cy])
+                        all_contours.append(cnts[0].reshape(-1, 2).tolist())
+                    else:
+                        centroids.append([0.0, 0.0])
+                        all_contours.append([])
+
+                overlay = cv2.addWeighted(image.copy(), 1.0, label_map, opacity, 0)
+
+                for i, mask in enumerate(masks):
+                    m_u8 = (mask > 0).astype(np.uint8) * 255
+                    cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    cv2.drawContours(overlay, cnts, -1, (255, 255, 255), 1)
+                    x1, y1, x2, y2 = pixel_boxes[i]
+                    cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 255, 255), 1)
+
+                self.report_progress(1.0, f'SAM: {n_boxes} objects segmented')
+                result = {
+                    'main': overlay, 'mask': combined_mask,
+                    'count': float(n_boxes),
+                    'areas': areas, 'centroids': centroids, 'contours': all_contours,
+                }
+                self._cache_hash = cache_key
+                self._cache_result = result
+                return result
+
+            # ── 4c. Prompted Mode (Box / Points) ──
             self.report_progress(0.6, 'SAM: Segmenting…')
 
             predict_kwargs = {

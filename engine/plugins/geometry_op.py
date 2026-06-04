@@ -146,22 +146,17 @@ class ROIPolygonNode(NodeProcessor):
         # No polygon drawn = full pass-through (all white mask)
         mask = np.ones((h, w), dtype=np.uint8) * 255 if len(pts_data) == 0 else np.zeros((h, w), dtype=np.uint8)
 
-        # Performance optimization: Send a small preview for the editor
+        # Encode preview for node thumbnail (main is stripped by engine, only strings pass)
         preview_b64 = None
         if img is not None:
-            if not hasattr(self, '_frame_count'): self._frame_count = 0
-            self._frame_count += 1
-            if self._frame_count % 6 == 0:
-                try:
-                    ph, pw = 720, int(720 * (w/h))
-                    pimg = cv2.resize(img, (pw, ph))
-                    _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
-                    preview_b64 = base64.b64encode(buf).decode('utf-8')
-                    self._last_preview = preview_b64
-                except Exception as e:
-                    print(f"[ROIPolygon] Preview encode error: {e}")
-            else:
-                preview_b64 = getattr(self, '_last_preview', None)
+            try:
+                ph = min(720, h)
+                pw = int(ph * (w / h))
+                pimg = cv2.resize(img, (pw, ph))
+                _, buf = cv2.imencode('.jpg', pimg, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                preview_b64 = base64.b64encode(buf).decode('utf-8')
+            except Exception as e:
+                print(f"[ROIPolygon] Preview encode error: {e}")
 
         pts = None
         if len(pts_data) > 0:
