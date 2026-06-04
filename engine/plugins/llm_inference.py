@@ -26,7 +26,7 @@ _DEFAULT_MODELS = {
 
 _BASE_URLS = {
     'Ollama (local)':  'http://localhost:11434',
-    'Ollama (cloud)':  'https://api.ollama.com',
+    'Ollama (cloud)':  'https://ollama.com/api',
     'OpenAI':          'https://api.openai.com',
     'Anthropic':       'https://api.anthropic.com',
     'Groq':            'https://api.groq.com/openai',
@@ -158,6 +158,40 @@ class LLMInferenceNode(NodeProcessor):
         data = resp.json()
         text   = data['choices'][0]['message']['content']
         tokens = float(data.get('usage', {}).get('total_tokens', 0))
+        return text, tokens
+
+    def _call_ollama_cloud(self, api_key: str, model: str, system: str,
+                           user_text: str, img_b64: str | None,
+                           json_mode: bool, temperature: float,
+                           max_tokens: int, timeout: int) -> tuple:
+        """Call Ollama cloud API (native /api/chat format + Bearer auth)."""
+        import requests
+        url = 'https://ollama.com/api/chat'
+        headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+
+        msg: dict = {'role': 'user', 'content': user_text}
+        if img_b64:
+            msg['images'] = [img_b64]
+
+        messages = []
+        if system:
+            messages.append({'role': 'system', 'content': system})
+        messages.append(msg)
+
+        payload: dict = {
+            'model':   model,
+            'messages': messages,
+            'stream':  False,
+            'options': {'temperature': temperature, 'num_predict': max_tokens},
+        }
+        if json_mode:
+            payload['format'] = 'json'
+
+        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+        resp.raise_for_status()
+        data   = resp.json()
+        text   = data['message']['content']
+        tokens = float(data.get('eval_count', 0) + data.get('prompt_eval_count', 0))
         return text, tokens
 
     def _call_openai_compatible(self, base_url: str, api_key: str, model: str,
@@ -300,8 +334,13 @@ class LLMInferenceNode(NodeProcessor):
                 text, tokens = self._call_ollama(
                     base_url, model, msgs, json_mode, temperature, max_tokens, timeout
                 )
+            elif provider == 'Ollama (cloud)':
+                text, tokens = self._call_ollama_cloud(
+                    api_key, model, system, user_text, img_b64,
+                    json_mode, temperature, max_tokens, timeout
+                )
             else:
-                # Ollama (cloud), OpenAI, Groq, Custom — all OpenAI-compatible with Bearer auth
+                # OpenAI, Groq, Custom — OpenAI-compatible with Bearer auth
                 msgs = self._build_messages_openai(system, user_text, img_b64)
                 text, tokens = self._call_openai_compatible(
                     base_url, api_key, model, msgs, json_mode, temperature, max_tokens, timeout
