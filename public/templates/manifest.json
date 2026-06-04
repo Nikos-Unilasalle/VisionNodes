@@ -125,6 +125,11 @@
     "file": "sam_segmentation.vn"
   },
   {
+    "name": "Stone Wall — GDINO + SAM + Ollama",
+    "description": "Full AI pipeline for stone wall analysis: Grounding DINO detects individual stones via text prompt (tile 3×3 for dense scenes), SAM 2 segments each stone with pixel precision, and Ollama (llava) classifies stone types by petrographic analysis. Outputs a JSON classification report.",
+    "file": "stone_wall_gdino_sam_ollama.vn"
+  },
+  {
     "name": "Sphere Counting (Hough Circles)",
     "description": "Optimized workflow for counting and visualizing spherical objects (beads, grains, cells). Employs bilateral filtering to reduce specular reflections and CLAHE contrast enhancement prior to Hough circle detection.",
     "file": "sphere_counting_hough.vn"
