@@ -786,6 +786,14 @@ function App() {
     }));
   };
 
+  // Custom node label — stored in data.userLabel, displayed by BaseNode in place of
+  // the type name (which then shows small + blue in the header corner).
+  const onSetNodeLabel = useCallback((nodeId: string, label: string) => {
+    setViewNodes(nds => nds.map(n => n.id === nodeId
+      ? { ...n, data: { ...n.data, userLabel: label } }
+      : n));
+  }, [setViewNodes]);
+
   const toggleExposedParam = useCallback((nodeId: string, paramId: string) => {
     setViewNodes(nds => nds.map(n => {
       if (n.id !== nodeId) return n;
@@ -1828,6 +1836,7 @@ function App() {
           onRequestCapture={requestCapture}
           onToggleExposed={toggleExposedParam}
           onExternalizeParam={onExternalizeParam}
+          onSetNodeLabel={onSetNodeLabel}
           onUpdateGroupChildParams={selectedNode?.type === 'group_node'
             ? (childNodeId, params) => updateGroupChildParams(selectedNode.id, childNodeId, params)
             : undefined}

@@ -96,6 +96,9 @@ export const BaseNode = ({
   const maxPorts = Math.max(totalInputs, totalOutputs);
 
   const nodeNote = data?.params?.node_note;
+  // Custom node label: when set, replaces the header title; the canonical type name
+  // is shown small + blue in the header's right corner (see inspector "Label" field).
+  const userLabel = ((data as any)?.userLabel || '').trim();
   const isLockedOut = !!(data as any)?.lockedOut;
   const isBypassed = !!(data as any)?.bypassed;
   const isMinified = !!(data as any)?.minified;
@@ -199,10 +202,10 @@ export const BaseNode = ({
       {!isMinified && (
       <div className="bg-[#3d4452] px-4 py-2 flex items-center justify-between border-b border-[#4f5b6b] rounded-t-[10px] overflow-hidden group/header shrink-0"
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-        <div className="flex items-center gap-3 truncate">
+        <div className="flex items-center gap-3 truncate min-w-0 flex-1">
           <Icon size={14} className="shrink-0 transition-colors" style={customBg ? { color: customBg } : {}} />
-          <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>{title}</span>
-          
+          <span className="font-bold text-[10px] uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#e5e7eb' }}>{userLabel || title}</span>
+
           {data?.schema?.variable_inputs && (
             <div className="flex gap-1 ml-2 shrink-0">
               <button 
@@ -217,6 +220,7 @@ export const BaseNode = ({
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {userLabel && <span className="hidden group-hover/header:inline text-[8px] font-bold uppercase tracking-wider text-blue-400/80 truncate max-w-[120px]" title={title}>{title}</span>}
           {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse" />}
           {headerExtra}
         </div>
@@ -225,7 +229,7 @@ export const BaseNode = ({
       
       {isMinified && (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-          <span className="text-[8px] font-bold uppercase tracking-wider truncate max-w-[90%]" style={customBg ? { color: customBg } : { color: '#6b7280' }}>{title}</span>
+          <span className="text-[8px] font-bold uppercase tracking-wider truncate max-w-[90%]" style={customBg ? { color: customBg } : { color: '#6b7280' }}>{userLabel || title}</span>
         </div>
       )}
       

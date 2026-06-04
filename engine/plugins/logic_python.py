@@ -69,7 +69,6 @@ _RESERVED_VARS = frozenset(['np', 'cv2', 'pd', 'state'])
 _DEFAULT_SCRIPT = """\
 # ── Inputs ────────────────────────────────────────────────────────────────────
 #   a, b, c, d …  : the connected inputs (a new port appears as you connect each).
-#                   Any type — image, scalar, list, dict, DataFrame…
 #   np, cv2       : numpy and OpenCV always available
 #   pd            : pandas (if installed)
 #
@@ -79,9 +78,29 @@ _DEFAULT_SCRIPT = """\
 #       out_a = a if isinstance(a, np.ndarray) else None
 #       out_b = float(np.mean(a)) if isinstance(a, np.ndarray) else 0.0
 #
+# ── VNStudio port types → Python value ────────────────────────────────────────
+#   image     → np.ndarray  HxWx3 uint8, BGR (OpenCV order)
+#   mask      → np.ndarray  HxW   uint8, 0/255 binary
+#   markers   → np.ndarray  HxW   int32, integer label map (0 = background)
+#   flow      → np.ndarray  HxWx2 float32, optical-flow dx/dy
+#   data      → pd.DataFrame                      (the orange "DataFrame" port)
+#   geotiff   → dict {'bands': np.ndarray (C,H,W) float32, 'count': int,
+#                     'crs': str, 'transform': affine, 'nodata': float|None}
+#   contours  → list[np.ndarray]  each (N,1,2) int32  (cv2 contour format)
+#   regions   → list[dict]  e.g. {'area':…, 'centroid':(y,x), 'bbox':…, …}
+#   points    → list[dict]  {'x': float, 'y': float, 'label': int}  (1=fg, 0=bg)
+#   audio     → np.ndarray  float32 samples  (paired with a scalar sample-rate)
+#   scalar    → int | float           string → str           dict → dict
+#   list      → list                  boolean → bool          any → anything
+#
 # ── DataFrame tip ─────────────────────────────────────────────────────────────
 #   if isinstance(a, pd.DataFrame):
 #       out_a = a[a['species'] == 'Iris-setosa']
+#
+# ── GeoTIFF tip ───────────────────────────────────────────────────────────────
+#   if isinstance(a, dict) and 'bands' in a:
+#       ndvi = (a['bands'][3] - a['bands'][2]) / (a['bands'][3] + a['bands'][2] + 1e-6)
+#       out_a = ndvi.astype(np.float32)
 #
 # ── Persistence between frames ────────────────────────────────────────────────
 #   state['counter'] = state.get('counter', 0) + 1
