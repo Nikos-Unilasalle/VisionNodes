@@ -13,23 +13,28 @@ import os
 
 _NOTIF_ID = 'llm_inference'
 
-_PROVIDERS = ['Ollama (local)', 'OpenAI', 'Anthropic', 'Groq', 'Custom']
+_PROVIDERS = ['Ollama (local)', 'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq', 'Custom']
 
 _DEFAULT_MODELS = {
-    'Ollama (local)': 'llava',
-    'OpenAI':         'gpt-4o-mini',
-    'Anthropic':      'claude-haiku-4-5-20251001',
-    'Groq':           'llama-3.2-11b-vision-preview',
-    'Custom':         'gpt-4o-mini',
+    'Ollama (local)':  'llava',
+    'Ollama (cloud)':  'llama3.2-vision',
+    'OpenAI':          'gpt-4o-mini',
+    'Anthropic':       'claude-haiku-4-5-20251001',
+    'Groq':            'llama-3.2-11b-vision-preview',
+    'Custom':          'gpt-4o-mini',
 }
 
 _BASE_URLS = {
-    'Ollama (local)': 'http://localhost:11434',
-    'OpenAI':         'https://api.openai.com',
-    'Anthropic':      'https://api.anthropic.com',
-    'Groq':           'https://api.groq.com/openai',
-    'Custom':         '',
+    'Ollama (local)':  'http://localhost:11434',
+    'Ollama (cloud)':  'https://api.ollama.com',
+    'OpenAI':          'https://api.openai.com',
+    'Anthropic':       'https://api.anthropic.com',
+    'Groq':            'https://api.groq.com/openai',
+    'Custom':          '',
 }
+
+# Providers that require an API key
+_REQUIRES_KEY = {'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq'}
 
 _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
 
@@ -276,7 +281,7 @@ class LLMInferenceNode(NodeProcessor):
         base_url = custom_url or _BASE_URLS.get(provider, '')
 
         # Cloud providers require an API key
-        if provider not in ('Ollama (local)',) and not api_key:
+        if provider in _REQUIRES_KEY and not api_key:
             return self._empty(f'{provider}: no API key — enter it in the param field')
 
         self.report_progress(0.1, f'LLM: calling {provider} / {model}…')
@@ -296,7 +301,7 @@ class LLMInferenceNode(NodeProcessor):
                     base_url, model, msgs, json_mode, temperature, max_tokens, timeout
                 )
             else:
-                # OpenAI, Groq, Custom — all OpenAI-compatible
+                # Ollama (cloud), OpenAI, Groq, Custom — all OpenAI-compatible with Bearer auth
                 msgs = self._build_messages_openai(system, user_text, img_b64)
                 text, tokens = self._call_openai_compatible(
                     base_url, api_key, model, msgs, json_mode, temperature, max_tokens, timeout
