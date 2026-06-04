@@ -17,7 +17,7 @@ _PROVIDERS = ['Ollama (local)', 'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq',
 
 _DEFAULT_MODELS = {
     'Ollama (local)':  'llava',
-    'Ollama (cloud)':  'llama3.2-vision',
+    'Ollama (cloud)':  'qwen3-vl:235b',
     'OpenAI':          'gpt-4o-mini',
     'Anthropic':       'claude-haiku-4-5-20251001',
     'Groq':            'llama-3.2-11b-vision-preview',
