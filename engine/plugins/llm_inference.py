@@ -16,8 +16,8 @@ _NOTIF_ID = 'llm_inference'
 _PROVIDERS = ['Ollama (local)', 'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq', 'Custom']
 
 _DEFAULT_MODELS = {
-    'Ollama (local)':  'llava',
-    'Ollama (cloud)':  'gemma4:12b',
+    'Ollama (local)':  'gemma4:e4b',
+    'Ollama (cloud)':  'gemma4:31b',
     'OpenAI':          'gpt-4o-mini',
     'Anthropic':       'claude-haiku-4-5-20251001',
     'Groq':            'llama-3.2-11b-vision-preview',
@@ -26,7 +26,7 @@ _DEFAULT_MODELS = {
 
 _BASE_URLS = {
     'Ollama (local)':  'http://localhost:11434',
-    'Ollama (cloud)':  'https://ollama.com/api',
+    'Ollama (cloud)':  'https://ollama.com',
     'OpenAI':          'https://api.openai.com',
     'Anthropic':       'https://api.anthropic.com',
     'Groq':            'https://api.groq.com/openai',
@@ -94,7 +94,7 @@ def _img_to_b64(img: np.ndarray) -> str:
         {'id': 'run',          'label': 'Run',          'type': 'trigger', 'default': False},
         {'id': 'provider',     'label': 'Provider',     'type': 'enum',
          'options': _PROVIDERS, 'default': 0},
-        {'id': 'model',        'label': 'Model',        'type': 'string',  'default': 'llava'},
+        {'id': 'model',        'label': 'Model (empty = provider default)', 'type': 'string', 'default': ''},
         {'id': 'api_key',      'label': 'API Key',      'type': 'string',  'default': ''},
         {'id': 'base_url',     'label': 'Custom Base URL', 'type': 'string', 'default': ''},
         {'id': 'system_prompt','label': 'System Prompt','type': 'string',
@@ -102,6 +102,7 @@ def _img_to_b64(img: np.ndarray) -> str:
         {'id': 'user_prompt',  'label': 'User Prompt (param)', 'type': 'string',
          'default': 'Describe what you see.'},
         {'id': 'json_mode',    'label': 'JSON Mode',    'type': 'bool',    'default': False},
+        {'id': 'thinking',     'label': 'Thinking (Ollama)', 'type': 'bool', 'default': False},
         {'id': 'temperature',  'label': 'Temperature',  'type': 'float',
          'default': 0.7, 'min': 0.0, 'max': 2.0, 'step': 0.05},
         {'id': 'max_tokens',   'label': 'Max Tokens',   'type': 'int',
@@ -139,58 +140,53 @@ class LLMInferenceNode(NodeProcessor):
         secrets = _load_secrets()
         return secrets.get(f'llm_{provider}_key', '')
 
-    def _call_ollama(self, base_url: str, model: str, messages: list,
-                     json_mode: bool, temperature: float, max_tokens: int, timeout: int) -> tuple:
-        """Call Ollama via OpenAI-compatible /v1/chat/completions."""
-        import requests
-        url = f"{base_url.rstrip('/')}/v1/chat/completions"
-        payload = {
-            'model':       model,
-            'messages':    messages,
-            'temperature': temperature,
-            'max_tokens':  max_tokens,
-            'stream':      False,
-        }
-        if json_mode:
-            payload['format'] = 'json'
-        resp = requests.post(url, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        text   = data['choices'][0]['message']['content']
-        tokens = float(data.get('usage', {}).get('total_tokens', 0))
-        return text, tokens
+    def _call_ollama_native(self, base_url: str, api_key: str, model: str, system: str,
+                            user_text: str, img_b64: str | None,
+                            json_mode: bool, temperature: float,
+                            max_tokens: int, timeout: int, thinking: bool) -> tuple:
+        """Call Ollama native /api/chat — works for both local and cloud.
+        Cloud uses Bearer auth (https://ollama.com); local has no auth.
+        Mirrors the GravityChat reference app contract.
 
-    def _call_ollama_cloud(self, api_key: str, model: str, system: str,
-                           user_text: str, img_b64: str | None,
-                           json_mode: bool, temperature: float,
-                           max_tokens: int, timeout: int) -> tuple:
-        """Call Ollama cloud API (native /api/chat format + Bearer auth)."""
+        Note: gemma4/qwen3 etc. have a thinking mode. With thinking ON, the
+        token budget is spent on hidden reasoning and 'content' comes back empty
+        if num_predict is too small. Default OFF for direct answers."""
         import requests
-        url = 'https://ollama.com/api/chat'
-        headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+        url = f"{base_url.rstrip('/')}/api/chat"
 
-        msg: dict = {'role': 'user', 'content': user_text}
+        headers = {'Content-Type': 'application/json'}
+        if api_key:
+            headers['Authorization'] = f'Bearer {api_key}'
+
+        # Native format: image goes in 'images' array on the message, not in content
+        user_msg: dict = {'role': 'user', 'content': user_text}
         if img_b64:
-            msg['images'] = [img_b64]
+            user_msg['images'] = [img_b64]
 
         messages = []
         if system:
             messages.append({'role': 'system', 'content': system})
-        messages.append(msg)
+        messages.append(user_msg)
 
         payload: dict = {
-            'model':   model,
+            'model':    model,
             'messages': messages,
-            'stream':  False,
-            'options': {'temperature': temperature, 'num_predict': max_tokens},
+            'stream':   False,
+            'think':    bool(thinking),
+            'options':  {'temperature': temperature, 'num_predict': max_tokens},
         }
         if json_mode:
             payload['format'] = 'json'
 
         resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
         resp.raise_for_status()
-        data   = resp.json()
-        text   = data['message']['content']
+        data    = resp.json()
+        message = data.get('message', {})
+        text    = message.get('content', '')
+        # Fallback: if a thinking model spent its budget reasoning and left
+        # content empty, surface the thinking text rather than returning nothing.
+        if not text and message.get('thinking'):
+            text = message['thinking']
         tokens = float(data.get('eval_count', 0) + data.get('prompt_eval_count', 0))
         return text, tokens
 
@@ -286,7 +282,7 @@ class LLMInferenceNode(NodeProcessor):
 
         provider_idx = int(params.get('provider', 0))
         provider     = _PROVIDERS[min(provider_idx, len(_PROVIDERS) - 1)]
-        model        = (params.get('model') or _DEFAULT_MODELS.get(provider, 'llava')).strip()
+        model        = (params.get('model') or _DEFAULT_MODELS.get(provider, 'gemma4:e4b')).strip()
         api_key      = self._resolve_api_key(provider, params.get('api_key', ''))
         custom_url   = (params.get('base_url') or '').strip()
         system       = params.get('system_prompt', '').strip()
@@ -294,6 +290,7 @@ class LLMInferenceNode(NodeProcessor):
         max_tokens   = int(params.get('max_tokens', 512))
         timeout      = int(params.get('timeout', 30))
         json_mode    = bool(params.get('json_mode', False))
+        thinking     = bool(params.get('thinking', False))
 
         # User prompt: port takes priority over param
         user_text = inputs.get('prompt') or params.get('user_prompt', 'Describe what you see.')
@@ -329,15 +326,11 @@ class LLMInferenceNode(NodeProcessor):
                 text, tokens = self._call_anthropic(
                     api_key, model, system, msgs, max_tokens, temperature, timeout
                 )
-            elif provider == 'Ollama (local)':
-                msgs = self._build_messages_openai(system, user_text, img_b64)
-                text, tokens = self._call_ollama(
-                    base_url, model, msgs, json_mode, temperature, max_tokens, timeout
-                )
-            elif provider == 'Ollama (cloud)':
-                text, tokens = self._call_ollama_cloud(
-                    api_key, model, system, user_text, img_b64,
-                    json_mode, temperature, max_tokens, timeout
+            elif provider in ('Ollama (local)', 'Ollama (cloud)'):
+                # Both use native /api/chat; cloud adds Bearer auth (api_key)
+                text, tokens = self._call_ollama_native(
+                    base_url, api_key, model, system, user_text, img_b64,
+                    json_mode, temperature, max_tokens, timeout, thinking
                 )
             else:
                 # OpenAI, Groq, Custom — OpenAI-compatible with Bearer auth
