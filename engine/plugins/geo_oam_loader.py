@@ -281,7 +281,7 @@ class OAMLoaderNode(NodeProcessor):
 
                     if legality_filter is not None:
                         try:
-                            clan_int = int(props.get('crois_clan') or 0)
+                            clan_int = int(float(props.get('crois_clan') or 0))
                         except (ValueError, TypeError):
                             clan_int = 0
                         if clan_int != legality_filter:
@@ -308,7 +308,7 @@ class OAMLoaderNode(NodeProcessor):
                         val = 1.0
                     elif output_field == 'class (crois_clan)':
                         try:
-                            val = float(int(props.get('crois_clan') or 0))
+                            val = float(int(float(props.get('crois_clan') or 0)))
                         except (ValueError, TypeError):
                             val = 0.0
                     elif output_field == 'type (type_expl)':

@@ -5,9 +5,7 @@ import numpy as np
 import cv2
 import base64
 
-from registry import vision_node, NodeProcessor, send_notification
-
-_NOTIF = 'gen_monte_carlo'
+from registry import vision_node, NodeProcessor
 
 
 @vision_node(
@@ -38,13 +36,15 @@ _NOTIF = 'gen_monte_carlo'
          'label': 'Base Resistance'},
         {'id': 'neighborhood',  'type': 'enum', 'default': '8-connected',
          'options': ['8-connected', '4-connected'], 'label': 'Neighborhood'},
+        {'id': 'seed',          'type': 'int', 'default': -1, 'min': -1, 'max': 9999,
+         'label': 'Random Seed (-1 = random)'},
         {'id': 'node_note',     'type': 'string', 'default': '',
          'label': 'Note'},
     ],
 )
 class UtilMonteCarloPropagationNode(NodeProcessor):
 
-    def process(self, inputs: dict, params: dict) -> dict:
+    def process(self, inputs: dict[str, object], params: dict[str, object]) -> dict[str, object]:
         seed_img = inputs.get('seed')
         if seed_img is None:
             return {'probability': None, 'preview': None, 'stats': None}
@@ -69,6 +69,7 @@ class UtilMonteCarloPropagationNode(NodeProcessor):
         n_steps = max(1, int(params.get('n_steps', 10)))
         resistance = np.clip(float(params.get('resistance', 0.5)), 0.0, 1.0)
         neighborhood = params.get('neighborhood', '8-connected')
+        seed_param = int(params.get('seed', -1))
 
         # Retrieve and normalize attractiveness map if available
         attr_in = inputs.get('attractiveness')
@@ -100,7 +101,7 @@ class UtilMonteCarloPropagationNode(NodeProcessor):
             kernel = np.ones((3, 3), dtype=np.uint8)
 
         accumulated = np.zeros((H, W), dtype=np.float32)
-        rng = np.random.default_rng(42)
+        rng = np.random.default_rng(None if seed_param < 0 else seed_param)
 
         # Run simulations
         for sim in range(n_simulations):
@@ -147,9 +148,11 @@ class UtilMonteCarloPropagationNode(NodeProcessor):
             'simulations_run': n_simulations,
         }
 
+        self.report_progress(1.0, f"Monte Carlo: {n_simulations} simulations terminées ✓")
+
         # Create thumbnail for display in UI node graph
         h, w = preview_rgb.shape[:2]
-        sc = min(1.0, 120 / h)
+        sc = min(1.0, 120 / h, 120 / w)
         thumb = cv2.resize(preview_rgb, (max(1, int(w * sc)), max(1, int(h * sc))))
         _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 60])
         thumb_b64 = base64.b64encode(buf).decode('utf-8')
