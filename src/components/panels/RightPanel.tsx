@@ -17,6 +17,7 @@ interface RightPanelProps {
   onRequestCapture: (id: string) => void;
   onToggleExposed: (nodeId: string, paramId: string) => void;
   onExternalizeParam?: (nodeId: string, sp: any, value: number) => void;
+  onSetNodeLabel?: (nodeId: string, label: string) => void;
   onUpdateGroupChildParams?: (childNodeId: string, params: any) => void;
   onRenameExposedParam?: (childNodeId: string, paramId: string, newLabel: string) => void;
 }
@@ -35,6 +36,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   onRequestCapture,
   onToggleExposed,
   onExternalizeParam,
+  onSetNodeLabel,
   onUpdateGroupChildParams,
   onRenameExposedParam,
 }) => {
@@ -86,6 +88,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   isInsideGroup={isInsideGroup}
                   onToggleExposed={onToggleExposed}
                   onExternalizeParam={onExternalizeParam}
+                  onSetNodeLabel={onSetNodeLabel}
                   exposedGroupParams={exposedGroupParams}
                   onUpdateGroupChildParams={onUpdateGroupChildParams}
                   onRenameExposedParam={onRenameExposedParam}

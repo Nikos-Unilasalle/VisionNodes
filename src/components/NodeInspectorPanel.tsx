@@ -409,6 +409,7 @@ interface NodeInspectorPanelProps {
   isInsideGroup?: boolean;
   onToggleExposed?: (nodeId: string, paramId: string) => void;
   onExternalizeParam?: (nodeId: string, sp: ParamSpec, value: number) => void;
+  onSetNodeLabel?: (nodeId: string, label: string) => void;
   exposedGroupParams?: ExposedParam[];
   onUpdateGroupChildParams?: (childNodeId: string, params: Record<string, unknown>) => void;
   onRenameExposedParam?: (childNodeId: string, paramId: string, newLabel: string) => void;
@@ -417,7 +418,7 @@ interface NodeInspectorPanelProps {
 export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   node, liveData, activePaletteIndex,
   pickColorNodeId, onUpdateParams, onPickColorToggle, onRequestCapture,
-  isInsideGroup, onToggleExposed, onExternalizeParam, exposedGroupParams, onUpdateGroupChildParams,
+  isInsideGroup, onToggleExposed, onExternalizeParam, onSetNodeLabel, exposedGroupParams, onUpdateGroupChildParams,
   onRenameExposedParam,
 }) => {
   const p = node.data.params;
@@ -444,6 +445,20 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
   return (
     <div className="space-y-8 pb-32">
+
+      {/* Custom node label — overrides the header title (type name moves to the corner) */}
+      {onSetNodeLabel && node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (
+        <div className="space-y-2 group">
+          <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Label</label>
+          <input
+            type="text"
+            value={(node.data as any).userLabel || ''}
+            onChange={e => onSetNodeLabel(node.id, e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-blue-300 font-bold outline-none focus:border-accent/50 transition-all placeholder:text-gray-600 placeholder:font-normal"
+            placeholder={node.data.label || node.type}
+          />
+        </div>
+      )}
 
       {/* group_node — exposed params from child nodes */}
       {node.type === 'group_node' && (
