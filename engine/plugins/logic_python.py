@@ -64,49 +64,39 @@ _builtins_src = __builtins__ if isinstance(__builtins__, dict) else vars(__built
 _SAFE_BUILTINS = {k: v for k, v in _builtins_src.items() if k in _ALLOWED}
 _SAFE_BUILTINS['__import__'] = _safe_import
 
+_RESERVED_VARS = frozenset(['np', 'cv2', 'pd', 'state'])
+
 _DEFAULT_SCRIPT = """\
 # ── Inputs ────────────────────────────────────────────────────────────────────
-#   a, b, c, d  : any type (image, scalar, list, dict, DataFrame…)
-#   np, cv2     : numpy and OpenCV always available
-#   pd          : pandas (if installed)
+#   a, b, c, d …  : the connected inputs (a new port appears as you connect each).
+#                   Any type — image, scalar, list, dict, DataFrame…
+#   np, cv2       : numpy and OpenCV always available
+#   pd            : pandas (if installed)
+#
+# ── Outputs ───────────────────────────────────────────────────────────────────
+#   out_a, out_b … : assign any variable named out_* to expose it on an output port.
+#                    Output ports are auto-typed by whatever you connect them to.
+#       out_a = a if isinstance(a, np.ndarray) else None
+#       out_b = float(np.mean(a)) if isinstance(a, np.ndarray) else 0.0
 #
 # ── DataFrame tip ─────────────────────────────────────────────────────────────
 #   if isinstance(a, pd.DataFrame):
-#       out_data   = a[a['species'] == 'Iris-setosa']  # → connecter à DF Stats
-#       out_scalar = float(a['sepal_length'].mean())
-#       out_dict   = a.describe().to_dict()
-#
-# ── Outputs ───────────────────────────────────────────────────────────────────
-#   out_main   (image)   out_scalar (float)   out_list (list)
-#   out_dict   (dict)    out_any    (any)      out_data (DataFrame)
+#       out_a = a[a['species'] == 'Iris-setosa']
 #
 # ── Persistence between frames ────────────────────────────────────────────────
 #   state['counter'] = state.get('counter', 0) + 1
 
-out_main   = a if isinstance(a, np.ndarray) else None
-out_scalar = 0.0
-out_list   = []
-out_dict   = {}
-out_any    = None
-out_data   = None
+out_a = a if isinstance(a, np.ndarray) else None
 """
 
 @vision_node(type_id='logic_python', label='Python Node', category='logic', icon='Zap',
+             dynamic_inputs=True,
+             dynamic_outputs=True,
              inputs=[
                  {'id': 'a', 'color': 'any'},
-                 {'id': 'b', 'color': 'any'},
-                 {'id': 'c', 'color': 'any'},
-                 {'id': 'd', 'color': 'any'},
-                 {'id': 'e', 'color': 'any'},
              ],
              outputs=[
-                 {'id': 'main',       'color': 'image'},
-                 {'id': 'out_scalar', 'color': 'scalar'},
-                 {'id': 'out_list',   'color': 'list'},
-                 {'id': 'out_dict',   'color': 'dict'},
-                 {'id': 'out_any',    'color': 'any'},
-                 {'id': 'out_data',   'color': 'data',   'label': 'DataFrame'},
-                 {'id': 'out_e',      'color': 'string', 'label': 'Error'},
+                 {'id': 'out_a', 'color': 'any'},
              ],
              params=[{
                  'id':      'code',
@@ -129,43 +119,36 @@ class PythonNode(NodeProcessor):
             'cv2':   cv2,
             'pd':    _pd_module,
             'state': self._state,
-            'a':     inputs.get('a'),
-            'b':     inputs.get('b'),
-            'c':     inputs.get('c'),
-            'd':     inputs.get('d'),
-            'e':     inputs.get('e'),
-            'out_main':   None,
-            'out_scalar': 0.0,
-            'out_list':   [],
-            'out_dict':   {},
-            'out_any':    None,
-            'out_data':   None,
-            'out_e':      '',
         }
+        # Inject every connected input as a variable (a, b, c…). Skip engine internals.
+        for key, val in inputs.items():
+            if key == 'raw_frame' or not key.isidentifier():
+                continue
+            ctx[key] = val
 
+        error = ''
         try:
             exec(code, ctx)
         except Exception as e:
             print(f"[Python Node Error] {e}")
-            ctx['out_e'] = str(e)
+            error = str(e)
 
-        scalar_raw = ctx.get('out_scalar', 0)
-        result = {
-            'main':       ctx.get('out_main'),
-            'out_scalar': float(scalar_raw) if isinstance(scalar_raw, (int, float, bool)) else 0.0,
-            'out_list':   ctx.get('out_list', []) if isinstance(ctx.get('out_list'), list) else [],
-            'out_dict':   ctx.get('out_dict', {}) if isinstance(ctx.get('out_dict'), dict) else {},
-            'out_any':    ctx.get('out_any'),
-            'out_data':   ctx.get('out_data'),
-            'out_e':      ctx.get('out_e', ''),
-        }
+        # Collect every out_* variable the script defined → auto-typed output ports.
+        result: dict = {}
+        for key, val in ctx.items():
+            if key.startswith('out_') and key not in _RESERVED_VARS:
+                result[key] = val
+
+        # Always expose the error string (inspector reads liveData.out_e for the editor).
+        result['out_e'] = error
 
         if _PANDAS_AVAILABLE and _pd_module is not None:
-            df_out = ctx.get('out_data')
-            if isinstance(df_out, _pd_module.DataFrame):
-                try:
-                    result['df_meta'] = _df_meta_local(df_out)
-                except Exception as e:
-                    print(f"[Python Node df_meta error] {e}")
+            for key, val in list(result.items()):
+                if isinstance(val, _pd_module.DataFrame):
+                    try:
+                        result['df_meta'] = _df_meta_local(val)
+                    except Exception as e:
+                        print(f"[Python Node df_meta error] {e}")
+                    break
 
         return result

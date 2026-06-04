@@ -795,6 +795,52 @@ function App() {
     }));
   }, [setViewNodes]);
 
+  // Externalize a node param: add a typed input on the node and wire a pre-configured
+  // Number (scalar_input) node to it. The engine then overrides the param with the
+  // incoming value (see engine.py param-override). Works natively on any node.
+  const onExternalizeParam = useCallback((nodeId: string, sp: any, value: number) => {
+    const target = nodesRef.current.find((n: Node) => n.id === nodeId);
+    if (!target) return;
+    const already = ((target.data as any)?.externalizedParams as string[] | undefined)?.includes(sp.id);
+    if (already) return;
+
+    pushSnapshot();
+
+    const isInt = sp.type === 'int' || sp.type === 'integer';
+    const numParams = {
+      format: isInt ? 0 : 1,
+      value: Number(value),
+      min: sp.min !== undefined ? Number(sp.min) : 0.0,
+      max: sp.max !== undefined ? Number(sp.max) : 100.0,
+      step: sp.step !== undefined ? Number(sp.step) : (isInt ? 1 : 0.01),
+    };
+    const numSchema = pluginSchemas?.find((s: any) => s.type === 'scalar_input');
+    const numId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const numPos = { x: (target.position?.x ?? 0) - 240, y: (target.position?.y ?? 0) };
+    const numNode: Node = {
+      id: numId, type: 'scalar_input', position: numPos, style: {},
+      data: { label: sp.label || sp.id, params: numParams, schema: numSchema },
+    };
+
+    const paramPort = { id: sp.id, color: 'scalar', label: sp.label || sp.id };
+    setViewNodes((nds: Node[]) => [
+      ...nds.map((n: Node) => n.id === nodeId ? {
+        ...n,
+        data: {
+          ...n.data,
+          paramPorts: [...(((n.data as any)?.paramPorts) ?? []), paramPort],
+          externalizedParams: [...(((n.data as any)?.externalizedParams) ?? []), sp.id],
+        },
+      } : n),
+      numNode,
+    ]);
+    setViewEdges((eds: Edge[]) => [...eds, {
+      id: `e-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      source: numId, sourceHandle: 'scalar__value',
+      target: nodeId, targetHandle: `scalar__${sp.id}`,
+    }]);
+  }, [pushSnapshot, setViewNodes, setViewEdges, nodesRef, pluginSchemas]);
+
   const updateGroupChildParams = useCallback((groupNodeId: string, childNodeId: string, params: Record<string, unknown>) => {
     const now = Date.now();
     if (now - lastParamPushRef.current > 500) {
@@ -1781,6 +1827,7 @@ function App() {
           onPickColorToggle={setPickColorNodeId}
           onRequestCapture={requestCapture}
           onToggleExposed={toggleExposedParam}
+          onExternalizeParam={onExternalizeParam}
           onUpdateGroupChildParams={selectedNode?.type === 'group_node'
             ? (childNodeId, params) => updateGroupChildParams(selectedNode.id, childNodeId, params)
             : undefined}
