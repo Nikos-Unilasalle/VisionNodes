@@ -32,6 +32,7 @@ export function useFileOperations({
   activePaletteIndex,
   visualizedNodeId,
   confirmUnsaved,
+  setSelectedNodeId,
 }: any) {
 
   const buildProjectContent = useCallback(() => {
@@ -129,6 +130,7 @@ export function useFileOperations({
       );
       setGroupStack([]); groupStackRef.current = [];
       setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
+      setSelectedNodeId?.(newNodes.find((n: any) => n.selected)?.id ?? null);
       if (ui) {
         if (ui.previewSize) setPreviewSize(ui.previewSize);
         if (ui.previewPos) setPreviewPos(_clampPreviewPos(ui.previewPos));
@@ -161,6 +163,7 @@ export function useFileOperations({
     const edges = data.edges || [];
     setGroupStack([]); groupStackRef.current = [];
     setNodes(nodes); setEdges(edges);
+    setSelectedNodeId?.(nodes.find((n: any) => n.selected)?.id ?? null);
     if (data.ui) {
       if (data.ui.previewSize) setPreviewSize(data.ui.previewSize);
       if (data.ui.previewPos) setPreviewPos(_clampPreviewPos(data.ui.previewPos));

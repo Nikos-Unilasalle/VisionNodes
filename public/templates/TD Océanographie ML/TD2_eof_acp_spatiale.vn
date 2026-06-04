@@ -3,8 +3,12 @@
     {
       "id": "reader",
       "type": "geo_netcdf_reader",
-      "position": { "x": 50, "y": 320 },
-      "width": 208, "height": 153,
+      "position": {
+        "x": -140,
+        "y": 340
+      },
+      "width": 208,
+      "height": 138,
       "data": {
         "label": "NetCDF Grid Reader",
         "params": {
@@ -14,13 +18,23 @@
           "lon_range": "-53.5,-51.5",
           "colormap": 0
         }
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -140,
+        "y": 340
       }
     },
     {
       "id": "pca",
       "type": "ml_grid_pca",
-      "position": { "x": 360, "y": 260 },
-      "width": 240, "height": 153,
+      "position": {
+        "x": 220,
+        "y": 300
+      },
+      "width": 208,
+      "height": 153,
       "data": {
         "label": "Spatial PCA (EOF)",
         "params": {
@@ -32,13 +46,23 @@
           "colormap": 3,
           "node_note": "Faites varier n_components de 1 a 50. Defi : PSNR > 30 dB !"
         }
+      },
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 220,
+        "y": 300
       }
     },
     {
       "id": "compare",
       "type": "viz_grid_compare",
-      "position": { "x": 700, "y": 170 },
-      "width": 240, "height": 121,
+      "position": {
+        "x": 700,
+        "y": 170
+      },
+      "width": 208,
+      "height": 121,
       "data": {
         "label": "Grid Compare",
         "params": {
@@ -46,79 +70,344 @@
           "colormap": 0,
           "node_note": "Changez frame_idx pour explorer differents pas de temps"
         }
-      }
+      },
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "psnr_inspect",
       "type": "data_inspector",
-      "position": { "x": 1020, "y": 170 },
-      "width": 240, "height": 180,
+      "position": {
+        "x": 1020,
+        "y": 170
+      },
+      "width": 180,
+      "height": 120,
       "data": {
         "label": "Data Inspector",
-        "params": { "node_note": "Qualite de reconstruction en dB. Objectif : PSNR > 30 dB" }
-      }
+        "params": {
+          "node_note": "Qualite de reconstruction en dB. Objectif : PSNR > 30 dB"
+        }
+      },
+      "selected": false,
+      "dragging": false
     },
     {
       "id": "display_compare",
       "type": "output_display",
-      "position": { "x": 700, "y": 400 },
-      "width": 320, "height": 240,
+      "position": {
+        "x": 1020,
+        "y": -20
+      },
+      "width": 208,
+      "height": 153,
       "data": {
         "label": "Display",
-        "params": { "node_note": "Original / Reconstruit / Erreur absolue" },
+        "params": {
+          "node_note": "Original / Reconstruit / Erreur absolue"
+        },
         "mainConnected": true
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1020,
+        "y": -20
       }
     },
     {
       "id": "display_modes",
       "type": "output_display",
-      "position": { "x": 360, "y": 480 },
-      "width": 280, "height": 200,
+      "position": {
+        "x": 700,
+        "y": -20
+      },
+      "width": 208,
+      "height": 153,
       "data": {
         "label": "Display",
-        "params": { "node_note": "EOF1 = structure spatiale principale de variabilite" },
+        "params": {
+          "node_note": "EOF1 = structure spatiale principale de variabilite"
+        },
         "mainConnected": true
-      }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": -20
+      },
+      "dragging": false
     },
     {
       "id": "compression_py",
       "type": "logic_python",
-      "position": { "x": 1020, "y": 420 },
-      "width": 260, "height": 153,
+      "position": {
+        "x": 700,
+        "y": 360
+      },
+      "width": 208,
+      "height": 108,
       "data": {
         "label": "Python Node",
         "params": {
           "node_note": "Exercice 2 — calcul du taux de compression PCA",
           "code": "# TD2 : Calcul du Taux de Compression PCA\n# Entree a = meta (dict depuis geo_netcdf_reader)\n\nmeta = a\n\n# Modifiez k pour qu'il corresponde a n_components du noeud PCA !\nk = 5\n\nif meta is None:\n    out_dict = {'statut': 'Branchez meta depuis le lecteur NetCDF'}\nelse:\n    shape = meta.get('shape', [0, 0, 0])  # [T, H, W]\n    T, H, W = shape[0], shape[1], shape[2]\n\n    # Taille originale\n    taille_orig = T * H * W\n\n    # Taille avec k composantes PCA\n    # On stocke : k scores temporels (T*k) + k cartes spatiales (k*H*W)\n    taille_pca = T * k + k * H * W\n\n    ratio = taille_orig / taille_pca if taille_pca > 0 else 0\n\n    out_dict = {\n        'original_T_x_H_x_W': f'{T} x {H} x {W} = {taille_orig:,}',\n        'stockage_PCA':        taille_pca,\n        'taux_compression':    f'1:{round(ratio, 1)}',\n        'reduction_pct':       f'{round((1 - 1/ratio) * 100, 1)} %',\n    }\n    out_scalar = round(ratio, 2)"
-        }
+        },
+        "ports": [
+          {
+            "id": "dict__a",
+            "color": "dict",
+            "label": "a"
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 360
       }
     },
     {
       "id": "ratio_inspect",
       "type": "data_inspector",
-      "position": { "x": 1300, "y": 420 },
-      "width": 240, "height": 180,
+      "position": {
+        "x": 980,
+        "y": 320
+      },
+      "width": 468,
+      "height": 223,
       "data": {
         "label": "Data Inspector",
-        "params": { "node_note": "Rapport de compression vs qualite de reconstruction" }
+        "params": {
+          "node_note": "Rapport de compression vs qualite de reconstruction"
+        }
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 320
       }
+    },
+    {
+      "id": "node-1780575526287-0.7840642393940644",
+      "type": "geo_copernicus_marine",
+      "position": {
+        "x": -140,
+        "y": 140
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "label": "Copernicus Marine",
+        "params": {
+          "username": "npriniotakis",
+          "password": "P0mp!dou2@50",
+          "dataset_id": "cmems_mod_glo_phy_my_0.083deg_P1D-m",
+          "variable": "thetao",
+          "date_start": "2023-01-01",
+          "date_end": "2023-01-31",
+          "bbox": "-53.5,4.5,-51.5,6.5",
+          "depth_idx": 0,
+          "colormap": 0,
+          "fetch": 0,
+          "node_note": "Entrez vos identifiants CMEMS puis cliquez Telecharger. Les credentials sont memorises automatiquement."
+        },
+        "paramPorts": [
+          {
+            "id": "depth_idx",
+            "color": "scalar",
+            "label": "Index Profondeur (4D)"
+          }
+        ],
+        "externalizedParams": [
+          "depth_idx"
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -140,
+        "y": 140
+      }
+    },
+    {
+      "id": "node-1780575737942-5veu90wyc",
+      "type": "scalar_input",
+      "position": {
+        "x": -420,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Index Profondeur (4D)",
+        "params": {
+          "format": 0,
+          "value": 10,
+          "min": 0,
+          "max": 100,
+          "step": 1
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "Integer",
+                "Float"
+              ],
+              "default": 1
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "min",
+              "label": "Min",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "max",
+              "label": "Max",
+              "type": "float",
+              "default": 100
+            },
+            {
+              "id": "step",
+              "label": "Step",
+              "type": "float",
+              "default": 1
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -420,
+        "y": 240
+      },
+      "dragging": false
     }
   ],
   "edges": [
-    { "id": "e1", "source": "reader",        "target": "pca",            "sourceHandle": "any__grids",         "targetHandle": "any__grids" },
-    { "id": "e2", "source": "reader",        "target": "pca",            "sourceHandle": "dict__meta",         "targetHandle": "dict__meta" },
-    { "id": "e3", "source": "reader",        "target": "compare",        "sourceHandle": "any__grids",         "targetHandle": "any__original" },
-    { "id": "e4", "source": "pca",           "target": "compare",        "sourceHandle": "any__reconstructed", "targetHandle": "any__reconstructed" },
-    { "id": "e5", "source": "compare",       "target": "display_compare","sourceHandle": "image__preview",     "targetHandle": "image__main" },
-    { "id": "e6", "source": "compare",       "target": "psnr_inspect",   "sourceHandle": "scalar__frame_psnr", "targetHandle": "any__data" },
-    { "id": "e7", "source": "pca",           "target": "display_modes",  "sourceHandle": "image__preview",     "targetHandle": "image__main" },
-    { "id": "e8", "source": "reader",        "target": "compression_py", "sourceHandle": "dict__meta",         "targetHandle": "any__a" },
-    { "id": "e9", "source": "compression_py","target": "ratio_inspect",  "sourceHandle": "dict__out_dict",     "targetHandle": "any__data" }
+    {
+      "id": "e4",
+      "source": "pca",
+      "target": "compare",
+      "sourceHandle": "any__reconstructed",
+      "targetHandle": "any__reconstructed"
+    },
+    {
+      "id": "e5",
+      "source": "compare",
+      "target": "display_compare",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e6",
+      "source": "compare",
+      "target": "psnr_inspect",
+      "sourceHandle": "scalar__frame_psnr",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e7",
+      "source": "pca",
+      "target": "display_modes",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e8",
+      "source": "reader",
+      "target": "compression_py",
+      "sourceHandle": "dict__meta",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e9",
+      "source": "compression_py",
+      "target": "ratio_inspect",
+      "sourceHandle": "dict__out_dict",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "node-1780575526287-0.7840642393940644",
+      "sourceHandle": "any__grids",
+      "target": "compare",
+      "targetHandle": "any__original",
+      "id": "e-1780575591388"
+    },
+    {
+      "source": "node-1780575526287-0.7840642393940644",
+      "sourceHandle": "any__grids",
+      "target": "pca",
+      "targetHandle": "any__grids",
+      "id": "e-1780575596622"
+    },
+    {
+      "source": "node-1780575526287-0.7840642393940644",
+      "sourceHandle": "dict__meta",
+      "target": "compression_py",
+      "targetHandle": "dict__a",
+      "id": "e-1780575622719"
+    },
+    {
+      "source": "node-1780575526287-0.7840642393940644",
+      "sourceHandle": "dict__meta",
+      "target": "pca",
+      "targetHandle": "dict__meta",
+      "id": "e-1780575630634"
+    },
+    {
+      "id": "e-1780575737944-p1rkjiwwt",
+      "source": "node-1780575737942-5veu90wyc",
+      "sourceHandle": "scalar__value",
+      "target": "node-1780575526287-0.7840642393940644",
+      "targetHandle": "scalar__depth_idx"
+    }
   ],
   "ui": {
-    "previewSize": { "w": 460, "h": 260 },
-    "previewPos":  { "x": 80, "y": -300 },
-    "activePaletteIndex": 3,
+    "previewSize": {
+      "w": 767.2977109253407,
+      "h": 276
+    },
+    "previewPos": {
+      "x": 263.0992373358458,
+      "y": -86.81297646951862
+    },
+    "activePaletteIndex": 4,
     "visualizedNodeId": "display_compare"
   }
 }
