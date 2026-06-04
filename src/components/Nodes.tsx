@@ -106,7 +106,7 @@ export const BaseNode = ({
   const startOffset = isMinified ? 10 : 45;
   const spacing = isMinified ? 5 : 32;
 
-  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isRotated, isMinified, nodeId, updateNodeInternals]);
+  useEffect(() => { if (nodeId) updateNodeInternals(nodeId); }, [isRotated, isMinified, nodeId, updateNodeInternals, totalInputs, totalOutputs]);
 
   const getPortTop = (index: number, total: number) => {
     if (total === 0) return '50%';

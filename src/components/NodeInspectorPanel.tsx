@@ -408,7 +408,7 @@ interface NodeInspectorPanelProps {
   onRequestCapture: (id: string) => void;
   isInsideGroup?: boolean;
   onToggleExposed?: (nodeId: string, paramId: string) => void;
-  onExternalizeParam?: (nodeId: string, sp: ParamSpec, value: number) => void;
+  onExternalizeParam?: (nodeId: string, sp: ParamSpec, value: any) => void;
   onSetNodeLabel?: (nodeId: string, label: string) => void;
   exposedGroupParams?: ExposedParam[];
   onUpdateGroupChildParams?: (childNodeId: string, params: Record<string, unknown>) => void;
@@ -1069,7 +1069,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
           }
 
-          const showExternalize = !!(onExternalizeParam && isNumber && !isEnum && sp.type !== 'trigger' && sp.type !== 'code');
+          const showExternalize = !!(onExternalizeParam && (isNumber || isString) && !isEnum && sp.type !== 'trigger' && sp.type !== 'code');
           const hasOverlay = showEye || showExternalize;
 
           return (
@@ -1081,8 +1081,14 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                 {showExternalize && (
                   <button
                     className={`p-1 rounded transition-all duration-150 ${isExternalized ? 'text-green-400' : 'text-gray-600 opacity-0 group-hover/param:opacity-100 hover:text-green-400'}`}
-                    onClick={(e) => { e.stopPropagation(); if (!isExternalized) onExternalizeParam!(node.id, sp, Number(p[sp.id] ?? sp.default ?? 0)); }}
-                    title={isExternalized ? 'Paramètre externalisé (Number connecté)' : 'Externaliser → créer une entrée + node Number'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isExternalized) {
+                        const val = isString ? (p[sp.id] ?? sp.default ?? '') : Number(p[sp.id] ?? sp.default ?? 0);
+                        onExternalizeParam!(node.id, sp, val);
+                      }
+                    }}
+                    title={isExternalized ? `Paramètre externalisé (${isString ? 'String' : 'Number'} connecté)` : `Externaliser → créer une entrée + node ${isString ? 'String' : 'Number'}`}
                   >
                     <PlugZap size={10} />
                   </button>

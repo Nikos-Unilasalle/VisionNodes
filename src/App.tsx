@@ -730,6 +730,11 @@ function App() {
     const sourceType = connection.sourceHandle.split('__')[0];
     const targetType = connection.targetHandle.split('__')[0];
     if (targetType === 'any' || sourceType === 'any') return true;
+
+    // Numerical type compatibility
+    const numericTypes = new Set(['scalar', 'int', 'integer', 'float', 'number', 'double']);
+    if (numericTypes.has(sourceType) && numericTypes.has(targetType)) return true;
+
     const sourceColor = N.HANDLE_COLORS[sourceType as keyof typeof N.HANDLE_COLORS] || sourceType;
     const targetColor = N.HANDLE_COLORS[targetType as keyof typeof N.HANDLE_COLORS] || targetType;
     if (sourceColor === targetColor) return true;
@@ -804,9 +809,9 @@ function App() {
   }, [setViewNodes]);
 
   // Externalize a node param: add a typed input on the node and wire a pre-configured
-  // Number (scalar_input) node to it. The engine then overrides the param with the
+  // Number (scalar_input) or String (string_input) node to it. The engine then overrides the param with the
   // incoming value (see engine.py param-override). Works natively on any node.
-  const onExternalizeParam = useCallback((nodeId: string, sp: any, value: number) => {
+  const onExternalizeParam = useCallback((nodeId: string, sp: any, value: any) => {
     const target = nodesRef.current.find((n: Node) => n.id === nodeId);
     if (!target) return;
     const already = ((target.data as any)?.externalizedParams as string[] | undefined)?.includes(sp.id);
@@ -814,23 +819,45 @@ function App() {
 
     pushSnapshot();
 
-    const isInt = sp.type === 'int' || sp.type === 'integer';
-    const numParams = {
-      format: isInt ? 0 : 1,
-      value: Number(value),
-      min: sp.min !== undefined ? Number(sp.min) : 0.0,
-      max: sp.max !== undefined ? Number(sp.max) : 100.0,
-      step: sp.step !== undefined ? Number(sp.step) : (isInt ? 1 : 0.01),
-    };
-    const numSchema = pluginSchemas?.find((s: any) => s.type === 'scalar_input');
-    const numId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const numPos = { x: (target.position?.x ?? 0) - 240, y: (target.position?.y ?? 0) };
-    const numNode: Node = {
-      id: numId, type: 'scalar_input', position: numPos, style: {},
-      data: { label: sp.label || sp.id, params: numParams, schema: numSchema },
-    };
+    const isString = sp.type === 'string';
+    let spawnedNode: Node;
+    let targetPortColor: string;
+    let sourceHandleId: string;
 
-    const paramPort = { id: sp.id, color: 'scalar', label: sp.label || sp.id };
+    if (isString) {
+      const stringParams = {
+        value: String(value ?? sp.default ?? ''),
+      };
+      const stringSchema = pluginSchemas?.find((s: any) => s.type === 'string_input');
+      const stringId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const stringPos = { x: (target.position?.x ?? 0) - 240, y: (target.position?.y ?? 0) };
+      spawnedNode = {
+        id: stringId, type: 'string_input', position: stringPos, style: {},
+        data: { label: sp.label || sp.id, params: stringParams, schema: stringSchema },
+      };
+      targetPortColor = 'string';
+      sourceHandleId = 'string__result';
+    } else {
+      const isInt = sp.type === 'int' || sp.type === 'integer';
+      const numParams = {
+        format: isInt ? 0 : 1,
+        value: Number(value),
+        min: sp.min !== undefined ? Number(sp.min) : 0.0,
+        max: sp.max !== undefined ? Number(sp.max) : 100.0,
+        step: sp.step !== undefined ? Number(sp.step) : (isInt ? 1 : 0.01),
+      };
+      const numSchema = pluginSchemas?.find((s: any) => s.type === 'scalar_input');
+      const numId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const numPos = { x: (target.position?.x ?? 0) - 240, y: (target.position?.y ?? 0) };
+      spawnedNode = {
+        id: numId, type: 'scalar_input', position: numPos, style: {},
+        data: { label: sp.label || sp.id, params: numParams, schema: numSchema },
+      };
+      targetPortColor = 'scalar';
+      sourceHandleId = 'scalar__value';
+    }
+
+    const paramPort = { id: sp.id, color: targetPortColor, label: sp.label || sp.id };
     setViewNodes((nds: Node[]) => [
       ...nds.map((n: Node) => n.id === nodeId ? {
         ...n,
@@ -840,12 +867,12 @@ function App() {
           externalizedParams: [...(((n.data as any)?.externalizedParams) ?? []), sp.id],
         },
       } : n),
-      numNode,
+      spawnedNode,
     ]);
     setViewEdges((eds: Edge[]) => [...eds, {
       id: `e-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      source: numId, sourceHandle: 'scalar__value',
-      target: nodeId, targetHandle: `scalar__${sp.id}`,
+      source: spawnedNode.id, sourceHandle: sourceHandleId,
+      target: nodeId, targetHandle: `${targetPortColor}__${sp.id}`,
     }]);
   }, [pushSnapshot, setViewNodes, setViewEdges, nodesRef, pluginSchemas]);
 
