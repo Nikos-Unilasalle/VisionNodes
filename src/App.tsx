@@ -1064,6 +1064,7 @@ function App() {
     workDir, refreshWorkDir,
     previewSize, previewPos, activePaletteIndex, visualizedNodeId,
     confirmUnsaved,
+    setSelectedNodeId,
   });
 
   useEffect(() => {
