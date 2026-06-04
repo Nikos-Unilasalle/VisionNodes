@@ -26,7 +26,7 @@ _DEFAULT_MODELS = {
 
 _BASE_URLS = {
     'Ollama (local)':  'http://localhost:11434',
-    'Ollama (cloud)':  'https://api.ollama.com',
+    'Ollama (cloud)':  'https://ollama.com',
     'OpenAI':          'https://api.openai.com',
     'Anthropic':       'https://api.anthropic.com',
     'Groq':            'https://api.groq.com/openai',
