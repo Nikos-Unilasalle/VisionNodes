@@ -101,7 +101,7 @@
         "label": "Ollama — Classification pierres",
         "params": {
           "provider": 0,
-          "model": "llava",
+          "model": "gemma4:e4b",
           "api_key": "",
           "base_url": "",
           "system_prompt": "You are an expert petrographer. You receive an image of a stone wall where each colored region is one individual stone segmented by AI. Analyze the visible stones and classify them by type based on color, texture, and morphology. Respond ONLY with valid JSON.",
