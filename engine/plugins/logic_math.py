@@ -149,12 +149,23 @@ class MathDistanceNode(NodeProcessor):
              outputs=[{'id': 'value', 'color': 'scalar'}],
              params=[
                  {'id': 'format', 'label': 'Format', 'type': 'enum', 'options': ['Integer', 'Float'], 'default': 1},
-                 {'id': 'value', 'label': 'Value', 'type': 'float', 'default': 0.0}
+                 {'id': 'value', 'label': 'Value', 'type': 'float', 'default': 0.0},
+                 {'id': 'min', 'label': 'Min', 'type': 'float', 'default': 0.0},
+                 {'id': 'max', 'label': 'Max', 'type': 'float', 'default': 100.0},
+                 {'id': 'step', 'label': 'Step', 'type': 'float', 'default': 1.0}
              ])
 class ScalarInputNode(NodeProcessor):
     def process(self, inputs, params):
         fmt = params.get('format', 1)
         val = params.get('value', 0.0)
-        return {'value': int(val) if fmt == 0 else float(val)}
+        
+        # Clamp value if min/max are defined in params
+        min_val = params.get('min', 0.0)
+        max_val = params.get('max', 100.0)
+        if min_val > max_val:
+            min_val, max_val = max_val, min_val
+            
+        clamped_val = max(min_val, min(max_val, val))
+        return {'value': int(clamped_val) if fmt == 0 else float(clamped_val)}
 
 

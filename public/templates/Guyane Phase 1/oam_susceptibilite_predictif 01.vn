@@ -1,0 +1,1192 @@
+{
+  "nodes": [
+    {
+      "id": "f-setup",
+      "type": "canvas_frame",
+      "position": {
+        "x": -2080,
+        "y": 120
+      },
+      "data": {
+        "label": "Zone d'étude · Dorlin",
+        "params": {}
+      },
+      "style": {
+        "width": 360,
+        "height": 340
+      },
+      "width": 360,
+      "height": 340
+    },
+    {
+      "id": "n-note-setup",
+      "type": "canvas_note",
+      "position": {
+        "x": -2060,
+        "y": 130
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Modèle de susceptibilité orpaillage\\nProfil multi-critères → candidats le long des rivières\\nRF (apprentissage) + MCDA (pondéré) comparés",
+          "color_index": 0
+        }
+      },
+      "width": 865,
+      "height": 65
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": {
+        "x": -2060,
+        "y": 240
+      },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 136
+    },
+    {
+      "id": "f-src",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1680,
+        "y": 30
+      },
+      "data": {
+        "label": "Sources · Copernicus",
+        "params": {}
+      },
+      "style": {
+        "width": 360,
+        "height": 560
+      },
+      "width": 360,
+      "height": 560
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1660,
+        "y": 80
+      },
+      "data": {
+        "label": "DEM GLO-30",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "mosaic_mode": "0",
+          "node_note": "Fetch → DEM Dorlin"
+        }
+      },
+      "width": 208,
+      "height": 268
+    },
+    {
+      "id": "n-s2",
+      "type": "geo_copernicus",
+      "position": {
+        "x": -1660,
+        "y": 440
+      },
+      "data": {
+        "label": "Sentinel-2 L2A",
+        "params": {
+          "collection": "0",
+          "bands": "B04,B03,B02,B08,B11",
+          "resolution": "10",
+          "cloud_max": "20",
+          "mosaic_mode": "0",
+          "date_start": "2023-06-01",
+          "date_end": "2023-10-01",
+          "cache_dir": "copernicus_cache",
+          "max_tile_px": "2500",
+          "fetch": 0,
+          "node_note": "Fetch → S2 pour NDVI"
+        }
+      },
+      "width": 208,
+      "height": 293,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -1660,
+        "y": 440
+      },
+      "dragging": false
+    },
+    {
+      "id": "f-terr",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1300,
+        "y": 30
+      },
+      "data": {
+        "label": "Terrain — Slope · Flow · HAND",
+        "params": {}
+      },
+      "style": {
+        "width": 720,
+        "height": 560
+      },
+      "width": 720,
+      "height": 560
+    },
+    {
+      "id": "n-slope",
+      "type": "geo_dem_slope",
+      "position": {
+        "x": -1280,
+        "y": 80
+      },
+      "data": {
+        "label": "Slope (°)",
+        "params": {
+          "colormap": 2,
+          "clamp_max": 12
+        }
+      },
+      "width": 208,
+      "height": 98
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": {
+        "x": -1280,
+        "y": 290
+      },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "Sort flow_acc + flow_dir"
+        }
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": {
+        "x": -960,
+        "y": 290
+      },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "threshold": 1000,
+          "clamp_max": 8,
+          "colormap": 1
+        }
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "n-ndvi",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": -960,
+        "y": 80
+      },
+      "data": {
+        "label": "NDVI",
+        "params": {
+          "red_band": 1,
+          "green_band": 2,
+          "blue_band": 3,
+          "nir_band": 4,
+          "swir_band": 5,
+          "ndvi": true,
+          "ndwi": true,
+          "mndwi": true,
+          "bsi": true,
+          "evi": false,
+          "nbr": false,
+          "node_note": "stack = NDVI,NDWI,MNDWI,BSI (4 bandes)"
+        }
+      },
+      "width": 208,
+      "height": 345
+    },
+    {
+      "id": "f-oam",
+      "type": "canvas_frame",
+      "position": {
+        "x": -1300,
+        "y": 610
+      },
+      "data": {
+        "label": "OAM Ground Truth + Distance amont",
+        "params": {}
+      },
+      "style": {
+        "width": 720,
+        "height": 560
+      },
+      "width": 720,
+      "height": 560
+    },
+    {
+      "id": "n-note-oam",
+      "type": "canvas_note",
+      "position": {
+        "x": -1280,
+        "y": 620
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "OAM = sites confirmés (présence)\\nUpstream = zone de remontée ~40km le long du fleuve",
+          "color_index": 4
+        }
+      },
+      "width": 575,
+      "height": 65
+    },
+    {
+      "id": "n-oam",
+      "type": "geo_oam_loader",
+      "position": {
+        "x": -1280,
+        "y": 690
+      },
+      "data": {
+        "label": "OAM — Illégaux Alluviaux",
+        "params": {
+          "fetch": 0,
+          "source": "WFS 2022",
+          "file_path": "",
+          "layer_name": "",
+          "output_field": "binary",
+          "legality": "Illegal (2)",
+          "mining_type": "Alluvionnaire",
+          "year_min": 2000,
+          "year_max": 2022,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Présence T0"
+        }
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "n-oam-broad",
+      "type": "geo_oam_loader",
+      "position": {
+        "x": -940,
+        "y": 920
+      },
+      "data": {
+        "label": "OAM 2022 — TOUS sites (seed upstream)",
+        "params": {
+          "fetch": 0,
+          "source": "WFS 2022",
+          "file_path": "",
+          "layer_name": "",
+          "output_field": "binary",
+          "legality": "All",
+          "mining_type": "All",
+          "year_min": 1990,
+          "year_max": 2022,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Toutes années 1990-2022, tous types → seed remontée max (2022 = plafond anti-fuite)"
+        }
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "n-upstream",
+      "type": "geo_upstream_distance",
+      "position": {
+        "x": -940,
+        "y": 690
+      },
+      "data": {
+        "label": "Upstream Distance (40km)",
+        "params": {
+          "max_distance_km": 40,
+          "channel_min_acc": 500,
+          "pixel_size_m": 30,
+          "node_note": "Remontée réseau depuis sites OAM"
+        }
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "f-feat",
+      "type": "canvas_frame",
+      "position": {
+        "x": -560,
+        "y": 30
+      },
+      "data": {
+        "label": "Feature Stack + Labels",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 900
+      },
+      "width": 380,
+      "height": 900
+    },
+    {
+      "id": "n-note-feat",
+      "type": "canvas_note",
+      "position": {
+        "x": -540,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Stack = profil joint des 5 critères\\nLabels = présence(2) vs background aléatoire(1)",
+          "color_index": 2
+        }
+      },
+      "width": 525,
+      "height": 65
+    },
+    {
+      "id": "n-geol",
+      "type": "geo_wfs_loader",
+      "position": {
+        "x": -940,
+        "y": 920
+      },
+      "data": {
+        "label": "Favorabilité aurifère BRGM 2001",
+        "params": {
+          "fetch": 0,
+          "wfs_url": "https://www.guyane-sig.fr/geoserver/wfs",
+          "type_name": "geologie:FAVORABILITE_AURIFERE_FORMATIONS_GEOLOGIQUES_BRGM_2001",
+          "bbox_filter": true,
+          "burn_field": "LEGENDE",
+          "value_map": "{\"Volcanisme basique (amphibolites = métalaves)\": 3, \"Volcanites, volcano-sédiments et sédiments indifférenciés\": 3, \"Volcanisme calco-alcalin acide à intermédiaire\": 3, \"Volcanisme indifférencié\": 3, \"Pélites\": 2, \"Gabbronorites, gabbros\": 2, \"Gabbros (île de Cayenne)\": 2, \"Grès et quartzites d'âge plus jeune que 2115 ± 4 Ma\": 1, \"Grès et quartzites à niveaux conglomératiques\": 1, \"Grès et quartzites à intercalations pélitiques\": 1}",
+          "default_value": 0,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Fetch → favorabilité 3=volcanique 2=pélites/gabbros 1=grès (métallogénie bouclier guyanais)"
+        }
+      },
+      "width": 150,
+      "height": 34
+    },
+    {
+      "id": "n-feat",
+      "type": "logic_python",
+      "position": {
+        "x": -540,
+        "y": 120
+      },
+      "data": {
+        "label": "Feature Stack",
+        "params": {
+          "code": "# ── Feature stack — profil multi-critères élargi ─────────────────────────────\n# a=Slope(°)  b=HAND(m)  c=Flow acc  d=Stack spectral S2 (multi-bande)  e=Géologie(opt)\n# upstream EXCLU (réfuté + fuite de cible). Géologie = slot BRGM (optionnel).\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nslope, hand, flow = _band(a), _band(b), _band(c)\nref = a if isinstance(a, dict) else None\n\nif ref is None or slope is None:\n    out_any = None\n    out_dict = {'erreur': 'Brancher Slope (a) + reference geotiff'}\nelse:\n    H, W = slope.shape\n    def fit(x):\n        if x is None: return np.zeros((H, W), dtype=np.float32)\n        if x.shape != (H, W):\n            x = cv2.resize(x, (W, H), interpolation=cv2.INTER_LINEAR)\n        return np.where(np.isfinite(x), x, 0.0).astype(np.float32)\n\n    bands = [fit(slope), fit(hand), fit(flow)]\n    names = ['slope', 'hand', 'flow_acc']\n\n    # Stack spectral S2 multi-bande (NDVI, NDWI, MNDWI, BSI…)\n    if isinstance(d, dict) and 'bands' in d:\n        sp = np.asarray(d['bands'], dtype=np.float32)\n        if sp.ndim == 2: sp = sp[np.newaxis]\n        sp_names = list(d.get('band_names', [f'spec_{i}' for i in range(sp.shape[0])]))\n        for i in range(sp.shape[0]):\n            bands.append(fit(sp[i]))\n            names.append(sp_names[i].lower() if i < len(sp_names) else f'spec_{i}')\n\n    # Géologie (optionnel — slot BRGM)\n    geo_b = _band(e)\n    if geo_b is not None:\n        bands.append(fit(geo_b))\n        names.append('geology')\n\n    stack = np.stack(bands, axis=0)\n    out_any = {**ref, 'bands': stack, 'count': len(bands), 'dtype': 'float32',\n               'band_names': names, '_bands': names}\n    out_dict = {'n_features': len(bands), 'features': names}\n",
+          "node_note": "a=slope b=hand c=flow d=spectral_stack e=geology(opt) → stack RF"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "n-labels",
+      "type": "logic_python",
+      "position": {
+        "x": -540,
+        "y": 530
+      },
+      "data": {
+        "label": "Labels (presence-background)",
+        "params": {
+          "code": "# ── Labels presence-background pour le RF ────────────────────────────────────\n# a = masque OAM (sites confirmés)  b = geotiff référence (grille)\n# Sortie : 2 = présence (OAM) · 1 = background aléatoire hors OAM · 0 = ignoré\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\noam = a if not isinstance(a, dict) else _band(a)\nref = b if isinstance(b, dict) else (a if isinstance(a, dict) else None)\n\nif oam is None or ref is None:\n    out_any = None\n    out_dict = {'erreur': 'Brancher a=masque OAM, b=geotiff référence'}\nelse:\n    if oam.ndim == 3: oam = oam[..., 0]\n    H, W = oam.shape\n    presence = oam > 0\n    labels = np.zeros((H, W), dtype=np.float32)\n    labels[presence] = 2.0\n\n    # Background : pixels tirés au hasard loin de tout site.\n    # Buffer adaptatif → garantit assez de candidats même si présence dense.\n    inv = (~presence).astype(np.uint8)\n    dist = cv2.distanceTransform(inv, cv2.DIST_L2, 5)\n    n_pos = int(presence.sum())\n    rng = np.random.default_rng(42)\n    buf = 10.0\n    cand = np.argwhere(dist > buf)\n    while len(cand) < n_pos * 3 and buf > 1.0:\n        buf /= 2.0\n        cand = np.argwhere(dist > buf)\n    if len(cand) == 0:\n        cand = np.argwhere(dist > 0)       # tout pixel hors présence\n    if len(cand) > 0 and n_pos > 0:\n        k = min(len(cand), n_pos * 3)      # ratio background:présence = 3:1\n        sel = rng.choice(len(cand), size=k, replace=False)\n        rr = cand[sel, 0]; cc = cand[sel, 1]\n        labels[rr, cc] = 1.0\n\n    out_any = {**ref, 'bands': labels[np.newaxis], 'count': 1, 'dtype': 'float32',\n               'band_names': ['label'], '_bands': ['label']}\n    out_dict = {'presence_px': n_pos, 'background_px': int((labels == 1).sum())}\n",
+          "node_note": "a=OAM mask b=ref → out_any labels 1/2"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-rf",
+      "type": "canvas_frame",
+      "position": {
+        "x": -140,
+        "y": 30
+      },
+      "data": {
+        "label": "Modèle A — Random Forest",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 440
+      },
+      "width": 380,
+      "height": 440
+    },
+    {
+      "id": "n-note-rf",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Apprend la signature jointe.\\nImportance = critères décisifs.",
+          "color_index": 1
+        }
+      },
+      "width": 385,
+      "height": 65
+    },
+    {
+      "id": "n-rf",
+      "type": "geo_rf_classifier",
+      "position": {
+        "x": -120,
+        "y": 120
+      },
+      "data": {
+        "label": "RF Classifier",
+        "params": {
+          "band_names": "slope,hand,flow_acc,ndvi,ndwi,mndwi,bsi,geology",
+          "n_estimators": 200,
+          "max_samples_per_class": 5000,
+          "test_fraction": 0.2,
+          "node_note": "features + labels → importance + proba"
+        }
+      },
+      "width": 208,
+      "height": 345
+    },
+    {
+      "id": "f-mcda",
+      "type": "canvas_frame",
+      "position": {
+        "x": -140,
+        "y": 490
+      },
+      "data": {
+        "label": "Modèle B — MCDA pondéré",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 440
+      },
+      "width": 380,
+      "height": 440
+    },
+    {
+      "id": "n-note-mcda",
+      "type": "canvas_note",
+      "position": {
+        "x": -120,
+        "y": 500
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Poids explicites, interprétable.\\nflow 0.30 · upstream 0.30 · slope 0.15 · hand 0.10 · veg 0.15",
+          "color_index": 3
+        }
+      },
+      "width": 576,
+      "height": 65
+    },
+    {
+      "id": "n-mcda",
+      "type": "logic_python",
+      "position": {
+        "x": -120,
+        "y": 580
+      },
+      "data": {
+        "label": "MCDA Susceptibility",
+        "params": {
+          "code": "# ── Score MCDA pondéré — susceptibilité interprétable (0-100) ─────────────────\n# a=Slope  b=HAND  c=Flow acc  d=Upstream dist(m)  e=NDVI\n# Poids explicites ajustables. Complément lisible du RF (boîte noire).\nW_FLOW, W_UPSTREAM, W_SLOPE, W_HAND, W_VEG = 0.30, 0.30, 0.15, 0.10, 0.15\nSLOPE_MAX, HAND_MAX = 12.0, 8.0\nUPSTREAM_MAX_M = 40000.0\n\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nslope, hand, flow = _band(a), _band(b), _band(c)\nup, ndvi = _band(d), _band(e)\nref = a if isinstance(a, dict) else None\n\nif ref is None or slope is None:\n    out_main = None; out_any = None\n    out_dict = {'erreur': 'Brancher Slope (a) minimum'}\nelse:\n    H, W = slope.shape\n    def fit(x, fill=0.0):\n        if x is None: return np.full((H, W), fill, dtype=np.float32)\n        if x.shape != (H, W):\n            x = cv2.resize(x, (W, H), interpolation=cv2.INTER_LINEAR)\n        return np.where(np.isfinite(x), x, fill).astype(np.float32)\n    slope, hand = fit(slope, SLOPE_MAX + 1), fit(hand, HAND_MAX + 1)\n    flow, up, ndvi = fit(flow), fit(up, 1e9), fit(ndvi)\n\n    # Scores partiels 0-1 (plus haut = plus favorable)\n    s_slope = np.exp(-slope / 8.0)\n    s_hand  = np.exp(-hand / 5.0)\n    fl = np.log1p(flow.clip(0)); s_flow = fl / (fl.max() + 1e-9)\n    s_up = np.clip(1.0 - up / UPSTREAM_MAX_M, 0.0, 1.0)   # proche amont = fort\n    s_veg = np.clip(ndvi, 0.0, 1.0)                        # forêt dense = cible\n\n    score = (W_FLOW*s_flow + W_UPSTREAM*s_up + W_SLOPE*s_slope +\n             W_HAND*s_hand + W_VEG*s_veg)\n    # Cutoffs durs terrain\n    score[slope > SLOPE_MAX] = 0.0\n    score[hand > HAND_MAX] = 0.0\n    score_pct = (score * 100.0).astype(np.float32)\n\n    out_any = {**ref, 'bands': score_pct[np.newaxis], 'count': 1, 'dtype': 'float32',\n               'band_names': ['susceptibility'], '_bands': ['susceptibility']}\n    sc_u8 = score_pct.clip(0, 100).astype(np.uint8) * 2  # 0-100 → 0-200 visible\n    prev = cv2.applyColorMap(sc_u8.clip(0, 255).astype(np.uint8), cv2.COLORMAP_INFERNO)\n    prev[score_pct < 1.0] = [0, 0, 0]\n    out_main = prev\n    out_dict = {\n        'suscept_high_pct': round(float((score_pct > 60).sum()) / (H*W) * 100, 2),\n        'suscept_med_pct':  round(float(((score_pct >= 30)&(score_pct <= 60)).sum()) / (H*W) * 100, 2),\n        'weights': {'flow': W_FLOW, 'upstream': W_UPSTREAM, 'slope': W_SLOPE,\n                    'hand': W_HAND, 'veg': W_VEG},\n    }\n",
+          "node_note": "a=slope b=hand c=flow d=upstream e=ndvi → score 0-100"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-comb",
+      "type": "canvas_frame",
+      "position": {
+        "x": 280,
+        "y": 30
+      },
+      "data": {
+        "label": "Étage 2 — Candidats finaux",
+        "params": {}
+      },
+      "style": {
+        "width": 380,
+        "height": 300
+      },
+      "width": 380,
+      "height": 300
+    },
+    {
+      "id": "n-note-comb",
+      "type": "canvas_note",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Candidats = profil RF × accessibilité upstream(40km)\nViridis : bon profil ET atteignable",
+          "color_index": 1
+        }
+      },
+      "width": 346,
+      "height": 86
+    },
+    {
+      "id": "n-combine",
+      "type": "logic_python",
+      "position": {
+        "x": 300,
+        "y": 120
+      },
+      "data": {
+        "label": "Candidats (RF × Upstream)",
+        "params": {
+          "code": "\n# ── Étage 2 : candidats = profil RF × accessibilité upstream ─────────────────\n# a = RF classification (geotiff, classe 2 = présence prédite)\n# b = zone upstream (mask, 40km le long du fleuve)\n# c = RF confidence (image, optionnel — intensité du profil)\n# Croise \"bon profil\" (RF) ET \"atteignable par une équipe\" (upstream).\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\nrf_cls = _band(a)\nref = a if isinstance(a, dict) else None\nzone = b if not isinstance(b, dict) else _band(b)\n\nif rf_cls is None or ref is None:\n    out_main = None; out_any = None\n    out_dict = {'erreur': 'a=RF classification, b=zone upstream'}\nelse:\n    H, W = rf_cls.shape\n    profile = (rf_cls >= 2).astype(np.float32)   # classe présence prédite\n\n    if zone is not None:\n        if zone.ndim == 3: zone = zone[..., 0]\n        if zone.shape != (H, W):\n            zone = cv2.resize(zone, (W, H), interpolation=cv2.INTER_NEAREST)\n        accessible = (zone > 0).astype(np.float32)\n    else:\n        accessible = np.ones((H, W), dtype=np.float32)\n\n    # Modulation par la confiance RF si fournie\n    conf = c if isinstance(c, np.ndarray) else None\n    if conf is not None:\n        if conf.ndim == 3: conf = cv2.cvtColor(conf, cv2.COLOR_BGR2GRAY)\n        if conf.shape != (H, W):\n            conf = cv2.resize(conf, (W, H), interpolation=cv2.INTER_LINEAR)\n        conf = conf.astype(np.float32) / 255.0\n    else:\n        conf = np.ones((H, W), dtype=np.float32)\n\n    candidates = profile * accessible * conf      # 0-1\n    cand_u8 = (candidates * 255.0).clip(0, 255).astype(np.uint8)\n\n    prev = cv2.applyColorMap(cand_u8, cv2.COLORMAP_VIRIDIS)\n    prev[candidates < 0.05] = [0, 0, 0]\n\n    out_main = prev\n    out_any = {**ref, 'bands': candidates[np.newaxis], 'count': 1, 'dtype': 'float32',\n               'band_names': ['candidate_score'], '_bands': ['candidate_score']}\n    n_cand = int((candidates > 0.3).sum())\n    out_dict = {\n        'candidate_cells': n_cand,\n        'candidate_pct': round(n_cand / (H * W) * 100, 3),\n        'profile_cells': int(profile.sum()),\n        'accessible_cells': int(accessible.sum()),\n    }\n",
+          "node_note": "a=RF class b=zone upstream c=RF confidence → candidats"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "f-out",
+      "type": "canvas_frame",
+      "position": {
+        "x": 700,
+        "y": 30
+      },
+      "data": {
+        "label": "Résultats & Comparaison",
+        "params": {}
+      },
+      "style": {
+        "width": 420,
+        "height": 920
+      },
+      "width": 420,
+      "height": 920
+    },
+    {
+      "id": "n-disp-imp",
+      "type": "output_display",
+      "position": {
+        "x": 720,
+        "y": 80
+      },
+      "data": {
+        "label": "RF — Importance critères",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_imp",
+            "color": "image",
+            "label": "Importance"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-cand",
+      "type": "output_display",
+      "position": {
+        "x": 720,
+        "y": 310
+      },
+      "data": {
+        "label": "Candidats finaux (RF × Upstream)",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_cand",
+            "color": "image",
+            "label": "Candidats"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-mcda",
+      "type": "output_display",
+      "position": {
+        "x": 720,
+        "y": 540
+      },
+      "data": {
+        "label": "MCDA — Susceptibilité",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_mcda",
+            "color": "image",
+            "label": "MCDA score"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-stats",
+      "type": "data_inspector",
+      "position": {
+        "x": 720,
+        "y": 770
+      },
+      "data": {
+        "label": "Stats Candidats",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "f-val",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1140,
+        "y": 30
+      },
+      "data": {
+        "label": "Validation temporelle — 2022 → 2023",
+        "params": {}
+      },
+      "style": {
+        "width": 720,
+        "height": 560
+      },
+      "width": 720,
+      "height": 560
+    },
+    {
+      "id": "n-note-val",
+      "type": "canvas_note",
+      "position": {
+        "x": 1160,
+        "y": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Entraîné 2022 · testé sur sites apparus 2023\nvert = nouveau site prédit · rouge = manqué · bleu = ancien",
+          "color_index": 4
+        }
+      },
+      "width": 381,
+      "height": 86
+    },
+    {
+      "id": "n-oam23",
+      "type": "geo_oam_loader",
+      "position": {
+        "x": 1160,
+        "y": 120
+      },
+      "data": {
+        "label": "OAM 2023 — Vérité terrain",
+        "params": {
+          "fetch": 0,
+          "source": "WFS 2023",
+          "file_path": "",
+          "layer_name": "",
+          "output_field": "binary",
+          "legality": "Illegal (2)",
+          "mining_type": "Alluvionnaire",
+          "year_min": 2000,
+          "year_max": 2023,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Sites confirmés 2023 (test)"
+        }
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "n-validate",
+      "type": "logic_python",
+      "position": {
+        "x": 1500,
+        "y": 120
+      },
+      "data": {
+        "label": "Validation (2022 → 2023)",
+        "params": {
+          "code": "\n# ── Validation temporelle : candidats 2022 vs sites apparus en 2023 ──────────\n# a = candidate_score (geotiff 0-1, modèle entraîné sur 2022)\n# b = OAM 2023 (mask, vérité terrain)   c = OAM 2022 (mask, sites déjà connus)\n# Test prédictif réel : les NOUVEAUX sites 2023 tombent-ils dans nos candidats ?\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\ncand = _band(a)\no23 = b if not isinstance(b, dict) else _band(b)\no22 = c if not isinstance(c, dict) else _band(c)\nzone = d if not isinstance(d, dict) else _band(d)   # zone upstream (atteignable 40km)\n\nif cand is None or o23 is None:\n    out_main = None; out_dict = {'erreur': 'a=candidat b=OAM2023 c=OAM2022 d=zone upstream'}\nelse:\n    H, W = cand.shape\n    def fitm(m):\n        if m is None: return np.zeros((H, W), dtype=bool)\n        if m.ndim == 3: m = m[..., 0]\n        if m.shape != (H, W):\n            m = cv2.resize(m, (W, H), interpolation=cv2.INTER_NEAREST)\n        return m > 0\n    s23, s22 = fitm(o23), fitm(o22)\n    reachable = fitm(zone) if zone is not None else np.ones((H, W), dtype=bool)\n    new_sites = s23 & ~s22              # sites émergés en 2023 (cible de prédiction)\n\n    eps = 1e-9\n    # Auto-échelle : candidat 0-1 OU susceptibilité 0-100\n    cmax = float(np.nanmax(cand)) if np.isfinite(cand).any() else 1.0\n    cand_n = cand / 100.0 if cmax > 1.5 else cand\n\n    n_new = int(new_sites.sum())\n    new_in_reach = int((new_sites & reachable).sum())\n    total = H * W\n    rate_base = n_new / (total + eps)\n\n    # ── Balayage de seuils : courbe recall / surface / enrichissement ──────────\n    # Révèle l'opérateur utile (ex : surveiller 5% du territoire, capter 50%).\n    sweep = {}\n    best = {'threshold': None, 'enrichment_x': 0.0}\n    for thr in [0.70, 0.72, 0.74, 0.76, 0.78, 0.80, 0.82, 0.85, 0.90]:\n        pr = cand_n >= thr\n        tp = int((pr & new_sites).sum())\n        area = int(pr.sum())\n        rec = tp / (n_new + eps)\n        area_pct = area / total * 100.0\n        rate_in = tp / (area + eps)\n        enr = rate_in / (rate_base + eps)\n        sweep[f'thr_{thr}'] = {\n            'recall': round(rec, 3),\n            'area_pct': round(area_pct, 2),\n            'enrichment_x': round(enr, 1),\n        }\n        if enr > best['enrichment_x'] and area_pct > 0.5:\n            best = {'threshold': thr, 'enrichment_x': round(enr, 1),\n                    'recall': round(rec, 3), 'area_pct': round(area_pct, 2)}\n\n    # Carte au meilleur seuil d'enrichissement\n    THR = best['threshold'] if best['threshold'] is not None else 0.7\n    pred = cand_n >= THR\n    TP = int((pred & new_sites).sum())\n    FN = int((~pred & new_sites).sum())\n    recall = TP / (n_new + eps)\n    missed = new_sites & ~pred\n    fn_out_reach = int((missed & ~reachable).sum())\n    fn_in_zone = int((missed & reachable).sum())\n    recall_reachable = TP / (new_in_reach + eps)\n    cand_pct = round(float(pred.sum()) / total * 100, 2)\n\n    out_dict = {\n        'new_sites_2023': n_new,\n        'best_operating_point': best,    # seuil au meilleur enrichissement\n        'sweep': sweep,                  # courbe complète recall/surface/enrichissement\n        'recall_at_best': round(recall, 3),\n        'FN_beyond_40km': fn_out_reach,\n        'FN_in_zone_low_score': fn_in_zone,\n    }\n",
+          "node_note": "a=candidats b=OAM2023 c=OAM2022 → recall/precision/F1"
+        }
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n-disp-val",
+      "type": "output_display",
+      "position": {
+        "x": 1160,
+        "y": 360
+      },
+      "data": {
+        "label": "Carte validation",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_val",
+            "color": "image",
+            "label": "Validation"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-stats-val",
+      "type": "data_inspector",
+      "position": {
+        "x": 1900,
+        "y": 160
+      },
+      "data": {
+        "label": "Scores prédictifs",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1900,
+        "y": 160
+      },
+      "dragging": false
+    },
+    {
+      "id": "n-note-valb",
+      "type": "canvas_note",
+      "position": {
+        "x": 1160,
+        "y": 620
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "MCDA seul (sans upstream) vs sites 2023\nMesure le plafond réel du profil terrain+spectral",
+          "color_index": 2
+        }
+      },
+      "width": 312,
+      "height": 86
+    },
+    {
+      "id": "n-validate-b",
+      "type": "logic_python",
+      "position": {
+        "x": 1160,
+        "y": 690
+      },
+      "data": {
+        "label": "Validation B (MCDA non-filtré)",
+        "params": {
+          "code": "\n# ── Validation temporelle : candidats 2022 vs sites apparus en 2023 ──────────\n# a = candidate_score (geotiff 0-1, modèle entraîné sur 2022)\n# b = OAM 2023 (mask, vérité terrain)   c = OAM 2022 (mask, sites déjà connus)\n# Test prédictif réel : les NOUVEAUX sites 2023 tombent-ils dans nos candidats ?\ndef _band(x):\n    if not isinstance(x, dict): return None\n    arr = np.asarray(x['bands'], dtype=np.float32)\n    return arr[0] if arr.ndim == 3 else arr\n\ncand = _band(a)\no23 = b if not isinstance(b, dict) else _band(b)\no22 = c if not isinstance(c, dict) else _band(c)\nzone = d if not isinstance(d, dict) else _band(d)   # zone upstream (atteignable 40km)\n\nif cand is None or o23 is None:\n    out_main = None; out_dict = {'erreur': 'a=candidat b=OAM2023 c=OAM2022 d=zone upstream'}\nelse:\n    H, W = cand.shape\n    def fitm(m):\n        if m is None: return np.zeros((H, W), dtype=bool)\n        if m.ndim == 3: m = m[..., 0]\n        if m.shape != (H, W):\n            m = cv2.resize(m, (W, H), interpolation=cv2.INTER_NEAREST)\n        return m > 0\n    s23, s22 = fitm(o23), fitm(o22)\n    reachable = fitm(zone) if zone is not None else np.ones((H, W), dtype=bool)\n    new_sites = s23 & ~s22              # sites émergés en 2023 (cible de prédiction)\n\n    eps = 1e-9\n    # Auto-échelle : candidat 0-1 OU susceptibilité 0-100\n    cmax = float(np.nanmax(cand)) if np.isfinite(cand).any() else 1.0\n    cand_n = cand / 100.0 if cmax > 1.5 else cand\n\n    n_new = int(new_sites.sum())\n    new_in_reach = int((new_sites & reachable).sum())\n    total = H * W\n    rate_base = n_new / (total + eps)\n\n    # ── Balayage de seuils : courbe recall / surface / enrichissement ──────────\n    # Révèle l'opérateur utile (ex : surveiller 5% du territoire, capter 50%).\n    sweep = {}\n    best = {'threshold': None, 'enrichment_x': 0.0}\n    for thr in [0.70, 0.72, 0.74, 0.76, 0.78, 0.80, 0.82, 0.85, 0.90]:\n        pr = cand_n >= thr\n        tp = int((pr & new_sites).sum())\n        area = int(pr.sum())\n        rec = tp / (n_new + eps)\n        area_pct = area / total * 100.0\n        rate_in = tp / (area + eps)\n        enr = rate_in / (rate_base + eps)\n        sweep[f'thr_{thr}'] = {\n            'recall': round(rec, 3),\n            'area_pct': round(area_pct, 2),\n            'enrichment_x': round(enr, 1),\n        }\n        if enr > best['enrichment_x'] and area_pct > 0.5:\n            best = {'threshold': thr, 'enrichment_x': round(enr, 1),\n                    'recall': round(rec, 3), 'area_pct': round(area_pct, 2)}\n\n    # Carte au meilleur seuil d'enrichissement\n    THR = best['threshold'] if best['threshold'] is not None else 0.7\n    pred = cand_n >= THR\n    TP = int((pred & new_sites).sum())\n    FN = int((~pred & new_sites).sum())\n    recall = TP / (n_new + eps)\n    missed = new_sites & ~pred\n    fn_out_reach = int((missed & ~reachable).sum())\n    fn_in_zone = int((missed & reachable).sum())\n    recall_reachable = TP / (new_in_reach + eps)\n    cand_pct = round(float(pred.sum()) / total * 100, 2)\n\n    out_dict = {\n        'new_sites_2023': n_new,\n        'best_operating_point': best,    # seuil au meilleur enrichissement\n        'sweep': sweep,                  # courbe complète recall/surface/enrichissement\n        'recall_at_best': round(recall, 3),\n        'FN_beyond_40km': fn_out_reach,\n        'FN_in_zone_low_score': fn_in_zone,\n    }\n",
+          "node_note": "a=MCDA suscept b=OAM2023 c=OAM2022 (pas de gate upstream)"
+        }
+      },
+      "width": 208,
+      "height": 249
+    },
+    {
+      "id": "n-stats-valb",
+      "type": "data_inspector",
+      "position": {
+        "x": 1880,
+        "y": -280
+      },
+      "data": {
+        "label": "Scores MCDA non-filtré",
+        "params": {}
+      },
+      "width": 695,
+      "height": 1497,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 1880,
+        "y": -280
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-dem",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e2",
+      "source": "n-bbox",
+      "sourceHandle": "string__bbox",
+      "target": "n-s2",
+      "targetHandle": "string__bbox"
+    },
+    {
+      "id": "e3",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-slope",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e4",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-flow",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e5",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-hand",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e6",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-hand",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e7",
+      "source": "n-s2",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-ndvi",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e8",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-oam",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e8b",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-oam-broad",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e9",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_dir",
+      "target": "n-upstream",
+      "targetHandle": "geotiff__flow_dir"
+    },
+    {
+      "id": "e10",
+      "source": "n-oam-broad",
+      "sourceHandle": "mask__mask",
+      "target": "n-upstream",
+      "targetHandle": "mask__seed"
+    },
+    {
+      "id": "e11",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-upstream",
+      "targetHandle": "geotiff__flow_acc"
+    },
+    {
+      "id": "e12",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-feat",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e13",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-feat",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e14",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-feat",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e16",
+      "source": "n-ndvi",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-feat",
+      "targetHandle": "any__d"
+    },
+    {
+      "id": "e16b",
+      "source": "n-geol",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-feat",
+      "targetHandle": "any__e"
+    },
+    {
+      "id": "e16c",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-geol",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e17",
+      "source": "n-oam",
+      "sourceHandle": "mask__mask",
+      "target": "n-labels",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e18",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-labels",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e19",
+      "source": "n-feat",
+      "sourceHandle": "any__out_any",
+      "target": "n-rf",
+      "targetHandle": "geotiff__features"
+    },
+    {
+      "id": "e20",
+      "source": "n-labels",
+      "sourceHandle": "any__out_any",
+      "target": "n-rf",
+      "targetHandle": "geotiff__labels"
+    },
+    {
+      "id": "e21",
+      "source": "n-slope",
+      "sourceHandle": "geotiff__slope",
+      "target": "n-mcda",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e22",
+      "source": "n-hand",
+      "sourceHandle": "geotiff__hand",
+      "target": "n-mcda",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e23",
+      "source": "n-flow",
+      "sourceHandle": "geotiff__flow_acc",
+      "target": "n-mcda",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e24",
+      "source": "n-upstream",
+      "sourceHandle": "geotiff__distance",
+      "target": "n-mcda",
+      "targetHandle": "any__d"
+    },
+    {
+      "id": "e25",
+      "source": "n-ndvi",
+      "sourceHandle": "geotiff__stack",
+      "target": "n-mcda",
+      "targetHandle": "any__e"
+    },
+    {
+      "id": "e26",
+      "source": "n-rf",
+      "sourceHandle": "geotiff__classification",
+      "target": "n-combine",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e27",
+      "source": "n-upstream",
+      "sourceHandle": "mask__search_zone",
+      "target": "n-combine",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e28",
+      "source": "n-rf",
+      "sourceHandle": "image__confidence",
+      "target": "n-combine",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e29",
+      "source": "n-rf",
+      "sourceHandle": "image__importance",
+      "target": "n-disp-imp",
+      "targetHandle": "image__0_imp"
+    },
+    {
+      "id": "e30",
+      "source": "n-combine",
+      "sourceHandle": "image__main",
+      "target": "n-disp-cand",
+      "targetHandle": "image__0_cand"
+    },
+    {
+      "id": "e31",
+      "source": "n-mcda",
+      "sourceHandle": "image__main",
+      "target": "n-disp-mcda",
+      "targetHandle": "image__0_mcda"
+    },
+    {
+      "id": "e32",
+      "source": "n-combine",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-stats",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e33",
+      "source": "n-dem",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "n-oam23",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e34",
+      "source": "n-combine",
+      "sourceHandle": "any__out_any",
+      "target": "n-validate",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e35",
+      "source": "n-oam23",
+      "sourceHandle": "mask__mask",
+      "target": "n-validate",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e36",
+      "source": "n-oam",
+      "sourceHandle": "mask__mask",
+      "target": "n-validate",
+      "targetHandle": "any__c"
+    },
+    {
+      "id": "e36b",
+      "source": "n-upstream",
+      "sourceHandle": "mask__search_zone",
+      "target": "n-validate",
+      "targetHandle": "any__d"
+    },
+    {
+      "id": "e37",
+      "source": "n-validate",
+      "sourceHandle": "image__main",
+      "target": "n-disp-val",
+      "targetHandle": "image__0_val"
+    },
+    {
+      "id": "e38",
+      "source": "n-validate",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-stats-val",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e39",
+      "source": "n-mcda",
+      "sourceHandle": "any__out_any",
+      "target": "n-validate-b",
+      "targetHandle": "any__a"
+    },
+    {
+      "id": "e40",
+      "source": "n-oam23",
+      "sourceHandle": "mask__mask",
+      "target": "n-validate-b",
+      "targetHandle": "any__b"
+    },
+    {
+      "id": "e41",
+      "source": "n-oam",
+      "sourceHandle": "mask__mask",
+      "target": "n-validate-b",
+      "targetHandle": "any__c"
+    },
+    {
+      "source": "n-validate-b",
+      "sourceHandle": "dict__out_dict",
+      "target": "n-stats-valb",
+      "targetHandle": "any__data",
+      "id": "e-1780426992480"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 339
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": null
+  }
+}

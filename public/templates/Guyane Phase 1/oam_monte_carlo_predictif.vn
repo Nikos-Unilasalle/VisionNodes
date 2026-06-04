@@ -1,0 +1,298 @@
+{
+  "nodes": [
+    {
+      "id": "f-setup",
+      "type": "canvas_frame",
+      "position": { "x": -1660, "y": 130 },
+      "data": { "label": "Zone d'étude", "params": {} },
+      "style": { "width": 380, "height": 320 },
+      "width": 380,
+      "height": 320
+    },
+    {
+      "id": "n-note-setup",
+      "type": "canvas_note",
+      "position": { "x": -1640, "y": 140 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Modèle Monte Carlo — OAM Ground Truth\nSeed T0 = sites illégaux alluviaux (WFS 2022)\nPrédiction propagation → valider vs OAM 2023",
+          "color_index": 0
+        }
+      },
+      "width": 340,
+      "height": 80
+    },
+    {
+      "id": "n-bbox",
+      "type": "geo_bbox",
+      "position": { "x": -1640, "y": 240 },
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": -53.78,
+          "lon_max": -53.58,
+          "lat_min": 3.55,
+          "lat_max": 3.72
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "f-terrain",
+      "type": "canvas_frame",
+      "position": { "x": -1220, "y": 30 },
+      "data": { "label": "Terrain — DEM + Pente + HAND", "params": {} },
+      "style": { "width": 940, "height": 500 },
+      "width": 940,
+      "height": 500
+    },
+    {
+      "id": "n-dem",
+      "type": "geo_copernicus",
+      "position": { "x": -1200, "y": 80 },
+      "data": {
+        "label": "DEM GLO-30",
+        "params": {
+          "collection": "9",
+          "bands": "data",
+          "resolution": "30",
+          "cloud_max": "100",
+          "cache_dir": "copernicus_cache",
+          "fetch": 0,
+          "mosaic_mode": "0",
+          "node_note": "Cliquer Fetch pour télécharger le DEM."
+        }
+      },
+      "width": 300,
+      "height": 260
+    },
+    {
+      "id": "n-slope",
+      "type": "geo_dem_slope",
+      "position": { "x": -860, "y": 40 },
+      "data": {
+        "label": "Pente",
+        "params": {
+          "colormap": 2,
+          "clamp_max": 12.0,
+          "node_note": "Seuil OAM alluvial : pente max 12°"
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-flow",
+      "type": "geo_dem_flow",
+      "position": { "x": -860, "y": 270 },
+      "data": {
+        "label": "Flow Accumulation",
+        "params": {
+          "node_note": "Réseau de drainage."
+        }
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-hand",
+      "type": "geo_dem_hand",
+      "position": { "x": -540, "y": 270 },
+      "data": {
+        "label": "HAND",
+        "params": {
+          "threshold": 1000,
+          "clamp_max": 8.0,
+          "colormap": 1,
+          "node_note": "Seuil OAM alluvial : HAND max 8m"
+        }
+      },
+      "width": 208,
+      "height": 200
+    },
+    {
+      "id": "f-oam",
+      "type": "canvas_frame",
+      "position": { "x": -1220, "y": 550 },
+      "data": { "label": "OAM Ground Truth — Seed T0", "params": {} },
+      "style": { "width": 460, "height": 340 },
+      "width": 460,
+      "height": 340
+    },
+    {
+      "id": "n-note-oam",
+      "type": "canvas_note",
+      "position": { "x": -1200, "y": 560 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "WFS 2022 · Illégaux · Alluvionnaire\nClé légalité crois_clan=2 · Fetcher avant de lancer",
+          "color_index": 4
+        }
+      },
+      "width": 420,
+      "height": 65
+    },
+    {
+      "id": "n-oam",
+      "type": "geo_oam_loader",
+      "position": { "x": -1200, "y": 640 },
+      "data": {
+        "label": "OAM T0 — Illégaux Alluviaux 2022",
+        "params": {
+          "fetch": 0,
+          "source": "WFS 2022",
+          "file_path": "",
+          "layer_name": "",
+          "output_field": "binary",
+          "legality": "Illegal (2)",
+          "mining_type": "Alluvionnaire",
+          "year_min": 2000,
+          "year_max": 2022,
+          "all_touched": false,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Sites illégaux alluviaux → seed Monte Carlo T0"
+        }
+      },
+      "width": 420,
+      "height": 220
+    },
+    {
+      "id": "f-attr",
+      "type": "canvas_frame",
+      "position": { "x": -500, "y": 30 },
+      "data": { "label": "Attractivité calibrée OAM", "params": {} },
+      "style": { "width": 380, "height": 490 },
+      "width": 380,
+      "height": 490
+    },
+    {
+      "id": "n-note-attr",
+      "type": "canvas_note",
+      "position": { "x": -480, "y": 40 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "attr = exp(-slope/8) × exp(-HAND/5) × (0.3 + 0.7 × flow_norm)\nslope > 12° ou HAND > 8m → attractivité = 0\nflow_accumulation : les criques/rivières = corridors prioritaires",
+          "color_index": 2
+        }
+      },
+      "width": 340,
+      "height": 80
+    },
+    {
+      "id": "n-attr",
+      "type": "logic_python",
+      "position": { "x": -480, "y": 140 },
+      "data": {
+        "label": "Attractivité (OAM calibrated)",
+        "params": {
+          "code": "# ── Attractivité calibrée OAM — sites alluviaux illégaux Guyane ─────────────\n# a = slope geotiff (degrés)\n# b = HAND geotiff (mètres)\n# c = flow_accumulation geotiff (cellules drainées)\n#\n# Logique : les mineurs naviguent par les criques/rivières.\n# Le flow_accumulation identifie les corridors fluviaux.\n# Zones sans accès fluvial = attractivité réduite même si terrain favorable.\n\nSLOPE_MAX = 12.0\nHAND_MAX  = 8.0\n\nif not isinstance(a, dict) or not isinstance(b, dict):\n    out_main = None\nelse:\n    slope = np.asarray(a['bands'], dtype=np.float32)\n    slope = slope[0] if slope.ndim == 3 else slope\n    hand  = np.asarray(b['bands'], dtype=np.float32)\n    hand  = hand[0] if hand.ndim == 3 else hand\n    H, W  = slope.shape\n\n    if hand.shape != (H, W):\n        hand = cv2.resize(hand, (W, H), interpolation=cv2.INTER_LINEAR)\n\n    slope = np.where(np.isfinite(slope), slope, SLOPE_MAX + 1.0)\n    hand  = np.where(np.isfinite(hand),  hand,  HAND_MAX  + 1.0)\n\n    # Corridor fluvial : flow_accumulation log-normalisé\n    if isinstance(c, dict):\n        flow = np.asarray(c['bands'], dtype=np.float32)\n        flow = flow[0] if flow.ndim == 3 else flow\n        if flow.shape != (H, W):\n            flow = cv2.resize(flow, (W, H), interpolation=cv2.INTER_LINEAR)\n        flow = np.where(np.isfinite(flow), flow, 0.0).clip(0)\n        flow_norm = np.log1p(flow)\n        fmax = flow_norm.max()\n        flow_norm = flow_norm / (fmax + 1e-9) if fmax > 0 else flow_norm\n    else:\n        # Sans flow : attractivité homogène (dégradé)\n        flow_norm = np.ones((H, W), dtype=np.float32) * 0.5\n\n    # Attractivité = terrain × accès fluvial\n    # 0.3 = valeur plancher (terrain accessible sans rivière directe)\n    # 0.7 × flow_norm = bonus corridors fluviaux (orpaillage alluvial)\n    attr = np.exp(-slope / 8.0) * np.exp(-hand / 5.0) * (0.3 + 0.7 * flow_norm)\n    attr[slope > SLOPE_MAX] = 0.0\n    attr[hand  > HAND_MAX]  = 0.0\n\n    attr_u8  = (attr * 255.0).clip(0, 255).astype(np.uint8)\n    out_main = cv2.cvtColor(attr_u8, cv2.COLOR_GRAY2BGR)",
+          "node_note": "a=slope · b=HAND · c=flow_acc → image attractivité corridors fluviaux"
+        }
+      },
+      "width": 360,
+      "height": 370
+    },
+    {
+      "id": "f-mc",
+      "type": "canvas_frame",
+      "position": { "x": -80, "y": 30 },
+      "data": { "label": "Monte Carlo Propagation", "params": {} },
+      "style": { "width": 720, "height": 730 },
+      "width": 720,
+      "height": 730
+    },
+    {
+      "id": "n-note-mc",
+      "type": "canvas_note",
+      "position": { "x": -60, "y": 40 },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "200 simulations · 20 steps · seed fixe 42 (reproductible)\nHorizon spatial ≈ 600m (20 px × 30m)\nChanger seed → -1 pour résultats stochastiques",
+          "color_index": 1
+        }
+      },
+      "width": 420,
+      "height": 80
+    },
+    {
+      "id": "n-mc",
+      "type": "util_monte_carlo_propagation",
+      "position": { "x": -60, "y": 140 },
+      "data": {
+        "label": "Monte Carlo Propagation",
+        "params": {
+          "n_simulations": 200,
+          "n_steps": 20,
+          "resistance": 0.6,
+          "neighborhood": "8-connected",
+          "seed": 42,
+          "node_note": "Seed OAM T0 · attractivité slope+HAND · forêt dense résistance 0.6"
+        }
+      },
+      "width": 280,
+      "height": 360
+    },
+    {
+      "id": "n-disp-prob",
+      "type": "output_display",
+      "position": { "x": 320, "y": 140 },
+      "data": {
+        "label": "Probability Map",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "mask__0_prob", "color": "mask", "label": "Probability" }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-disp-preview",
+      "type": "output_display",
+      "position": { "x": 320, "y": 360 },
+      "data": {
+        "label": "Risk Preview (JET)",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          { "id": "image__0_preview", "color": "image", "label": "Preview" }
+        ]
+      },
+      "width": 208,
+      "height": 185
+    },
+    {
+      "id": "n-stats",
+      "type": "data_inspector",
+      "position": { "x": 320, "y": 570 },
+      "data": {
+        "label": "Risk Statistics",
+        "params": {}
+      },
+      "width": 208,
+      "height": 160
+    }
+  ],
+  "edges": [
+    { "id": "e-bbox-dem",    "source": "n-bbox",  "sourceHandle": "string__bbox",         "target": "n-dem",   "targetHandle": "string__bbox" },
+    { "id": "e-dem-slope",   "source": "n-dem",   "sourceHandle": "geotiff__geotiff",      "target": "n-slope", "targetHandle": "geotiff__geotiff" },
+    { "id": "e-dem-flow",    "source": "n-dem",   "sourceHandle": "geotiff__geotiff",      "target": "n-flow",  "targetHandle": "geotiff__geotiff" },
+    { "id": "e-dem-hand",    "source": "n-dem",   "sourceHandle": "geotiff__geotiff",      "target": "n-hand",  "targetHandle": "geotiff__geotiff" },
+    { "id": "e-flow-hand",   "source": "n-flow",  "sourceHandle": "geotiff__flow_acc",     "target": "n-hand",  "targetHandle": "geotiff__flow_acc" },
+    { "id": "e-dem-oam",     "source": "n-dem",   "sourceHandle": "geotiff__geotiff",      "target": "n-oam",   "targetHandle": "geotiff__reference" },
+    { "id": "e-slope-attr",  "source": "n-slope", "sourceHandle": "geotiff__slope",        "target": "n-attr",  "targetHandle": "any__a" },
+    { "id": "e-hand-attr",   "source": "n-hand",  "sourceHandle": "geotiff__hand",         "target": "n-attr",  "targetHandle": "any__b" },
+    { "id": "e-flow-attr",   "source": "n-flow",  "sourceHandle": "geotiff__flow_acc",     "target": "n-attr",  "targetHandle": "any__c" },
+    { "id": "e-oam-seed",    "source": "n-oam",   "sourceHandle": "mask__mask",            "target": "n-mc",    "targetHandle": "mask__seed" },
+    { "id": "e-attr-mc",     "source": "n-attr",  "sourceHandle": "image__main",           "target": "n-mc",    "targetHandle": "image__attractiveness" },
+    { "id": "e-mc-prob",     "source": "n-mc",    "sourceHandle": "mask__probability",     "target": "n-disp-prob",     "targetHandle": "mask__0_prob" },
+    { "id": "e-mc-preview",  "source": "n-mc",    "sourceHandle": "image__preview",        "target": "n-disp-preview",  "targetHandle": "image__0_preview" },
+    { "id": "e-mc-stats",    "source": "n-mc",    "sourceHandle": "dict__stats",           "target": "n-stats",         "targetHandle": "data__table" }
+  ]
+}

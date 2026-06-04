@@ -140,6 +140,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   string_length: N.StringNode,
   string_case: N.StringNode,
   string_replace: N.StringNode,
+  scalar_input: N.ScalarInputNode,
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   canvas_teleport: N.TeleportNode,
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
