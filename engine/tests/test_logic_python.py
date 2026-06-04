@@ -58,3 +58,33 @@ def test_numpy_available():
 def test_list_output():
     out = _run("out_list = [1, 2, 3]")
     assert out['out_list'] == [1, 2, 3]
+
+
+# ── Dynamic auto-typed I/O ────────────────────────────────────────────────────
+
+def test_dynamic_inputs_injected_as_vars():
+    # Every connected input becomes a same-named variable (a, b, c…).
+    out = _run("out_a = a + b + c", inputs={'a': 1, 'b': 2, 'c': 3})
+    assert out['out_a'] == 6
+
+
+def test_collects_multiple_out_vars():
+    out = _run("out_a = 10\nout_b = 20\nout_c = 30")
+    assert out['out_a'] == 10 and out['out_b'] == 20 and out['out_c'] == 30
+
+
+def test_only_out_prefixed_vars_returned():
+    out = _run("tmp = 99\nout_a = tmp")
+    assert out['out_a'] == 99 and 'tmp' not in out
+
+
+def test_reserved_vars_not_emitted_as_outputs():
+    # np/cv2/pd/state must never leak into outputs even though they're in ctx.
+    out = _run("out_a = 1")
+    assert 'np' not in out and 'state' not in out
+
+
+def test_raw_frame_input_not_injected():
+    # engine always passes raw_frame; it must not be referenceable as a script var.
+    out = _run("out_a = raw_frame", inputs={'raw_frame': object(), 'a': 5})
+    assert "'raw_frame' is not defined" in out['out_e']

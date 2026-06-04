@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2 } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2, PlugZap } from 'lucide-react';
 import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
@@ -408,6 +408,7 @@ interface NodeInspectorPanelProps {
   onRequestCapture: (id: string) => void;
   isInsideGroup?: boolean;
   onToggleExposed?: (nodeId: string, paramId: string) => void;
+  onExternalizeParam?: (nodeId: string, sp: ParamSpec, value: number) => void;
   exposedGroupParams?: ExposedParam[];
   onUpdateGroupChildParams?: (childNodeId: string, params: Record<string, unknown>) => void;
   onRenameExposedParam?: (childNodeId: string, paramId: string, newLabel: string) => void;
@@ -416,7 +417,7 @@ interface NodeInspectorPanelProps {
 export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   node, liveData, activePaletteIndex,
   pickColorNodeId, onUpdateParams, onPickColorToggle, onRequestCapture,
-  isInsideGroup, onToggleExposed, exposedGroupParams, onUpdateGroupChildParams,
+  isInsideGroup, onToggleExposed, onExternalizeParam, exposedGroupParams, onUpdateGroupChildParams,
   onRenameExposedParam,
 }) => {
   const p = node.data.params;
@@ -993,6 +994,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         const renderWidget = (sp: ParamSpec): React.ReactNode => {
           const isExposed = (node.data.exposedParams ?? []).includes(sp.id);
           const showEye   = !!(isInsideGroup && onToggleExposed && sp.type !== 'trigger' && sp.type !== 'code');
+          const isExternalized = ((node.data as any).externalizedParams ?? []).includes(sp.id);
           const isEnum    = sp.type === 'enum' || sp.options;
           const isColor   = sp.type === 'color';
           const isDate    = sp.type === 'date' || sp.id === 'date_start' || sp.id === 'date_end';
@@ -1052,18 +1054,34 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
           }
 
+          const showExternalize = !!(onExternalizeParam && isNumber && !isEnum && sp.type !== 'trigger' && sp.type !== 'code');
+          const hasOverlay = showEye || showExternalize;
+
           return (
-            <div key={sp.id} className={showEye ? 'relative group/param' : undefined}>
-              {inner}
-              {showEye && (
-                <button
-                  className={`absolute top-0 right-0 p-1 rounded transition-all duration-150 ${isExposed ? 'text-accent' : 'text-gray-600 opacity-0 group-hover/param:opacity-100'}`}
-                  onClick={(e) => { e.stopPropagation(); onToggleExposed!(node.id, sp.id); }}
-                  title={isExposed ? 'Retirer du groupe' : 'Exposer dans le groupe'}
-                >
-                  {isExposed ? <Eye size={10} /> : <EyeOff size={10} />}
-                </button>
-              )}
+            <div key={sp.id} className={hasOverlay ? 'relative group/param' : undefined}>
+              <div className={isExternalized ? 'opacity-40 pointer-events-none' : undefined}>
+                {inner}
+              </div>
+              <div className="absolute top-0 right-0 flex items-center gap-0.5">
+                {showExternalize && (
+                  <button
+                    className={`p-1 rounded transition-all duration-150 ${isExternalized ? 'text-green-400' : 'text-gray-600 opacity-0 group-hover/param:opacity-100 hover:text-green-400'}`}
+                    onClick={(e) => { e.stopPropagation(); if (!isExternalized) onExternalizeParam!(node.id, sp, Number(p[sp.id] ?? sp.default ?? 0)); }}
+                    title={isExternalized ? 'Paramètre externalisé (Number connecté)' : 'Externaliser → créer une entrée + node Number'}
+                  >
+                    <PlugZap size={10} />
+                  </button>
+                )}
+                {showEye && (
+                  <button
+                    className={`p-1 rounded transition-all duration-150 ${isExposed ? 'text-accent' : 'text-gray-600 opacity-0 group-hover/param:opacity-100'}`}
+                    onClick={(e) => { e.stopPropagation(); onToggleExposed!(node.id, sp.id); }}
+                    title={isExposed ? 'Retirer du groupe' : 'Exposer dans le groupe'}
+                  >
+                    {isExposed ? <Eye size={10} /> : <EyeOff size={10} />}
+                  </button>
+                )}
+              </div>
             </div>
           );
         };

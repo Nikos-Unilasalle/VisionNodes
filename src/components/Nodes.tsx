@@ -88,7 +88,10 @@ export const BaseNode = ({
   const computingNodeId = useComputingNodeId();
   const isComputing = !!nodeId && computingNodeId === nodeId;
   const updateNodeInternals = useUpdateNodeInternals();
-  const totalInputs = inputs.length + (data?.params?.var_count || 0);
+  // Externalized-param input handles — rendered natively on any node (see App.onExternalizeParam).
+  const paramPorts: { id: string; color: string; label?: string }[] = (data as any)?.paramPorts ?? [];
+  const allInputs = paramPorts.length ? [...inputs, ...paramPorts] : inputs;
+  const totalInputs = allInputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
 
@@ -152,21 +155,21 @@ export const BaseNode = ({
       )}
       {/* Inputs with Labels */}
       {isRotated
-        ? inputs.map((inp: any, i: number) => {
+        ? allInputs.map((inp: any, i: number) => {
             const portLeft = getPortLeft(i, totalInputs);
             return (
               <React.Fragment key={inp.id}>
                 <StyledHandle type="target" position={Position.Top} id={inp.id} color={inp.color} left={portLeft} noBorder={isMinified} />
-                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{inp.id}</span>}
+                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{inp.label || inp.id}</span>}
               </React.Fragment>
             );
           })
-        : inputs.map((inp: any, i: number) => {
+        : allInputs.map((inp: any, i: number) => {
             const top = getPortTop(i, totalInputs);
             return (
               <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
                 <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
-                {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.id}</span>}
+                {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.label || inp.id}</span>}
               </div>
             );
           })
@@ -176,7 +179,7 @@ export const BaseNode = ({
       {Array.from({ length: (data?.params?.var_count || 0) }).map((_, i) => {
         const char = String.fromCharCode(97 + i);
         if (isRotated) {
-          const portLeft = getPortLeft(inputs.length + i, totalInputs);
+          const portLeft = getPortLeft(allInputs.length + i, totalInputs);
           return (
             <React.Fragment key={char}>
               <StyledHandle type="target" position={Position.Top} id={char} color="scalar" left={portLeft} noBorder={isMinified} />
@@ -184,7 +187,7 @@ export const BaseNode = ({
             </React.Fragment>
           );
         }
-        const top = getPortTop(inputs.length + i, totalInputs);
+        const top = getPortTop(allInputs.length + i, totalInputs);
         return (
           <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" noBorder={isMinified} />
@@ -239,7 +242,7 @@ export const BaseNode = ({
             return (
               <React.Fragment key={out.id}>
                 <StyledHandle type="source" position={Position.Bottom} id={out.id} color={out.color} left={portLeft} noBorder={isMinified} />
-                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, bottom: 8, transform: 'translateX(-50%)' }}>{out.id}</span>}
+                {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, bottom: 8, transform: 'translateX(-50%)' }}>{out.label || out.id}</span>}
               </React.Fragment>
             );
           })
@@ -247,7 +250,7 @@ export const BaseNode = ({
             const top = getPortTop(i, totalOutputs);
             return (
               <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-                {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.id}</span>}
+                {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.label || out.id}</span>}
                 <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
               </div>
             );
@@ -1668,16 +1671,35 @@ export const StringNode = memo(({ selected, data }: any) => {
 });
 
 export const PythonNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const updateNodeInternals = useUpdateNodeInternals();
   const code = data.params?.code || '';
   const lines = code.split('\n').map(l => l.trim());
   const firstComment = lines.find(l => l.startsWith('#'));
   const displayLine = firstComment || lines.find(l => l !== '') || '';
   const onOpenEditor = data.onOpenEditor;
 
+  // Dynamic, auto-typed I/O. Inputs in data.ports (a, b, c…), outputs in data.outPorts (out_a…).
+  const inPorts: { id: string; color: string; label?: string }[] = data?.ports ?? [];
+  const outPorts: { id: string; color: string; label?: string }[] = data?.outPorts ?? [];
+
+  useEffect(() => {
+    if (nodeId) updateNodeInternals(nodeId);
+  }, [inPorts.length, outPorts.length, nodeId, updateNodeInternals]);
+
+  const stripColor = (id: string) => { const i = id.indexOf('__'); return i >= 0 ? id.slice(i + 2) : id; };
+  const inputs = [
+    ...inPorts.map(p => ({ id: stripColor(p.id), color: p.color, label: p.label || stripColor(p.id) })),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any', label: '+' },
+  ];
+  const outputs = [
+    ...outPorts.map(p => ({ id: stripColor(p.id), color: p.color, label: p.label || stripColor(p.id) })),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'any', label: '+' },
+  ];
+
   return (
     <BaseNode title="Python Script" icon={Zap} selected={selected} data={data} color="red"
-              inputs={[{id: 'a', color: 'any'}, {id: 'b', color: 'any'}, {id: 'c', color: 'any'}, {id: 'd', color: 'any'}, {id: 'e', color: 'any'}]}
-              outputs={[{id: 'main', color: 'image'}, {id: 'out_scalar', color: 'scalar'}, {id: 'out_list', color: 'list'}, {id: 'out_dict', color: 'dict'}, {id: 'out_any', color: 'any'}, {id: 'out_data', color: 'data', label: 'DataFrame'}, {id: 'out_e', color: 'string', label: 'Error'}]}>
+              inputs={inputs} outputs={outputs}>
       <div 
         className="relative group nodrag flex flex-col items-center justify-center min-h-[56px] w-full bg-black/10 rounded-xl p-3 border border-white/5 shadow-inner overflow-hidden cursor-pointer"
         onDoubleClick={e => { e.stopPropagation(); onOpenEditor?.(); }}

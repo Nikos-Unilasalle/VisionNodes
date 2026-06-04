@@ -36,13 +36,29 @@ export function useConnectionHandling({
       return;
     }
 
+    // SOURCE-dynamic: logic_python output factory — auto-typed letter-named output ports (out_a, out_b…).
+    // Stored separately in data.outPorts. Color inferred from the target input it connects to.
+    if (sourceNode?.type === 'logic_python' && params.sourceHandle?.endsWith('__DYNAMIC_NEW_HANDLE')) {
+      const idx = (sourceNode.data as any)?.outPorts?.length ?? 0;
+      const letter = String.fromCharCode(97 + Math.min(idx, 25));
+      const color = (params.targetHandle?.split('__')[0]) || 'any';
+      const portId = `${color}__out_${letter}`;
+      const newPort = { id: portId, color, label: `out_${letter}` };
+      setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.source ? {
+        ...n,
+        data: { ...n.data, outPorts: [...((n.data as any)?.outPorts ?? []), newPort] },
+      } : n));
+      setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, sourceHandle: portId }, eds));
+      return;
+    }
+
     const targetNode = nodesRef.current.find((n: Node) => n.id === params.target);
     const targetSchema = pluginSchemas?.find((s: any) => s.type === targetNode?.type);
     
     // Check if node is dynamic via schema flags or known types
     const isDynamic = !!targetSchema?.dynamic_inputs ||
                      !!targetSchema?.dynamic_outputs ||
-                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer'].includes(targetNode?.type || '');
+                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python'].includes(targetNode?.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
@@ -69,7 +85,17 @@ export function useConnectionHandling({
         const sh = params.sourceHandle;
         const color = sh.split('__')[0] || 'any';
 
-        if (targetNode!.type === 'output_display' || targetNode!.type === 'draw_overlay') {
+        if (targetNode!.type === 'logic_python') {
+          // Auto-typed, letter-named input ports (a, b, c…) → engine maps th=letter → script var.
+          const idx = (targetNode!.data as any)?.ports?.length ?? 0;
+          const letter = String.fromCharCode(97 + Math.min(idx, 25));
+          const portId = `${color}__${letter}`;
+          const newPort = { id: portId, color, label: letter };
+          setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+            ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+            : n));
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
+        } else if (targetNode!.type === 'output_display' || targetNode!.type === 'draw_overlay') {
           const { portId } = createDynamicPort(color, color === 'image' ? 'img' : 'data');
           setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
         } else if (targetNode!.type === 'util_csv_export') {

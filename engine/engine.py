@@ -498,6 +498,17 @@ class VisionEngine:
                 if proc:
                     try:
                         params = node.get('data', {}).get('params', {})
+                        # Param externalization: a connected input whose handle id matches a
+                        # schema param id overrides that param's value (e.g. a Number node
+                        # driving a slider). Copy to avoid mutating the node's stored params.
+                        node_schema = self._schema_by_type.get(ntype, {})
+                        param_specs = node_schema.get('params', [])
+                        if param_specs:
+                            overrides = {ps['id']: inputs[ps['id']]
+                                         for ps in param_specs
+                                         if ps.get('id') in inputs and inputs[ps['id']] is not None}
+                            if overrides:
+                                params = {**params, **overrides}
                         is_cacheable = ntype not in REALTIME_NODE_TYPES or getattr(proc, '_paused', False)
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
