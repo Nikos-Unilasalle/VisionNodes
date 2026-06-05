@@ -375,7 +375,7 @@ class MLUNetGridNode(NodeProcessor):
             unet      = _UNetModel(base_channels=n_latent, n_levels=n_levels)
             optimizer = torch.optim.Adam(unet.parameters(), lr=lr)
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer, patience=5, factor=0.5, verbose=False,
+                optimizer, patience=5, factor=0.5,
             )
 
             loss_history = {'train_loss': [], 'val_loss': []}
