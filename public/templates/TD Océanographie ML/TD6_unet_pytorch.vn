@@ -1,0 +1,285 @@
+{
+  "nodes": [
+    {
+      "id": "reader",
+      "type": "geo_netcdf_reader",
+      "position": { "x": -160, "y": 100 },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "label": "NetCDF Grid Reader",
+        "params": {
+          "path": "samples/ocean_temperature.nc",
+          "variable": "thetao",
+          "lat_range": "4.5,6.5",
+          "lon_range": "-53.5,-51.5",
+          "colormap": 0
+        }
+      }
+    },
+    {
+      "id": "pca",
+      "type": "ml_grid_pca",
+      "position": { "x": 120, "y": -80 },
+      "width": 240,
+      "height": 180,
+      "data": {
+        "label": "ACP Spatiale (référence)",
+        "params": {
+          "n_components": 10,
+          "standardize": true,
+          "detrend": 1,
+          "cos_lat": false,
+          "node_note": "Référence PCA (k=10) — comparaison avec U-Net"
+        }
+      }
+    },
+    {
+      "id": "unet",
+      "type": "ml_unet_grid",
+      "position": { "x": 120, "y": 200 },
+      "width": 260,
+      "height": 220,
+      "data": {
+        "label": "U-Net Grid",
+        "params": {
+          "n_latent": 16,
+          "n_levels": 3,
+          "n_epochs": 30,
+          "batch_size": 8,
+          "learning_rate": 0.001,
+          "val_split": 0.2,
+          "colormap": 0,
+          "node_note": "Cliquez 'Entraîner' puis observez les courbes de loss. Exercice 1 : comparez le PSNR obtenu avec PCA (k=10). Exercice 2 : augmentez n_levels à 4 — l'architecture est-elle meilleure ?"
+        }
+      }
+    },
+    {
+      "id": "compare_pca",
+      "type": "viz_grid_compare",
+      "position": { "x": 420, "y": -80 },
+      "width": 260,
+      "height": 180,
+      "data": {
+        "label": "Comparaison PCA",
+        "params": {
+          "frame_idx": 0,
+          "node_note": "Comparaison PCA — objectif PSNR > 30 dB"
+        }
+      }
+    },
+    {
+      "id": "compare_unet",
+      "type": "viz_grid_compare",
+      "position": { "x": 420, "y": 200 },
+      "width": 260,
+      "height": 180,
+      "data": {
+        "label": "Comparaison U-Net",
+        "params": {
+          "frame_idx": 0,
+          "node_note": "Comparaison U-Net — objectif PSNR > 30 dB"
+        }
+      }
+    },
+    {
+      "id": "inspector_pca",
+      "type": "data_inspector",
+      "position": { "x": 720, "y": -80 },
+      "width": 240,
+      "height": 160,
+      "data": {
+        "label": "PSNR PCA",
+        "params": {
+          "node_note": "PSNR reconstruction PCA"
+        }
+      }
+    },
+    {
+      "id": "inspector_unet",
+      "type": "data_inspector",
+      "position": { "x": 720, "y": 200 },
+      "width": 240,
+      "height": 160,
+      "data": {
+        "label": "PSNR U-Net",
+        "params": {
+          "node_note": "PSNR reconstruction U-Net"
+        }
+      }
+    },
+    {
+      "id": "monitor",
+      "type": "ml_training_monitor",
+      "position": { "x": 420, "y": 460 },
+      "width": 260,
+      "height": 180,
+      "data": {
+        "label": "Training Monitor",
+        "params": {
+          "log_scale": false,
+          "show_best": true,
+          "smooth": 3,
+          "node_note": "Exercice 3 : Observez la convergence. Y a-t-il du surapprentissage (val > train) ? Modifiez learning_rate pour accélérer la convergence."
+        }
+      }
+    },
+    {
+      "id": "display_monitor",
+      "type": "output_display",
+      "position": { "x": 720, "y": 460 },
+      "width": 320,
+      "height": 220,
+      "data": {
+        "label": "Courbes Loss",
+        "params": {
+          "node_note": "Convergence de l'entraînement U-Net"
+        },
+        "mainConnected": true
+      }
+    },
+    {
+      "id": "saver",
+      "type": "ml_model_saver",
+      "position": { "x": 420, "y": 680 },
+      "width": 240,
+      "height": 140,
+      "data": {
+        "label": "Model Saver",
+        "params": {
+          "path": "unet_sst.pt",
+          "node_note": "Exercice 4 : Sauvegardez votre modèle, puis utilisez ml_model_loader pour le recharger sans réentraîner."
+        }
+      }
+    },
+    {
+      "id": "logic_compression",
+      "type": "logic_python",
+      "position": { "x": 120, "y": 460 },
+      "width": 280,
+      "height": 180,
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "node_note": "Exercice 5 : Ajustez k_pca et n_latent pour que les deux modèles aient le même taux de compression. Lequel a le meilleur PSNR ?",
+          "code": "# TD6 — Exercice 5 : Taux de compression PCA vs U-Net\n# Entrée a = meta (dict depuis geo_netcdf_reader)\n# Modifiez k_pca et latent_unet selon vos nœuds !\n\nmeta = a\nk_pca = 10        # n_components PCA\nn_latent = 16     # canaux latents U-Net (base)\nn_levels = 3      # niveaux U-Net\n\nif meta is None:\n    out_dict = {'statut': 'Branchez meta depuis le lecteur NetCDF'}\nelse:\n    shape = meta.get('shape', [0, 0, 0])\n    T, H, W = shape[0], shape[1], shape[2]\n    taille_orig = T * H * W\n\n    # PCA : T*k scores + k*H*W cartes\n    taille_pca = T * k_pca + k_pca * H * W\n    ratio_pca = taille_orig / taille_pca if taille_pca > 0 else 0\n\n    # U-Net : compte les feature maps à chaque niveau (approximation)\n    params_unet = sum(n_latent * (2**i) * (H // max(1, 2**i)) * (W // max(1, 2**i)) for i in range(n_levels))\n    ratio_unet = taille_orig / params_unet if params_unet > 0 else 0\n\n    out_dict = {\n        'T_x_H_x_W': f'{T} x {H} x {W} = {taille_orig:,}',\n        'compression_PCA': f'1:{round(ratio_pca, 1)} (k={k_pca})',\n        'compression_UNet': f'~1:{round(ratio_unet, 1)} (approximation)',\n        'avantage_UNet': 'Non-lineaire — peut capturer des structures complexes',\n        'avantage_PCA': 'Interpretable — modes spatiaux explicites (EOF)',\n    }\n    out_scalar = round(ratio_pca, 2)"
+        },
+        "ports": [
+          { "id": "dict__a", "color": "dict", "label": "a" }
+        ]
+      }
+    },
+    {
+      "id": "inspector_compression",
+      "type": "data_inspector",
+      "position": { "x": 120, "y": 680 },
+      "width": 240,
+      "height": 160,
+      "data": {
+        "label": "Compression PCA vs U-Net",
+        "params": {
+          "node_note": "Taux de compression comparatif"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_reader_pca_grids",
+      "source": "reader",
+      "target": "pca",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__grids"
+    },
+    {
+      "id": "e_reader_unet_grids",
+      "source": "reader",
+      "target": "unet",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__grids"
+    },
+    {
+      "id": "e_reader_compare_pca_orig",
+      "source": "reader",
+      "target": "compare_pca",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__original"
+    },
+    {
+      "id": "e_reader_compare_unet_orig",
+      "source": "reader",
+      "target": "compare_unet",
+      "sourceHandle": "any__grids",
+      "targetHandle": "any__original"
+    },
+    {
+      "id": "e_reader_logic_meta",
+      "source": "reader",
+      "target": "logic_compression",
+      "sourceHandle": "dict__meta",
+      "targetHandle": "dict__a"
+    },
+    {
+      "id": "e_pca_compare_recon",
+      "source": "pca",
+      "target": "compare_pca",
+      "sourceHandle": "any__reconstructed",
+      "targetHandle": "any__reconstructed"
+    },
+    {
+      "id": "e_unet_compare_recon",
+      "source": "unet",
+      "target": "compare_unet",
+      "sourceHandle": "any__reconstructed",
+      "targetHandle": "any__reconstructed"
+    },
+    {
+      "id": "e_unet_monitor",
+      "source": "unet",
+      "target": "monitor",
+      "sourceHandle": "dict__loss_history",
+      "targetHandle": "dict__loss_history"
+    },
+    {
+      "id": "e_unet_saver",
+      "source": "unet",
+      "target": "saver",
+      "sourceHandle": "dict__model_bundle",
+      "targetHandle": "dict__model_bundle"
+    },
+    {
+      "id": "e_compare_pca_psnr",
+      "source": "compare_pca",
+      "target": "inspector_pca",
+      "sourceHandle": "scalar__frame_psnr",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_compare_unet_psnr",
+      "source": "compare_unet",
+      "target": "inspector_unet",
+      "sourceHandle": "scalar__frame_psnr",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e_monitor_display",
+      "source": "monitor",
+      "target": "display_monitor",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e_logic_inspector",
+      "source": "logic_compression",
+      "target": "inspector_compression",
+      "sourceHandle": "dict__out_dict",
+      "targetHandle": "any__data"
+    }
+  ],
+  "ui": {
+    "previewSize": { "w": 640, "h": 240 },
+    "previewPos":  { "x": 120, "y": -320 },
+    "activePaletteIndex": 4,
+    "visualizedNodeId": "display_monitor"
+  }
+}
