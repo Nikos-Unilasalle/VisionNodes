@@ -1,0 +1,775 @@
+{
+  "nodes": [
+    {
+      "id": "frame-source",
+      "type": "canvas_frame",
+      "position": {
+        "x": -240,
+        "y": 200
+      },
+      "style": {
+        "width": 260,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 240,
+          "color_index": 2,
+          "title": "Image Source"
+        }
+      },
+      "width": 260,
+      "height": 34
+    },
+    {
+      "id": "frame-gdino",
+      "type": "canvas_frame",
+      "position": {
+        "x": 80,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 5,
+          "title": "Détection GDINO (tiles 3×3)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-sam",
+      "type": "canvas_frame",
+      "position": {
+        "x": 480,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 4,
+          "title": "Segmentation SAM (Boxes List)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-llm",
+      "type": "canvas_frame",
+      "position": {
+        "x": 880,
+        "y": 200
+      },
+      "style": {
+        "width": 560,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 3,
+          "title": "Classification Ollama (llava)"
+        }
+      },
+      "width": 560,
+      "height": 34
+    },
+    {
+      "id": "img-1",
+      "type": "input_image",
+      "position": {
+        "x": -220,
+        "y": 280
+      },
+      "data": {
+        "label": "Stone Wall",
+        "params": {
+          "path": "samples/mixed-wall.jpg"
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gdino-1",
+      "type": "grounding_dino_detector",
+      "position": {
+        "x": 100,
+        "y": 280
+      },
+      "data": {
+        "label": "Grounding DINO",
+        "params": {
+          "hf_token": "",
+          "text_prompt": "stone . brick fragment . brick piece . small brick frament",
+          "model": 1,
+          "tile_mode": 0,
+          "tile_overlap": 64,
+          "box_threshold": 0.05,
+          "text_threshold": 0.95,
+          "nms_threshold": 1,
+          "show_labels": true,
+          "max_boxes": 0,
+          "detect": 0
+        },
+        "paramPorts": [
+          {
+            "id": "box_threshold",
+            "color": "scalar",
+            "label": "Box Threshold"
+          }
+        ],
+        "externalizedParams": [
+          "box_threshold"
+        ]
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "disp-gdino",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": 580
+      },
+      "data": {
+        "label": "GDINO — Bboxes",
+        "params": {
+          "color_index": 5
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "sam-1",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 520,
+        "y": 280
+      },
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "hf_token": "",
+          "model": 2,
+          "prompt_mode": 3,
+          "multimask": true,
+          "mask_select": 0,
+          "overlay_opacity": 55,
+          "segment": 0
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 280
+      }
+    },
+    {
+      "id": "disp-sam",
+      "type": "output_display",
+      "position": {
+        "x": 520,
+        "y": 520
+      },
+      "data": {
+        "label": "SAM — Masques",
+        "params": {
+          "color_index": 4
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 520
+      }
+    },
+    {
+      "id": "insp-text",
+      "type": "data_inspector",
+      "position": {
+        "x": 1520,
+        "y": 240
+      },
+      "data": {
+        "label": "Résultat classification",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 340,
+      "height": 580,
+      "selected": false,
+      "dragging": false,
+      "style": {
+        "width": 340,
+        "height": 580
+      },
+      "resizing": false,
+      "positionAbsolute": {
+        "x": 1520,
+        "y": 240
+      }
+    },
+    {
+      "id": "insp-count",
+      "type": "data_inspector",
+      "position": {
+        "x": 760,
+        "y": 380
+      },
+      "data": {
+        "label": "Nb pierres détectées",
+        "params": {},
+        "minified": true,
+        "savedHeight": 120
+      },
+      "width": 320,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 760,
+        "y": 380
+      },
+      "dragging": false,
+      "style": {
+        "height": 24,
+        "width": 320
+      },
+      "resizing": false
+    },
+    {
+      "id": "node-1780604639451-0qdf3xo2t",
+      "type": "scalar_input",
+      "position": {
+        "x": -220,
+        "y": 500
+      },
+      "style": {},
+      "data": {
+        "label": "Box Threshold",
+        "params": {
+          "format": 1,
+          "value": 0.1,
+          "min": 0.05,
+          "max": 0.95,
+          "step": 0.05
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "Integer",
+                "Float"
+              ],
+              "default": 1
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "min",
+              "label": "Min",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "max",
+              "label": "Max",
+              "type": "float",
+              "default": 100
+            },
+            {
+              "id": "step",
+              "label": "Step",
+              "type": "float",
+              "default": 1
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -220,
+        "y": 500
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780605163073-kkywa255f",
+      "type": "llm_inference",
+      "position": {
+        "x": 840,
+        "y": 520
+      },
+      "style": {},
+      "data": {
+        "label": "LLM Inference",
+        "params": {
+          "provider": 1,
+          "api_key": "1396d50b19444b32b1a5e8ec37aef3aa.amS74n7vqNtHnqkV0duenz35",
+          "system_prompt": "You are a precise computer vision assistant. Your task is to analyze the provided image where objects (stones and brick fragments) have been annotated with bounding boxes and IDs.",
+          "user_prompt": "Classify each detected ID into one of the following structural/geological categories based on its visual appearance: - \"river_cobble\" (rounded, smooth grey/greenish stones) - \"brick_fragment\" (red/orange terracotta pieces) - \"irregular_fieldstone\" (rough, angular masonry stones) - \"schist_stone\" (dark, layered, or flat stones)  Output ONLY a valid Python dictionary where the keys are the categories and the values are lists of integers representing the detected IDs.   Do not include any introduction, formatting code blocks (like ```python), markdown, or conversational text. Output raw text only.  Example of expected output format: {\"river_cobble\": [1, 2, 5], \"brick_fragment\": [3, 4, 7], \"irregular_fieldstone\": [6, 8], \"schist_stone\": [9]}",
+          "run": 0,
+          "model": "gemma4:31b",
+          "max_tokens": 2112,
+          "timeout": 60
+        },
+        "schema": {
+          "type": "llm_inference",
+          "label": "LLM Inference",
+          "category": "logic",
+          "icon": "BrainCircuit",
+          "description": "Universal LLM node — connects to Ollama (local) or cloud providers (OpenAI, Anthropic, Groq, Custom OpenAI-compatible). Supports text and vision (image) inputs. JSON mode parses structured output into a dict port. API keys are persisted locally.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image",
+              "label": "Image (vision)"
+            },
+            {
+              "id": "prompt",
+              "color": "string",
+              "label": "User Prompt"
+            },
+            {
+              "id": "context",
+              "color": "dict",
+              "label": "Context (injected as JSON)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "text",
+              "color": "string",
+              "label": "Response Text"
+            },
+            {
+              "id": "json_data",
+              "color": "dict",
+              "label": "JSON Data"
+            },
+            {
+              "id": "tokens",
+              "color": "scalar",
+              "label": "Tokens Used"
+            }
+          ],
+          "params": [
+            {
+              "id": "run",
+              "label": "Run",
+              "type": "trigger",
+              "default": false
+            },
+            {
+              "id": "provider",
+              "label": "Provider",
+              "type": "enum",
+              "options": [
+                "Ollama (local)",
+                "Ollama (cloud)",
+                "OpenAI",
+                "Anthropic",
+                "Groq",
+                "Custom"
+              ],
+              "default": 0
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "string",
+              "default": "llava"
+            },
+            {
+              "id": "api_key",
+              "label": "API Key",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "base_url",
+              "label": "Custom Base URL",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "system_prompt",
+              "label": "System Prompt",
+              "type": "string",
+              "default": "You are a helpful vision assistant. Be concise."
+            },
+            {
+              "id": "user_prompt",
+              "label": "User Prompt (param)",
+              "type": "string",
+              "default": "Describe what you see."
+            },
+            {
+              "id": "json_mode",
+              "label": "JSON Mode",
+              "type": "bool",
+              "default": false
+            },
+            {
+              "id": "temperature",
+              "label": "Temperature",
+              "type": "float",
+              "default": 0.7,
+              "min": 0,
+              "max": 2,
+              "step": 0.05
+            },
+            {
+              "id": "max_tokens",
+              "label": "Max Tokens",
+              "type": "int",
+              "default": 512,
+              "min": 64,
+              "max": 8192,
+              "step": 64
+            },
+            {
+              "id": "timeout",
+              "label": "Timeout (s)",
+              "type": "int",
+              "default": 30,
+              "min": 5,
+              "max": 120
+            }
+          ],
+          "resizable": true,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 138,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 840,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780612780801-189evv04m",
+      "type": "data_inspector",
+      "position": {
+        "x": 1120,
+        "y": 280
+      },
+      "style": {
+        "width": 380,
+        "height": 540
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 380,
+      "height": 540,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1120,
+        "y": 280
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1780641372048-gxfdv6isw",
+      "type": "stone_calepinage",
+      "position": {
+        "x": 1200,
+        "y": 880
+      },
+      "style": {},
+      "data": {
+        "label": "Stone Calepinage",
+        "params": {
+          "bg_gray": 255
+        },
+        "schema": {
+          "type": "stone_calepinage",
+          "label": "Stone Calepinage",
+          "category": "visualize",
+          "icon": "LayoutGrid",
+          "description": "Wall layout (calepinage) colored by stone type. Takes SAM contours (one per stone, ordered by ID) and a classification dict {type: [ids]} from an LLM. Each stone is filled with its type color. Outputs an overlay on the photo and a clean technical diagram with legend.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image",
+              "label": "Source Image"
+            },
+            {
+              "id": "contours",
+              "color": "list",
+              "label": "Contours (SAM)"
+            },
+            {
+              "id": "classes",
+              "color": "dict",
+              "label": "Classes {type:[ids]}"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "overlay",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "diagram",
+              "color": "image",
+              "label": "Diagram"
+            },
+            {
+              "id": "legend",
+              "color": "dict",
+              "label": "Legend (type→count)"
+            }
+          ],
+          "params": [
+            {
+              "id": "opacity",
+              "label": "Overlay Opacity (%)",
+              "type": "number",
+              "default": 55,
+              "min": 0,
+              "max": 100,
+              "step": 5
+            },
+            {
+              "id": "outline",
+              "label": "Outline Thickness",
+              "type": "int",
+              "default": 2,
+              "min": 0,
+              "max": 8
+            },
+            {
+              "id": "show_ids",
+              "label": "Show Stone IDs",
+              "type": "bool",
+              "default": true
+            },
+            {
+              "id": "show_legend",
+              "label": "Show Legend",
+              "type": "bool",
+              "default": true
+            },
+            {
+              "id": "font_scale",
+              "label": "Font Scale",
+              "type": "float",
+              "default": 0.45,
+              "min": 0.2,
+              "max": 2,
+              "step": 0.05
+            },
+            {
+              "id": "bg_gray",
+              "label": "Diagram BG (gray 0-255)",
+              "type": "int",
+              "default": 245,
+              "min": 0,
+              "max": 255
+            }
+          ],
+          "resizable": true,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 1200,
+        "y": 880
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-img-gdino",
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "gdino-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-img-sam",
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "sam-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gdino-boxes-sam",
+      "source": "gdino-1",
+      "sourceHandle": "list__boxes_list",
+      "target": "sam-1",
+      "targetHandle": "list__boxes"
+    },
+    {
+      "id": "e-gdino-disp",
+      "source": "gdino-1",
+      "sourceHandle": "image__main",
+      "target": "disp-gdino",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-sam-disp",
+      "source": "sam-1",
+      "sourceHandle": "image__main",
+      "target": "disp-sam",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-sam-count",
+      "source": "sam-1",
+      "sourceHandle": "scalar__count",
+      "target": "insp-count",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e-1780604639453-c1f4nvh5f",
+      "source": "node-1780604639451-0qdf3xo2t",
+      "sourceHandle": "scalar__value",
+      "target": "gdino-1",
+      "targetHandle": "scalar__box_threshold"
+    },
+    {
+      "source": "node-1780605163073-kkywa255f",
+      "sourceHandle": "scalar__tokens",
+      "target": "insp-text",
+      "targetHandle": "any__data",
+      "id": "e-1780613005686"
+    },
+    {
+      "source": "gdino-1",
+      "sourceHandle": "image__main",
+      "target": "node-1780605163073-kkywa255f",
+      "targetHandle": "image__image",
+      "id": "e-1780613123387"
+    },
+    {
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "node-1780641372048-gxfdv6isw",
+      "targetHandle": "image__image",
+      "id": "e-1780641389768"
+    },
+    {
+      "source": "sam-1",
+      "sourceHandle": "list__contours",
+      "target": "node-1780641372048-gxfdv6isw",
+      "targetHandle": "list__contours",
+      "id": "e-1780641401035"
+    },
+    {
+      "source": "node-1780605163073-kkywa255f",
+      "sourceHandle": "string__text",
+      "target": "node-1780612780801-189evv04m",
+      "targetHandle": "any__data",
+      "id": "e-1780641469715"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 661.7265625,
+      "h": 441
+    },
+    "previewPos": {
+      "x": 72.1171875,
+      "y": -31.43359375
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1780641372048-gxfdv6isw"
+  }
+}

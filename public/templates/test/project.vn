@@ -1,0 +1,260 @@
+{
+  "nodes": [
+    {
+      "id": "node-1780600749877-271t4hnhl",
+      "type": "grounding_dino_detector",
+      "position": {
+        "x": 860,
+        "y": -80
+      },
+      "style": {},
+      "data": {
+        "label": "Grounding DINO",
+        "params": {
+          "hf_token": "",
+          "model": 1,
+          "box_threshold": 0.1,
+          "detect": 0
+        },
+        "schema": {
+          "type": "grounding_dino_detector",
+          "label": "Grounding DINO",
+          "category": "analysis",
+          "icon": "Search",
+          "description": "Zero-shot object detection using Grounding DINO (IDEA Research). Detect any object by typing its name as a text prompt (e.g. 'stone . rock .'). Connect boxes_list → SAM Segmenter (Boxes List mode) for precise segmentation. Models download automatically from HuggingFace.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image"
+            },
+            {
+              "id": "prompt",
+              "color": "string",
+              "label": "Text Prompt (port)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "boxes_list",
+              "color": "list",
+              "label": "Boxes List → SAM"
+            },
+            {
+              "id": "box_0",
+              "color": "dict",
+              "label": "Box 0"
+            },
+            {
+              "id": "box_1",
+              "color": "dict",
+              "label": "Box 1"
+            },
+            {
+              "id": "box_2",
+              "color": "dict",
+              "label": "Box 2"
+            },
+            {
+              "id": "count",
+              "color": "scalar",
+              "label": "Count"
+            }
+          ],
+          "params": [
+            {
+              "id": "hf_token",
+              "label": "Hugging Face Token (leave empty if saved)",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "text_prompt",
+              "label": "Text Prompt",
+              "type": "string",
+              "default": "stone . rock ."
+            },
+            {
+              "id": "model",
+              "label": "Model",
+              "type": "enum",
+              "options": [
+                "Tiny",
+                "Base"
+              ],
+              "default": 0
+            },
+            {
+              "id": "box_threshold",
+              "label": "Box Threshold",
+              "type": "float",
+              "default": 0.35,
+              "min": 0.05,
+              "max": 0.95,
+              "step": 0.05
+            },
+            {
+              "id": "text_threshold",
+              "label": "Text Threshold",
+              "type": "float",
+              "default": 0.25,
+              "min": 0.05,
+              "max": 0.95,
+              "step": 0.05
+            },
+            {
+              "id": "nms_threshold",
+              "label": "NMS Threshold",
+              "type": "float",
+              "default": 0.5,
+              "min": 0.1,
+              "max": 1,
+              "step": 0.05
+            },
+            {
+              "id": "show_labels",
+              "label": "Show Labels",
+              "type": "bool",
+              "default": true
+            },
+            {
+              "id": "max_boxes",
+              "label": "Max Boxes (0=all)",
+              "type": "int",
+              "default": 0,
+              "min": 0,
+              "max": 500
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 860,
+        "y": -80
+      }
+    },
+    {
+      "id": "node-1780600758323-zredny7qi",
+      "type": "input_image",
+      "position": {
+        "x": 500,
+        "y": 80
+      },
+      "style": {},
+      "data": {
+        "label": "mur.jpeg",
+        "params": {
+          "path": "samples/billes.jpg"
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 500,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780600795143-289jrti7e",
+      "type": "data_inspector",
+      "position": {
+        "x": 1160,
+        "y": 340
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 220,
+      "height": 200,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1160,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780601363943-5vwhk48kb",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 1320,
+        "y": -40
+      },
+      "style": {},
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "model": 2,
+          "prompt_mode": 3
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1320,
+        "y": -40
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-1780600795195-943stzstm",
+      "source": "node-1780600749877-271t4hnhl",
+      "target": "node-1780600795143-289jrti7e",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e-1780600795195-lfp3563ab",
+      "source": "node-1780600749877-271t4hnhl",
+      "target": "node-1780600795143-289jrti7e",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "node-1780600758323-zredny7qi",
+      "sourceHandle": "image__main",
+      "target": "node-1780600749877-271t4hnhl",
+      "targetHandle": "image__image",
+      "id": "e-1780601215721"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 1173.359375,
+      "h": 1055
+    },
+    "previewPos": {
+      "x": 262.59375,
+      "y": -46.01171875
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1780600749877-271t4hnhl"
+  }
+}
