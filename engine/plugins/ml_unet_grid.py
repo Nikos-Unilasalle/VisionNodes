@@ -317,6 +317,7 @@ class MLUNetGridNode(NodeProcessor):
         mse = float(np.nanmean((grids_orig - recon) ** 2))
 
         with self._lock:
+            self._model         = model
             self._reconstructed = recon
             self._mse           = mse
 
@@ -388,6 +389,9 @@ class MLUNetGridNode(NodeProcessor):
                 self._total_epochs   = n_epochs
                 self._current_epoch  = 0
 
+            # Référence explicite au node pour éviter toute ambiguïté dans la classe imbriquée
+            node_ref = self
+
             # ── Callback ───────────────────────────────────────────────────
             class _ProgressCallback(pl.Callback):
                 def on_train_epoch_end(cb_self, trainer, pl_module):
@@ -401,21 +405,21 @@ class MLUNetGridNode(NodeProcessor):
                     if vl_or_none is not None:
                         loss_history['val_loss'].append(vl_or_none)
 
-                    with self._lock:
-                        self._current_epoch   = epoch
-                        self._last_train_loss = None if np.isnan(tl) else tl
-                        self._last_val_loss   = vl_or_none
-                        self._loss_history    = {k: list(v) for k, v in loss_history.items()}
-                        self._norm_mean       = mean_val
-                        self._norm_std        = std_val
-                        self._progress_msg    = (
+                    with node_ref._lock:
+                        node_ref._current_epoch   = epoch
+                        node_ref._last_train_loss = None if np.isnan(tl) else tl
+                        node_ref._last_val_loss   = vl_or_none
+                        node_ref._loss_history    = {k: list(v) for k, v in loss_history.items()}
+                        node_ref._norm_mean       = mean_val
+                        node_ref._norm_std        = std_val
+                        node_ref._progress_msg    = (
                             f'Epoch {epoch}/{n_epochs} — train={tl:.5f}'
                             + (f' val={vl:.5f}' if vl_or_none is not None else '')
                         )
 
                     # Mise à jour inférence toutes les 5 epochs ou dernière epoch
                     if epoch % 5 == 0 or epoch == n_epochs:
-                        self._update_cache(
+                        node_ref._update_cache(
                             unet, grids_orig, grids_norm, nan_mask, mean_val, std_val, H, W,
                         )
 
