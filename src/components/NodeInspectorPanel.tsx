@@ -567,22 +567,56 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         return (
           <>
             {node.type === 'canvas_note' ? (
-              <div className="space-y-2 group mb-6">
-                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
-                <div className="rounded-xl overflow-hidden border border-white/10 transition-all focus-within:border-accent/40" style={{ background: bgColor }}>
-                  <MarkdownToolbar 
-                    textareaRef={noteTextareaRef} 
-                    value={p.text || ''} 
-                    onChange={val => up({ text: val })} 
-                  />
-                  <textarea
-                    ref={noteTextareaRef}
-                    value={p.text || ''}
-                    onChange={e => up({ text: e.target.value })}
-                    className="w-full px-4 py-3 text-[13px] outline-none resize-y"
-                    style={{ background: 'transparent', color: textColor, fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
-                    placeholder="Enter note text (Markdown supported)..."
-                  />
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="space-y-2 group">
+                  <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
+                  <div className="rounded-xl overflow-hidden border border-white/10 transition-all focus-within:border-accent/40" style={{ background: bgColor }}>
+                    <MarkdownToolbar
+                      textareaRef={noteTextareaRef}
+                      value={p.text || ''}
+                      onChange={val => up({ text: val })}
+                    />
+                    <textarea
+                      ref={noteTextareaRef}
+                      value={p.text || ''}
+                      onChange={e => up({ text: e.target.value })}
+                      className="w-full px-4 py-3 text-[13px] outline-none resize-y"
+                      style={{ background: 'transparent', color: textColor, fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
+                      placeholder="Enter note text (Markdown supported)..."
+                    />
+                  </div>
+                </div>
+                {/* Input port settings */}
+                <div className="space-y-3 border border-white/5 rounded-xl px-3 py-3 bg-white/[0.02]">
+                  <label className="text-[9px] text-gray-500 uppercase tracking-widest font-black">Text Input Port</label>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400">Mode</span>
+                    <select
+                      value={p.mode ?? 0}
+                      onChange={e => up({ mode: Number(e.target.value) })}
+                      className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white outline-none cursor-pointer"
+                    >
+                      <option value={0}>Append</option>
+                      <option value={1}>Replace</option>
+                    </select>
+                  </div>
+                  {(p.mode ?? 0) === 0 && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-gray-400 shrink-0">Separator</span>
+                      <input
+                        value={p.separator ?? '\n\n'}
+                        onChange={e => up({ separator: e.target.value })}
+                        className="flex-1 bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white outline-none font-mono min-w-0"
+                        placeholder="\n\n"
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => up({ text: '', mode: p.mode ?? 0 })}
+                    className="w-full text-[9px] font-black uppercase tracking-widest text-red-400/70 hover:text-red-400 border border-red-400/10 hover:border-red-400/30 rounded-lg py-1.5 transition-all"
+                  >
+                    Clear
+                  </button>
                 </div>
               </div>
             ) : (
