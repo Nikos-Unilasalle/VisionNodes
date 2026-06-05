@@ -63,8 +63,14 @@ _TILE_GRIDS   = [1, 2, 3, 4, 5]
          'default': 0.15, 'min': 0.05, 'max': 0.95, 'step': 0.05},
         {'id': 'nms_threshold',  'label': 'NMS Threshold',  'type': 'float',
          'default': 0.5, 'min': 0.1, 'max': 1.0, 'step': 0.05},
+        {'id': 'min_area',       'label': 'Min Area (% of image)', 'type': 'float',
+         'default': 0.0, 'min': 0.0, 'max': 100.0, 'step': 0.1},
+        {'id': 'max_area',       'label': 'Max Area (% of image)', 'type': 'float',
+         'default': 50.0, 'min': 1.0, 'max': 100.0, 'step': 1.0},
         {'id': 'label_mode',     'label': 'Label Mode',     'type': 'enum',
          'options': ['ID', 'ID + Score', 'Label + Score', 'None'], 'default': 0},
+        {'id': 'label_pos',      'label': 'Label Position', 'type': 'enum',
+         'options': ['Top-Left', 'Center'], 'default': 0},
         {'id': 'max_boxes',      'label': 'Max Boxes (0=all)', 'type': 'int',
          'default': 0, 'min': 0, 'max': 1000},
     ],
@@ -222,6 +228,9 @@ class GroundingDINODetectorNode(NodeProcessor):
         text_thr    = float(params.get('text_threshold', 0.15))
         nms_thr     = float(params.get('nms_threshold',  0.5))
         label_mode  = int(params.get('label_mode', 0))
+        label_pos   = int(params.get('label_pos', 0))   # 0=top-left, 1=center
+        min_area    = float(params.get('min_area', 0.0)) / 100.0
+        max_area    = float(params.get('max_area', 50.0)) / 100.0
         max_boxes   = int(params.get('max_boxes', 0))
         tile_idx    = int(params.get('tile_mode', 0))
         grid        = _TILE_GRIDS[min(tile_idx, len(_TILE_GRIDS) - 1)]
@@ -299,6 +308,17 @@ class GroundingDINODetectorNode(NodeProcessor):
             scores      = scores[keep]
             labels      = [labels[i] for i in keep]
 
+        # Area filter: drop boxes outside [min_area, max_area] fraction of image.
+        # Removes the common GDINO failure where one box engulfs the whole image.
+        if len(boxes_pixel) > 0:
+            img_area  = float(w * h)
+            box_areas = ((boxes_pixel[:, 2] - boxes_pixel[:, 0]) *
+                         (boxes_pixel[:, 3] - boxes_pixel[:, 1])) / img_area
+            keep_area = np.where((box_areas >= min_area) & (box_areas <= max_area))[0]
+            boxes_pixel = boxes_pixel[keep_area]
+            scores      = scores[keep_area]
+            labels      = [labels[i] for i in keep_area]
+
         if max_boxes > 0 and len(boxes_pixel) > max_boxes:
             boxes_pixel = boxes_pixel[:max_boxes]
             scores      = scores[:max_boxes]
@@ -346,8 +366,16 @@ class GroundingDINODetectorNode(NodeProcessor):
                 txt = f'{label} {score:.2f}'
             if txt:
                 (tw, th), _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
-                cv2.rectangle(overlay, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
-                cv2.putText(overlay, txt, (x1 + 2, y1 - 4),
+                if label_pos == 1:
+                    # Center: place label box at the bbox centroid
+                    cx = (x1 + x2) // 2
+                    cy = (y1 + y2) // 2
+                    bx, by = cx - tw // 2, cy + th // 2
+                else:
+                    # Top-Left: label box hugging the top edge
+                    bx, by = x1 + 2, y1 - 4
+                cv2.rectangle(overlay, (bx - 2, by - th - 4), (bx + tw + 2, by + 2), color, -1)
+                cv2.putText(overlay, txt, (bx, by),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 1, cv2.LINE_AA)
 
         n = len(boxes_list)
