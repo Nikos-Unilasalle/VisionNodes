@@ -103,16 +103,24 @@ export function useKeyboardShortcuts({
               }
               const isMinified = !!(n.data as any)?.minified;
               if (!isMinified) {
-                return { 
-                  ...n, 
-                  style: { ...n.style, height: 24 }, 
-                  data: { ...n.data, minified: true, savedHeight: n.style?.height } 
+                // Notes : petite icône carrée (largeur fixe). Autres : barre 24px.
+                if (n.type === 'canvas_note') {
+                  return {
+                    ...n,
+                    style: { ...n.style, width: 48, height: 40 },
+                    data: { ...n.data, minified: true, savedHeight: n.style?.height, savedWidth: n.style?.width },
+                  };
+                }
+                return {
+                  ...n,
+                  style: { ...n.style, height: 24 },
+                  data: { ...n.data, minified: true, savedHeight: n.style?.height }
                 };
               } else {
-                return { 
-                  ...n, 
-                  style: { ...n.style, height: n.data?.savedHeight }, 
-                  data: { ...n.data, minified: false } 
+                return {
+                  ...n,
+                  style: { ...n.style, width: (n.data as any)?.savedWidth ?? n.style?.width, height: n.data?.savedHeight },
+                  data: { ...n.data, minified: false }
                 };
               }
             }));
