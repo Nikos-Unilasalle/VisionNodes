@@ -245,5 +245,3 @@ class ObjDepthMapNode(NodeProcessor):
             '_thumb': thumb,
             '_error': err,
         }
-
-}
