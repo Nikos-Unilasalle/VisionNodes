@@ -2526,8 +2526,9 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
       }}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Optional text input — feed dialogue/transcript to append into the note */}
-      <StyledHandle type="target" position={Position.Left} id="text" color="any" top="14px" />
+      {/* Optional text input / output */}
+      <StyledHandle type="target" position={Position.Left}  id="text"     color="any"    top="14px" />
+      <StyledHandle type="source" position={Position.Right} id="text_out" color="string" top="14px" />
       <div
         className="flex items-center gap-1.5 px-2 py-1 select-none cursor-grab active:cursor-grabbing"
         style={{ background: 'rgba(0,0,0,0.13)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}
