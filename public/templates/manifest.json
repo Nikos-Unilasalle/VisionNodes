@@ -130,6 +130,11 @@
     "file": "stone_wall_gdino_sam_ollama.vn"
   },
   {
+    "name": "AI Dialogue — Two LLMs Debate",
+    "description": "Two AI personas (Alice & Bob) debate for a fixed number of turns via a single LLM Conversation orchestrator node. The transcript streams into a sticky Note (text input), turns collect into a Variable accumulator. Works with Ollama (local/cloud), OpenAI, Anthropic, Groq, DeepSeek.",
+    "file": "ai_dialogue.vn"
+  },
+  {
     "name": "Sphere Counting (Hough Circles)",
     "description": "Optimized workflow for counting and visualizing spherical objects (beads, grains, cells). Employs bilateral filtering to reduce specular reflections and CLAHE contrast enhancement prior to Hough circle detection.",
     "file": "sphere_counting_hough.vn"
