@@ -1,0 +1,87 @@
+{
+  "nodes": [
+    {
+      "id": "frame-conv",
+      "type": "canvas_frame",
+      "position": { "x": 60, "y": 160 },
+      "style": { "width": 320, "height": 34, "zIndex": -1 },
+      "data": { "label": "Frame", "params": { "collapsed": true, "savedHeight": 520, "color_index": 3, "title": "Dialogue IA (orchestrateur)" } },
+      "width": 320, "height": 34
+    },
+    {
+      "id": "frame-out",
+      "type": "canvas_frame",
+      "position": { "x": 440, "y": 160 },
+      "style": { "width": 420, "height": 34, "zIndex": -1 },
+      "data": { "label": "Frame", "params": { "collapsed": true, "savedHeight": 520, "color_index": 1, "title": "Transcript + accumulateur" } },
+      "width": 420, "height": 34
+    },
+
+    {
+      "id": "conv-1",
+      "type": "llm_conversation",
+      "position": { "x": 80, "y": 240 },
+      "data": {
+        "label": "AI Dialogue",
+        "params": {
+          "opening": "Debate in one short sentence each: should a stone wall be dry-stacked or mortared?",
+          "num_turns": 6,
+          "a_name": "Alice",
+          "a_provider": 0,
+          "a_model": "gemma4:e4b",
+          "a_api_key": "",
+          "a_system": "You are Alice, a pragmatic modern builder. Reply in ONE concise sentence. Stay in character, address Bob directly.",
+          "b_name": "Bob",
+          "b_provider": 0,
+          "b_model": "gemma4:e4b",
+          "b_api_key": "",
+          "b_system": "You are Bob, a traditionalist dry-stone mason. Reply in ONE concise sentence. Stay in character, address Alice directly.",
+          "temperature": 0.85,
+          "max_tokens": 120,
+          "timeout": 60,
+          "thinking": false
+        }
+      },
+      "style": { "width": 300 },
+      "width": 300
+    },
+
+    {
+      "id": "note-1",
+      "type": "canvas_note",
+      "position": { "x": 470, "y": 230 },
+      "style": { "width": 360, "height": 300 },
+      "data": {
+        "label": "Transcript",
+        "params": {
+          "text": "Press Run Conversation on the AI Dialogue node…",
+          "mode": 1,
+          "separator": "\n\n",
+          "color_index": 1
+        }
+      },
+      "width": 360, "height": 300
+    },
+
+    {
+      "id": "var-1",
+      "type": "variable_store",
+      "position": { "x": 470, "y": 560 },
+      "data": {
+        "label": "Turn Collector",
+        "params": { "separator": "\n", "max_items": 0 }
+      }
+    },
+    {
+      "id": "insp-last",
+      "type": "data_inspector",
+      "position": { "x": 760, "y": 560 },
+      "data": { "label": "Last Message", "params": {} }
+    }
+  ],
+  "edges": [
+    { "id": "e-conv-note",  "source": "conv-1", "sourceHandle": "string__transcript", "target": "note-1", "targetHandle": "any__text" },
+    { "id": "e-conv-var",   "source": "conv-1", "sourceHandle": "list__turns",         "target": "var-1",  "targetHandle": "any__replace" },
+    { "id": "e-conv-last",  "source": "conv-1", "sourceHandle": "string__last",        "target": "insp-last", "targetHandle": "any__data" }
+  ]
+}
