@@ -68,6 +68,44 @@ def _img_to_b64(img: np.ndarray) -> str:
     return base64.b64encode(buf).decode('utf-8')
 
 
+def _extract_api_error(resp) -> str:
+    """Pull the human-readable error out of a provider's JSON body.
+    Providers return the real reason (bad model, no credit, invalid param)
+    in the body — raise_for_status() throws it away, so we dig it out."""
+    try:
+        body = resp.json()
+    except Exception:
+        txt = (resp.text or '').strip()
+        return txt[:300] if txt else f'HTTP {resp.status_code}'
+    # OpenAI / Ollama / Groq: {"error": {"message": "..."}} or {"error": "..."}
+    err = body.get('error') if isinstance(body, dict) else None
+    if isinstance(err, dict):
+        msg = err.get('message') or err.get('type') or str(err)
+    elif isinstance(err, str):
+        msg = err
+    elif isinstance(body, dict):
+        # Anthropic: {"type":"error","error":{"type":"...","message":"..."}}
+        msg = body.get('message') or json.dumps(body)
+    else:
+        msg = str(body)
+    return f'HTTP {resp.status_code}: {str(msg)[:280]}'
+
+
+def _post_json(url: str, headers: dict, payload: dict, timeout: int):
+    """POST JSON, returning parsed response. On HTTP error, raise with the
+    provider's actual error message (not the opaque raise_for_status text)."""
+    import requests
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
+    except requests.exceptions.ConnectionError as e:
+        raise RuntimeError(f'Connection failed to {url} — is the server running? ({str(e)[:100]})')
+    except requests.exceptions.Timeout:
+        raise RuntimeError(f'Request timed out after {timeout}s — try raising Timeout')
+    if not resp.ok:
+        raise RuntimeError(_extract_api_error(resp))
+    return resp.json()
+
+
 @vision_node(
     type_id='llm_inference',
     label='LLM Inference',
@@ -151,7 +189,6 @@ class LLMInferenceNode(NodeProcessor):
         Note: gemma4/qwen3 etc. have a thinking mode. With thinking ON, the
         token budget is spent on hidden reasoning and 'content' comes back empty
         if num_predict is too small. Default OFF for direct answers."""
-        import requests
         url = f"{base_url.rstrip('/')}/api/chat"
 
         headers = {'Content-Type': 'application/json'}
@@ -178,9 +215,7 @@ class LLMInferenceNode(NodeProcessor):
         if json_mode:
             payload['format'] = 'json'
 
-        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        data    = resp.json()
+        data    = _post_json(url, headers, payload, timeout)
         message = data.get('message', {})
         text    = message.get('content', '')
         # Fallback: if a thinking model spent its budget reasoning and left
@@ -194,7 +229,6 @@ class LLMInferenceNode(NodeProcessor):
                                 messages: list, json_mode: bool,
                                 temperature: float, max_tokens: int, timeout: int) -> tuple:
         """Call any OpenAI-compatible API (/v1/chat/completions)."""
-        import requests
         url = f"{base_url.rstrip('/')}/v1/chat/completions"
         headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
         payload = {
@@ -205,9 +239,7 @@ class LLMInferenceNode(NodeProcessor):
         }
         if json_mode:
             payload['response_format'] = {'type': 'json_object'}
-        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _post_json(url, headers, payload, timeout)
         text   = data['choices'][0]['message']['content']
         tokens = float(data.get('usage', {}).get('total_tokens', 0))
         return text, tokens
@@ -215,7 +247,6 @@ class LLMInferenceNode(NodeProcessor):
     def _call_anthropic(self, api_key: str, model: str, system: str, messages: list,
                         max_tokens: int, temperature: float, timeout: int) -> tuple:
         """Call Anthropic Messages API (distinct format)."""
-        import requests
         url = 'https://api.anthropic.com/v1/messages'
         headers = {
             'x-api-key':         api_key,
@@ -225,14 +256,13 @@ class LLMInferenceNode(NodeProcessor):
         payload = {
             'model':      model,
             'max_tokens': max_tokens,
-            'temperature': temperature,
+            # Anthropic requires temperature in [0, 1]; the node allows up to 2.
+            'temperature': max(0.0, min(1.0, temperature)),
             'messages':   messages,
         }
         if system:
             payload['system'] = system
-        resp = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        data   = resp.json()
+        data   = _post_json(url, headers, payload, timeout)
         text   = data['content'][0]['text']
         tokens = float(data.get('usage', {}).get('input_tokens', 0) +
                        data.get('usage', {}).get('output_tokens', 0))
