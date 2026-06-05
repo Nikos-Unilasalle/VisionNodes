@@ -109,6 +109,14 @@ class LLMConversationNode(NodeProcessor):
     def _empty(self, msg: str = '') -> dict:
         return {'transcript': msg, 'turns': [], 'last': ''}
 
+    def _bump_v(self, params: dict, result: dict) -> dict:
+        """Attach a set_param _command that increments _v, permanently changing
+        params_sig so the engine node cache never returns a stale snapshot."""
+        new_v = int(params.get('_v', 0)) + 1
+        return {**result, '_command': {
+            'type': 'set_param', 'node_id': '__self__', 'params': {'_v': new_v}
+        }}
+
     def _persona(self, params: dict, prefix: str) -> dict:
         provider_idx = int(params.get(f'{prefix}_provider', 0))
         provider = P.PROVIDERS[min(provider_idx, len(P.PROVIDERS) - 1)]
@@ -126,13 +134,7 @@ class LLMConversationNode(NodeProcessor):
     def process(self, inputs: dict, params: dict) -> dict:
         if bool(params.get('clear', False)):
             self._cache_result = None
-            # Increment _v so params_sig changes permanently, busting the engine-level
-            # node cache — otherwise the engine returns the stale cached output on the
-            # next run (when clear resets to False) without calling process() at all.
-            new_v = int(params.get('_v', 0)) + 1
-            return {**self._empty(''), '_command': {
-                'type': 'set_param', 'node_id': '__self__', 'params': {'_v': new_v}
-            }}
+            return self._bump_v(params, self._empty(''))
 
         if not bool(params.get('run', False)):
             if self._cache_result is not None:
@@ -178,7 +180,7 @@ class LLMConversationNode(NodeProcessor):
                 turns = [{'speaker': A['name'], 'text': text}]
                 result = {'transcript': transcript_str, 'turns': turns, 'last': text}
                 self._cache_result = result
-                return result
+                return self._bump_v(params, result)
 
             # ── 2-persona mode: dialogue ──
             B = self._persona(params, 'b')
@@ -225,4 +227,4 @@ class LLMConversationNode(NodeProcessor):
             'last': transcript[-1]['text'] if transcript else '',
         }
         self._cache_result = result
-        return result
+        return self._bump_v(params, result)
