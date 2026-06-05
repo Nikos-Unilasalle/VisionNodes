@@ -452,11 +452,15 @@ class MLUNetGridNode(NodeProcessor):
             pip_names=['torch'],
             notif_id=_NOTIF_ID,
         ):
-            return {}
+            with self._lock:
+                lh = {k: list(v) for k, v in self._loss_history.items()}
+            return {'loss_history': lh}
 
         grids = inputs.get('grids')
         if grids is None or not isinstance(grids, np.ndarray) or grids.ndim != 3:
-            return {}
+            with self._lock:
+                lh = {k: list(v) for k, v in self._loss_history.items()}
+            return {'loss_history': lh}
 
         trigger = int(params.get('train', 0))
 
