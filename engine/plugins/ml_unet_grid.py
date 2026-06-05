@@ -425,6 +425,7 @@ class MLUNetGridNode(NodeProcessor):
                 enable_progress_bar=False,
                 enable_model_summary=False,
                 log_every_n_steps=1,
+                logger=False,
             )
             trainer.fit(module, train_loader, val_loader)
 
