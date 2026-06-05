@@ -172,7 +172,7 @@ export const BaseNode = ({
             return (
               <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
                 <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
-                {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{inp.label || inp.id}</span>}
+                {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 max-w-[42%] truncate">{inp.label || inp.id}</span>}
               </div>
             );
           })
@@ -254,7 +254,7 @@ export const BaseNode = ({
             const top = getPortTop(i, totalOutputs);
             return (
               <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
-                {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80">{out.label || out.id}</span>}
+                {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 max-w-[42%] truncate text-right">{out.label || out.id}</span>}
                 <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
               </div>
             );
