@@ -63,8 +63,8 @@ _TILE_GRIDS   = [1, 2, 3, 4, 5]
          'default': 0.15, 'min': 0.05, 'max': 0.95, 'step': 0.05},
         {'id': 'nms_threshold',  'label': 'NMS Threshold',  'type': 'float',
          'default': 0.5, 'min': 0.1, 'max': 1.0, 'step': 0.05},
-        {'id': 'show_labels',    'label': 'Show Labels',    'type': 'bool',
-         'default': True},
+        {'id': 'label_mode',     'label': 'Label Mode',     'type': 'enum',
+         'options': ['ID', 'ID + Score', 'Label + Score', 'None'], 'default': 0},
         {'id': 'max_boxes',      'label': 'Max Boxes (0=all)', 'type': 'int',
          'default': 0, 'min': 0, 'max': 1000},
     ],
@@ -221,7 +221,7 @@ class GroundingDINODetectorNode(NodeProcessor):
         box_thr     = float(params.get('box_threshold',  0.20))
         text_thr    = float(params.get('text_threshold', 0.15))
         nms_thr     = float(params.get('nms_threshold',  0.5))
-        show_labels = bool(params.get('show_labels', True))
+        label_mode  = int(params.get('label_mode', 0))
         max_boxes   = int(params.get('max_boxes', 0))
         tile_idx    = int(params.get('tile_mode', 0))
         grid        = _TILE_GRIDS[min(tile_idx, len(_TILE_GRIDS) - 1)]
@@ -306,13 +306,14 @@ class GroundingDINODetectorNode(NodeProcessor):
 
         # Build normalized YOLO-compatible output (matches SAM box port format)
         boxes_list = []
-        for box, score, label in zip(boxes_pixel, scores, labels):
+        for i, (box, score, label) in enumerate(zip(boxes_pixel, scores, labels)):
             x1, y1, x2, y2 = box
             xmin = float(x1) / w
             ymin = float(y1) / h
             bw   = float(x2 - x1) / w
             bh   = float(y2 - y1) / h
             boxes_list.append({
+                'id':     i,
                 'label':  label,
                 'score':  float(score),
                 'xmin':   xmin,
@@ -335,8 +336,15 @@ class GroundingDINODetectorNode(NodeProcessor):
                 int((i * 197 + 120) % 200 + 55),
             )
             cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 2)
-            if show_labels:
+            # label_mode: 0=ID, 1=ID+Score, 2=Label+Score, 3=None
+            txt = None
+            if label_mode == 0:
+                txt = f'#{i}'
+            elif label_mode == 1:
+                txt = f'#{i} {score:.2f}'
+            elif label_mode == 2:
                 txt = f'{label} {score:.2f}'
+            if txt:
                 (tw, th), _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, 0.45, 1)
                 cv2.rectangle(overlay, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
                 cv2.putText(overlay, txt, (x1 + 2, y1 - 4),
