@@ -52,6 +52,7 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
     ],
     params=[
         {'id': 'run',          'label': 'Run',           'type': 'trigger', 'default': False},
+        {'id': 'clear',        'label': 'Clear',         'type': 'trigger', 'default': False},
         {'id': 'num_personas', 'label': 'Mode',          'type': 'enum',
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
         {'id': 'opening',      'label': 'Message / Opening', 'type': 'string',
@@ -122,6 +123,10 @@ class LLMConversationNode(NodeProcessor):
         }
 
     def process(self, inputs: dict, params: dict) -> dict:
+        if bool(params.get('clear', False)):
+            self._cache_result = None
+            return self._empty('')
+
         if not bool(params.get('run', False)):
             if self._cache_result is not None:
                 return self._cache_result
