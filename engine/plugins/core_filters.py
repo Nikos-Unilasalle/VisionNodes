@@ -11,8 +11,8 @@ from registry import vision_node, NodeProcessor
     inputs=[{"id": "image", "color": "image"}],
     outputs=[{"id": "main", "color": "image"}],
     params=[
-        {"id": "low", "label": "Low Threshold", "type": "int", "default": 100},
-        {"id": "high", "label": "High Threshold", "type": "int", "default": 200}
+        {"id": "low",  "label": "Low Threshold",  "type": "int", "default": 100, "min": 0, "max": 500, "step": 1},
+        {"id": "high", "label": "High Threshold", "type": "int", "default": 200, "min": 0, "max": 500, "step": 1}
     ]
 )
 class CannyFilter(NodeProcessor):
