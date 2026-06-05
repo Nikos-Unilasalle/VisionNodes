@@ -188,18 +188,27 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                       if (n.type === 'canvas_frame') return n;
                       const isMinified = !!(n.data as any)?.minified;
                       if (!isMinified) {
+                        // Notes : on les réduit en petite icône carrée (on
+                        // sauvegarde largeur ET hauteur). Autres nœuds : barre 24px.
+                        if (n.type === 'canvas_note') {
+                          return {
+                            ...n,
+                            style: { ...n.style, width: 48, height: 40 },
+                            data: { ...n.data, minified: true, savedHeight: n.style?.height, savedWidth: n.style?.width },
+                          };
+                        }
                         // Minifying: Save current height and set to 24
-                        return { 
-                          ...n, 
-                          style: { ...n.style, height: 24 }, 
-                          data: { ...n.data, minified: true, savedHeight: n.style?.height } 
+                        return {
+                          ...n,
+                          style: { ...n.style, height: 24 },
+                          data: { ...n.data, minified: true, savedHeight: n.style?.height }
                         };
                       } else {
-                        // Expanding: Restore height
-                        return { 
-                          ...n, 
-                          style: { ...n.style, height: n.data?.savedHeight }, 
-                          data: { ...n.data, minified: false } 
+                        // Expanding: Restore dimensions
+                        return {
+                          ...n,
+                          style: { ...n.style, width: n.data?.savedWidth ?? n.style?.width, height: n.data?.savedHeight },
+                          data: { ...n.data, minified: false }
                         };
                       }
                     }));

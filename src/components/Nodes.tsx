@@ -2482,6 +2482,36 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
   const isMinified = !!(data as any)?.minified;
 
+  // ── Note minifiée : adorable petite icône (post-it) ──────────────────────
+  if (isMinified) {
+    const firstLine = (text || '').split('\n').find((l: string) => l.trim()) || 'Note vide';
+    return (
+      <div
+        className="relative w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing transition-all duration-200 hover:scale-105"
+        style={{
+          background: bgColor,
+          borderRadius: '6px',
+          transform: `rotate(${rotation - 2}deg)`,
+          boxShadow: selected
+            ? `3px 5px 14px rgba(0,0,0,0.34), 0 0 0 2px rgba(0,0,0,0.25)`
+            : `2px 4px 10px rgba(0,0,0,0.26)`,
+        }}
+        onDoubleClick={handleDoubleClick}
+        title={firstLine}
+      >
+        {/* coin replié (dog-ear) pour l'effet post-it */}
+        <div
+          className="absolute top-0 right-0 w-2.5 h-2.5"
+          style={{
+            background: 'rgba(0,0,0,0.16)',
+            borderRadius: '0 6px 0 4px',
+          }}
+        />
+        <LucideIcons.StickyNote size={18} strokeWidth={2.2} style={{ color: textColor, opacity: 0.85 }} />
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex-1 w-full h-full flex flex-col overflow-hidden transition-all duration-200"
@@ -2489,7 +2519,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
         background: bgColor,
         borderRadius: '5px 5px 0 0',
         transform: `rotate(${rotation}deg)`,
-        height: isMinified ? 22 : '100%',
+        height: '100%',
         boxShadow: selected
           ? `5px 8px 24px rgba(0,0,0,0.38), 2px 3px 8px rgba(0,0,0,0.22), 0 0 0 2px rgba(0,0,0,0.25)`
           : `4px 6px 18px rgba(0,0,0,0.28), 2px 3px 6px rgba(0,0,0,0.16)`,
@@ -2498,7 +2528,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
     >
       <div
         className="flex items-center gap-1.5 px-2 py-1 select-none cursor-grab active:cursor-grabbing"
-        style={{ background: 'rgba(0,0,0,0.13)', borderBottom: isMinified ? 'none' : '1px solid rgba(0,0,0,0.10)' }}
+        style={{ background: 'rgba(0,0,0,0.13)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}
       >
         <div
           className="w-2.5 h-2.5 rounded-[2px] flex-shrink-0"
