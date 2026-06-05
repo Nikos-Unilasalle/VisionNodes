@@ -428,6 +428,7 @@ class MLUNetGridNode(NodeProcessor):
                 callbacks=[_ProgressCallback()],
                 enable_progress_bar=False,
                 enable_model_summary=False,
+                enable_checkpointing=False,
                 log_every_n_steps=1,
                 logger=False,
             )
