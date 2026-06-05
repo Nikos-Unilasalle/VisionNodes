@@ -81,8 +81,11 @@ class GeoCopernicusMarineNode(NodeProcessor):
 
     @staticmethod
     def _dl_params_key(params: dict) -> str:
+        # depth_idx sélectionne la couche APRÈS téléchargement → hors clé
+        # pour éviter de réinitialiser _auto_tried à chaque frame quand
+        # depth_idx est piloté par un scalar_input externe.
         keys = ('dataset_id', 'variable', 'bbox', 'date_start', 'date_end',
-                'min_depth', 'max_depth', 'depth_idx', 'service', 'cache_dir')
+                'min_depth', 'max_depth', 'service', 'cache_dir')
         s = json.dumps({k: params.get(k) for k in keys}, sort_keys=True)
         return hashlib.md5(s.encode()).hexdigest()
 
@@ -184,8 +187,8 @@ class GeoCopernicusMarineNode(NodeProcessor):
             username = secrets.get('copernicus_marine_username', '')
             password = secrets.get('copernicus_marine_password', '')
 
-        dataset_id = params.get('dataset_id', '').strip()
-        variable = params.get('variable', '').strip()
+        dataset_id = str(params.get('dataset_id') or '').strip()
+        variable   = str(params.get('variable')   or '').strip()
         bbox_val = params.get('bbox', '').strip()
         date_start = params.get('date_start', '').strip()
         date_end = params.get('date_end', '').strip()
