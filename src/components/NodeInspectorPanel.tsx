@@ -1107,24 +1107,75 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           );
         };
 
-        // ── non-slot params (flat, existing logic) ────────────────────────
-        const nonSlotNodes = schemaParams
-          .filter(sp => !sp.slot)
-          .map((sp: ParamSpec) => {
-            if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
-              const mode = Number(p.mode ?? 0);
-              if (sp.id === 'scale'  && mode !== 0) return null;
-              if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
-              if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
+        // ── non-slot params — with section collapsible support ───────────────
+        // Group params into sections: a 'section' type param opens a new group.
+        // Params before the first section are rendered flat (legacy behaviour).
+        type ParamGroup = { section: ParamSpec | null; params: ParamSpec[] };
+        const paramGroups: ParamGroup[] = [];
+        let currentGroup: ParamGroup = { section: null, params: [] };
+        for (const sp of schemaParams.filter(sp => !sp.slot)) {
+          if (sp.type === 'section') {
+            if (currentGroup.params.length > 0 || currentGroup.section) {
+              paramGroups.push(currentGroup);
             }
-            if (node.type === 'filter_color_mask') {
-              const mode = Number(p.mode ?? 0);
-              if (mode === 0 && sp.id === 'threshold') return null;
-              if (mode !== 0 && ['h_tol', 's_tol', 'v_tol'].includes(sp.id)) return null;
-            }
-            if (!passesShowIf(sp)) return null;
-            return renderWidget(sp);
-          });
+            currentGroup = { section: sp, params: [] };
+          } else {
+            currentGroup.params.push(sp);
+          }
+        }
+        paramGroups.push(currentGroup);
+
+        const renderGroupParams = (params: ParamSpec[]) => params.map((sp: ParamSpec) => {
+          if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
+            const mode = Number(p.mode ?? 0);
+            if (sp.id === 'scale'  && mode !== 0) return null;
+            if (sp.id === 'width'  && mode !== 1 && mode !== 3) return null;
+            if (sp.id === 'height' && mode !== 2 && mode !== 3) return null;
+          }
+          if (node.type === 'filter_color_mask') {
+            const mode = Number(p.mode ?? 0);
+            if (mode === 0 && sp.id === 'threshold') return null;
+            if (mode !== 0 && ['h_tol', 's_tol', 'v_tol'].includes(sp.id)) return null;
+          }
+          if (!passesShowIf(sp)) return null;
+          return renderWidget(sp);
+        });
+
+        const nonSlotNodes = paramGroups.map((group, gi) => {
+          // No section header → flat (legacy)
+          if (!group.section) {
+            return <React.Fragment key={`flat-${gi}`}>{renderGroupParams(group.params)}</React.Fragment>;
+          }
+          const sec = group.section;
+          // Section hidden by show_if → skip the whole group
+          if (!passesShowIf(sec)) return null;
+          const secKey = `section-${sec.id}`;
+          const isCollapsed = collapsedSlots.has(secKey);
+          const visibleParams = group.params.filter(passesShowIf);
+          return (
+            <div key={secKey} className="rounded-xl overflow-hidden border border-white/[0.07]">
+              <button
+                className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left"
+                onClick={() => toggleSlot(secKey)}
+              >
+                <span className="text-gray-400 text-[12px] font-mono w-3 shrink-0 leading-none">
+                  {isCollapsed ? '›' : '∨'}
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-200 truncate flex-1">
+                  {sec.label || sec.id}
+                </span>
+                {visibleParams.length > 0 && isCollapsed && (
+                  <span className="text-[8px] text-gray-600 font-mono shrink-0">{visibleParams.length} params</span>
+                )}
+              </button>
+              {!isCollapsed && (
+                <div className="px-3 pb-3 pt-2 flex flex-col gap-4 border-t border-white/[0.05]">
+                  {renderGroupParams(group.params)}
+                </div>
+              )}
+            </div>
+          );
+        });
 
         // ── slot-grouped params (collapsible) ─────────────────────────────
         const hasSlotParams = schemaParams.some(sp => sp.slot);
