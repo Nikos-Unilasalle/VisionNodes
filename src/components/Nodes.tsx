@@ -4049,7 +4049,7 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
 // Params excluded from the on-node chip summary (internal / non-visual)
 const _HIDDEN_PARAMS = new Set([
   'cache_dir', 'node_note', 'output_dir', 'file_path', 'model_path',
-  'expression', 'code', 'label', 'title', 'text',
+  'expression', 'code', 'label', 'title', 'text', '_v',
 ]);
 
 // Nodes with many ports + params: hide the in-body param chips for a clean look.
