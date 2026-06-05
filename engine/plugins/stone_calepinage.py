@@ -10,6 +10,34 @@ Each stone is filled with its type color. Produces two outputs:
 from registry import vision_node, NodeProcessor
 import cv2
 import numpy as np
+import json
+import re
+
+
+def _coerce_to_dict(classes):
+    """Accept a dict, or a JSON string (possibly wrapped in markdown fences /
+    surrounded by prose) and return a dict. Returns {} on failure."""
+    if isinstance(classes, dict):
+        return classes
+    if not isinstance(classes, str):
+        return {}
+    s = classes.strip()
+    # Strip ```json … ``` fences
+    if s.startswith('```'):
+        s = s.split('\n', 1)[-1].rsplit('```', 1)[0].strip()
+    # Direct parse
+    try:
+        return json.loads(s)
+    except Exception:
+        pass
+    # Last resort: grab the first {...} block in the text
+    m = re.search(r'\{.*\}', s, re.DOTALL)
+    if m:
+        try:
+            return json.loads(m.group(0))
+        except Exception:
+            pass
+    return {}
 
 # Distinct, print-friendly palette (BGR) cycled per stone type
 _PALETTE = [
@@ -41,7 +69,7 @@ _UNKNOWN_COLOR = (150, 150, 150)  # grey for unclassified stones
     inputs=[
         {'id': 'image',    'color': 'image', 'label': 'Source Image'},
         {'id': 'contours', 'color': 'list',  'label': 'Contours (SAM)'},
-        {'id': 'classes',  'color': 'dict',  'label': 'Classes {type:[ids]}'},
+        {'id': 'classes',  'color': 'any',   'label': 'Classes {type:[ids]} (dict or JSON string)'},
     ],
     outputs=[
         {'id': 'overlay',  'color': 'image', 'label': 'Overlay'},
@@ -126,7 +154,7 @@ class StoneCalepinageNode(NodeProcessor):
     def process(self, inputs: dict, params: dict) -> dict:
         image    = inputs.get('image')
         contours = inputs.get('contours')
-        classes  = inputs.get('classes')
+        classes  = _coerce_to_dict(inputs.get('classes'))
 
         if image is None:
             return {'overlay': None, 'diagram': None, 'legend': None}
