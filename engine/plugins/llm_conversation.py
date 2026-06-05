@@ -1,17 +1,15 @@
 """
-LLM Conversation — two AI personas dialogue for a fixed number of turns.
+LLM — one or two AI personas. Single persona = simple Q&A assistant.
+Two personas = dialogue/debate for N turns.
 
-A single orchestrator node (the engine is a DAG; a bounded loop lives inside
-process(), not as a graph cycle). Persona A and Persona B alternate, each
-seeing the exchange from its own point of view (its lines = assistant, the
-other's = user). Outputs the full transcript, a per-turn list, and the last
-message. Reuses the shared provider plumbing (_llm_shared/providers.py).
+A single orchestrator (the engine is a DAG; the bounded loop lives inside
+process(), not as a graph cycle). Uses _llm_shared/providers.py for all
+provider logic. API keys are persisted in ~/.vnstudio/secrets.json.
 """
 from registry import vision_node, NodeProcessor, send_notification
 import os
 import importlib.util
 
-# Load shared provider module (not a plugin → import by path)
 _PROV_PATH = os.path.join(os.path.dirname(__file__), '_llm_shared', 'providers.py')
 _spec = importlib.util.spec_from_file_location('_llm_providers', _PROV_PATH)
 P = importlib.util.module_from_spec(_spec)
@@ -21,8 +19,6 @@ _NOTIF_ID = 'llm_conversation'
 
 
 def _build_history(transcript: list, speaker: str, system_prompt: str, opening: str) -> list:
-    """Build a provider-ready history from THIS speaker's POV.
-    Its own lines → 'assistant'; the other speaker's lines + opening → 'user'."""
     history = []
     if system_prompt:
         history.append({'role': 'system', 'content': system_prompt})
@@ -36,58 +32,69 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
 
 @vision_node(
     type_id='llm_conversation',
-    label='LLM Conversation',
+    label='LLM',
     category='logic',
     icon='MessagesSquare',
     description=(
-        "Two AI personas dialogue for a fixed number of turns. Each persona "
-        "has its own provider, model and system prompt. The loop runs inside "
-        "the node (no graph cycle). Outputs the full transcript, a per-turn "
-        "list, and the last message. Supports Ollama (local/cloud), OpenAI, "
-        "Anthropic, Groq, DeepSeek, Custom."
+        "One or two AI personas. Single persona = Q&A assistant (opening → response). "
+        "Two personas = debate/dialogue for N turns. Each persona has its own "
+        "provider, model and system prompt. API keys are saved locally. "
+        "Supports Ollama (local/cloud), OpenAI, Anthropic, Groq, DeepSeek, Custom."
     ),
     inputs=[
-        {'id': 'image', 'color': 'image',  'label': 'Image (vision, turn 1)'},
-        {'id': 'seed',  'color': 'string', 'label': 'Opening Message (port)'},
+        {'id': 'image', 'color': 'image',  'label': 'Image (vision)'},
+        {'id': 'seed',  'color': 'string', 'label': 'Message (port)'},
     ],
     outputs=[
         {'id': 'transcript', 'color': 'string', 'label': 'Transcript'},
-        {'id': 'turns',      'color': 'list',   'label': 'Turns [{speaker,text}]'},
-        {'id': 'last',       'color': 'string', 'label': 'Last Message'},
+        {'id': 'turns',      'color': 'list',   'label': 'Turns'},
+        {'id': 'last',       'color': 'string', 'label': 'Last'},
     ],
     params=[
-        {'id': 'run',       'label': 'Run Conversation', 'type': 'trigger', 'default': False},
-        {'id': 'opening',   'label': 'Opening Message', 'type': 'string',
-         'default': 'Let us debate: is a stone wall better dry-stacked or mortared?'},
-        {'id': 'num_turns', 'label': 'Number of Turns', 'type': 'int',
-         'default': 6, 'min': 2, 'max': 40},
-
-        # ── Persona A ──
-        {'id': 'a_name',     'label': 'A · Name', 'type': 'string', 'default': 'Alice'},
-        {'id': 'a_provider', 'label': 'A · Provider', 'type': 'enum',
-         'options': P.PROVIDERS, 'default': 0},
-        {'id': 'a_model',    'label': 'A · Model (empty=default)', 'type': 'string', 'default': ''},
-        {'id': 'a_api_key',  'label': 'A · API Key', 'type': 'string', 'default': ''},
-        {'id': 'a_system',   'label': 'A · System Prompt', 'type': 'string',
-         'default': 'You are Alice, a pragmatic builder. Be concise (2-3 sentences). Stay in character.'},
-
-        # ── Persona B ──
-        {'id': 'b_name',     'label': 'B · Name', 'type': 'string', 'default': 'Bob'},
-        {'id': 'b_provider', 'label': 'B · Provider', 'type': 'enum',
-         'options': P.PROVIDERS, 'default': 0},
-        {'id': 'b_model',    'label': 'B · Model (empty=default)', 'type': 'string', 'default': ''},
-        {'id': 'b_api_key',  'label': 'B · API Key', 'type': 'string', 'default': ''},
-        {'id': 'b_system',   'label': 'B · System Prompt', 'type': 'string',
-         'default': 'You are Bob, a traditionalist mason. Be concise (2-3 sentences). Stay in character.'},
+        {'id': 'run',          'label': 'Run',           'type': 'trigger', 'default': False},
+        {'id': 'num_personas', 'label': 'Mode',          'type': 'enum',
+         'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
+        {'id': 'opening',      'label': 'Message / Opening', 'type': 'string',
+         'default': 'What do you think about dry-stacked stone walls?'},
+        {'id': 'num_turns',    'label': 'Turns (dialogue only)', 'type': 'int',
+         'default': 6, 'min': 2, 'max': 40,
+         'show_if': {'param': 'num_personas', 'value': 1}},
 
         # ── Generation ──
+        {'id': 'section_gen', 'label': 'Generation', 'type': 'section'},
         {'id': 'temperature', 'label': 'Temperature', 'type': 'float',
          'default': 0.8, 'min': 0.0, 'max': 2.0, 'step': 0.05},
         {'id': 'max_tokens',  'label': 'Max Tokens / turn', 'type': 'int',
          'default': 200, 'min': 32, 'max': 2048, 'step': 32},
-        {'id': 'timeout',     'label': 'Timeout (s) / turn', 'type': 'int',
+        {'id': 'timeout',     'label': 'Timeout (s)', 'type': 'int',
          'default': 60, 'min': 5, 'max': 180},
-        {'id': 'thinking',    'label': 'Thinking (Ollama)', 'type': 'bool', 'default': False},
+        {'id': 'thinking',    'label': 'Thinking mode (Ollama)', 'type': 'bool', 'default': False},
+
+        # ── Persona A ──
+        {'id': 'section_a',  'label': 'Persona A', 'type': 'section'},
+        {'id': 'a_name',     'label': 'Name',     'type': 'string', 'default': 'Assistant'},
+        {'id': 'a_provider', 'label': 'Provider', 'type': 'enum',
+         'options': P.PROVIDERS, 'default': 0},
+        {'id': 'a_model',    'label': 'Model (empty = default)', 'type': 'string', 'default': ''},
+        {'id': 'a_api_key',  'label': 'API Key',  'type': 'string', 'default': ''},
+        {'id': 'a_system',   'label': 'System Prompt', 'type': 'string',
+         'default': 'You are a helpful assistant. Be concise.'},
+
+        # ── Persona B (2-persona mode only) ──
+        {'id': 'section_b',  'label': 'Persona B',
+         'type': 'section', 'show_if': {'param': 'num_personas', 'value': 1}},
+        {'id': 'b_name',     'label': 'Name',     'type': 'string', 'default': 'Bob',
+         'show_if': {'param': 'num_personas', 'value': 1}},
+        {'id': 'b_provider', 'label': 'Provider', 'type': 'enum',
+         'options': P.PROVIDERS, 'default': 0,
+         'show_if': {'param': 'num_personas', 'value': 1}},
+        {'id': 'b_model',    'label': 'Model (empty = default)', 'type': 'string', 'default': '',
+         'show_if': {'param': 'num_personas', 'value': 1}},
+        {'id': 'b_api_key',  'label': 'API Key',  'type': 'string', 'default': '',
+         'show_if': {'param': 'num_personas', 'value': 1}},
+        {'id': 'b_system',   'label': 'System Prompt', 'type': 'string',
+         'default': 'You are Bob, a traditionalist mason. Be concise (2-3 sentences). Stay in character.',
+         'show_if': {'param': 'num_personas', 'value': 1}},
     ],
     colorable=True,
     resizable=True,
@@ -115,67 +122,91 @@ class LLMConversationNode(NodeProcessor):
         }
 
     def process(self, inputs: dict, params: dict) -> dict:
-        # Trigger gate
         if not bool(params.get('run', False)):
             if self._cache_result is not None:
                 return self._cache_result
-            return self._empty('Press Run Conversation to start')
+            return self._empty('Press Run to start')
 
-        opening   = (inputs.get('seed') or params.get('opening', '')).strip()
-        num_turns = int(params.get('num_turns', 6))
+        opening     = (inputs.get('seed') or params.get('opening', '')).strip()
+        num_personas = int(params.get('num_personas', 0))
+        num_turns   = int(params.get('num_turns', 6))
         temperature = float(params.get('temperature', 0.8))
         max_tokens  = int(params.get('max_tokens', 200))
         timeout     = int(params.get('timeout', 60))
         thinking    = bool(params.get('thinking', False))
 
         A = self._persona(params, 'a')
-        B = self._persona(params, 'b')
 
-        # Validate keys
-        for who in (A, B):
-            if who['provider'] in P.REQUIRES_KEY and not who['api_key']:
-                return self._empty(f"{who['name']} ({who['provider']}): no API key")
+        if A['provider'] in P.REQUIRES_KEY and not A['api_key']:
+            return self._empty(f"Persona A ({A['provider']}): no API key")
 
         if not self.ensure_packages(['requests'], notif_id=_NOTIF_ID):
             return self._empty('requests package unavailable')
 
-        # Image attaches to the very first model call only
         img = inputs.get('image')
         img_b64 = P.img_to_b64(img) if img is not None else None
 
-        transcript: list = []   # [{'speaker': name, 'text': ...}]
-        speakers = [A, B]
-
         try:
-            for t in range(num_turns):
-                who = speakers[t % 2]            # A starts
-                other = speakers[(t + 1) % 2]
-                self.report_progress((t + 0.5) / num_turns,
-                                     f'Turn {t + 1}/{num_turns}: {who["name"]}…')
+            # ── 1-persona mode: simple Q&A ──
+            if num_personas == 0:
+                self.report_progress(0.3, f'LLM: asking {A["name"]}…')
+                history = [
+                    *([{'role': 'system', 'content': A['system']}] if A['system'] else []),
+                    {'role': 'user', 'content': opening},
+                ]
+                text, _ = P.call_llm(
+                    A['provider'], A['model'], A['api_key'], A['base_url'],
+                    history, img_b64,
+                    json_mode=False, temperature=temperature,
+                    max_tokens=max_tokens, timeout=timeout, thinking=thinking,
+                )
+                text = (text or '').strip()
+                self.report_progress(1.0, 'LLM: done')
+                transcript_str = f"{A['name']}: {text}"
+                turns = [{'speaker': A['name'], 'text': text}]
+                result = {'transcript': transcript_str, 'turns': turns, 'last': text}
+                self._cache_result = result
+                return result
 
+            # ── 2-persona mode: dialogue ──
+            B = self._persona(params, 'b')
+            if B['provider'] in P.REQUIRES_KEY and not B['api_key']:
+                return self._empty(f"Persona B ({B['provider']}): no API key")
+
+            transcript: list = []
+            speakers = [A, B]
+
+            for t in range(num_turns):
+                who = speakers[t % 2]
+                self.report_progress(
+                    (t + 0.5) / num_turns,
+                    f'Turn {t + 1}/{num_turns}: {who["name"]}…'
+                )
                 history = _build_history(transcript, who['name'], who['system'], opening)
                 use_img = img_b64 if t == 0 else None
-
                 text, _ = P.call_llm(
                     who['provider'], who['model'], who['api_key'], who['base_url'],
                     history, use_img,
                     json_mode=False, temperature=temperature,
                     max_tokens=max_tokens, timeout=timeout, thinking=thinking,
                 )
-                text = (text or '').strip()
-                transcript.append({'speaker': who['name'], 'text': text})
+                transcript.append({'speaker': who['name'], 'text': (text or '').strip()})
 
         except Exception as e:
             err = str(e)
-            print(f'[LLMConversation] Error: {err}')
-            send_notification(f'Conversation error: {err[:120]}', level='error', notif_id=_NOTIF_ID)
-            # Return whatever was gathered so far + the error
-            partial = self._format(transcript, opening, A, B)
-            return {'transcript': partial + f'\n\n[ERROR] {err[:200]}',
-                    'turns': transcript, 'last': transcript[-1]['text'] if transcript else ''}
+            print(f'[LLM] Error: {err}')
+            send_notification(f'LLM error: {err[:120]}', level='error', notif_id=_NOTIF_ID)
+            turns = locals().get('transcript', [])
+            return {
+                'transcript': '\n\n'.join(f"{t['speaker']}: {t['text']}" for t in turns) + f'\n\n[ERROR] {err[:200]}',
+                'turns': turns,
+                'last': turns[-1]['text'] if turns else '',
+            }
 
-        self.report_progress(1.0, f'Conversation done ({num_turns} turns)')
-        full = self._format(transcript, opening, A, B)
+        self.report_progress(1.0, f'Done ({num_turns} turns)')
+        lines = [f"[Opening] {opening}\n"] if opening else []
+        lines += [f"{t['speaker']}: {t['text']}" for t in transcript]
+        full = '\n\n'.join(lines)
         result = {
             'transcript': full,
             'turns': transcript,
@@ -183,11 +214,3 @@ class LLMConversationNode(NodeProcessor):
         }
         self._cache_result = result
         return result
-
-    def _format(self, transcript: list, opening: str, A: dict, B: dict) -> str:
-        lines = []
-        if opening:
-            lines.append(f'[Opening] {opening}\n')
-        for turn in transcript:
-            lines.append(f"{turn['speaker']}: {turn['text']}")
-        return '\n\n'.join(lines)
