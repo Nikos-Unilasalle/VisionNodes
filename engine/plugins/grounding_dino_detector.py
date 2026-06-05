@@ -212,6 +212,14 @@ class GroundingDINODetectorNode(NodeProcessor):
         if self.model is None:
             return self._empty(image, f'Loading {model_name}…')
 
+        # Normalize image to uint8 BGR (Blend Modes and other nodes can output float32)
+        if image.dtype != np.uint8:
+            if image.dtype in (np.float32, np.float64):
+                scale = 255.0 if image.max() <= 1.0 else 1.0
+                image = np.clip(image * scale, 0, 255).astype(np.uint8)
+            else:
+                image = np.clip(image, 0, 255).astype(np.uint8)
+
         # Trigger gate — only run on button press
         triggered = bool(params.get('detect', False))
         if not triggered:
