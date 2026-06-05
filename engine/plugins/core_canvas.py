@@ -33,6 +33,7 @@ class NoteNode(NodeProcessor):
         "hand-edited note."
     ),
     inputs=[{"id": "text", "color": "any", "label": "Text In"}],
+    outputs=[{"id": "text_out", "color": "string", "label": "Text Out"}],
     params=[
         {"id": "text", "label": "Text", "type": "string", "multiline": True,
          "default": "Write something..."},
@@ -50,15 +51,20 @@ class CanvasNoteNode(NodeProcessor):
 
     def process(self, inputs, params):
         # Clear trigger resets the accumulator and blanks the note.
+        current_text = params.get('text', '') or ''
+
         if bool(params.get('clear', False)):
             self._acc = ''
             self._last_input = None
-            return {"_command": {"type": "set_param", "node_id": "__self__",
-                                 "params": {"text": ""}}}
+            return {
+                "text_out": '',
+                "_command": {"type": "set_param", "node_id": "__self__", "params": {"text": ""}},
+            }
 
         incoming = inputs.get('text')
         if incoming is None:
-            return {}   # no input connected → leave the hand-edited note untouched
+            # No input connected — expose the hand-edited text as output
+            return {"text_out": current_text}
 
         if not isinstance(incoming, str):
             try:
@@ -69,7 +75,7 @@ class CanvasNoteNode(NodeProcessor):
 
         # Dedupe: only act when the input actually changes (graph re-runs each tick)
         if incoming == self._last_input:
-            return {}
+            return {"text_out": current_text}
         self._last_input = incoming
 
         mode = int(params.get('mode', 0))   # 0=append, 1=replace
@@ -78,14 +84,15 @@ class CanvasNoteNode(NodeProcessor):
         else:
             sep = params.get('separator', '\n\n')
             if self._acc is None:
-                # Seed from the current note text (skip the placeholder default)
                 seed = params.get('text', '') or ''
                 self._acc = '' if seed.strip() in ('', 'Write something...') else seed
             self._acc = (self._acc + sep + incoming) if self._acc else incoming
             new_text = self._acc
 
-        return {"_command": {"type": "set_param", "node_id": "__self__",
-                             "params": {"text": new_text}}}
+        return {
+            "text_out": new_text,
+            "_command": {"type": "set_param", "node_id": "__self__", "params": {"text": new_text}},
+        }
 
 @vision_node(
     type_id="canvas_frame",
