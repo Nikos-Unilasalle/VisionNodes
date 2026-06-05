@@ -128,7 +128,8 @@ class MLTrainingMonitorNode(NodeProcessor):
             ax.set_xlabel('Epoch')
             ax.set_ylabel('Loss')
             ax.grid(True, alpha=0.4)
-            ax.legend(fontsize=8, loc='upper right')
+            if ax.get_lines():
+                ax.legend(fontsize=8, loc='upper right')
 
             # Titre
             if len(val_loss) > 0:
