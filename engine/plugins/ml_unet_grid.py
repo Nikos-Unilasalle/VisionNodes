@@ -96,8 +96,17 @@ def _fig_to_bgr(fig) -> np.ndarray:
 
 # ─── Architecture U-Net ───────────────────────────────────────────────────────
 
+_UNET_CLASSES = None  # cache module-level (classes picklables une fois construites)
+
+
 def _build_unet_classes():
-    """Importe torch et retourne les classes U-Net (évite import toplevel)."""
+    """Importe torch et retourne (ConvBlock, UNetModel), mises en cache au
+    niveau module pour que les instances soient picklables de façon stable
+    (même qualname à la sauvegarde et au chargement)."""
+    global _UNET_CLASSES
+    if _UNET_CLASSES is not None:
+        return _UNET_CLASSES
+
     import torch
     import torch.nn as nn
 
@@ -180,47 +189,19 @@ def _build_unet_classes():
 
             return self.final_conv(cur)
 
-    return _UNetConvBlock, _UNetModel
+    _UNET_CLASSES = (_UNetConvBlock, _UNetModel)
+    return _UNET_CLASSES
 
 
-def _build_lightning_module(_UNetModel):
-    """Crée la classe LightningModule après import pl."""
-    try:
-        import pytorch_lightning as pl
-    except ImportError:
-        import lightning.pytorch as pl
-    import torch
-    import torch.nn as nn
-
-    class _UNetLightningModule(pl.LightningModule):
-        def __init__(self, model, lr=1e-3):
-            super().__init__()
-            self.model = model
-            self.lr    = lr
-
-        def forward(self, x):
-            return self.model(x)
-
-        def training_step(self, batch, batch_idx):
-            x, y = batch
-            loss = torch.nn.functional.mse_loss(self(x), y)
-            self.log('train_loss', loss, on_epoch=True, on_step=False)
-            return loss
-
-        def validation_step(self, batch, batch_idx):
-            x, y = batch
-            loss = torch.nn.functional.mse_loss(self(x), y)
-            self.log('val_loss', loss, on_epoch=True, on_step=False)
-
-        def configure_optimizers(self):
-            opt = torch.optim.Adam(self.parameters(), lr=self.lr)
-            sched = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, patience=5, factor=0.5)
-            return {
-                'optimizer': opt,
-                'lr_scheduler': {'scheduler': sched, 'monitor': 'val_loss'},
-            }
-
-    return _UNetLightningModule
+def rebuild_unet(config: dict):
+    """Reconstruit un U-Net vierge à partir d'un config dict
+    ({n_latent, n_levels}). Utilisé par ml_model_loader pour recharger un
+    modèle depuis un state_dict."""
+    _, _UNetModel = _build_unet_classes()
+    return _UNetModel(
+        base_channels=int(config.get('n_latent', 16)),
+        n_levels=int(config.get('n_levels', 3)),
+    )
 
 
 # ─── Node ─────────────────────────────────────────────────────────────────────
@@ -341,6 +322,10 @@ class MLUNetGridNode(NodeProcessor):
             T, H, W = grids_orig.shape
 
             # ── Normalisation ──────────────────────────────────────────────
+            # IMPORTANT : on normalise PUIS on remplit les NaN (terre) avec 0,
+            # ce qui place la terre exactement à la moyenne (0 en espace
+            # normalisé). Remplir avant normalisation enverrait la terre à
+            # (0-mean)/std (ex : -53) et ferait exploser la loss.
             nan_mask   = np.isnan(grids_orig)
             valid_vals = grids_orig[~nan_mask]
             mean_val   = float(np.mean(valid_vals)) if len(valid_vals) > 0 else 0.0
@@ -348,28 +333,41 @@ class MLUNetGridNode(NodeProcessor):
             if std_val == 0.0:
                 std_val = 1.0
 
-            grids_filled = np.where(nan_mask, 0.0, grids_orig)
-            grids_norm   = ((grids_filled - mean_val) / std_val).astype(np.float32)
+            grids_norm = (grids_orig - mean_val) / std_val
+            grids_norm = np.where(nan_mask, 0.0, grids_norm).astype(np.float32)
 
-            # ── Padding ────────────────────────────────────────────────────
+            # Masque de validité (1 = océan, 0 = terre) — pour une loss
+            # calculée uniquement sur l'océan, comme l'ACP.
+            valid_f = (~nan_mask).astype(np.float32)
+
+            # ── Padding (au multiple de 2^n_levels) ────────────────────────
             factor = 2 ** n_levels
             H_pad  = ((H + factor - 1) // factor) * factor
             W_pad  = ((W + factor - 1) // factor) * factor
             if H_pad != H or W_pad != W:
-                grids_norm = np.pad(grids_norm, ((0, 0), (0, H_pad - H), (0, W_pad - W)), mode='reflect')
+                pad = ((0, 0), (0, H_pad - H), (0, W_pad - W))
+                grids_norm = np.pad(grids_norm, pad, mode='reflect')
+                valid_f    = np.pad(valid_f,    pad, mode='constant', constant_values=0.0)
 
-            # ── Dataset ────────────────────────────────────────────────────
+            # ── Dataset : (image, masque) ──────────────────────────────────
             X = torch.from_numpy(grids_norm[:, np.newaxis])   # (T, 1, H_pad, W_pad)
+            M = torch.from_numpy(valid_f[:, np.newaxis])      # (T, 1, H_pad, W_pad)
             n_val   = max(1, int(T * val_split))
             n_train = max(1, T - n_val)
             if n_train + n_val > T:
                 n_val = T - n_train
             train_ds, val_ds = random_split(
-                TensorDataset(X), [n_train, n_val],
+                TensorDataset(X, M), [n_train, n_val],
                 generator=torch.Generator().manual_seed(42),
             )
             train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
             val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=0)
+
+            def masked_mse(pred, target, mask):
+                """MSE calculée uniquement là où mask=1 (océan)."""
+                se  = ((pred - target) ** 2) * mask
+                den = mask.sum().clamp_min(1.0)
+                return se.sum() / den
 
             # ── Modèle + optimiseur ────────────────────────────────────────
             unet      = _UNetModel(base_channels=n_latent, n_levels=n_levels)
@@ -389,9 +387,9 @@ class MLUNetGridNode(NodeProcessor):
                 # — Train —
                 unet.train()
                 train_sum = 0.0
-                for (xb,) in train_loader:
+                for xb, mb in train_loader:
                     optimizer.zero_grad()
-                    loss = F.mse_loss(unet(xb), xb)
+                    loss = masked_mse(unet(xb), xb, mb)
                     loss.backward()
                     optimizer.step()
                     train_sum += loss.item()
@@ -401,8 +399,8 @@ class MLUNetGridNode(NodeProcessor):
                 unet.eval()
                 val_sum = 0.0
                 with torch.no_grad():
-                    for (xb,) in val_loader:
-                        val_sum += F.mse_loss(unet(xb), xb).item()
+                    for xb, mb in val_loader:
+                        val_sum += masked_mse(unet(xb), xb, mb).item()
                 val_loss = val_sum / max(len(val_loader), 1)
 
                 scheduler.step(val_loss)
@@ -574,10 +572,12 @@ class MLUNetGridNode(NodeProcessor):
         if state == 'training' and total_epochs > 0:
             _draw_progress_bar(preview, current_epoch, total_epochs, last_tl, last_vl)
 
+        # Bundle 100 % picklable : state_dict (tenseurs) + config, pas
+        # d'objet modèle (classe locale → non sérialisable par torch.save).
         model_bundle = {
-            'model':      model,
-            'config':     config,
             'model_type': 'unet_grid',
+            'state_dict': {k: v.cpu() for k, v in model.state_dict().items()},
+            'config':     config,
             'norm_mean':  norm_mean,
             'norm_std':   norm_std,
         }

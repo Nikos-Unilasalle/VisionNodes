@@ -10,6 +10,13 @@ __pycache__/
 # Tauri/Rust
 src-tauri/target/
 
+# PyTorch Lightning artifacts (disabled via logger=False/enable_checkpointing=False,
+# but ignore defensively in case any node re-enables them)
+src-tauri/checkpoints/
+src-tauri/lightning_logs/
+checkpoints/
+lightning_logs/
+
 # OS
 .DS_Store
 

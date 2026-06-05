@@ -7,11 +7,38 @@ from registry import vision_node, NodeProcessor, send_notification
 _NOTIF_ID = 'ml_model_loader'
 
 
+def _rebuild_model(bundle):
+    """Reconstruit l'objet modèle PyTorch depuis un bundle.
+
+    Supporte deux formes :
+      - bundle['state_dict'] + model_type (forme sérialisable recommandée)
+      - bundle['model'] : objet modèle direct (compat. ascendante en mémoire)
+    """
+    model = bundle.get('model')
+    if model is not None:
+        return model
+
+    state_dict = bundle.get('state_dict')
+    if state_dict is None:
+        return None
+
+    model_type = bundle.get('model_type', '')
+    config     = bundle.get('config', {})
+
+    if model_type == 'unet_grid':
+        from ml_unet_grid import rebuild_unet
+        model = rebuild_unet(config)
+        model.load_state_dict(state_dict)
+        return model
+
+    return None
+
+
 def _apply_bundle_to_grids(bundle, grids):
     """Applique un model bundle sur des grilles numpy (T,H,W). Retourne (reconstructed, mse)."""
     import torch
 
-    model = bundle.get('model')
+    model = _rebuild_model(bundle)
     if model is None:
         return None, None
 
@@ -25,12 +52,11 @@ def _apply_bundle_to_grids(bundle, grids):
     grids = np.array(grids, dtype=np.float32)
     T, H, W = grids.shape
 
-    # NaN mask
-    nan_mask = np.isnan(grids)
-    grids_filled = np.where(nan_mask, 0.0, grids)
-
-    # Normaliser
-    grids_norm = (grids_filled - norm_mean) / norm_std
+    # NaN mask — normaliser PUIS remplir la terre à 0 (= moyenne), comme à
+    # l'entraînement (sinon la terre part à -mean/std et fausse l'inférence).
+    nan_mask   = np.isnan(grids)
+    grids_norm = (grids - norm_mean) / norm_std
+    grids_norm = np.where(nan_mask, 0.0, grids_norm).astype(np.float32)
 
     # Déterminer n_levels pour le padding
     n_levels = int(config.get('n_levels', 3))
@@ -45,7 +71,6 @@ def _apply_bundle_to_grids(bundle, grids):
         grids_norm = np.pad(grids_norm, ((0, 0), (0, pad_h), (0, pad_w)), mode='reflect')
 
     # Inférence
-    model_type = bundle.get('model_type', '')
     model.eval()
     with torch.no_grad():
         x = torch.tensor(grids_norm[:, np.newaxis, :, :], dtype=torch.float32)  # (T,1,H_pad,W_pad)
@@ -61,7 +86,7 @@ def _apply_bundle_to_grids(bundle, grids):
     # Ré-appliquer masque NaN
     recon = np.where(nan_mask, np.nan, recon)
 
-    # MSE
+    # MSE (océan uniquement)
     diff  = grids - recon
     mse   = float(np.nanmean(diff ** 2))
 
