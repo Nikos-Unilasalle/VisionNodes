@@ -187,6 +187,7 @@ class MLPyTorchTrainerNode(NodeProcessor):
                 callbacks=[early_stop, progress_cb],
                 enable_progress_bar=False,
                 enable_model_summary=False,
+                enable_checkpointing=False,
                 log_every_n_steps=1,
                 logger=False,
             )
