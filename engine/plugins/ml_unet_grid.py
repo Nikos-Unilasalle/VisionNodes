@@ -28,6 +28,55 @@ _MPL_DARK = {
 _COLORMAPS = ['viridis', 'plasma', 'jet', 'inferno']
 
 
+def _draw_progress_bar(img: np.ndarray, epoch: int, total: int,
+                       train_loss: float | None, val_loss: float | None) -> np.ndarray:
+    """Overlay une barre de progression OpenCV sur img (in-place, retourne img)."""
+    h, w = img.shape[:2]
+    bar_h   = 28
+    margin  = 12
+    bar_y   = h - bar_h - margin
+    bar_x0  = margin
+    bar_x1  = w - margin
+    bar_w   = bar_x1 - bar_x0
+
+    # Fond semi-transparent
+    overlay = img.copy()
+    cv2.rectangle(overlay, (0, bar_y - 18), (w, h), (20, 20, 20), -1)
+    cv2.addWeighted(overlay, 0.75, img, 0.25, 0, img)
+
+    # Barre fond
+    cv2.rectangle(img, (bar_x0, bar_y), (bar_x1, bar_y + bar_h), (55, 55, 55), -1)
+    cv2.rectangle(img, (bar_x0, bar_y), (bar_x1, bar_y + bar_h), (90, 90, 90), 1)
+
+    # Remplissage
+    progress = epoch / max(total, 1)
+    fill_w   = int(bar_w * progress)
+    if fill_w > 0:
+        # Dégradé bleu → cyan
+        for i in range(fill_w):
+            t = i / max(fill_w - 1, 1)
+            b = int(200 + 55 * t)
+            g = int(100 + 100 * t)
+            r = int(40 + 20 * t)
+            cv2.line(img, (bar_x0 + i, bar_y + 1), (bar_x0 + i, bar_y + bar_h - 2), (r, g, b), 1)
+
+    # Texte epoch
+    pct_str = f'{int(progress * 100)}%'
+    cv2.putText(img, pct_str, (bar_x0 + fill_w // 2 - 14, bar_y + bar_h - 7),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.42, (240, 240, 240), 1, cv2.LINE_AA)
+
+    # Texte métriques (au-dessus de la barre)
+    parts = [f'Epoch {epoch}/{total}']
+    if train_loss is not None and not (train_loss != train_loss):  # not NaN
+        parts.append(f'train={train_loss:.5f}')
+    if val_loss is not None and not (val_loss != val_loss):
+        parts.append(f'val={val_loss:.5f}')
+    cv2.putText(img, '  '.join(parts), (bar_x0, bar_y - 5),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.38, (180, 210, 255), 1, cv2.LINE_AA)
+
+    return img
+
+
 def _get_mpl():
     import matplotlib
     matplotlib.use('Agg')
@@ -226,6 +275,10 @@ class MLUNetGridNode(NodeProcessor):
         self._norm_std       = 1.0
         self._training_key   = None
         self._progress_msg   = ''
+        self._current_epoch  = 0
+        self._total_epochs   = 0
+        self._last_train_loss = None
+        self._last_val_loss   = None
 
     # ── Clé d'entraînement ──────────────────────────────────────────────────
 
@@ -331,29 +384,37 @@ class MLUNetGridNode(NodeProcessor):
 
             loss_history = {'train_loss': [], 'val_loss': []}
 
+            with self._lock:
+                self._total_epochs   = n_epochs
+                self._current_epoch  = 0
+
             # ── Callback ───────────────────────────────────────────────────
             class _ProgressCallback(pl.Callback):
                 def on_train_epoch_end(cb_self, trainer, pl_module):
-                    epoch   = trainer.current_epoch
+                    epoch   = trainer.current_epoch + 1   # 1-based
                     metrics = trainer.callback_metrics
                     tl = float(metrics.get('train_loss', float('nan')))
                     vl = float(metrics.get('val_loss',   float('nan')))
+                    vl_or_none = None if np.isnan(vl) else vl
 
                     loss_history['train_loss'].append(tl)
-                    if not np.isnan(vl):
-                        loss_history['val_loss'].append(vl)
+                    if vl_or_none is not None:
+                        loss_history['val_loss'].append(vl_or_none)
 
                     with self._lock:
-                        self._loss_history = {k: list(v) for k, v in loss_history.items()}
-                        self._norm_mean    = mean_val
-                        self._norm_std     = std_val
-                        self._progress_msg = (
-                            f'Epoch {epoch + 1}/{n_epochs} — train={tl:.5f}'
-                            + (f' val={vl:.5f}' if not np.isnan(vl) else '')
+                        self._current_epoch   = epoch
+                        self._last_train_loss = None if np.isnan(tl) else tl
+                        self._last_val_loss   = vl_or_none
+                        self._loss_history    = {k: list(v) for k, v in loss_history.items()}
+                        self._norm_mean       = mean_val
+                        self._norm_std        = std_val
+                        self._progress_msg    = (
+                            f'Epoch {epoch}/{n_epochs} — train={tl:.5f}'
+                            + (f' val={vl:.5f}' if vl_or_none is not None else '')
                         )
 
-                    # Mise à jour intermédiaire toutes les 5 epochs ou dernière epoch
-                    if (epoch + 1) % 5 == 0 or (epoch + 1) == n_epochs:
+                    # Mise à jour inférence toutes les 5 epochs ou dernière epoch
+                    if epoch % 5 == 0 or epoch == n_epochs:
                         self._update_cache(
                             unet, grids_orig, grids_norm, nan_mask, mean_val, std_val, H, W,
                         )
@@ -417,13 +478,17 @@ class MLUNetGridNode(NodeProcessor):
             current_key is None or current_key != new_key or state in ('idle', 'error')
         ):
             with self._lock:
-                self._state        = 'training'
-                self._training_key = new_key
-                self._loss_history = {'train_loss': [], 'val_loss': []}
-                self._progress_msg = 'Démarrage U-Net...'
-                self._model        = None
-                self._reconstructed = None
-                self._mse          = None
+                self._state          = 'training'
+                self._training_key   = new_key
+                self._loss_history   = {'train_loss': [], 'val_loss': []}
+                self._progress_msg   = 'Démarrage U-Net...'
+                self._model          = None
+                self._reconstructed  = None
+                self._mse            = None
+                self._current_epoch  = 0
+                self._total_epochs   = int(params.get('n_epochs', 30))
+                self._last_train_loss = None
+                self._last_val_loss   = None
 
             self._thread = threading.Thread(
                 target=self._train_thread,
@@ -433,23 +498,32 @@ class MLUNetGridNode(NodeProcessor):
             self._thread.start()
 
         with self._lock:
-            state        = self._state
-            progress_msg = self._progress_msg
-            model        = self._model
-            recon        = self._reconstructed
-            mse          = self._mse
-            loss_history = {k: list(v) for k, v in self._loss_history.items()}
-            norm_mean    = self._norm_mean
-            norm_std     = self._norm_std
-            config       = dict(self._config)
+            state          = self._state
+            progress_msg   = self._progress_msg
+            model          = self._model
+            recon          = self._reconstructed
+            mse            = self._mse
+            loss_history   = {k: list(v) for k, v in self._loss_history.items()}
+            norm_mean      = self._norm_mean
+            norm_std       = self._norm_std
+            config         = dict(self._config)
+            current_epoch  = self._current_epoch
+            total_epochs   = self._total_epochs
+            last_tl        = self._last_train_loss
+            last_vl        = self._last_val_loss
 
         if state == 'training' and progress_msg:
             send_notification(progress_msg, level='info', notif_id=_NOTIF_ID + '_prog')
 
         if model is None:
+            # Avant la première inférence intermédiaire : barre de progression seule
             blank = np.zeros((200, 640, 3), dtype=np.uint8)
-            msg   = progress_msg if state == 'training' else "Cliquez 'Entraîner' pour lancer l'entraînement"
-            cv2.putText(blank, msg[:70], (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (150, 150, 150), 1, cv2.LINE_AA)
+            if state == 'training' and total_epochs > 0:
+                _draw_progress_bar(blank, current_epoch, total_epochs, last_tl, last_vl)
+            else:
+                msg = "Cliquez 'Entraîner' pour lancer l'entraînement"
+                cv2.putText(blank, msg, (10, 105), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.42, (150, 150, 150), 1, cv2.LINE_AA)
             return {
                 'preview':      blank,
                 'loss_history': loss_history,
@@ -499,6 +573,10 @@ class MLUNetGridNode(NodeProcessor):
             plt.tight_layout()
             preview = _fig_to_bgr(fig)
             plt.close(fig)
+
+        # Barre de progression overlay quand entraînement en cours
+        if state == 'training' and total_epochs > 0:
+            _draw_progress_bar(preview, current_epoch, total_epochs, last_tl, last_vl)
 
         model_bundle = {
             'model':      model,
