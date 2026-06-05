@@ -326,21 +326,17 @@ class MLUNetGridNode(NodeProcessor):
     def _train_thread(self, grids_orig, params):
         try:
             import torch
+            import torch.nn.functional as F
             from torch.utils.data import DataLoader, TensorDataset, random_split
-            try:
-                import pytorch_lightning as pl
-            except ImportError:
-                import lightning.pytorch as pl
 
             _, _UNetModel = _build_unet_classes()
-            _UNetLightningModule = _build_lightning_module(_UNetModel)
 
-            n_latent  = int(params.get('n_latent',      16))
-            n_levels  = int(params.get('n_levels',       3))
-            n_epochs  = int(params.get('n_epochs',      30))
-            batch_size = int(params.get('batch_size',    8))
-            lr        = float(params.get('learning_rate', 0.001))
-            val_split = float(params.get('val_split',   0.2))
+            n_latent   = int(params.get('n_latent',       16))
+            n_levels   = int(params.get('n_levels',        3))
+            n_epochs   = int(params.get('n_epochs',       30))
+            batch_size = int(params.get('batch_size',      8))
+            lr         = float(params.get('learning_rate', 0.001))
+            val_split  = float(params.get('val_split',    0.2))
 
             T, H, W = grids_orig.shape
 
@@ -353,101 +349,91 @@ class MLUNetGridNode(NodeProcessor):
                 std_val = 1.0
 
             grids_filled = np.where(nan_mask, 0.0, grids_orig)
-            grids_norm   = (grids_filled - mean_val) / std_val
+            grids_norm   = ((grids_filled - mean_val) / std_val).astype(np.float32)
 
             # ── Padding ────────────────────────────────────────────────────
-            factor  = 2 ** n_levels
-            H_pad   = ((H + factor - 1) // factor) * factor
-            W_pad   = ((W + factor - 1) // factor) * factor
-            pad_h   = H_pad - H
-            pad_w   = W_pad - W
-            if pad_h > 0 or pad_w > 0:
-                grids_norm = np.pad(grids_norm, ((0, 0), (0, pad_h), (0, pad_w)), mode='reflect')
+            factor = 2 ** n_levels
+            H_pad  = ((H + factor - 1) // factor) * factor
+            W_pad  = ((W + factor - 1) // factor) * factor
+            if H_pad != H or W_pad != W:
+                grids_norm = np.pad(grids_norm, ((0, 0), (0, H_pad - H), (0, W_pad - W)), mode='reflect')
 
             # ── Dataset ────────────────────────────────────────────────────
-            X   = torch.tensor(grids_norm[:, np.newaxis, :, :], dtype=torch.float32)
-            ds  = TensorDataset(X, X)  # auto-encodeur : entrée = cible
-            n_val = max(1, int(len(X) * val_split))
-            n_train = len(X) - n_val
-            if n_train < 1:
-                n_train = 1
-                n_val   = len(X) - 1 if len(X) > 1 else 1
+            X = torch.from_numpy(grids_norm[:, np.newaxis])   # (T, 1, H_pad, W_pad)
+            n_val   = max(1, int(T * val_split))
+            n_train = max(1, T - n_val)
+            if n_train + n_val > T:
+                n_val = T - n_train
             train_ds, val_ds = random_split(
-                ds, [n_train, n_val],
+                TensorDataset(X), [n_train, n_val],
                 generator=torch.Generator().manual_seed(42),
             )
             train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,  num_workers=0)
             val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False, num_workers=0)
 
-            # ── Modèle ─────────────────────────────────────────────────────
-            unet   = _UNetModel(base_channels=n_latent, n_levels=n_levels)
-            module = _UNetLightningModule(model=unet, lr=lr)
+            # ── Modèle + optimiseur ────────────────────────────────────────
+            unet      = _UNetModel(base_channels=n_latent, n_levels=n_levels)
+            optimizer = torch.optim.Adam(unet.parameters(), lr=lr)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, patience=5, factor=0.5, verbose=False,
+            )
 
             loss_history = {'train_loss': [], 'val_loss': []}
 
             with self._lock:
-                self._total_epochs   = n_epochs
-                self._current_epoch  = 0
+                self._total_epochs  = n_epochs
+                self._current_epoch = 0
 
-            # Référence explicite au node pour éviter toute ambiguïté dans la classe imbriquée
-            node_ref = self
+            # ── Boucle d'entraînement PyTorch ─────────────────────────────
+            for epoch in range(n_epochs):
+                # — Train —
+                unet.train()
+                train_sum = 0.0
+                for (xb,) in train_loader:
+                    optimizer.zero_grad()
+                    loss = F.mse_loss(unet(xb), xb)
+                    loss.backward()
+                    optimizer.step()
+                    train_sum += loss.item()
+                train_loss = train_sum / len(train_loader)
 
-            # ── Callback ───────────────────────────────────────────────────
-            class _ProgressCallback(pl.Callback):
-                def on_train_epoch_end(cb_self, trainer, pl_module):
-                    epoch   = trainer.current_epoch + 1   # 1-based
-                    metrics = trainer.callback_metrics
-                    tl = float(metrics.get('train_loss', float('nan')))
-                    vl = float(metrics.get('val_loss',   float('nan')))
-                    vl_or_none = None if np.isnan(vl) else vl
+                # — Validation —
+                unet.eval()
+                val_sum = 0.0
+                with torch.no_grad():
+                    for (xb,) in val_loader:
+                        val_sum += F.mse_loss(unet(xb), xb).item()
+                val_loss = val_sum / max(len(val_loader), 1)
 
-                    loss_history['train_loss'].append(tl)
-                    if vl_or_none is not None:
-                        loss_history['val_loss'].append(vl_or_none)
+                scheduler.step(val_loss)
 
-                    with node_ref._lock:
-                        node_ref._current_epoch   = epoch
-                        node_ref._last_train_loss = None if np.isnan(tl) else tl
-                        node_ref._last_val_loss   = vl_or_none
-                        node_ref._loss_history    = {k: list(v) for k, v in loss_history.items()}
-                        node_ref._norm_mean       = mean_val
-                        node_ref._norm_std        = std_val
-                        node_ref._progress_msg    = (
-                            f'Epoch {epoch}/{n_epochs} — train={tl:.5f}'
-                            + (f' val={vl:.5f}' if vl_or_none is not None else '')
-                        )
+                # — Mise à jour état (chaque epoch) —
+                loss_history['train_loss'].append(train_loss)
+                loss_history['val_loss'].append(val_loss)
+                with self._lock:
+                    self._current_epoch   = epoch + 1
+                    self._last_train_loss = train_loss
+                    self._last_val_loss   = val_loss
+                    self._loss_history    = {k: list(v) for k, v in loss_history.items()}
+                    self._norm_mean       = mean_val
+                    self._norm_std        = std_val
+                    self._progress_msg    = (
+                        f'Epoch {epoch + 1}/{n_epochs} — '
+                        f'train={train_loss:.5f}  val={val_loss:.5f}'
+                    )
 
-                    # Mise à jour inférence toutes les 5 epochs ou dernière epoch
-                    if epoch % 5 == 0 or epoch == n_epochs:
-                        node_ref._update_cache(
-                            unet, grids_orig, grids_norm, nan_mask, mean_val, std_val, H, W,
-                        )
-
-            trainer = pl.Trainer(
-                max_epochs=n_epochs,
-                callbacks=[_ProgressCallback()],
-                enable_progress_bar=False,
-                enable_model_summary=False,
-                enable_checkpointing=False,
-                log_every_n_steps=1,
-                logger=False,
-            )
-            trainer.fit(module, train_loader, val_loader)
+                # — Inférence intermédiaire toutes les 5 epochs —
+                if (epoch + 1) % 5 == 0 or (epoch + 1) == n_epochs:
+                    self._update_cache(unet, grids_orig, grids_norm, nan_mask, mean_val, std_val, H, W)
 
             # ── Mise à jour finale ─────────────────────────────────────────
             self._update_cache(unet, grids_orig, grids_norm, nan_mask, mean_val, std_val, H, W)
-
             with self._lock:
-                self._model    = unet
-                self._config   = {
-                    'n_latent': n_latent,
-                    'n_levels': n_levels,
-                    'H': H,
-                    'W': W,
-                }
+                self._config       = {'n_latent': n_latent, 'n_levels': n_levels, 'H': H, 'W': W}
                 self._norm_mean    = mean_val
                 self._norm_std     = std_val
                 self._loss_history = {k: list(v) for k, v in loss_history.items()}
+                self._current_epoch = n_epochs
                 self._state        = 'done'
 
             mse = self._mse or 0.0
@@ -462,8 +448,8 @@ class MLUNetGridNode(NodeProcessor):
 
     def process(self, inputs, params):
         if not self.ensure_packages(
-            ['torch', 'pytorch_lightning'],
-            pip_names=['torch', 'pytorch-lightning'],
+            ['torch'],
+            pip_names=['torch'],
             notif_id=_NOTIF_ID,
         ):
             return {}
