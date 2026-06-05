@@ -4049,6 +4049,12 @@ const _HIDDEN_PARAMS = new Set([
   'expression', 'code', 'label', 'title', 'text',
 ]);
 
+// Nodes with many ports + params: hide the in-body param chips for a clean look.
+// Settings live in the inspector instead.
+const _COMPACT_NODE_TYPES = new Set([
+  'llm_conversation', 'variable_store',
+]);
+
 const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
   const nodeId = useNodeId();
   const nd = useNodeData(nodeId);
@@ -4084,7 +4090,7 @@ const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
 
   // Build visible param chips: enum + bool params, excluding internal ones, max 4
   const paramChips: { label: string; value: string }[] = React.useMemo(() => {
-    if (!schema?.params) return [];
+    if (!schema?.params || _COMPACT_NODE_TYPES.has(schema.type)) return [];
     const chips: { label: string; value: string }[] = [];
     for (const p of schema.params) {
       if (_HIDDEN_PARAMS.has(p.id)) continue;
