@@ -71,7 +71,7 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
          'options': ['Box Input Port', 'Points List Input Port', 'Automatic (Grid)',
-                     'Boxes List (Grounding DINO)'],
+                     'Boxes List'],
          'default': 0},
 
         # ── Automatic Mode Settings ──
@@ -418,9 +418,12 @@ class SAMSegmenterNode(NodeProcessor):
                     ]
                     label_map[mask] = color
                     combined_mask[mask] = 255
-                
-                overlay = cv2.addWeighted(overlay, 1.0, label_map, opacity, 0)
-                
+
+                # Proper alpha blend ONLY in masked regions (not additive)
+                blended = cv2.addWeighted(overlay, 1.0 - opacity, label_map, opacity, 0)
+                region  = label_map.any(axis=2)
+                overlay[region] = blended[region]
+
                 # Draw white contours for each stone
                 for m in masks_data:
                     mask = m['segmentation']
@@ -519,7 +522,11 @@ class SAMSegmenterNode(NodeProcessor):
                         centroids.append([0.0, 0.0])
                         all_contours.append([])
 
-                overlay = cv2.addWeighted(image.copy(), 1.0, label_map, opacity, 0)
+                # Proper alpha blend ONLY in masked regions (not additive)
+                overlay = image.copy()
+                blended = cv2.addWeighted(image, 1.0 - opacity, label_map, opacity, 0)
+                region  = label_map.any(axis=2)
+                overlay[region] = blended[region]
 
                 for i, mask in enumerate(masks):
                     m_u8 = (mask > 0).astype(np.uint8) * 255
@@ -640,7 +647,9 @@ class SAMSegmenterNode(NodeProcessor):
         color_mask = np.zeros_like(image)
         color_mask[mask_bool] = [mb, mg, mr]
 
-        overlay = cv2.addWeighted(overlay, 1.0, color_mask, opacity, 0)
+        # Proper alpha blend ONLY in the masked region (not additive)
+        blended = cv2.addWeighted(overlay, 1.0 - opacity, color_mask, opacity, 0)
+        overlay[mask_bool] = blended[mask_bool]
 
         # Draw contour on overlay for clarity
         contours, _ = cv2.findContours(
