@@ -2513,6 +2513,10 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   }
 
   return (
+    <div className="relative w-full h-full">
+      {/* Handles outside overflow-hidden so they aren't clipped */}
+      <StyledHandle type="target" position={Position.Left}  id="text"     color="any"    top="20px" />
+      <StyledHandle type="source" position={Position.Right} id="text_out" color="string" top="20px" />
     <div
       className="flex-1 w-full h-full flex flex-col overflow-hidden transition-all duration-200"
       style={{
@@ -2526,9 +2530,6 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
       }}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Optional text input / output */}
-      <StyledHandle type="target" position={Position.Left}  id="text"     color="any"    top="14px" />
-      <StyledHandle type="source" position={Position.Right} id="text_out" color="string" top="14px" />
       <div
         className="flex items-center gap-1.5 px-2 py-1 select-none cursor-grab active:cursor-grabbing"
         style={{ background: 'rgba(0,0,0,0.13)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}
@@ -2589,6 +2590,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
           </div>
         )
       )}
+    </div>
     </div>
   );
 });
