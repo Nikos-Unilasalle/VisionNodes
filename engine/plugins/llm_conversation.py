@@ -53,6 +53,7 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
     params=[
         {'id': 'run',          'label': 'Run',           'type': 'trigger', 'default': False},
         {'id': 'clear',        'label': 'Clear',         'type': 'trigger', 'default': False},
+        {'id': '_v',           'label': '',              'type': 'int',     'default': 0},
         {'id': 'num_personas', 'label': 'Mode',          'type': 'enum',
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
         {'id': 'opening',      'label': 'Message / Opening', 'type': 'string',
@@ -125,7 +126,13 @@ class LLMConversationNode(NodeProcessor):
     def process(self, inputs: dict, params: dict) -> dict:
         if bool(params.get('clear', False)):
             self._cache_result = None
-            return self._empty('')
+            # Increment _v so params_sig changes permanently, busting the engine-level
+            # node cache — otherwise the engine returns the stale cached output on the
+            # next run (when clear resets to False) without calling process() at all.
+            new_v = int(params.get('_v', 0)) + 1
+            return {**self._empty(''), '_command': {
+                'type': 'set_param', 'node_id': '__self__', 'params': {'_v': new_v}
+            }}
 
         if not bool(params.get('run', False)):
             if self._cache_result is not None:

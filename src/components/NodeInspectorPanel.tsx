@@ -1160,6 +1160,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         paramGroups.push(currentGroup);
 
         const renderGroupParams = (params: ParamSpec[]) => params.map((sp: ParamSpec) => {
+          // Skip internal/hidden params (underscore prefix = engine-only state)
+          if (sp.id.startsWith('_')) return null;
           if (node.type === 'geom_resize' && sp.id !== 'mode' && sp.id !== 'interpolation') {
             const mode = Number(p.mode ?? 0);
             if (sp.id === 'scale'  && mode !== 0) return null;
