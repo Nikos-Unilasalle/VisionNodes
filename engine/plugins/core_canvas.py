@@ -73,9 +73,11 @@ class CanvasNoteNode(NodeProcessor):
             except Exception:
                 incoming = str(incoming)
 
-        # Dedupe: only act when the input actually changes (graph re-runs each tick)
+        # Dedupe: only act when the input actually changes (graph re-runs each tick).
+        # Use _acc (accumulated text) as text_out — current_text from params lags
+        # one run behind because set_param only updates the frontend, not engine params.
         if incoming == self._last_input:
-            return {"text_out": current_text}
+            return {"text_out": self._acc if self._acc is not None else current_text}
         self._last_input = incoming
 
         mode = int(params.get('mode', 0))   # 0=append, 1=replace
