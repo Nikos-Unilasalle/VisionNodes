@@ -13,7 +13,7 @@ import os
 
 _NOTIF_ID = 'llm_inference'
 
-_PROVIDERS = ['Ollama (local)', 'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq', 'Custom']
+_PROVIDERS = ['Ollama (local)', 'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq', 'DeepSeek', 'Custom']
 
 _DEFAULT_MODELS = {
     'Ollama (local)':  'gemma4:e4b',
@@ -21,6 +21,7 @@ _DEFAULT_MODELS = {
     'OpenAI':          'gpt-4o-mini',
     'Anthropic':       'claude-haiku-4-5-20251001',
     'Groq':            'llama-3.2-11b-vision-preview',
+    'DeepSeek':        'deepseek-chat',
     'Custom':          'gpt-4o-mini',
 }
 
@@ -30,11 +31,12 @@ _BASE_URLS = {
     'OpenAI':          'https://api.openai.com',
     'Anthropic':       'https://api.anthropic.com',
     'Groq':            'https://api.groq.com/openai',
+    'DeepSeek':        'https://api.deepseek.com',
     'Custom':          '',
 }
 
 # Providers that require an API key
-_REQUIRES_KEY = {'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq'}
+_REQUIRES_KEY = {'Ollama (cloud)', 'OpenAI', 'Anthropic', 'Groq', 'DeepSeek'}
 
 _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
 
@@ -170,6 +172,7 @@ class LLMInferenceNode(NodeProcessor):
             'OpenAI':    'OPENAI_API_KEY',
             'Anthropic': 'ANTHROPIC_API_KEY',
             'Groq':      'GROQ_API_KEY',
+            'DeepSeek':  'DEEPSEEK_API_KEY',
         }
         env_key = env_map.get(provider, '')
         if env_key and os.environ.get(env_key):
