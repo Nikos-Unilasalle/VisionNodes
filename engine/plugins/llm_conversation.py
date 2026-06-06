@@ -54,11 +54,12 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
         {'id': 'run',          'label': 'Run',           'type': 'trigger', 'default': False},
         {'id': 'clear',        'label': 'Clear',         'type': 'trigger', 'default': False},
         {'id': '_v',           'label': '',              'type': 'int',     'default': 0},
-        {'id': 'num_personas', 'label': 'Mode',          'type': 'enum',
+        {'id': 'num_personas',  'label': 'Mode',          'type': 'enum',
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
-        {'id': 'opening',      'label': 'Message / Opening', 'type': 'string',
+        {'id': 'keep_context',  'label': 'Keep Context',  'type': 'bool', 'default': False},
+        {'id': 'opening',       'label': 'Message / Opening', 'type': 'string',
          'default': 'What do you think about dry-stacked stone walls?'},
-        {'id': 'num_turns',    'label': 'Turns (dialogue only)', 'type': 'int',
+        {'id': 'num_turns',     'label': 'Turns (dialogue only)', 'type': 'int',
          'default': 6, 'min': 2, 'max': 40,
          'show_if': {'param': 'num_personas', 'value': 1}},
 
@@ -105,6 +106,10 @@ class LLMConversationNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         self._cache_result = None
+        # Persistent conversation history for keep_context mode.
+        # 1-persona: list of {'role','content'} dicts (OpenAI format).
+        # 2-persona: list of {'speaker','text'} turn dicts.
+        self._ctx_history: list = []
 
     def _empty(self, msg: str = '') -> dict:
         return {'transcript': msg, 'turns': [], 'last': ''}
@@ -134,6 +139,7 @@ class LLMConversationNode(NodeProcessor):
     def process(self, inputs: dict, params: dict) -> dict:
         if bool(params.get('clear', False)):
             self._cache_result = None
+            self._ctx_history = []
             return self._bump_v(params, self._empty(''))
 
         if not bool(params.get('run', False)):
@@ -160,14 +166,28 @@ class LLMConversationNode(NodeProcessor):
         img = inputs.get('image')
         img_b64 = P.img_to_b64(img) if img is not None else None
 
+        keep_context = bool(params.get('keep_context', False))
+
         try:
-            # ── 1-persona mode: simple Q&A ──
+            # ── 1-persona mode: Q&A (with optional running context) ──
             if num_personas == 0:
                 self.report_progress(0.3, f'LLM: asking {A["name"]}…')
-                history = [
-                    *([{'role': 'system', 'content': A['system']}] if A['system'] else []),
-                    {'role': 'user', 'content': opening},
-                ]
+
+                if keep_context and self._ctx_history:
+                    # Continue the conversation: append new user message to existing history
+                    history = [
+                        *([{'role': 'system', 'content': A['system']}] if A['system'] else []),
+                        *self._ctx_history,
+                        {'role': 'user', 'content': opening},
+                    ]
+                else:
+                    # Fresh conversation
+                    self._ctx_history = []
+                    history = [
+                        *([{'role': 'system', 'content': A['system']}] if A['system'] else []),
+                        {'role': 'user', 'content': opening},
+                    ]
+
                 text, _ = P.call_llm(
                     A['provider'], A['model'], A['api_key'], A['base_url'],
                     history, img_b64,
@@ -175,29 +195,51 @@ class LLMConversationNode(NodeProcessor):
                     max_tokens=max_tokens, timeout=timeout, thinking=thinking,
                 )
                 text = (text or '').strip()
+
+                if keep_context:
+                    self._ctx_history.append({'role': 'user',      'content': opening})
+                    self._ctx_history.append({'role': 'assistant',  'content': text})
+
                 self.report_progress(1.0, 'LLM: done')
-                transcript_str = f"{A['name']}: {text}"
-                turns = [{'speaker': A['name'], 'text': text}]
-                result = {'transcript': transcript_str, 'turns': turns, 'last': text}
+                # Build full transcript from accumulated context
+                ctx_turns = [
+                    {'speaker': 'User' if m['role'] == 'user' else A['name'], 'text': m['content']}
+                    for m in self._ctx_history
+                    if m['role'] in ('user', 'assistant')
+                ] if keep_context else [{'speaker': A['name'], 'text': text}]
+
+                transcript_str = '\n\n'.join(
+                    f"{'You' if t['speaker'] == 'User' else A['name']}: {t['text']}"
+                    for t in ctx_turns
+                )
+                result = {'transcript': transcript_str, 'turns': ctx_turns, 'last': text}
                 self._cache_result = result
                 return self._bump_v(params, result)
 
-            # ── 2-persona mode: dialogue ──
+            # ── 2-persona mode: dialogue (with optional running context) ──
             B = self._persona(params, 'b')
             if B['provider'] in P.REQUIRES_KEY and not B['api_key']:
                 return self._empty(f"Persona B ({B['provider']}): no API key")
 
-            transcript: list = []
+            # Seed from previous turns if keep_context, otherwise fresh
+            if not (keep_context and self._ctx_history):
+                self._ctx_history = []
+
+            transcript: list = list(self._ctx_history)  # copy to extend
             speakers = [A, B]
+            # If context has turns, next speaker alternates from where we left off
+            start_t = len(self._ctx_history)
 
             for t in range(num_turns):
-                who = speakers[t % 2]
+                who = speakers[(start_t + t) % 2]
                 self.report_progress(
                     (t + 0.5) / num_turns,
                     f'Turn {t + 1}/{num_turns}: {who["name"]}…'
                 )
-                history = _build_history(transcript, who['name'], who['system'], opening)
-                use_img = img_b64 if t == 0 else None
+                # Opening is used only on the very first turn ever
+                eff_opening = opening if (start_t + t) == 0 else ''
+                history = _build_history(transcript, who['name'], who['system'], eff_opening)
+                use_img = img_b64 if (start_t + t) == 0 else None
                 text, _ = P.call_llm(
                     who['provider'], who['model'], who['api_key'], who['base_url'],
                     history, use_img,
@@ -205,6 +247,9 @@ class LLMConversationNode(NodeProcessor):
                     max_tokens=max_tokens, timeout=timeout, thinking=thinking,
                 )
                 transcript.append({'speaker': who['name'], 'text': (text or '').strip()})
+
+            if keep_context:
+                self._ctx_history = transcript  # persist all turns
 
         except Exception as e:
             err = str(e)
@@ -218,7 +263,7 @@ class LLMConversationNode(NodeProcessor):
             }
 
         self.report_progress(1.0, f'Done ({num_turns} turns)')
-        lines = [f"[Opening] {opening}\n"] if opening else []
+        lines = [f"[Opening] {opening}\n"] if (opening and not self._ctx_history[:-num_turns]) else []
         lines += [f"{t['speaker']}: {t['text']}" for t in transcript]
         full = '\n\n'.join(lines)
         result = {
