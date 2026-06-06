@@ -95,7 +95,11 @@ def extract_api_error(resp) -> str:
         body = resp.json()
     except Exception:
         txt = (resp.text or '').strip()
-        return txt[:300] if txt else f'HTTP {resp.status_code}'
+        # Strip HTML tags so a 502 Bad Gateway page doesn't flood the UI
+        import re as _re
+        txt = _re.sub(r'<[^>]+>', ' ', txt)
+        txt = ' '.join(txt.split())
+        return f'HTTP {resp.status_code}: {txt[:200]}' if txt else f'HTTP {resp.status_code}'
     err = body.get('error') if isinstance(body, dict) else None
     if isinstance(err, dict):
         msg = err.get('message') or err.get('type') or str(err)

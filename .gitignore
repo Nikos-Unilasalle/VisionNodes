@@ -36,6 +36,11 @@ output.wav
 # Cache
 gee_cache/
 engine/plugins/gee_cache/package-lock.json
+copernicus_cache/
+
+# Secrets (live in ~/.vnstudio/, never in repo — defensive)
+secrets.json
+.vnstudio/
 
 # AI Assistant Metadata
 .agents/

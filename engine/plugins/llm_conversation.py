@@ -54,9 +54,12 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
         {'id': 'run',          'label': 'Run',           'type': 'trigger', 'default': False},
         {'id': 'clear',        'label': 'Clear',         'type': 'trigger', 'default': False},
         {'id': '_v',           'label': '',              'type': 'int',     'default': 0},
+        {'id': '_ctx',         'label': '',              'type': 'string',  'default': ''},
+        {'id': '_ctx_label',   'label': '',              'type': 'string',  'default': ''},
         {'id': 'num_personas',  'label': 'Mode',          'type': 'enum',
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
         {'id': 'keep_context',  'label': 'Keep Context',  'type': 'bool', 'default': False},
+        {'id': 'auto_context',  'label': 'Auto Node Context', 'type': 'bool', 'default': False},
         {'id': 'opening',       'label': 'Message / Opening', 'type': 'string',
          'default': 'What do you think about this?'},
         {'id': 'num_turns',     'label': 'Turns (dialogue only)', 'type': 'int',
@@ -115,11 +118,12 @@ class LLMConversationNode(NodeProcessor):
         return {'transcript': msg, 'turns': [], 'last': ''}
 
     def _bump_v(self, params: dict, result: dict) -> dict:
-        """Attach a set_param _command that increments _v, permanently changing
-        params_sig so the engine node cache never returns a stale snapshot."""
+        """Increment _v (breaks engine params_sig cache) and reset both
+        trigger params so neither re-fires on the next engine tick."""
         new_v = int(params.get('_v', 0)) + 1
         return {**result, '_command': {
-            'type': 'set_param', 'node_id': '__self__', 'params': {'_v': new_v}
+            'type': 'set_param', 'node_id': '__self__',
+            'params': {'_v': new_v, 'run': False, 'clear': False},
         }}
 
     def _persona(self, params: dict, prefix: str) -> dict:
@@ -145,9 +149,24 @@ class LLMConversationNode(NodeProcessor):
         if not bool(params.get('run', False)):
             if self._cache_result is not None:
                 return self._cache_result
-            return self._empty('Press Run to start')
+            # Empty transcript so downstream nodes (Note, Variable) don't
+            # receive a placeholder string before the user presses Run.
+            return {'transcript': '', 'turns': [], 'last': ''}
 
         opening     = (inputs.get('seed') or params.get('opening', '')).strip()
+
+        # Auto node context: prepend a snapshot of the node the user selected on
+        # the canvas (captured by the frontend into _ctx) so the LLM can give
+        # parameter advice without the user pasting anything.
+        if bool(params.get('auto_context', False)):
+            ctx = (params.get('_ctx', '') or '').strip()
+            if ctx:
+                opening = (
+                    "The user is working in a node-based computer-vision studio "
+                    "and is asking about this node:\n\n"
+                    f"{ctx}\n\n---\n\n{opening}"
+                )
+
         num_personas = int(params.get('num_personas', 0))
         num_turns   = int(params.get('num_turns', 6))
         temperature = float(params.get('temperature', 0.8))

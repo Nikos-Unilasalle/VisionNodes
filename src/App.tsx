@@ -1118,6 +1118,13 @@ function App() {
 
   const addNode = useCallback((type: string, label: string, schema?: any, initialParams: any = {}, dropPosition?: { x: number, y: number }, skipSnapshot = false) => {
     if (!skipSnapshot) pushSnapshot();
+    // Restore last-used provider/model for new LLM nodes (saved by LLMConversationNode component).
+    if (type === 'llm_conversation' && Object.keys(initialParams).length === 0) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('vn_llm_last_params') || 'null');
+        if (saved) initialParams = { ...saved };
+      } catch {}
+    }
     const id = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const defaultStyle: Record<string, any> = {
       data_inspector: { width: 220, height: 200 },
@@ -1170,6 +1177,76 @@ function App() {
     setPendingConnection(null);
   }, [pushSnapshot, pendingConnection, instance, setViewNodes, setViewEdges, setIsAddMenuOpen, setPendingConnection]);
   addNodeRef.current = addNode;
+
+  // Drop a ready-made "Help me!" assistant: question note → LLM → answer note,
+  // pre-wired and pre-configured for node-parameter advice (auto-context on).
+  const addHelpAssistant = useCallback(() => {
+    pushSnapshot();
+    const base = instance?.screenToFlowPosition
+      ? instance.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      : { x: 0, y: 0 };
+    const ts = Date.now();
+    const rnd = () => Math.random().toString(36).slice(2, 9);
+    const qId = `note-q-${ts}-${rnd()}`;
+    const lId = `llm-help-${ts}-${rnd()}`;
+    const aId = `note-a-${ts}-${rnd()}`;
+
+    const qNode = {
+      id: qId, type: 'canvas_note',
+      position: { x: base.x - 580, y: base.y - 40 },
+      style: { width: 300, height: 180 },
+      data: { label: 'Your question', params: {
+        text: 'Which parameters give the best result?',
+        mode: 0, color_index: 0,
+      } },
+    };
+    let savedLlmParams: Record<string, any> = {};
+    try {
+      const raw = localStorage.getItem('vn_llm_last_params');
+      if (raw) savedLlmParams = JSON.parse(raw);
+    } catch {}
+
+    const lNode = {
+      id: lId, type: 'llm_conversation',
+      position: { x: base.x - 130, y: base.y },
+      style: { width: 224 },
+      data: { label: 'Help me!', params: {
+        num_personas: 0,
+        keep_context: false,
+        auto_context: true,
+        opening: '',
+        timeout: 60,
+        max_tokens: 2000,
+        a_name: 'Computer vision hero',
+        a_system: 'You are a helpful assistant specialised in computer vision. '
+          + 'Give concise, direct answers focused on algorithms and image-processing concepts — no Python code.',
+        node_note: 'Please select the node you need advice for',
+        // Inherit last-used provider + model
+        ...(savedLlmParams.a_provider !== undefined ? { a_provider: savedLlmParams.a_provider } : {}),
+        ...(savedLlmParams.a_model    !== undefined ? { a_model:    savedLlmParams.a_model    } : {}),
+      } },
+    };
+    const aNode = {
+      id: aId, type: 'canvas_note',
+      position: { x: base.x + 250, y: base.y - 90 },
+      style: { width: 380, height: 320 },
+      data: { label: 'Answer', params: {
+        mode: 1, color_index: 4,
+      } },
+    };
+
+    const e1 = {
+      id: `e-${ts}-${rnd()}`, source: qId, sourceHandle: 'string__text_out',
+      target: lId, targetHandle: 'string__seed',
+    };
+    const e2 = {
+      id: `e-${ts}-${rnd()}`, source: lId, sourceHandle: 'string__last',
+      target: aId, targetHandle: 'any__text',
+    };
+
+    setViewNodes(nds => [...nds, qNode, aNode, lNode]);
+    setViewEdges(eds => [...eds, e1, e2]);
+  }, [pushSnapshot, instance, setViewNodes, setViewEdges]);
 
   useEffect(() => {
     if (lastCommands && lastCommands.length > 0) {
@@ -1526,6 +1603,7 @@ function App() {
         alignNodes={alignNodes}
         snapToggle={() => setSnapEnabled(!snapEnabled)}
         addNode={addNode}
+        addHelpAssistant={addHelpAssistant}
         saveProject={saveProject}
         saveProjectAs={saveProjectAs}
         saveProjectIncremental={saveProjectIncremental}

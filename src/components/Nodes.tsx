@@ -2515,8 +2515,8 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
   return (
     <div className="relative w-full h-full">
       {/* Handles outside overflow-hidden so they aren't clipped */}
-      <StyledHandle type="target" position={Position.Left}  id="text"     color="any"    top="20px" />
-      <StyledHandle type="source" position={Position.Right} id="text_out" color="string" top="20px" />
+      <StyledHandle type="target" position={Position.Left}  id="text"     color="any"    top="40px" />
+      <StyledHandle type="source" position={Position.Right} id="text_out" color="string" top="40px" />
     <div
       className="flex-1 w-full h-full flex flex-col overflow-hidden transition-all duration-200"
       style={{
@@ -2548,7 +2548,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
 
       {!isMinified && (
         editing ? (
-          <div className="flex-1 flex flex-col min-h-0 w-full h-full bg-black/10 nodrag nopan" onMouseDown={handleEditorMouseDown}>
+          <div className="flex-1 flex flex-col min-h-0 w-full h-full bg-black/10 nodrag nopan nowheel" onMouseDown={handleEditorMouseDown}>
             <MarkdownToolbar
               textareaRef={textareaRef}
               value={text}
@@ -2570,7 +2570,7 @@ export const CanvasNoteNode = memo(({ selected, data }: any) => {
           </div>
         ) : (
           <div
-            className="flex-1 nodrag px-3 py-2 overflow-y-auto select-none cursor-text markdown-body"
+            className="flex-1 nodrag nowheel px-3 py-2 overflow-y-auto select-none cursor-text markdown-body"
             style={{
               color: text ? textColor : `${textColor}55`,
               fontSize: 13,
@@ -3492,6 +3492,7 @@ export const GenericCustomNode = memo((props: any) => {
   if (t === 'ml_svm_classifier')  return <MLClassifierNodeUI {...props} />;
   if (t === 'ml_df_stats')        return <MLDfStatsNodeUI {...props} />;
   if (t === 'raster_colorizer')   return <RasterColorizerNode {...props} />;
+  if (t === 'llm_conversation')   return <LLMConversationNode {...props} />;
 
   return <GenericCustomNodeInternal {...props} schema={schema} />;
 });
@@ -4045,6 +4046,184 @@ const TurbidityStatsNodeUI = ({ data, selected }: { data: any; selected: boolean
     </BaseNode>
   );
 };
+
+const _LLM_INPUTS = [
+  { id: 'image', color: 'image',  label: 'Image' },
+  { id: 'seed',  color: 'string', label: 'Message' },
+];
+const _LLM_OUTPUTS = [
+  { id: 'transcript', color: 'string', label: 'Transcript' },
+  { id: 'turns',      color: 'list',   label: 'Turns' },
+  { id: 'last',       color: 'string', label: 'Last' },
+];
+
+// Node types that carry no useful "parameter advice" context.
+const _LLM_CTX_SKIP = new Set([
+  'llm_conversation', 'canvas_note', 'canvas_frame', 'canvas_reroute',
+  'canvas_ribbon', 'canvas_teleport', 'note', 'group_input', 'group_output',
+]);
+
+/** Build a compact text snapshot of a node for the LLM auto-context feature. */
+const _buildNodeContext = (n: any): string => {
+  const sc = n?.data?.schema;
+  const label = n?.data?.label || sc?.label || n?.type || 'Node';
+  const desc = n?.data?.description || sc?.description || '';
+  const params = n?.data?.params || {};
+  const specs = (sc?.params || []) as any[];
+
+  const lines = [`Node: ${label} (type: ${n?.type})`];
+  if (desc) lines.push(`Description: ${desc}`);
+
+  const paramLines: string[] = [];
+  for (const sp of specs) {
+    if (!sp?.id || sp.id.startsWith('_')) continue;
+    if (sp.type === 'section') continue;
+    let val = params[sp.id];
+    if (val === undefined) val = sp.default;
+    if (sp.type === 'enum' && Array.isArray(sp.options)) {
+      const idx = typeof val === 'number' ? val : sp.options.indexOf(val);
+      if (idx >= 0 && sp.options[idx] !== undefined) val = sp.options[idx];
+    }
+    const range = (sp.min !== undefined && sp.max !== undefined) ? ` (range ${sp.min}–${sp.max})` : '';
+    paramLines.push(`  - ${sp.label || sp.id}: ${val}${range}`);
+  }
+  if (paramLines.length) {
+    lines.push('Current parameters:');
+    lines.push(...paramLines);
+  }
+  return lines.join('\n');
+};
+
+export const LLMConversationNode = memo(({ selected, data }: any) => {
+  const selfId = useNodeId();
+  const MessagesSquare = getIcon('MessagesSquare', Box);
+  const keepCtx  = !!(data.params?.keep_context);
+  const autoCtx  = !!(data.params?.auto_context);
+  const modeIdx  = data.params?.num_personas ?? 0;
+  const modeLabel = modeIdx === 1 ? '2 Personas' : '1 Persona';
+
+  // Watch canvas selection: the first selected node that isn't this LLM (or a
+  // pure-canvas helper) becomes the auto-context target. Returns a JSON string
+  // so the component only re-renders when the captured node actually changes.
+  const targetJson = useStore((s: any) => {
+    for (const n of s.nodeInternals.values()) {
+      if (!n.selected || n.id === selfId) continue;
+      if (_LLM_CTX_SKIP.has(n.type)) continue;
+      return JSON.stringify(_buildNodeContext(n)) + '|' + (n.data?.label || n.data?.schema?.label || n.type);
+    }
+    return '';
+  });
+
+  const captured = React.useMemo(() => {
+    if (!targetJson) return null;
+    const sep = targetJson.lastIndexOf('|');
+    try {
+      return { text: JSON.parse(targetJson.slice(0, sep)) as string, label: targetJson.slice(sep + 1) };
+    } catch { return null; }
+  }, [targetJson]);
+
+  // Persist the latest captured context into _ctx so it survives selecting the
+  // LLM node itself (which deselects the target). Never wipe on deselect.
+  const lastCtxRef = React.useRef<string>('');
+  React.useEffect(() => {
+    if (autoCtx && captured && captured.text !== lastCtxRef.current) {
+      lastCtxRef.current = captured.text;
+      data.onChangeParams?.({ _ctx: captured.text, _ctx_label: captured.label });
+    }
+  }, [autoCtx, captured, data]);
+
+  const storedLabel = data.params?._ctx_label || captured?.label || '';
+  const hasCtx = !!(data.params?._ctx);
+
+  // Persist provider + model choices so new nodes start with the last used values.
+  const a_provider = data.params?.a_provider;
+  const a_model    = data.params?.a_model;
+  const b_provider = data.params?.b_provider;
+  const b_model    = data.params?.b_model;
+  React.useEffect(() => {
+    if (a_provider === undefined) return;
+    try {
+      localStorage.setItem('vn_llm_last_params', JSON.stringify({
+        a_provider, a_model: a_model ?? '',
+        b_provider: b_provider ?? 0, b_model: b_model ?? '',
+      }));
+    } catch {}
+  }, [a_provider, a_model, b_provider, b_model]);
+
+  const handleRun    = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ run: true }); };
+  const handleClear  = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ clear: true }); };
+  const toggleAuto   = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ auto_context: !autoCtx }); };
+
+  return (
+    <BaseNode
+      title={data.label || 'LLM'}
+      icon={MessagesSquare}
+      selected={selected}
+      data={data}
+      color="accent"
+      width={224}
+      inputs={_LLM_INPUTS}
+      outputs={_LLM_OUTPUTS}
+    >
+      {/* Spacer: push content below the lowest port (top=109px, header≈42px → need 75px from content top) */}
+      <div style={{ marginTop: 72 }} className="px-2 pb-2 nodrag flex flex-col gap-1.5">
+        {/* mode + keep-context badge */}
+        <div className="flex items-center justify-between">
+          <span className="text-[7px] font-black uppercase tracking-widest text-gray-500">{modeLabel}</span>
+          {keepCtx && (
+            <span className="text-[7px] font-black uppercase tracking-widest text-accent/60 bg-accent/10 px-1.5 py-0.5 rounded">context</span>
+          )}
+        </div>
+
+        {/* Auto node-context toggle */}
+        <button
+          onClick={toggleAuto}
+          className={`flex items-center justify-between px-2 py-1 rounded-lg border transition-all ${
+            autoCtx
+              ? 'bg-accent/15 border-accent/40 text-accent'
+              : 'bg-black/20 border-white/10 text-gray-500 hover:border-white/20'
+          }`}
+          title="Feed the selected node's params to the LLM automatically"
+        >
+          <span className="flex items-center gap-1 text-[7px] font-black uppercase tracking-widest">
+            <Crosshair size={8} /> Auto Context
+          </span>
+          <span className={`w-2 h-2 rounded-full ${autoCtx ? 'bg-accent' : 'bg-gray-600'}`} />
+        </button>
+
+        {/* Captured target indicator */}
+        {autoCtx && (
+          hasCtx ? (
+            <div className="flex items-center gap-1 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-emerald-400/90 truncate">
+              <span className="text-emerald-500">→</span>
+              <span className="truncate">{storedLabel || 'node captured'}</span>
+            </div>
+          ) : (
+            <div className="px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-gray-600 truncate">
+              select a node…
+            </div>
+          )
+        )}
+
+        {/* Run / Clear buttons */}
+        <div className="flex gap-1.5">
+          <button
+            onClick={handleRun}
+            className="flex-1 bg-accent/10 hover:bg-accent/25 border border-accent/30 hover:border-accent/60 text-accent text-[8px] font-black uppercase tracking-widest py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all active:scale-95"
+          >
+            <Play size={9} /> Run
+          </button>
+          <button
+            onClick={handleClear}
+            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-gray-400 hover:text-gray-200 text-[8px] font-black uppercase tracking-widest py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all active:scale-95"
+          >
+            <RotateCcw size={9} /> Clear
+          </button>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
 
 // Params excluded from the on-node chip summary (internal / non-visual)
 const _HIDDEN_PARAMS = new Set([
