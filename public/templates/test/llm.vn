@@ -1,0 +1,694 @@
+{
+  "nodes": [
+    {
+      "id": "frame-source",
+      "type": "canvas_frame",
+      "position": {
+        "x": -240,
+        "y": 200
+      },
+      "style": {
+        "width": 260,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 240,
+          "color_index": 2,
+          "title": "Image Source"
+        }
+      },
+      "width": 260,
+      "height": 34
+    },
+    {
+      "id": "frame-gdino",
+      "type": "canvas_frame",
+      "position": {
+        "x": 80,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 5,
+          "title": "Détection GDINO (tiles 3×3)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-sam",
+      "type": "canvas_frame",
+      "position": {
+        "x": 480,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 4,
+          "title": "Segmentation SAM (Boxes List)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-llm",
+      "type": "canvas_frame",
+      "position": {
+        "x": 880,
+        "y": 200
+      },
+      "style": {
+        "width": 560,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 3,
+          "title": "Classification Ollama (llava)"
+        }
+      },
+      "width": 560,
+      "height": 34
+    },
+    {
+      "id": "img-1",
+      "type": "input_image",
+      "position": {
+        "x": -220,
+        "y": 280
+      },
+      "data": {
+        "label": "Stone Wall",
+        "params": {
+          "path": "samples/mixed-wall.jpg"
+        }
+      },
+      "width": 208,
+      "height": 203
+    },
+    {
+      "id": "gdino-1",
+      "type": "grounding_dino_detector",
+      "position": {
+        "x": 100,
+        "y": 280
+      },
+      "data": {
+        "label": "Grounding DINO",
+        "params": {
+          "hf_token": "",
+          "text_prompt": "stone",
+          "model": 0,
+          "tile_mode": 2,
+          "tile_overlap": 64,
+          "box_threshold": 0.2,
+          "text_threshold": 0.15,
+          "nms_threshold": 0.5,
+          "show_labels": true,
+          "max_boxes": 0
+        }
+      },
+      "width": 208,
+      "height": 217
+    },
+    {
+      "id": "disp-gdino",
+      "type": "output_display",
+      "position": {
+        "x": 100,
+        "y": 580
+      },
+      "data": {
+        "label": "GDINO — Bboxes",
+        "params": {
+          "color_index": 5
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "sam-1",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 500,
+        "y": 280
+      },
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "hf_token": "",
+          "model": 1,
+          "prompt_mode": 3,
+          "multimask": false,
+          "mask_select": 0,
+          "overlay_opacity": 55
+        }
+      },
+      "width": 208,
+      "height": 217
+    },
+    {
+      "id": "disp-sam",
+      "type": "output_display",
+      "position": {
+        "x": 500,
+        "y": 580
+      },
+      "data": {
+        "label": "SAM — Masques",
+        "params": {
+          "color_index": 4
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153
+    },
+    {
+      "id": "llm-1",
+      "type": "llm_inference",
+      "position": {
+        "x": 900,
+        "y": 280
+      },
+      "data": {
+        "label": "Ollama — Classification pierres",
+        "params": {
+          "provider": 0,
+          "model": "gemma4:e4b",
+          "api_key": "",
+          "base_url": "",
+          "system_prompt": "You are an expert petrographer. You receive an image of a stone wall where each colored region is one individual stone segmented by AI. Analyze the visible stones and classify them by type based on color, texture, and morphology. Respond ONLY with valid JSON.",
+          "user_prompt": "Classify the stone types visible in this segmented wall image. For each distinct stone type you can identify, give a name, visual description, and estimated count. Return JSON: {\"stone_types\": [{\"name\": \"...\", \"description\": \"...\", \"estimated_count\": N}], \"dominant_type\": \"...\", \"wall_notes\": \"...\"}",
+          "json_mode": true,
+          "temperature": 0.3,
+          "max_tokens": 512,
+          "timeout": 60
+        }
+      },
+      "style": {
+        "width": 300
+      },
+      "width": 300,
+      "height": 138
+    },
+    {
+      "id": "insp-text",
+      "type": "data_inspector",
+      "position": {
+        "x": 1260,
+        "y": 280
+      },
+      "data": {
+        "label": "Résultat classification",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "insp-count",
+      "type": "data_inspector",
+      "position": {
+        "x": 1260,
+        "y": 500
+      },
+      "data": {
+        "label": "Nb pierres détectées",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "node-1780728437860-ynu10aox2",
+      "type": "llm_conversation",
+      "position": {
+        "x": 840,
+        "y": 660
+      },
+      "style": {},
+      "data": {
+        "label": "LLM",
+        "params": {
+          "auto_context": true,
+          "run": true,
+          "_v": 5,
+          "clear": false,
+          "a_system": "You are a helpful assistant specialized in Computer Vision. Your inputs are never python but algorithm oriented",
+          "max_tokens": 1024,
+          "a_provider": 3
+        },
+        "schema": {
+          "type": "llm_conversation",
+          "label": "LLM",
+          "category": "logic",
+          "icon": "MessagesSquare",
+          "description": "One or two AI personas. Single persona = Q&A assistant (opening → response). Two personas = debate/dialogue for N turns. Each persona has its own provider, model and system prompt. API keys are saved locally. Supports Ollama (local/cloud), OpenAI, Anthropic, Groq, DeepSeek, Custom.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image",
+              "label": "Image (vision)"
+            },
+            {
+              "id": "seed",
+              "color": "string",
+              "label": "Message (port)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "transcript",
+              "color": "string",
+              "label": "Transcript"
+            },
+            {
+              "id": "turns",
+              "color": "list",
+              "label": "Turns"
+            },
+            {
+              "id": "last",
+              "color": "string",
+              "label": "Last"
+            }
+          ],
+          "params": [
+            {
+              "id": "run",
+              "label": "Run",
+              "type": "trigger",
+              "default": false
+            },
+            {
+              "id": "clear",
+              "label": "Clear",
+              "type": "trigger",
+              "default": false
+            },
+            {
+              "id": "_v",
+              "label": "",
+              "type": "int",
+              "default": 0
+            },
+            {
+              "id": "_ctx",
+              "label": "",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "_ctx_label",
+              "label": "",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "num_personas",
+              "label": "Mode",
+              "type": "enum",
+              "options": [
+                "1 Persona (Q&A)",
+                "2 Personas (Dialogue)"
+              ],
+              "default": 0
+            },
+            {
+              "id": "keep_context",
+              "label": "Keep Context",
+              "type": "bool",
+              "default": false
+            },
+            {
+              "id": "auto_context",
+              "label": "Auto Node Context",
+              "type": "bool",
+              "default": false
+            },
+            {
+              "id": "opening",
+              "label": "Message / Opening",
+              "type": "string",
+              "default": "What do you think about this?"
+            },
+            {
+              "id": "num_turns",
+              "label": "Turns (dialogue only)",
+              "type": "int",
+              "default": 6,
+              "min": 2,
+              "max": 40,
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "section_gen",
+              "label": "Generation",
+              "type": "section"
+            },
+            {
+              "id": "temperature",
+              "label": "Temperature",
+              "type": "float",
+              "default": 0.8,
+              "min": 0,
+              "max": 2,
+              "step": 0.05
+            },
+            {
+              "id": "max_tokens",
+              "label": "Max Tokens / turn",
+              "type": "int",
+              "default": 200,
+              "min": 32,
+              "max": 2048,
+              "step": 32
+            },
+            {
+              "id": "timeout",
+              "label": "Timeout (s)",
+              "type": "int",
+              "default": 60,
+              "min": 5,
+              "max": 180
+            },
+            {
+              "id": "thinking",
+              "label": "Thinking mode (Ollama)",
+              "type": "bool",
+              "default": false
+            },
+            {
+              "id": "section_a",
+              "label": "Persona A",
+              "type": "section"
+            },
+            {
+              "id": "a_name",
+              "label": "Name",
+              "type": "string",
+              "default": "Assistant"
+            },
+            {
+              "id": "a_provider",
+              "label": "Provider",
+              "type": "enum",
+              "options": [
+                "Ollama (local)",
+                "Ollama (cloud)",
+                "OpenAI",
+                "Anthropic",
+                "Groq",
+                "DeepSeek",
+                "Custom"
+              ],
+              "default": 0
+            },
+            {
+              "id": "a_model",
+              "label": "Model (empty = default)",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "a_api_key",
+              "label": "API Key",
+              "type": "string",
+              "default": ""
+            },
+            {
+              "id": "a_system",
+              "label": "System Prompt",
+              "type": "string",
+              "default": "You are a helpful assistant. Be concise."
+            },
+            {
+              "id": "section_b",
+              "label": "Persona B",
+              "type": "section",
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "b_name",
+              "label": "Name",
+              "type": "string",
+              "default": "Bob",
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "b_provider",
+              "label": "Provider",
+              "type": "enum",
+              "options": [
+                "Ollama (local)",
+                "Ollama (cloud)",
+                "OpenAI",
+                "Anthropic",
+                "Groq",
+                "DeepSeek",
+                "Custom"
+              ],
+              "default": 0,
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "b_model",
+              "label": "Model (empty = default)",
+              "type": "string",
+              "default": "",
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "b_api_key",
+              "label": "API Key",
+              "type": "string",
+              "default": "",
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            },
+            {
+              "id": "b_system",
+              "label": "System Prompt",
+              "type": "string",
+              "default": "You are Bob, a thoughtful critic. Be concise (2-3 sentences). Stay in character.",
+              "show_if": {
+                "param": "num_personas",
+                "value": 1
+              }
+            }
+          ],
+          "resizable": true,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 224,
+      "height": 220,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 840,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780728453602-pybo5731y",
+      "type": "canvas_note",
+      "position": {
+        "x": 1140,
+        "y": 700
+      },
+      "style": {
+        "width": 518,
+        "height": 856
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "\n\n[ERROR] <html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>cloudflare</center>\r\n</body>\r\n</html>"
+        }
+      },
+      "width": 518,
+      "height": 856,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1140,
+        "y": 700
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1780728467893-qz8n97w9a",
+      "type": "canvas_note",
+      "position": {
+        "x": 500,
+        "y": 820
+      },
+      "style": {
+        "width": 300,
+        "height": 180
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 0,
+          "text": "Comment paramétrer grounding dino pour segmenter toutes les pierres de ce mure, y compris les fragments de briques ?"
+        }
+      },
+      "width": 300,
+      "height": 180,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 500,
+        "y": 820
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-img-gdino",
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "gdino-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-img-sam",
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "sam-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gdino-boxes-sam",
+      "source": "gdino-1",
+      "sourceHandle": "list__boxes_list",
+      "target": "sam-1",
+      "targetHandle": "list__boxes"
+    },
+    {
+      "id": "e-gdino-disp",
+      "source": "gdino-1",
+      "sourceHandle": "image__main",
+      "target": "disp-gdino",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-sam-disp",
+      "source": "sam-1",
+      "sourceHandle": "image__main",
+      "target": "disp-sam",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-sam-llm-img",
+      "source": "sam-1",
+      "sourceHandle": "image__main",
+      "target": "llm-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-llm-insp",
+      "source": "llm-1",
+      "sourceHandle": "dict__json_data",
+      "target": "insp-text",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e-sam-count",
+      "source": "sam-1",
+      "sourceHandle": "scalar__count",
+      "target": "insp-count",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "img-1",
+      "sourceHandle": "image__main",
+      "target": "node-1780728437860-ynu10aox2",
+      "targetHandle": "image__image",
+      "id": "e-1780728465002"
+    },
+    {
+      "source": "node-1780728467893-qz8n97w9a",
+      "sourceHandle": "string__text_out",
+      "target": "node-1780728437860-ynu10aox2",
+      "targetHandle": "string__seed",
+      "id": "e-1780728474545"
+    },
+    {
+      "source": "node-1780728437860-ynu10aox2",
+      "sourceHandle": "string__transcript",
+      "target": "node-1780728453602-pybo5731y",
+      "targetHandle": "any__text",
+      "id": "e-1780728578365"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 266
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": null
+  }
+}

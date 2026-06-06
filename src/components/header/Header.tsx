@@ -3,8 +3,9 @@ import {
   FilePlus, FolderOpen, Save, SaveAll, Undo2, Redo2,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3,
   Image, Film, Camera, Type, Layout, GitCommit, FileCode,
-  Palette, FolderSearch, BookOpen, RefreshCw
+  Palette, FolderSearch, BookOpen, RefreshCw, HelpCircle
 } from 'lucide-react';
+import ApiKeysPanel from './ApiKeysPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as N from '../Nodes';
 import logo from '../../assets/logo.svg';
@@ -31,6 +32,7 @@ interface HeaderProps {
   alignNodes: (direction: 'horizontal' | 'vertical') => void;
   snapToggle: () => void;
   addNode: (type: string, label: string) => void;
+  addHelpAssistant: () => void;
   saveProject: () => void;
   saveProjectAs: () => void;
   saveProjectIncremental: () => void;
@@ -54,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({
   isPaletteSelectOpen, isProjectsOpen, isTemplatesOpen,
   workDir, workDirFiles, templates,
   setActiveCanvasId, handleUndo, handleRedo, alignNodes, snapToggle,
-  addNode, saveProject, saveProjectAs, saveProjectIncremental,
+  addNode, addHelpAssistant, saveProject, saveProjectAs, saveProjectIncremental,
   loadProject, newProject,
   setIsPaletteSelectOpen, setActivePaletteIndex,
   setIsProjectsOpen, setIsTemplatesOpen,
@@ -170,6 +172,16 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={addHelpAssistant}
+          title="Drop a Help assistant (question → LLM → answer)"
+          className="flex items-center gap-1.5 px-2.5 py-1 bg-accent/10 hover:bg-accent/20 rounded-lg border border-accent/30 text-accent text-[10px] font-bold transition-all"
+        >
+          <HelpCircle size={14} /> Help
+        </button>
+
+        <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+
         <div className="flex items-center gap-0.5 bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
           {canvases.map((c, i) => (
             <button
@@ -327,6 +339,9 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </AnimatePresence>
          </div>
+
+         <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+         <ApiKeysPanel />
       </div>
     </header>
   );
