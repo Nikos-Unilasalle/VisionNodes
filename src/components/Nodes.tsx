@@ -1486,7 +1486,7 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
       )}
 
       {/* Scrollable content */}
-          <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0">
+          <div className="flex-1 overflow-auto scrollbar-hide p-2.5 min-h-0 nowheel">
             <JsonTreeView data={displayData} />
           </div>
         </>
