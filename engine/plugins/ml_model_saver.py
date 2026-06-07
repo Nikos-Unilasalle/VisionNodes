@@ -12,7 +12,7 @@ _NOTIF_ID = 'ml_model_saver'
     label='Model Saver',
     category='Machine Learning',
     icon='Save',
-    description="Sauvegarde un model bundle PyTorch (dict) sur disque. Déclencher avec le trigger 'save'.",
+    description="Saves a PyTorch model bundle (dict) to disk. Trigger with the 'save' param.",
     inputs=[
         {'id': 'model_bundle', 'color': 'dict', 'label': 'Model Bundle'},
     ],
@@ -20,8 +20,8 @@ _NOTIF_ID = 'ml_model_saver'
         {'id': 'status', 'color': 'dict', 'label': 'Status'},
     ],
     params=[
-        {'id': 'path', 'label': 'Chemin de sauvegarde', 'type': 'string', 'default': 'model.pt'},
-        {'id': 'save', 'label': 'Sauvegarder',          'type': 'trigger'},
+        {'id': 'path', 'label': 'Save path', 'type': 'string', 'default': 'model.pt'},
+        {'id': 'save', 'label': 'Save',      'type': 'trigger'},
     ],
     resizable=True, min_width=220, min_height=120,
 )
@@ -35,7 +35,7 @@ class MLModelSaverNode(NodeProcessor):
 
     def process(self, inputs, params):
         if not self.ensure_packages(['torch'], pip_names=['torch'], notif_id=_NOTIF_ID):
-            return {'status': {'saved': False, 'path': '', 'size_mb': 0.0, 'error': 'torch manquant'}}
+            return {'status': {'saved': False, 'path': '', 'size_mb': 0.0, 'error': 'torch missing'}}
 
         import torch
 
@@ -45,7 +45,7 @@ class MLModelSaverNode(NodeProcessor):
 
         if trigger == 1:
             if bundle is None:
-                send_notification('Aucun modèle connecté à ml_model_saver', level='warning', notif_id=_NOTIF_ID)
+                send_notification('No model connected to ml_model_saver', level='warning', notif_id=_NOTIF_ID)
                 return {
                     'status': {
                         'saved': False,
@@ -68,13 +68,13 @@ class MLModelSaverNode(NodeProcessor):
                 self._last_saved = True
 
                 send_notification(
-                    f'Modèle sauvegardé → {path} ({size_mb:.2f} MB)',
+                    f'Model saved → {path} ({size_mb:.2f} MB)',
                     level='info',
                     notif_id=_NOTIF_ID,
                 )
 
             except Exception as exc:
-                send_notification(f'Erreur sauvegarde modèle : {exc}', level='error', notif_id=_NOTIF_ID)
+                send_notification(f'Error saving model: {exc}', level='error', notif_id=_NOTIF_ID)
                 return {
                     'status': {
                         'saved': False,

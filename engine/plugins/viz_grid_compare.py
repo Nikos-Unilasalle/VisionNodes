@@ -39,8 +39,8 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     category='Machine Learning',
     icon='Eye',
     description=(
-        "Compare visuellement deux grilles spatiales (Réel vs Reconstruit). "
-        "Affiche les cartes côte à côte ainsi que la carte de différence d'erreur absolue."
+        "Visually compares two spatial grids (Real vs Reconstructed). "
+        "Displays side-by-side maps and the absolute error difference map."
     ),
     inputs=[
         {'id': 'original',      'color': 'any',    'label': 'Original'},
@@ -52,8 +52,8 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
         {'id': 'frame_psnr',    'color': 'scalar', 'label': 'PSNR frame'},
     ],
     params=[
-        {'id': 'frame_idx',     'label': 'Index Frame / Temps',     'type': 'int',    'default': 0, 'min': 0, 'max': 50000},
-        {'id': 'colormap',      'label': 'Palette Couleur',          'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
+        {'id': 'frame_idx',     'label': 'Frame Index / Time',     'type': 'int',    'default': 0, 'min': 0, 'max': 50000},
+        {'id': 'colormap',      'label': 'Color Palette',          'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
     ]
 )
 class GridCompareDashboardNode(NodeProcessor):
@@ -70,11 +70,11 @@ class GridCompareDashboardNode(NodeProcessor):
             return {}
 
         if not isinstance(orig, np.ndarray) or not isinstance(recon, np.ndarray):
-            send_notification("Grid Compare: Les entrées doivent être des tableaux NumPy", level='error', notif_id=_NOTIF_ID)
+            send_notification("Grid Compare: Inputs must be NumPy arrays", level='error', notif_id=_NOTIF_ID)
             return {}
 
         if orig.shape != recon.shape:
-            send_notification(f"Grid Compare: Dimensions différentes (orig: {orig.shape}, recon: {recon.shape})", level='error', notif_id=_NOTIF_ID)
+            send_notification(f"Grid Compare: Different dimensions (orig: {orig.shape}, recon: {recon.shape})", level='error', notif_id=_NOTIF_ID)
             return {}
 
         T, H, W = orig.shape
@@ -175,7 +175,7 @@ class GridCompareDashboardNode(NodeProcessor):
                 ax3.axis('off')
 
                 fig.suptitle(
-                    f"Comparaison Frame {frame_idx}/{T-1}  |  "
+                    f"Comparison Frame {frame_idx}/{T-1}  |  "
                     f"MSE: {frame_mse:.5f}  |  PSNR: {frame_psnr:.2f} dB",
                     fontsize=10
                 )

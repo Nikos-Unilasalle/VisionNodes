@@ -30,9 +30,9 @@ _MPL_DARK = {
 
 
 _EXPORT_PARAMS = [
-    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
-    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
-    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_dpi', 'label': 'Export DPI (100=screen, 300=pub)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Export width px (0 = node size)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Export height px (0 = node size)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
 ]
 
 

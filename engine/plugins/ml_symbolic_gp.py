@@ -111,8 +111,8 @@ def _protected_exp(x1):
         {'id': 'raster_h',  'type': 'int',   'default': 200,   'min': 32, 'max': 1024, 'label': 'Raster height (px)'},
         {'id': 'raster_w',  'type': 'int',   'default': 200,   'min': 32, 'max': 1024, 'label': 'Raster width (px)'},
         {'id': 'formula',   'type': 'code',
-         'default': '15.5 * (Rouge / Vert) + log(NIR)',
-         'label': 'True formula (vars: Bleu, Vert, Rouge, NIR)'},
+         'default': '15.5 * (Red / Green) + log(NIR)',
+         'label': 'True formula (vars: Blue, Green, Red, NIR)'},
         {'id': 'noise_std', 'type': 'float', 'default': 0.5,  'min': 0.0, 'max': 5.0, 'label': 'Noise std-dev'},
         {'id': 'seed',      'type': 'int',   'default': 42,   'min': 0,   'max': 9999, 'label': 'Random seed'},
     ],
@@ -128,19 +128,19 @@ class SyntheticRegressionDataNode(NodeProcessor):
         n_train  = max(20, int(params.get('n_train', 200)))
         H        = max(32, int(params.get('raster_h', 200)))
         W        = max(32, int(params.get('raster_w', 200)))
-        formula  = str(params.get('formula', '15.5 * (Rouge / Vert) + log(NIR)')).strip()
+        formula  = str(params.get('formula', '15.5 * (Red / Green) + log(NIR)')).strip()
         noise_sd = float(params.get('noise_std', 0.5))
         seed     = int(params.get('seed', 42))
 
-        send_notification(f'Synth: {n_train} samples + raster {W}×{H}…', progress=0.1, notif_id=_NOTIF)
+        send_notification(f'Synth: {n_train} samples + raster {W}x{H}...', progress=0.1, notif_id=_NOTIF)
 
         rng = np.random.default_rng(seed)
 
         def _sample_bands(n):
             return {
-                'Bleu':  rng.uniform(0.01,  0.05, n).astype(np.float32),
-                'Vert':  rng.uniform(0.02,  0.08, n).astype(np.float32),
-                'Rouge': rng.uniform(0.01,  0.12, n).astype(np.float32),
+                'Blue':  rng.uniform(0.01,  0.05, n).astype(np.float32),
+                'Green': rng.uniform(0.02,  0.08, n).astype(np.float32),
+                'Red':   rng.uniform(0.01,  0.12, n).astype(np.float32),
                 'NIR':   rng.uniform(0.005, 0.04, n).astype(np.float32),
             }
 
@@ -165,7 +165,7 @@ class SyntheticRegressionDataNode(NodeProcessor):
         train_df['__px_idx'] = np.arange(n_train, dtype=np.int32)
 
         # ── Raster table (no label, full HxW pixels)
-        send_notification('Synth: raster pixels…', progress=0.5, notif_id=_NOTIF)
+        send_notification('Synth: raster pixels...', progress=0.5, notif_id=_NOTIF)
         n_raster = H * W
         raster_bands = _sample_bands(n_raster)
         raster_df = pd.DataFrame(raster_bands)
@@ -173,11 +173,11 @@ class SyntheticRegressionDataNode(NodeProcessor):
 
         # ── Preview
         lines = [
-            f'Formule: {formula}',
-            f'Training: {n_train} samples  |  Bruit σ={noise_sd}',
-            f'Raster: {W} × {H}  ({n_raster:,} pixels)',
-            f'Variables: Bleu, Vert, Rouge, NIR',
-            f'Label stats: μ={y_noisy.mean():.2f}  σ={y_noisy.std():.2f}',
+            f'Formula: {formula}',
+            f'Training: {n_train} samples  |  Noise sd={noise_sd}',
+            f'Raster: {W} x {H}  ({n_raster:,} pixels)',
+            f'Variables: Blue, Green, Red, NIR',
+            f'Label stats: mean={y_noisy.mean():.2f}  std={y_noisy.std():.2f}',
             f'             min={y_noisy.min():.2f}  max={y_noisy.max():.2f}',
             f'Seed: {seed}',
         ]
@@ -236,7 +236,7 @@ class SyntheticRegressionDataNode(NodeProcessor):
         {'id': 'use_sqrt',         'type': 'bool',   'default': True,  'label': 'Include sqrt'},
         {'id': 'use_div',          'type': 'bool',   'default': True,  'label': 'Include protected div'},
         {'id': 'log_transform',    'type': 'bool',   'default': True,
-         'label': 'Log-transform target (log1p/expm1)  — recommandé turbidité'},
+         'label': 'Log-transform target (log1p/expm1) — recommended for turbidity'},
         {'id': 'seed',             'type': 'int',    'default': 42,    'min': 0, 'max': 9999,
          'label': 'Base random seed'},
         {'id': 'run',              'type': 'trigger','default': 0,     'label': 'Train Ensemble'},
@@ -318,7 +318,7 @@ class SymbolicRegressorNode(NodeProcessor):
         y_orig = y_all.copy()
         if log_transform:
             y_all = np.log1p(np.maximum(0.0, y_all)).astype(np.float32)
-            send_notification('GP: log1p(target) appliqué', progress=0.04, notif_id=_NOTIF)
+            send_notification('GP: log1p(target) applied', progress=0.04, notif_id=_NOTIF)
 
         # ── Build function set
         protected_log_fn  = make_function(function=_protected_log,      name='log',  arity=1)

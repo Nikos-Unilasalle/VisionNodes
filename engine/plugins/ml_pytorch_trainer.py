@@ -12,15 +12,15 @@ _NOTIF_ID = 'ml_pytorch_trainer'
 
 DEFAULT_CODE = '''\
 """
-Définissez ici votre LightningModule ET la fonction make_dataloaders.
+Define your LightningModule AND the make_dataloaders function here.
 
-Variables disponibles dans le contexte :
-  - data    : dict reçu en entrée du nœud
-  - params  : dict des paramètres (n_epochs, lr, batch_size, etc.)
-  - torch, nn, F, pl : déjà importés
+Variables available in context:
+  - data    : dict received as input of the node
+  - params  : dict of parameters (n_epochs, lr, batch_size, etc.)
+  - torch, nn, F, pl : already imported
 
-Deux éléments OBLIGATOIRES :
-  1. class MyModule(pl.LightningModule) avec training_step, validation_step, configure_optimizers
+Two REQUIRED elements:
+  1. class MyModule(pl.LightningModule) with training_step, validation_step, configure_optimizers
   2. def make_dataloaders(data, params) -> (module, train_loader, val_loader)
 """
 import torch.nn as nn
@@ -55,7 +55,7 @@ class MyModule(pl.LightningModule):
 
 
 def make_dataloaders(data, params):
-    # data doit contenir \'X\' (array numpy ou tensor)
+    # data must contain \'X\' (numpy array or tensor)
     X = torch.tensor(data[\'X\'], dtype=torch.float32)
     ds = TensorDataset(X)
     n_val = max(1, int(len(X) * 0.2))
@@ -65,7 +65,7 @@ def make_dataloaders(data, params):
     input_dim = X.shape[1] if X.ndim > 1 else 1
     lr = float(params.get(\'learning_rate\', 0.001))
     module = MyModule(input_dim=input_dim, latent_dim=4, lr=lr)
-    return module, DataLoader(train_ds, batch_size=bs, shuffle=True, num_workers=0), \\
+    return module, DataLoader(train_ds, batch_size=bs, shuffle=True, num_workers=0), \
            DataLoader(val_ds, batch_size=bs, num_workers=0)
 '''
 
@@ -75,7 +75,7 @@ def make_dataloaders(data, params):
     label='PyTorch Trainer',
     category='Machine Learning',
     icon='Cpu',
-    description="Entraîneur PyTorch Lightning générique — définissez votre LightningModule dans le champ code.",
+    description="Generic PyTorch Lightning trainer — define your LightningModule in the code editor.",
     inputs=[
         {'id': 'data', 'color': 'dict', 'label': 'Data (dict)'},
     ],
@@ -85,14 +85,14 @@ def make_dataloaders(data, params):
         {'id': 'status',        'color': 'dict', 'label': 'Status'},
     ],
     params=[
-        {'id': 'code',          'label': 'Code Python',      'type': 'code',   'default': DEFAULT_CODE},
+        {'id': 'code',          'label': 'Python Code',      'type': 'code',   'default': DEFAULT_CODE},
         {'id': 'n_epochs',      'label': 'Epochs',           'type': 'int',    'default': 30, 'min': 1, 'max': 300},
         {'id': 'patience',      'label': 'Early stop patience', 'type': 'int', 'default': 10, 'min': 1, 'max': 50},
         {'id': 'learning_rate', 'label': 'Learning rate',    'type': 'float',  'default': 0.001},
         {'id': 'batch_size',    'label': 'Batch size',       'type': 'int',    'default': 16, 'min': 1, 'max': 256},
-        {'id': 'accelerator',   'label': 'Accélérateur',     'type': 'enum',
-         'options': ['cpu', 'gpu (si dispo)', 'auto'], 'default': 2},
-        {'id': 'train',         'label': 'Entraîner',        'type': 'trigger'},
+        {'id': 'accelerator',   'label': 'Accelerator',     'type': 'enum',
+         'options': ['cpu', 'gpu (if available)', 'auto'], 'default': 2},
+        {'id': 'train',         'label': 'Train',        'type': 'trigger'},
     ],
     resizable=True, min_width=320, min_height=200,
 )
@@ -134,12 +134,12 @@ class MLPyTorchTrainerNode(NodeProcessor):
 
             make_dataloaders_fn = namespace.get('make_dataloaders')
             if make_dataloaders_fn is None:
-                raise ValueError("La fonction 'make_dataloaders' est introuvable dans le code.")
+                raise ValueError("The function 'make_dataloaders' could not be found in the code.")
 
             module, train_loader, val_loader = make_dataloaders_fn(data, params)
 
             if not isinstance(module, pl.LightningModule):
-                raise TypeError("make_dataloaders doit retourner un pl.LightningModule en premier élément.")
+                raise TypeError("make_dataloaders must return a pl.LightningModule as the first element.")
 
             n_epochs = int(params.get('n_epochs', 30))
             patience = int(params.get('patience', 10))
@@ -211,15 +211,15 @@ class MLPyTorchTrainerNode(NodeProcessor):
                 self._loss_history = {k: list(v) for k, v in loss_history.items()}
                 self._state        = 'done'
 
-            msg = f'Training terminé — val_loss={final_val:.4f}' if not np.isnan(final_val) \
-                  else 'Training terminé'
+            msg = f'Training completed — val_loss={final_val:.4f}' if not np.isnan(final_val) \
+                  else 'Training completed'
             send_notification(msg, level='info', notif_id=_NOTIF_ID)
 
         except Exception as exc:
             with self._lock:
                 self._state     = 'error'
                 self._error_msg = str(exc)
-            send_notification(f'Erreur training : {exc}', level='error', notif_id=_NOTIF_ID)
+            send_notification(f'Training error: {exc}', level='error', notif_id=_NOTIF_ID)
 
     # ── process ─────────────────────────────────────────────────────────────
 
@@ -230,7 +230,7 @@ class MLPyTorchTrainerNode(NodeProcessor):
             notif_id=_NOTIF_ID,
         ):
             return {
-                'status': {'state': 'error', 'epoch': 0, 'message': 'torch ou pytorch_lightning manquant'}
+                'status': {'state': 'error', 'epoch': 0, 'message': 'torch or pytorch_lightning missing'}
             }
 
         data    = inputs.get('data') or {}
@@ -245,7 +245,7 @@ class MLPyTorchTrainerNode(NodeProcessor):
                 self._state        = 'training'
                 self._loss_history = {'train_loss': [], 'val_loss': []}
                 self._epoch        = 0
-                self._progress_msg = 'Démarrage...'
+                self._progress_msg = 'Starting...'
                 self._model_bundle = None
 
             self._thread = threading.Thread(

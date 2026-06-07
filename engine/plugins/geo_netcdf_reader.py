@@ -13,29 +13,29 @@ _NOTIF_ID = 'netcdf_reader'
     category='geography',
     icon='Globe',
     description=(
-        "Lit un fichier NetCDF (.nc) ou un dossier de fichiers NetCDF. "
-        "Extrait une variable sous forme de tenseur 3D (Temps x Lat x Lon)."
+        "Reads a NetCDF file (.nc) or a folder of NetCDF files. "
+        "Extracts a variable as a 3D tensor (Time x Lat x Lon)."
     ),
     inputs=[],
     outputs=[
         {'id': 'grids',       'color': 'any',    'label': 'Grids (T x H x W)'},
-        {'id': 'preview',     'color': 'image',  'label': 'Aperçu (1ère frame)'},
+        {'id': 'preview',     'color': 'image',  'label': 'Preview (1st frame)'},
         {'id': 'meta',        'color': 'dict',   'label': 'Meta'},
     ],
     params=[
-        {'id': 'path',         'label': 'Chemin (Fichier ou Dossier)',    'type': 'string', 'default': ''},
-        {'id': 'variable',     'label': 'Variable (vide = auto)',         'type': 'string', 'default': ''},
-        {'id': 'depth_idx',    'label': 'Index Profondeur (si 4D)',      'type': 'int',    'default': 0, 'min': 0, 'max': 500},
-        {'id': 'lat_range',    'label': 'Plage Latitudes (ex: -40,-30)', 'type': 'string', 'default': ''},
-        {'id': 'lon_range',    'label': 'Plage Longitudes (ex: -40,-30)','type': 'string', 'default': ''},
-        {'id': 'lat_coord',    'label': 'Nom Dim Latitude (vide = auto)', 'type': 'string', 'default': ''},
-        {'id': 'lon_coord',    'label': 'Nom Dim Longitude (vide = auto)','type': 'string', 'default': ''},
-        {'id': 'time_coord',   'label': 'Nom Dim Temps (vide = auto)',    'type': 'string', 'default': ''},
-        {'id': 'time_slice',   'label': 'Slice Temporel (ex: 0:10 ou YYYY-MM-DD:YYYY-MM-DD)', 'type': 'string', 'default': ''},
-        {'id': 'spatial_stride','label': 'Pas spatial (stride)',           'type': 'int',    'default': 1, 'min': 1, 'max': 100},
-        {'id': 'scale_factor', 'label': 'Facteur d\'Échelle (Scale)',    'type': 'float',  'default': 1.0},
-        {'id': 'add_offset',   'label': 'Offset / Décalage',              'type': 'float',  'default': 0.0},
-        {'id': 'colormap',     'label': 'Palette Couleur',                'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno', 'Rainbow'], 'default': 0},
+        {'id': 'path',         'label': 'Path (File or Folder)',    'type': 'string', 'default': ''},
+        {'id': 'variable',     'label': 'Variable (blank = auto)',         'type': 'string', 'default': ''},
+        {'id': 'depth_idx',    'label': 'Depth Index (if 4D)',      'type': 'int',    'default': 0, 'min': 0, 'max': 500},
+        {'id': 'lat_range',    'label': 'Latitude Range (e.g., -40,-30)', 'type': 'string', 'default': ''},
+        {'id': 'lon_range',    'label': 'Longitude Range (e.g., -40,-30)','type': 'string', 'default': ''},
+        {'id': 'lat_coord',    'label': 'Latitude Dim Name (blank = auto)', 'type': 'string', 'default': ''},
+        {'id': 'lon_coord',    'label': 'Longitude Dim Name (blank = auto)','type': 'string', 'default': ''},
+        {'id': 'time_coord',   'label': 'Time Dim Name (blank = auto)',    'type': 'string', 'default': ''},
+        {'id': 'time_slice',   'label': 'Time Slice (e.g., 0:10 or YYYY-MM-DD:YYYY-MM-DD)', 'type': 'string', 'default': ''},
+        {'id': 'spatial_stride','label': 'Spatial Stride',           'type': 'int',    'default': 1, 'min': 1, 'max': 100},
+        {'id': 'scale_factor', 'label': 'Scale Factor',             'type': 'float',  'default': 1.0},
+        {'id': 'add_offset',   'label': 'Add Offset',              'type': 'float',  'default': 0.0},
+        {'id': 'colormap',     'label': 'Color Palette',                'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno', 'Rainbow'], 'default': 0},
     ]
 )
 class NetCDFGridReaderNode(NodeProcessor):
@@ -112,13 +112,13 @@ class NetCDFGridReaderNode(NodeProcessor):
                 if os.path.isdir(path):
                     files = sorted(glob.glob(os.path.join(path, "*.nc")))
                     if not files:
-                        send_notification("NetCDF Reader: Aucun fichier .nc trouvé dans le dossier", level='warning', notif_id=_NOTIF_ID)
+                        send_notification("NetCDF Reader: No .nc files found in folder", level='warning', notif_id=_NOTIF_ID)
                         return {'grids': None, 'preview': None, 'meta': None}
                     
-                    send_notification(f"NetCDF: Chargement de {len(files)} fichiers...", progress=0.2, notif_id=_NOTIF_ID)
+                    send_notification(f"NetCDF: Loading {len(files)} files...", progress=0.2, notif_id=_NOTIF_ID)
                     ds = xr.open_mfdataset(files, combine='by_coords')
                 else:
-                    send_notification(f"NetCDF: Chargement du fichier {os.path.basename(path)}...", progress=0.2, notif_id=_NOTIF_ID)
+                    send_notification(f"NetCDF: Loading file {os.path.basename(path)}...", progress=0.2, notif_id=_NOTIF_ID)
                     ds = xr.open_dataset(path)
 
                 # 2. Variable selection
@@ -130,11 +130,11 @@ class NetCDFGridReaderNode(NodeProcessor):
                     elif all_vars:
                         var_name = all_vars[0]
                     else:
-                        send_notification("NetCDF Reader: Aucune variable trouvée dans le dataset", level='error', notif_id=_NOTIF_ID)
+                        send_notification("NetCDF Reader: No variables found in dataset", level='error', notif_id=_NOTIF_ID)
                         return {'grids': None, 'preview': None, 'meta': None}
 
                 if var_name not in ds.data_vars:
-                    send_notification(f"NetCDF Reader: Variable '{var_name}' introuvable. Variables dispo: {all_vars}", level='error', notif_id=_NOTIF_ID)
+                    send_notification(f"NetCDF Reader: Variable '{var_name}' not found. Available variables: {all_vars}", level='error', notif_id=_NOTIF_ID)
                     return {'grids': None, 'preview': None, 'meta': None}
 
                 da = ds[var_name]
@@ -157,7 +157,7 @@ class NetCDFGridReaderNode(NodeProcessor):
                         depth_dim = dim
 
                 if not lat_dim or not lon_dim:
-                    send_notification("NetCDF Reader: Dimensions de latitude/longitude non détectées", level='error', notif_id=_NOTIF_ID)
+                    send_notification("NetCDF Reader: Latitude/longitude dimensions not detected", level='error', notif_id=_NOTIF_ID)
                     return {'grids': None, 'preview': None, 'meta': None}
 
                 # 4. Slice spatial bounding box
@@ -171,7 +171,7 @@ class NetCDFGridReaderNode(NodeProcessor):
                         else:
                             slice_dict[lat_dim] = slice(lmin, lmax)
                     except Exception:
-                        send_notification("NetCDF Reader: Format Plage Latitude invalide (attendu: min,max)", level='warning', notif_id=_NOTIF_ID)
+                        send_notification("NetCDF Reader: Invalid Latitude Range format (expected: min,max)", level='warning', notif_id=_NOTIF_ID)
 
                 if lon_range_str and lon_dim in da.coords:
                     try:
@@ -182,7 +182,7 @@ class NetCDFGridReaderNode(NodeProcessor):
                         else:
                             slice_dict[lon_dim] = slice(lmin, lmax)
                     except Exception:
-                        send_notification("NetCDF Reader: Format Plage Longitude invalide (attendu: min,max)", level='warning', notif_id=_NOTIF_ID)
+                        send_notification("NetCDF Reader: Invalid Longitude Range format (expected: min,max)", level='warning', notif_id=_NOTIF_ID)
 
                 if slice_dict:
                     da = da.sel(**slice_dict)
@@ -260,7 +260,7 @@ class NetCDFGridReaderNode(NodeProcessor):
                 self._cache_path = cache_key
                 self._pending_thumb = True
                 self._preview_cache = None
-                send_notification(f"NetCDF: {grids.shape[0]} frames de taille {grids.shape[1]}x{grids.shape[2]} chargées.", progress=1.0, notif_id=_NOTIF_ID)
+                send_notification(f"NetCDF: {grids.shape[0]} frames of size {grids.shape[1]}x{grids.shape[2]} loaded.", progress=1.0, notif_id=_NOTIF_ID)
 
             except Exception as e:
                 send_notification(f"NetCDF Reader error: {e}", level='error', notif_id=_NOTIF_ID)

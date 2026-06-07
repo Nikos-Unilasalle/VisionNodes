@@ -98,9 +98,9 @@ def _apply_bundle_to_grids(bundle, grids):
     label='Model Loader',
     category='Machine Learning',
     icon='FolderOpen',
-    description="Charge un model bundle PyTorch depuis disque. Applique l'inférence sur des grilles si connecté.",
+    description="Loads a PyTorch model bundle from disk and applies inference on spatial grids if connected.",
     inputs=[
-        {'id': 'grids', 'color': 'any', 'label': 'Grids (T×H×W) — optionnel'},
+        {'id': 'grids', 'color': 'any', 'label': 'Grids (T×H×W) — optional'},
     ],
     outputs=[
         {'id': 'model_bundle',  'color': 'dict',   'label': 'Model Bundle'},
@@ -109,8 +109,8 @@ def _apply_bundle_to_grids(bundle, grids):
         {'id': 'status',        'color': 'dict',   'label': 'Status'},
     ],
     params=[
-        {'id': 'path', 'label': 'Chemin du modèle', 'type': 'string',  'default': 'model.pt'},
-        {'id': 'load', 'label': 'Recharger',         'type': 'trigger'},
+        {'id': 'path', 'label': 'Model path', 'type': 'string',  'default': 'model.pt'},
+        {'id': 'load', 'label': 'Reload',     'type': 'trigger'},
     ],
     resizable=True, min_width=220, min_height=130,
 )
@@ -124,7 +124,7 @@ class MLModelLoaderNode(NodeProcessor):
 
     def process(self, inputs, params):
         if not self.ensure_packages(['torch'], pip_names=['torch'], notif_id=_NOTIF_ID):
-            return {'status': {'loaded': False, 'error': 'torch manquant'}}
+            return {'status': {'loaded': False, 'error': 'torch missing'}}
 
         import torch
 
@@ -143,14 +143,14 @@ class MLModelLoaderNode(NodeProcessor):
                 self._loaded_path = path
                 self._error       = ''
                 send_notification(
-                    f'Modèle chargé depuis {path}',
+                    f'Model loaded from {path}',
                     level='info',
                     notif_id=_NOTIF_ID,
                 )
             except Exception as exc:
                 self._bundle = None
                 self._error  = str(exc)
-                send_notification(f'Erreur chargement modèle : {exc}', level='error', notif_id=_NOTIF_ID)
+                send_notification(f'Error loading model: {exc}', level='error', notif_id=_NOTIF_ID)
 
         if self._bundle is None:
             return {

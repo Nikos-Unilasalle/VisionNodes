@@ -98,8 +98,78 @@ def group_by_category(nodes, ts_path):
     # Now build the final grouped structure
     # Map nodes by type for quick lookup
     node_map = { n["type"]: n for n in nodes if "type" in n }
-    seen_types = set()
     
+    # Map remaining unmapped nodes dynamically to clean categories
+    mapped_types = { n_info["type"] for cat in cats_config for n_info in cat["nodes"] }
+    type_aliases = {
+        'canvas_note': 'note',
+        'canvas_reroute': 'reroute'
+    }
+    
+    for n in nodes:
+        t = n.get("type")
+        if not t:
+            continue
+            
+        resolved_type = type_aliases.get(t, t)
+        is_mapped = resolved_type in mapped_types or t in mapped_types
+        if t in ['canvas_note', 'canvas_reroute']:
+            is_mapped = False
+        if not is_mapped:
+            cat_id = None
+            cat_label = None
+            
+            if t.startswith("geo_") or t in ["s1_polarization_features", "raster_colorizer", "geotiff_to_mask"]:
+                if any(x in t for x in ["loader", "reader", "writer", "sampler", "wfs", "stack", "download"]):
+                    cat_id, cat_label = "geo_input", "Geo Input"
+                else:
+                    cat_id, cat_label = "geo_analysis", "Geo Analysis"
+            elif t.startswith("ml_") or t in ["dinov2_classifier", "ml_dataframe_join", "ml_random_forest", "ml_rf_regressor"]:
+                cat_id, cat_label = "Machine Learning", "Machine Learning"
+            elif t.startswith("llm_") or t == "grounding_dino_detector":
+                cat_id, cat_label = "ai", "AI & LLM"
+            elif t.startswith("canvas_") or t in ["canvas_note", "canvas_reroute"]:
+                cat_id, cat_label = "canvas", "Canvas"
+            elif t in ["rock_classifier", "stone_calepinage"]:
+                cat_id, cat_label = "geology", "Geology"
+            elif t == "pbr_material_gen":
+                cat_id, cat_label = "3d", "3D / Geometry"
+            elif t == "variable_store":
+                cat_id, cat_label = "logic", "Logic"
+            elif t in ["bbox_transform", "box_selection", "export_crops"]:
+                cat_id, cat_label = "geometry", "Geometry"
+            elif t == "util_monte_carlo_propagation":
+                cat_id, cat_label = "math", "Math"
+            else:
+                python_cat = n.get("category", "")
+                if python_cat:
+                    cat_id = python_cat
+                    cat_label = python_cat.replace("_", " ").title()
+            
+            if cat_id:
+                cat_found = False
+                for c in cats_config:
+                    if c["id"] == cat_id:
+                        c["nodes"].append({
+                            "type": t,
+                            "ts_label": n.get("label", t),
+                            "ts_desc": n.get("description", "")
+                        })
+                        cat_found = True
+                        break
+                if not cat_found:
+                    cats_config.append({
+                        "id": cat_id,
+                        "label": cat_label,
+                        "nodes": [{
+                            "type": t,
+                            "ts_label": n.get("label", t),
+                            "ts_desc": n.get("description", "")
+                        }]
+                    })
+                mapped_types.add(t)
+
+    seen_types = set()
     sorted_cats = []
     
     for cat in cats_config:
@@ -111,14 +181,22 @@ def group_by_category(nodes, ts_path):
         
         for n_info in cat["nodes"]:
             t = n_info["type"]
-            if t in node_map and t not in seen_types:
-                seen_types.add(t)
-                node_data = node_map[t].copy()
-                # Override label, description and CATEGORY with the TS ones for perfect consistency
+            # Resolve type alias if needed (e.g. if TS has note but python has canvas_note)
+            eff_type = t
+            if t not in node_map:
+                # check reverse alias
+                for k, v in type_aliases.items():
+                    if v == t and k in node_map:
+                        eff_type = k
+                        break
+            
+            if eff_type in node_map and eff_type not in seen_types:
+                seen_types.add(eff_type)
+                node_data = node_map[eff_type].copy()
                 node_data["category"] = cat["id"]
-                if n_info["ts_label"]:
+                if n_info.get("ts_label"):
                     node_data["label"] = n_info["ts_label"]
-                if n_info["ts_desc"]:
+                if n_info.get("ts_desc"):
                     node_data["description"] = n_info["ts_desc"]
                 cat_group["nodes"].append(node_data)
                 
@@ -126,10 +204,8 @@ def group_by_category(nodes, ts_path):
             sorted_cats.append(cat_group)
             
     # Nodes that are in python but not in TS categories
-    # We can optionally group them under 'Uncategorized' or just ignore them.
-    # We will put them in a 'developer' category at the end if they exist.
     mapped_types = { n_info["type"] for cat in cats_config for n_info in cat["nodes"] }
-    unmapped = [n for n in nodes if n.get("type") not in mapped_types]
+    unmapped = [n for n in nodes if n.get("type") not in mapped_types and n.get("type") not in seen_types]
     
     if unmapped:
         unmapped.sort(key=lambda x: x.get("label", ""))

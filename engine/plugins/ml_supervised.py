@@ -38,9 +38,9 @@ def _get_mpl():
 
 
 _EXPORT_PARAMS = [
-    {'id': 'out_dpi', 'label': 'DPI export (100=écran, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
-    {'id': 'out_w',   'label': 'Largeur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
-    {'id': 'out_h',   'label': 'Hauteur export px  (0 = taille nœud)',    'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_dpi', 'label': 'Export DPI (100=screen, 300=publication)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
+    {'id': 'out_w',   'label': 'Export width px (0 = node size)',          'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
+    {'id': 'out_h',   'label': 'Export height px (0 = node size)',         'type': 'int', 'default': 0,   'min': 0,  'max': 5000},
 ]
 
 
@@ -224,9 +224,9 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, fig_w, fi
     category='Machine Learning',
     icon='TrendingUp',
     description=(
-        "Linear regression: scatter prédit vs réel, résidus, "
-        "et bar chart des coefficients par feature. "
-        "Sorties : R² train/test, RMSE."
+        "Linear regression: predicted vs actual scatter, residuals, "
+        "and feature coefficients bar chart. "
+        "Outputs: train/test R², RMSE."
     ),
     inputs=[
         {'id': 'train',    'color': 'data', 'label': 'Train set'},
@@ -234,7 +234,7 @@ def _confusion_plot(model, X_te, y_te, classes, cmap, acc, model_name, fig_w, fi
         {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
-        {'id': 'preview',    'color': 'image',  'label': 'Prédit vs Réel + Résidus'},
+        {'id': 'preview',    'color': 'image',  'label': 'Predicted vs Actual + Residuals'},
         {'id': 'coef_plot',  'color': 'image',  'label': 'Coefficients'},
         {'id': 'r2_test',    'color': 'scalar', 'label': 'R² test'},
         {'id': 'r2_train',   'color': 'scalar', 'label': 'R² train'},
@@ -388,8 +388,8 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
     icon='Zap',
     description=(
         "Support Vector Machine. "
-        "2 features → frontière de décision. N features → confusion matrix. "
-        "Ajuster C (régularisation) et kernel pour comprendre les marges."
+        "2 features → decision boundary. N features → confusion matrix. "
+        "Adjust C (regularization) and kernel to explore margins."
     ),
     inputs=[
         {'id': 'train',    'color': 'data', 'label': 'Train set'},
@@ -397,7 +397,7 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
         {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
-        {'id': 'preview',     'color': 'image',  'label': 'Frontière / Confusion matrix'},
+        {'id': 'preview',     'color': 'image',  'label': 'Decision Boundary / Confusion Matrix'},
         {'id': 'accuracy',    'color': 'scalar', 'label': 'Test accuracy'},
         {'id': 'train_acc',   'color': 'scalar', 'label': 'Train accuracy'},
         {'id': 'report',      'color': 'image',  'label': 'Classification report'},
@@ -406,13 +406,13 @@ _KERNELS = ['rbf', 'linear', 'poly', 'sigmoid']
     params=[
         {'id': 'features',     'label': 'Features (blank = all numeric)', 'type': 'string', 'default': ''},
         {'id': 'target',       'label': 'Target column',                  'type': 'string', 'default': ''},
-        {'id': 'C',            'label': 'C  (régularisation)',            'type': 'float',  'default': 1.0, 'min': 0.001, 'max': 1000.0},
+        {'id': 'C',            'label': 'C (regularization)',             'type': 'float',  'default': 1.0, 'min': 0.001, 'max': 1000.0},
         {'id': 'kernel',       'label': 'Kernel',                         'type': 'enum',   'options': _KERNELS, 'default': 0},
         {'id': 'gamma',        'label': 'Gamma',                          'type': 'enum',   'options': ['scale', 'auto'], 'default': 0},
         {'id': 'degree',       'label': 'Degree (poly only)',             'type': 'int',    'default': 3, 'min': 2, 'max': 6},
         {'id': 'standardize',  'label': 'Standardize features',           'type': 'bool',   'default': True},
-        {'id': 'colormap',     'label': 'Colormap',                       'type': 'enum',   'options': _CMAP_LABELS, 'default': 0},
-        {'id': 'boundary_res', 'label': 'Résolution frontière',           'type': 'int',    'default': 120, 'min': 40, 'max': 300},
+        {'id': 'colormap',     'label': 'Colormap (tree)',                'type': 'enum',   'options': _CMAP_LABELS, 'default': 0},
+        {'id': 'boundary_res', 'label': 'Boundary resolution',            'type': 'int',    'default': 120, 'min': 40, 'max': 300},
         *_EXPORT_PARAMS,
     ],
     resizable=True,
@@ -516,8 +516,8 @@ class MLSVMClassifierNode(NodeProcessor):
     category='Machine Learning',
     icon='GitBranch',
     description=(
-        "Arbre de décision. Slider max_depth pour observer la complexité de l'arbre. "
-        "Affiche l'arbre complet + bar chart des feature importances."
+        "Decision Tree. Use max_depth slider to control model complexity. "
+        "Plots the full decision tree and feature importances."
     ),
     inputs=[
         {'id': 'train',    'color': 'data', 'label': 'Train set'},
@@ -525,19 +525,19 @@ class MLSVMClassifierNode(NodeProcessor):
         {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
     outputs=[
-        {'id': 'tree_plot',  'color': 'image',  'label': 'Arbre de décision'},
-        {'id': 'importance', 'color': 'image',  'label': 'Feature importances'},
+        {'id': 'tree_plot',  'color': 'image',  'label': 'Decision Tree Plot'},
+        {'id': 'importance', 'color': 'image',  'label': 'Feature Importances'},
         {'id': 'accuracy',   'color': 'scalar', 'label': 'Test accuracy'},
         {'id': 'train_acc',  'color': 'scalar', 'label': 'Train accuracy'},
-        {'id': 'depth',      'color': 'scalar', 'label': 'Profondeur réelle'},
+        {'id': 'depth',      'color': 'scalar', 'label': 'Actual depth'},
     ],
     params=[
         {'id': 'features',        'label': 'Features (blank = all numeric)', 'type': 'string', 'default': ''},
         {'id': 'target',          'label': 'Target column',                  'type': 'string', 'default': ''},
-        {'id': 'max_depth',       'label': 'Max depth (0 = illimité)',        'type': 'int',    'default': 4, 'min': 0, 'max': 20},
+        {'id': 'max_depth',       'label': 'Max depth (0 = unlimited)',      'type': 'int',    'default': 4, 'min': 0, 'max': 20},
         {'id': 'criterion',       'label': 'Criterion',                      'type': 'enum',   'options': ['gini', 'entropy', 'log_loss'], 'default': 0},
         {'id': 'min_samples_split','label': 'Min samples split',             'type': 'int',    'default': 2, 'min': 2, 'max': 50},
-        {'id': 'colormap',        'label': 'Colormap (arbre)',               'type': 'enum',   'options': _CMAP_LABELS, 'default': 3},
+        {'id': 'colormap',        'label': 'Colormap (tree)',                'type': 'enum',   'options': _CMAP_LABELS, 'default': 3},
         *_EXPORT_PARAMS,
     ],
     resizable=True,
