@@ -131,7 +131,7 @@
   "edges": [
     { "id": "e-img-gdino",       "source": "img-1",   "sourceHandle": "image__main",       "target": "gdino-1", "targetHandle": "image__image" },
     { "id": "e-img-sam",         "source": "img-1",   "sourceHandle": "image__main",       "target": "sam-1",   "targetHandle": "image__image" },
-    { "id": "e-gdino-boxes-sam", "source": "gdino-1", "sourceHandle": "list__boxes_list",  "target": "sam-1",   "targetHandle": "list__boxes" },
+    { "id": "e-gdino-boxes-sam", "source": "gdino-1", "sourceHandle": "list__boxes_list",  "target": "sam-1",   "targetHandle": "any__boxes" },
     { "id": "e-gdino-disp",      "source": "gdino-1", "sourceHandle": "image__main",       "target": "disp-gdino", "targetHandle": "image__main" },
     { "id": "e-sam-disp",        "source": "sam-1",   "sourceHandle": "image__main",       "target": "disp-sam",   "targetHandle": "image__main" },
     { "id": "e-sam-llm-img",     "source": "sam-1",   "sourceHandle": "image__main",       "target": "llm-1",   "targetHandle": "image__image" },

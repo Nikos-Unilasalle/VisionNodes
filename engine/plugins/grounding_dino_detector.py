@@ -39,10 +39,7 @@ _TILE_GRIDS   = [1, 2, 3, 4, 5]
     ],
     outputs=[
         {'id': 'main',       'color': 'image',  'label': 'Overlay'},
-        {'id': 'boxes_list', 'color': 'list',   'label': 'Boxes List → SAM'},
-        {'id': 'box_0',      'color': 'dict',   'label': 'Box 0'},
-        {'id': 'box_1',      'color': 'dict',   'label': 'Box 1'},
-        {'id': 'box_2',      'color': 'dict',   'label': 'Box 2'},
+        {'id': 'boxes_list', 'color': 'list',   'label': 'Boxes List'},
         {'id': 'count',      'color': 'scalar', 'label': 'Count'},
     ],
     params=[
@@ -133,7 +130,7 @@ class GroundingDINODetectorNode(NodeProcessor):
 
     def _empty(self, image, msg: str = None) -> dict:
         main = self._status_overlay(image, msg) if (msg and image is not None) else image
-        return {'main': main, 'boxes_list': [], 'box_0': None, 'box_1': None, 'box_2': None, 'count': 0.0}
+        return {'main': main, 'boxes_list': [], 'count': 0.0}
 
     def _infer_patch(self, pil_patch, text_prompt: str, box_thr: float, text_thr: float, torch) -> tuple:
         """Run GDINO on one PIL patch. Returns (boxes_xyxy_px, scores, labels)."""
@@ -393,9 +390,6 @@ class GroundingDINODetectorNode(NodeProcessor):
         out = {
             'main':       overlay,
             'boxes_list': boxes_list,
-            'box_0':      boxes_list[0] if n > 0 else None,
-            'box_1':      boxes_list[1] if n > 1 else None,
-            'box_2':      boxes_list[2] if n > 2 else None,
             'count':      float(n),
         }
         self._cache_result = out

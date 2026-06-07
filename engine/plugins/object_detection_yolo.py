@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, _notification_queue
 import cv2
 import numpy as np
 import torch
@@ -61,6 +61,7 @@ class YoloDetectionNode(NodeProcessor):
                 self.model = model
                 self.current_model_name = name
                 send_notification(f'YOLO: ready ({name})', progress=1.0, notif_id='yolo_load')
+                _notification_queue.put_nowait({'_wake_engine': True, '_node_type': 'object_detection_yolo'})
             except Exception as e:
                 send_notification(f'YOLO load error: {e}', level='error', notif_id='yolo_load')
                 self.model = None
