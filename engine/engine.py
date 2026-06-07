@@ -148,7 +148,7 @@ def _is_serializable(v, _depth=0):
         return math.isfinite(v)  # reject NaN/Inf — json.dumps outputs non-standard tokens that break frontend JSON.parse
     if isinstance(v, np.ndarray):
         return False
-    if _depth > 2:
+    if _depth > 3:
         return False
     if isinstance(v, dict):
         if len(v) > 64:
@@ -282,6 +282,7 @@ class VisionEngine:
         self.connected_clients = set()
         self.node_instances = {}
         self._node_cache = {}  # {nid: {'sig': str, 'output': dict}}
+        self._edge_topology_sig = ''  # hash of edge set; cache cleared on topology change
         self.registry = {}
         self.registry.update(NODE_CLASS_REGISTRY)
         self.pending_capture = None
@@ -358,7 +359,14 @@ class VisionEngine:
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
         self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
-        self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid in active_nids}
+        # Clear cache when edge topology changes (new file load, reconnect) so stale results
+        # from a previous session don't mask newly-valid outputs.
+        edge_sig = str(sorted((e.get('source',''), e.get('sourceHandle',''), e.get('target',''), e.get('targetHandle','')) for e in flat_edges))
+        if edge_sig != self._edge_topology_sig:
+            self._edge_topology_sig = edge_sig
+            self._node_cache = {}
+        else:
+            self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid in active_nids}
         node_types = {n.get('type') for n in flat_nodes}
         needs_camera = 'input_webcam' in node_types
         if needs_camera and (self.cap is None or not self.cap.isOpened()):

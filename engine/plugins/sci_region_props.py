@@ -173,6 +173,7 @@ class RegionPropsNode(NodeProcessor):
 
         if img is not None:
             base = img.copy() if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            base = base.astype(np.uint8)
             preview = cv2.addWeighted(base, 0.45, colored, 0.55, 0)
         else:
             preview = colored.copy()

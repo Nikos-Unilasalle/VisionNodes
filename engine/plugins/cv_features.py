@@ -287,10 +287,14 @@ class HoughCirclesNode(NodeProcessor):
     label="Filter Contours",
     category='segmentation',
     icon="Filter",
-    description="Filters a contour list by elongation (long/short axis ratio) and/or area. Use min_elongation > 1 to keep only elongated shapes like rivers.",
-    inputs=[{"id": "contours", "color": "contours"}],
+    description="Filters a contour list by elongation (long/short axis ratio) and/or area. Use min_elongation > 1 to keep only elongated shapes like rivers. Connect an image to preview the kept contours.",
+    inputs=[
+        {"id": "contours", "color": "contours"},
+        {"id": "image",    "color": "image", "label": "Image (preview)"}
+    ],
     outputs=[
         {"id": "contours_list", "color": "contours"},
+        {"id": "main",          "color": "image", "label": "Overlay"},
         {"id": "count",         "color": "scalar"}
     ],
     params=[
@@ -300,40 +304,89 @@ class HoughCirclesNode(NodeProcessor):
         {"id": "max_elongation",  "label": "Max Elongation (0=off)",  "type": "float", "default": 0.0, "min": 0.0, "max": 100.0, "step": 0.5},
         {"id": "min_area",        "label": "Min Area (0=off)",        "type": "float", "default": 0.0, "min": 0.0, "max": 100000},
         {"id": "max_area",        "label": "Max Area (0=off)",        "type": "float", "default": 0.0, "min": 0.0, "max": 100000},
+        {"id": "show_rejected",   "label": "Show Rejected (red)",     "type": "bool",  "default": True},
+        {"id": "fill",            "label": "Fill Kept",               "type": "bool",  "default": False},
+        {"id": "thickness",       "label": "Outline Thickness",       "type": "int",   "default": 2, "min": 1, "max": 8},
     ]
 )
 class FilterContoursNode(NodeProcessor):
-    def process(self, inputs, params):
-        contours = inputs.get('contours') or []
+    def _keep(self, c: dict, params: dict) -> bool:
         max_circ = float(params.get('max_circularity', 0.0))
         min_circ = float(params.get('min_circularity', 0.0))
         min_elo  = float(params.get('min_elongation', 1.0))
         max_elo  = float(params.get('max_elongation', 0.0))
         min_area = float(params.get('min_area', 0.0))
         max_area = float(params.get('max_area', 0.0))
+        circ = float(c.get('circularity', 1.0))
+        elo  = float(c.get('elongation', 1.0))
+        area = float(c.get('area', 0.0))
+        if max_circ > 0.0 and circ > max_circ:
+            return False
+        if min_circ > 0.0 and circ < min_circ:
+            return False
+        if min_elo > 1.0 and elo < min_elo:
+            return False
+        if max_elo > 0.0 and elo > max_elo:
+            return False
+        if min_area > 0.0 and area < min_area:
+            return False
+        if max_area > 0.0 and area > max_area:
+            return False
+        return True
 
-        results = []
+    def _to_px(self, c: dict, w: int, h: int):
+        pts_raw = c.get('pts')
+        if not pts_raw or len(pts_raw) < 3:
+            return None
+        if c.get('relative', True):
+            px = np.array([[int(p[0] * w), int(p[1] * h)] for p in pts_raw], dtype=np.int32)
+        else:
+            px = np.array([[int(p[0]), int(p[1])] for p in pts_raw], dtype=np.int32)
+        return px
+
+    def process(self, inputs, params):
+        contours = inputs.get('contours') or []
+        image    = inputs.get('image')
+
+        results  = []
+        rejected = []
         for c in contours:
             if not isinstance(c, dict):
                 continue
-            circ = float(c.get('circularity', 1.0))
-            elo  = float(c.get('elongation', 1.0))
-            area = float(c.get('area', 0.0))
-            if max_circ > 0.0 and circ > max_circ:
-                continue
-            if min_circ > 0.0 and circ < min_circ:
-                continue
-            if min_elo > 1.0 and elo < min_elo:
-                continue
-            if max_elo > 0.0 and elo > max_elo:
-                continue
-            if min_area > 0.0 and area < min_area:
-                continue
-            if max_area > 0.0 and area > max_area:
-                continue
-            results.append(c)
+            (results if self._keep(c, params) else rejected).append(c)
 
-        return {"contours_list": results, "count": len(results)}
+        # Build preview overlay if an image is connected
+        overlay = None
+        if image is not None and hasattr(image, 'shape'):
+            overlay = image.copy()
+            if overlay.ndim == 2:
+                overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2BGR)
+            h, w = overlay.shape[:2]
+            thick = int(params.get('thickness', 2))
+            do_fill = bool(params.get('fill', False))
+
+            if bool(params.get('show_rejected', True)):
+                for c in rejected:
+                    px = self._to_px(c, w, h)
+                    if px is not None:
+                        cv2.polylines(overlay, [px], True, (60, 60, 200), 1)
+
+            for c in results:
+                px = self._to_px(c, w, h)
+                if px is None:
+                    continue
+                color_hex = str(c.get('color', '#00ff00')).lstrip('#')
+                try:
+                    bgr = tuple(int(color_hex[i:i+2], 16) for i in (4, 2, 0))
+                except Exception:
+                    bgr = (0, 255, 0)
+                if do_fill:
+                    layer = overlay.copy()
+                    cv2.fillPoly(layer, [px], bgr)
+                    overlay = cv2.addWeighted(overlay, 0.6, layer, 0.4, 0)
+                cv2.polylines(overlay, [px], True, bgr, thick)
+
+        return {"contours_list": results, "main": overlay, "count": len(results)}
 
 
 @vision_node(

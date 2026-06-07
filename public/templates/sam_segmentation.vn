@@ -598,7 +598,7 @@
       "source": "node-1778526171434-o1wxbsb6e",
       "sourceHandle": "dict__box",
       "target": "node-1778529169730-0.8964377937290595",
-      "targetHandle": "dict__box",
+      "targetHandle": "any__boxes",
       "id": "e-1778529176965",
       "selected": false
     },

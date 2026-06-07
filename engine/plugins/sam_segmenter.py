@@ -44,9 +44,8 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
     ),
     inputs=[
         {'id': 'image',  'color': 'image'},
-        {'id': 'box',    'color': 'dict', 'label': 'Box (from YOLO)'},
+        {'id': 'boxes',  'color': 'any',  'label': 'Boxes (single or list)'},
         {'id': 'points', 'color': 'list', 'label': 'Points List'},
-        {'id': 'boxes',  'color': 'list', 'label': 'Boxes List (Grounding DINO)'},
     ],
     outputs=[
         {'id': 'main',      'color': 'image',  'label': 'Overlay'},
@@ -70,8 +69,8 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
 
         # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
-         'options': ['Box Input Port', 'Points List Input Port', 'Automatic (Grid)',
-                     'Boxes List'],
+         'options': ['Box (single)', 'Points List Input Port', 'Automatic (Grid)',
+                     'Boxes List (all)'],
          'default': 0},
 
         # ── Automatic Mode Settings ──
@@ -231,6 +230,19 @@ class SAMSegmenterNode(NodeProcessor):
                     0.65, color, 1, cv2.LINE_AA)
         return out
 
+    def _normalize_box_inputs(self, inputs):
+        """Smart unified 'boxes' port: accepts a single box dict (YOLO) or a
+        boxes list (Grounding DINO). Returns (single_box_dict_or_None, boxes_list)."""
+        raw = inputs.get('boxes')
+        if raw is None:
+            raw = inputs.get('box')  # back-compat for old 'box' handle
+        if isinstance(raw, dict):
+            return raw, [raw]
+        if isinstance(raw, list):
+            single = raw[0] if (raw and isinstance(raw[0], dict)) else None
+            return single, raw
+        return None, []
+
     def process(self, inputs, params):
         image = inputs.get('image')
 
@@ -310,13 +322,12 @@ class SAMSegmenterNode(NodeProcessor):
 
         # Build cache key from image + prompt params + inputs
         img_hash = hash(image[::8, ::8].tobytes())
-        box_in = inputs.get('box')
+        box_in, boxes_in = self._normalize_box_inputs(inputs)
         pts_in = inputs.get('points')
-        
+
         box_hash = tuple(sorted(box_in.items())) if isinstance(box_in, dict) else None
 
         pts_hash   = str(pts_in)                 if isinstance(pts_in, list) else None
-        boxes_in   = inputs.get('boxes')
         boxes_hash = str(boxes_in)               if isinstance(boxes_in, list) else None
 
         prompt_key = (prompt_mode, box_hash, pts_hash, boxes_hash,
@@ -448,9 +459,9 @@ class SAMSegmenterNode(NodeProcessor):
 
             # ── 4b. Boxes List mode (Grounding DINO → SAM batch) ──
             if prompt_mode == 3:
-                boxes_input = inputs.get('boxes')
+                boxes_input = boxes_in
                 if not isinstance(boxes_input, list) or len(boxes_input) == 0:
-                    return empty('No boxes list — connect Grounding DINO boxes_list → boxes port')
+                    return empty('No boxes — connect a boxes list to the boxes port')
 
                 pixel_boxes = []
                 for b in boxes_input:
@@ -553,7 +564,7 @@ class SAMSegmenterNode(NodeProcessor):
             }
 
             # Auto-detect mode if the selected input port is empty
-            box_input  = inputs.get('box')
+            box_input  = box_in
             pts_input  = inputs.get('points')
             has_box    = isinstance(box_input, dict)
             has_points = isinstance(pts_input, list) and len(pts_input) > 0
@@ -660,7 +671,7 @@ class SAMSegmenterNode(NodeProcessor):
         # Draw the prompt indicator on the overlay
         if prompt_mode == 0:
             # Draw box from input
-            box_input = inputs.get('box')
+            box_input = box_in
             if isinstance(box_input, dict):
                 bbox = self._get_bbox_from_dict(box_input, h, w)
                 if bbox is not None:

@@ -1,0 +1,842 @@
+{
+  "nodes": [
+    {
+      "id": "note-1",
+      "type": "canvas_note",
+      "position": {
+        "x": 340,
+        "y": -80
+      },
+      "style": {
+        "width": 1100,
+        "height": 190
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "**Zero-shot calepinage pipeline**\n\n1. Grounding DINO detects stones via text prompt → boxes_list\n2. SAM segments each box → contours (ordered by id)\n3. DINOv2 classifies each crop by k-NN against your reference images → classes {type:[ids]}\n4. Stone Calepinage crosses contours + classes → colored wall diagram + legend\n\nSETUP: set the Image File path. In DINOv2 set 'Reference Folder' (ImageFolder, subfolders = class names) and press 'Build Refs'. Then press 'Detect' on Grounding DINO.",
+          "color_index": 3
+        }
+      },
+      "width": 1100,
+      "height": 190,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "positionAbsolute": {
+        "x": 340,
+        "y": -80
+      }
+    },
+    {
+      "id": "frame-source",
+      "type": "canvas_frame",
+      "position": {
+        "x": -240,
+        "y": 200
+      },
+      "style": {
+        "width": 260,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 240,
+          "color_index": 2,
+          "title": "Source"
+        }
+      },
+      "width": 260,
+      "height": 34
+    },
+    {
+      "id": "frame-gdino",
+      "type": "canvas_frame",
+      "position": {
+        "x": 80,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 5,
+          "title": "Detection — Grounding DINO"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-sam",
+      "type": "canvas_frame",
+      "position": {
+        "x": 480,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 4,
+          "title": "Segmentation — SAM (contours)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-dino",
+      "type": "canvas_frame",
+      "position": {
+        "x": 880,
+        "y": 200
+      },
+      "style": {
+        "width": 340,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 560,
+          "color_index": 6,
+          "title": "Classification — DINOv2 (zero-shot)"
+        }
+      },
+      "width": 340,
+      "height": 34
+    },
+    {
+      "id": "frame-calep",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1280,
+        "y": 200
+      },
+      "style": {
+        "width": 380,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "collapsed": true,
+          "savedHeight": 600,
+          "color_index": 1,
+          "title": "Calepinage — Wall Layout"
+        }
+      },
+      "width": 380,
+      "height": 34
+    },
+    {
+      "id": "src-1",
+      "type": "input_image",
+      "position": {
+        "x": -220,
+        "y": 280
+      },
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/wall.jpg",
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gdino-1",
+      "type": "grounding_dino_detector",
+      "position": {
+        "x": 120,
+        "y": 280
+      },
+      "data": {
+        "label": "Grounding DINO",
+        "params": {
+          "hf_token": "",
+          "text_prompt": "stone . small stone . large stone .",
+          "model": 0,
+          "tile_mode": 0,
+          "box_threshold": 0.05,
+          "text_threshold": 0.8,
+          "nms_threshold": 1,
+          "label_mode": 0,
+          "max_boxes": 0,
+          "color_index": 0,
+          "detect": 0,
+          "label_pos": 1
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 120,
+        "y": 280
+      }
+    },
+    {
+      "id": "disp-gdino",
+      "type": "output_display",
+      "position": {
+        "x": 360,
+        "y": 520
+      },
+      "data": {
+        "label": "GDINO — Bboxes",
+        "params": {
+          "color_index": 5
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "sam-1",
+      "type": "sam_segmenter",
+      "position": {
+        "x": 560,
+        "y": 280
+      },
+      "data": {
+        "label": "SAM Segmenter",
+        "params": {
+          "hf_token": "",
+          "model": 3,
+          "prompt_mode": 3,
+          "multimask": false,
+          "mask_select": 0,
+          "overlay_opacity": 55,
+          "color_index": 4,
+          "segment": 0
+        }
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 560,
+        "y": 280
+      }
+    },
+    {
+      "id": "disp-sam",
+      "type": "output_display",
+      "position": {
+        "x": 920,
+        "y": 500
+      },
+      "data": {
+        "label": "SAM — Contours",
+        "params": {
+          "color_index": 4
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 920,
+        "y": 500
+      },
+      "dragging": false
+    },
+    {
+      "id": "dino-1",
+      "type": "dinov2_classifier",
+      "position": {
+        "x": 900,
+        "y": 280
+      },
+      "data": {
+        "label": "DINOv2 Classifier",
+        "params": {
+          "hf_token": "",
+          "model": 0,
+          "ref_dir": "/Users/nikos/Desktop/VNStudio/samples/stones",
+          "k": 5,
+          "metric": 0,
+          "min_score": 0,
+          "crop_pad": 0,
+          "whole_frame": false,
+          "label_mode": 0,
+          "color_index": 1,
+          "build_refs": 0
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": true,
+      "dragging": false
+    },
+    {
+      "id": "insp-classes",
+      "type": "data_inspector",
+      "position": {
+        "x": 1200,
+        "y": 560
+      },
+      "data": {
+        "label": "classes {type:[ids]}",
+        "params": {
+          "color_index": 6
+        }
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1200,
+        "y": 560
+      },
+      "dragging": false
+    },
+    {
+      "id": "calep-1",
+      "type": "stone_calepinage",
+      "position": {
+        "x": 1300,
+        "y": 280
+      },
+      "data": {
+        "label": "Stone Calepinage",
+        "params": {
+          "opacity": 55,
+          "outline": 2,
+          "show_ids": true,
+          "show_legend": true,
+          "font_scale": 0.45,
+          "bg_gray": 245,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "disp-diagram",
+      "type": "output_display",
+      "position": {
+        "x": 1580,
+        "y": 340
+      },
+      "data": {
+        "label": "Calepinage — Diagram",
+        "params": {
+          "color_index": 3
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 340
+      },
+      "dragging": false
+    },
+    {
+      "id": "insp-legend",
+      "type": "data_inspector",
+      "position": {
+        "x": 1580,
+        "y": 520
+      },
+      "data": {
+        "label": "Legend (type→count)",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780810162016-on1635rad",
+      "type": "bbox_transform",
+      "position": {
+        "x": 360,
+        "y": 700
+      },
+      "style": {},
+      "data": {
+        "label": "BBox Transform",
+        "params": {
+          "resize_amount": 6,
+          "filter_mode": 1,
+          "max_size": 20
+        },
+        "schema": {
+          "type": "bbox_transform",
+          "label": "BBox Transform",
+          "category": "analysis",
+          "icon": "Scaling",
+          "description": "Resize (enlarge/reduce) and size-filter bounding boxes. Accepts a boxes list or a single box dict (Grounding DINO / YOLO format). Resize by percent of box size or by pixels per side; filter by area (% of image or px²) or by width/height in px. Connect the source image for pixel-based modes.",
+          "inputs": [
+            {
+              "id": "boxes_list",
+              "color": "list",
+              "label": "Boxes List"
+            },
+            {
+              "id": "box",
+              "color": "dict",
+              "label": "Single Box (optional)"
+            },
+            {
+              "id": "image",
+              "color": "image",
+              "label": "Image (for px modes)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "boxes_list",
+              "color": "list",
+              "label": "Boxes List"
+            },
+            {
+              "id": "main",
+              "color": "image",
+              "label": "Overlay"
+            },
+            {
+              "id": "count",
+              "color": "scalar",
+              "label": "Count"
+            }
+          ],
+          "params": [
+            {
+              "id": "resize_mode",
+              "label": "Resize Mode",
+              "type": "enum",
+              "options": [
+                "Percent (% of box)",
+                "Pixels (per side)"
+              ],
+              "default": 0
+            },
+            {
+              "id": "resize_amount",
+              "label": "Resize Amount (+grow / -shrink)",
+              "type": "float",
+              "default": 0,
+              "min": -100,
+              "max": 500,
+              "step": 1
+            },
+            {
+              "id": "clamp",
+              "label": "Clamp to Image Bounds",
+              "type": "bool",
+              "default": true
+            },
+            {
+              "id": "filter_mode",
+              "label": "Size Filter",
+              "type": "enum",
+              "options": [
+                "None",
+                "Area % of image",
+                "Area px²",
+                "Width & Height px"
+              ],
+              "default": 0
+            },
+            {
+              "id": "min_size",
+              "label": "Min Size",
+              "type": "float",
+              "default": 0,
+              "min": 0,
+              "max": 1000000,
+              "step": 1
+            },
+            {
+              "id": "max_size",
+              "label": "Max Size (0 = no max)",
+              "type": "float",
+              "default": 0,
+              "min": 0,
+              "max": 1000000,
+              "step": 1
+            },
+            {
+              "id": "draw",
+              "label": "Draw Overlay",
+              "type": "bool",
+              "default": true
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 138,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 700
+      }
+    },
+    {
+      "id": "node-1780810536204-fdvrezss3",
+      "type": "feat_filter_contours",
+      "position": {
+        "x": 660,
+        "y": 560
+      },
+      "style": {},
+      "data": {
+        "label": "Filter Contours",
+        "params": {
+          "max_circularity": 0.2
+        }
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 660,
+        "y": 560
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1780811000852-uj26hpt8z",
+      "type": "export_crops",
+      "position": {
+        "x": 660,
+        "y": 720
+      },
+      "style": {},
+      "data": {
+        "label": "Export Crops",
+        "params": {
+          "out_dir": "/Users/nikos/Desktop/VNStudio/samples/stones",
+          "prefix": "",
+          "cut_mode": 1,
+          "naming": 1,
+          "pad": -5,
+          "export_trigger": 0
+        },
+        "schema": {
+          "type": "export_crops",
+          "label": "Export Crops",
+          "category": "output",
+          "icon": "DownloadCloud",
+          "description": "Export one image per object from a boxes list (GDINO/YOLO) and/or a contours list (SAM). Rect or masked (transparent) crops. Optionally sort into per-class subfolders via a connected labels list (DINOv2) — perfect for building an ImageFolder reference set. Press 'Export Now' to write.",
+          "inputs": [
+            {
+              "id": "image",
+              "color": "image",
+              "label": "Source Image"
+            },
+            {
+              "id": "boxes_list",
+              "color": "list",
+              "label": "Boxes List (GDINO)"
+            },
+            {
+              "id": "contours",
+              "color": "list",
+              "label": "Contours (SAM)"
+            },
+            {
+              "id": "labels_list",
+              "color": "list",
+              "label": "Labels List (DINOv2, optional)"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "count",
+              "color": "scalar",
+              "label": "Exported Count"
+            }
+          ],
+          "params": [
+            {
+              "id": "export_trigger",
+              "label": "Export Now",
+              "type": "trigger",
+              "default": 0
+            },
+            {
+              "id": "out_dir",
+              "label": "Output Folder",
+              "type": "string",
+              "default": "exports/crops"
+            },
+            {
+              "id": "prefix",
+              "label": "Prefix",
+              "type": "string",
+              "default": "crop"
+            },
+            {
+              "id": "source",
+              "label": "Source",
+              "type": "enum",
+              "options": [
+                "Auto",
+                "Boxes",
+                "Contours"
+              ],
+              "default": 0
+            },
+            {
+              "id": "cut_mode",
+              "label": "Cut Mode",
+              "type": "enum",
+              "options": [
+                "Rect (opaque)",
+                "Masked (transparent)"
+              ],
+              "default": 0
+            },
+            {
+              "id": "naming",
+              "label": "Naming",
+              "type": "enum",
+              "options": [
+                "Auto (by class if labels)",
+                "By id",
+                "By class"
+              ],
+              "default": 0
+            },
+            {
+              "id": "pad",
+              "label": "Padding (px)",
+              "type": "int",
+              "default": 5,
+              "min": 0,
+              "max": 200
+            },
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "PNG",
+                "JPG"
+              ],
+              "default": 0
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 660,
+        "y": 720
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-src-gdino",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "gdino-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-src-sam",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "sam-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-src-dino",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "dino-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-src-calep",
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "calep-1",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e-gdino-dino",
+      "source": "gdino-1",
+      "sourceHandle": "list__boxes_list",
+      "target": "dino-1",
+      "targetHandle": "list__boxes_list"
+    },
+    {
+      "id": "e-gdino-disp",
+      "source": "gdino-1",
+      "sourceHandle": "image__main",
+      "target": "disp-gdino",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-sam-contours",
+      "source": "sam-1",
+      "sourceHandle": "list__contours",
+      "target": "calep-1",
+      "targetHandle": "list__contours"
+    },
+    {
+      "id": "e-sam-disp",
+      "source": "sam-1",
+      "sourceHandle": "image__main",
+      "target": "disp-sam",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e-dino-classes",
+      "source": "dino-1",
+      "sourceHandle": "dict__classes",
+      "target": "calep-1",
+      "targetHandle": "any__classes"
+    },
+    {
+      "id": "e-dino-insp",
+      "source": "dino-1",
+      "sourceHandle": "dict__classes",
+      "target": "insp-classes",
+      "targetHandle": "any__data"
+    },
+    {
+      "id": "e-calep-disp",
+      "source": "calep-1",
+      "sourceHandle": "image__diagram",
+      "target": "disp-diagram",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-calep-legend",
+      "source": "calep-1",
+      "sourceHandle": "dict__legend",
+      "target": "insp-legend",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "source": "gdino-1",
+      "sourceHandle": "list__boxes_list",
+      "target": "node-1780810162016-on1635rad",
+      "targetHandle": "list__boxes_list",
+      "id": "e-1780810266930"
+    },
+    {
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "node-1780810162016-on1635rad",
+      "targetHandle": "image__image",
+      "id": "e-1780810271422"
+    },
+    {
+      "source": "node-1780810162016-on1635rad",
+      "sourceHandle": "list__boxes_list",
+      "target": "sam-1",
+      "targetHandle": "list__boxes",
+      "id": "e-1780810447770"
+    },
+    {
+      "source": "sam-1",
+      "sourceHandle": "list__contours",
+      "target": "node-1780810536204-fdvrezss3",
+      "targetHandle": "contours__contours",
+      "id": "e-1780810549554"
+    },
+    {
+      "source": "src-1",
+      "sourceHandle": "image__main",
+      "target": "node-1780811000852-uj26hpt8z",
+      "targetHandle": "image__image",
+      "id": "e-1780812084619"
+    },
+    {
+      "source": "sam-1",
+      "sourceHandle": "list__contours",
+      "target": "node-1780811000852-uj26hpt8z",
+      "targetHandle": "list__contours",
+      "id": "e-1780812112931"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 400
+    },
+    "previewPos": {
+      "x": 428.2109375,
+      "y": 6.1484375
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "sam-1"
+  }
+}

@@ -68,7 +68,7 @@ _UNKNOWN_COLOR = (150, 150, 150)  # grey for unclassified stones
     ),
     inputs=[
         {'id': 'image',    'color': 'image', 'label': 'Source Image'},
-        {'id': 'contours', 'color': 'list',  'label': 'Contours (SAM)'},
+        {'id': 'contours', 'color': 'list',  'label': 'Contours'},
         {'id': 'classes',  'color': 'any',   'label': 'Classes {type:[ids]} (dict or JSON string)'},
     ],
     outputs=[
