@@ -87,6 +87,10 @@ _UNKNOWN_COLOR = (150, 150, 150)  # grey for unclassified stones
          'default': 0.45, 'min': 0.2, 'max': 2.0, 'step': 0.05},
         {'id': 'bg_gray',        'label': 'Diagram BG (gray 0-255)', 'type': 'int',
          'default': 245, 'min': 0, 'max': 255},
+        {'id': 'class_filter',   'label': 'Show Only Class (empty = all)', 'type': 'string',
+         'default': ''},
+        {'id': 'others_mode',    'label': 'Other Classes', 'type': 'enum',
+         'options': ['Hide', 'Grey'], 'default': 1},
     ],
     colorable=True,
     resizable=True,
@@ -173,6 +177,8 @@ class StoneCalepinageNode(NodeProcessor):
         show_legend = bool(params.get('show_legend', True))
         font_scale  = float(params.get('font_scale', 0.45))
         bg_gray     = int(params.get('bg_gray', 245))
+        class_filter = str(params.get('class_filter', '') or '').strip()
+        others_grey  = int(params.get('others_mode', 1)) == 1
 
         id_to_type, type_names = self._build_id_to_type(classes)
 
@@ -193,8 +199,15 @@ class StoneCalepinageNode(NodeProcessor):
             if cnt is None:
                 continue
             type_name = id_to_type.get(sid)
-            color = type_colors.get(type_name, _UNKNOWN_COLOR)
-            if type_name is not None:
+            matched = (not class_filter) or (type_name == class_filter)
+
+            # Class filter: hide non-matching stones entirely…
+            if not matched and not others_grey:
+                continue
+            # …or render them in grey for context.
+            color = type_colors.get(type_name, _UNKNOWN_COLOR) if matched else _UNKNOWN_COLOR
+
+            if matched and type_name is not None:
                 counts[type_name] = counts.get(type_name, 0) + 1
 
             # Fill both layers
@@ -221,6 +234,8 @@ class StoneCalepinageNode(NodeProcessor):
         overlay[region_mask] = blended[region_mask]
         if outline > 0:
             for sid, contour in enumerate(contours):
+                if sid not in centroids:   # skip stones hidden by class filter
+                    continue
                 cnt = self._contour_to_np(contour)
                 if cnt is not None:
                     cv2.polylines(overlay, [cnt], True, (255, 255, 255), 1)
@@ -236,6 +251,9 @@ class StoneCalepinageNode(NodeProcessor):
 
         # ── Legend on diagram ──
         if show_legend:
-            self._draw_legend(diagram, type_colors, counts, font_scale)
+            legend_colors = type_colors
+            if class_filter:
+                legend_colors = {class_filter: type_colors.get(class_filter, _UNKNOWN_COLOR)}
+            self._draw_legend(diagram, legend_colors, counts, font_scale)
 
         return {'overlay': overlay, 'diagram': diagram, 'legend': counts}
