@@ -59,7 +59,7 @@ _DEFAULT_ENTRIES = (
 @vision_node(
     type_id='image_legend',
     label='Image Legend',
-    category='cv',
+    category='draw',
     icon='BookOpen',
     description=(
         'Overlay a colour-coded legend on any image. '
