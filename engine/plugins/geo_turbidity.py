@@ -2,7 +2,7 @@
 Sentinel-2 marine turbidity pipeline nodes.
 
 Pipeline order:
-  geo_s2_loader → geo_dn_normalize → geo_water_mask_mndwi
+  geo_s2_loader → geo_dn_normalize → geo_water_mask (MNDWI)
   → geo_deglint → geo_turbidity_nechad → geo_geotiff_writer
 """
 
@@ -84,99 +84,7 @@ class DnNormalizeNode(NodeProcessor):
 
 
 # ---------------------------------------------------------------------------
-# 2. Water Mask (MNDWI + erosion)
-# ---------------------------------------------------------------------------
-
-@vision_node(
-    type_id='geo_water_mask_mndwi',
-    label='Water Mask (MNDWI)',
-    category='geography',
-    icon='Waves',
-    description=(
-        "Compute MNDWI = (Green − SWIR) / (Green + SWIR), threshold to isolate water, "
-        "then erode edges to remove mixed land/sea pixels. "
-        "Band indices reference the geotiff band order (1-based). "
-        "For geo_s2_loader output: Green=B3→band 1, SWIR=B11→band 4."
-    ),
-    inputs=[{'id': 'geotiff', 'color': 'geotiff'}],
-    outputs=[
-        {'id': 'mask',    'color': 'mask',   'label': 'Water Mask'},
-        {'id': 'mndwi',   'color': 'image',  'label': 'MNDWI Map'},
-        {'id': 'geotiff', 'color': 'geotiff','label': 'GeoTIFF (pass-through)'},
-    ],
-    params=[
-        {'id': 'green_band', 'type': 'int',   'default': 1,   'min': 1, 'max': 20, 'label': 'Green Band (B3)'},
-        {'id': 'swir_band',  'type': 'int',   'default': 4,   'min': 1, 'max': 20, 'label': 'SWIR Band (B11)'},
-        {'id': 'threshold',  'type': 'float', 'default': 0.0, 'min': -1.0, 'max': 1.0, 'label': 'Threshold (>N = water)'},
-        {'id': 'erode_size', 'type': 'int',   'default': 3,   'min': 0, 'max': 15,  'label': 'Erode Kernel (px)'},
-        {'id': 'scl_band',   'type': 'int',   'default': 0,   'min': 0, 'max': 20,  'label': 'SCL Band index (0=off)'},
-    ]
-)
-class WaterMaskMndwiNode(NodeProcessor):
-    def __init__(self):
-        super().__init__()
-        self._ck = None
-        self._co = None
-
-    def process(self, inputs, params):
-        geo = inputs.get('geotiff')
-        if geo is None:
-            return {'mask': None, 'mndwi': None, 'geotiff': None}
-        ck = _ck(geo, params)
-        if ck == self._ck:
-            return self._co
-
-        bands = geo['bands']
-        count = geo['count']
-        eps   = 1e-10
-        h, w  = bands.shape[1], bands.shape[2]
-
-        send_notification(f'Masque eau: calcul MNDWI ({w}×{h})…', progress=0.2, notif_id='water_mask')
-
-        g_idx = min(max(int(params.get('green_band', 1)), 1), count) - 1
-        s_idx = min(max(int(params.get('swir_band',  4)), 1), count) - 1
-
-        green = bands[g_idx].astype(np.float32)
-        swir  = bands[s_idx].astype(np.float32)
-
-        mndwi = (green - swir) / (green + swir + eps)
-        send_notification('Masque eau: seuillage…', progress=0.5, notif_id='water_mask')
-
-        thresh    = float(params.get('threshold', 0.0))
-        water_bin = (mndwi > thresh).astype(np.uint8)
-
-        erode_sz = int(params.get('erode_size', 3))
-        if erode_sz > 0:
-            send_notification(f'Masque eau: érosion morphologique {erode_sz}×{erode_sz}…', progress=0.7, notif_id='water_mask')
-            kernel    = cv2.getStructuringElement(cv2.MORPH_RECT, (erode_sz, erode_sz))
-            water_bin = cv2.erode(water_bin, kernel, iterations=1)
-
-        # SCL cloud masking (classes 3=shadow, 8=cloud med, 9=cloud high, 10=cirrus)
-        scl_idx = int(params.get('scl_band', 0))
-        if scl_idx > 0 and scl_idx <= count:
-            send_notification('Masque eau: exclusion nuages SCL…', progress=0.8, notif_id='water_mask')
-            scl = bands[scl_idx - 1].astype(np.uint8)
-            cloud_px = np.isin(scl, [3, 8, 9, 10])
-            water_bin[cloud_px] = 0
-            n_cloud = int(cloud_px.sum())
-            send_notification(f'Masque eau: {n_cloud:,} px nuages exclus', progress=0.85, notif_id='water_mask')
-
-        mask       = water_bin * 255
-        water_pct  = float(np.count_nonzero(mask)) / mask.size * 100.0
-        send_notification(f'Masque eau: OK — {water_pct:.1f}% eau valide', progress=0.9, notif_id='water_mask')
-
-        # Colorized MNDWI map (blue=water, land=grey)
-        mndwi_u8    = ((mndwi + 1.0) / 2.0 * 255.0).clip(0, 255).astype(np.uint8)
-        mndwi_color = cv2.applyColorMap(mndwi_u8, cv2.COLORMAP_OCEAN)
-        send_notification('Masque eau: OK', progress=1.0, notif_id='water_mask')
-
-        self._co = {'mask': mask, 'mndwi': _disp(mndwi_color), 'geotiff': geo}
-        self._ck = ck
-        return self._co
-
-
-# ---------------------------------------------------------------------------
-# 3. Deglint Correction
+# 2. Deglint Correction  (Water Mask → use geo_water_mask node)
 # ---------------------------------------------------------------------------
 
 @vision_node(

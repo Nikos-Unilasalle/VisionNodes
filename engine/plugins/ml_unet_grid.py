@@ -212,12 +212,12 @@ def rebuild_unet(config: dict):
     category='Machine Learning',
     icon='Layers',
     description=(
-        "U-Net convolutif pour la reconstruction de grilles géospatiales (T×H×W). "
-        "Entraînement PyTorch Lightning dans un thread. Gère les NaN (masque océan)."
+        "Convolutive U-Net for spatial grid reconstruction (T×H×W). "
+        "PyTorch Lightning training in a separate thread. Handles NaNs (ocean mask)."
     ),
     inputs=[
         {'id': 'grids', 'color': 'any',  'label': 'Grids (T×H×W)'},
-        {'id': 'meta',  'color': 'dict', 'label': 'Meta (optionnel)'},
+        {'id': 'meta',  'color': 'dict', 'label': 'Meta (optional)'},
     ],
     outputs=[
         {'id': 'reconstructed', 'color': 'any',    'label': 'Reconstructed'},
@@ -227,15 +227,15 @@ def rebuild_unet(config: dict):
         {'id': 'model_bundle',  'color': 'dict',   'label': 'Model Bundle'},
     ],
     params=[
-        {'id': 'n_latent',      'label': 'Canaux de base (n_latent)', 'type': 'int',   'default': 16,   'min': 4,     'max': 256},
-        {'id': 'n_levels',      'label': 'Niveaux U-Net',             'type': 'int',   'default': 3,    'min': 1,     'max': 5},
+        {'id': 'n_latent',      'label': 'Base channels (n_latent)', 'type': 'int',   'default': 16,   'min': 4,     'max': 256},
+        {'id': 'n_levels',      'label': 'U-Net levels',             'type': 'int',   'default': 3,    'min': 1,     'max': 5},
         {'id': 'n_epochs',      'label': 'Epochs',                    'type': 'int',   'default': 30,   'min': 5,     'max': 300},
         {'id': 'batch_size',    'label': 'Batch size',                'type': 'int',   'default': 8,    'min': 1,     'max': 64},
         {'id': 'learning_rate', 'label': 'Learning rate',             'type': 'float', 'default': 0.001},
         {'id': 'val_split',     'label': 'Val split',                 'type': 'float', 'default': 0.2},
         {'id': 'colormap',      'label': 'Colormap',                  'type': 'enum',
          'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
-        {'id': 'train',         'label': 'Entraîner',                 'type': 'trigger'},
+        {'id': 'train',         'label': 'Train',                 'type': 'trigger'},
     ],
     resizable=True, min_width=300, min_height=200,
 )
@@ -435,12 +435,12 @@ class MLUNetGridNode(NodeProcessor):
                 self._state        = 'done'
 
             mse = self._mse or 0.0
-            send_notification(f'U-Net entraîné ! MSE={mse:.5f}', level='info', notif_id=_NOTIF_ID)
+            send_notification(f'U-Net trained! MSE={mse:.5f}', level='info', notif_id=_NOTIF_ID)
 
         except Exception as exc:
             with self._lock:
                 self._state = 'error'
-            send_notification(f'Erreur U-Net : {exc}', level='error', notif_id=_NOTIF_ID)
+            send_notification(f'U-Net error: {exc}', level='error', notif_id=_NOTIF_ID)
 
     # ── process ─────────────────────────────────────────────────────────────
 
@@ -475,7 +475,7 @@ class MLUNetGridNode(NodeProcessor):
                 self._state          = 'training'
                 self._training_key   = new_key
                 self._loss_history   = {'train_loss': [], 'val_loss': []}
-                self._progress_msg   = 'Démarrage U-Net...'
+                self._progress_msg   = 'Starting U-Net...'
                 self._model          = None
                 self._reconstructed  = None
                 self._mse            = None
@@ -515,7 +515,7 @@ class MLUNetGridNode(NodeProcessor):
             if state == 'training' and total_epochs > 0:
                 _draw_progress_bar(blank, current_epoch, total_epochs, last_tl, last_vl)
             else:
-                msg = "Cliquez 'Entraîner' pour lancer l'entraînement"
+                msg = "Click 'Train' to start training"
                 cv2.putText(blank, msg, (10, 105), cv2.FONT_HERSHEY_SIMPLEX,
                             0.42, (150, 150, 150), 1, cv2.LINE_AA)
             return {
@@ -545,7 +545,7 @@ class MLUNetGridNode(NodeProcessor):
                 mse_str = f'{mse:.5f}' if mse is not None else '?'
                 ax_img.set_title(f'Reconstruction (MSE={mse_str})', fontsize=9)
             else:
-                ax_img.set_title('Entraînement en cours...', fontsize=9)
+                ax_img.set_title('Training in progress...', fontsize=9)
             ax_img.axis('off')
 
             # Panel droit : courbes loss

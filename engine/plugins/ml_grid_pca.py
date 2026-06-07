@@ -39,8 +39,8 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     category='Machine Learning',
     icon='Activity',
     description=(
-        "Applique une ACP spatiale (EOF) sur un tenseur de grilles 3D. "
-        "Reconstruit les grilles et extrait les modes spatiaux principaux."
+        "Applies spatial PCA (EOF) on a 3D grid tensor. "
+        "Reconstructs grids and extracts principal spatial modes."
     ),
     inputs=[
         {'id': 'grids',       'color': 'any',    'label': 'Grids (T x H x W)'},
@@ -49,16 +49,16 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     outputs=[
         {'id': 'reconstructed', 'color': 'any',    'label': 'Reconstructed'},
         {'id': 'modes',         'color': 'any',    'label': 'Modes (EOF)'},
-        {'id': 'preview',       'color': 'image',  'label': 'Aperçu & Variance'},
-        {'id': 'mse',           'color': 'scalar', 'label': 'MSE global'},
+        {'id': 'preview',       'color': 'image',  'label': 'Preview & Variance'},
+        {'id': 'mse',           'color': 'scalar', 'label': 'Global MSE'},
     ],
     params=[
-        {'id': 'n_components',  'label': 'Composantes principales (k)',   'type': 'int',  'default': 10, 'min': 1, 'max': 100},
-        {'id': 'standardize',   'label': 'Centrer et Réduire',            'type': 'bool', 'default': True},
-        {'id': 'detrend',       'label': 'Dé-tendance temporelle',       'type': 'enum', 'options': ['None', 'Constant (mean)', 'Linear'], 'default': 1},
-        {'id': 'cos_lat',       'label': 'Pondération Latitude (cos lat)', 'type': 'bool', 'default': False},
-        {'id': 'solver',        'label': 'Solveur PCA',                  'type': 'enum', 'options': ['auto', 'full', 'arpack', 'randomized'], 'default': 0},
-        {'id': 'colormap',      'label': 'Palette Couleur (Modes)',       'type': 'enum', 'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 3},
+        {'id': 'n_components',  'label': 'Principal components (k)',     'type': 'int',  'default': 10, 'min': 1, 'max': 100},
+        {'id': 'standardize',   'label': 'Standardize (center & scale)', 'type': 'bool', 'default': True},
+        {'id': 'detrend',       'label': 'Temporal detrending',          'type': 'enum', 'options': ['None', 'Constant (mean)', 'Linear'], 'default': 1},
+        {'id': 'cos_lat',       'label': 'Latitude weighting (cos lat)', 'type': 'bool', 'default': False},
+        {'id': 'solver',        'label': 'PCA solver',                   'type': 'enum', 'options': ['auto', 'full', 'arpack', 'randomized'], 'default': 0},
+        {'id': 'colormap',      'label': 'Colormap (Modes)',             'type': 'enum', 'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 3},
     ]
 )
 class SpatialGridPCANode(NodeProcessor):
@@ -76,7 +76,7 @@ class SpatialGridPCANode(NodeProcessor):
             return {}
 
         if not isinstance(grids, np.ndarray) or len(grids.shape) != 3:
-            send_notification("Spatial PCA: L'entrée doit être un tableau NumPy 3D (T, H, W)", level='error', notif_id=_NOTIF_ID)
+            send_notification("Spatial PCA: Input must be a 3D NumPy array (T, H, W)", level='error', notif_id=_NOTIF_ID)
             return {}
 
         if not self.ensure_packages(['sklearn'], pip_names=['scikit-learn'], notif_id=_NOTIF_ID):
@@ -116,7 +116,7 @@ class SpatialGridPCANode(NodeProcessor):
             n_valid = np.sum(valid_pixel_mask)
 
             if n_valid == 0:
-                send_notification("Spatial PCA: Aucun pixel valide (non-NaN) trouvé", level='error', notif_id=_NOTIF_ID)
+                send_notification("Spatial PCA: No valid (non-NaN) pixels found", level='error', notif_id=_NOTIF_ID)
                 return {}
 
             X_valid = X_flat[:, valid_pixel_mask].copy()
@@ -218,10 +218,10 @@ class SpatialGridPCANode(NodeProcessor):
 
                 xs = np.arange(1, len(var_ratio) + 1)
                 ax1.bar(xs, var_ratio * 100, color='#3b82f6', alpha=0.8)
-                ax1.plot(xs, np.cumsum(var_ratio) * 100, 'o--', color='#f97316', ms=4, label='Cumul')
+                ax1.plot(xs, np.cumsum(var_ratio) * 100, 'o--', color='#f97316', ms=4, label='Cumulative')
                 ax1.set_xlabel('Principal Component')
-                ax1.set_ylabel('Variance expliquée (%)')
-                ax1.set_title('Variance Expliquée', fontsize=9)
+                ax1.set_ylabel('Explained variance (%)')
+                ax1.set_title('Explained Variance', fontsize=9)
                 ax1.grid(True)
                 ax1.legend(fontsize=7, labelcolor='#cccccc')
 
@@ -247,7 +247,7 @@ class SpatialGridPCANode(NodeProcessor):
                 mode1_colored[nan_mask] = [40, 40, 40]
                 mode1_rgb = cv2.cvtColor(mode1_colored, cv2.COLOR_BGR2RGB)
                 ax2.imshow(mode1_rgb)
-                ax2.set_title('Mode spatial 1 (EOF1)', fontsize=9)
+                ax2.set_title('Spatial Mode 1 (EOF1)', fontsize=9)
                 ax2.axis('off')
 
                 fig.suptitle(

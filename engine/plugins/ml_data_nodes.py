@@ -502,9 +502,9 @@ _SK_DATASETS = [
     'iris',
     'wine',
     'breast_cancer',
-    'diabetes  (régression)',
+    'diabetes (regression)',
     'digits',
-    'california_housing  (régression)',
+    'california_housing (regression)',
 ]
 _SK_KEYS = ['iris', 'wine', 'breast_cancer', 'diabetes', 'digits', 'california_housing']
 
@@ -515,16 +515,16 @@ _SK_KEYS = ['iris', 'wine', 'breast_cancer', 'diabetes', 'digits', 'california_h
     category='DataFrame',
     icon='Database',
     description=(
-        "Charge un jeu de données de démonstration scikit-learn. "
-        "Colonne cible toujours nommée 'target' (labels texte pour les classifications). "
-        "Idéal pour commencer sans fichier CSV."
+        "Loads a demo scikit-learn dataset. "
+        "Target column is always named 'target' (text labels for classification). "
+        "Ideal for quick starts without a CSV file."
     ),
     inputs=[],
     outputs=[
-        {'id': 'table',     'color': 'data',   'label': 'DataFrame complet'},
+        {'id': 'table',     'color': 'data',   'label': 'Full DataFrame'},
         {'id': 'preview',   'color': 'image',  'label': 'Info panel'},
-        {'id': 'row_count', 'color': 'scalar', 'label': 'Lignes'},
-        {'id': 'col_count', 'color': 'scalar', 'label': 'Colonnes'},
+        {'id': 'row_count', 'color': 'scalar', 'label': 'Row count'},
+        {'id': 'col_count', 'color': 'scalar', 'label': 'Column count'},
         {'id': 'img_size',  'color': 'list',   'label': 'Img Size'},
     ],
     params=[
@@ -588,8 +588,8 @@ class MLSklearnDatasetNode(NodeProcessor):
         lines = [
             f"Dataset : {key}",
             f"Shape   : {df.shape[0]} rows × {df.shape[1]} cols",
-            f"Target  : target  ({df['target'].nunique() if 'target' in df else '?'} valeurs uniques)",
-            f"Features: {len(num_cols)} numériques",
+            f"Target  : target ({df['target'].nunique() if 'target' in df else '?'} unique values)",
+            f"Features: {len(num_cols)} numeric",
             "",
         ] + [f"  {c}" for c in df.columns[:12]]
         if len(df.columns) > 12:

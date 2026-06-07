@@ -28,7 +28,7 @@ engine/
   engine.py                   — WebSocket server, plugin loader, graph executor
   registry.py                 — single source of truth: NODE_SCHEMAS, NODE_CLASS_REGISTRY,
                                 vision_node decorator, NodeProcessor ABC, topological_sort (Kahn)
-  plugins/                    — 67+ plugins, all import from registry (NOT __main__)
+  plugins/                    — 265 plugin files, 413 registered node types, all import from registry (NOT __main__)
   tests/                      — pytest suite (registry, csv_export, logic_python)
 
 src-tauri/

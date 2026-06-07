@@ -50,7 +50,7 @@ def _smooth(arr: np.ndarray, window: int) -> np.ndarray:
     label='Training Monitor',
     category='Machine Learning',
     icon='TrendingDown',
-    description="Visualise les courbes de loss train/val. Affiche la meilleure epoch et les valeurs finales.",
+    description="Visualizes train/validation loss curves. Displays the best epoch and final values.",
     inputs=[
         {'id': 'loss_history', 'color': 'dict', 'label': 'Loss History'},
     ],
@@ -61,9 +61,9 @@ def _smooth(arr: np.ndarray, window: int) -> np.ndarray:
         {'id': 'final_val_loss',    'color': 'scalar', 'label': 'Final Val Loss'},
     ],
     params=[
-        {'id': 'log_scale',  'label': 'Échelle log Y',           'type': 'bool', 'default': False},
-        {'id': 'show_best',  'label': 'Marquer meilleure epoch', 'type': 'bool', 'default': True},
-        {'id': 'smooth',     'label': 'Lissage (fenêtre)',        'type': 'int',  'default': 1, 'min': 1, 'max': 20},
+        {'id': 'log_scale',  'label': 'Log scale Y',           'type': 'bool', 'default': False},
+        {'id': 'show_best',  'label': 'Mark best epoch', 'type': 'bool', 'default': True},
+        {'id': 'smooth',     'label': 'Smoothing (window)',        'type': 'int',  'default': 1, 'min': 1, 'max': 20},
     ],
     resizable=True, min_width=300, min_height=200,
 )
@@ -73,7 +73,7 @@ class MLTrainingMonitorNode(NodeProcessor):
         history = inputs.get('loss_history')
         if not isinstance(history, dict):
             blank = np.zeros((200, 420, 3), dtype=np.uint8)
-            cv2.putText(blank, 'En attente de loss_history...', (20, 100),
+            cv2.putText(blank, 'Waiting for loss_history...', (20, 100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 150, 150), 1, cv2.LINE_AA)
             return {
                 'preview': blank,
@@ -138,7 +138,7 @@ class MLTrainingMonitorNode(NodeProcessor):
             elif len(train_loss) > 0:
                 title = f'Training Monitor | Epoch {best_epoch} | Train: {final_train:.4f}'
             else:
-                title = 'Training Monitor | Aucune donnée'
+                title = 'Training Monitor | No data'
             fig.suptitle(title, fontsize=8, color='#cccccc')
 
             plt.tight_layout()

@@ -317,7 +317,7 @@
         }
       },
       "width": 180,
-      "height": 120,
+      "height": 329,
       "selected": false,
       "positionAbsolute": {
         "x": 1200,
@@ -384,7 +384,7 @@
         }
       },
       "width": 180,
-      "height": 120,
+      "height": 121,
       "selected": false,
       "positionAbsolute": {
         "x": 1580,
@@ -829,14 +829,14 @@
   ],
   "ui": {
     "previewSize": {
-      "w": 400,
-      "h": 400
+      "w": 182.69140625,
+      "h": 183
     },
     "previewPos": {
-      "x": 428.2109375,
-      "y": 6.1484375
+      "x": 57.95703125,
+      "y": -17.625
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "sam-1"
+    "visualizedNodeId": "calep-1"
   }
 }

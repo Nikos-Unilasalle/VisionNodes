@@ -9,7 +9,7 @@ import {
   Microscope, GraduationCap, Terminal, Code2, Users, Sun, Moon,
   Box, Image, Camera, ScanLine, Activity, Filter, Shuffle,
   BarChart2, Database, Scissors, Grid, Palette, Eye, RefreshCw,
-  PlusCircle, Sparkles, MousePointer2
+  PlusCircle, Sparkles, MousePointer2, Settings
 } from 'lucide-react';
 import nodesData from '../data/nodes.json';
 
@@ -61,6 +61,7 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   output:      { label: 'Output',       color: '#818cf8' },
   canvas:      { label: 'Canvas',       color: '#a3e635' },
   image:       { label: 'Image',        color: '#a3d154' },
+  image_ops:   { label: 'Image Ops',    color: '#a3e635' },
   color:       { label: 'Color',        color: '#e879f9' },
   geometry:    { label: 'Geometry',     color: '#2dd4bf' },
   mask:        { label: 'Mask',         color: '#fbbf24' },
@@ -72,6 +73,7 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   segmentation:{ label: 'Segmentation', color: '#34d399' },
   tracking:    { label: 'Tracking',     color: '#60a5fa' },
   measure:     { label: 'Measure',      color: '#059669' },
+  analyze:     { label: 'Analyze',      color: '#0ea5e9' },
   visualize:   { label: 'Visualize',    color: '#38bdf8' },
   data:        { label: 'Data',         color: '#f97316' },
   utility:     { label: 'Utility',      color: '#9ca3af' },
@@ -85,6 +87,11 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   'Machine Learning': { label: 'Machine Learning', color: '#6366f1' },
   cv:          { label: 'Computer Vision', color: '#14b8a6' },
   logic:       { label: 'Logic',        color: '#f59e0b' },
+  geo_input:   { label: 'Geo Input',    color: '#10b981' },
+  geo_analysis:{ label: 'Geo Analysis', color: '#059669' },
+  forensics:   { label: 'Forensics',    color: '#f43f5e' },
+  ai:          { label: 'AI & LLM',     color: '#818cf8' },
+  '3d':        { label: '3D / Geometry',color: '#fb923c' },
   unmapped:    { label: 'Other / Internal', color: '#6b7280' },
 };
 
@@ -440,7 +447,7 @@ const FEATURES = [
   {
     icon: <Layers size={22} strokeWidth={1.5} />,
     title: 'Modular Orchestration',
-    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 340+ production-ready nodes spanning CV, Machine Learning, signal processing, and data utilities (DataFrames).',
+    text: 'Abstract complexity into atomic, composable units. Construct pipelines of arbitrary depth from a library of 400+ production-ready nodes spanning CV, Machine Learning, signal processing, and data utilities (DataFrames).',
   },
   {
     icon: <Zap size={22} strokeWidth={1.5} />,
@@ -484,10 +491,151 @@ const FeaturesSection = () => (
   </section>
 );
 
+// ─── Upgrades Section ────────────────────────────────────────────────────────
+const UpgradesSection = () => (
+  <section className="section-full section-alt border-t border-[var(--border)]">
+    <div className="container-lg">
+      <div className="text-center mb-12">
+        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[11px] font-bold uppercase tracking-widest mb-4">
+          Major Release Upgrades
+        </span>
+        <h2 className="text-[36px] md:text-[44px] text-[var(--text-main)] mb-4">
+          Next-Generation Computational Tools
+        </h2>
+        <p className="text-[16px] text-[var(--text-dim)] max-w-2xl mx-auto">
+          VisionNodes Studio is evolving. The latest release introduces over 400+ nodes, native integration with Large Language Models, advanced machine learning tools, and specialized Earth Observation modules.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Card 1: AI & LLM Vision */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="vn-card p-8 flex flex-col gap-5 justify-between"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+                <Sparkles size={20} />
+              </div>
+              <h3 className="text-[20px] font-semibold text-[var(--text-main)]">AI & LLM Cognitive Nodes</h3>
+            </div>
+            <p className="text-[14px] text-[var(--text-dim)] leading-relaxed mb-4">
+              Leverage state-of-the-art vision-language models (local Ollama or cloud APIs like OpenAI and Anthropic) directly within your pipeline. Proceed to zero-shot classification and complex reasoning over image streams.
+            </p>
+            <ul className="text-[13px] text-[var(--text-dim)] list-disc pl-5 space-y-1.5">
+              <li><strong>Zero-Shot Classification</strong>: Classify image objects using pure text instructions.</li>
+              <li><strong>Detection Pipelines</strong>: Seamlessly daisy-chain Grounding DINO and Segment Anything (SAM) for automated target labeling.</li>
+              <li><strong>JSON Structured Output</strong>: Force LLM responses into structured dict ports for programmatic downstream execution.</li>
+            </ul>
+          </div>
+          <div className="flex gap-2">
+            <span className="cat-pill bg-[#6366f1]/10 text-[#6366f1]">AI & LLM</span>
+            <span className="cat-pill bg-[#34d399]/10 text-[#34d399]">Segment Anything</span>
+          </div>
+        </motion.div>
+
+        {/* Card 2: Smart Node Assistant */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="vn-card p-8 flex flex-col gap-5 justify-between"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+                <Settings size={20} />
+              </div>
+              <h3 className="text-[20px] font-semibold text-[var(--text-main)]">Real-time Parameter Assistant</h3>
+            </div>
+            <p className="text-[14px] text-[var(--text-dim)] leading-relaxed mb-4">
+              Configuring complex mathematical filters and computer vision parameters has never been easier. The integrated LLM acts as an assistant that can directly help you tune selected nodes in the workspace.
+            </p>
+            <ul className="text-[13px] text-[var(--text-dim)] list-disc pl-5 space-y-1.5">
+              <li><strong>Context-Aware Advice</strong>: The LLM reads the complete configuration, parameters, and inputs of your selected node.</li>
+              <li><strong>Interactive Setup Guide</strong>: Ask for recommendations on kernel sizes, thresholding values, or specialized algorithm configurations.</li>
+              <li><strong>Troubleshooting Panel</strong>: Receive instant help when a node throws an error or fails to yield the expected results.</li>
+            </ul>
+          </div>
+          <div className="flex gap-2">
+            <span className="cat-pill bg-[#c084fc]/10 text-[#c084fc]">Logic Helper</span>
+            <span className="cat-pill bg-[#fb923c]/10 text-[#fb923c]">Interactive UX</span>
+          </div>
+        </motion.div>
+
+        {/* Card 3: Earth Observation Pack */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="vn-card p-8 flex flex-col gap-5 justify-between"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+                <Globe size={20} />
+              </div>
+              <h3 className="text-[20px] font-semibold text-[var(--text-main)]">Remote Sensing & Earth Observation</h3>
+            </div>
+            <p className="text-[14px] text-[var(--text-dim)] leading-relaxed mb-4">
+              A complete suite of geospatial and spectral processing nodes designed for environmental analysis, remote sensing, and geology. Read, process, and write multi-spectral geographic datasets out-of-the-box.
+            </p>
+            <ul className="text-[13px] text-[var(--text-dim)] list-disc pl-5 space-y-1.5">
+              <li><strong>Data Downloaders</strong>: Direct downloads from Copernicus CDSE (Sentinel-2/1) and Hub'eau (Naiades), plus native Google Earth Engine queries.</li>
+              <li><strong>Atmospheric Correction</strong>: Integrated ACOLITE DSF (Dark Spectrum Fitting) algorithm for water-surface reflectance.</li>
+              <li><strong>Terrain Analysis</strong>: Advanced DEM processing (aspect, flow accumulation, hillshade, slope, TRI, TWI, HAND).</li>
+            </ul>
+          </div>
+          <div className="flex gap-2">
+            <span className="cat-pill bg-[#10b981]/10 text-[#10b981]">Geo Input</span>
+            <span className="cat-pill bg-[#059669]/10 text-[#059669]">Geo Analysis</span>
+          </div>
+        </motion.div>
+
+        {/* Card 4: Machine Learning & DataFrames */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="vn-card p-8 flex flex-col gap-5 justify-between"
+        >
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center text-[var(--accent)]">
+                <Database size={20} />
+              </div>
+              <h3 className="text-[20px] font-semibold text-[var(--text-main)]">ML & Structured Data Pipelines</h3>
+            </div>
+            <p className="text-[14px] text-[var(--text-dim)] leading-relaxed mb-4">
+              Go beyond simple computer vision. Preprocess tabular data using pandas-style DataFrames, train classic ML models, or train and monitor deep neural networks directly within your visual graphs.
+            </p>
+            <ul className="text-[13px] text-[var(--text-dim)] list-disc pl-5 space-y-1.5">
+              <li><strong>DataFrame Operations</strong>: Join, fill missing values, group by, rename, sample, and sort dataset tables interactively.</li>
+              <li><strong>Supervised & Unsupervised ML</strong>: Train and save SVM, KNN, Random Forest, Symbolic Regression, and K-Means models.</li>
+              <li><strong>Deep Learning</strong>: Dynamic U-Net training for segmentation with a real-time PyTorch trainer and loss monitor.</li>
+            </ul>
+          </div>
+          <div className="flex gap-2">
+            <span className="cat-pill bg-[#eab308]/10 text-[#eab308]">DataFrames</span>
+            <span className="cat-pill bg-[#6366f1]/10 text-[#6366f1]">Machine Learning</span>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  </section>
+);
+
 // ─── Institutional Section ────────────────────────────────────────────────────
 
 const InstitutionalSection = () => (
-  <section className="section-full section-alt">
+  <section className="section-full">
     <div className="container-lg">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -536,6 +684,7 @@ const HomePage = ({ onDownload }: { onDownload: () => void }) => (
     <HeroSection onDownload={onDownload} />
     <ManifestoSection />
     <FeaturesSection />
+    <UpgradesSection />
     <InstitutionalSection />
   </motion.div>
 );
