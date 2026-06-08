@@ -145,7 +145,10 @@ class MathDistanceNode(NodeProcessor):
         return {'result': math.sqrt((x2 - x1)**2 + (y2 - y1)**2)}
 
 @vision_node(type_id='scalar_input', label='Number', category='math', icon='Hash',
-             inputs=[],
+             inputs=[
+                 {'id': 'min', 'color': 'scalar', 'label': 'Min'},
+                 {'id': 'max', 'color': 'scalar', 'label': 'Max'},
+             ],
              outputs=[{'id': 'value', 'color': 'scalar'}],
              params=[
                  {'id': 'format', 'label': 'Format', 'type': 'enum', 'options': ['Integer', 'Float'], 'default': 1},
@@ -158,14 +161,18 @@ class ScalarInputNode(NodeProcessor):
     def process(self, inputs, params):
         fmt = params.get('format', 1)
         val = params.get('value', 0.0)
-        
-        # Clamp value if min/max are defined in params
-        min_val = params.get('min', 0.0)
-        max_val = params.get('max', 100.0)
+
+        # Port connection overrides param when connected
+        min_val = float(inputs['min']) if inputs.get('min') is not None else params.get('min', 0.0)
+        max_val = float(inputs['max']) if inputs.get('max') is not None else params.get('max', 100.0)
+
         if min_val > max_val:
             min_val, max_val = max_val, min_val
-            
+
         clamped_val = max(min_val, min(max_val, val))
-        return {'value': int(clamped_val) if fmt == 0 else float(clamped_val)}
+        result = int(clamped_val) if fmt == 0 else float(clamped_val)
+
+        # Expose effective bounds as live data so the frontend slider updates
+        return {'value': result, '_min': min_val, '_max': max_val}
 
 
