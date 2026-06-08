@@ -16,7 +16,7 @@ try:
     import sam2
     SAM2_AVAILABLE = True
 except ImportError:
-    pass
+    torch = None
 
 _NOTIF_ID = 'sam_segmenter'
 
@@ -257,10 +257,11 @@ class SAMSegmenterNode(NodeProcessor):
         if not self.ensure_packages(['sam2'], pip_names=['git+https://github.com/facebookresearch/sam2.git'], notif_id=_NOTIF_ID):
             return empty()
 
+        if torch is None:
+            return empty('torch not available — install pytorch')
+
         hf_token = params.get('hf_token', '')
 
-        # Local persistence for HF token
-        import json, os
         secrets_path = os.path.expanduser('~/.vnstudio/secrets.json')
         if hf_token:
             os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
@@ -360,7 +361,6 @@ class SAMSegmenterNode(NodeProcessor):
 
             # ── 4. Run prediction ──
             multimask = bool(params.get('multimask', True))
-            mask_idx = int(params.get('mask_index', 0))
 
             if prompt_mode == 2:
                 # ── 4a. Automatic Mode (Grid) ──
@@ -372,6 +372,7 @@ class SAMSegmenterNode(NodeProcessor):
                 
                 gen_config = (pps, iou_t, stab_t)
                 if self.generator is None or self._gen_config != gen_config:
+                    from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
                     self.generator = SAM2AutomaticMaskGenerator(
                         model=self.predictor.model,
                         points_per_side=pps,
@@ -398,53 +399,36 @@ class SAMSegmenterNode(NodeProcessor):
 
                 for i, m in enumerate(masks_data):
                     mask = m['segmentation']
-                    # CRITICAL: Ensure mask is a numpy array for indexing
                     if hasattr(mask, 'cpu'):
                         mask = mask.detach().cpu().numpy()
-                    
-                    # Ensure boolean
                     mask = mask > 0
-                    
-                    # Extract metrics
+
                     area = float(m.get('area', np.sum(mask)))
                     areas.append(area)
-                    
-                    # Centroid from bbox (x, y, w, h)
+
                     bbox = m.get('bbox', [0, 0, 0, 0])
-                    centroids.append([float(bbox[0] + bbox[2]/2), float(bbox[1] + bbox[3]/2)])
-                    
-                    # Extract contour
+                    centroids.append([float(bbox[0] + bbox[2] / 2), float(bbox[1] + bbox[3] / 2)])
+
                     m_u8 = mask.astype(np.uint8) * 255
                     cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                     if cnts:
-                        # Convert to list of points for the output list
-                        pts = cnts[0].reshape(-1, 2).tolist()
-                        all_contours.append(pts)
+                        all_contours.append(cnts[0].reshape(-1, 2).tolist())
+                        cv2.drawContours(overlay, cnts, -1, (255, 255, 255), 1)
 
-                    # Color based on index i
                     color = [
-                        int((i * 67 + 40) % 200 + 55),
+                        int((i * 67  + 40) % 200 + 55),
                         int((i * 137 + 80) % 200 + 55),
-                        int((i * 197 + 120) % 200 + 55)
+                        int((i * 197 + 120) % 200 + 55),
                     ]
                     label_map[mask] = color
                     combined_mask[mask] = 255
 
-                # Proper alpha blend ONLY in masked regions (not additive)
+                # Alpha blend only in masked regions
                 blended = cv2.addWeighted(overlay, 1.0 - opacity, label_map, opacity, 0)
                 region  = label_map.any(axis=2)
                 overlay[region] = blended[region]
 
-                # Draw white contours for each stone
-                for m in masks_data:
-                    mask = m['segmentation']
-                    if hasattr(mask, 'cpu'):
-                        mask = mask.detach().cpu().numpy()
-                    m_uint8 = (mask > 0).astype(np.uint8) * 255
-                    cnts, _ = cv2.findContours(m_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    cv2.drawContours(overlay, cnts, -1, (255, 255, 255), 1)
-
-                self.report_progress(1.0, f'SAM: {len(masks_data)} stones found')
+                self.report_progress(1.0, f'SAM: {len(masks_data)} objects found')
                 result = {
                     'main': overlay,
                     'mask': combined_mask,
@@ -486,24 +470,32 @@ class SAMSegmenterNode(NodeProcessor):
 
                 all_boxes_np = np.array(pixel_boxes)  # (N, 4) pixel xyxy
 
-                with torch.inference_mode():
-                    if self.device == 'cuda':
-                        with torch.autocast(self.device, dtype=torch.bfloat16):
-                            masks, scores_batch, _ = self.predictor.predict(
-                                box=all_boxes_np,
-                                multimask_output=False,
-                            )
-                    else:
-                        masks, scores_batch, _ = self.predictor.predict(
-                            box=all_boxes_np,
-                            multimask_output=False,
-                        )
+                # Chunk the batch: a single predict() on hundreds of boxes can
+                # exhaust GPU memory (dense GDINO output → MPS/CUDA OOM).
+                # The image embedding is cached, so per-chunk predict is cheap.
+                CHUNK = 24
+                mask_chunks = []
+                for start in range(0, n_boxes, CHUNK):
+                    box_chunk = all_boxes_np[start:start + CHUNK]
+                    self.report_progress(
+                        0.6 + 0.3 * start / max(n_boxes, 1),
+                        f'SAM: Segmenting {start + len(box_chunk)}/{n_boxes}…'
+                    )
+                    with torch.inference_mode():
+                        if self.device == 'cuda':
+                            with torch.autocast(self.device, dtype=torch.bfloat16):
+                                m, _, _ = self.predictor.predict(box=box_chunk, multimask_output=False)
+                        else:
+                            m, _, _ = self.predictor.predict(box=box_chunk, multimask_output=False)
+                    if hasattr(m, 'cpu'):
+                        m = m.detach().cpu().numpy()
+                    if m.ndim == 4:
+                        m = m[:, 0]            # (k, 1, H, W) → (k, H, W)
+                    elif m.ndim == 2:
+                        m = m[None, ...]       # single box → (1, H, W)
+                    mask_chunks.append(m)
 
-                # SAM2 returns (N, 1, H, W) when multimask_output=False with batch boxes
-                if masks.ndim == 4:
-                    masks = masks[:, 0]   # → (N, H, W)
-                if hasattr(masks, 'cpu'):
-                    masks = masks.detach().cpu().numpy()
+                masks = np.concatenate(mask_chunks, axis=0)  # (N, H, W)
 
                 opacity = float(params.get('overlay_opacity', 50)) / 100.0
                 label_map    = np.zeros((h, w, 3), dtype=np.uint8)

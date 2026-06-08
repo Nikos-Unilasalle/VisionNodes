@@ -78,3 +78,13 @@ engine/plugins/planetary_cache_smoke/
 
 # Large screen captures
 public/templates/**/capture_n-display_*.png
+
+# Bundled self-contained Python engine (multi-GB, built by scripts/build_pyengine.sh)
+# Keep the dirs (.gitkeep) so tauri build's resource glob always matches.
+src-tauri/resources/pyengine/*
+src-tauri/resources/engine/*
+!src-tauri/resources/pyengine/.gitkeep
+!src-tauri/resources/engine/.gitkeep
+
+# Smoke pipeline outputs
+graphify-out/
