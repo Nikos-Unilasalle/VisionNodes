@@ -392,19 +392,20 @@
     },
     {
       "id": "n-watermask",
-      "type": "geo_water_mask_mndwi",
+      "type": "geo_water_mask",
       "position": {
         "x": -1060,
         "y": 1210
       },
       "data": {
-        "label": "Masque eau",
+        "label": "Water Mask",
         "params": {
           "green_band": 2,
           "swir_band": 5,
           "threshold": 0,
-          "erode_size": 3,
-          "scl_band": 0
+          "scl_band": 0,
+          "index": 1,
+          "erode_px": 3
         }
       },
       "width": 208,
