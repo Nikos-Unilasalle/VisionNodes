@@ -3,7 +3,10 @@
     {
       "id": "n-s2loader",
       "type": "geo_s2_loader",
-      "position": { "x": 0, "y": 180 },
+      "position": {
+        "x": 0,
+        "y": 180
+      },
       "style": {},
       "data": {
         "label": "Sentinel-2 Loader",
@@ -22,7 +25,10 @@
     {
       "id": "n-dnnorm",
       "type": "geo_dn_normalize",
-      "position": { "x": 320, "y": 230 },
+      "position": {
+        "x": 320,
+        "y": 230
+      },
       "style": {},
       "data": {
         "label": "DN → Réflectance",
@@ -37,7 +43,10 @@
     {
       "id": "n-bandsel",
       "type": "geo_band_selector",
-      "position": { "x": 320, "y": 440 },
+      "position": {
+        "x": 320,
+        "y": 440
+      },
       "style": {},
       "data": {
         "label": "Aperçu RGB (B4/B3/B2)",
@@ -54,17 +63,21 @@
     },
     {
       "id": "n-watermask",
-      "type": "geo_water_mask_mndwi",
-      "position": { "x": 640, "y": 160 },
+      "type": "geo_water_mask",
+      "position": {
+        "x": 640,
+        "y": 160
+      },
       "style": {},
       "data": {
-        "label": "Masque Eau (MNDWI)",
+        "label": "Water Mask",
         "params": {
           "green_band": 1,
           "swir_band": 4,
           "threshold": 0.0,
-          "erode_size": 3,
-          "scl_band": 0
+          "scl_band": 0,
+          "index": 1,
+          "erode_px": 3
         }
       },
       "width": 208,
@@ -73,7 +86,10 @@
     {
       "id": "n-deglint",
       "type": "geo_deglint",
-      "position": { "x": 1000, "y": 160 },
+      "position": {
+        "x": 1000,
+        "y": 160
+      },
       "style": {},
       "data": {
         "label": "Déglint (NIR)",
@@ -91,7 +107,10 @@
     {
       "id": "n-turbidity",
       "type": "geo_turbidity_nechad",
-      "position": { "x": 1360, "y": 140 },
+      "position": {
+        "x": 1360,
+        "y": 140
+      },
       "style": {},
       "data": {
         "label": "Turbidité Nechad",
@@ -111,7 +130,10 @@
     {
       "id": "n-writer",
       "type": "geo_geotiff_writer",
-      "position": { "x": 1720, "y": 160 },
+      "position": {
+        "x": 1720,
+        "y": 160
+      },
       "style": {},
       "data": {
         "label": "Export GeoTIFF",
@@ -127,7 +149,10 @@
     {
       "id": "n-turbstats",
       "type": "geo_turbidity_stats",
-      "position": { "x": 1720, "y": 380 },
+      "position": {
+        "x": 1720,
+        "y": 380
+      },
       "style": {},
       "data": {
         "label": "Turbidity Statistics",
@@ -143,15 +168,30 @@
     {
       "id": "n-display",
       "type": "output_display",
-      "position": { "x": 1360, "y": 500 },
+      "position": {
+        "x": 1360,
+        "y": 500
+      },
       "style": {},
       "data": {
         "label": "Résultats",
         "params": {},
         "ports": [
-          { "id": "image__0_ntu001", "color": "image", "label": "NTU" },
-          { "id": "image__1_mndwi2", "color": "image", "label": "MNDWI" },
-          { "id": "image__2_rgb003", "color": "image", "label": "RGB" }
+          {
+            "id": "image__0_ntu001",
+            "color": "image",
+            "label": "NTU"
+          },
+          {
+            "id": "image__1_mndwi2",
+            "color": "image",
+            "label": "MNDWI"
+          },
+          {
+            "id": "image__2_rgb003",
+            "color": "image",
+            "label": "RGB"
+          }
         ],
         "minified": false
       },
@@ -161,8 +201,15 @@
     {
       "id": "f-load",
       "type": "canvas_frame",
-      "position": { "x": -20, "y": 100 },
-      "style": { "width": 580, "height": 620, "zIndex": -1 },
+      "position": {
+        "x": -20,
+        "y": 100
+      },
+      "style": {
+        "width": 580,
+        "height": 620,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -176,8 +223,15 @@
     {
       "id": "f-mask",
       "type": "canvas_frame",
-      "position": { "x": 618, "y": 100 },
-      "style": { "width": 300, "height": 240, "zIndex": -1 },
+      "position": {
+        "x": 618,
+        "y": 100
+      },
+      "style": {
+        "width": 300,
+        "height": 240,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -191,8 +245,15 @@
     {
       "id": "f-correction",
       "type": "canvas_frame",
-      "position": { "x": 978, "y": 100 },
-      "style": { "width": 660, "height": 300, "zIndex": -1 },
+      "position": {
+        "x": 978,
+        "y": 100
+      },
+      "style": {
+        "width": 660,
+        "height": 300,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -206,8 +267,15 @@
     {
       "id": "f-export",
       "type": "canvas_frame",
-      "position": { "x": 1700, "y": 100 },
-      "style": { "width": 260, "height": 240, "zIndex": -1 },
+      "position": {
+        "x": 1700,
+        "y": 100
+      },
+      "style": {
+        "width": 260,
+        "height": 240,
+        "zIndex": -1
+      },
       "data": {
         "label": "Frame",
         "params": {
@@ -221,8 +289,14 @@
     {
       "id": "note-s2",
       "type": "canvas_note",
-      "position": { "x": -20, "y": 740 },
-      "style": { "width": 580, "height": 100 },
+      "position": {
+        "x": -20,
+        "y": 740
+      },
+      "style": {
+        "width": 580,
+        "height": 100
+      },
       "data": {
         "label": "Note",
         "params": {
@@ -236,8 +310,14 @@
     {
       "id": "note-nechad",
       "type": "canvas_note",
-      "position": { "x": 978, "y": 420 },
-      "style": { "width": 660, "height": 60 },
+      "position": {
+        "x": 978,
+        "y": 420
+      },
+      "style": {
+        "width": 660,
+        "height": 60
+      },
       "data": {
         "label": "Note",
         "params": {
@@ -316,7 +396,7 @@
     {
       "id": "e-010",
       "source": "n-watermask",
-      "sourceHandle": "image__mndwi",
+      "sourceHandle": "image__index_image",
       "target": "n-display",
       "targetHandle": "image__1_mndwi2"
     },
@@ -343,8 +423,14 @@
     }
   ],
   "ui": {
-    "previewSize": { "w": 860, "h": 420 },
-    "previewPos": { "x": 400, "y": -80 },
+    "previewSize": {
+      "w": 860,
+      "h": 420
+    },
+    "previewPos": {
+      "x": 400,
+      "y": -80
+    },
     "activePaletteIndex": 6,
     "visualizedNodeId": "n-display"
   }
