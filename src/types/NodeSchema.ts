@@ -16,6 +16,8 @@ export interface ParamSpec {
   show_if?: { param: string; value: number | string | boolean };
   /** Slot key ('a'–'h') — hide this param if the slot is not connected. */
   slot?: string;
+  /** UI hint — 'df_columns' shows clickable column chips from live df_meta. */
+  hints?: string;
 }
 
 export interface PortSpec {
