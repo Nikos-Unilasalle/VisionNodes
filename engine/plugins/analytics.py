@@ -358,49 +358,59 @@ class AnalysisReportNode(NodeProcessor):
     label='K-Means Classifier',
     category='measure',
     icon='Grid',
-    description="Clusters a list of objects (like circles) into K groups based on a numeric property. Adds a 'cluster_id' to each item.",
+    description="Clusters a list of objects (like circles) into K groups based on a numeric property. Adds a 'cluster_id' to each item. Cluster 0 = smallest value, cluster K-1 = largest.",
     inputs=[{'id': 'items', 'color': 'list'}],
     outputs=[
         {'id': 'items', 'color': 'list', 'label': 'Clustered List'},
-        {'id': 'stats', 'color': 'dict', 'label': 'Group Counts'}
+        {'id': 'stats', 'color': 'dict', 'label': 'Group Stats (count + center)'},
     ],
     params=[
-        {'id': 'k', 'label': 'K Clusters', 'type': 'int', 'default': 3, 'min': 2, 'max': 10},
-        {'id': 'key', 'label': 'Property Key', 'type': 'string', 'default': 'radius'},
+        {'id': 'k',   'label': 'K Clusters',    'type': 'int',    'default': 3, 'min': 2, 'max': 10},
+        {'id': 'key', 'label': 'Property Key',   'type': 'string', 'default': 'radius', 'hints': 'item_keys'},
     ]
 )
 class KMeansListStatsNode(NodeProcessor):
     def process(self, inputs, params):
         items = inputs.get('items') or []
-        k = int(params.get('k', 3))
-        key = params.get('key', 'radius')
-        
-        if len(items) < k:
-            return {'items': items, 'stats': {'Error': 'Not enough items'}}
-            
-        # 1. Prepare data
-        data = []
-        valid_items = []
-        for item in items:
-            if isinstance(item, dict) and key in item:
-                data.append([float(item[key])])
-                valid_items.append(item)
-        
-        if not data:
-            return {'items': items, 'stats': {'Error': 'No valid property found'}}
-            
-        # 2. Run K-Means (OpenCV)
-        X = np.array(data, dtype=np.float32)
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-        compactness, labels, centers = cv2.kmeans(X, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
-        
-        # 3. Tag items and collect stats
-        counts = {}
-        for i, (item, label) in enumerate(zip(valid_items, labels.flatten())):
-            cluster_id = int(label)
-            item['cluster_id'] = cluster_id
-            counts[f"Group {cluster_id + 1}"] = counts.get(f"Group {cluster_id + 1}", 0) + 1
-            
-        # Sort counts by group ID
-        sorted_counts = {k: v for k, v in sorted(counts.items())}
-        return {'items': valid_items, 'stats': sorted_counts}
+        k_clusters = int(params.get('k', 3))
+        key = str(params.get('key', 'radius'))
+
+        # Expose available keys for the inspector chips UI
+        available_keys = sorted({
+            k for item in items if isinstance(item, dict)
+            for k, v in item.items() if isinstance(v, (int, float))
+        })
+
+        if len(items) < k_clusters:
+            return {'items': items, 'stats': {'error': 'Not enough items'},
+                    '_available_keys': available_keys}
+
+        valid_items = [item for item in items if isinstance(item, dict) and key in item]
+        if not valid_items:
+            return {'items': items, 'stats': {'error': f"No item has key '{key}'"},
+                    '_available_keys': available_keys}
+
+        X = np.array([[float(item[key])] for item in valid_items], dtype=np.float32)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.1)
+        _, raw_labels, raw_centers = cv2.kmeans(
+            X, k_clusters, None, criteria, 10, cv2.KMEANS_PP_CENTERS
+        )
+
+        # Remap cluster ids so 0 = smallest centroid, K-1 = largest (stable, predictable)
+        center_vals = raw_centers.flatten()
+        rank = {orig: rank for rank, orig in enumerate(np.argsort(center_vals))}
+        sorted_centers = center_vals[np.argsort(center_vals)]
+
+        tagged = []
+        counts = [0] * k_clusters
+        for item, raw_label in zip(valid_items, raw_labels.flatten()):
+            cluster_id = rank[int(raw_label)]
+            counts[cluster_id] += 1
+            tagged.append({**item, 'cluster_id': cluster_id})
+
+        stats = {
+            f"group_{i}": {'count': counts[i], 'center': round(float(sorted_centers[i]), 4)}
+            for i in range(k_clusters)
+        }
+
+        return {'items': tagged, 'stats': stats, '_available_keys': available_keys}

@@ -73,6 +73,17 @@ def _out_size(params, default_w=540, default_h=420, inputs=None):
     return w / dpi, h / dpi, dpi
 
 
+def _df_meta_input(df) -> dict:
+    r, c = df.shape
+    return {
+        'shape':   [r, c],
+        'columns': [str(col) for col in df.columns],
+        'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
+        'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
+        'head':    [],
+    }
+
+
 def _pick_features(df, feat_str):
     """Return list of numeric feature columns from comma-separated string or all numeric."""
     num_cols = [c for c in df.columns if df[c].dtype.kind in 'biufc']
@@ -101,18 +112,25 @@ def _pick_features(df, feat_str):
     outputs=[
         {'id': 'table',      'color': 'data',   'label': 'DataFrame + cluster'},
         {'id': 'preview',    'color': 'image',  'label': 'Clusters'},
+        {'id': 'elbow_plot', 'color': 'image',  'label': 'Elbow curve'},
         {'id': 'inertia',    'color': 'scalar', 'label': 'Inertia (WCSS)'},
         {'id': 'silhouette', 'color': 'scalar', 'label': 'Silhouette score'},
+        {'id': 'df_meta',    'color': 'dict',   'label': 'DF Columns'},
     ],
     params=[
-        {'id': 'features',     'label': 'Features (blank = all numeric)', 'type': 'string', 'default': ''},
-        {'id': 'k',            'label': 'k  (clusters)',   'type': 'int',  'default': 3, 'min': 2, 'max': 20},
-        {'id': 'init',         'label': 'Init method',     'type': 'enum', 'options': ['k-means++', 'random'], 'default': 0},
-        {'id': 'max_iter',     'label': 'Max iterations',  'type': 'int',  'default': 300, 'min': 10, 'max': 1000},
-        {'id': 'random_state', 'label': 'Random seed',     'type': 'int',  'default': 42,  'min': 0,  'max': 9999},
-        {'id': 'colormap',     'label': 'Colormap',        'type': 'enum', 'options': _CMAP_LABELS, 'default': 0},
-        {'id': 'show_regions', 'label': 'Show regions',    'type': 'bool', 'default': True},
-        {'id': 'boundary_res', 'label': 'Region resolution', 'type': 'int', 'default': 120, 'min': 40, 'max': 300},
+        {'id': 'features',     'label': 'Features (blank = all numeric)', 'type': 'string', 'default': '', 'hints': 'df_columns'},
+        {'id': 'k',            'label': 'k  (clusters)',      'type': 'int',  'default': 3,   'min': 2,  'max': 20},
+        {'id': 'standardize',  'label': 'Standardize features', 'type': 'bool', 'default': True},
+        {'id': 'init',         'label': 'Init method',         'type': 'enum', 'options': ['k-means++', 'random'], 'default': 0},
+        {'id': 'max_iter',     'label': 'Max iterations',      'type': 'int',  'default': 300, 'min': 10, 'max': 1000},
+        {'id': 'n_init',       'label': 'N restarts',          'type': 'int',  'default': 10,  'min': 1,  'max': 50},
+        {'id': 'random_state', 'label': 'Random seed',         'type': 'int',  'default': 42,  'min': 0,  'max': 9999},
+        {'id': 'show_elbow',   'label': 'Show elbow plot',     'type': 'bool', 'default': False},
+        {'id': 'k_max',        'label': 'Elbow k max',         'type': 'int',  'default': 10,  'min': 2,  'max': 30,
+         'show_if': {'param': 'show_elbow', 'value': True}},
+        {'id': 'colormap',     'label': 'Colormap',            'type': 'enum', 'options': _CMAP_LABELS, 'default': 0},
+        {'id': 'show_regions', 'label': 'Show regions',        'type': 'bool', 'default': True},
+        {'id': 'boundary_res', 'label': 'Region resolution',   'type': 'int',  'default': 120, 'min': 40, 'max': 300},
         *_EXPORT_PARAMS,
     ],
     resizable=True,
@@ -131,17 +149,22 @@ class MLKMeansNode(NodeProcessor):
         from sklearn.cluster import KMeans
         from sklearn.metrics import silhouette_score
         from sklearn.decomposition import PCA
+        from sklearn.preprocessing import StandardScaler
 
-        _, plt = _get_mpl()
+        mpl, plt = _get_mpl()
 
         feat_str     = str(params.get('features', '')).strip()
         k            = int(params.get('k', 3))
+        standardize  = bool(params.get('standardize', True))
         init         = ['k-means++', 'random'][int(params.get('init', 0))]
         max_iter     = int(params.get('max_iter', 300))
+        n_init       = int(params.get('n_init', 10))
         random_state = int(params.get('random_state', 42))
         cmap         = _CMAPS[int(params.get('colormap', 0))]
         show_regions = bool(params.get('show_regions', True))
         res          = int(params.get('boundary_res', 120))
+        show_elbow   = bool(params.get('show_elbow', False))
+        k_max        = int(params.get('k_max', 10))
         fig_w, fig_h, dpi = _out_size(params, 540, 420, inputs=inputs)
 
         features = _pick_features(df, feat_str)
@@ -149,33 +172,43 @@ class MLKMeansNode(NodeProcessor):
             send_notification("K-Means: no numeric features found", level='warning', notif_id=_NOTIF_ID)
             return {}
 
-        X = df[features].dropna().values.astype(float)
-        if len(X) < k:
-            send_notification(f"K-Means: need ≥ k={k} samples (got {len(X)})", level='warning', notif_id=_NOTIF_ID)
-            return {}
+        df_meta = _df_meta_input(df)
+
+        valid_mask = df[features].notna().all(axis=1)
+        X_raw = df[features][valid_mask].values.astype(float)
+        if len(X_raw) < k:
+            send_notification(f"K-Means: need ≥ k={k} samples (got {len(X_raw)})", level='warning', notif_id=_NOTIF_ID)
+            return {'df_meta': df_meta}
+
+        if standardize:
+            scaler = StandardScaler()
+            X = scaler.fit_transform(X_raw)
+        else:
+            X = X_raw
 
         km = KMeans(n_clusters=k, init=init, max_iter=max_iter,
-                    random_state=random_state, n_init=10)
+                    random_state=random_state, n_init=n_init)
         labels  = km.fit_predict(X)
         inertia = float(km.inertia_)
         sil     = float(silhouette_score(X, labels)) if k > 1 and len(X) > k else 0.0
 
-        # Attach cluster label to a copy of the (non-NaN) rows
-        df_out = df[features].dropna().copy()
+        # Preserve all original columns, append cluster label
+        df_out = df[valid_mask].copy()
         df_out['cluster'] = labels
 
-        # ── Visualisation ──────────────────────────────────────────────────
+        # ── Cluster visualisation ──────────────────────────────────────────────
         use_pca = len(features) != 2
         if use_pca:
-            pca2   = PCA(n_components=2, random_state=random_state)
-            X_vis  = pca2.fit_transform(X)
-            ax_labels = ('PC1', 'PC2')
+            pca2        = PCA(n_components=2, random_state=random_state)
+            X_vis       = pca2.fit_transform(X)
+            ax_labels   = ('PC1', 'PC2')
             centers_vis = pca2.transform(km.cluster_centers_)
         else:
             X_vis       = X
             ax_labels   = tuple(features)
             centers_vis = km.cluster_centers_
 
+        cmap_obj = mpl.colormaps[cmap]
         with plt.rc_context(_MPL_DARK):
             fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
@@ -192,7 +225,7 @@ class MLKMeansNode(NodeProcessor):
                 ax.contourf(xx, yy, Z, alpha=0.20, cmap=cmap, levels=k)
                 ax.contour(xx, yy, Z, colors='#555', linewidths=0.5)
 
-            colors = plt.cm.get_cmap(cmap)(np.linspace(0, 1, k))
+            colors = cmap_obj(np.linspace(0, 1, k))
             for i, color in enumerate(colors):
                 mask = labels == i
                 ax.scatter(X_vis[mask, 0], X_vis[mask, 1], color=color,
@@ -204,8 +237,9 @@ class MLKMeansNode(NodeProcessor):
 
             ax.set_xlabel(ax_labels[0])
             ax.set_ylabel(ax_labels[1])
-            suffix = '  (PCA projection)' if use_pca else ''
-            ax.set_title(f"K-Means  k={k}  |  inertia={inertia:.1f}  sil={sil:.3f}{suffix}", fontsize=9)
+            std_note = '  ±std' if standardize else ''
+            suffix   = '  (PCA projection)' if use_pca else ''
+            ax.set_title(f"K-Means  k={k}  |  inertia={inertia:.1f}  sil={sil:.3f}{std_note}{suffix}", fontsize=9)
             ax.legend(fontsize=7, labelcolor='#cccccc', loc='best',
                       markerscale=1.2, framealpha=0.4)
             ax.grid(True)
@@ -213,11 +247,38 @@ class MLKMeansNode(NodeProcessor):
             img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
+        # ── Elbow curve ────────────────────────────────────────────────────────
+        elbow_img = None
+        if show_elbow:
+            k_range  = range(1, min(k_max + 1, len(X) + 1))
+            inertias = []
+            for ki in k_range:
+                km_i = KMeans(n_clusters=ki, init=init, max_iter=max_iter,
+                              random_state=random_state, n_init=n_init)
+                km_i.fit(X)
+                inertias.append(float(km_i.inertia_))
+            with plt.rc_context(_MPL_DARK):
+                fig_e, ax_e = plt.subplots(figsize=(fig_w, fig_h * 0.7))
+                ax_e.plot(list(k_range), inertias, 'o-', color='#5b9cf6',
+                          linewidth=1.5, markersize=5)
+                ax_e.axvline(x=k, color='#f59e0b', linestyle='--',
+                             linewidth=1.2, label=f'Current k={k}')
+                ax_e.set_xlabel('k (clusters)')
+                ax_e.set_ylabel('Inertia (WCSS)')
+                ax_e.set_title('Elbow curve', fontsize=9)
+                ax_e.legend(fontsize=7, labelcolor='#cccccc', framealpha=0.4)
+                ax_e.grid(True)
+                fig_e.tight_layout()
+                elbow_img = _fig_to_bgr(fig_e, dpi)
+                plt.close(fig_e)
+
         return {
             'table':      df_out,
             'preview':    img,
+            'elbow_plot': elbow_img,
             'inertia':    inertia,
             'silhouette': sil,
+            'df_meta':    df_meta,
         }
 
 

@@ -15,12 +15,17 @@ _COLORMAPS = [
 _CMAP_NAMES = [n for n, _ in _COLORMAPS]
 _CMAP_IDS   = [i for _, i in _COLORMAPS]
 
-# Features produced by sci_region_props
-_FEATURES = [
-    'area', 'radius', 'cluster_id', 'circularity', 'aspect_ratio', 'solidity', 'eccentricity',
-    'perimeter', 'equivalent_diameter', 'mean_intensity', 'max_intensity',
-    'std_intensity', 'orientation',
-]
+_ID_KEYS = ('id', 'label', 'cluster_id', 'region_id', 'idx')
+
+
+def _find_id(r: dict) -> int | None:
+    for k in _ID_KEYS:
+        if k in r:
+            try:
+                return int(r[k])
+            except (ValueError, TypeError):
+                continue
+    return None
 
 
 @vision_node(
@@ -42,12 +47,12 @@ _FEATURES = [
         {'id': 'main', 'color': 'image', 'label': 'Heatmap'},
     ],
     params=[
-        {'id': 'feature',     'label': 'Feature',        'type': 'enum',  'options': _FEATURES, 'default': 0},
-        {'id': 'colormap',    'label': 'Colormap',        'type': 'enum',  'options': _CMAP_NAMES, 'default': 0},
-        {'id': 'alpha',       'label': 'Heatmap Alpha',   'type': 'float', 'default': 0.85, 'min': 0.0, 'max': 1.0},
-        {'id': 'bg_alpha',    'label': 'BG Alpha',        'type': 'float', 'default': 0.25, 'min': 0.0, 'max': 1.0},
-        {'id': 'show_values', 'label': 'Show Values',     'type': 'bool',  'default': False},
-        {'id': 'colorbar',    'label': 'Show Colorbar',   'type': 'bool',  'default': True},
+        {'id': 'feature',     'label': 'Feature',        'type': 'string', 'default': 'area', 'hints': 'item_keys'},
+        {'id': 'colormap',    'label': 'Colormap',        'type': 'enum',   'options': _CMAP_NAMES, 'default': 0},
+        {'id': 'alpha',       'label': 'Heatmap Alpha',   'type': 'float',  'default': 0.85, 'min': 0.0, 'max': 1.0},
+        {'id': 'bg_alpha',    'label': 'BG Alpha',        'type': 'float',  'default': 0.25, 'min': 0.0, 'max': 1.0},
+        {'id': 'show_values', 'label': 'Show Values',     'type': 'bool',   'default': False},
+        {'id': 'colorbar',    'label': 'Show Colorbar',   'type': 'bool',   'default': True},
     ]
 )
 class ClusterHeatmapNode(NodeProcessor):
@@ -56,34 +61,42 @@ class ClusterHeatmapNode(NodeProcessor):
         regions = inputs.get('regions')
         img     = inputs.get('image')
 
+        available_keys = sorted({
+            k for r in (regions or []) if isinstance(r, dict)
+            for k, v in r.items() if isinstance(v, (int, float))
+        })
+
         if labels is None or not regions:
-            return {'main': img}
+            return {'main': img, '_available_keys': available_keys}
 
-        label_img    = labels.astype(np.int32)
-        h, w         = label_img.shape[:2]
-        
-        feat_raw = params.get('feature', 0)
-        if isinstance(feat_raw, str) and not feat_raw.isdigit():
-            feat_name = feat_raw if feat_raw in _FEATURES else _FEATURES[0]
-        else:
-            try: feat_name = _FEATURES[int(feat_raw)]
-            except: feat_name = _FEATURES[0]
+        label_img = labels.astype(np.int32)
+        h, w      = label_img.shape[:2]
 
-        cmap_id      = _CMAP_IDS[int(params.get('colormap', 0))]
-        alpha        = float(params.get('alpha', 0.85))
-        bg_alpha     = float(params.get('bg_alpha', 0.25))
-        show_values  = bool(params.get('show_values', False))
+        feat_name = str(params.get('feature', 'area')).strip() or 'area'
+
+        cmap_id       = _CMAP_IDS[int(params.get('colormap', 0))]
+        alpha         = float(params.get('alpha', 0.85))
+        bg_alpha      = float(params.get('bg_alpha', 0.25))
+        show_values   = bool(params.get('show_values', False))
         show_colorbar = bool(params.get('colorbar', True))
 
-        # Build label → feature value map (skip missing feature)
+        # Build label → feature value map; auto-detect id key
         lbl_to_val = {}
         for r in regions:
-            if not isinstance(r, dict): continue
-            if feat_name not in r: continue
-            lbl_to_val[int(r['id'])] = float(r[feat_name])
+            if not isinstance(r, dict):
+                continue
+            if feat_name not in r:
+                continue
+            region_id = _find_id(r)
+            if region_id is None:
+                continue
+            try:
+                lbl_to_val[region_id] = float(r[feat_name])
+            except (ValueError, TypeError):
+                continue
 
         if not lbl_to_val:
-            return {'main': img}
+            return {'main': img, '_available_keys': available_keys}
 
         vals = list(lbl_to_val.values())
         vmin, vmax = min(vals), max(vals)
@@ -143,4 +156,4 @@ class ClusterHeatmapNode(NodeProcessor):
             cv2.putText(out, feat_label, (bar_x - 2, bar_y + bar_h + 12),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.26, (180, 180, 180), 1, cv2.LINE_AA)
 
-        return {'main': out}
+        return {'main': out, '_available_keys': available_keys}
