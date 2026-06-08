@@ -1079,9 +1079,41 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           } else if (isDate) {
             inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isString) {
-            inner = sp.id === 'code'
-              ? <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} liveError={liveData?.out_e || undefined} />
-              : <TextInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
+            if (sp.id === 'code') {
+              inner = <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} liveError={liveData?.out_e || undefined} />;
+            } else {
+              const colHints: string[] | undefined =
+                sp.hints === 'df_columns' ? (liveData?.df_meta?.columns as string[] | undefined) :
+                sp.hints === 'item_keys'  ? (liveData?._available_keys as string[] | undefined) :
+                undefined;
+              const curVal = String(p[sp.id] ?? sp.default ?? '');
+              const selected = new Set(curVal.split(',').map((s: string) => s.trim()).filter(Boolean));
+              inner = (
+                <div className="space-y-1.5">
+                  <TextInput label={sp.label || sp.id} val={curVal} onChange={(v) => up({ [sp.id]: v })} />
+                  {colHints?.length ? (
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {colHints.map((col: string) => {
+                        const active = selected.has(col);
+                        return (
+                          <button
+                            key={col}
+                            onClick={() => {
+                              const next = new Set(selected);
+                              if (active) next.delete(col); else next.add(col);
+                              up({ [sp.id]: Array.from(next).join(', ') });
+                            }}
+                            className={`text-[8px] font-mono px-1.5 py-0.5 rounded border transition-all ${active ? 'bg-accent/20 border-accent/50 text-accent' : 'bg-white/5 border-white/10 text-gray-400 hover:border-accent/30 hover:text-gray-200'}`}
+                          >
+                            {col}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }
           } else if (isNumber) {
             const val = Number(p[sp.id] ?? sp.default ?? 0);
             let minVal = sp.min;
