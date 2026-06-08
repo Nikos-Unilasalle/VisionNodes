@@ -26,6 +26,26 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
   useEffect(() => {
     let retryDelay = 1000;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let failCount = 0;
+    let hasConnected = false;
+    const OFFLINE_ID = 'engine_offline';
+
+    const showOffline = () => {
+      setNotifications(prev => {
+        const msg = hasConnected
+          ? 'Engine disconnected — reconnecting…'
+          : 'Engine offline — start the Python engine (check dependencies)';
+        const n: EngineNotification = { id: OFFLINE_ID, message: msg, progress: null, level: 'error' };
+        const idx = prev.findIndex(x => x.id === OFFLINE_ID);
+        return idx >= 0 ? prev.map((x, i) => i === idx ? n : x) : [...prev, n];
+      });
+    };
+
+    const clearOffline = () => {
+      clearTimeout(dismissTimers.current[OFFLINE_ID]);
+      delete dismissTimers.current[OFFLINE_ID];
+      setNotifications(prev => prev.filter(x => x.id !== OFFLINE_ID));
+    };
 
     const connect = () => {
       ws.current = new WebSocket('ws://localhost:8765');
@@ -85,10 +105,21 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
       ws.current.onopen = () => {
         setIsConnected(true);
         retryDelay = 1000;
+        failCount = 0;
+        hasConnected = true;
+        clearOffline();
+      };
+
+      ws.current.onerror = () => {
+        // onclose fires right after — keep the socket from leaking listeners.
+        try { ws.current?.close(); } catch { /* noop */ }
       };
 
       ws.current.onclose = () => {
         setIsConnected(false);
+        failCount++;
+        // Surface a sticky offline warning once retries clearly aren't transient.
+        if (failCount >= 3) showOffline();
         retryTimer = setTimeout(connect, retryDelay);
         retryDelay = Math.min(retryDelay * 2, 16000);
       };

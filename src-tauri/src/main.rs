@@ -21,34 +21,51 @@ fn main() {
         .setup(|app| {
             #[cfg(not(debug_assertions))]
             {
-                use tauri_plugin_shell::ShellExt;
-                let sidecar_cmd = app.shell().sidecar("engine-bin");
-                
+                // Launch the bundled, self-contained Python engine from the app
+                // Resources (built by scripts/build_pyengine.sh or .ps1, see BUILD.md):
+                //   macOS:   Resources/pyengine/bin/python3  Resources/engine/engine.py
+                //   Windows: Resources/pyengine/Scripts/python.exe  Resources/engine/engine.py
+                let resource_dir = app
+                    .path()
+                    .resource_dir()
+                    .expect("failed to resolve resource dir");
+
+                #[cfg(target_os = "windows")]
+                let python_path = resource_dir.join("resources/pyengine/Scripts/python.exe");
+                #[cfg(not(target_os = "windows"))]
+                let python_path = resource_dir.join("resources/pyengine/bin/python3");
+
+                let engine_path = resource_dir.join("resources/engine/engine.py");
+
                 let mut launched = false;
-                if let Ok(cmd) = sidecar_cmd {
-                    if let Ok((_rx, child)) = cmd.spawn() {
-                        app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Sidecar(child)))));
-                        println!("Sidecar engine launched.");
-                        launched = true;
+                if python_path.exists() && engine_path.exists() {
+                    match std::process::Command::new(&python_path).arg(&engine_path).spawn() {
+                        Ok(child) => {
+                            app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Std(child)))));
+                            println!("Bundled engine launched: {:?}", python_path);
+                            launched = true;
+                        }
+                        Err(e) => println!("Failed to spawn bundled engine: {e}"),
                     }
+                } else {
+                    println!(
+                        "Bundled engine not found (python={:?} exists={}, engine={:?} exists={}).",
+                        python_path, python_path.exists(), engine_path, engine_path.exists()
+                    );
                 }
 
                 if !launched {
-                    println!("Sidecar 'engine-bin' not found or failed to launch. Trying local venv fallback...");
-                    // Fallback to local venv if available (useful for portable source builds)
-                    let mut root = std::env::current_dir().unwrap();
-                    // If we are inside the .app bundle, we might need to look elsewhere, 
-                    // but for a simple build folder, this works.
+                    // Last-resort fallback: a local .venv next to the binary (source builds).
+                    let root = std::env::current_dir().unwrap();
                     let venv_path = root.join(".venv/bin/python3");
-                    let engine_path = root.join("engine/engine.py");
-
-                    if venv_path.exists() && engine_path.exists() {
-                        if let Ok(child) = std::process::Command::new(venv_path).arg(engine_path).spawn() {
+                    let local_engine = root.join("engine/engine.py");
+                    if venv_path.exists() && local_engine.exists() {
+                        if let Ok(child) = std::process::Command::new(venv_path).arg(local_engine).spawn() {
                             app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Std(child)))));
                             println!("Local fallback engine launched.");
                         }
                     } else {
-                        println!("Warning: No engine found (sidecar or local venv). The app will start but nodes won't work.");
+                        println!("Warning: No engine found. The app will start but nodes won't work.");
                     }
                 }
             }

@@ -2,15 +2,39 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
+    <!--
+      App Sandbox is intentionally DISABLED.
+      VisionNodes bundles a full Python interpreter (Resources/pyengine) that it
+      spawns as a child process and uses for heavy computer-vision file I/O across
+      the user's disk. App Sandbox blocks spawning the embedded interpreter and
+      remaps $HOME to a container, which breaks the file capabilities scoped to
+      $HOME/** in capabilities/default.json. Sandbox + embedded interpreter is not
+      a supported combination for this kind of app.
+    -->
+
+    <!-- Camera (video capture nodes) -->
     <key>com.apple.security.device.camera</key>
     <true/>
+
+    <!-- WebSocket: engine binds a local server, frontend connects -->
     <key>com.apple.security.network.client</key>
     <true/>
     <key>com.apple.security.network.server</key>
     <true/>
-    <key>com.apple.security.files.user-selected.read-write</key>
+
+    <!--
+      Hardened Runtime: the embedded Python and its native extensions
+      (torch, numpy, opencv, rasterio…) are not signed with this app's team.
+      Allow loading them and the JIT/unsigned executable memory that some
+      ML/native libraries require.
+    -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
     <true/>
 </dict>
 </plist>
