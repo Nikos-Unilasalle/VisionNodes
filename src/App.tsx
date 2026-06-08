@@ -27,6 +27,7 @@ import { getNestedSubGraph, updateNestedSubGraph } from './utils/groups';
 import type { Canvas, GroupEntry } from './data/canvases';
 import { CANVAS_IDS, CANVAS_NAMES, makeInitialCanvases } from './data/canvases';
 import { useFileOperations } from './hooks/useFileOperations';
+import { useAutosave } from './hooks/useAutosave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useConnectionHandling } from './hooks/useConnectionHandling';
 import { useGroupOperations } from './hooks/useGroupOperations';
@@ -84,6 +85,8 @@ function App() {
   const canvasEdgesRef = useRef<Edge[]>([]);
   canvasNodesRef.current = canvasNodes;
   canvasEdgesRef.current = canvasEdges;
+  const canvasesRef = useRef<Canvas[]>(canvases);
+  canvasesRef.current = canvases;
 
   const [groupStack, setGroupStack] = useState<GroupEntry[]>([]);
   const groupStackRef = useRef<GroupEntry[]>([]);
@@ -1073,6 +1076,31 @@ function App() {
       .then(setTemplates)
       .catch(e => console.error('Failed to load templates manifest:', e));
   }, []);
+
+  // ── Autosave (crash protection): writes each canvas every 5 min ──
+  const { recoverAll: recoverAutosave } = useAutosave({ canvasesRef, pushNotification });
+
+  // Startup recovery: if the app opens with all canvases empty but autosaves
+  // hold content, restore them (recovers the last session after a crash).
+  const autosaveCheckedRef = useRef(false);
+  useEffect(() => {
+    if (autosaveCheckedRef.current) return;
+    autosaveCheckedRef.current = true;
+    (async () => {
+      const allEmpty = canvasesRef.current.every(c => c.nodes.length === 0);
+      if (!allEmpty) return;
+      const recovered = await recoverAutosave(CANVAS_IDS);
+      if (recovered.length === 0) return;
+      setCanvases(prev => prev.map(c => {
+        const r = recovered.find(x => x.canvasId === c.id);
+        return r ? { ...c, name: r.name, filePath: r.filePath, nodes: r.nodes, edges: r.edges } : c;
+      }));
+      pushNotification(
+        `Recovered ${recovered.length} canvas(es) from autosave`,
+        'info'
+      );
+    })();
+  }, [recoverAutosave, pushNotification]);
 
   const enterGroup = useCallback((groupNodeId: string) => {
     const newStack = [...groupStackRef.current, { groupNodeId }];
