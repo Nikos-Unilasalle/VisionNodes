@@ -1581,14 +1581,19 @@ export const OutputDisplayNode = memo(({ selected, data }: any) => {
 // --- LOGIC & MATH ---
 
 export const ScalarInputNode = memo(({ selected, data }: any) => {
+  const nd = useNodeData(useNodeId());
   const format = data.params?.format ?? 1; // 0 = Integer, 1 = Float
   const val = Number(data.params?.value ?? 0.0);
   const minVal = Number(data.params?.min ?? 0.0);
   const maxVal = Number(data.params?.max ?? 100.0);
   const stepVal = Number(data.params?.step ?? (format === 0 ? 1 : 0.01));
 
-  const actualMin = Math.min(minVal, maxVal);
-  const actualMax = Math.max(minVal, maxVal);
+  // Live bounds from engine override static params when a port is connected
+  const effectiveMin = nd?._min !== undefined ? Number(nd._min) : minVal;
+  const effectiveMax = nd?._max !== undefined ? Number(nd._max) : maxVal;
+
+  const actualMin = Math.min(effectiveMin, effectiveMax);
+  const actualMax = Math.max(effectiveMin, effectiveMax);
 
   const [localVal, setLocalVal] = useState(String(val));
 
