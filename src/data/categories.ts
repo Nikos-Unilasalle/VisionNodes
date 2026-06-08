@@ -386,7 +386,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geo_statistics',       label: 'Geo Statistics',    description: 'Computes zonal statistics over a geographic area.' },
     { type: 'geo_turbidity_nechad', label: 'Turbidity (Nechad)',description: 'Estimates water turbidity using the Nechad algorithm.' },
     { type: 'geo_turbidity_stats',  label: 'Turbidity Stats',   description: 'Computes turbidity statistics across a scene.' },
-    { type: 'geo_water_mask_mndwi', label: 'Water Mask (MNDWI)',description: 'Extracts a water mask using the MNDWI index.' },
+    { type: 'geo_water_mask',       label: 'Water Mask',        description: 'Extracts a binary water mask using the NDWI or MNDWI index.' },
     { type: 'feat_ndwi',            label: 'NDWI',              description: 'Normalized Difference Water Index.' },
     { type: 'feat_spectral_index',  label: 'Spectral Index',    description: 'Generic spectral index calculator.' },
     { type: 'feat_water_refine',    label: 'Water Refine',      description: 'Post-processes a water mask for accuracy.' },
