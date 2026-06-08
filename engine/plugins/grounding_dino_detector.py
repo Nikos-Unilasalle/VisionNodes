@@ -10,6 +10,14 @@ from registry import vision_node, NodeProcessor, send_notification
 import cv2
 import numpy as np
 import threading
+import json
+import os
+
+try:
+    import torch
+    _TORCH_AVAILABLE = True
+except ImportError:
+    _TORCH_AVAILABLE = False
 
 _NOTIF_ID = 'grounding_dino'
 
@@ -41,6 +49,7 @@ _TILE_GRIDS   = [1, 2, 3, 4, 5]
         {'id': 'main',       'color': 'image',  'label': 'Overlay'},
         {'id': 'boxes_list', 'color': 'list',   'label': 'Boxes List'},
         {'id': 'count',      'color': 'scalar', 'label': 'Count'},
+        {'id': 'scores',     'color': 'list',   'label': 'Confidence Scores'},
     ],
     params=[
         {'id': 'hf_token',       'label': 'HuggingFace Token (leave empty if saved)', 'type': 'string',
@@ -130,15 +139,19 @@ class GroundingDINODetectorNode(NodeProcessor):
 
     def _empty(self, image, msg: str = None) -> dict:
         main = self._status_overlay(image, msg) if (msg and image is not None) else image
-        return {'main': main, 'boxes_list': [], 'count': 0.0}
+        return {'main': main, 'boxes_list': [], 'count': 0.0, 'scores': []}
 
-    def _infer_patch(self, pil_patch, text_prompt: str, box_thr: float, text_thr: float, torch) -> tuple:
+    def _infer_patch(self, pil_patch, text_prompt: str, box_thr: float, text_thr: float) -> tuple:
         """Run GDINO on one PIL patch. Returns (boxes_xyxy_px, scores, labels)."""
         ph, pw = pil_patch.size[1], pil_patch.size[0]
         inp = self.processor(images=pil_patch, text=text_prompt, return_tensors='pt')
         inp = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in inp.items()}
         with torch.no_grad():
-            out = self.model(**inp)
+            if self.device == 'cuda':
+                with torch.autocast('cuda', dtype=torch.float16):
+                    out = self.model(**inp)
+            else:
+                out = self.model(**inp)
         try:
             res = self.processor.post_process_grounded_object_detection(
                 out, inp['input_ids'],
@@ -158,15 +171,12 @@ class GroundingDINODetectorNode(NodeProcessor):
         return boxes, scores, labels
 
     def process(self, inputs: dict, params: dict) -> dict:
-        import torch
-
         image = inputs.get('image')
         if image is None:
             return self._empty(None)
 
         # HF token — persist to ~/.vnstudio/secrets.json
-        import json, os
-        hf_token    = params.get('hf_token', '')
+        hf_token = params.get('hf_token', '')
         secrets_path = os.path.expanduser('~/.vnstudio/secrets.json')
         if hf_token:
             os.makedirs(os.path.dirname(secrets_path), exist_ok=True)
@@ -250,7 +260,7 @@ class GroundingDINODetectorNode(NodeProcessor):
             if grid == 1:
                 # ── Single pass ──
                 self.report_progress(0.3, 'GDINO: detecting…')
-                boxes_pixel, scores, labels = self._infer_patch(pil_img, text_prompt, box_thr, text_thr, torch)
+                boxes_pixel, scores, labels = self._infer_patch(pil_img, text_prompt, box_thr, text_thr)
 
             else:
                 # ── Tile mode: NxN patches with overlap ──
@@ -276,7 +286,7 @@ class GroundingDINODetectorNode(NodeProcessor):
                     )
 
                     p_boxes, p_scores, p_labels = self._infer_patch(
-                        patch, text_prompt, box_thr, text_thr, torch
+                        patch, text_prompt, box_thr, text_thr
                     )
 
                     # Remap from patch coords → full image coords
@@ -325,9 +335,10 @@ class GroundingDINODetectorNode(NodeProcessor):
             labels      = [labels[i] for i in keep_area]
 
         if max_boxes > 0 and len(boxes_pixel) > max_boxes:
-            boxes_pixel = boxes_pixel[:max_boxes]
-            scores      = scores[:max_boxes]
-            labels      = labels[:max_boxes]
+            top_idx     = np.argsort(scores)[::-1][:max_boxes]
+            boxes_pixel = boxes_pixel[top_idx]
+            scores      = scores[top_idx]
+            labels      = [labels[i] for i in top_idx]
 
         # Build normalized YOLO-compatible output (matches SAM box port format)
         boxes_list = []
@@ -391,6 +402,7 @@ class GroundingDINODetectorNode(NodeProcessor):
             'main':       overlay,
             'boxes_list': boxes_list,
             'count':      float(n),
+            'scores':     [float(s) for s in scores],
         }
         self._cache_result = out
         return out
