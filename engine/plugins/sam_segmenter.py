@@ -70,7 +70,7 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
          'options': ['Box (single)', 'Points List Input Port', 'Automatic (Grid)',
-                     'Boxes List (all)'],
+                     'Boxes List (all)', 'Points (1 per object)'],
          'default': 0},
 
         # ── Automatic Mode Settings ──
@@ -553,6 +553,109 @@ class SAMSegmenterNode(NodeProcessor):
                     'areas': areas, 'centroids': centroids, 'contours': all_contours,
                 }
                 self._cache_hash = cache_key
+                self._cache_result = result
+                return result
+
+            # ── 4d. Points Batch Mode (1 SAM call per point → 1 mask per object) ──
+            if prompt_mode == 4:
+                pts_list = inputs.get('points')
+                if not pts_list or not isinstance(pts_list, list) or len(pts_list) == 0:
+                    return empty('No points — connect Manual Points → POINTS LIST')
+
+                fg_points = [
+                    p for p in pts_list
+                    if isinstance(p, dict) and 'x' in p and 'y' in p
+                    and p.get('label', 1) == 1
+                ]
+                if not fg_points:
+                    return empty('Points list empty or no foreground points')
+
+                n_pts = len(fg_points)
+                self.report_progress(0.3, f'SAM: Segmenting {n_pts} objects…')
+
+                opacity      = float(params.get('overlay_opacity', 50)) / 100.0
+                label_map     = np.zeros((h, w, 3), dtype=np.uint8)
+                combined_mask = np.zeros((h, w), dtype=np.uint8)
+                areas, centroids, all_contours = [], [], []
+
+                for i, pt in enumerate(fg_points):
+                    px = pt['x'] * w
+                    py = pt['y'] * h
+                    coords = np.array([[px, py]])
+                    lbls   = np.array([1])
+
+                    with torch.inference_mode():
+                        if self.device == 'cuda':
+                            with torch.autocast(self.device, dtype=torch.bfloat16):
+                                masks_i, scores_i, _ = self.predictor.predict(
+                                    point_coords=coords,
+                                    point_labels=lbls,
+                                    multimask_output=multimask,
+                                )
+                        else:
+                            masks_i, scores_i, _ = self.predictor.predict(
+                                point_coords=coords,
+                                point_labels=lbls,
+                                multimask_output=multimask,
+                            )
+
+                    best    = int(np.argmax(scores_i)) if multimask else 0
+                    mask    = masks_i[best]
+                    if hasattr(mask, 'cpu'):
+                        mask = mask.detach().cpu().numpy()
+                    mask_bool = mask > 0
+
+                    color = [
+                        int((i * 67  + 40) % 200 + 55),
+                        int((i * 137 + 80) % 200 + 55),
+                        int((i * 197 + 120) % 200 + 55),
+                    ]
+                    label_map[mask_bool]     = color
+                    combined_mask[mask_bool] = 255
+                    areas.append(float(np.sum(mask_bool)))
+
+                    m_u8 = mask_bool.astype(np.uint8) * 255
+                    cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    if cnts:
+                        Mc = cv2.moments(m_u8)
+                        cx_c = float(Mc['m10'] / Mc['m00']) if Mc['m00'] != 0 else px
+                        cy_c = float(Mc['m01'] / Mc['m00']) if Mc['m00'] != 0 else py
+                        centroids.append([cx_c, cy_c])
+                        all_contours.append(cnts[0].reshape(-1, 2).tolist())
+                    else:
+                        centroids.append([float(px), float(py)])
+                        all_contours.append([])
+
+                    self.report_progress(
+                        0.3 + 0.65 * (i + 1) / n_pts,
+                        f'SAM: {i + 1}/{n_pts} segmented…'
+                    )
+
+                # ── Blend overlay ──
+                overlay = image.copy()
+                blended = cv2.addWeighted(image, 1.0 - opacity, label_map, opacity, 0)
+                region  = label_map.any(axis=2)
+                overlay[region] = blended[region]
+
+                # Draw contours + point markers
+                for i, pt in enumerate(fg_points):
+                    if i < len(all_contours) and all_contours[i]:
+                        cnts_draw = [np.array(all_contours[i], dtype=np.int32).reshape(-1, 1, 2)]
+                        cv2.drawContours(overlay, cnts_draw, -1, (255, 255, 255), 1)
+                    cx_p, cy_p = int(pt['x'] * w), int(pt['y'] * h)
+                    cv2.circle(overlay, (cx_p, cy_p), 5, (0, 220, 80), -1)
+                    cv2.circle(overlay, (cx_p, cy_p), 6, (255, 255, 255), 1)
+
+                self.report_progress(1.0, f'SAM: {n_pts} objects segmented')
+                result = {
+                    'main':      overlay,
+                    'mask':      combined_mask,
+                    'count':     float(n_pts),
+                    'areas':     areas,
+                    'centroids': centroids,
+                    'contours':  all_contours,
+                }
+                self._cache_hash   = cache_key
                 self._cache_result = result
                 return result
 
