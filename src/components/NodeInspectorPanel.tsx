@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2, PlugZap } from 'lucide-react';
-import { save as tauriSaveDialog } from '@tauri-apps/plugin-dialog';
+import { save as tauriSaveDialog, open as tauriOpenDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
 import { HexColorPicker } from 'react-colorful';
@@ -48,11 +48,13 @@ export const TextInput = ({ label, val, onChange }: TextInputProps) => (
   </div>
 );
 
-interface FilePathInputProps { label: string; val: string; onChange: (v: string) => void; filters?: { name: string; extensions: string[] }[]; }
-export const FilePathInput = ({ label, val, onChange, filters }: FilePathInputProps) => {
+interface FilePathInputProps { label: string; val: string; onChange: (v: string) => void; filters?: { name: string; extensions: string[] }[]; mode?: 'save' | 'open'; }
+export const FilePathInput = ({ label, val, onChange, filters, mode = 'save' }: FilePathInputProps) => {
   const browse = async () => {
-    const chosen = await tauriSaveDialog({ defaultPath: val || undefined, filters });
-    if (chosen) onChange(chosen);
+    const chosen = mode === 'open'
+      ? await tauriOpenDialog({ defaultPath: val || undefined, filters, multiple: false, directory: false })
+      : await tauriSaveDialog({ defaultPath: val || undefined, filters });
+    if (typeof chosen === 'string' && chosen) onChange(chosen);
   };
   return (
     <div className="space-y-4 group">
@@ -502,7 +504,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   let control: React.ReactNode;
                   if (isE2) control = <SelectInput label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
                   else if (isColor2) control = <ColorInput label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
-                  else if (sp.type === 'file_path') control = <FilePathInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} />;
+                  else if (sp.type === 'file_path' || sp.type === 'file_open') control = <FilePathInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} mode={sp.type === 'file_open' ? 'open' : 'save'} />;
                   else if (isS2) control = <TextInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   else if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
@@ -1074,8 +1076,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             }} />;
           } else if (isColor) {
             inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
-          } else if (sp.type === 'file_path') {
-            inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} />;
+          } else if (sp.type === 'file_path' || sp.type === 'file_open') {
+            inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} mode={sp.type === 'file_open' ? 'open' : 'save'} />;
           } else if (isDate) {
             inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isString) {

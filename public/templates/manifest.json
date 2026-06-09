@@ -1,5 +1,15 @@
 [
   {
+    "name": "RANSAC Homography — Robust Geometric Alignment",
+    "description": "Estimates a robust homography between two views of the same scene using SIFT keypoints + Brute-Force matching + RANSAC geometric verification. A Python node synthetically rotates the source image 20° to create a second view for self-contained testing. Outputs: inlier match overlay, warped image (img1 aligned to img2's frame), and the 3×3 H matrix. Replace sources with real scene photos for outlier filtering in action.",
+    "file": "ransac_homography.vn"
+  },
+  {
+    "name": "CLIP — Zero-Shot Classification & Embedding",
+    "description": "OpenAI CLIP (ViT-B/32 or ViT-L/14) encodes images and text in a shared embedding space — no training required. Edit comma-separated labels in the inspector to classify any image (Mode 1). Connect the 512d embedding output to a K-Means or similarity node for retrieval pipelines (Mode 2). Outputs: annotated overlay, probability scores list, best label, confidence, and the raw L2-normalized embedding vector.",
+    "file": "clip_zero_shot.vn"
+  },
+  {
     "name": "Grounding DINO + DINOv2 — Zero-shot Classify",
     "description": "Two-stage zero-shot pipeline: Grounding DINO detects objects via text prompt, then DINOv2 crops each box and classifies it by k-NN against your reference images (ImageFolder dir, subfolders = classes). No training, no labeled head — just point at a reference folder and press Build Refs. Outputs a labels list and overlay.",
     "file": "gdino_dinov2_classify.vn"
