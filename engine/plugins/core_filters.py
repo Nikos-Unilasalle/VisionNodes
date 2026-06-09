@@ -24,21 +24,88 @@ class CannyFilter(NodeProcessor):
 
 @vision_node(
     type_id="filter_blur",
-    label="Gaussian Blur",
+    label="Blur",
     category='image',
     icon="Waves",
-    description="Applies a Gaussian blur to smooth the image.",
-    inputs=[{"id": "image", "color": "image"}],
+    description="Smooths the image. Multiple methods (Gaussian, Median, Box, "
+                "Bilateral, Motion). Connect a mask to blur only that region.",
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "mask", "color": "mask"},
+    ],
     outputs=[{"id": "main", "color": "image"}],
-    params=[{"id": "size", "label": "Kernel Size", "type": "int", "default": 5}]
+    params=[
+        {"id": "method", "label": "Method", "type": "enum",
+         "options": ["Gaussian", "Median", "Box", "Bilateral", "Motion"], "default": 0},
+        {"id": "size", "label": "Strength (kernel)", "type": "scalar",
+         "min": 1, "max": 99, "step": 2, "default": 5},
+        {"id": "sigma", "label": "Sigma (Gaussian, 0=auto)", "type": "float",
+         "min": 0, "max": 50, "step": 0.5, "default": 0},
+        {"id": "sigma_color", "label": "Sigma Color (Bilateral)", "type": "scalar",
+         "min": 1, "max": 200, "default": 75},
+        {"id": "sigma_space", "label": "Sigma Space (Bilateral)", "type": "scalar",
+         "min": 1, "max": 200, "default": 75},
+        {"id": "angle", "label": "Angle (Motion)", "type": "scalar",
+         "min": 0, "max": 360, "default": 0},
+    ]
 )
 class BlurFilter(NodeProcessor):
+    @staticmethod
+    def _odd(v, lo=1):
+        v = int(round(v))
+        if v < lo: v = lo
+        if v % 2 == 0: v += 1
+        return v
+
+    def _apply(self, img, params):
+        method = int(params.get('method', 0))
+        size = self._odd(params.get('size', 5))
+
+        if method == 1:  # Median
+            return cv2.medianBlur(img, size)
+        if method == 2:  # Box / Average
+            return cv2.blur(img, (size, size))
+        if method == 3:  # Bilateral (edge-preserving)
+            sc = float(params.get('sigma_color', 75))
+            ss = float(params.get('sigma_space', 75))
+            src = img if img.ndim == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            out = cv2.bilateralFilter(src, size, sc, ss)
+            return out if img.ndim == 3 else cv2.cvtColor(out, cv2.COLOR_BGR2GRAY)
+        if method == 4:  # Motion (directional)
+            angle = float(params.get('angle', 0))
+            kernel = np.zeros((size, size), dtype=np.float32)
+            kernel[size // 2, :] = 1.0
+            kernel = cv2.warpAffine(
+                kernel,
+                cv2.getRotationMatrix2D((size / 2 - 0.5, size / 2 - 0.5), angle, 1.0),
+                (size, size))
+            s = kernel.sum()
+            if s > 0: kernel /= s
+            return cv2.filter2D(img, -1, kernel)
+        # Gaussian (default)
+        sigma = float(params.get('sigma', 0))
+        return cv2.GaussianBlur(img, (size, size), sigma)
+
     def process(self, inputs, params):
         img = inputs.get('image')
         if img is None: return {"main": None}
-        s = int(params.get('size', 5))
-        if s % 2 == 0: s += 1
-        return {"main": cv2.GaussianBlur(img, (s, s), 0)}
+
+        blurred = self._apply(img, params)
+
+        mask = inputs.get('mask')
+        if mask is None:
+            return {"main": blurred}
+
+        # Composite: blurred inside the mask, original outside, with soft edges.
+        if mask.ndim == 3:
+            mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        if mask.shape[:2] != img.shape[:2]:
+            mask = cv2.resize(mask, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
+        alpha = (mask.astype(np.float32) / 255.0)
+        if img.ndim == 3:
+            alpha = alpha[:, :, None]
+        out = blurred.astype(np.float32) * alpha + img.astype(np.float32) * (1.0 - alpha)
+        return {"main": out.astype(img.dtype)}
 
 @vision_node(
     type_id="filter_gray",

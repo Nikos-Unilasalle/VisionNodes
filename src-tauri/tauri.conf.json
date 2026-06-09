@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "VisionNodes",
+  "productName": "VNStudio",
   "version": "0.1.0",
   "identifier": "com.visionnodes.app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "VisionNodes",
+        "title": "VNStudio",
         "width": 1280,
         "height": 800,
         "theme": "Light",
@@ -25,7 +25,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg", "msi"],
+    "targets": "all",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

@@ -119,32 +119,116 @@ class ContourInfoNode(NodeProcessor):
     label="CLAHE (Contrast)",
     category='image',
     icon="Maximize",
-    description="Adaptively improves local image contrast (CLAHE algorithm).",
-    inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}],
+    description="Adaptive local contrast enhancement (CLAHE). Choose the color "
+                "space to operate in, dose the effect, and optionally restrict it "
+                "to a mask region. 'Auto Clip' derives the clip limit from local "
+                "contrast; the 'luma' output exposes the equalized luminance channel.",
+    inputs=[
+        {"id": "image", "color": "image"},
+        {"id": "mask", "color": "mask"},
+    ],
+    outputs=[
+        {"id": "main", "color": "image"},
+        {"id": "luma", "color": "image"},
+    ],
     params=[
-        {"id": "clip_limit", "label": "Clip Limit", "type": "scalar", "min": 1, "max": 10, "default": 2},
-        {"id": "grid_size", "label": "Grid Size", "type": "scalar", "min": 1, "max": 16, "default": 8}
+        {"id": "auto_clip", "label": "Auto Clip", "type": "bool", "default": False},
+        {"id": "clip_limit", "label": "Clip Limit", "type": "float",
+         "min": 0.5, "max": 40, "step": 0.5, "default": 2},
+        {"id": "grid_size", "label": "Tile Grid Size", "type": "scalar",
+         "min": 1, "max": 32, "default": 8},
+        {"id": "color_space", "label": "Operate On", "type": "enum",
+         "options": ["LAB (luminance)", "YCrCb (luma)", "HSV (value)",
+                     "Per-channel RGB", "Grayscale out"], "default": 0},
+        {"id": "strength", "label": "Strength (blend)", "type": "float",
+         "min": 0, "max": 1, "step": 0.05, "default": 1},
     ]
 )
 class ClaheNode(NodeProcessor):
+    def _luma_proxy(self, img, mode):
+        """Single-channel image CLAHE will actually operate on, used both for
+        the auto-clip heuristic and as the 'luma' output."""
+        if img.ndim == 2:
+            return img
+        if mode == 2:  # HSV value
+            return cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 2]
+        if mode == 1:  # YCrCb luma
+            return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)[:, :, 0]
+        if mode == 0:  # LAB lightness
+            return cv2.cvtColor(img, cv2.COLOR_BGR2LAB)[:, :, 0]
+        # per-channel / grayscale-out: perceptual gray is the meaningful proxy
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    @staticmethod
+    def _auto_clip(luma):
+        """Flat / low-contrast images get a stronger clip limit; contrasty ones
+        get a gentle one. Tuned so std~20 -> ~8, std~70 -> ~2.3, clamped [1, 16]."""
+        std = float(luma.std())
+        return float(np.clip(160.0 / max(std, 1.0), 1.0, 16.0))
+
+    def _equalize(self, img, clahe, mode):
+        """Returns (result, equalized_luma). result matches input channels."""
+        if img.ndim == 2:  # Grayscale input
+            out = clahe.apply(img)
+            return out, out
+
+        if mode == 4:  # Grayscale output
+            cl = clahe.apply(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+            return cv2.cvtColor(cl, cv2.COLOR_GRAY2BGR), cl
+        if mode == 3:  # Per-channel RGB (stronger, can shift hues)
+            b, g, r = cv2.split(img)
+            res = cv2.merge((clahe.apply(b), clahe.apply(g), clahe.apply(r)))
+            return res, cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+        if mode == 1:  # YCrCb — equalize luma
+            y, cr, cb = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb))
+            cl = clahe.apply(y)
+            return cv2.cvtColor(cv2.merge((cl, cr, cb)), cv2.COLOR_YCrCb2BGR), cl
+        if mode == 2:  # HSV — equalize value
+            h, s, v = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
+            cl = clahe.apply(v)
+            return cv2.cvtColor(cv2.merge((h, s, cl)), cv2.COLOR_HSV2BGR), cl
+        # LAB (default) — equalize lightness, preserves color best
+        l, a, b = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2LAB))
+        cl = clahe.apply(l)
+        return cv2.cvtColor(cv2.merge((cl, a, b)), cv2.COLOR_LAB2BGR), cl
+
     def process(self, inputs, params):
         img = inputs.get('image')
-        if img is None: return {"main": None}
-        
-        clip = float(params.get('clip_limit', 2.0))
-        grid = int(params.get('grid_size', 8))
-        
-        clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(grid, grid))
-        
-        if len(img.shape) == 3:
-            lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            l, a, b = cv2.split(lab)
-            cl = clahe.apply(l)
-            limg = cv2.merge((cl, a, b))
-            return {"main": cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)}
+        if img is None: return {"main": None, "luma": None}
+
+        grid = max(1, int(params.get('grid_size', 8)))
+        mode = int(params.get('color_space', 0))
+        strength = min(1.0, max(0.0, float(params.get('strength', 1.0))))
+
+        if bool(params.get('auto_clip', False)):
+            clip = self._auto_clip(self._luma_proxy(img, mode))
         else:
-            return {"main": clahe.apply(img)}
+            clip = max(0.01, float(params.get('clip_limit', 2.0)))
+
+        clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(grid, grid))
+        result, luma = self._equalize(img, clahe, mode)
+
+        # Grayscale-out mode promotes a 2D input to BGR; align the original.
+        base = img
+        if result.ndim == 3 and base.ndim == 2:
+            base = cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
+
+        # Dose the effect: blend the enhanced result back with the original.
+        if strength < 1.0:
+            result = cv2.addWeighted(result, strength, base, 1.0 - strength, 0)
+
+        # Optional mask: enhance only inside the mask, soft-composited.
+        mask = inputs.get('mask')
+        if mask is not None:
+            if mask.ndim == 3:
+                mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+            if mask.shape[:2] != base.shape[:2]:
+                mask = cv2.resize(mask, (base.shape[1], base.shape[0]), interpolation=cv2.INTER_NEAREST)
+            alpha = mask.astype(np.float32) / 255.0
+            ca = alpha[:, :, None] if base.ndim == 3 else alpha
+            result = (result.astype(np.float32) * ca + base.astype(np.float32) * (1.0 - ca)).astype(base.dtype)
+
+        return {"main": result, "luma": luma}
 
 @vision_node(
     type_id="feat_bilateral",

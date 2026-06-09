@@ -47,9 +47,7 @@ PY="$PYDEST/bin/python3"
 
 # ── 2. Install engine dependencies into the bundled interpreter ──
 echo "▶ Installing dependencies (this is the slow part — torch/sam2/rasterio)…"
-"$PY" -m ensurepip --upgrade >/dev/null 2>&1 || true
-"$PY" -m pip install --upgrade pip >/dev/null
-"$PY" -m pip install -r "$ROOT/engine/requirements.txt"
+uv pip install --break-system-packages -r "$ROOT/engine/requirements.txt" --python "$PY"
 
 # ── 3. Copy engine source into resources (self-contained, no caches/tests) ──
 echo "▶ Copying engine source → $ENGDEST"

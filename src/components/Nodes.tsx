@@ -537,7 +537,7 @@ export const FilterGradientNode = memo(({ selected, data }: any) => (
 ));
 
 export const FilterBlurNode = memo(({ selected, data }: any) => (
-  <BaseNode title="Blur" icon={Ghost} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}]} outputs={[{id: 'main', color: 'image'}]} />
+  <BaseNode title="Blur" icon={Ghost} selected={selected} data={data} color="blue" inputs={[{id: 'main', color: 'image'}, {id: 'mask', color: 'mask'}]} outputs={[{id: 'main', color: 'image'}]} />
 ));
 
 export const FilterThresholdNode = memo(({ selected, data }: any) => (
