@@ -51,6 +51,7 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         {'id': 'main',      'color': 'image',  'label': 'Overlay'},
         {'id': 'mask',      'color': 'mask',   'label': 'Combined Mask'},
         {'id': 'count',     'color': 'scalar', 'label': 'Object Count'},
+        {'id': 'boxes',     'color': 'list',   'label': 'Boxes List (YOLO)'},
         {'id': 'areas',     'color': 'list',   'label': 'Areas (px²)'},
         {'id': 'centroids', 'color': 'list',   'label': 'Centroids'},
         {'id': 'contours',  'color': 'list',   'label': 'Contours List'},
@@ -80,6 +81,12 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
          'default': 0.8, 'min': 0.0, 'max': 1.0, 'step': 0.05},
         {'id': 'stability_score_thresh', 'label': 'Stability Threshold (Auto)', 'type': 'float',
          'default': 0.95, 'min': 0.0, 'max': 1.0, 'step': 0.05},
+        {'id': 'box_nms_thresh', 'label': 'Box NMS Threshold (Auto)', 'type': 'float',
+         'default': 0.7, 'min': 0.0, 'max': 1.0, 'step': 0.05},
+        {'id': 'crop_n_layers', 'label': 'Crop Layers (Auto)', 'type': 'int',
+         'default': 0, 'min': 0, 'max': 3, 'step': 1},
+        {'id': 'min_mask_region_area', 'label': 'Min Mask Area px (Auto)', 'type': 'int',
+         'default': 0, 'min': 0, 'max': 100000, 'step': 50},
 
         # ── Mask Selection ──
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
@@ -90,6 +97,12 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         # ── Visualization ──
         {'id': 'overlay_opacity', 'label': 'Overlay Opacity (%)', 'type': 'number',
          'default': 50, 'min': 0, 'max': 100, 'step': 5},
+
+        # ── Persistence ──
+        {'id': 'save_path', 'label': 'Save File (.seg.json)', 'type': 'file_path',
+         'default': '~/VNStudio/exports/segmentation.seg.json',
+         'filters': [{'name': 'Segmentation', 'extensions': ['json']}]},
+        {'id': 'save_seg', 'label': 'Save Segmentation', 'type': 'trigger', 'default': False},
     ],
     colorable=True,
 )
@@ -220,6 +233,52 @@ class SAMSegmenterNode(NodeProcessor):
 
         return np.array([x_min, y_min, x_max, y_max])
 
+    @staticmethod
+    def _norm_box(x, y, bw, bh, w, h):
+        """Pixel xywh → normalized YOLO dict {xmin,ymin,width,height}."""
+        return {
+            'xmin':   float(x) / w,
+            'ymin':   float(y) / h,
+            'width':  float(bw) / w,
+            'height': float(bh) / h,
+        }
+
+    def _save_segmentation(self, path, result, h, w):
+        """Serialize current result to a .seg.json (boxes + precise contours).
+        Returns (ok, message)."""
+        path = os.path.expanduser((path or '').strip())
+        if not path:
+            return False, 'No save path set'
+        boxes     = result.get('boxes', []) or []
+        contours  = result.get('contours', []) or []
+        areas     = result.get('areas', []) or []
+        centroids = result.get('centroids', []) or []
+        n = max(len(boxes), len(contours))
+        objects = []
+        for i in range(n):
+            objects.append({
+                'box':      boxes[i]     if i < len(boxes)     else None,
+                'contour':  contours[i]  if i < len(contours)  else [],
+                'area':     areas[i]     if i < len(areas)     else None,
+                'centroid': centroids[i] if i < len(centroids) else None,
+            })
+        doc = {
+            'version': 1,
+            'source': 'sam_segmenter',
+            'image_size': {'w': int(w), 'h': int(h)},
+            'count': len(objects),
+            'objects': objects,
+        }
+        try:
+            d = os.path.dirname(path)
+            if d:
+                os.makedirs(d, exist_ok=True)
+            with open(path, 'w') as f:
+                json.dump(doc, f)
+            return True, f'Saved {len(objects)} objects → {os.path.basename(path)}'
+        except Exception as e:
+            return False, f'Save failed: {str(e)[:100]}'
+
     def _status_overlay(self, image, text, color=(255, 200, 50)):
         """Draw a status banner on a copy of the image."""
         if image is None:
@@ -249,7 +308,7 @@ class SAMSegmenterNode(NodeProcessor):
         def empty(msg=None, color=(255, 200, 50)):
             main = self._status_overlay(image, msg, color) if msg and image is not None else image
             return {'main': main, 'mask': None, 'count': 0,
-                    'areas': [], 'centroids': [], 'contours': []}
+                    'boxes': [], 'areas': [], 'centroids': [], 'contours': []}
 
         if image is None:
             return empty()
@@ -309,6 +368,20 @@ class SAMSegmenterNode(NodeProcessor):
         if self.predictor is None:
             return empty(f'Loading {model_name}…')
 
+        # ── Save gate (independent of Segment) ──
+        if bool(params.get('save_seg', False)):
+            h0, w0 = image.shape[:2]
+            if getattr(self, '_cache_result', None) is not None:
+                ok, msg = self._save_segmentation(
+                    params.get('save_path', ''), self._cache_result, h0, w0)
+                send_notification(msg, level='info' if ok else 'error', notif_id=_NOTIF_ID)
+            else:
+                send_notification('SAM: run Segment before saving',
+                                  level='error', notif_id=_NOTIF_ID)
+            if getattr(self, '_cache_result', None) is not None:
+                return self._cache_result
+            return empty('Press Segment to run')
+
         # ── Trigger gate ──
         triggered = bool(params.get('segment', False))
         if not triggered:
@@ -336,7 +409,10 @@ class SAMSegmenterNode(NodeProcessor):
                       params.get('overlay_opacity', 50),
                       params.get('points_per_side', 32),
                       params.get('pred_iou_thresh', 0.8),
-                      params.get('stability_score_thresh', 0.95))
+                      params.get('stability_score_thresh', 0.95),
+                      params.get('box_nms_thresh', 0.7),
+                      params.get('crop_n_layers', 0),
+                      params.get('min_mask_region_area', 0))
 
         cache_key = (img_hash, prompt_key)
         if cache_key == getattr(self, '_cache_hash', None) and getattr(self, '_cache_result', None) is not None:
@@ -369,15 +445,21 @@ class SAMSegmenterNode(NodeProcessor):
                 pps = int(params.get('points_per_side', 32))
                 iou_t = float(params.get('pred_iou_thresh', 0.8))
                 stab_t = float(params.get('stability_score_thresh', 0.95))
-                
-                gen_config = (pps, iou_t, stab_t)
+                nms_t = float(params.get('box_nms_thresh', 0.7))
+                crop_layers = int(params.get('crop_n_layers', 0))
+                min_area = int(params.get('min_mask_region_area', 0))
+
+                gen_config = (pps, iou_t, stab_t, nms_t, crop_layers, min_area)
                 if self.generator is None or self._gen_config != gen_config:
                     from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
                     self.generator = SAM2AutomaticMaskGenerator(
                         model=self.predictor.model,
                         points_per_side=pps,
                         pred_iou_thresh=iou_t,
-                        stability_score_thresh=stab_t
+                        stability_score_thresh=stab_t,
+                        box_nms_thresh=nms_t,
+                        crop_n_layers=crop_layers,
+                        min_mask_region_area=min_area,
                     )
                     self._gen_config = gen_config
 
@@ -396,6 +478,7 @@ class SAMSegmenterNode(NodeProcessor):
                 areas = []
                 centroids = []
                 all_contours = []
+                boxes = []
 
                 for i, m in enumerate(masks_data):
                     mask = m['segmentation']
@@ -406,8 +489,9 @@ class SAMSegmenterNode(NodeProcessor):
                     area = float(m.get('area', np.sum(mask)))
                     areas.append(area)
 
-                    bbox = m.get('bbox', [0, 0, 0, 0])
+                    bbox = m.get('bbox', [0, 0, 0, 0])  # COCO xywh, pixels
                     centroids.append([float(bbox[0] + bbox[2] / 2), float(bbox[1] + bbox[3] / 2)])
+                    boxes.append(self._norm_box(bbox[0], bbox[1], bbox[2], bbox[3], w, h))
 
                     m_u8 = mask.astype(np.uint8) * 255
                     cnts, _ = cv2.findContours(m_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -433,6 +517,7 @@ class SAMSegmenterNode(NodeProcessor):
                     'main': overlay,
                     'mask': combined_mask,
                     'count': float(len(masks_data)),
+                    'boxes': boxes,
                     'areas': areas,
                     'centroids': centroids,
                     'contours': all_contours,
@@ -538,10 +623,14 @@ class SAMSegmenterNode(NodeProcessor):
                     x1, y1, x2, y2 = pixel_boxes[i]
                     cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 255, 255), 1)
 
+                boxes_out = [self._norm_box(x1, y1, x2 - x1, y2 - y1, w, h)
+                             for (x1, y1, x2, y2) in pixel_boxes]
+
                 self.report_progress(1.0, f'SAM: {n_boxes} objects segmented')
                 result = {
                     'main': overlay, 'mask': combined_mask,
                     'count': float(n_boxes),
+                    'boxes': boxes_out,
                     'areas': areas, 'centroids': centroids, 'contours': all_contours,
                 }
                 self._cache_hash = cache_key
@@ -706,10 +795,17 @@ class SAMSegmenterNode(NodeProcessor):
         if contours:
             cnt_list = [c.reshape(-1, 2).tolist() for c in contours]
 
+        # Bounding box of the single mask → normalized YOLO dict
+        boxes_out = []
+        if np.any(mask_bool):
+            bx, by, bw_px, bh_px = cv2.boundingRect(mask_uint8)
+            boxes_out = [self._norm_box(bx, by, bw_px, bh_px, w, h)]
+
         result = {
             'main': overlay,
             'mask': mask_uint8,
             'count': 1.0,
+            'boxes': boxes_out,
             'areas': [area],
             'centroids': [[cx, cy]],
             'contours': cnt_list,

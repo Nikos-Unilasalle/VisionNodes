@@ -71,6 +71,15 @@ _IMG_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tif', '.tiff')
          'default': False},
         {'id': 'label_mode', 'label': 'Label Mode', 'type': 'enum',
          'options': ['Label + Score', 'Label', 'None'], 'default': 0},
+
+        # ── Run gate ──
+        {'id': 'classify', 'label': 'Classify', 'type': 'trigger', 'default': False},
+
+        # ── Persistence ──
+        {'id': 'save_path', 'label': 'Save File (.cls.json)', 'type': 'file_path',
+         'default': '~/VNStudio/exports/classification.cls.json',
+         'filters': [{'name': 'Classification', 'extensions': ['json']}]},
+        {'id': 'save_classif', 'label': 'Save Classification', 'type': 'trigger', 'default': False},
     ],
     colorable=True,
 )
@@ -89,6 +98,9 @@ class DINOv2ClassifierNode(NodeProcessor):
         self._ref_dir = ''
         self._ref_model = ''
         self._building = False
+
+        # Result cache (so downstream stays fed without re-running the heavy model)
+        self._cache_result = None
 
         self.device = 'cpu'
         try:
@@ -236,6 +248,32 @@ class DINOv2ClassifierNode(NodeProcessor):
         main = self._status_overlay(image, msg) if (msg and image is not None) else image
         return {'main': main, 'labels_list': [], 'classes': {}, 'summary': {}, 'count': 0.0}
 
+    def _save_classification(self, path: str, result: dict, h: int, w: int) -> tuple:
+        """Serialize a classification result to .cls.json. Returns (ok, message)."""
+        import json
+        path = os.path.expanduser((path or '').strip())
+        if not path:
+            return False, 'No save path set'
+        # Strip the overlay image; keep machine-usable data only.
+        doc = {
+            'version': 1,
+            'source': 'dinov2_classifier',
+            'image_size': {'w': int(w), 'h': int(h)},
+            'count': int(result.get('count', 0) or 0),
+            'labels_list': result.get('labels_list', []),
+            'classes': result.get('classes', {}),
+            'summary': result.get('summary', {}),
+        }
+        try:
+            d = os.path.dirname(path)
+            if d:
+                os.makedirs(d, exist_ok=True)
+            with open(path, 'w') as f:
+                json.dump(doc, f, ensure_ascii=False)
+            return True, f'Saved {doc["count"]} labels → {os.path.basename(path)}'
+        except Exception as e:
+            return False, f'Save failed: {str(e)[:100]}'
+
     def _crop(self, image: np.ndarray, box: dict, pad: float):
         """box has normalized xmin/ymin/width/height. Returns BGR crop or None."""
         h, w = image.shape[:2]
@@ -330,6 +368,24 @@ class DINOv2ClassifierNode(NodeProcessor):
 
         if self._ref_embeds is None or self._ref_model != model_name:
             return self._empty(image, 'Press "Build Refs" first')
+
+        # ── Save gate (independent of Classify) ──
+        if bool(params.get('save_classif', False)):
+            hh, ww = image.shape[:2]
+            if self._cache_result is not None:
+                ok, msg = self._save_classification(params.get('save_path', ''),
+                                                    self._cache_result, hh, ww)
+                send_notification(msg, level='info' if ok else 'error', notif_id=_NOTIF_ID)
+            else:
+                send_notification('DINOv2: run Classify before saving',
+                                  level='error', notif_id=_NOTIF_ID)
+            return self._cache_result if self._cache_result is not None else self._empty(image, 'Press Classify to run')
+
+        # ── Classify gate: heavy model only runs on explicit trigger ──
+        if not bool(params.get('classify', False)):
+            if self._cache_result is not None:
+                return self._cache_result
+            return self._empty(image, 'Press Classify to run')
 
         # Read params
         k          = int(params.get('k', 5))
@@ -444,10 +500,12 @@ class DINOv2ClassifierNode(NodeProcessor):
             classes_map.setdefault(item['label'], []).append(item['id'])
 
         self.report_progress(1.0, f'DINOv2: {n} classified')
-        return {
+        result = {
             'main':        overlay,
             'labels_list': labels_list,
             'classes':     classes_map,
             'summary':     summary,
             'count':       float(n),
         }
+        self._cache_result = result
+        return result
