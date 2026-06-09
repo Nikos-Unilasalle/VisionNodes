@@ -54,6 +54,103 @@ _PALETTE = [
 ]
 _UNKNOWN_COLOR = (150, 150, 150)  # grey for unclassified stones
 
+# Number of user-assignable (class name → color) slots in the inspector
+_NUM_COLOR_SLOTS = 12
+
+
+def _hex_to_bgr(hex_str: str) -> tuple | None:
+    """'#RRGGBB' → (B, G, R). Returns None on bad input."""
+    if not isinstance(hex_str, str):
+        return None
+    s = hex_str.strip().lstrip('#')
+    if len(s) != 6:
+        return None
+    try:
+        r = int(s[0:2], 16)
+        g = int(s[2:4], 16)
+        b = int(s[4:6], 16)
+        return (b, g, r)
+    except ValueError:
+        return None
+
+
+def _color_slot_params() -> list[dict]:
+    """Build (class name, color) param pairs so the user can assign a color
+    per class. Grouped under a collapsible 'Class Colors' section. Empty name =
+    pair ignored (palette fallback applies)."""
+    params = [{'id': 'class_colors_section', 'type': 'section', 'label': 'Class Colors'}]
+    for i in range(_NUM_COLOR_SLOTS):
+        default_hex = '#%02x%02x%02x' % (
+            _PALETTE[i % len(_PALETTE)][2],
+            _PALETTE[i % len(_PALETTE)][1],
+            _PALETTE[i % len(_PALETTE)][0],
+        )
+        params.append({'id': f'cls_name_{i}', 'type': 'string', 'default': '',
+                       'label': f'Class {i + 1} name'})
+        params.append({'id': f'cls_color_{i}', 'type': 'color', 'default': default_hex,
+                       'label': f'Class {i + 1} color'})
+    return params
+
+
+# Cache a unicode-capable TrueType font (Hershey/cv2 cannot render accents)
+_FONT_PATHS = [
+    '/System/Library/Fonts/Supplemental/Arial.ttf',
+    '/System/Library/Fonts/Helvetica.ttc',
+    '/Library/Fonts/Arial.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+]
+_FONT_CACHE: dict = {}
+
+
+def _get_font(size: int):
+    """Return a PIL ImageFont for the given pixel size, cached. None if PIL missing."""
+    try:
+        from PIL import ImageFont
+    except ImportError:
+        return None
+    if size in _FONT_CACHE:
+        return _FONT_CACHE[size]
+    font = None
+    for p in _FONT_PATHS:
+        try:
+            font = ImageFont.truetype(p, size)
+            break
+        except Exception:
+            continue
+    if font is None:
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
+    _FONT_CACHE[size] = font
+    return font
+
+
+def _put_unicode_text(img: np.ndarray, text: str, org: tuple,
+                      color_bgr: tuple, px: int) -> np.ndarray:
+    """Draw accented/unicode text onto a BGR image via PIL. org = baseline-left
+    (matches cv2.putText convention roughly). Returns the image (modified)."""
+    try:
+        from PIL import Image as PILImage, ImageDraw
+    except ImportError:
+        # Fallback: cv2 (will mangle accents, but never crash)
+        cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, px / 28.0,
+                    color_bgr, 1, cv2.LINE_AA)
+        return img
+    font = _get_font(px)
+    if font is None:
+        cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, px / 28.0,
+                    color_bgr, 1, cv2.LINE_AA)
+        return img
+    pil = PILImage.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(pil)
+    # PIL org = top-left; shift up by font size to approximate cv2 baseline
+    x, y = org
+    draw.text((x, y - px), text, font=font,
+              fill=(color_bgr[2], color_bgr[1], color_bgr[0]))
+    img[:] = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
+    return img
+
 
 @vision_node(
     type_id='stone_calepinage',
@@ -91,7 +188,7 @@ _UNKNOWN_COLOR = (150, 150, 150)  # grey for unclassified stones
          'default': ''},
         {'id': 'others_mode',    'label': 'Other Classes', 'type': 'enum',
          'options': ['Hide', 'Grey'], 'default': 1},
-    ],
+    ] + _color_slot_params(),
     colorable=True,
     resizable=True,
 )
@@ -151,8 +248,8 @@ class StoneCalepinageNode(NodeProcessor):
             cv2.rectangle(canvas, (x0 + pad, y), (x0 + pad + sw, y + sw), color, -1)
             cv2.rectangle(canvas, (x0 + pad, y), (x0 + pad + sw, y + sw), (40, 40, 40), 1)
             label = f'{type_name} ({cnt})'
-            cv2.putText(canvas, label, (x0 + pad + sw + 8, y + sw - 2),
-                        cv2.FONT_HERSHEY_SIMPLEX, font_scale, (20, 20, 20), 1, cv2.LINE_AA)
+            _put_unicode_text(canvas, label, (x0 + pad + sw + 8, y + sw - 2),
+                              (20, 20, 20), max(11, int(28 * font_scale / 0.45 * 0.6)))
             y += row_h
 
     def process(self, inputs: dict, params: dict) -> dict:
@@ -182,10 +279,20 @@ class StoneCalepinageNode(NodeProcessor):
 
         id_to_type, type_names = self._build_id_to_type(classes)
 
-        # Assign a stable color per type name
+        # User-assigned colors: {class name → BGR} from the inspector slots
+        user_colors: dict = {}
+        for i in range(_NUM_COLOR_SLOTS):
+            name = str(params.get(f'cls_name_{i}', '') or '').strip()
+            if not name:
+                continue
+            bgr = _hex_to_bgr(params.get(f'cls_color_{i}', ''))
+            if bgr is not None:
+                user_colors[name] = bgr
+
+        # Assign a color per type name: user choice first, else cycle palette
         type_colors: dict = {}
         for idx, name in enumerate(type_names):
-            type_colors[name] = _PALETTE[idx % len(_PALETTE)]
+            type_colors[name] = user_colors.get(name, _PALETTE[idx % len(_PALETTE)])
 
         # Build the two color layers
         fill_overlay = np.zeros((h, w, 3), dtype=np.uint8)
