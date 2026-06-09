@@ -46,7 +46,7 @@ export const CATEGORIES: Category[] = [
     { type: 'group_output',label: 'Group Output',  description: 'Exposes outputs at the group boundary.' },
   ]},
   { id: 'image', label: 'Image', icon: Layers, section: 'generic', nodes: [
-    { type: 'filter_blur',      label: 'Gaussian Blur', description: 'Applies a Gaussian blur to smooth the image and reduce noise.' },
+    { type: 'filter_blur',      label: 'Blur', description: 'Smooths the image (Gaussian, Median, Box, Bilateral, Motion). Optional mask input to blur only a region.' },
     { type: 'filter_gray',      label: 'Grayscale',     description: 'Converts the image to grayscale.' },
     { type: 'filter_threshold', label: 'Threshold',     description: 'Separates the image into black and white based on intensity.' },
     { type: 'filter_canny',     label: 'Canny Edge',    description: 'Detects edges using the Canny algorithm.' },
