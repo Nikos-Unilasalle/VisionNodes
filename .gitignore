@@ -88,3 +88,6 @@ src-tauri/resources/engine/*
 
 # Smoke pipeline outputs
 graphify-out/
+
+# Runtime export artifacts (segmentation/classification/crops)
+exports/
