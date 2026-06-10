@@ -201,6 +201,8 @@ export const CATEGORIES: Category[] = [
     { type: 'feat_fill_contours',   label: 'Fill Contours',       description: 'Fills all contours from a list into a binary mask.' },
     { type: 'feat_filter_contours', label: 'Filter Contours',     description: 'Filters contours by elongation ratio and/or area range.' },
     { type: 'feat_watershed',       label: 'Watershed',           description: 'Marker-based watershed segmentation.' },
+    { type: 'feat_grabcut',         label: 'GrabCut (Graph Cut)', description: 'Interactive foreground extraction via graph-cut (min-cut/max-flow). Drive with Manual Points: green=keep, red=remove.' },
+    { type: 'feat_active_contour',  label: 'Active Contour (Snake)', description: 'Deformable snake / Chan-Vese / geodesic active contour. Init from Manual Points, a mask, or a shape.' },
     { type: 'sci_connected_components',  label: 'Connected Components', description: 'Labels connected regions in a binary mask.' },
     { type: 'feat_distance_transform', label: 'Distance Transform', description: 'Computes distance from each pixel to nearest background.' },
     { type: 'fast_sam_segmenter',   label: 'AI Segmenter',        description: 'Zero-shot instance segmentation using FastSAM.' },
