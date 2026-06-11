@@ -7,6 +7,7 @@ export type NodesDataStore = {
   getAll: () => Record<string, any>;
   getNode: (nodeId: string) => Record<string, any>;
   subscribe: (nodeId: string, cb: () => void) => () => void;
+  setNodeField: (nodeId: string, field: string, value: any) => void;
   _update: (data: Record<string, any>) => void;
 };
 
@@ -62,7 +63,14 @@ function createNodesDataStore(): NodesDataStore {
     }
   }
 
-  return { getAll, getNode, subscribe, _update };
+  // Imperatively set one live field for a node (e.g. an editor pushing a fresh preview
+  // immediately on close). The next engine _update overwrites it naturally.
+  function setNodeField(nodeId: string, field: string, value: any) {
+    current = { ...current, [`${nodeId}:${field}`]: value };
+    listeners.get(nodeId)?.forEach(cb => cb());
+  }
+
+  return { getAll, getNode, subscribe, setNodeField, _update };
 }
 
 export const NodesDataContext = createContext<NodesDataStore>(createNodesDataStore());

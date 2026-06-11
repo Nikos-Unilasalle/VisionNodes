@@ -1,25 +1,30 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { PenTool, Minus, Type, Circle, Undo2, Trash2, Image } from 'lucide-react';
-import { useNodeData } from '../../context/NodesDataContext';
+import React, { useState, useRef, useEffect, useCallback, useContext } from 'react';
+import { PenTool, Minus, Type, Circle, CircleDot, Square, MoveUpRight, PaintBucket, Undo2, Trash2, Image } from 'lucide-react';
+import { useNodeData, NodesDataContext } from '../../context/NodesDataContext';
 import { PALETTES } from '../Nodes';
 
-type Tool = 'brush' | 'line' | 'text' | 'circle';
+type Tool = 'brush' | 'line' | 'arrow' | 'rect' | 'ellipse' | 'circle' | 'text';
 
 type Stroke = {
   tool: Tool;
   pts: [number, number][];
   color: string;
   size: number;
+  fill?: boolean;
   text?: string;
 };
 
+const SHAPE_TOOLS = new Set<Tool>(['rect', 'ellipse', 'circle']); // tools that support fill
+
 const FIXED_COLORS = ['#ffffff', '#000000', '#ff3333', '#ffcc00', '#33ff88', '#ff33cc'];
 
-const AnnotatorOverlay = ({ node, onClose }: any) => {
+const AnnotatorOverlay = ({ node, hasImageInput = false, onClose }: any) => {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [tool, setTool] = useState<Tool>('brush');
   const [color, setColor] = useState('#ffffff');
   const [size, setSize] = useState(4);
+  const [fill, setFill] = useState(false);
+  const [bgColor, setBgColor] = useState<string>(node?.data?.params?.bg_color ?? '#0c0c0c');
   const [textPos, setTextPos] = useState<[number, number] | null>(null);
   const [textInput, setTextInput] = useState('');
   const [zoom, setZoom] = useState(1);
@@ -37,8 +42,13 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
   const strokesRef = useRef<Stroke[]>([]);
   strokesRef.current = strokes;
 
+  const store = useContext(NodesDataContext);
   const nd = useNodeData(node?.id ?? null);
-  const frame = nd?.main_preview || nd?.main;
+  // The engine composites background + strokes into main_preview. We only want to show
+  // it as the editor base when there's a real connected image to annotate. Otherwise
+  // (blank board) we render the LIVE bgColor here so the picker is immediately visible.
+  const withBg = String(node?.data?.params?.with_background ?? true).toLowerCase() !== 'false';
+  const frame = (hasImageInput && withBg) ? (nd?.main_preview || nd?.main) : null;
 
   const palIdx = node?.data?.activePaletteIndex ?? 6;
   const paletteColors = (PALETTES[palIdx % PALETTES.length]?.colors ?? []).map((c: any) => c.bg);
@@ -90,13 +100,37 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
         ctx.moveTo(s.pts[0][0] * w, s.pts[0][1] * h);
         ctx.lineTo(s.pts[s.pts.length - 1][0] * w, s.pts[s.pts.length - 1][1] * h);
         ctx.stroke();
+      } else if (s.tool === 'arrow' && s.pts.length >= 2) {
+        const x1 = s.pts[0][0] * w, y1 = s.pts[0][1] * h;
+        const x2 = s.pts[s.pts.length - 1][0] * w, y2 = s.pts[s.pts.length - 1][1] * h;
+        const ang = Math.atan2(y2 - y1, x2 - x1);
+        const head = Math.max(10, s.size * 3);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+        ctx.stroke();
+      } else if (s.tool === 'rect' && s.pts.length >= 2) {
+        const x1 = s.pts[0][0] * w, y1 = s.pts[0][1] * h;
+        const x2 = s.pts[s.pts.length - 1][0] * w, y2 = s.pts[s.pts.length - 1][1] * h;
+        ctx.beginPath();
+        ctx.rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+        s.fill ? ctx.fill() : ctx.stroke();
+      } else if (s.tool === 'ellipse' && s.pts.length >= 2) {
+        const x1 = s.pts[0][0] * w, y1 = s.pts[0][1] * h;
+        const x2 = s.pts[s.pts.length - 1][0] * w, y2 = s.pts[s.pts.length - 1][1] * h;
+        ctx.beginPath();
+        ctx.ellipse((x1 + x2) / 2, (y1 + y2) / 2, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2, 0, 0, Math.PI * 2);
+        s.fill ? ctx.fill() : ctx.stroke();
       } else if (s.tool === 'circle' && s.pts.length > 0) {
         const cx = s.pts[0][0] * w;
         const cy = s.pts[0][1] * h;
         const r = s.size * Math.min(w, h) / 100;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.stroke();
+        s.fill ? ctx.fill() : ctx.stroke();
       } else if (s.tool === 'text' && s.pts.length > 0 && s.text) {
         const fontSize = Math.max(12, s.size * 4);
         ctx.font = `bold ${fontSize}px sans-serif`;
@@ -199,20 +233,21 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
     }
 
     if (tool === 'circle') {
-      setStrokes(prev => [...prev, { tool: 'circle', pts: [pos], color, size }]);
+      setStrokes(prev => [...prev, { tool: 'circle', pts: [pos], color, size, fill }]);
       return;
     }
 
     isDrawing.current = true;
-    currentStroke.current = { tool, pts: [pos], color, size };
-    if (tool === 'line') lineStart.current = pos;
+    currentStroke.current = { tool, pts: [pos], color, size, fill: SHAPE_TOOLS.has(tool) ? fill : undefined };
+    lineStart.current = pos; // anchor for two-point tools (line, arrow, rect, ellipse)
 
     const onMove = (ev: MouseEvent) => {
       if (!isDrawing.current || !currentStroke.current) return;
       const p = getRelPos(ev);
       if (tool === 'brush') {
         currentStroke.current = { ...currentStroke.current, pts: [...currentStroke.current.pts, p] };
-      } else if (tool === 'line') {
+      } else {
+        // line / arrow / rect / ellipse: anchor → current point
         currentStroke.current = { ...currentStroke.current, pts: [lineStart.current!, p] };
       }
       redraw(strokesRef.current, currentStroke.current);
@@ -241,8 +276,32 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
     setTextInput('');
   };
 
+  const compositePreview = (): string | null => {
+    const strokeCanvas = canvasRef.current;
+    if (!strokeCanvas || strokeCanvas.width === 0 || strokeCanvas.height === 0) return null;
+    const w = strokeCanvas.width;
+    const h = strokeCanvas.height;
+    const off = document.createElement('canvas');
+    off.width = w; off.height = h;
+    const ctx = off.getContext('2d');
+    if (!ctx) return null;
+    if (frame && imgRef.current) {
+      ctx.drawImage(imgRef.current, 0, 0, w, h);
+    } else {
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.drawImage(strokeCanvas, 0, 0);
+    return off.toDataURL('image/jpeg', 0.7).split(',')[1];
+  };
+
   const save = () => {
-    node.data.onChangeParams({ annotations: JSON.stringify(strokes) });
+    node.data.onChangeParams({ annotations: JSON.stringify(strokes), bg_color: bgColor });
+    // Push the freshly composited image straight into the live store so the node
+    // thumbnail updates the instant the editor closes. The engine overwrites it
+    // on its next frame with the real output.
+    const preview = compositePreview();
+    if (preview && node?.id) store.setNodeField(node.id, 'main_preview', preview);
     onClose();
   };
 
@@ -262,10 +321,13 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
   }, [onClose, textPos]);
 
   const TOOLS: [Tool, React.ElementType, string][] = [
-    ['brush',  PenTool, 'Brush'],
-    ['line',   Minus,   'Line'],
-    ['circle', Circle,  'Circle'],
-    ['text',   Type,    'Text'],
+    ['brush',   PenTool,     'Brush'],
+    ['line',    Minus,       'Line'],
+    ['arrow',   MoveUpRight, 'Arrow'],
+    ['rect',    Square,      'Rect'],
+    ['ellipse', Circle,      'Ellipse'],
+    ['circle',  CircleDot,   'Circle'],
+    ['text',    Type,        'Text'],
   ];
 
   const cursorStyle = tool === 'text' ? 'text' : 'crosshair';
@@ -320,7 +382,8 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
         >
           <div
             ref={containerRef}
-            className="relative inline-block shadow-[0_0_100px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden border border-white/10 bg-[#0c0c0c]"
+            className="relative inline-block shadow-[0_0_100px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden border border-white/10"
+            style={{ background: bgColor }}
           >
             {frame ? (
               <img
@@ -331,8 +394,14 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
                 alt="annotator"
               />
             ) : (
-              <div className="w-[800px] h-[450px] flex items-center justify-center text-gray-700">
-                <Image size={48} className="opacity-10" />
+              <div
+                className="flex items-center justify-center"
+                style={{
+                  width: Math.min(Number(node?.data?.params?.canvas_w) || 640, 960),
+                  height: Math.min(Number(node?.data?.params?.canvas_h) || 480, 600),
+                }}
+              >
+                <Image size={48} className="opacity-5" />
               </div>
             )}
 
@@ -423,6 +492,41 @@ const AnnotatorOverlay = ({ node, onClose }: any) => {
               className="w-24 accent-violet-500"
             />
           </div>
+
+          <div className="w-px h-10 bg-white/10" />
+
+          {/* Fill toggle (shapes only) */}
+          <button
+            onClick={() => setFill(f => !f)}
+            disabled={!SHAPE_TOOLS.has(tool)}
+            title="Filled shapes (rectangle, ellipse, circle)"
+            className={`px-3 py-2 rounded-xl flex flex-col items-center gap-1 transition-all border disabled:opacity-25 ${
+              fill
+                ? 'bg-violet-500/40 text-violet-300 border-violet-500/50'
+                : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'
+            }`}
+          >
+            <PaintBucket size={15} />
+            <span className="text-[8px] font-black uppercase tracking-wider">{fill ? 'Filled' : 'Outline'}</span>
+          </button>
+
+          <div className="w-px h-10 bg-white/10" />
+
+          {/* Background color */}
+          <label className="flex flex-col items-center gap-1.5 cursor-pointer">
+            <span className="text-[8px] font-black text-gray-500 uppercase tracking-wider">Background</span>
+            <span
+              className="w-7 h-7 rounded-lg border border-white/20 shadow-inner relative overflow-hidden"
+              style={{ background: bgColor }}
+            >
+              <input
+                type="color"
+                value={bgColor}
+                onChange={e => setBgColor(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </span>
+          </label>
 
           <div className="w-px h-10 bg-white/10" />
 

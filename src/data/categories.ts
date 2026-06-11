@@ -127,7 +127,7 @@ export const CATEGORIES: Category[] = [
     { type: 'mask_to_svg',         label: 'Mask to SVG',    description: 'Converts a binary mask to SVG path data.' },
   ]},
   { id: 'draw', label: 'Draw', icon: PenTool, section: 'generic', nodes: [
-    { type: 'tool_annotator',    label: 'Annotator',    description: 'Interactive drawing layer: brush, lines, circles, and text directly over the image.' },
+    { type: 'tool_annotator',    label: 'Annotator',    description: 'Interactive drawing board: brush, line, arrow, rectangle, ellipse, circle (filled or outline), text, with a custom background color — over an image or from scratch.' },
     { type: 'draw_overlay',      label: 'Draw Overlay', description: 'Draws shapes and text over the main video stream.' },
     { type: 'draw_tint_mask',    label: 'Tint Mask',    description: 'Transparent colorization of a masked region with a color picker and configurable opacity.' },
     { type: 'draw_rect',         label: 'Draw Rect',    description: 'Draws a rectangle on the image.' },
