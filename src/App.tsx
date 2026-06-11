@@ -172,6 +172,64 @@ function App() {
   const [copernicusEditingId,   setCopernicusEditingId]   = useState<string | null>(null);
   const [pythonEditingId,       setPythonEditingId]       = useState<string | null>(null);
   const [dfEditingId,           setDfEditingId]           = useState<string | null>(null);
+  // Per-conflict-group user choice of which edge is active. Key = `${target}::${handle}`.
+  const [activeEdgeOverrides, setActiveEdgeOverrides] = useState<Map<string, string>>(new Map());
+
+  // ── Conflict detection: multiple edges sharing the same (target, targetHandle) ──
+  // Exactly one edge per group is "active": the user-chosen override, else the last
+  // connected edge (which is the one the engine would otherwise pick).
+  const edgeConflictMap = useMemo(() => {
+    const groups = new Map<string, string[]>();
+    for (const e of edges) {
+      if (!e.targetHandle) continue;
+      const key = `${e.target}::${e.targetHandle}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(e.id);
+    }
+    const result = new Map<string, { groupKey: string; active: boolean }>();
+    for (const [key, ids] of groups) {
+      if (ids.length < 2) continue;
+      const override = activeEdgeOverrides.get(key);
+      const activeId = (override && ids.includes(override)) ? override : ids[ids.length - 1];
+      for (const id of ids) {
+        result.set(id, { groupKey: key, active: id === activeId });
+      }
+    }
+    return result;
+  }, [edges, activeEdgeOverrides]);
+
+  // Edges that must NOT be sent to the engine (inactive duplicates).
+  const inactiveEdgeIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const [id, info] of edgeConflictMap) if (!info.active) s.add(id);
+    return s;
+  }, [edgeConflictMap]);
+
+  const activateEdge = useCallback((edgeId: string) => {
+    const info = edgeConflictMap.get(edgeId);
+    if (!info || info.active) return;
+    setActiveEdgeOverrides(prev => {
+      const next = new Map(prev);
+      next.set(info.groupKey, edgeId);
+      return next;
+    });
+  }, [edgeConflictMap]);
+
+  // Drop overrides whose group no longer conflicts or whose edge vanished.
+  useEffect(() => {
+    setActiveEdgeOverrides(prev => {
+      if (prev.size === 0) return prev;
+      const liveGroups = new Set<string>();
+      for (const info of edgeConflictMap.values()) liveGroups.add(info.groupKey);
+      let changed = false;
+      const next = new Map(prev);
+      for (const key of prev.keys()) {
+        if (!liveGroups.has(key)) { next.delete(key); changed = true; }
+      }
+      return changed ? next : prev;
+    });
+  }, [edgeConflictMap]);
+
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
@@ -690,10 +748,10 @@ function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isConnected) updateGraph(canvasNodes, canvasEdges);
+      if (isConnected) updateGraph(canvasNodes, canvasEdges.filter(e => !inactiveEdgeIds.has(e.id)));
     }, 100);
     return () => clearTimeout(timer);
-  }, [canvasNodes, canvasEdges, isConnected, updateGraph]);
+  }, [canvasNodes, canvasEdges, isConnected, updateGraph, inactiveEdgeIds]);
 
   // Sync mainConnected flag on Display nodes from actual edges
   useEffect(() => {
@@ -926,16 +984,16 @@ function App() {
     if (!prev) return;
     setGroupStack([]); groupStackRef.current = [];
     setNodes(prev.nodes); setEdges(prev.edges);
-    if (isConnected) updateGraph(prev.nodes, prev.edges);
-  }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
+    if (isConnected) updateGraph(prev.nodes, prev.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
+  }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph, inactiveEdgeIds]);
 
   const handleRedo = useCallback(() => {
     const next = histRedo(activeCanvasId, { nodes: canvasNodesRef.current, edges: canvasEdgesRef.current });
     if (!next) return;
     setGroupStack([]); groupStackRef.current = [];
     setNodes(next.nodes); setEdges(next.edges);
-    if (isConnected) updateGraph(next.nodes, next.edges);
-  }, [histRedo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph]);
+    if (isConnected) updateGraph(next.nodes, next.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
+  }, [histRedo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph, inactiveEdgeIds]);
 
   const copyNodes = useCallback(() => {
     const selectedNodes = nodes.filter(n => n.selected);
@@ -1123,13 +1181,13 @@ function App() {
     nodesRef, edgesRef, pushSnapshot, setViewNodes, setViewEdges, instance,
   });
 
-  useEffect(() => { if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current); }, [isConnected, updateGraph]);
+  useEffect(() => { if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current.filter((e: any) => !inactiveEdgeIds.has(e.id))); }, [isConnected, updateGraph, inactiveEdgeIds]);
   useEffect(() => {
     setSelectedNodeId(null);
     setGroupStack([]);
     groupStackRef.current = [];
-    if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current);
-  }, [activeCanvasId, isConnected, updateGraph]);
+    if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current.filter((e: any) => !inactiveEdgeIds.has(e.id)));
+  }, [activeCanvasId, isConnected, updateGraph, inactiveEdgeIds]);
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
     setViewNodes(nds => {
@@ -1599,14 +1657,25 @@ function App() {
           .map((id: string) => ribbonMap.get(id))
           .filter(Boolean)
           .sort((a: any, b: any) => a.x - b.x);
+        const conflictInfo = edgeConflictMap.get(edge.id);
         return {
           ...edge,
-          type: waypoints.length > 0 ? 'ribbon' : edge.type,
-          data: { ...edge.data, ribbon: waypoints.length > 0 ? waypoints : undefined },
-          style: { ...edge.style, stroke: resolveColor(edge), strokeWidth: waypoints.length > 0 ? 1.5 : 2 },
+          type: (waypoints.length > 0 || conflictInfo) ? 'ribbon' : edge.type,
+          data: {
+            ...edge.data,
+            ribbon: waypoints.length > 0 ? waypoints : undefined,
+            conflictStatus: conflictInfo ? (conflictInfo.active ? 'active' : 'inactive') : undefined,
+            onActivate: conflictInfo && !conflictInfo.active ? () => activateEdge(edge.id) : undefined,
+          },
+          style: {
+            ...edge.style,
+            stroke: resolveColor(edge),
+            strokeWidth: waypoints.length > 0 ? 1.5 : 2,
+            strokeOpacity: conflictInfo && !conflictInfo.active ? 0.3 : 1,
+          },
         };
       });
-  }, [edges, nodes, isRerouting]);
+  }, [edges, nodes, isRerouting, edgeConflictMap, activateEdge]);
 
   return (
     <div className="w-full h-screen bg-[#2c333f] flex flex-col text-white font-sans overflow-hidden select-none">
@@ -1695,10 +1764,19 @@ function App() {
                   { id: `rr-in-${t}`, source: edge.source, sourceHandle: edge.sourceHandle, target: rerouteId, targetHandle: 'any__in' },
                   { id: `rr-out-${t}`, source: rerouteId, sourceHandle: portId, target: edge.target, targetHandle: edge.targetHandle },
                 ]);
+              } else if (edgeConflictMap.has(edge.id)) {
+                // Conflicting edge: a plain click activates it (never deletes).
+                activateEdge(edge.id);
               } else {
                 pushSnapshot();
                 setViewEdges(eds => eds.filter(e => e.id !== edge.id));
               }
+            }}
+            onEdgeContextMenu={(event, edge) => {
+              // Right-click always deletes a link (the way to remove a conflicting edge).
+              event.preventDefault();
+              pushSnapshot();
+              setViewEdges(eds => eds.filter(e => e.id !== edge.id));
             }}
             nodeTypes={dynamicNodeTypes}
             edgeTypes={RIBBON_EDGE_TYPES}
@@ -1820,6 +1898,7 @@ function App() {
             {annotatorEditingId && (
                <AnnotatorOverlay
                  node={nodesWithData.find(n => n.id === annotatorEditingId)}
+                 hasImageInput={edges.some(e => e.target === annotatorEditingId && (e.targetHandle ?? '').endsWith('image'))}
                  onClose={() => setAnnotatorEditingId(null)}
                />
             )}

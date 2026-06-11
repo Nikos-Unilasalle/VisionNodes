@@ -9,12 +9,15 @@ import json
     label='Annotator',
     category='draw',
     icon='PenTool',
-    description='Interactive annotation layer. Draw text, lines, and freehand strokes over an image using the built-in editor.',
+    description='Interactive drawing layer. Brush, lines, arrows, rectangles, ellipses, circles and text over an image or a solid background — built-in editor.',
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
-        {'id': 'annotations',     'label': 'Annotations',    'type': 'string',  'default': '[]'},
-        {'id': 'with_background', 'label': 'With Background', 'type': 'boolean', 'default': True},
+        {'id': 'annotations',     'label': 'Annotations',     'type': 'string',  'default': '[]'},
+        {'id': 'with_background', 'label': 'Use Input Image',  'type': 'boolean', 'default': True},
+        {'id': 'bg_color',        'label': 'Background Color', 'type': 'color',   'default': '#0c0c0c'},
+        {'id': 'canvas_w',        'label': 'Board Width',      'type': 'int',     'default': 640, 'min': 64, 'max': 4096},
+        {'id': 'canvas_h',        'label': 'Board Height',     'type': 'int',     'default': 480, 'min': 64, 'max': 4096},
     ],
     colorable=True,
 )
@@ -53,19 +56,23 @@ class AnnotatorNode(NodeProcessor):
         except Exception:
             annotations = []
 
-        if img is not None:
+        bg_bgr = self._parse_color(params.get('bg_color', '#0c0c0c'))
+
+        if img is not None and with_bg:
             h, w = img.shape[:2]
-            if with_bg:
-                canvas = img.copy()
-                if len(canvas.shape) == 2:
-                    canvas = cv2.cvtColor(canvas, cv2.COLOR_GRAY2BGR)
-                elif canvas.shape[2] == 4:
-                    canvas = cv2.cvtColor(canvas, cv2.COLOR_BGRA2BGR)
-            else:
-                canvas = np.zeros((h, w, 3), dtype=np.uint8)
+            canvas = img.copy()
+            if len(canvas.shape) == 2:
+                canvas = cv2.cvtColor(canvas, cv2.COLOR_GRAY2BGR)
+            elif canvas.shape[2] == 4:
+                canvas = cv2.cvtColor(canvas, cv2.COLOR_BGRA2BGR)
         else:
-            h, w = 480, 640
-            canvas = np.zeros((h, w, 3), dtype=np.uint8)
+            # Solid background board. Match input size if connected, else use params.
+            if img is not None:
+                h, w = img.shape[:2]
+            else:
+                w = max(64, int(params.get('canvas_w', 640)))
+                h = max(64, int(params.get('canvas_h', 480)))
+            canvas = np.full((h, w, 3), bg_bgr, dtype=np.uint8)
 
         for ann in annotations:
             if not isinstance(ann, dict):
@@ -73,7 +80,10 @@ class AnnotatorNode(NodeProcessor):
             tool = ann.get('tool', 'brush')
             color = self._parse_color(ann.get('color', '#ffffff'))
             size = max(1, int(ann.get('size', 3)))
+            filled = bool(ann.get('fill', False))
             pts_rel = ann.get('pts', [])
+            # OpenCV thickness: -1 means filled
+            thick = -1 if filled else size
 
             if tool == 'brush' and len(pts_rel) > 1:
                 pts = [(int(p[0] * w), int(p[1] * h)) for p in pts_rel]
@@ -85,11 +95,28 @@ class AnnotatorNode(NodeProcessor):
                 p2 = (int(pts_rel[-1][0] * w), int(pts_rel[-1][1] * h))
                 cv2.line(canvas, p1, p2, color, size, cv2.LINE_AA)
 
+            elif tool == 'arrow' and len(pts_rel) >= 2:
+                p1 = (int(pts_rel[0][0] * w), int(pts_rel[0][1] * h))
+                p2 = (int(pts_rel[-1][0] * w), int(pts_rel[-1][1] * h))
+                cv2.arrowedLine(canvas, p1, p2, color, size, cv2.LINE_AA, tipLength=0.25)
+
+            elif tool == 'rect' and len(pts_rel) >= 2:
+                p1 = (int(pts_rel[0][0] * w), int(pts_rel[0][1] * h))
+                p2 = (int(pts_rel[-1][0] * w), int(pts_rel[-1][1] * h))
+                cv2.rectangle(canvas, p1, p2, color, thick, cv2.LINE_AA)
+
+            elif tool == 'ellipse' and len(pts_rel) >= 2:
+                x1, y1 = pts_rel[0][0] * w, pts_rel[0][1] * h
+                x2, y2 = pts_rel[-1][0] * w, pts_rel[-1][1] * h
+                cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
+                ax, ay = max(1, int(abs(x2 - x1) / 2)), max(1, int(abs(y2 - y1) / 2))
+                cv2.ellipse(canvas, (cx, cy), (ax, ay), 0, 0, 360, color, thick, cv2.LINE_AA)
+
             elif tool == 'circle' and pts_rel:
                 cx = int(pts_rel[0][0] * w)
                 cy = int(pts_rel[0][1] * h)
                 radius = max(1, int(size * min(w, h) / 100))
-                cv2.circle(canvas, (cx, cy), radius, color, size, cv2.LINE_AA)
+                cv2.circle(canvas, (cx, cy), radius, color, thick, cv2.LINE_AA)
 
             elif tool == 'text' and pts_rel:
                 pt = (int(pts_rel[0][0] * w), int(pts_rel[0][1] * h))
