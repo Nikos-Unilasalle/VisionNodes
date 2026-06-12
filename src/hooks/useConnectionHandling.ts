@@ -133,7 +133,8 @@ export function useConnectionHandling({
       }
     }
 
-    setViewEdges((eds: any) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
+    setViewEdges((eds: any) => addEdge({ ...params, id: `e-${Date.now()}` },
+      eds.filter((e: any) => !(e.target === params.target && e.targetHandle === params.targetHandle))));
   }, [pushSnapshot, setViewNodes, setViewEdges, nodesRef, edgesRef, groupStackRef, activeCanvasIdRef, setCanvases]);
 
   return { onConnect };
