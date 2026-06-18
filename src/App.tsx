@@ -42,6 +42,7 @@ import ManualPointsEditorOverlay from './components/overlays/ManualPointsEditorO
 import GeoInteractiveSamplerEditorOverlay from './components/overlays/GeoInteractiveSamplerEditorOverlay';
 import GeoBboxEditorOverlay from './components/overlays/GeoBboxEditorOverlay';
 import CopernicusMapEditorOverlay from './components/overlays/CopernicusMapEditorOverlay';
+import { exportScene } from './exportSvg';
 import LineEditorOverlay from './components/overlays/LineEditorOverlay';
 import ROIEditorOverlay from './components/overlays/ROIEditorOverlay';
 import TutorialOverlay from './components/overlays/TutorialOverlay';
@@ -1378,12 +1379,37 @@ function App() {
     updateGraph(n, e);
   }, [confirmUnsaved, pushSnapshot, setNodes, setEdges, setActiveFilePath, updateGraph]);
 
+  const handleExportSvg = useCallback(async (format: 'svg' | 'png' = 'svg') => {
+    const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+    const sceneName = activeFilePath
+      ? activeFilePath.split(/[\\/]/).pop()?.replace(/\.vn$/i, '') ?? 'scene'
+      : (activeCanvas?.name ?? 'scene');
+    const selectedIds = nodesRef.current.filter((n: any) => n.selected).map((n: any) => n.id);
+    await exportScene({
+      nodes: nodesRef.current,
+      edges: canvasEdgesRef.current,
+      getNodeDef: (type: string) => {
+        const s = pluginSchemas.find((s: any) => s.type === type);
+        if (!s) return undefined;
+        return {
+          label: s.label,
+          inputs: (s.inputs ?? []).map((p: any) => ({ id: p.id, color: p.color })),
+          outputs: (s.outputs ?? []).map((p: any) => ({ id: p.id, color: p.color })),
+        };
+      },
+      title: sceneName,
+      selectionIds: selectedIds.length ? new Set(selectedIds) : undefined,
+      format,
+      defaultName: sceneName,
+    });
+  }, [canvases, activeCanvasId, activeFilePath, nodesRef, canvasEdgesRef, pluginSchemas]);
+
   useKeyboardShortcuts({
     copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo,
     pushSnapshot, setViewNodes, nodesRef, instance,
     groupSelectedNodes, exitGroup, groupStackRef, canBypass,
     setIsAddMenuOpen, saveProject, loadProject, setPendingConnection, handleRotate,
-    handleVisualize, handleTeleport,
+    handleVisualize, handleTeleport, handleExportSvg,
   });
 
   useEffect(() => {
@@ -1716,6 +1742,7 @@ function App() {
         loadProjectFromPath={loadProjectFromPath}
         loadTemplate={loadTemplate}
         setShowAbout={setShowAbout}
+        handleExportSvg={handleExportSvg}
       />
 
       <div className="flex-1 flex w-full relative">

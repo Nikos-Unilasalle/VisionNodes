@@ -22,6 +22,7 @@ export function useKeyboardShortcuts({
   handleRotate,
   handleVisualize,
   handleTeleport,
+  handleExportSvg,
 }: any) {
 
   useEffect(() => {
@@ -65,6 +66,10 @@ export function useKeyboardShortcuts({
       if (cmdKey && e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         getCurrentWindow().isFullscreen().then(is => getCurrentWindow().setFullscreen(!is));
+      }
+      if (cmdKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        handleExportSvg?.('svg');
       }
       if (cmdKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
@@ -162,5 +167,5 @@ export function useKeyboardShortcuts({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize, handleTeleport]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize, handleTeleport, handleExportSvg]);
 }
