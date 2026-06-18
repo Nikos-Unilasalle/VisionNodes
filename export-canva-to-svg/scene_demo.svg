@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 54 1088 228" width="1088" height="228" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="10" y="54" width="1088" height="228" fill="#ffffff"/>
+<text x="40" y="78" font-size="14" font-weight="600" fill="#7a1330">Pipeline — seuillage + propriétés de régions</text>
+<path d="M198.0,193.0 C224.0,193.0 224.0,193.0 250.0,193.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M408.0,193.0 C439.0,193.0 439.0,173.0 470.0,173.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M628.0,173.0 C659.0,173.0 659.0,163.0 690.0,163.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M848.0,163.0 C879.0,163.0 879.0,203.0 910.0,203.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M628.0,173.0 C769.0,173.0 769.0,229.0 910.0,229.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M198.0,219.0 C334.0,219.0 334.0,199.0 470.0,199.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 4"/>
+<rect x="40" y="140" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M40,170 L40,150 Q40,140 50,140 L188,140 Q198,140 198,150 L198,170 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="119" y="160" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">webcam_source</text>
+<circle cx="198.0" cy="193.0" r="5.5" fill="#b51d44"/>
+<text x="186" y="197" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<path d="M192.5,213.5 L204.5,219.0 L192.5,224.5 Z" fill="#b51d44"/>
+<text x="186" y="223" font-size="11" text-anchor="end" fill="#9a5566">tick</text>
+<rect x="250" y="140" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M250,170 L250,150 Q250,140 260,140 L398,140 Q408,140 408,150 L408,170 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="329" y="160" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">cv_colorspace</text>
+<circle cx="250.0" cy="193.0" r="5.5" fill="#b51d44"/>
+<text x="262" y="197" font-size="11" fill="#9a5566">image</text>
+<circle cx="408.0" cy="193.0" r="5.5" fill="#b51d44"/>
+<text x="396" y="197" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<rect x="470" y="120" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M470,150 L470,130 Q470,120 480,120 L618,120 Q628,120 628,130 L628,150 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="549" y="140" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">plugin_threshold</text>
+<circle cx="470.0" cy="173.0" r="5.5" fill="#b51d44"/>
+<text x="482" y="177" font-size="11" fill="#9a5566">image</text>
+<path d="M464.5,193.5 L476.5,199.0 L464.5,204.5 Z" fill="#b51d44"/>
+<text x="482" y="203" font-size="11" fill="#9a5566">trigger</text>
+<circle cx="628.0" cy="173.0" r="5.5" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="616" y="177" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<rect x="690" y="110" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M690,140 L690,120 Q690,110 700,110 L838,110 Q848,110 848,120 L848,140 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="769" y="130" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">sci_region_props</text>
+<circle cx="690.0" cy="163.0" r="5.5" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="702" y="167" font-size="11" fill="#9a5566">mask</text>
+<rect x="842.5" y="157.5" width="11.0" height="11.0" rx="1" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="836" y="167" font-size="11" text-anchor="end" fill="#9a5566">props</text>
+<rect x="842.5" y="183.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="836" y="193" font-size="11" text-anchor="end" fill="#9a5566">count</text>
+<rect x="910" y="150" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M910,180 L910,160 Q910,150 920,150 L1058,150 Q1068,150 1068,160 L1068,180 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="989" y="170" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">output_display</text>
+<circle cx="910.0" cy="203.0" r="5.5" fill="#b51d44"/>
+<text x="922" y="207" font-size="11" fill="#9a5566">in1</text>
+<circle cx="910.0" cy="229.0" r="5.5" fill="#b51d44"/>
+<text x="922" y="233" font-size="11" fill="#9a5566">in2</text>
+</svg>
