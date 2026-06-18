@@ -1,0 +1,99 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "image_loader",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "label": "Image Loader",
+        "params": {},
+        "ports": []
+      }
+    },
+    {
+      "id": "n2",
+      "type": "plugin_threshold",
+      "position": {
+        "x": 210,
+        "y": 0
+      },
+      "data": {
+        "label": "Threshold",
+        "params": {},
+        "ports": []
+      }
+    },
+    {
+      "id": "n3",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 420,
+        "y": 0
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {},
+        "ports": []
+      }
+    },
+    {
+      "id": "n4",
+      "type": "sci_region_props",
+      "position": {
+        "x": 681,
+        "y": 0
+      },
+      "data": {
+        "label": "Region Properties",
+        "params": {},
+        "ports": []
+      }
+    },
+    {
+      "id": "n5",
+      "type": "data_inspector",
+      "position": {
+        "x": 903,
+        "y": 0
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {},
+        "ports": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "source": "n1",
+      "target": "n2",
+      "sourceHandle": "image__image",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e1",
+      "source": "n2",
+      "target": "n3",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e2",
+      "source": "n3",
+      "target": "n4",
+      "sourceHandle": "list__regions",
+      "targetHandle": "list__regions"
+    },
+    {
+      "id": "e3",
+      "source": "n4",
+      "target": "n5",
+      "sourceHandle": "dict__props",
+      "targetHandle": "any__data"
+    }
+  ]
+}

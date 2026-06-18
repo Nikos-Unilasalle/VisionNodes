@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 830.00 300.00" width="830.00" height="300.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
+<rect x="-28.00" y="-54.00" width="830.00" height="300.00" fill="#ffffff"/>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 12.3 — Mean-shift : le nombre de classes émerge des données</text>
+<path d="M150.00,81.00 C179.00,81.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M150.00,81.00 C179.00,81.00 179.00,174.00 208.00,174.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M358.00,42.00 C387.00,42.00 387.00,100.00 416.00,100.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M358.00,174.00 C387.00,174.00 387.00,124.00 416.00,124.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M566.00,100.00 C595.00,100.00 595.00,82.00 624.00,82.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<rect x="0.00" y="41.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="0.00" y="39.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M0.00,69.00 L0.00,48.00 Q0.00,39.00 9.00,39.00 L141.00,39.00 Q150.00,39.00 150.00,48.00 L150.00,69.00 Z" fill="#fde7ee"/>
+<line x1="0.00" y1="69.00" x2="150.00" y2="69.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="10.00" y="50.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="26.00" y="58.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Image Loader</text>
+<circle cx="150.00" cy="81.00" r="6" fill="#d12f6b"/>
+<text x="137.00" y="84.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="208.00" y="2.00" width="150" height="86" rx="9" fill="#fbd7e3"/>
+<rect x="208.00" y="0.00" width="150" height="86" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M208.00,30.00 L208.00,9.00 Q208.00,0.00 217.00,0.00 L349.00,0.00 Q358.00,0.00 358.00,9.00 L358.00,30.00 Z" fill="#fde7ee"/>
+<line x1="208.00" y1="30.00" x2="358.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="218.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="234.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">K-means</text>
+<circle cx="208.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="221.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<circle cx="358.00" cy="42.00" r="6" fill="#d12f6b"/><circle cx="358.00" cy="42.00" r="2.70" fill="#ffffff"/>
+<text x="345.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">labels</text>
+<line x1="218.00" y1="60.00" x2="348.00" y2="60.00" stroke="#f0a8c2" stroke-width="0.8" stroke-dasharray="2 2"/>
+<text x="222.00" y="74.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">k = 3 (fixe)</text>
+<rect x="208.00" y="134.00" width="150" height="86" rx="9" fill="#fbd7e3"/>
+<rect x="208.00" y="132.00" width="150" height="86" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M208.00,162.00 L208.00,141.00 Q208.00,132.00 217.00,132.00 L349.00,132.00 Q358.00,132.00 358.00,141.00 L358.00,162.00 Z" fill="#fde7ee"/>
+<line x1="208.00" y1="162.00" x2="358.00" y2="162.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="218.00" y="143.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="234.00" y="151.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Mean-shift</text>
+<circle cx="208.00" cy="174.00" r="6" fill="#d12f6b"/>
+<text x="221.00" y="177.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<circle cx="358.00" cy="174.00" r="6" fill="#d12f6b"/><circle cx="358.00" cy="174.00" r="2.70" fill="#ffffff"/>
+<text x="345.00" y="177.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">labels</text>
+<line x1="218.00" y1="192.00" x2="348.00" y2="192.00" stroke="#f0a8c2" stroke-width="0.8" stroke-dasharray="2 2"/>
+<text x="222.00" y="206.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">k auto</text>
+<rect x="416.00" y="60.00" width="150" height="78" rx="9" fill="#fbd7e3"/>
+<rect x="416.00" y="58.00" width="150" height="78" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M416.00,88.00 L416.00,67.00 Q416.00,58.00 425.00,58.00 L557.00,58.00 Q566.00,58.00 566.00,67.00 L566.00,88.00 Z" fill="#fde7ee"/>
+<line x1="416.00" y1="88.00" x2="566.00" y2="88.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="426.00" y="69.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="442.00" y="77.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Split Half</text>
+<circle cx="416.00" cy="100.00" r="6" fill="#d12f6b"/>
+<text x="429.00" y="103.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">left</text>
+<circle cx="416.00" cy="124.00" r="6" fill="#d12f6b"/>
+<text x="429.00" y="127.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">right</text>
+<circle cx="566.00" cy="100.00" r="6" fill="#d12f6b"/>
+<text x="553.00" y="103.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="624.00" y="42.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="624.00" y="40.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M624.00,70.00 L624.00,49.00 Q624.00,40.00 633.00,40.00 L765.00,40.00 Q774.00,40.00 774.00,49.00 L774.00,70.00 Z" fill="#fde7ee"/>
+<line x1="624.00" y1="70.00" x2="774.00" y2="70.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="634.00" y="51.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="650.00" y="59.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Output Display</text>
+<circle cx="624.00" cy="82.00" r="6" fill="#d12f6b"/>
+<text x="637.00" y="85.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+</svg>
