@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 1269.00 272.00" width="1269.00" height="272.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
+<rect x="-28.00" y="-54.00" width="1269.00" height="272.00" fill="#ffffff"/>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 10.3 — Hough : voter dans (ρ, θ) fait émerger les droites</text>
+<path d="M150.00,42.00 C179.00,42.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M358.00,42.00 C387.00,42.00 387.00,42.00 416.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M589.00,42.00 C618.00,42.00 618.00,42.00 647.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M797.00,42.00 C826.00,42.00 826.00,66.00 855.00,66.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M150.00,42.00 C190.00,42.00 190.00,170.00 222.00,170.00 L783.00,170.00 C815.00,170.00 815.00,42.00 855.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<path d="M1005.00,42.00 C1034.00,42.00 1034.00,42.00 1063.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
+<rect x="0.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="0.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M0.00,30.00 L0.00,9.00 Q0.00,0.00 9.00,0.00 L141.00,0.00 Q150.00,0.00 150.00,9.00 L150.00,30.00 Z" fill="#fde7ee"/>
+<line x1="0.00" y1="30.00" x2="150.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="10.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="26.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Image Loader</text>
+<circle cx="150.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="137.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="208.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="208.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M208.00,30.00 L208.00,9.00 Q208.00,0.00 217.00,0.00 L349.00,0.00 Q358.00,0.00 358.00,9.00 L358.00,30.00 Z" fill="#fde7ee"/>
+<line x1="208.00" y1="30.00" x2="358.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="218.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="234.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Canny</text>
+<circle cx="208.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="221.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<circle cx="358.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="345.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="416.00" y="2.00" width="173" height="150" rx="9" fill="#fbd7e3"/>
+<rect x="416.00" y="0.00" width="173" height="150" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M416.00,30.00 L416.00,9.00 Q416.00,0.00 425.00,0.00 L580.00,0.00 Q589.00,0.00 589.00,9.00 L589.00,30.00 Z" fill="#fde7ee"/>
+<line x1="416.00" y1="30.00" x2="589.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="426.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="442.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Hough Accumulator</text>
+<circle cx="416.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="429.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">edges</text>
+<circle cx="589.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="576.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">accum</text>
+<clipPath id="clip_ha"><rect x="426.00" y="62.00" width="153.00" height="64.00" rx="6"/></clipPath>
+<rect x="426.00" y="62.00" width="153.00" height="64.00" rx="6" fill="#fdeef3" stroke="#f0a8c2" stroke-width="1"/>
+<g clip-path="url(#clip_ha)"><path d="M450.5,69.7 L450.5,115.8 L566.8,115.8" fill="none" stroke="#e0588f" stroke-width="1" stroke-opacity="0.55"/><polyline points="450.5,105.3 452.4,103.9 454.4,102.5 456.3,100.9 458.2,99.2 460.2,97.5 462.1,95.7 464.0,93.9 466.0,92.1 467.9,90.2 469.9,88.4 471.8,86.7 473.7,85.0 475.7,83.4 477.6,81.9 479.6,80.5 481.5,79.3 483.4,78.2 485.4,77.2 487.3,76.5 489.2,75.9 491.2,75.5 493.1,75.2 495.1,75.2 497.0,75.4 498.9,75.7 500.9,76.3 502.8,77.0 504.7,77.9 506.7,79.0 508.6,80.2 510.6,81.5 512.5,83.0 514.4,84.5 516.4,86.2 518.3,87.9 520.2,89.7 522.2,91.5 524.1,93.4 526.1,95.2 528.0,97.0 529.9,98.8 531.9,100.4 533.8,102.0 535.8,103.5 537.7,104.9 539.6,106.2 541.6,107.3 543.5,108.2 545.4,109.0 547.4,109.6 549.3,110.0 551.3,110.2 553.2,110.2 555.1,110.1 557.1,109.7 559.0,109.2 560.9,108.4 562.9,107.5 564.8,106.5 566.8,105.3" fill="none" stroke="#e0588f" stroke-width="1.8" stroke-opacity="0.7"/><circle cx="489.2" cy="75.9" r="8" fill="#e0588f" fill-opacity="0.22"/><circle cx="489.2" cy="75.9" r="4.8" fill="#e0588f"/></g>
+<text x="502.50" y="138.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="middle" font-style="italic" fill="#a85d78">pic → droite dans l&#x27;image</text>
+<rect x="647.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="647.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M647.00,30.00 L647.00,9.00 Q647.00,0.00 656.00,0.00 L788.00,0.00 Q797.00,0.00 797.00,9.00 L797.00,30.00 Z" fill="#fde7ee"/>
+<line x1="647.00" y1="30.00" x2="797.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="657.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="673.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Colormap / LUT</text>
+<circle cx="647.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="660.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<circle cx="797.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="784.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="855.00" y="2.00" width="150" height="78" rx="9" fill="#fbd7e3"/>
+<rect x="855.00" y="0.00" width="150" height="78" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M855.00,30.00 L855.00,9.00 Q855.00,0.00 864.00,0.00 L996.00,0.00 Q1005.00,0.00 1005.00,9.00 L1005.00,30.00 Z" fill="#fde7ee"/>
+<line x1="855.00" y1="30.00" x2="1005.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="865.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="881.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Draw Line</text>
+<circle cx="855.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="868.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<polygon points="855.00,59.00 862.00,66.00 855.00,73.00 848.00,66.00" fill="#ffffff" stroke="#d12f6b" stroke-width="1.6"/>
+<text x="868.00" y="69.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">lines</text>
+<circle cx="1005.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="992.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
+<rect x="1063.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
+<rect x="1063.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
+<path d="M1063.00,30.00 L1063.00,9.00 Q1063.00,0.00 1072.00,0.00 L1204.00,0.00 Q1213.00,0.00 1213.00,9.00 L1213.00,30.00 Z" fill="#fde7ee"/>
+<line x1="1063.00" y1="30.00" x2="1213.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
+<rect x="1073.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
+<text x="1089.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Output Display</text>
+<circle cx="1063.00" cy="42.00" r="6" fill="#d12f6b"/>
+<text x="1076.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+</svg>
