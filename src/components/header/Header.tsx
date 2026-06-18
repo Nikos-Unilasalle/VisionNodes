@@ -3,7 +3,7 @@ import {
   FilePlus, FolderOpen, Save, SaveAll, Undo2, Redo2,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3,
   Image, Film, Camera, Type, Layout, GitCommit, FileCode,
-  Palette, FolderSearch, BookOpen, RefreshCw, HelpCircle
+  Palette, FolderSearch, BookOpen, RefreshCw, HelpCircle, Share2
 } from 'lucide-react';
 import ApiKeysPanel from './ApiKeysPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,6 +48,7 @@ interface HeaderProps {
   loadProjectFromPath: (path: string) => void;
   loadTemplate: (file: string) => void;
   setShowAbout: (v: boolean) => void;
+  handleExportSvg: (format?: 'svg' | 'png') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -62,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({
   setIsProjectsOpen, setIsTemplatesOpen,
   setWorkDirAndSave, refreshWorkDir,
   confirmUnsaved, loadProjectFromPath, loadTemplate,
-  setShowAbout,
+  setShowAbout, handleExportSvg,
 }) => {
   return (
     <header className="h-10 bg-[#3d4452] border-b border-[#4f5b6b] flex items-center justify-between px-4 z-50">
@@ -105,6 +106,14 @@ const Header: React.FC<HeaderProps> = ({
               </svg>
             </button>
           </>)}
+        </div>
+
+        <div className="h-4 w-[1px] bg-[#222] mx-1" />
+
+        <div className="flex items-center bg-[#3d4452] rounded-lg border border-[#4f5b6b] p-0.5">
+          <button onClick={() => handleExportSvg('svg')} title="Export SVG (⌘⇧E)" className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 transition-all">
+            <Share2 size={14} />
+          </button>
         </div>
 
         <div className="h-4 w-[1px] bg-[#222] mx-1" />
