@@ -144,22 +144,19 @@
 #let theme1 = modern + (theme: option1-theme-func)
 
 #show: bookly.with(
-  title: "Fondamentaux de la vision par ordinateur",
-  author: "VNStudio",
+  title: "Le monde vu par les nombres",
+  author: "Nicolas Priniotakis",
   theme: theme1,
   lang: "fr",
   config-options: (open-right: false),
   title-page: [
-    #set page(width: 19.05cm, height: 23.5cm, header: none, footer: none, margin: auto)
-    #align(center + horizon)[
-      #text(size: 2.6em, fill: rgb("#c1002a"), weight: "bold", font: "Roboto")[Fondamentaux de la vision par ordinateur]
-      #v(1.2em)
-      #text(size: 1.2em, fill: rgb("#334155"))[VNStudio]
-    ]
+    #set page(width: 19.05cm, height: 23.5cm, header: none, footer: none, margin: (top: 0pt, bottom: 0pt, left: 0pt, right: 0pt))
+    #image("/Couv.pdf", width: 100%, height: 100%, fit: "stretch")
   ],
 )
 
 #front-matter[
+  #include "chapters/introduction.typ"
   #outline(title: [Table des matières], depth: 2, indent: 1em)
 ]
 
@@ -181,4 +178,8 @@
   #include "chapters/chapitre15_apprentissage_profond.typ"
   #include "chapters/chapitre16_statistiques_robustes.typ"
   #include "chapters/chapitre17_descripteurs_locaux.typ"
+]
+
+#back-matter[
+  #include "chapters/conclusion.typ"
 ]

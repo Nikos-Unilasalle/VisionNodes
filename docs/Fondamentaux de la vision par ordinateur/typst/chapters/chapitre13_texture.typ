@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Le grain des choses : la texture], toc: false)[
+#chapter(title: [La texture], toc: false)[
 
-#figtodo("chap13", [Illustration de couverture du chapitre 13])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap13.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
@@ -105,7 +105,9 @@ Canvas : `Image Source` → `Grayscale` → `First Order Stats` → `Inspector`.
 
 #subtitle[Compter non plus les billes, mais les paires de billes voisines]
 
-#figtodo("fig_ch13_obs1_glcm.svg", [fig_ch13_obs1_glcm])
+#figfull("/figures/fig_ch13_obs1_glcm.svg")
+
+#figfull("/figures/fig_ch13_obs1_glcm.svg")
 
 === L'intention
 Le premier ordre a échoué faute de regarder les voisinages. On veut la pièce manquante : non plus la distribution d'un pixel isolé, mais celle d'une *paire* de pixels liés par une relation géométrique fixée. Là se cache l'information que A et B (§13.1) ne livraient pas.
@@ -237,7 +239,9 @@ Canvas : `Image Source` → `Grayscale` → `GLCM` → `Haralick Features` → `
 
 #subtitle[Demander à chaque voisin : es-tu plus clair que moi ? oui/non, et lire le mot binaire]
 
-#figtodo("fig_ch13_obs2_lbp.svg", [fig_ch13_obs2_lbp])
+#figfull("/figures/fig_ch13_obs2_lbp.svg")
+
+#figfull("/figures/fig_ch13_obs2_lbp.svg")
 
 === L'intention
 La GLCM compte des paires. On veut maintenant décrire chaque pixel par la *forme* de son voisinage immédiat — bord, coin, point, zone plate — et résumer la région par la fréquence de ces formes. On vise au passage une robustesse à l'éclairage que les niveaux bruts n'offrent pas.
@@ -298,7 +302,9 @@ Canvas : `Image Source` → `Grayscale` → `LBP` → `Inspector`. Le nœud expo
 
 #subtitle[Un peigne accordé à une fréquence et une direction, qui vibre fort sur la bonne trame]
 
-#figtodo("fig_ch13_obs3_gabor.svg", [fig_ch13_obs3_gabor])
+#figfull("/figures/fig_ch13_obs3_gabor.svg")
+
+#figfull("/figures/fig_ch13_obs3_gabor.svg")
 
 === L'intention
 Une texture est une répétition : les stries d'un tissu, les alvéoles d'une éponge, les grains d'une roche. Toute répétition a une échelle (une période) et souvent une direction privilégiée. On veut mesurer _combien d'énergie_ la texture place à chaque fréquence et dans chaque direction — mais *localement*, sans perdre où elle se trouve.

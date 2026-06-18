@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Là où l'image bascule : gradients et contours], toc: false)[
+#chapter(title: [Gradients et contours], toc: false)[
 
-#figtodo("chap6", [Illustration de couverture du chapitre 6])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap6.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

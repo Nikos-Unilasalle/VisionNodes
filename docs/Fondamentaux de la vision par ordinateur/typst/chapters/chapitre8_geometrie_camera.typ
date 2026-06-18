@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Géométrie de la caméra : projeter, perdre, retrouver], toc: false)[
+#chapter(title: [Géométrie de la caméra], toc: false)[
 
-#figtodo("chap8", [Illustration de couverture du chapitre 8])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap8.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Noter un découpage : métriques de segmentation et détection], toc: false)[
+#chapter(title: [Métriques de segmentation], toc: false)[
 
-#figtodo("chap4", [Illustration de couverture du chapitre 4])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap4.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

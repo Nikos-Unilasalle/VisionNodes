@@ -17,7 +17,7 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Tester une forme, pas pondérer : la morphologie mathématique], toc: false)[
+#chapter(title: [Morphologie mathématique], toc: false)[
 
 #block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap11.png", width: 100%)]
 

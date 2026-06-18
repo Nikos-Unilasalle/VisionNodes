@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 648 228" width="648" height="228" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="648" height="228" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 13.3 — Banc de Gabor : résonance fréquentielle et angulaire</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M380.0,79.0 C405.0,79.0 405.0,53.0 430.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M588.0,53.0 C666.6,53.0 351.4,119.0 430.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M380.0,53.0 C405.0,53.0 405.0,119.0 430.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="0" width="170" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L370,0 Q380,0 380,10 L380,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="295" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Gabor Bank</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="380.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="368" y="57" font-size="11" text-anchor="end" fill="#9a5566">energy</text>
+<circle cx="380.0" cy="79.0" r="5.5" fill="#b51d44"/>
+<text x="368" y="83" font-size="11" text-anchor="end" fill="#9a5566">response</text>
+<rect x="430" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M430,30 L430,10 Q430,0 440,0 L578,0 Q588,0 588,10 L588,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="509" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Texture Energy</text>
+<circle cx="430.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="442" y="57" font-size="11" fill="#9a5566">response</text>
+<circle cx="588.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="576" y="57" font-size="11" text-anchor="end" fill="#9a5566">energy</text>
+<rect x="430" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M430,96 L430,76 Q430,66 440,66 L578,66 Q588,66 588,76 L588,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="509" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="430.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="442" y="123" font-size="11" fill="#9a5566">image</text>
+</svg>

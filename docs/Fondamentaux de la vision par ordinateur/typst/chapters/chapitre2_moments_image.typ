@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Peser une forme : les moments d'image], toc: false)[
+#chapter(title: [Les moments d'image], toc: false)[
 
-#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap2.png", width: 100%)]
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap2.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

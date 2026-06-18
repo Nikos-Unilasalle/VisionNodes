@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 878 228" width="878" height="228" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="878" height="228" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 14.3 — Netteté : variance du Laplacien, net vs flouté</text>
+<path d="M158.0,53.0 C289.0,53.0 289.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C184.0,53.0 184.0,119.0 210.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M368.0,119.0 C394.0,119.0 394.0,119.0 420.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M610.0,53.0 C635.0,53.0 635.0,53.0 660.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M610.0,119.0 C635.0,119.0 635.0,119.0 660.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,96 L210,76 Q210,66 220,66 L358,66 Q368,66 368,76 L368,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="289" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Blur</text>
+<circle cx="210.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="123" font-size="11" fill="#9a5566">image</text>
+<circle cx="368.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="356" y="123" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="420" y="0" width="190" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,30 L420,10 Q420,0 430,0 L600,0 Q610,0 610,10 L610,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="515" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Sharpness (Laplacian Var.)</text>
+<circle cx="420.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="432" y="57" font-size="11" fill="#9a5566">image</text>
+<rect x="604.5" y="47.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="598" y="57" font-size="11" text-anchor="end" fill="#9a5566">score</text>
+<rect x="420" y="66" width="190" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,96 L420,76 Q420,66 430,66 L600,66 Q610,66 610,76 L610,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="515" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Sharpness (Laplacian Var.)</text>
+<circle cx="420.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="432" y="123" font-size="11" fill="#9a5566">image</text>
+<rect x="604.5" y="113.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="598" y="123" font-size="11" text-anchor="end" fill="#9a5566">score</text>
+<rect x="660" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M660,30 L660,10 Q660,0 670,0 L808,0 Q818,0 818,10 L818,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="739" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scalar Display</text>
+<rect x="654.5" y="47.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="672" y="57" font-size="11" fill="#9a5566">value</text>
+<rect x="660" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M660,96 L660,76 Q660,66 670,66 L808,66 Q818,66 818,76 L818,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="739" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scalar Display</text>
+<rect x="654.5" y="113.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="672" y="123" font-size="11" fill="#9a5566">value</text>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 863 228" width="863" height="228" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="863" height="228" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 15.1 — Entropie croisée : le coût explose quand la confiance s&#x27;effondre</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M368.0,53.0 C394.0,53.0 394.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C289.0,119.0 289.0,79.0 420.0,79.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M595.0,53.0 C620.0,53.0 620.0,53.0 645.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="0" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,96 L0,76 Q0,66 10,66 L148,66 Q158,66 158,76 L158,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Ground Truth</text>
+<circle cx="158.0" cy="119.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="158.0" cy="119.0" r="2" fill="#b51d44"/>
+<text x="146" y="123" font-size="11" text-anchor="end" fill="#9a5566">label</text>
+<rect x="210" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L358,0 Q368,0 368,10 L368,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="289" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Classifier</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="368.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="368.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="356" y="57" font-size="11" text-anchor="end" fill="#9a5566">logits</text>
+<rect x="420" y="0" width="175" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,30 L420,10 Q420,0 430,0 L585,0 Q595,0 595,10 L595,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="508" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Cross-Entropy Loss</text>
+<circle cx="420.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="420.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="432" y="57" font-size="11" fill="#9a5566">logits</text>
+<circle cx="420.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="420.0" cy="79.0" r="2" fill="#b51d44"/>
+<text x="432" y="83" font-size="11" fill="#9a5566">label</text>
+<rect x="589.5" y="47.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="583" y="57" font-size="11" text-anchor="end" fill="#9a5566">loss</text>
+<rect x="645" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M645,30 L645,10 Q645,0 655,0 L793,0 Q803,0 803,10 L803,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="724" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scalar Display</text>
+<rect x="639.5" y="47.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="657" y="57" font-size="11" fill="#9a5566">value</text>
+</svg>

@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [La couleur n'est pas dans l'objet : couleur et photométrie], toc: false)[
+#chapter(title: [Couleur et photométrie], toc: false)[
 
-#figtodo("chap7", [Illustration de couverture du chapitre 7])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap7.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

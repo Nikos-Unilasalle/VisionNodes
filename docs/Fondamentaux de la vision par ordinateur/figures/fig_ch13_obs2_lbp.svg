@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 638 228" width="638" height="228" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="638" height="228" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 13.2 — LBP : le micro-motif en 8 questions binaires</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M370.0,53.0 C395.0,53.0 395.0,119.0 420.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M370.0,79.0 C395.0,79.0 395.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="0" width="160" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L360,0 Q370,0 370,10 L370,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="290" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">LBP Texture</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="370.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="358" y="57" font-size="11" text-anchor="end" fill="#9a5566">lbp_map</text>
+<circle cx="370.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="370.0" cy="79.0" r="2" fill="#b51d44"/>
+<text x="358" y="83" font-size="11" text-anchor="end" fill="#9a5566">histogram</text>
+<rect x="420" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,30 L420,10 Q420,0 430,0 L568,0 Q578,0 578,10 L578,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="499" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Histogram</text>
+<circle cx="420.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="432" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="578.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="566" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="420" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,96 L420,76 Q420,66 430,66 L568,66 Q578,66 578,76 L578,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="499" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="420.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="432" y="123" font-size="11" fill="#9a5566">image</text>
+</svg>

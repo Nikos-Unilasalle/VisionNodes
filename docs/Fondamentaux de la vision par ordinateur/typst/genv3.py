@@ -160,6 +160,26 @@ SECTION_FIG = {
     ("7", "7.3"): ["fig_ch7_obs2_deltaE.pdf"],
     ("7", "7.6"): ["fig_ch7_obs1_gamma.pdf", "fig_ch7_obs3_white_balance.pdf"],
     ("9", "9.4"): ["fig_ch9_obs2_horn_schunck.pdf"],
+    # ch13 — texture
+    ("13", "13.2"): ["fig_ch13_obs1_glcm.svg"],
+    ("13", "13.4"): ["fig_ch13_obs2_lbp.svg"],
+    ("13", "13.5"): ["fig_ch13_obs3_gabor.svg"],
+    # ch14 — qualité image
+    ("14", "14.2"): ["fig_ch14_obs1_mse_shift.svg"],
+    ("14", "14.3"): ["fig_ch14_obs2_ssim.svg"],
+    ("14", "14.5"): ["fig_ch14_obs3_sharpness.svg"],
+    # ch15 — apprentissage profond
+    ("15", "15.1"): ["fig_ch15_obs1_crossentropy.svg"],
+    ("15", "15.5"): ["fig_ch15_obs2_giou.svg"],
+    # ch16 — statistiques robustes
+    ("16", "16.1"): ["fig_ch16_obs1_median.svg"],
+    ("16", "16.3"): ["fig_ch16_obs2_mestimators.svg"],
+    ("16", "16.5"): ["fig_ch16_obs3_ransac.svg"],
+    # ch17 — descripteurs locaux
+    ("17", "17.1"): ["fig_ch17_01_ssd_vs_descripteur.svg"],
+    ("17", "17.2"): ["fig_ch17_02_echelle_caracteristique.svg"],
+    ("17", "17.3"): ["fig_ch17_03_hog_glyphes.svg"],
+    ("17", "17.4"): ["fig_ch17_04_sift_orientation.svg"],
 }
 
 def section_illustration(sec_num):
@@ -168,8 +188,28 @@ def section_illustration(sec_num):
             return f'#figfull("/illustrations/chap{sec_num}.{ext}")'
     return None
 
+SHORT_TITLE = {
+    "1":  "Décrire une forme",
+    "2":  "Les moments d'image",
+    "3":  "Distances et similarités",
+    "4":  "Métriques de segmentation",
+    "5":  "Filtrage et convolution",
+    "6":  "Gradients et contours",
+    "7":  "Couleur et photométrie",
+    "8":  "Géométrie de la caméra",
+    "9":  "Le flot optique",
+    "10": "Les transformées",
+    "11": "Morphologie mathématique",
+    "12": "Seuillage et segmentation",
+    "13": "La texture",
+    "14": "Mesure de qualité",
+    "15": "Fonctions de coût",
+    "16": "Statistiques robustes",
+    "17": "Descripteurs locaux",
+}
+
 def cover_image(ch_num):
-    for ext in ("png", "jpeg", "jpg"):
+    for ext in ("jpeg", "jpg", "png"):
         p = ILL / f"chap{ch_num}.{ext}"
         if p.exists():
             return f'#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap{ch_num}.{ext}", width: 100%)]'
@@ -328,7 +368,8 @@ def convert(md_path: Path) -> str:
     body_typ = "\n\n".join(parts)
 
     doc = [HEADER]
-    doc.append(f"#chapter(title: [{inline(title)}], toc: false)[\n")
+    short = SHORT_TITLE.get(ch_num, title)
+    doc.append(f"#chapter(title: [{inline(short)}], toc: false)[\n")
     doc.append(cover_image(ch_num))
     doc.append("\n#pagebreak()")
     doc.append('#block(above: 0em, below: 1em)[')
@@ -346,6 +387,76 @@ def convert(md_path: Path) -> str:
     doc.append("\n]\n")
     return "\n".join(doc)
 
+def convert_prose(md_path: Path) -> str:
+    """Convertit introduction.md ou conclusion.md → Typst sans #chapter numéroté."""
+    raw = md_path.read_text(encoding="utf-8").split("\n")
+    parts = []
+    title_rendered = False
+    i = 0
+    while i < len(raw):
+        line = raw[i]
+        # Skip leading cover image / italic caption
+        if line.startswith("![") or (line.startswith("*") and line.endswith("*") and i < 5):
+            i += 1; continue
+        # h1 → titre personnalisé (pas de #heading pour éviter numérotation bookly)
+        m1 = re.match(r'^#\s+(.+)$', line)
+        if m1 and not line.startswith('##'):
+            raw_title = m1.group(1).strip()
+            # Strip "Introduction —" / "Conclusion —" prefixes
+            raw_title = re.sub(r'^(Introduction|Conclusion)\s*[—–-]\s*', '', raw_title, flags=re.I).strip()
+            # Capitalize first letter
+            display = raw_title[0].upper() + raw_title[1:] if raw_title else raw_title
+            parts.append(
+                '#v(2em)\n'
+                '#block(breakable: false)[\n'
+                f'  #text(size: 2.2em, weight: "bold", fill: rgb("#1e293b"), font: "Roboto")[{inline(display)}]\n'
+                '  #v(0.4em)\n'
+                '  #line(length: 100%, stroke: 1.5pt + rgb("#c1002a"))\n'
+                ']\n'
+                '#v(1.5em)'
+            )
+            title_rendered = True
+            i += 1; continue
+        # h2 → ==
+        m2 = re.match(r'^##\s+(.+)$', line)
+        if m2:
+            parts.append(f'== {inline(strip_num(m2.group(1).strip()))}\n')
+            i += 1; continue
+        # h3 → ===
+        m3 = re.match(r'^###\s+(.+)$', line)
+        if m3:
+            parts.append(f'=== {inline(strip_num(m3.group(1).strip()))}\n')
+            i += 1; continue
+        # horizontal rule
+        if re.match(r'^---+$', line.strip()):
+            i += 1; continue
+        # blockquote → info-box
+        if line.startswith('> '):
+            bq = [line[2:]]
+            i += 1
+            while i < len(raw) and raw[i].startswith('> '):
+                bq.append(raw[i][2:]); i += 1
+            parts.append(f'#info-box[\n{render_block(bq)}\n]')
+            continue
+        # bullet list
+        if re.match(r'^[-*]\s+', line):
+            items = []
+            while i < len(raw) and re.match(r'^[-*]\s+', raw[i]):
+                items.append(f'- {inline(re.sub(r"^[-*]\s+","",raw[i]))}')
+                i += 1
+            parts.append('\n'.join(items))
+            continue
+        # paragraph
+        para = []
+        while i < len(raw) and raw[i].strip() and not raw[i].startswith('#') and not raw[i].startswith('>') and not raw[i].startswith('- ') and not raw[i].startswith('* ') and not re.match(r'^---+$', raw[i].strip()):
+            para.append(raw[i]); i += 1
+        if para:
+            parts.append(inline(' '.join(para)))
+            continue
+        i += 1
+    return HEADER + '\n\n'.join(p for p in parts if p.strip()) + '\n'
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     includes = []
@@ -358,6 +469,14 @@ def main():
         outp.write_text(typ, encoding="utf-8")
         includes.append(f'  #include "chapters/{md.stem}.typ"')
         print("  ✓", fn)
+    # intro + conclusion
+    for prose_fn in ("introduction.md", "conclusion.md"):
+        md = SRC / prose_fn
+        if md.exists():
+            typ = convert_prose(md)
+            outp = OUT / (md.stem + ".typ")
+            outp.write_text(typ, encoding="utf-8")
+            print("  ✓", prose_fn)
     # patch book.typ includes
     book = (TYPST / "book.typ").read_text(encoding="utf-8")
     book = re.sub(r'#main-matter\[\n.*?\n\]', "#main-matter[\n" + "\n".join(includes) + "\n]", book, flags=re.S)

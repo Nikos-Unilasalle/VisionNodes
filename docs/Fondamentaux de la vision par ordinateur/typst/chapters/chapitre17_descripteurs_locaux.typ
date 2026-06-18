@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Retrouver un point : descripteurs locaux et appariement], toc: false)[
+#chapter(title: [Descripteurs locaux], toc: false)[
 
-#figtodo("chap17", [Illustration de couverture du chapitre 17])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap17.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
@@ -51,6 +51,8 @@ Ce chapitre relie et concrétise des outils vus séparément. La détection s'ap
 == Le problème de l'appariement : pourquoi les pixels bruts ne suffisent pas
 
 #subtitle[Reconnaître une structure sans se laisser abuser par sa couleur exacte]
+
+#figfull("/figures/fig_ch17_01_ssd_vs_descripteur.svg")
 
 === L'intention
 On veut mettre en correspondance des points homologues entre deux vues d'une même scène. Pour chaque point d'une image, on cherche son jumeau dans l'autre, malgré les changements de cadrage, de zoom et d'éclairage.
@@ -122,6 +124,8 @@ Sur une image et sa copie transformée (tournée de 30°, zoomée de 20%, éclai
 
 #subtitle[Le bon recul de lecture, qui s'ajuste à la taille de la structure]
 
+#figfull("/figures/fig_ch17_02_echelle_caracteristique.svg")
+
 === L'intention
 Pour comparer des points-clés d'images zoomées différemment, on doit extraire le descripteur sur un voisinage proportionnel à la taille de la structure dans l'image. Il faut trouver automatiquement cette taille pour chaque point.
 
@@ -190,6 +194,8 @@ Sur une image avec points SIFT affichés sous forme de cercles de rayon proporti
 
 #subtitle[Un plan de bordures résumé par des roses des orientations]
 
+#figfull("/figures/fig_ch17_03_hog_glyphes.svg")
+
 === L'intention
 On souhaite décrire la forme locale pour reconnaître des objets à la pose fixe (comme des piétons ou des composants sur un tapis roulant) de manière robuste à la lumière.
 
@@ -245,6 +251,8 @@ En visualisant les glyphes HOG (étoiles d'orientations) sur un piéton :
 == SIFT : le descripteur de référence
 
 #subtitle[Orienter la carte locale pour la lire toujours dans le même sens]
+
+#figfull("/figures/fig_ch17_04_sift_orientation.svg")
 
 === L'intention
 On souhaite combiner les invariances d'échelle, de rotation et d'éclairage pour obtenir le descripteur le plus robuste et universel possible pour apparier des scènes complexes.
