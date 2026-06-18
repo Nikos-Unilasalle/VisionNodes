@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Mesurer un écart : distances et similarités], toc: false)[
+#chapter(title: [Distances et similarités], toc: false)[
 
-#figtodo("chap3", [Illustration de couverture du chapitre 3])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap3.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

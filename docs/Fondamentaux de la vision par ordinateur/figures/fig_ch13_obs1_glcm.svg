@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 678 294" width="678" height="294" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="678" height="294" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 13.1 — GLCM : texture lisse vs contrastée</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M400.0,79.0 C430.0,79.0 430.0,53.0 460.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M400.0,105.0 C430.0,105.0 430.0,119.0 460.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M400.0,53.0 C430.0,53.0 430.0,185.0 460.0,185.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="0" width="190" height="128" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L390,0 Q400,0 400,10 L400,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="305" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">GLCM Extractor</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="400.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="400.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="388" y="57" font-size="11" text-anchor="end" fill="#9a5566">matrix</text>
+<rect x="394.5" y="73.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="388" y="83" font-size="11" text-anchor="end" fill="#9a5566">contrast</text>
+<rect x="394.5" y="99.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="388" y="109" font-size="11" text-anchor="end" fill="#9a5566">homogeneity</text>
+<rect x="460" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M460,30 L460,10 Q460,0 470,0 L608,0 Q618,0 618,10 L618,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="539" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scalar Display</text>
+<rect x="454.5" y="47.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="472" y="57" font-size="11" fill="#9a5566">value</text>
+<rect x="460" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M460,96 L460,76 Q460,66 470,66 L608,66 Q618,66 618,76 L618,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="539" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scalar Display</text>
+<rect x="454.5" y="113.5" width="11.0" height="11.0" rx="1" fill="#b51d44"/>
+<text x="472" y="123" font-size="11" fill="#9a5566">value</text>
+<rect x="460" y="132" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M460,162 L460,142 Q460,132 470,132 L608,132 Q618,132 618,142 L618,162 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="539" y="152" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="460.0" cy="185.0" r="5.5" fill="#b51d44"/>
+<text x="472" y="189" font-size="11" fill="#9a5566">image</text>
+</svg>

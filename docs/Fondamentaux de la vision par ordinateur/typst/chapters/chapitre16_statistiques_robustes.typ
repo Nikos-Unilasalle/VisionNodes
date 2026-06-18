@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Se méfier des données : les statistiques robustes], toc: false)[
+#chapter(title: [Statistiques robustes], toc: false)[
 
-#figtodo("chap16", [Illustration de couverture du chapitre 16])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap16.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
@@ -52,7 +52,9 @@ Les statistiques robustes traversent tout le livre et en révèlent la face « m
 
 #subtitle[Un capteur fou tire sur la moyenne de tout son poids ; sur la médiane, d'un seul cran]
 
-#figtodo("fig_ch16_obs1_median.svg", [fig_ch16_obs1_median])
+#figfull("/figures/fig_ch16_obs1_median.svg")
+
+#figfull("/figures/fig_ch16_obs1_median.svg")
 
 === L'intention
 On veut résumer un échantillon par un point central qui ne se laisse pas emporter par une valeur folle. La moyenne échoue à cette tâche ; on cherche un estimateur dont une donnée aberrante ne puisse pas détourner le résultat.
@@ -151,7 +153,9 @@ Canvas : `Scalar List` → `MAD Scale` → `Inspector`. Le nœud sort la médian
 
 #subtitle[Jusqu'à quelle distance un résidu a-t-il le droit de tirer sur l'estimation]
 
-#figtodo("fig_ch16_obs2_mestimators.svg", [fig_ch16_obs2_mestimators])
+#figfull("/figures/fig_ch16_obs2_mestimators.svg")
+
+#figfull("/figures/fig_ch16_obs2_mestimators.svg")
 
 === L'intention
 La médiane est robuste mais grossière (elle ne lit que des signes) ; les moindres carrés sont précis mais fragiles (influence non bornée). On veut un réglage continu entre les deux : précis près de la cible, robuste au loin, et avec un curseur pour décider _à partir d'où_ on se méfie.
@@ -266,7 +270,9 @@ Canvas : `Data Points` → `IRLS Fit` → `Inspector`. Le nœud part d'une initi
 
 #subtitle[Tirer un petit jury au sort, lui demander une version des faits, compter qui la confirme]
 
-#figtodo("fig_ch16_obs3_ransac.svg", [fig_ch16_obs3_ransac])
+#figfull("/figures/fig_ch16_obs3_ransac.svg")
+
+#figfull("/figures/fig_ch16_obs3_ransac.svg")
 
 === L'intention
 Quand les outliers sont nombreux — la moitié des appariements entre deux images peuvent être faux —, même les M-estimateurs cèdent. On veut une méthode qui tolère une *majorité* de données corrompues, en les excluant carrément plutôt qu'en les atténuant.

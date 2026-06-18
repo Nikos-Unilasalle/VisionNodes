@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Décrire une forme avec des nombres], toc: false)[
+#chapter(title: [Décrire une forme], toc: false)[
 
-#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap1.png", width: 100%)]
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap1.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[

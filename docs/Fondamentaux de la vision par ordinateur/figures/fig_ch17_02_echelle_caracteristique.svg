@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 1078 188" width="1078" height="188" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="1078" height="188" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 17.2 — Espace d&#x27;échelle : le blob trouve son σ optimal dans le LoG</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M370.0,53.0 C395.0,53.0 395.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M590.0,53.0 C615.0,53.0 615.0,79.0 640.0,79.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C399.0,53.0 399.0,53.0 640.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M810.0,53.0 C835.0,53.0 835.0,53.0 860.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="0" width="160" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L360,0 Q370,0 370,10 L370,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="290" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">LoG Pyramid</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="370.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="370.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="358" y="57" font-size="11" text-anchor="end" fill="#9a5566">pyramid</text>
+<rect x="420" y="0" width="170" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M420,30 L420,10 Q420,0 430,0 L580,0 Q590,0 590,10 L590,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="505" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Scale Extrema</text>
+<circle cx="420.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="420.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="432" y="57" font-size="11" fill="#9a5566">pyramid</text>
+<circle cx="590.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="590.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="578" y="57" font-size="11" text-anchor="end" fill="#9a5566">keypoints</text>
+<rect x="640" y="0" width="170" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M640,30 L640,10 Q640,0 650,0 L800,0 Q810,0 810,10 L810,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="725" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Keypoint Drawer</text>
+<circle cx="640.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="652" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="640.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="640.0" cy="79.0" r="2" fill="#b51d44"/>
+<text x="652" y="83" font-size="11" fill="#9a5566">keypoints</text>
+<circle cx="810.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="798" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="860" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M860,30 L860,10 Q860,0 870,0 L1008,0 Q1018,0 1018,10 L1018,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="939" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="860.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="872" y="57" font-size="11" fill="#9a5566">image</text>
+</svg>

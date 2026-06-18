@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Bonne image, pour qui ? la mesure de qualité], toc: false)[
+#chapter(title: [Mesure de qualité], toc: false)[
 
-#figtodo("chap14", [Illustration de couverture du chapitre 14])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap14.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
@@ -142,7 +142,9 @@ La MAD est insensible aux quelques contours réels et ne mesure que le fond alé
 
 #subtitle[Empiler les deux images et noter l'écart de chaque case, sans jamais regarder le motif]
 
-#figtodo("fig_ch14_obs1_mse_shift.svg", [fig_ch14_obs1_mse_shift])
+#figfull("/figures/fig_ch14_obs1_mse_shift.svg")
+
+#figfull("/figures/fig_ch14_obs1_mse_shift.svg")
 
 === L'intention
 On veut le plus simple des verdicts : de combien l'image dégradée s'écarte-t-elle de l'originale ? Un seul nombre, calculé sans rien supposer de qui regarde. On verra que ce « rien supposer » est lui-même une hypothèse — celle d'un observateur qui ne voit que des pixels.
@@ -216,7 +218,9 @@ Le nœud `PSNR` calcule l'erreur quadratique moyenne pixel par pixel. L'inspecte
 
 #subtitle[Comparer trois choses séparément : la clarté, le contraste, et le dessin]
 
-#figtodo("fig_ch14_obs2_ssim.svg", [fig_ch14_obs2_ssim])
+#figfull("/figures/fig_ch14_obs2_ssim.svg")
+
+#figfull("/figures/fig_ch14_obs2_ssim.svg")
 
 === L'intention
 L'œil ne somme pas des écarts de pixels : il perçoit des structures. Une dérive globale de luminosité sur une photo satellite ne choque pas ; une ligne de texte effacée est catastrophique, même si tous les autres pixels sont parfaits. On veut une mesure qui épouse cette hiérarchie — indulgente sur ce que l'œil tolère, sévère sur ce qui le heurte.
@@ -317,7 +321,9 @@ Canvas : `Image Source` → `Grayscale` → `Image Entropy` → `Inspector`. Le 
 
 #subtitle[Un bord franc devient une pente douce sous le flou — on mesure ce qui reste de raideur]
 
-#figtodo("fig_ch14_obs3_sharpness.svg", [fig_ch14_obs3_sharpness])
+#figfull("/figures/fig_ch14_obs3_sharpness.svg")
+
+#figfull("/figures/fig_ch14_obs3_sharpness.svg")
 
 === L'intention
 On veut juger, sans référence, si une image est nette ou floue — pour faire la mise au point automatiquement, trier des scans, sélectionner la meilleure photo d'une rafale.

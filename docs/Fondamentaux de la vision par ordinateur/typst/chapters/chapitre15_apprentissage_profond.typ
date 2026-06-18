@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Apprentissage profond : les fonctions de coût comme sources de gradient], toc: false)[
+#chapter(title: [Fonctions de coût], toc: false)[
 
-#figtodo("chap15", [Illustration de couverture du chapitre 15])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap15.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
@@ -144,7 +144,9 @@ Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
 
 #subtitle[Punir non pas l'erreur en général, mais la confiance mal placée]
 
-#figtodo("fig_ch15_obs1_crossentropy.svg", [fig_ch15_obs1_crossentropy])
+#figfull("/figures/fig_ch15_obs1_crossentropy.svg")
+
+#figfull("/figures/fig_ch15_obs1_crossentropy.svg")
 
 === L'intention
 On veut entraîner un classifieur — distinguer des chiffres manuscrits, des diagnostics sur radiographie. La métrique visée est la *justesse* (le taux de bonnes réponses), mais c'est un escalier : elle ne bouge pas quand les sorties du réseau changent un peu, elle saute d'un cran quand la classe prédite bascule. Un escalier n'a pas de pente exploitable. Il faut un substitut lisse.
@@ -348,7 +350,9 @@ Canvas : `Prediction` + `Target` → `Smooth L1` → `Inspector`. Le nœud expos
 
 #subtitle[Quand deux boîtes ne se touchent pas, la métrique est aveugle — on lui rend la vue]
 
-#figtodo("fig_ch15_obs2_giou.svg", [fig_ch15_obs2_giou])
+#figfull("/figures/fig_ch15_obs2_giou.svg")
+
+#figfull("/figures/fig_ch15_obs2_giou.svg")
 
 === L'intention
 Pour entraîner un détecteur, on aimerait optimiser directement l'IoU (chapitre 4), la métrique même qu'on évalue. Mais elle a un défaut fatal comme coût : quand la boîte prédite et la cible *ne se chevauchent pas*, l'IoU vaut 0 partout, quelle que soit la distance entre les deux.

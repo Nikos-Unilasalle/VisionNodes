@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 1093 410" width="1093" height="410" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="1093" height="410" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 17.1 — SSD brut vs descripteur invariant : qui survit à la transformation ?</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C184.0,119.0 184.0,119.0 210.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,79.0 C402.5,79.0 402.5,86.0 430.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,145.0 C402.5,145.0 402.5,112.0 430.0,112.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M595.0,86.0 C622.5,86.0 622.5,105.0 650.0,105.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C404.0,53.0 404.0,53.0 650.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C404.0,119.0 404.0,79.0 650.0,79.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M815.0,53.0 C842.5,53.0 842.5,53.0 870.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C184.0,53.0 184.0,209.0 210.0,209.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C184.0,119.0 184.0,275.0 210.0,275.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,53.0 C455.3,53.0 129.7,235.0 210.0,235.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,119.0 C455.3,119.0 129.7,301.0 210.0,301.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M390.0,209.0 C415.0,209.0 415.0,242.0 440.0,242.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M390.0,275.0 C415.0,275.0 415.0,268.0 440.0,268.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M605.0,242.0 C630.0,242.0 630.0,261.0 655.0,261.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C406.5,53.0 406.5,209.0 655.0,209.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C406.5,119.0 406.5,235.0 655.0,235.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M820.0,209.0 C847.5,209.0 847.5,209.0 875.0,209.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="0" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,96 L0,76 Q0,66 10,66 L148,66 Q158,66 158,76 L158,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<circle cx="158.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="123" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="210" y="0" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L365,0 Q375,0 375,10 L375,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="292" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">ORB Detector</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="375.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="363" y="57" font-size="11" text-anchor="end" fill="#9a5566">keypoints</text>
+<circle cx="375.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="79.0" r="2" fill="#b51d44"/>
+<text x="363" y="83" font-size="11" text-anchor="end" fill="#9a5566">descriptors</text>
+<rect x="210" y="66" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,96 L210,76 Q210,66 220,66 L365,66 Q375,66 375,76 L375,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="292" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">ORB Detector</text>
+<circle cx="210.0" cy="119.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="123" font-size="11" fill="#9a5566">image</text>
+<circle cx="375.0" cy="119.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="119.0" r="2" fill="#b51d44"/>
+<text x="363" y="123" font-size="11" text-anchor="end" fill="#9a5566">keypoints</text>
+<circle cx="375.0" cy="145.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="145.0" r="2" fill="#b51d44"/>
+<text x="363" y="149" font-size="11" text-anchor="end" fill="#9a5566">descriptors</text>
+<rect x="430" y="33" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M430,63 L430,43 Q430,33 440,33 L585,33 Q595,33 595,43 L595,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="512" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">BFMatcher</text>
+<circle cx="430.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="86.0" r="2" fill="#b51d44"/>
+<text x="442" y="90" font-size="11" fill="#9a5566">desc1</text>
+<circle cx="430.0" cy="112.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="112.0" r="2" fill="#b51d44"/>
+<text x="442" y="116" font-size="11" fill="#9a5566">desc2</text>
+<circle cx="595.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="595.0" cy="86.0" r="2" fill="#b51d44"/>
+<text x="583" y="90" font-size="11" text-anchor="end" fill="#9a5566">matches</text>
+<rect x="650" y="0" width="165" height="128" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M650,30 L650,10 Q650,0 660,0 L805,0 Q815,0 815,10 L815,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="732" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Match Drawer</text>
+<circle cx="650.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="662" y="57" font-size="11" fill="#9a5566">img1</text>
+<circle cx="650.0" cy="79.0" r="5.5" fill="#b51d44"/>
+<text x="662" y="83" font-size="11" fill="#9a5566">img2</text>
+<circle cx="650.0" cy="105.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="650.0" cy="105.0" r="2" fill="#b51d44"/>
+<text x="662" y="109" font-size="11" fill="#9a5566">matches</text>
+<circle cx="815.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="803" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="870" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M870,30 L870,10 Q870,0 880,0 L1018,0 Q1028,0 1028,10 L1028,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="949" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="870.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="882" y="57" font-size="11" fill="#9a5566">image</text>
+<rect x="210" y="156" width="180" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,186 L210,166 Q210,156 220,156 L380,156 Q390,156 390,166 L390,186 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="300" y="176" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Patch Extractor</text>
+<circle cx="210.0" cy="209.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="213" font-size="11" fill="#9a5566">image</text>
+<circle cx="210.0" cy="235.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="210.0" cy="235.0" r="2" fill="#b51d44"/>
+<text x="222" y="239" font-size="11" fill="#9a5566">keypoints</text>
+<circle cx="390.0" cy="209.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="390.0" cy="209.0" r="2" fill="#b51d44"/>
+<text x="378" y="213" font-size="11" text-anchor="end" fill="#9a5566">patches</text>
+<rect x="210" y="222" width="180" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,252 L210,232 Q210,222 220,222 L380,222 Q390,222 390,232 L390,252 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="300" y="242" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Patch Extractor</text>
+<circle cx="210.0" cy="275.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="279" font-size="11" fill="#9a5566">image</text>
+<circle cx="210.0" cy="301.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="210.0" cy="301.0" r="2" fill="#b51d44"/>
+<text x="222" y="305" font-size="11" fill="#9a5566">keypoints</text>
+<circle cx="390.0" cy="275.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="390.0" cy="275.0" r="2" fill="#b51d44"/>
+<text x="378" y="279" font-size="11" text-anchor="end" fill="#9a5566">patches</text>
+<rect x="440" y="189" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M440,219 L440,199 Q440,189 450,189 L595,189 Q605,189 605,199 L605,219 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="522" y="209" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">SSD Matcher</text>
+<circle cx="440.0" cy="242.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="440.0" cy="242.0" r="2" fill="#b51d44"/>
+<text x="452" y="246" font-size="11" fill="#9a5566">patches1</text>
+<circle cx="440.0" cy="268.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="440.0" cy="268.0" r="2" fill="#b51d44"/>
+<text x="452" y="272" font-size="11" fill="#9a5566">patches2</text>
+<circle cx="605.0" cy="242.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="605.0" cy="242.0" r="2" fill="#b51d44"/>
+<text x="593" y="246" font-size="11" text-anchor="end" fill="#9a5566">matches</text>
+<rect x="655" y="156" width="165" height="128" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M655,186 L655,166 Q655,156 665,156 L810,156 Q820,156 820,166 L820,186 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="738" y="176" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Match Drawer</text>
+<circle cx="655.0" cy="209.0" r="5.5" fill="#b51d44"/>
+<text x="667" y="213" font-size="11" fill="#9a5566">img1</text>
+<circle cx="655.0" cy="235.0" r="5.5" fill="#b51d44"/>
+<text x="667" y="239" font-size="11" fill="#9a5566">img2</text>
+<circle cx="655.0" cy="261.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="655.0" cy="261.0" r="2" fill="#b51d44"/>
+<text x="667" y="265" font-size="11" fill="#9a5566">matches</text>
+<circle cx="820.0" cy="209.0" r="5.5" fill="#b51d44"/>
+<text x="808" y="213" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<rect x="875" y="156" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M875,186 L875,166 Q875,156 885,156 L1023,156 Q1033,156 1033,166 L1033,186 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="954" y="176" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
+<circle cx="875.0" cy="209.0" r="5.5" fill="#b51d44"/>
+<text x="887" y="213" font-size="11" fill="#9a5566">image</text>
+</svg>

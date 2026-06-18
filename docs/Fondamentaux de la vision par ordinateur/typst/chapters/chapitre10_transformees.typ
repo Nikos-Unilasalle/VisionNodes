@@ -17,9 +17,9 @@
 #let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
 
 
-#chapter(title: [Changer de regard : les transformées], toc: false)[
+#chapter(title: [Les transformées], toc: false)[
 
-#figtodo("chap10", [Illustration de couverture du chapitre 10])
+#block(above: 0pt, below: 2em, width: 100%)[#image("/illustrations/chap10.jpeg", width: 100%)]
 
 #pagebreak()
 #block(above: 0em, below: 1em)[
