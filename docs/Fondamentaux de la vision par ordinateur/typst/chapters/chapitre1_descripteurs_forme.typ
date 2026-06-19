@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Décrire une forme], toc: false)[
@@ -50,7 +70,7 @@ Deux mots de vocabulaire avant de commencer. Une *région* désigne l'ensemble d
 
 #subtitle[Le ballon de baudruche qui cherche la forme la plus économe]
 
-#figfull("/figures/fig_ch1_obs1_circ_roundness.pdf")
+#figcap("/figures/fig_ch1_obs1_circ_roundness.pdf", [Observation — circularité ≠ rondeur (le bord vs la forme d'ensemble)])
 
 === L'intention
 On veut séparer automatiquement les objets ronds des objets allongés ou déchiquetés. En reconnaissance de caractères, distinguer un « O » d'un « I ». En biologie, repérer les cellules saines (rondes) parmi des débris. Il nous faut un nombre qui vaut son maximum pour un cercle parfait, et qui chute dès que la forme s'éloigne du disque.
@@ -105,7 +125,7 @@ Dans votre canvas :
 
 Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Shape Descriptors` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre *Simplification (Epsilon)* sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
+*Exercice de dépannage :* L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre *Simplification (Epsilon)* sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
 
 ---
 ]
@@ -189,7 +209,7 @@ Canvas : `Find Contours` → `Region Properties`. Le nœud calcule l'ellipse d'i
 
 #subtitle[La pellicule plastique tendue qui ignore les creux]
 
-#figfull("/figures/fig_ch1_obs2_solidity_convexity.pdf")
+#figcap("/figures/fig_ch1_obs2_solidity_convexity.pdf", [Observation — solidité ≠ convexité (aires vs périmètres de l'enveloppe)])
 
 === L'intention
 Quand deux cellules se touchent, le traitement d'image les fond parfois en une seule forme en « 8 ». On veut détecter ces fusions accidentelles — repérer qu'une forme a un creux profond, là où on attendait un objet plein.
@@ -264,7 +284,7 @@ Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. Mêmes nœud
 
 #subtitle[Le rectangle rigide, aligné sur l'image, qui assume sa naïveté]
 
-#figfull("/figures/fig_ch1_obs3_extent_rect.pdf")
+#figcap("/figures/fig_ch1_obs3_extent_rect.pdf", [Observation — l'étendue dépend de l'orientation, pas la rectangularité])
 
 === L'intention
 Sur une chaîne de tri où les composants arrivent toujours dans la même orientation, on veut une mesure de remplissage instantanée, sans le coût d'extraire et d'analyser des contours complexes.
@@ -354,7 +374,7 @@ Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte 
 
 #subtitle[La circularité débarrassée de ce qui la trompait]
 
-#figfull("/figures/fig_ch1_obs1_circ_roundness.pdf")
+#figcap("/figures/fig_ch1_obs1_circ_roundness.pdf", [Observation — circularité ≠ rondeur (le bord vs la forme d'ensemble)])
 
 === L'intention
 La circularité (§1.1) avait un défaut : un bord dentelé la faisait chuter, même quand la forme globale restait bien ronde. On veut mesurer la rondeur *d'ensemble*, en ignorant les aspérités du contour.
@@ -407,12 +427,119 @@ _(T = translation, R = rotation, E = échelle.)_ Aucun descripteur ne suffit seu
 
 // ============================================================
 
-== une invariance est une information qu'on accepte de perdre
+== Une invariance est une information qu'on accepte de perdre
 
 Une invariance rend un descripteur aveugle à une transformation. C'est utile quand cette transformation ne porte aucune information pour la tâche, coûteux quand elle en porte. La circularité ignore la taille : l'utiliser, c'est déclarer que la dimension n'a aucune importance pour le problème posé. Refuser le diamètre équivalent parce qu'il varie avec la taille, c'est oublier qu'il a été conçu exactement pour ça. La bonne question de conception n'est donc pas « ce descripteur est-il invariant ? » mais « à quoi dois-je être aveugle pour cette tâche ? ».
 
 On retrouvera cette question à chaque chapitre, sous d'autres noms. Un filtre garde une fréquence et en jette une autre ; une distance déclare ce qui se ressemble ; une caméra projette et sacrifie la profondeur. Un descripteur garde une chose et en jette une autre — choisir ses descripteurs, c'est dire ce qui, dans une forme, compte pour le problème qu'on traite.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 1
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Trier des cellules par la forme de leur contour
+
+#figtodo("ex_ch1_cellules_sang", [Vue en microscopie optique de cellules sanguines : au centre, quelques globules ...])
+
+
+*Ce que vous voyez.* Deux familles de cellules côte à côte. Les globules rouges sont des disques réguliers. Les neutrophiles ont un contour très découpé, mais leur silhouette globale reste compacte. La mission : les séparer automatiquement par la forme.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold` → `Find Contours` → `Shape Descriptors` → `Output Display`
+
+Réglez `Retrieval Mode` sur `RETR_EXTERNAL` et `Contour Approximation` sur `CHAIN_APPROX_SIMPLE`. L'inspecteur affiche pour chaque cellule sa circularité et sa rondeur.
+
+
+
+
+*Questions*
+
+
++ Cliquez sur un globule rouge, puis sur un neutrophile, et relevez leur circularité et leur rondeur. Pour quelle famille les deux nombres sont-ils proches ? Pour laquelle s'écartent-ils nettement ?
+
++ La rondeur du neutrophile reste haute alors que sa circularité s'effondre. Lequel des deux descripteurs « voit » le contour découpé, lequel ne regarde que la silhouette d'ensemble ?
+
++ Poussez le curseur `Simplification (Epsilon)` jusqu'à 15 pixels sur un neutrophile. Sa circularité remonte-t-elle ? Sa rondeur bouge-t-elle ? Pourquoi lisser le contour réveille l'un et laisse l'autre indifférent ?
+
++ *Défi.* Branchez un `Filter Contours` sur la circularité. Trouvez le seuil qui ne laisse passer que les globules rouges. Combien en comptez-vous ? Existe-t-il une cellule à la frontière que le seuil classe mal ?
+
+
+
+=== Exercice 2 · Détecter les graines abîmées sur une chaîne de tri
+
+#figtodo("ex_ch1_haricots", [Graines de haricots vues de dessus sur fond blanc : certaines entières et bien b...])
+
+
+*Ce que vous voyez.* Trois populations dans le même bac : graines saines, graines fendues, paires collées. Une chaîne de tri doit les séparer toute seule.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold` → `Find Contours` → `Convex Hull` → `Shape Descriptors` → `Output Display`
+
+Activez l'overlay de l'enveloppe convexe pour la voir se dessiner par-dessus chaque graine.
+
+
+
+
+*Questions*
+
+
++ Relevez la solidité et la convexité d'une graine de chaque population. Pour quelle population la solidité chute-t-elle le plus ? Pour laquelle la convexité chute-t-elle ?
+
++ La graine fendue a un sillon profond mais un contour extérieur assez lisse. Lequel des deux descripteurs trahit le sillon ? Regardez l'enveloppe convexe pour comprendre où se cache l'écart.
+
++ La paire collée garde une convexité élevée malgré la fusion. En observant comment l'enveloppe enveloppe les deux lobes, expliquez pourquoi le bord reste « lisse » alors que la surface, elle, a un creux.
+
++ *Défi.* Réglez les filtres pour que la chaîne accepte les graines saines et rejette les deux autres populations, en un seul passage. Quelle combinaison de seuils (solidité, convexité) y arrive ? Reste-t-il un cas ambigu que le tri laisse passer à tort ?
+
+
+
+=== Exercice 3 · Reconnaître une pièce quelle que soit son orientation
+
+#figtodo("ex_ch1_composants", [Composants électroniques sur un tapis de contrôle : des résistances cylindriques...])
+
+
+*Ce que vous voyez.* Les mêmes pièces, mêmes dimensions, mais orientées différemment selon leur chute sur le tapis. Le système de tri doit reconnaître les résistances quelle que soit leur inclinaison.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold` → `Find Contours` → `Min Area Rect` → `Bounding Rect` → `Shape Descriptors` → `Output Display`
+
+Activez les overlays de la boîte droite (bleue) et de la boîte orientée (orange).
+
+
+
+
+*Questions*
+
+
++ Relevez l'étendue et la rectangularité d'une résistance à 0°, 45° et 90°. Lequel des deux nombres s'effondre quand la pièce tourne ? Lequel reste stable ?
+
++ L'étendue chute fortement à 45°. Regardez la boîte bleue dans l'overlay : qu'est-ce qui enfle autour de la pièce quand elle bascule en diagonale ?
+
++ La rectangularité, elle, ne bronche pas. Quelle propriété de la boîte orange (qui pivote avec la pièce) garantit cette stabilité ?
+
++ *Défi.* Une résistance allongée et une petite vis cylindrique ont la même rectangularité élevée. La rectangularité seule ne suffit donc pas à les distinguer. Ajoutez l'élongation au tri et trouvez le seuil qui sépare les deux pièces. Combien de résistances comptez-vous sur le tapis ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

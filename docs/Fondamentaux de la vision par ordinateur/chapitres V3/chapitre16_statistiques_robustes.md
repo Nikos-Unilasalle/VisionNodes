@@ -42,7 +42,7 @@ médiane :  m̂ = argmin_m Σᵢ |xᵢ − m|      (minimise L1)
 
 Deux notions chiffrent la robustesse. Le **point de rupture** est la fraction de données qu'on peut corrompre avant que l'estimation parte à l'infini : 1/n → 0 % pour la moyenne (un seul point suffit), 50 % pour la médiane (il faut corrompre plus de la moitié de l'échantillon). La **fonction d'influence** ψ mesure l'effet d'ajouter une observation en x — l'image du levier : combien la balance bascule quand on pose un poids en x. Pour la moyenne, ψ(x) = x − μ, non bornée ; pour la médiane, ψ(x) ∝ sign(x − m), bornée. Borner ψ, c'est être robuste. ∎
 
-### Exemple chiffré
+### Exemple
 
 Cinq mesures d'un capteur de distance (cm), dont la dernière déraille sur un reflet :
 
@@ -89,7 +89,7 @@ MAD = médiane(|xᵢ − médiane(x)|)
 
 L'influence de la MAD est bornée : une aberration ne peut pas gonfler l'échelle estimée au-delà d'un plafond. C'est ce qui la rend indispensable pour paramétrer Huber (§16.3) et le seuil d'inlier de RANSAC (§16.5) : sans mètre-étalon robuste, « borner l'influence à ±k » n'a pas de sens, car k doit s'exprimer en unités de bruit, pas en pixels bruts. ∎
 
-### Exemple chiffré
+### Exemple
 
 Les deux échantillons du §16.1 :
 
@@ -159,7 +159,7 @@ Tukey      → ψ redescend à 0    influence annulée au-delà du seuil, rejett
 
 Les seuils `k = 1,345·σ̂` (Huber) et `c = 4,685·σ̂` (Tukey) donnent tous deux **95 % d'efficacité** sous bruit gaussien : on ne perd que 5 % de précision sur données propres, tout en gagnant la robustesse. ∎
 
-### Exemple chiffré
+### Exemple
 
 Quatre résidus d'un ajustement de profil en imagerie industrielle, dont un aberrant (éclat de métal), seuil k = 2 :
 
@@ -207,7 +207,7 @@ Huber :  w(e) = 1       si |e| ≤ k       Tukey :  w(e) = (1−(e/k)²)²  si |
 
 Huber dégrade le poids des grands résidus comme 1/|e| (jamais à zéro) ; Tukey le met à zéro au-delà du seuil. Un ajustement robuste n'est donc qu'un moindres carrés où les outliers sont progressivement éteints par leur propre influence bornée. ∎
 
-### Exemple chiffré
+### Exemple
 
 Estimer une profondeur en reconstruction 3D à partir de y = [10,0 ; 10,2 ; 9,8 ; 25,0], dont **25,0** est aberrant (mauvaise triangulation sur un fond spéculaire) :
 
@@ -268,7 +268,7 @@ N = log(1 − p) / log(1 − wⁿ)
 
 p est la probabilité souhaitée de toucher au moins un tirage pur, n la taille de l'échantillon minimal (2 pour une droite, 4 pour une homographie, 8 pour la matrice fondamentale — chapitre 8). Point capital : N dépend exponentiellement de n et de w, mais **pas de la taille du jeu de données**. L'influence de RANSAC est binaire — un point est inlier (poids 1, il fonde le modèle) ou outlier (poids 0, ignoré). Son point de rupture peut **dépasser 50 %** (il tolère une majorité d'outliers, à condition d'allonger N), là où aucun M-estimateur ne va. ∎
 
-### Exemple chiffré
+### Exemple
 
 Combien de tirages pour p = 0,99 dans trois scénarios courants ?
 
@@ -305,7 +305,7 @@ Dans votre canvas :
 
 Le nœud `Find Homography (RANSAC)` filtre en continu les correspondances aberrantes. L'inspecteur affiche le nombre d'appariements, le nombre d'inliers, le taux estimé de points valides (inliers) retenus, et permet d'ajuster le curseur du seuil de tolérance pour voir en temps réel comment l'algorithme rejette ou accepte les points selon leur cohérence géométrique.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à apparier deux images présentant un bruit de numérisation normal. Dans le nœud **Find Homography (RANSAC)**, régler le paramètre **Reprojection Threshold** sur une valeur extrêmement basse (ex. : 0.1 pixel). Le lecteur observe dans l'inspecteur que le nombre d'inliers retenus s'effondre à 0, provoquant l'échec de l'alignement. Cet échec contrôlé démontre que le bruit de mesure naturel des pixels sains dépasse cette tolérance excessivement stricte, les faisant classer à tort comme des données aberrantes.
+**Exercice de dépannage :** L'exercice consiste à apparier deux images présentant un bruit de numérisation normal. Dans le nœud **Find Homography (RANSAC)**, régler le paramètre **Reprojection Threshold** sur une valeur extrêmement basse (ex. : 0.1 pixel). Le lecteur observe dans l'inspecteur que le nombre d'inliers retenus s'effondre à 0, provoquant l'échec de l'alignement. Cet échec contrôlé démontre que le bruit de mesure naturel des pixels sains dépasse cette tolérance excessivement stricte, les faisant classer à tort comme des données aberrantes.
 
 ---
 
@@ -329,7 +329,7 @@ MSAC   :  score = Σᵢ min(eᵢ², t²)               (coût tronqué au lieu d
 MLESAC :  score = vraisemblance d'un mélange inliers/outliers
 ```
 
-### Exemple chiffré
+### Exemple
 
 Deux modèles candidats, même nombre d'inliers (3 sur 4, t = 2), départagés par MSAC :
 

@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Fonctions de coût], toc: false)[
@@ -134,7 +153,7 @@ Dans votre canvas :
 
 Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique *L2 Loss* (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type *L1 Loss* (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
+*Exercice de dépannage :* L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique *L2 Loss* (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type *L1 Loss* (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
 
 ---
 
@@ -143,8 +162,6 @@ Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
 == Entropie croisée et softmax : quand le gradient est l'erreur elle-même
 
 #subtitle[Punir non pas l'erreur en général, mais la confiance mal placée]
-
-#figfull("/figures/fig_ch15_obs1_crossentropy.svg")
 
 #figfull("/figures/fig_ch15_obs1_crossentropy.svg")
 
@@ -352,8 +369,6 @@ Canvas : `Prediction` + `Target` → `Smooth L1` → `Inspector`. Le nœud expos
 
 #figfull("/figures/fig_ch15_obs2_giou.svg")
 
-#figfull("/figures/fig_ch15_obs2_giou.svg")
-
 === L'intention
 Pour entraîner un détecteur, on aimerait optimiser directement l'IoU (chapitre 4), la métrique même qu'on évalue. Mais elle a un défaut fatal comme coût : quand la boîte prédite et la cible *ne se chevauchent pas*, l'IoU vaut 0 partout, quelle que soit la distance entre les deux.
 
@@ -406,6 +421,8 @@ Canvas : `Predicted Box` + `Target Box` → `IoU Loss` → `Inspector`. Le nœud
 == Loss contrastive (InfoNCE) : structurer un espace de représentation
 
 #subtitle[Fabriquer un quiz « lequel est le vrai jumeau ? » pour créer une pente à partir de rien]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191405(1).jpeg")
 
 === L'intention
 Ce coût répond à un problème sans cible explicite : pas de bonne classe, pas de masque, pas de boîte. On a seulement la relation « ces deux images montrent le même contenu » ou « des contenus différents ». La métrique visée — la qualité de l'espace de représentation — n'a aucune formule directe. Comment fabriquer une pente à partir de rien ?
@@ -468,7 +485,7 @@ Canvas : `Anchor` + `Positive` + `Negatives` → `Contrastive Loss` → `Inspect
 
 // ============================================================
 
-== le coût n'est pas la cible, c'est la pente vers elle
+== Le coût n'est pas la cible, c'est la pente vers elle
 
 Le chapitre tient en un principe qui structure tout l'apprentissage profond : on ne minimise jamais ce qu'on veut, mais un substitut dont le gradient y conduit. Et ce substitut n'est pas choisi au hasard — chaque coût répond à une faille précise de la métrique qu'il remplace.
 
@@ -490,5 +507,112 @@ Chaque coût est un arbitrage entre fidélité à la métrique et exploitabilit�
 Choisir une distance (chapitre 3), c'est déclarer ce qui compte ; choisir une base (chapitre 10), où le problème devient simple ; choisir un coût, c'est déclarer ce qui compte _et fabriquer la pente qui y mène_. La métrique dit si c'est bon, le coût dit dans quelle direction s'améliorer. Le chapitre 16 reprendra la repondération des exemples — déjà à l'œuvre dans Huber et focal — pour en faire le cœur de l'estimation robuste, quand quelques valeurs aberrantes menacent toute une mesure.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 15
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Détecter des objets rares sans noyer la cible dans le fond
+
+#figtodo("ex_ch15_parking", [Vue aérienne d'un parking quasi vide : des dizaines de places de stationnement v...])
+
+
+*Ce que vous voyez.* Une scène où la cible (les voitures) est écrasée sous une masse de fond identique. C'est le déséquilibre que la focal loss corrige à l'entraînement : ici on observe ses conséquences sur un détecteur déjà entraîné.
+
+*Pipeline VNStudio*
+`Image Source` → `Object Detection (YOLO)` → `Draw Overlay` → `Output Display`
+
+Le nœud affiche les boîtes détectées avec leur score de confiance.
+
+
+
+
+*Questions*
+
+
++ Lancez la détection avec un seuil de confiance bas (0,1). Combien de boîtes apparaissent ? Combien sont de vraies voitures, combien sont des fausses alarmes posées sur des places vides ?
+
++ Montez le seuil progressivement. À quelle valeur les fausses alarmes disparaissent-elles ? Reste-t-il les deux vraies voitures, ou en perdez-vous une au passage ?
+
++ Un détecteur mal entraîné, écrasé par la masse du fond, devient « paresseux » et rate les objets rares. Sur cette image, le vôtre privilégie-t-il plutôt la prudence (rate des voitures) ou l'excès de zèle (invente des voitures) ? Que faudrait-il rééquilibrer ?
+
++ *Défi.* Trouvez une scène encore plus déséquilibrée (un seul objet minuscule dans une grande image uniforme) et comptez les fausses détections à seuil bas. Comparez avec une scène équilibrée (autant d'objets que de fond). Sur laquelle le détecteur se trompe-t-il le plus, et pourquoi ?
+
+
+
+=== Exercice 2 · Mesurer la qualité d'une segmentation par le recouvrement
+
+#figtodo("ex_ch15_segmentation_overlap", [Vue microscopique d'une cellule : à gauche le contour tracé à la main par un bio...])
+
+
+*Ce que vous voyez.* Deux masques de la même cellule. La mission : mesurer leur recouvrement, car c'est exactement ce que la Dice loss optimise pendant l'entraînement.
+
+*Pipeline VNStudio*
+`Image Source` → `SAM Segmenter` → `Mask Overlap` → `Output Display`
+
+Le nœud `Mask Overlap` compare le masque automatique au masque de référence et affiche le score de recouvrement (IoU et Dice).
+
+
+
+
+*Questions*
+
+
++ Segmentez la cellule, puis lisez le score de recouvrement. Le masque automatique colle-t-il bien à la référence, ou déborde-t-il ? Repérez visuellement où ils divergent.
+
++ Décalez volontairement le masque automatique (déplacez le point de clic SAM). Le score chute-t-il vite ou lentement ? À quel décalage les deux masques ne se touchent plus du tout (recouvrement nul) ?
+
++ Quand les deux masques ne se chevauchent plus, le score reste bloqué à zéro et ne dit plus dans quelle direction corriger. Pourquoi est-ce un problème quand on démarre un entraînement avec un masque encore très loin de la cible ?
+
++ *Défi.* Segmentez un amas de plusieurs cellules collées d'un seul clic. Le masque englobe-t-il tout l'amas ou une seule cellule ? Réglez SAM (points positifs et négatifs) pour isoler une seule cellule et faire remonter le score de recouvrement avec son contour de référence.
+
+
+
+=== Exercice 3 · Ajuster une boîte englobante malgré des points parasites
+
+#figtodo("ex_ch15_bbox_fit", [Photo d'un panneau routier rectangulaire détecté : la majorité des points de con...])
+
+
+*Ce que vous voyez.* Une boîte à ajuster autour d'un objet, perturbée par quelques points parasites. C'est le rôle de la Smooth L1 (Huber) en détection : suivre les bons points sans se laisser tirer par les rares aberrants.
+
+*Pipeline VNStudio*
+`Image Source` → `Find Contours` → `Robust Box Fit` → `Draw Overlay` → `Output Display`
+
+Le nœud ajuste la boîte avec un mode ordinaire (sensible aux parasites) ou robuste (Huber).
+
+
+
+
+*Questions*
+
+
++ Ajustez la boîte en mode ordinaire. Englobe-t-elle juste le panneau, ou s'étire-t-elle pour avaler l'autocollant ? Mesurez de combien elle déborde.
+
++ Passez en mode robuste. La boîte se resserre-t-elle sur le panneau seul ? Comparez les deux résultats superposés.
+
++ Réglez le curseur de tolérance du mode robuste. Trouvez la plage où la boîte ignore l'autocollant tout en épousant les quatre coins du panneau. Que se passe-t-il aux réglages extrêmes (trop serré, trop large) ?
+
++ *Défi.* Ajoutez plusieurs autocollants autour du panneau. Le mode robuste tient-il toujours ? Jusqu'à quelle quantité de points parasites la boîte reste-t-elle correcte avant de décrocher ? Pour un système qui annote des milliers d'images sans supervision, quel mode est le plus sûr ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

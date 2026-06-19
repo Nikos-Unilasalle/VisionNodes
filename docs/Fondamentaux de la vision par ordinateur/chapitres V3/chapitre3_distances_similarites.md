@@ -51,7 +51,7 @@ Le symbole Σ additionne sur toutes les coordonnées ; les barres |…| sont la 
 - p = 2 : distance euclidienne (L2)
 - p → ∞ : distance de Tchebychev (L∞) ∎
 
-### Exemple chiffré
+### Exemple
 
 x = (1, 2, 3), y = (4, 0, 3) → écarts (3, 2, 0) :
 
@@ -95,7 +95,7 @@ d(x, y) = √( (x − y)ᵀ Σ⁻¹ (x − y) )
 
 Le détail des symboles importe peu : Σ⁻¹ (l'« inverse » de la covariance) est l'outil qui réalise le redressement, et le reste est une distance euclidienne dans l'espace ainsi redressé. En clair : c'est la distance ordinaire, mais mesurée après avoir rendu le nuage de données parfaitement rond. ∎
 
-### Exemple chiffré
+### Exemple
 
 Données très étirées horizontalement, dix fois plus dispersées en x qu'en y. Depuis le centre, comparons deux points à la même distance euclidienne : a = (10, 0) et b = (0, 10).
 
@@ -151,7 +151,7 @@ C'est pourquoi la recherche documentaire, les systèmes de recommandation et la 
 
 Si l'on ramène d'abord les vecteurs à une longueur de 1 (on dit qu'on les **normalise**), distance euclidienne et distance cosinus deviennent deux façons de dire la même chose : l'une croît exactement avec l'autre. D'où une habitude répandue : on normalise les embeddings avant de les ranger dans un index, ce qui permet d'utiliser un moteur de recherche euclidien rapide tout en raisonnant, au fond, en cosinus.
 
-### Exemple chiffré
+### Exemple
 
 x = (2, 0), y = (3, 0) : colinéaires → cos = 6 / (2·3) = 1, similarité maximale malgré des longueurs différentes. x = (1, 0), y = (0, 1) : perpendiculaires → cos = 0.
 
@@ -197,7 +197,7 @@ d_B(h, g) = −ln( BC(h, g) )
 
 ---
 
-### 3.4.3 — Exemple chiffré
+### 3.4.3 — Exemple
 
 h = (0,5 ; 0,5 ; 0), g = (0 ; 0,5 ; 0,5) — deux histogrammes qui ne se recouvrent que sur une seule case :
 
@@ -231,7 +231,7 @@ Dans votre canvas :
 
 Le nœud `Histogram Distance` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
+**Exercice de dépannage :** L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
 
 ---
 
@@ -257,7 +257,7 @@ EMD₁(h, g) = Σᵢ |H(i) − G(i)|     où H, G sont les cumuls de h, g
 
 C'est l'aire entre les deux courbes cumulées, calculable d'un trait en parcourant les cases une fois. ∎
 
-### Exemple chiffré (cas 1-D)
+### Exemple (cas 1-D)
 
 h = (0,5 ; 0,5 ; 0), g = (0 ; 0,5 ; 0,5), cases équidistantes :
 
@@ -300,7 +300,7 @@ H(A, B) = max( h(A, B), h(B, A) )              (distance symétrique)
 
 Le `min` cherche le plus proche voisin (la plus petite distance), le `max` retient le pire cas (la plus grande de ces distances). La distance symétrique prend le pire des deux sens. ∎
 
-### Exemple chiffré
+### Exemple
 
 A = {(0,0), (1,0)}, B = {(0,0), (1,0), (6,0)} :
 

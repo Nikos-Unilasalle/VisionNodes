@@ -39,7 +39,7 @@ Iₓ·u + Iᵧ·v + Iₜ = 0          (équation du flot optique)
 
 Iₓ et Iᵧ sont les variations spatiales d'intensité (le gradient, horizontal et vertical) ; Iₜ est la variation temporelle, c'est-à-dire la simple différence entre les deux images au même pixel ; u et v sont l'inconnue cherchée — le déplacement horizontal et vertical. Tout est mesurable sauf u et v. Et là est le problème : **une seule équation, deux inconnues**. Les données ne suffisent pas à les déterminer ; il faudra ajouter une hypothèse. ∎
 
-### Exemple chiffré
+### Exemple
 
 Un bord vertical dans une image de scanner : fort gradient horizontal (Iₓ = 50), aucun gradient vertical (Iᵧ = 0). Entre deux images, la région s'éclaircit (Iₜ = −100) :
 
@@ -111,7 +111,7 @@ Le problème d'ouverture réapparaît donc sous forme chiffrée : le flot n'est 
 
 Pour les grands déplacements (où l'équation du §9.1 s'effondre), on utilise une **pyramide d'images** : on réduit la résolution par deux à chaque niveau, si bien qu'un déplacement de 20 pixels n'en fait plus que 2 ou 3 au niveau le plus grossier ; on y calcule le flot, puis on l'affine niveau par niveau jusqu'à la pleine résolution. ∎
 
-### Exemple chiffré
+### Exemple
 
 Fenêtre 5×5 sur le coin d'un marqueur : valeurs propres λ₁ = 1200, λ₂ = 950 — toutes deux grandes, la solution sort sans ambiguïté. Fenêtre sur le bord droit d'un couloir : gradients tous horizontaux, λ₁ = 1100 mais λ₂ ≈ 3. Le rapport 1100/3 ≈ 367 indique une solution numériquement instable, à rejeter — c'est le problème d'ouverture qui frappe.
 
@@ -150,7 +150,7 @@ Le **terme de données** mesure à quel point le champ respecte l'équation du f
 
 Le cœur de l'affaire est le terme de lissage. Là où les données ne disent rien (zones plates, bords droits — le problème d'ouverture), il **propage** le mouvement depuis les zones fiables (les coins) vers les zones ambiguës, par une sorte de diffusion. Horn-Schunck remplit les trous que Lucas-Kanade laissait vides. Le prix : un champ **dense** (une flèche par pixel) mais **flou aux frontières** (objet et fond voient leurs vitesses se mélanger si α est grand). On atteint le minimum non par une formule directe, mais **par petits pas** : on ajuste le champ itérativement jusqu'à ce qu'il se stabilise — la même mécanique que les snakes du chapitre 12. ∎
 
-### Exemple chiffré
+### Exemple
 
 Sur une image de vélocimétrie (suivi de particules dans un fluide), un grand α donne un champ lisse où les tourbillons sont visibles mais les bords du vaisseau flous ; un petit α restitue les gradients de vitesse à la paroi mais introduit du bruit au cœur du flux peu contrasté. Le bon réglage dépend de l'échelle du mouvement attendu — un lien direct avec le chapitre 5.
 
@@ -177,7 +177,7 @@ Dans votre canvas :
 
 Le nœud `Flow Visualize` traduit les composantes horizontal `u` et vertical `v` du flot optique en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme **Lucas-Kanade Tracker**). Régler le paramètre **Pyramid Levels** sur `0` avec une **Window Size** de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre **Pyramid Levels** à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
+**Exercice de dépannage :** L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme **Lucas-Kanade Tracker**). Régler le paramètre **Pyramid Levels** sur `0` avec une **Window Size** de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre **Pyramid Levels** à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
 
 ---
 

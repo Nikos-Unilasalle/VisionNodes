@@ -47,7 +47,7 @@ La circularité baisse pour **deux raisons** que rien ne permet de distinguer : 
 
 Elle reste en revanche insensible à la translation, à la rotation et à l'échelle : un cercle est un cercle, où qu'il soit, quelle que soit sa taille.
 
-### Exemple chiffré
+### Exemple
 
 Un « O » bien formé donne environ `C ≈ 0,9`. Un « I » modélisé par une barre de 40 px de haut sur 4 de large : `C = 4π · 160 / 88² ≈ 0,26`. Un simple seuil à 0,5 sépare d'emblée les caractères ronds des caractères linéaires.
 
@@ -81,7 +81,7 @@ Dans votre canvas :
 
 Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Shape Descriptors` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre **Simplification (Epsilon)** sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
+**Exercice de dépannage :** L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre **Simplification (Epsilon)** sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
 
 ---
 
@@ -109,7 +109,7 @@ où `L_max` et `L_min` sont la longueur et la largeur de la **boîte englobante 
 
 L'élongation dit si la forme générale est trapue ou étirée, rien de plus. Son angle mort est béant : elle ignore tout ce qui se passe *à l'intérieur* de la boîte. Une équerre en « L » et une barre en diagonale peuvent partager la même boîte orientée, donc la même élongation, alors que leur matière est répartie de façons radicalement différentes.
 
-### Exemple chiffré
+### Exemple
 
 Un globule rouge : `E ≈ 1,0`. Une bactérie en bâtonnet : `E ≈ 5 à 8`. Une fibre : souvent `E > 20`.
 
@@ -149,7 +149,7 @@ Le rapport `λ₂/λ₁` compare les deux envergures. S'il vaut 1 (nuage rond), 
 
 Pourquoi deux outils pour mesurer l'allongement ? Parce qu'ils ne regardent pas la même chose. Une forme en croix a une boîte englobante carrée — élongation 1, l'air trapu — mais l'excentricité, en pesant la répartition réelle des pixels des deux barres, en révèle la vraie géométrie. Et surtout, l'excentricité est **stable** : un pixel de bruit isolé change la boîte de l'élongation, mais ne déplace presque pas la masse globale.
 
-### Exemple chiffré
+### Exemple
 
 Un nuage deux fois et demie plus étalé en longueur (`λ₁ = 2500`) qu'en largeur (`λ₂ = 400`) : `e = √(1 − 400/2500) = √0,84 ≈ 0,916`.
 
@@ -187,7 +187,7 @@ Sans aucune cavité, l'objet touche son enveloppe convexe partout et `S = 1`. Pl
 
 C'est le descripteur des fusions d'objets. Deux cellules collées en « 8 » : l'enveloppe convexe recouvre le creux central, ce vide fait chuter la solidité autour de 0,85, bien en dessous de ce qu'on attend d'une cellule isolée. Son angle mort : la rugosité fine du bord, qui retire très peu de surface et la laisse donc presque insensible.
 
-### Exemple chiffré
+### Exemple
 
 Une forme à deux lobes : aire `A = 3100 px²`, enveloppe convexe `A_convexe = 3720 px²`. Solidité `S = 3100 / 3720 ≈ 0,83`.
 
@@ -226,7 +226,7 @@ Les deux descripteurs travaillent en équipe, et c'est leur combinaison qui info
 - Un contour très granuleux mais sans gros renfoncement : **convexité basse, solidité haute** → un bord abîmé, une structure saine.
 - Un croissant de lune parfaitement lisse : **convexité haute, solidité basse** → un bord net, mais une grande concavité de masse.
 
-### Exemple chiffré
+### Exemple
 
 Un galet ébréché : contour réel tortueux `P = 380 px`, enveloppe directe `P_convexe = 322 px`. Convexité `Cv = 322 / 380 ≈ 0,84`. Couplée à une solidité élevée, cette valeur dit à la machine : surface détériorée, structure intacte.
 
@@ -284,7 +284,7 @@ L'idée : si on refondait la matière de l'objet en un disque parfait de même s
 D_eq = √(4 · A / π)
 ```
 
-### Exemple chiffré
+### Exemple
 
 Un grain de sable à `A = 3100 px²` sous un microscope réglé à 0,5 µm/pixel : `D_eq = √(4 · 3100 / π) ≈ 62,8 px`, soit environ **31 µm** de diamètre réel. C'est ce descripteur qui dresse les courbes granulométriques.
 
@@ -318,7 +318,7 @@ R = A / A_minRect
 
 La rectangularité est totalement aveugle à l'allongement. Prenez n'importe quelle ellipse — un ovale presque rond ou un ovale étiré comme un lacet : elle remplit toujours sa boîte ajustée à la même proportion, `π/4 ≈ 0,785`. La rectangularité ne lit que l'occupation des **coins**, pas les proportions d'ensemble. Un descripteur qui vaut 0,785 signale donc « bords arrondis, coins vides », sans rien dire de la forme générale.
 
-### Exemple chiffré
+### Exemple
 
 Un composant rectangulaire `A = 4800 px²` dans une boîte ajustée de 122 × 42 px (5124 px²) : `R = 4800 / 5124 ≈ 0,93` — une forme franchement rectangulaire.
 
@@ -352,7 +352,7 @@ Rd = 4 · A / (π · L_max²)
 
 Un disque dentelé garde une rondeur élevée (`Rd ≈ 0,95`) tandis que sa circularité s'effondre. C'est tout l'intérêt de garder les deux : leur **différence** isole la rugosité du bord, débarrassée de la forme d'ensemble.
 
-### Exemple chiffré
+### Exemple
 
 Une particule abrasive : `A = 3100 px²`, grand axe `L_max = 68 px`. Rondeur `Rd = 4 · 3100 / (π · 68²) ≈ 0,85` — forme globalement compacte. Mais sa circularité ne vaut que `C ≈ 0,55`, à cause du bord déchiqueté. La soustraction `0,85 − 0,55 = 0,30` donne une mesure pure de l'état du bord, indépendante de la silhouette.
 

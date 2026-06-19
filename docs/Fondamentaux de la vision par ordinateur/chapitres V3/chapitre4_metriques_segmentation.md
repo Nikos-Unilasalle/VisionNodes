@@ -51,7 +51,7 @@ Cette décomposition montre la double pénalité de l'IoU : il sanctionne d'un m
 
 En détection, on déclare une prédiction « correcte » (un VP) si son IoU avec la vérité dépasse un seuil. Le seuil historique de 0,5 est un compromis : assez permissif pour tolérer une localisation imparfaite, assez strict pour rejeter les recouvrements fortuits. Les benchmarks modernes moyennent sur plusieurs seuils (de 0,50 à 0,95) pour ne pas dépendre de ce choix.
 
-### Exemple chiffré
+### Exemple
 
 Deux carrés de côté 10 px, décalés de 3 px à l'horizontale (recouvrement 7 × 10 px) :
 
@@ -87,7 +87,7 @@ Dans votre canvas :
 
 Le nœud `IoU` effectue l'intersection et l'union logiques des deux masques binaires. L'inspecteur affiche instantanément l'IoU (Jaccard) et le coefficient de Dice (F1). Le nœud colore également l'image de sortie (vert pour les Vrais Positifs, rouge pour les Faux Positifs, bleu pour les Faux Négatifs), ce qui révèle aussitôt si l'erreur penche vers la sur- ou la sous-segmentation, sans biais lié à la taille de l'arrière-plan.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
+**Exercice de dépannage :** L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
 
 ---
 
@@ -125,7 +125,7 @@ Dice = 2·VP / (2·VP + FP + FN)
 
 C'est exactement le **F1-score** (vu en 4.3) appliqué pixel par pixel au lieu d'objet par objet. Dice en imagerie et F1 en apprentissage sont la même quantité dans deux vocabulaires. ∎
 
-### Exemple chiffré
+### Exemple
 
 Les deux carrés du §4.1 (intersection 70 px², chaque carré 100 px²) :
 
@@ -183,7 +183,7 @@ La moyenne ordinaire masquerait le déséquilibre ; l'harmonique refuse de réco
 
 Quand une dimension importe plus que l'autre, on penche le compromis avec un réglage : favoriser le rappel pour un dépistage médical (mieux vaut une fausse alerte qu'un cancer manqué), favoriser la précision pour un filtre anti-spam (mieux vaut laisser passer un spam que bloquer un vrai message). ∎
 
-### Exemple chiffré
+### Exemple
 
 Un détecteur de cellules malades trouve 80 régions suspectes : 60 vraies, 20 du tissu sain pris pour malade, et 40 cellules malades passées inaperçues.
 
@@ -222,7 +222,7 @@ AP = aire sous la courbe précision-rappel
 
 (AP pour *Average Precision*, la précision moyenne ; sa moyenne sur toutes les catégories d'objets s'appelle mAP.) La courbe brute étant en dents de scie, on la « repasse » d'abord : à chaque niveau de rappel, on retient la meilleure précision atteignable au-delà, ce qui lisse les irrégularités dues à l'ordre exact des détections. ∎
 
-### Exemple chiffré
+### Exemple
 
 Cinq détections triées par confiance décroissante, sur 3 objets réels :
 
@@ -279,7 +279,7 @@ RQ (Recognition Quality)  = F1-score au niveau des objets (pas des pixels)
 
 La **SQ** mesure la qualité de délimitation des objets *trouvés* ; la **RQ** mesure la capacité à trouver les bons objets. La factorisation sépare proprement les deux questions. Un modèle médical peut exceller en RQ (il repère toutes les lésions) mais faiblir en SQ (ses contours sont flous) : la PQ seule masque ce diagnostic, la décomposition le révèle. L'appariement à IoU > 0,5 a une propriété commode : il est forcément **unique** (deux prédictions séparées ne peuvent dépasser 0,5 avec la même vérité), ce qui évite toute ambiguïté. ∎
 
-### Exemple chiffré
+### Exemple
 
 Scène de télédétection, 3 bâtiments à segmenter. Le modèle en prédit 4 : 2 bien appariés (IoU = 0,80 et 0,90), 1 prédiction sans correspondant (FP), 1 bâtiment réel non trouvé (FN).
 
@@ -320,7 +320,7 @@ BF  = 2 · P_c · R_c / (P_c + R_c)
 
 C'est un F1 (la moyenne harmonique de 4.3) appliqué aux pixels de frontière. Le BF et la distance de Hausdorff (§3.6) mesurent tous deux l'erreur de frontière, différemment : la Hausdorff rapporte le *pire* écart ponctuel (sensible à un point aberrant), le BF une *proportion* de frontière correcte dans la tolérance (robuste, borné entre 0 et 1). Les deux se complètent — BF pour la qualité globale du contour, HD95 pour garantir l'absence d'excursion grave. ∎
 
-### Exemple chiffré
+### Exemple
 
 Lésion dermique. Frontière vérité 200 px, frontière prédite 210 px, tolérance 2 px. 190 pixels prédits trouvent un voisin vérité proche, 185 pixels vérité trouvent un voisin prédit proche :
 

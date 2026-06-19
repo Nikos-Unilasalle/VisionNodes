@@ -65,10 +65,14 @@
   }
   
   // Tables
-  show table.cell.where(y: 0): set text(weight: "bold", fill: white)
+  show table.cell.where(y: 0): set text(weight: "regular", fill: white, font: "Roboto", size: 0.85em)
+  show table.cell: set par(justify: false)
+
+  // Block code never justified (inline raw unaffected)
+  show raw.where(block: true): it => [#set par(justify: false); #it]
   set table(
     fill: (_, y) => if y == 0 {colors.primary} else if calc.odd(y) {colors.secondary.lighten(60%)},
-    stroke: none
+    stroke: (_, y) => if y == 0 { 1.5pt + colors.primary } else { none }
   )
   
   // Lists
@@ -79,8 +83,14 @@
   // Footnotes
   set footnote.entry(separator: line(length: 30% + 0pt, stroke: 0.75pt + colors.primary))
   
+  // Bold text: compensate font metric difference vs regular weight
+  show strong: set text(size: 0.93em)
+
   // References
   show ref: set text(fill: colors.primary)
+
+  // QED marker in primary color
+  show "∎": text(fill: colors.primary)[∎]
   
   // Page style
   let page-header = context {
@@ -182,4 +192,8 @@
 
 #back-matter[
   #include "chapters/conclusion.typ"
+]
+
+#appendix[
+  #include "chapters/annexe_A_lire_une_formule.typ"
 ]

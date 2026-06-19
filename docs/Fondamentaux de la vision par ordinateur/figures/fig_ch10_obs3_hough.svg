@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 1269.00 272.00" width="1269.00" height="272.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
 <rect x="-28.00" y="-54.00" width="1269.00" height="272.00" fill="#ffffff"/>
-<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 10.3 — Hough : voter dans (ρ, θ) fait émerger les droites</text>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation — Hough : voter dans (ρ, θ) fait émerger les droites</text>
 <path d="M150.00,42.00 C179.00,42.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M358.00,42.00 C387.00,42.00 387.00,42.00 416.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M589.00,42.00 C618.00,42.00 618.00,42.00 647.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>

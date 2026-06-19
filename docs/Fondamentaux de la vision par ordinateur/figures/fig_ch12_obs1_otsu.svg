@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 830.00 300.00" width="830.00" height="300.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
 <rect x="-28.00" y="-54.00" width="830.00" height="300.00" fill="#ffffff"/>
-<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 12.1 — Otsu global vs local : l&#x27;éclairage non uniforme trompe le seuil global</text>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation — Otsu global vs local : l&#x27;éclairage non uniforme trompe le seuil global</text>
 <path d="M150.00,81.00 C179.00,81.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M150.00,81.00 C179.00,81.00 179.00,174.00 208.00,174.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M358.00,42.00 C387.00,42.00 387.00,100.00 416.00,100.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>

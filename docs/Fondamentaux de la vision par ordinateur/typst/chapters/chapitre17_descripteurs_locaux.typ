@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Descripteurs locaux], toc: false)[
@@ -98,12 +117,12 @@ Centrer et réduire les intensités d'un patch corrige le gain et l'offset, mais
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 Sur une image et sa copie transformée (tournée de 30°, zoomée de 20%, éclaircie) :
 - Comparer les patchs bruts par SSD donne des appariements incohérents reliant des zones sans rapport.
 - Comparer les descripteurs ORB retrouve les vrais homologues, reliant proprement les mêmes angles de fenêtre.
 
-==== 📷 Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
+==== Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
 - *Pipeline :*
   ```
   Image Loader ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) \[Vue B\]
@@ -168,12 +187,12 @@ Le nombre d'octaves et d'échelles par octave détermine la précision de la loc
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 Sur une image avec points SIFT affichés sous forme de cercles de rayon proportionnel à `σ` :
 - Les petits détails ont de petits cercles, les grandes structures de grands cercles.
 - En zoomant l'image de x2, les mêmes cercles apparaissent deux fois plus grands, montrant que l'échelle s'adapte au zoom.
 
-==== 📷 Observation 17.B — Le cercle qui suit le zoom
+==== Observation 17.B — Le cercle qui suit le zoom
 - *Pipeline :*
   ```
   Image Loader ─┬──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue A)
@@ -226,12 +245,12 @@ Pour éviter les effets de seuil (aliasing), les vrais algorithmes répartissent
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 En visualisant les glyphes HOG (étoiles d'orientations) sur un piéton :
 - Modifier la luminosité ou le contraste ne change pas les glyphes (grâce au gradient et à la normalisation de bloc).
 - Tourner la silhouette de 20° fait tourner toutes les étoiles, modifiant le vecteur final.
 
-==== 📷 Observation 17.C — HOG : sensible à la rotation, insensible à la lumière
+==== Observation 17.C — HOG : sensible à la rotation, insensible à la lumière
 - *Pipeline :*
   ```
   Image Loader ─┬─> Brightness/Contrast ──> Python Node (HOG, visualize) ──> Output Display
@@ -287,12 +306,12 @@ RootSIFT est une variante améliorant la robustesse : on normalise le vecteur en
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 Sur deux vues d'une même affiche, l'une tournée de 45° :
 - Les flèches d'orientation dessinées sur les points SIFT tournent de 45° avec la scène.
 - Les lignes d'appariement restent majoritairement droites et correctes.
 
-==== 📷 Observation 17.D — Les flèches qui tournent
+==== Observation 17.D — Les flèches qui tournent
 - *Pipeline :*
   ```
   Image Loader (vue droite)  ──> Features (SIFT, dessine orientation) ─┐
@@ -352,11 +371,11 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 - ORB s'exécute de façon fluide en temps réel (30 fps) sur flux vidéo.
 - Pour des transformations modérées, ORB et SIFT donnent des résultats similaires, mais sous déformation ou flou important, SIFT préserve plus de lignes correctes.
 
-==== 📷 Observation 17.E — Mesurer le compromis ORB/SIFT
+==== Observation 17.E — Mesurer le compromis ORB/SIFT
 - *Pipeline :*
   ```
   Paire d'images ─┬─> Features (ORB) ──> Python Node (match + chrono) ─┐
@@ -375,6 +394,8 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 == Le ratio test de Lowe : rejeter l'ambiguïté
 
 #subtitle[Exiger un coup de cœur, éliminer le doute]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191409.jpeg")
 
 === L'intention
 Les points-clés situés sur des zones répétitives ou du bruit génèrent de faux appariements à faible distance. On veut les rejeter sans utiliser de seuil de distance absolu, qui varie d'une image à l'autre.
@@ -423,12 +444,12 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 - À `τ = 0,95`, les appariements forment un nuage de lignes croisées désordonnées.
 - À `τ = 0,8`, la quasi-totalité des lignes croisées disparaît, ne laissant que les appariements cohérents.
 - Sur un motif de grille, presque aucun point ne survit.
 
-==== 📷 Observation 17.F — Le curseur du ratio test
+==== Observation 17.F — Le curseur du ratio test
 - *Pipeline :*
   ```
   Paire d'images (facile vs répétitive) ──> Features (ORB) ──> Python Node (ratio τ réglable) ──> Draw Lines ──> Output Display
@@ -438,7 +459,7 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
 + Sur la scène répétitive, observez la disparition de presque tous les points.
 + Retenez que devant un désordre de lignes, le premier réflexe est de *serrer le ratio test*.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à apparier deux images présentant un motif répétitif (ex. un carrelage ou une grille). Dans le nœud *BFMatcher*, désactiver le ratio test de Lowe en réglant *Lowe Ratio* sur `1.0`. Le lecteur observe à l'écran un réseau chaotique et inexploitable de lignes croisées reliant des points n'ayant aucun rapport géométrique. Activer ensuite le ratio test de Lowe avec un seuil de `0.7`. Le lecteur constate que la quasi-totalité des fausses correspondances s'efface instantanément, démontrant l'efficacité de cette méthode pour éliminer les ambiguïtés structurelles inhérentes aux décors répétitifs.
+*Exercice de dépannage :* L'exercice consiste à apparier deux images présentant un motif répétitif (ex. un carrelage ou une grille). Dans le nœud *BFMatcher*, désactiver le ratio test de Lowe en réglant *Lowe Ratio* sur `1.0`. Le lecteur observe à l'écran un réseau chaotique et inexploitable de lignes croisées reliant des points n'ayant aucun rapport géométrique. Activer ensuite le ratio test de Lowe avec un seuil de `0.7`. Le lecteur constate que la quasi-totalité des fausses correspondances s'efface instantanément, démontrant l'efficacité de cette méthode pour éliminer les ambiguïtés structurelles inhérentes aux décors répétitifs.
 
 ---
 ]
@@ -481,11 +502,11 @@ Le seuil de tolérance (distance de reprojection) est exprimé en pixels et doit
 ]
 
 #canvas[
-==== 🔎 Ce que vous verriez
+==== Ce que vous verriez
 - Les appariements inliers s'affichent en *vert* (parallèles et propres), les outliers rejetés en *rouge* (directions aberrantes).
 - Appliquer l'homographie estimée aligne parfaitement les deux images dans un panorama. Sans RANSAC, l'image déformée part en vrille.
 
-==== 📷 Observation 17.G — Voir le panorama se former
+==== Observation 17.G — Voir le panorama se former
 - *Pipeline :*
   ```
   Image A ─┬─> Features (SIFT) ─┐
@@ -546,12 +567,119 @@ Ces méthodes apprises résolvent l'appariement sur des surfaces peu texturées 
 
 // ============================================================
 
-== l'invariance est un tri
+== L'invariance est un tri
 
 Tout ce chapitre tient dans une décision prise quatre fois : que faut-il ignorer ? On ignore la position en n'extrayant qu'aux points-clés, l'échelle en mesurant l'échelle caractéristique, la rotation en travaillant dans un référentiel tourné, le gain et l'offset par le gradient et la normalisation. Ce que le descripteur jette n'est pas une perte : c'est ce qui changeait d'une vue à l'autre, et qui l'empêchait de reconnaître un même point.
 
 La même logique relie les étapes. Le ratio test élève le taux d'inliers, ce qui effondre le nombre d'itérations de RANSAC : un bon tri en amont rend la robustesse en aval presque gratuite. C'est le fil conducteur de tout l'ouvrage : bien poser la représentation laisse peu de travail au reste. Le chapitre 16 a donné l'estimateur ; ce chapitre lui a fourni des correspondances assez propres pour qu'il converge.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 17
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Décrire une silhouette par ses orientations
+
+#figtodo("ex_ch17_pieton", [Photographie d'un piéton de face sur un trottoir : silhouette bien contrastée su...])
+
+
+*Ce que vous voyez.* Une silhouette humaine dont la « rose des vents » des contours est très caractéristique. La mission : en tirer une signature de forme stable, à la base de la détection de piétons.
+
+*Pipeline VNStudio*
+`Image Source` → `HOG Features` → `Draw Overlay` → `Output Display`
+
+Le nœud découpe l'image en cellules et dessine dans chacune les orientations de contour dominantes.
+
+
+
+
+*Questions*
+
+
++ Sur la visualisation, où les traits d'orientation sont-ils les plus marqués : sur les bords du corps, la peau, ou le fond ? Pointent-ils en travers des contours, comme attendu ?
+
++ Sur une cellule posée sur une épaule, quelle orientation domine ? Correspond-elle à la ligne de l'épaule que vous voyez ?
+
++ Faites pivoter le piéton de 10°. La signature change-t-elle beaucoup, ou tient-elle bon ? La détection survit-elle à un sujet légèrement penché ?
+
++ *Défi.* Comparez la signature d'un piéton et celle d'un cycliste. Sont-elles plus proches entre elles qu'entre deux piétons différents ? Si les deux se confondent, quel trait de silhouette partagent-ils, et que faudrait-il ajouter pour les distinguer ?
+
+
+
+=== Exercice 2 · Apparier deux vues d'un livre en rejetant les erreurs
+
+#figtodo("ex_ch17_livre_appariement", [Deux photos du même livre : de face à gauche, légèrement en angle et plus éclair...])
+
+
+*Ce que vous voyez.* Deux vues du même objet avec un léger changement d'angle et de lumière. Certains appariements sont justes, d'autres faux. La mission : ne garder que les bons, étape clé pour la reconnaissance d'objet et les panoramas.
+
+*Pipeline VNStudio*
+`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `Output Display`
+
+Le détecteur trouve des points caractéristiques ; le matcher les relie et applique un test pour rejeter les appariements ambigus.
+
+
+
+
+*Questions*
+
+
++ Comptez les appariements verts (gardés) et rouges (rejetés). Quelle part le test rejette-t-il ? Serrez le test : combien d'appariements restent, et paraissent-ils plus sûrs à l'œil ?
+
++ Comparez un coin net du livre et une zone de texture répétitive (la trame du papier). Pour lequel l'appariement est-il franc et sans hésitation ? Pourquoi une zone qui se répète crée-t-elle des appariements ambigus ?
+
++ Montez le nombre de points détectés. Le nombre de bons appariements grimpe-t-il autant, ou les nouveaux points sont-ils surtout du bruit ? Le rapport bons/total s'améliore-t-il ?
+
++ *Défi.* Éclaircissez fortement l'image de droite. Les appariements tiennent-ils malgré ce changement de lumière ? Comparez avec un descripteur SIFT *(à créer)*. Lequel résiste le mieux, et lequel choisiriez-vous pour des photos prises à des heures différentes ?
+
+
+
+=== Exercice 3 · Imposer une cohérence géométrique pour redresser une affiche
+
+#figtodo("ex_ch17_affiche_ransac", [Deux vues d'une affiche : de face et à 30° de côté. Avant nettoyage, quelques ap...])
+
+
+*Ce que vous voyez.* Des appariements bruts encore truffés d'erreurs. La mission : ne garder que ceux qui racontent tous le même mouvement, puis s'en servir pour remettre l'affiche de face.
+
+*Pipeline VNStudio*
+`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `RANSAC Homography` → `Draw Overlay` → `Output Display`
+
+RANSAC cherche la transformation que soutient le plus grand nombre d'appariements et écarte les autres comme intrus.
+
+
+
+
+*Questions*
+
+
++ Notez le nombre d'appariements avant RANSAC, puis le nombre d'inliers gardés après. Quelle proportion d'intrus le test simple avait-il laissé passer ?
+
++ Sur l'image, les inliers gardés relient-ils des points qui se correspondent vraiment ? Les lignes sont-elles maintenant toutes cohérentes, ou en reste-t-il une de travers ?
+
++ Resserrez la tolérance de RANSAC, puis élargissez-la. Combien d'inliers dans chaque cas ? Décrivez le compromis : trop serré on perd de bons points, trop large on laisse entrer des intrus.
+
++ *Défi.* Servez-vous de la transformation trouvée pour redresser la vue oblique de l'affiche. Le résultat est-il bien rectangulaire ? Si les coins restent un peu déformés, d'où vient le défaut : objectif non corrigé, surface non plane, ou trop peu d'inliers ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

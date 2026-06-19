@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Filtrage et convolution], toc: false)[
@@ -52,7 +72,7 @@ Le chapitre construit la convolution depuis ses propriétés, puis dérive les f
 
 #subtitle[Une petite grille de nombres, posée sur chaque pixel à son tour]
 
-#figfull("/figures/fig_ch5_obs3_conv_vs_corr.pdf")
+#figcap("/figures/fig_ch5_obs3_conv_vs_corr.pdf", [Observation — convolution ≠ corrélation (le noyau est retourné)])
 
 === L'intention
 On veut une opération qui exploite le voisinage de chaque pixel, mais une opération *uniforme* : le même traitement partout, réglé une seule fois, applicable à l'image entière.
@@ -149,7 +169,7 @@ Dans votre canvas :
 
 Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à appliquer un flou avec un *Kernel Size* très large (ex. : 21x21) sur une image claire, en réglant le paramètre *Border Type* sur *Constant (0)* (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
+*Exercice de dépannage :* L'exercice consiste à appliquer un flou avec un *Kernel Size* très large (ex. : 21x21) sur une image claire, en réglant le paramètre *Border Type* sur *Constant (0)* (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
 
 ---
 ]
@@ -160,7 +180,7 @@ Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et
 
 #subtitle[Le chapeau mexicain qui s'allume sur les taches et les bords]
 
-#figfull("/figures/fig_ch5_obs1_dog_bandpass.pdf")
+#figcap("/figures/fig_ch5_obs1_dog_bandpass.pdf", [Observation — la DoG est un filtre passe-bande])
 
 === L'intention
 Après les filtres qui voient ce qui est lisse, on veut détecter ce qui _change_ — contours, taches, petits blobs. Mais mesurer un changement (dériver) amplifie le bruit ; il faut donc lisser avant.
@@ -242,7 +262,7 @@ Canvas : `Image Source` → `Bilateral Filter` → `Output Display`. Le nœud ex
 
 #subtitle[Un peigne à dents régulières, incliné, dont l'empreinte s'estompe vers les bords]
 
-#figfull("/figures/fig_ch5_obs2_gabor.pdf")
+#figcap("/figures/fig_ch5_obs2_gabor.pdf", [Observation — Gabor sélectionne une fréquence ET une orientation])
 
 === L'intention
 Certains signaux sont des *ondulations* localisées et orientées : une strie sur un tissu, une nervure de feuille, un sillon d'empreinte digitale. On veut un filtre qui réponde fortement là où l'image ondule à une fréquence donnée, dans une direction donnée.
@@ -296,7 +316,7 @@ Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Output Display`. L
 
 // ============================================================
 
-== quand l'hypothèse est fausse, le filtre dégrade
+== Quand l'hypothèse est fausse, le filtre dégrade
 
 Chaque filtre du chapitre porte une déclaration sur le signal, inscrite dans ses nombres et appliquée aveuglément à chaque pixel. Quand l'a priori est vrai — signal effectivement lisse (gaussien), effectivement à sauts nets (bilatéral), effectivement strié à telle fréquence (Gabor) — le filtre excelle. Quand il est faux, il dégrade le signal précisément là où on voulait l'améliorer : le gaussien dit « les variations brusques sont du bruit » et efface alors les contours qu'on voulait garder.
 
@@ -305,5 +325,117 @@ Le chapitre 3 mesurait la proximité pertinente entre objets ; un filtre fait de
 Le chapitre 6 enchaînera directement : tout détecteur de contour est un filtre de dérivation, et son comportement face au bruit dépend de l'a priori de lisseur qu'il porte en amont. Le chapitre 10 reprendra l'idée dans le domaine des fréquences, où l'on verra qu'un noyau de lissage est un « passe-bas », un noyau de dérivation un « passe-haut », un Gabor un « passe-bande orienté ».
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 5
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Isoler une échelle de détail dans un portrait
+
+#figtodo("ex_ch5_portrait", [Portrait à contre-jour : fond légèrement flou, grain de peau visible, rides marq...])
+
+
+*Ce que vous voyez.* Une scène où coexistent des détails fins, moyens et larges. La mission : un filtre qui ne garde qu'une seule échelle à la fois, comme on règle la « clarté » ou le « grain » dans un logiciel de retouche.
+
+*Pipeline VNStudio*
+`Image Source` → `Gaussian Filter` (doux) → branche A
+`Image Source` → `Gaussian Filter` (plus large) → branche B
+`Difference` (A − B) → `Colormap` → `Output Display`
+
+La différence de deux flous garde uniquement les détails situés entre les deux échelles. Réglez les deux flous du plus serré au plus large.
+
+
+
+
+*Questions*
+
+
++ Avec deux flous très doux, quels détails ressortent : le grain de peau, les rides ou le contour du visage ? Élargissez les deux flous : quelle échelle s'allume maintenant ?
+
++ Quand le résultat ne garde qu'une bande d'échelle, le fond uniforme devient gris neutre. Vérifiez-le. Pourquoi ce type de filtre « oublie » les grandes plages unies et ne réagit qu'aux transitions d'une certaine finesse ?
+
++ Trouvez le réglage qui fait ressortir le mieux les rides sans le grain de peau ni le contour. Quelle paire de flous y arrive ? Notez-la comme « filtre à rides ».
+
++ *Défi.* Appliquez le même filtre à une photo de tissu à carreaux. Trouvez le réglage qui fait disparaître complètement le quadrillage. Que se passe-t-il aux croisements des lignes, là où deux bords se rencontrent ?
+
+
+
+=== Exercice 2 · Lisser une surface sans baver sur les bords
+
+#figtodo("ex_ch5_porte", [Photographie d'une porte en bois peinte : surface lisse à légère texture de pein...])
+
+
+*Ce que vous voyez.* Une surface à lisser (la texture de peinture) avec des détails à sauver absolument (la fissure, le bord porte/mur). La mission : nettoyer le bruit sans noyer les contours.
+
+*Pipeline VNStudio*
+`Image Source` → `Split Half` :
+— gauche : `Gaussian Filter`
+— droite : `Bilateral Filter` *(à créer)*
+→ `Output Display`
+
+L'affichage côte à côte compare un flou ordinaire et un flou qui « respecte les bords ».
+
+
+
+
+*Questions*
+
+
++ Sur le bord porte/mur, comparez les deux moitiés. Laquelle bave et crée un halo, laquelle garde le bord net tout en lissant la surface ?
+
++ Poussez le réglage « tolérance de couleur » du filtre bilatéral à fond. Que devient-il ? Pourquoi finit-il par se comporter exactement comme le flou ordinaire ?
+
++ Élargissez la portée du flou bilatéral. La fine fissure survit-elle même quand vous lissez fort ? Jusqu'où pouvez-vous aller avant qu'elle s'efface ?
+
++ *Défi.* Réglez le bilatéral pour effacer entièrement la texture de peinture tout en gardant nets la fissure, le nœud et le bord. Existe-t-il un réglage parfait, ou faut-il sacrifier un peu de l'un pour gagner sur l'autre ? Décrivez le compromis.
+
+
+
+=== Exercice 3 · Détecter l'orientation des fils d'un tissu
+
+#figtodo("ex_ch5_tissu_ecossais", [Morceau de tissu écossais : bandes de couleur formant un quadrillage, avec des f...])
+
+
+*Ce que vous voyez.* Une texture dont les orientations dominantes sautent aux yeux. La mission : un filtre qui ne réagit qu'à une direction et une finesse données, pour cartographier les fils.
+
+*Pipeline VNStudio*
+`Image Source` → `Gabor Filter` *(à créer)* (4 orientations) → `Grid Compare` → `Output Display`
+
+Chaque filtre ne s'allume que pour les fils qui suivent son orientation. La grille compare les quatre réponses.
+
+
+
+
+*Questions*
+
+
++ Parmi les quatre cartes (horizontale, verticale, et deux diagonales), laquelle s'allume le plus fort ? Correspond-elle à la direction dominante que vous voyez dans le tissu ?
+
++ Sur une bande strictement verticale, comparez la réponse du filtre vertical et celle du filtre horizontal. L'un est-il quasi éteint pendant que l'autre brille ? Que dit cela sur la sélectivité du filtre ?
+
++ Réglez la finesse du filtre (l'espacement auquel il réagit). À quel réglage les fils du tissu ressortent-ils le mieux ? Ce réglage correspond-il à l'espacement visible des fils ?
+
++ *Défi.* Servez-vous des quatre réponses pour fabriquer une « signature de texture » du tissu écossais. Comparez-la à celle d'un tissu uni. Les deux signatures sont-elles assez différentes pour qu'une machine distingue automatiquement les deux étoffes ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

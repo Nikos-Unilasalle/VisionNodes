@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Seuillage et segmentation], toc: false)[
@@ -163,7 +182,7 @@ Dans votre canvas :
 
 En faisant glisser le curseur `Block Size` de manière à ce qu'il dépasse la taille des motifs d'intérêt, et en ajustant le curseur `C` pour éliminer le bruit du fond, vous obtiendrez un masque binaire parfaitement net de vos objets, quel que soit l'éclairage de la scène.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger une image de texte sous un éclairage oblique très asymétrique. Tenter d'abord d'isoler les lettres avec un nœud *Threshold* en mode automatique d'Otsu. Le lecteur constate que le masque sépare simplement l'image en deux zones (ombre et lumière) sans extraire le texte. Remplacer par un nœud *Adaptive Threshold* en réglant le *Block Size* sur une valeur trop petite de 3 pixels. Le lecteur observe que le texte s'évide, ne laissant que de fins contours illisibles. Monter enfin le *Block Size* à 21 pixels (dépassant la largeur des lettres) pour voir le texte se dessiner proprement, prouvant la supériorité de l'adaptation locale et la nécessité d'un calibrage d'échelle de référence.
+*Exercice de dépannage :* L'exercice consiste à charger une image de texte sous un éclairage oblique très asymétrique. Tenter d'abord d'isoler les lettres avec un nœud *Threshold* en mode automatique d'Otsu. Le lecteur constate que le masque sépare simplement l'image en deux zones (ombre et lumière) sans extraire le texte. Remplacer par un nœud *Adaptive Threshold* en réglant le *Block Size* sur une valeur trop petite de 3 pixels. Le lecteur observe que le texte s'évide, ne laissant que de fins contours illisibles. Monter enfin le *Block Size* à 21 pixels (dépassant la largeur des lettres) pour voir le texte se dessiner proprement, prouvant la supériorité de l'adaptation locale et la nécessité d'un calibrage d'échelle de référence.
 
 _Domaines :_ OCR sur pages photographiées sous éclairage oblique, lecture de plaques sous éclairage inégal, défauts sur surfaces non uniformément éclairées.
 
@@ -175,6 +194,8 @@ _Domaines :_ OCR sur pages photographiées sous éclairage oblique, lecture de p
 == Watershed (ligne de partage des eaux) : segmenter par le relief
 
 #subtitle[L'eau qui monte depuis les sources au fond des vallées et forme des lacs séparés par des digues]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191407(1).jpeg")
 
 Les méthodes vues jusqu'ici partitionnent l'image par une hypothèse sur les _valeurs_ : un seuil sépare deux modes d'intensité, K-means regroupe des couleurs proches. Le watershed change de registre. Il lit l'image comme un *relief* et laisse l'eau monter depuis des sources : chaque bassin qui se remplit devient une région, et les crêtes où deux bassins se rejoignent deviennent les frontières. Ce qui décide de la segmentation n'est plus une valeur de coupe, c'est le choix des sources — les _marqueurs_. Là est le fil de la section : sur un relief donné, la segmentation est entièrement déterminée par l'endroit d'où l'on fait partir l'eau.
 
@@ -385,6 +406,8 @@ _Domaines :_ simplification d'images satellite, détection de régions d'intér�
 
 #subtitle[Un anneau de caoutchouc qui se contracte jusqu'à épouser le contour]
 
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191403.jpeg")
+
 === L'intention
 Au lieu d'étiqueter chaque pixel indépendamment, on veut poser une courbe dans l'image et la laisser se déformer jusqu'à ce qu'elle vienne se coller sur le bord d'un objet — pour obtenir directement une frontière lisse et fermée.
 
@@ -438,6 +461,8 @@ _Domaines :_ segmentation d'organes en imagerie médicale, suivi de silhouette e
 == Coupe de graphe (graph cut) : la décision globale et cohérente
 
 #subtitle[Un réseau de tuyaux qu'on coupe au moindre coût pour séparer objet et fond]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191402.jpeg")
 
 === L'intention
 Les méthodes précédentes décident localement, ou dans un espace sans géométrie. On veut une décision *globale*, où un pixel dont on est sûr aide à trancher le cas de ses voisins hésitants — pour que la segmentation reste cohérente d'un bout à l'autre.
@@ -518,7 +543,7 @@ _État de l'art :_ ces méthodes précèdent l'apprentissage profond (U-Net, Mas
 
 // ============================================================
 
-== un seul axe, six fois
+== Un seul axe, six fois
 
 Le chapitre raconte une histoire déclinée sept fois : l'image seule ne tranche pas, il faut *ajouter une hypothèse* et choisir *où* placer la décision.
 
@@ -537,5 +562,119 @@ Le watershed déplace la question. Otsu demandait _où couper les valeurs_ ; le 
 D'un bout à l'autre, le même axe : à gauche le pur attachement aux données (le seuillage, où chaque pixel décide seul et où le bruit passe entier), à droite la régularité dominante (le lissage qui propage et nettoie, au risque d'effacer le détail). La coupe de graphe le rend visible avec son curseur λ — le même curseur que le α de Horn-Schunck pour le mouvement (chapitre 9), la même tension qu'un filtre encode comme a priori sur le signal (chapitre 5), la même question qu'une distance pose en déclarant ce qui rapproche deux pixels (chapitre 3). Comme un descripteur du chapitre 1 garde une chose et en jette une autre, une segmentation déclare ce qu'elle suppose d'une frontière : tout l'art est de choisir, pour l'image qu'on a, ce qu'on accepte de tenir pour vrai. Le chapitre 13 reprendra cette idée pour décrire les textures.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 12
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Binariser une page ancienne mal éclairée
+
+#figtodo("ex_ch12_livre_ancien", [Page d'un livre ancien en lumière rasante : encre noire sur papier ivoire, mais ...])
+
+
+*Ce que vous voyez.* Un document dont le fond s'assombrit d'un côté. La mission : obtenir un texte noir net sur fond blanc partout, première étape de toute lecture automatique de document.
+
+*Pipeline VNStudio*
+`Image Source` → `Split Half` :
+— gauche : `Threshold (Advanced)` (seuil global)
+— droite : `Threshold (Advanced)` (seuil adaptatif)
+→ `Output Display`
+
+Le seuil global cherche une seule coupure pour toute l'image ; le seuil adaptatif s'ajuste localement.
+
+
+
+
+*Questions*
+
+
++ Sur le seuil global, le texte du côté sombre ressort-il, ou se noie-t-il dans un fond noirci ? Le seuil adaptatif fait-il mieux sur cette zone ? Comparez les deux moitiés.
+
++ Élargissez la fenêtre du seuil adaptatif. Que se passe-t-il quand elle devient plus grande que les taches d'oxydation ? Et quand elle devient plus petite que l'espace entre deux lignes ?
+
++ Le seuil global trouve tout seul sa coupure entre encre et papier. Sur une page bien contrastée, tombe-t-il au bon endroit ? Sur la page mal éclairée, pourquoi une seule coupure ne peut-elle pas convenir aux deux côtés à la fois ?
+
++ *Défi.* Réglez la chaîne pour produire un texte lisible sur toute la page, des deux côtés, sans que les taches d'oxydation ressortent comme des lettres. Quel réglage y arrive ? Combien de mots restent illisibles malgré tout ?
+
+
+
+=== Exercice 2 · Séparer des cellules qui se touchent
+
+#figtodo("ex_ch12_cellules_confluentes", [Vue microscopique de cellules en culture serrées : certaines isolées, d'autres c...])
+
+
+*Ce que vous voyez.* Des cellules collées que le simple seuillage voit comme une seule masse. La mission : les recompter une par une, problème quotidien en biologie.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Region Properties` → `Output Display`
+
+Le watershed part du cœur de chaque cellule (les points les plus profonds de la carte de distance) et fait monter les bassins jusqu'à ce qu'ils se rencontrent.
+
+
+
+
+*Questions*
+
+
++ Avec le seuillage seul, combien de régions le comptage trouve-t-il pour un amas de trois cellules collées ? Avec le watershed, combien en obtient-on ?
+
++ Affichez la carte de distance colorée. Combien de cœurs distincts voyez-vous dans l'amas de trois ? Un par cellule, ou moins ?
+
++ Le watershed trace une frontière entre cellules voisines. Tombe-t-elle à l'endroit de la vraie membrane, ou ailleurs ? Le découpage vous paraît-il juste ?
+
++ *Défi.* Sur une image bruitée, le watershed découpe parfois une cellule en plusieurs morceaux (sur-découpage). Lissez la carte de distance avant de chercher les cœurs. À partir de quel lissage le sur-découpage disparaît-il sans souder deux cellules proches ? Recomptez et comparez au comptage manuel.
+
+
+
+=== Exercice 3 · Découper une plage en zones de couleur
+
+#figtodo("ex_ch12_plage", [Photographie d'une plage tropicale à quatre zones nettes : ciel bleu, mer turquo...])
+
+
+*Ce que vous voyez.* Une scène à quatre régions de couleur bien distinctes mais aux frontières floues. La mission : comparer deux façons de découper l'image par la couleur et voir laquelle colle le mieux au réel.
+
+*Pipeline VNStudio*
+`Image Source` → `Grid Compare` :
+— K-Means (4 groupes), lancé deux fois
+— Mean Shift *(à créer)*
+— image originale
+→ `Output Display`
+
+K-Means exige qu'on lui dise le nombre de zones ; Mean Shift le découvre seul.
+
+
+
+
+*Questions*
+
+
++ Lancez K-Means deux fois. Les deux découpages sont-ils identiques ? Où voyez-vous des différences ? Pourquoi un démarrage au hasard donne-t-il des résultats variables ?
+
++ Mean Shift ne demande pas le nombre de zones. Combien en trouve-t-il ? Plus ou moins que quatre ? Élargissez sa portée de couleur : le nombre de zones change-t-il ?
+
++ Sur la transition douce ciel/mer, K-Means trace une frontière nette et tranchée. Mean Shift fait-il pareil, ou crée-t-il des zones intermédiaires ? Lequel respecte mieux ce que voit l'œil ?
+
++ *Défi.* Réglez chacune des deux méthodes pour isoler proprement le palmier vert du reste, sans rogner sur le ciel ni la mer. Laquelle y arrive le plus facilement ? Pour découper une scène dont on ignore le nombre de régions, laquelle choisiriez-vous ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

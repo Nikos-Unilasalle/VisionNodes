@@ -58,7 +58,7 @@ Ce choix naïf échoue car il ne possède aucune invariance. Les invariances doi
 
 Le descripteur mesure la ressemblance locale. L'angle mort de cette invariance est qu'en jetant de l'information pour devenir insensible aux transformations, on perd en distinctivité. Un descripteur invariant en rotation ne distingue plus un motif de sa version tournée, ce qui peut créer des faux positifs. Les descripteurs classiques ne gèrent pas non plus les forts changements de point de vue perspectifs ou les déformations non rigides.
 
-### Exemple chiffré
+### Exemple
 
 Soit un patch `P` de valeur moyenne 100 et sa copie `Pt` éclaircie par un gain de 1.3 puis assombrie par un offset de −10 (`Pt = 1.3·P − 10`). L'écart moyen par pixel est de `0.3·100 − 10 = 20`. Le SSD pixel à pixel vaut `20² = 400` par pixel, soit des dizaines de milliers sur un patch 16×16, alors que c'est le même point. Le gradient, lui, élimine l'offset (`∇(I − 10) = ∇I`) et le gain est réduit à un facteur d'échelle que la normalisation efface.
 
@@ -68,12 +68,12 @@ Centrer et réduire les intensités d'un patch corrige le gain et l'offset, mais
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 Sur une image et sa copie transformée (tournée de 30°, zoomée de 20%, éclaircie) :
 - Comparer les patchs bruts par SSD donne des appariements incohérents reliant des zones sans rapport.
 - Comparer les descripteurs ORB retrouve les vrais homologues, reliant proprement les mêmes angles de fenêtre.
 
-#### 📷 Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
+#### Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
 - **Pipeline :**
   ```
   Image Loader ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) [Vue B]
@@ -124,7 +124,7 @@ Multiplier par `σ²` compense la baisse d'amplitude naturelle de `∇²G_σ` à
 
 Elle mesure la position et l'échelle caractéristique `σ₀` d'une structure isotrope (un blob). Son angle mort principal est les contours rectilignes : la courbure transverse crée une réponse forte le long des arêtes. SIFT résout cela en rejetant les points où le rapport des valeurs propres de la matrice hessienne du DoG dépasse un seuil (typiquement 10), excluant ainsi les contours comme le faisait le critère de Harris (§6.5).
 
-### Exemple chiffré
+### Exemple
 
 Pour un blob gaussien d'écart-type `s = 6` pixels, balayer `σ` de 2 à 12 montre que la réponse normalisée du LoG atteint son maximum exact à `σ = 6,00`. Le descripteur extrait à cette taille sera identique, que l'image soit zoomée ou non.
 
@@ -134,12 +134,12 @@ Le nombre d'octaves et d'échelles par octave détermine la précision de la loc
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 Sur une image avec points SIFT affichés sous forme de cercles de rayon proportionnel à `σ` :
 - Les petits détails ont de petits cercles, les grandes structures de grands cercles.
 - En zoomant l'image de x2, les mêmes cercles apparaissent deux fois plus grands, montrant que l'échelle s'adapte au zoom.
 
-#### 📷 Observation 17.B — Le cercle qui suit le zoom
+#### Observation 17.B — Le cercle qui suit le zoom
 - **Pipeline :**
   ```
   Image Loader ─┬──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue A)
@@ -180,7 +180,7 @@ Bloc : regroupement de cellules voisines et normalisation L2
 
 HOG mesure la distribution locale des orientations de contours. Son angle mort majeur est qu'il n'est **pas invariant en rotation** : tourner l'image décale circulairement les bins des histogrammes. C'est un choix assumé pour la détection à pose connue.
 
-### Exemple chiffré
+### Exemple
 
 Dans une cellule 8×8 traversée par un dégradé à 45° où en chaque pixel `Iₓ = 10, Iᵧ = 10` : la magnitude vaut `‖∇I‖ = 14,14` et l'angle `θ = 45°`. Les 36 pixels intérieurs accumulent un vote total de `36 × 14,14 = 509,1` qui tombe entièrement dans le bin `[40°, 60°)`.
 
@@ -190,7 +190,7 @@ Pour éviter les effets de seuil (aliasing), les vrais algorithmes répartissent
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 En visualisant les glyphes HOG (étoiles d'orientations) sur un piéton :
 - Modifier la luminosité ou le contraste ne change pas les glyphes (grâce au gradient et à la normalisation de bloc).
 - Tourner la silhouette de 20° fait tourner toutes les étoiles, modifiant le vecteur final.
@@ -239,7 +239,7 @@ Le seuillage à 0,2 élimine l'influence excessive des variations d'éclairage n
 
 Il mesure la structure fine des gradients dans le repère propre du point. Son angle mort est qu'il suppose une déformation purement plane et isotrope (similitude). Il tolère mal les grands angles de perspective (cisaillement) et se fait piéger par les motifs répétés (carrelages, fenêtres).
 
-### Exemple chiffré
+### Exemple
 
 Si un point-clé a une orientation dominante de 40° et qu'un gradient y est mesuré à 85° dans l'image, il est consigné à `85° − 40° = 45°` dans le descripteur. Si l'image tourne de 30°, l'orientation dominante passe à 70° et le gradient à 115°. La valeur consignée reste `115° − 70° = 45°`.
 
@@ -249,12 +249,12 @@ RootSIFT est une variante améliorant la robustesse : on normalise le vecteur en
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 Sur deux vues d'une même affiche, l'une tournée de 45° :
 - Les flèches d'orientation dessinées sur les points SIFT tournent de 45° avec la scène.
 - Les lignes d'appariement restent majoritairement droites et correctes.
 
-#### 📷 Observation 17.D — Les flèches qui tournent
+#### Observation 17.D — Les flèches qui tournent
 - **Pipeline :**
   ```
   Image Loader (vue droite)  ──> Features (SIFT, dessine orientation) ─┐
@@ -298,7 +298,7 @@ L'angle d'orientation dominante est estimé par les moments d'ordre 1 (§2) : �
 
 Il mesure un motif de comparaison relative de clarté. Son angle mort est sa sensibilité aux déformations sévères (zoom important, distorsions) et sa distinctivité plus faible que celle de SIFT, ce qui génère plus de faux appariements.
 
-### Exemple chiffré
+### Exemple
 
 Soient deux descripteurs 8 bits :
 ```
@@ -313,11 +313,11 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 - ORB s'exécute de façon fluide en temps réel (30 fps) sur flux vidéo.
 - Pour des transformations modérées, ORB et SIFT donnent des résultats similaires, mais sous déformation ou flou important, SIFT préserve plus de lignes correctes.
 
-#### 📷 Observation 17.E — Mesurer le compromis ORB/SIFT
+#### Observation 17.E — Mesurer le compromis ORB/SIFT
 - **Pipeline :**
   ```
   Paire d'images ─┬─> Features (ORB) ──> Python Node (match + chrono) ─┐
@@ -357,7 +357,7 @@ où `d₁` est la distance au plus proche voisin dans l'espace des descripteurs,
 
 Elle élimine les appariements ambigus. Son angle mort est les structures répétitives légitimes (carrelages, fenêtres de gratte-ciel) : elle rejette les correspondances réelles car elles se ressemblent toutes, affamant le pipeline.
 
-### Exemple chiffré
+### Exemple
 
 Sur deux points comparés :
 - Point distinctif : `d₁ = 0,32, d₂ = 0,51`. Ratio = `0,32 / 0,51 = 0,63 < 0,8` ──> **Accepté**.
@@ -384,12 +384,12 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 - À `τ = 0,95`, les appariements forment un nuage de lignes croisées désordonnées.
 - À `τ = 0,8`, la quasi-totalité des lignes croisées disparaît, ne laissant que les appariements cohérents.
 - Sur un motif de grille, presque aucun point ne survit.
 
-#### 📷 Observation 17.F — Le curseur du ratio test
+#### Observation 17.F — Le curseur du ratio test
 - **Pipeline :**
   ```
   Paire d'images (facile vs répétitive) ──> Features (ORB) ──> Python Node (ratio τ réglable) ──> Draw Lines ──> Output Display
@@ -399,7 +399,7 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
   2. Sur la scène répétitive, observez la disparition de presque tous les points.
   3. Retenez que devant un désordre de lignes, le premier réflexe est de **serrer le ratio test**.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à apparier deux images présentant un motif répétitif (ex. un carrelage ou une grille). Dans le nœud **BFMatcher**, désactiver le ratio test de Lowe en réglant **Lowe Ratio** sur `1.0`. Le lecteur observe à l'écran un réseau chaotique et inexploitable de lignes croisées reliant des points n'ayant aucun rapport géométrique. Activer ensuite le ratio test de Lowe avec un seuil de `0.7`. Le lecteur constate que la quasi-totalité des fausses correspondances s'efface instantanément, démontrant l'efficacité de cette méthode pour éliminer les ambiguïtés structurelles inhérentes aux décors répétitifs.
+**Exercice de dépannage :** L'exercice consiste à apparier deux images présentant un motif répétitif (ex. un carrelage ou une grille). Dans le nœud **BFMatcher**, désactiver le ratio test de Lowe en réglant **Lowe Ratio** sur `1.0`. Le lecteur observe à l'écran un réseau chaotique et inexploitable de lignes croisées reliant des points n'ayant aucun rapport géométrique. Activer ensuite le ratio test de Lowe avec un seuil de `0.7`. Le lecteur constate que la quasi-totalité des fausses correspondances s'efface instantanément, démontrant l'efficacité de cette méthode pour éliminer les ambiguïtés structurelles inhérentes aux décors répétitifs.
 
 ---
 
@@ -432,7 +432,7 @@ où `w` est la proportion de vrais appariements (inliers) et `n` le nombre de po
 
 Elle estime le modèle géométrique dominant (homographie, matrice fondamentale) et filtre les correspondances aberrantes. Son angle mort est les configurations dégénérées (4 points alignés) et les scènes multi-plans : RANSAC ne capture que le plan dominant et rejette le reste comme du bruit ; il faut alors l'appliquer en séquence.
 
-### Exemple chiffré
+### Exemple
 
 Avec `w = 0,5` (50% de vrais appariements) et `p = 0,99`, RANSAC demande `N = 72` tirages. Si `w = 0,3` (sans ratio test préalable), il faut `N = 567` tirages. Préfiltrer les appariements par le ratio test de Lowe divise le coût calculatoire de RANSAC par huit.
 
@@ -442,11 +442,11 @@ Le seuil de tolérance (distance de reprojection) est exprimé en pixels et doit
 
 ### Dans VNStudio
 
-#### 🔎 Ce que vous verriez
+#### Ce que vous verriez
 - Les appariements inliers s'affichent en **vert** (parallèles et propres), les outliers rejetés en **rouge** (directions aberrantes).
 - Appliquer l'homographie estimée aligne parfaitement les deux images dans un panorama. Sans RANSAC, l'image déformée part en vrille.
 
-#### 📷 Observation 17.G — Voir le panorama se former
+#### Observation 17.G — Voir le panorama se former
 - **Pipeline :**
   ```
   Image A ─┬─> Features (SIFT) ─┐

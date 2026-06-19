@@ -105,7 +105,7 @@ Dans votre canvas :
 
 Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique **L2 Loss** (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type **L1 Loss** (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
+**Exercice de dépannage :** L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique **L2 Loss** (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type **L1 Loss** (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
 
 ---
 
@@ -142,7 +142,7 @@ gradient sur les logits = ŷ − y
 
 Pas de facteur parasite, pas de saturation cachée : si le réseau prédit 0,7 là où il fallait 1, le logit reçoit une poussée de −0,3 ; s'il a déjà raison, le gradient s'annule de lui-même. (La démonstration de cette simplification figure en annexe maths.) C'est ce qui rend l'entropie croisée si docile à entraîner.
 
-### Exemple chiffré
+### Exemple
 
 Un classifieur de chiffres manuscrits sort z = [2,0 ; 1,0 ; 0,1] pour {« 3 », « 8 », « 5 »}, la vérité étant « 3 » (y = [1, 0, 0]) :
 
@@ -189,7 +189,7 @@ Dice « soft » :  L = 1 − 2·Σ(p·g) / (Σp + Σg + ε)
 
 p est la carte de probabilités prédite (valeurs continues dans [0, 1]), g le masque de vérité binaire, ε un petit terme de stabilité. La propriété décisive est dans son gradient : le dénominateur **normalise par la taille des régions**. Que l'objet occupe 1 % ou 50 % de l'image, l'échelle du gradient reste comparable — là où l'entropie croisée serait noyée par les millions de pixels de fond, le Dice rapporte tout au chevauchement relatif. ∎
 
-### Exemple chiffré
+### Exemple
 
 Une coupe IRM montre une petite lésion ; le masque de vérité compte 4 pixels positifs. Le réseau prédit :
 
@@ -239,7 +239,7 @@ L = −α · (1 − pₜ)^γ · log(pₜ)        pₜ = proba prédite de la VRA
 
 α équilibre les fréquences de classes, γ ≥ 0 est le facteur de focalisation. À γ = 0, on retrouve l'entropie croisée pondérée. Le parallèle avec Huber (chapitre 16) est instructif par opposition : Huber réduit l'influence des *grandes* erreurs (les aberrations à ignorer), focal celle des *petites* erreurs (les exemples faciles, déjà appris). ∎
 
-### Exemple chiffré (γ = 2)
+### Exemple (γ = 2)
 
 Détection de défauts rares sur des pièces conformes :
 
@@ -291,7 +291,7 @@ L(x) = 0,5·x²/β      si |x| < β
 
 x est l'erreur de régression, β le seuil de transition (souvent 1). Le lien avec le chapitre 8 est direct : l'erreur de reprojection du bundle adjustment est une somme de carrés L2, dominée par une seule correspondance aberrante ; la remplacer par un noyau de Huber est la correction qui rend le recalage robuste aux faux appariements. ∎
 
-### Exemple chiffré (β = 1)
+### Exemple (β = 1)
 
 Quatre résidus d'un détecteur embarqué, dont un aberrant dû à une annotation imprécise :
 
@@ -342,7 +342,7 @@ L_GIoU = 1 − IoU + |C \ (A ∪ B)| / |C|
 
 A est la boîte prédite, B la cible, C la plus petite boîte les englobant toutes deux. Le terme correctif sculpte un gradient là où la métrique seule était aveugle — exactement la logique du substitut dérivable. ∎
 
-### Exemple chiffré
+### Exemple
 
 Deux boîtes **disjointes**, format (x₁, y₁, x₂, y₂), en imagerie aérienne :
 
@@ -393,7 +393,7 @@ L = −log( exp(sim(zᵢ, zⱼ⁺)/τ) / Σₖ exp(sim(zᵢ, zₖ)/τ) )
 
 zᵢ est l'ancre, zⱼ⁺ le positif, zₖ l'ensemble des candidats (positif + négatifs), `sim` le cosinus, τ la température. Réécrit, c'est exactement l'entropie croisée du §15.1 appliquée au quiz artificiel : le gradient pousse vers le haut la similarité avec le positif, vers le bas celle des négatifs — d'autant plus fort qu'un négatif est, à tort, jugé proche. ∎
 
-### Exemple chiffré
+### Exemple
 
 Une ancre microscopique (une cellule), son positif (même cellule, autre contraste, sim = 0,9) et deux négatifs (sim = 0,3 et 0,2). Effet de la température :
 

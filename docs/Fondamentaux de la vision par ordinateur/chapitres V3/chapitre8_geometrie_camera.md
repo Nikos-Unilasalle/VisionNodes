@@ -93,7 +93,7 @@ K = [ fx   0   cx ]
 - **fx, fy** : la focale en pixels (distance focale ÷ taille physique d'un pixel)
 - **cx, cy** : le centre optique — là où l'axe optique touche le capteur ∎
 
-### Exemple chiffré
+### Exemple
 
 f = 500 px, centre (320, 240). Un point à Zc = 2 m, décalé de 30 cm sur le côté et 10 cm en hauteur :
 
@@ -170,7 +170,7 @@ x'  ∼  H · x          (H : matrice 3×3, 8 degrés de liberté)
 
 La raison de fond : pour les points d'un plan Z = 0, la colonne de R associée à Z disparaît du produit K·[R|t]. Il reste une matrice 3×3 — exactement H. La perte de profondeur devient ici un avantage : pour un plan, Z est connu (nul), donc le terme problématique s'annule de lui-même. ∎
 
-### Exemple chiffré
+### Exemple
 
 Vue aérienne d'un parking depuis une caméra inclinée à 45°. Quatre coins de la zone d'intérêt sont identifiés dans l'image, leurs coordonnées métriques au sol connues → H se calcule → chaque image est redressée en vue de dessus. Les véhicules deviennent mesurables en mètres.
 
@@ -244,7 +244,7 @@ Z  =  f · B / d
 
 **3. La baseline est un arbitrage de conception.** Grande baseline → grandes disparités → meilleure précision en profondeur, mais recouvrement réduit entre les deux images et appariement plus difficile pour les objets proches. Chaque application a son B optimal. ∎
 
-### Exemple chiffré
+### Exemple
 
 f = 800 px, B = 12 cm, disparité d = 40 px :
 
@@ -308,7 +308,7 @@ C'est la métrique de référence de tout le chapitre — calibration, reconstru
 | < 0,1 px | Métrologie, chirurgie, cartographie précise |
 | > 1,0 px | Poses insuffisamment diversifiées, ou mauvaise détection des coins |
 
-### Exemple chiffré
+### Exemple
 
 Le modèle prédit le coin d'un damier en (320,0 ; 240,0), détecté à (320,8 ; 239,4) :
 
@@ -337,7 +337,7 @@ Dans votre canvas :
 
 Le nœud `Undistort` prend en entrée l'image déformée et lui applique la matrice de calibration préalablement estimée. Il se place toujours en début de pipeline et précalcule les cartes de remapping au chargement des paramètres. La correction s'applique ensuite en temps réel sans coût supplémentaire par image, redressant instantanément les lignes courbes de l'objectif grand angle en lignes droites parfaites, particulièrement près des bords.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud **Find Homography (RANSAC)**. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
+**Exercice de dépannage :** L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud **Find Homography (RANSAC)**. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
 
 ---
 

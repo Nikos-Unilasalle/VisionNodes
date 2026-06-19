@@ -47,7 +47,7 @@ Pour vous représenter cette formule physiquement :
 
 On calcule cette décomposition pour toutes les fréquences possibles grâce à la **FFT** (transformée de Fourier rapide), un algorithme extrêmement optimisé capable de traiter une image haute définition en temps réel. ∎
 
-### Exemple chiffré
+### Exemple
 
 Une image de rayures verticales espacées de 10 pixels a une transformée presque entièrement vide, **sauf deux pics** symétriques à la fréquence correspondant à cet espacement. Toute la structure « rayures » tient dans deux nombres. Pour les effacer — sur une radiographie, un scan de document —, on annule ces deux nombres puis on revient dans l'espace des pixels : les rayures ont disparu sans toucher au reste. Trivial dans la base de Fourier, laborieux dans les pixels.
 
@@ -125,7 +125,7 @@ Sa propriété reine est la **compaction d'énergie** : pour les images naturell
 
 La quantification est la seule étape destructive, et elle exploite la perception : l'œil tolère mal les erreurs dans les zones lisses (basses fréquences) mais bien dans les détails fins (hautes fréquences). Poussée trop loin, elle produit les fameux **artefacts en blocs** : les frontières des carrés de 8×8 deviennent visibles, révélant l'unité de calcul que le changement de base avait réussi à faire oublier.
 
-### Exemple chiffré
+### Exemple
 
 Un bloc 8×8 pris dans un ciel uniforme : après DCT, un seul nombre (la moyenne du bloc) concentre presque toute l'énergie, les 63 autres sont proches de zéro. On stocke un nombre au lieu de 64. Un bloc pris dans du feuillage serré étale son énergie sur des dizaines de nombres : il se compresse moins bien. La DCT n'améliore pas l'image, elle rend visible la compressibilité déjà présente.
 
@@ -160,7 +160,7 @@ une DROITE dans l'image  →   un POINT dans l'espace des paramètres (un pic de
 
 Plusieurs points alignés produisent des courbes qui **se croisent toutes au même endroit** : les paramètres de leur droite commune. On compte les votes dans une grille (l'**accumulateur**) et on cherche les pics. Pour les cercles, même principe avec trois paramètres (centre et rayon). La force de Hough est sa **robustesse aux occlusions et au bruit** : une droite partiellement masquée accumule moins de votes mais reste détectable, et le bruit ne forme aucun pic. Sa faiblesse : le coût de l'accumulateur, surtout pour les cercles, et la sensibilité à la finesse de la grille. ∎
 
-### Exemple chiffré
+### Exemple
 
 Trois pixels alignés horizontalement à hauteur 5 : ils votent tous, entre autres, pour « la droite horizontale à hauteur 5 ». Cette case de l'accumulateur reçoit trois votes, toutes les autres au plus un. Le pic est sans ambiguïté : la droite est détectée.
 
@@ -187,7 +187,7 @@ Dans votre canvas :
 
 Le nœud `Hough Lines` prend la carte de contours binaires produite par Canny et accumule les votes. En modifiant le curseur `Votes Threshold` (seuil de votes) dans l'inspecteur, vous déterminez le niveau de sélectivité nécessaire pour filtrer les lignes dominantes de la scène. Un nœud `Hough Circles` fait de même pour les cercles, et l'inspecteur compte les formes trouvées.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image bruitée et à régler le curseur **Votes Threshold** sur une valeur extrêmement basse (ex. : 10 votes) dans le nœud **Hough Lines**. Le lecteur observe à l'écran une quantité géante de lignes parasites traversant l'image de part en part. Cela montre comment des alignements fortuits de pixels de bruit s'accumulent au-dessus du seuil de tolérance, démontrant l'importance d'adapter ce seuil à la taille physique des objets recherchés.
+**Exercice de dépannage :** L'exercice consiste à charger une image bruitée et à régler le curseur **Votes Threshold** sur une valeur extrêmement basse (ex. : 10 votes) dans le nœud **Hough Lines**. Le lecteur observe à l'écran une quantité géante de lignes parasites traversant l'image de part en part. Cela montre comment des alignements fortuits de pixels de bruit s'accumulent au-dessus du seuil de tolérance, démontrant l'importance d'adapter ce seuil à la taille physique des objets recherchés.
 
 ---
 
@@ -213,7 +213,7 @@ DT(p) = distance du pixel p au pixel de fond le plus proche
 
 On peut choisir la distance (euclidienne, Manhattan… chapitre 3). Un algorithme rapide la calcule en deux passages sur l'image. Elle sert au **watershed** (le relief où l'eau monte sépare des objets accolés, chapitre 12), à la **squelettisation** (réduire une forme à son axe : chiffres manuscrits, réseaux vasculaires) et à la **navigation** (distance à l'obstacle le plus proche en tout point). ∎
 
-### Exemple chiffré
+### Exemple
 
 Un disque binaire de rayon 10 pixels : la carte vaut 0 sur le bord, croît vers le centre, et atteint exactement 10 au centre — le rayon. Le point le plus haut donne d'un coup le centre et le rayon, sans calculer ni contour ni centre de gravité. Pour un rectangle, la carte forme une arête centrale dont la hauteur donne le demi-côté.
 

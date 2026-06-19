@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Distances et similarités], toc: false)[
@@ -52,7 +72,7 @@ Le fil du chapitre tient en une phrase : *une distance déclare ce qui compte.* 
 
 #figfull("/illustrations/chap3.1.png")
 
-#figfull("/figures/fig_ch3_obs3_lp_balls.pdf")
+#figcap("/figures/fig_ch3_obs3_lp_balls.pdf", [Observation — la boule unité change de forme avec p])
 
 === L'intention
 On veut comparer deux vecteurs nombre par nombre, mais sans figer d'avance la façon de combiner les écarts : tantôt en les additionnant tous, tantôt en ne retenant que le plus grand. Un seul mécanisme réglable couvrirait toute la gamme.
@@ -110,7 +130,7 @@ Canvas : `Vector A` + `Vector B` → `Distance Metrics` → `Inspector`. Le nœu
 
 #subtitle[Un mètre d'écart, banal sur l'autoroute, énorme en travers d'un couloir]
 
-#figfull("/figures/fig_ch3_obs1_mahalanobis.pdf")
+#figcap("/figures/fig_ch3_obs1_mahalanobis.pdf", [Observation — Mahalanobis : l'ellipse d'iso-distance suit le nuage])
 
 === L'intention
 La distance euclidienne suppose en secret que toutes les directions se valent et que les axes sont indépendants. C'est rarement vrai. On voudrait une distance qui tienne compte de la dispersion propre à chaque direction : un écart doit compter peu là où les données varient déjà beaucoup, et beaucoup là où elles varient peu.
@@ -261,7 +281,7 @@ Dans votre canvas :
 
 Le nœud `Histogram Distance` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
+*Exercice de dépannage :* L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
 
 ---
 ]
@@ -272,7 +292,7 @@ Le nœud `Histogram Distance` compare les deux distributions normalisées. Il ca
 
 #subtitle[Combien de travail pour remodeler un tas de sable en un autre]
 
-#figfull("/figures/fig_ch3_obs2_wasserstein_chi2.pdf")
+#figcap("/figures/fig_ch3_obs2_wasserstein_chi2.pdf", [Observation — Wasserstein voit le glissement, χ² voit case par case])
 
 === L'intention
 Les distances case-à-case (§3.4) ignorent la proximité des cases entre elles : un décalage d'une seule teinte les déclare maximalement différentes. On veut une mesure qui *connaisse la géométrie des cases* — où déplacer de la masse vers une case voisine coûte peu, vers une case lointaine coûte cher.
@@ -380,7 +400,7 @@ Canvas : `Contour A` + `Contour B` → `Hausdorff Distance` → `Inspector`. Le 
 
 // ============================================================
 
-== chaque mesure cache une hypothèse
+== Chaque mesure cache une hypothèse
 
 Le fil du chapitre se déroule d'une mesure à l'autre :
 
@@ -398,5 +418,112 @@ Il n'existe pas de distance universellement meilleure. L'EMD, qui connaît la g�
 Un descripteur (chapitre 1) garde une chose et en jette une autre ; un moment (chapitre 2) paie chaque détail supplémentaire en fragilité ; une distance déclare ce qui mérite d'être appelé proche. Le chapitre 4 prolongera la question sur les métriques de segmentation, où l'on verra qu'aucune mesure unique ne capture à elle seule la qualité d'un résultat.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 3
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Choisir la bonne distance pour comparer deux couleurs
+
+#figtodo("ex_ch3_nuancier", [Nuancier de peinture : une couleur de référence au centre, entourée de huit écha...])
+
+
+*Ce que vous voyez.* Une couleur de référence et ses voisines. La mission : trouver laquelle est « la plus proche », et constater que la réponse change selon la façon de mesurer l'écart.
+
+*Pipeline VNStudio*
+`Image Source` → `Color Distance` → `Colormap` → `Output Display`
+
+Le nœud calcule la distance de chaque pixel à la couleur de référence, au choix en mode L1 (somme des écarts), L2 (distance directe) ou L∞ (plus grand écart sur un canal).
+
+
+
+
+*Questions*
+
+
++ En mode L2, quelle teinte du nuancier ressort comme la plus proche de la référence ? Repérez-la sur la carte de distance.
+
++ Basculez en mode L∞. La couleur jugée la plus proche change-t-elle ? Pourquoi ce mode ne regarde-t-il que le canal qui s'écarte le plus, en ignorant les autres ?
+
++ Prenez une teinte qui diffère un peu sur les trois canaux et une autre qui diffère beaucoup sur un seul. Selon le mode, laquelle est déclarée la plus proche ? Pour assortir une retouche de peinture, quel mode vous semble le plus juste ?
+
++ *Défi.* Réglez le mode et le seuil pour qu'une chaîne de contrôle qualité accepte les échantillons « assez proches » de la référence et rejette les autres. Combien d'échantillons passent ? Le résultat change-t-il selon le mode de distance choisi ?
+
+
+
+=== Exercice 2 · Repérer une anomalie discrète sur un fond qui varie
+
+#figtodo("ex_ch3_pelouse", [Pelouse vue du dessus : fond vert dont la teinte varie naturellement, quelques p...])
+
+
+*Ce que vous voyez.* Un fond dont la couleur varie beaucoup tout seul. L'intrus à trouver (la fleur) est petit ; la terre, plus étendue, n'est pas vraiment une anomalie. La mission : détecter ce qui sort vraiment de l'ordinaire.
+
+*Pipeline VNStudio*
+`Image Source` → `Color Space` (RGB → HSV) → `Anomaly Distance` → `Colormap` → `Output Display`
+
+Le nœud apprend la couleur « normale » sur une zone de pelouse que vous sélectionnez, puis allume chaque pixel selon son étrangeté en tenant compte de la façon dont la pelouse varie.
+
+
+
+
+*Questions*
+
+
++ Sélectionnez une zone de pelouse comme référence, puis lancez le calcul. Qu'est-ce qui s'allume le plus fort sur la carte : la fleur violette ou la terre brune ?
+
++ Branchez à la place une simple distance de couleur ordinaire (mode L2 du nœud précédent). La terre brune ressort-elle maintenant à tort comme une anomalie ? Pourquoi tenir compte de la variation naturelle du fond change le verdict ?
+
++ Agrandissez la zone de référence pour qu'elle inclue un peu de terre. La fleur ressort-elle toujours autant ? Qu'est-ce que cela vous dit sur l'importance de bien choisir la zone « normale » ?
+
++ *Défi.* Réglez le seuil pour ne marquer que la fleur, sans aucune fausse alarme sur la pelouse ou la terre. Existe-t-il un réglage parfait, ou faut-il accepter un compromis ? Ajoutez une deuxième petite fleur et vérifiez qu'elle est aussi détectée.
+
+
+
+=== Exercice 3 · Distinguer une variation de lot d'un vrai changement de produit
+
+#figtodo("ex_ch3_cereales", [Trois boîtes de céréales côte à côte : deux de la même marque mais de lots diffé...])
+
+
+*Ce que vous voyez.* Deux produits presque identiques (simple variation d'impression) et un produit vraiment différent. La mission : régler une comparaison qui tolère la variation de lot mais détecte le vrai changement.
+
+*Pipeline VNStudio*
+`Image Source` → `Color Space` (→ canal L de Lab) → `Histogram` → `Histogram Compare` → `Output Display`
+
+Le nœud compare les histogrammes deux à deux et affiche leur écart, au choix avec une mesure « case par case » (χ²) ou une mesure « de glissement » (Wasserstein, sensible au décalage d'ensemble).
+
+
+
+
+*Questions*
+
+
++ Comparez les deux boîtes de la même marque. La mesure de glissement les juge-t-elle proches ? La mesure case par case est-elle d'accord, ou les déclare-t-elle très différentes à cause du léger décalage de luminosité ?
+
++ Comparez maintenant une boîte de la marque avec celle du concurrent. Les deux mesures s'accordent-elles cette fois sur une grande différence ?
+
++ Éclaircissez progressivement une boîte (réglez son exposition). Suivez les deux écarts. Lequel grimpe doucement avec le décalage, lequel s'emballe dès le premier glissement ? Lequel reflète mieux « c'est le même produit, juste un autre lot » ?
+
++ *Défi.* Réglez la comparaison et un seuil pour qu'un contrôle qualité accepte les variations de lot et n'alerte que sur un vrai changement de produit. Quelle mesure choisissez-vous ? Testez sur les trois boîtes et vérifiez qu'une seule alerte se déclenche.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

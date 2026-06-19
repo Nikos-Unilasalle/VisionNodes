@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 843 254" width="843" height="254" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
 <rect x="-30" y="-56" width="843" height="254" fill="#ffffff"/>
-<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 15.2 — IoU plat à 0, GIoU qui guide vers la cible</text>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation — IoU plat à 0, GIoU qui guide vers la cible</text>
 <path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M368.0,53.0 C394.0,53.0 394.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M368.0,53.0 C394.0,53.0 394.0,119.0 420.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>

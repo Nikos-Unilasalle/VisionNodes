@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 622.00 258.00" width="622.00" height="258.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
 <rect x="-28.00" y="-54.00" width="622.00" height="258.00" fill="#ffffff"/>
-<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 11.1 — érosion : l&#x27;élément structurant doit tenir entier dans l&#x27;objet</text>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation — érosion : l&#x27;élément structurant doit tenir entier dans l&#x27;objet</text>
 <path d="M150.00,42.00 C179.00,42.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M358.00,42.00 C387.00,42.00 387.00,42.00 416.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <rect x="0.00" y="2.00" width="150" height="144" rx="9" fill="#fbd7e3"/>

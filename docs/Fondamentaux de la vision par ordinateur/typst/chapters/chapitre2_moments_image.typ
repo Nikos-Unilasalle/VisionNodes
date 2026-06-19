@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Les moments d'image], toc: false)[
@@ -125,7 +145,7 @@ Dans votre canvas :
 
 Le nœud `Image Moments` calcule en continu l'ensemble des moments bruts et centrés d'après les formules ci-dessus. Le nœud de conversion `Grayscale` placé en amont garantit que les images couleur sont correctement projetées sur un seul canal avant le calcul.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger une image contenant deux disques blancs distincts et identiques sur fond noir. En connectant cette image au nœud `Image Moments`, le lecteur constate dans l'inspecteur que le centroïde calculé se positionne au milieu du vide séparant les deux disques, là où il n'y a aucun pixel d'objet. Cela illustre de façon flagrante comment l'hypothèse tacite d'une seule silhouette connexe fait échouer la localisation géométrique de l'objet réel dès que les composants se séparent dans l'image.
+*Exercice de dépannage :* L'exercice consiste à charger une image contenant deux disques blancs distincts et identiques sur fond noir. En connectant cette image au nœud `Image Moments`, le lecteur constate dans l'inspecteur que le centroïde calculé se positionne au milieu du vide séparant les deux disques, là où il n'y a aucun pixel d'objet. Cela illustre de façon flagrante comment l'hypothèse tacite d'une seule silhouette connexe fait échouer la localisation géométrique de l'objet réel dès que les composants se séparent dans l'image.
 
 ---
 ]
@@ -176,8 +196,6 @@ Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. L'i
 
 #subtitle[Mesurer les écarts au centroïde, pas au coin de l'image]
 
-#figfull("/figures/fig_ch2_obs2_mu30_asymmetry.pdf")
-
 === L'intention
 Les moments bruts mélangent deux choses : la forme de l'objet et l'endroit où il se trouve dans l'image. On veut ne garder que la forme, pour qu'un objet déplacé reste identique à lui-même.
 
@@ -213,6 +231,9 @@ Le signe de μ₁₁ se lit comme une tendance : négatif, il signifie que lorsq
 ]
 
 === Les moments d'ordre 3 mesurent l'asymétrie
+
+#figcap("/figures/fig_ch2_obs2_mu30_asymmetry.pdf", [Observation — μ₃₀ change de signe, pas de magnitude (asymétrie)])
+
 À l'ordre 2, les écarts au centroïde sont élevés au carré : un pixel à gauche et un pixel à droite contribuent pareil, car le carré efface le signe (un nombre négatif au carré devient positif). À l'ordre 3, le cube *conserve le signe* : les deux côtés ne se compensent plus, et le moment mesure de quel côté la masse penche.
 
 ```
@@ -279,7 +300,7 @@ Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les
 
 #figfull("/illustrations/chap2.5.png")
 
-#figfull("/figures/fig_ch2_obs3_orientation.pdf")
+#figcap("/figures/fig_ch2_obs3_orientation.pdf", [Observation — l'orientation est instable sur une forme isotrope])
 
 === L'intention
 On veut connaître l'axe le long duquel la forme s'allonge — pour redresser un caractère, aligner une empreinte, normaliser la pose d'une cellule avant de la classer.
@@ -327,7 +348,7 @@ Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`.
 
 #figfull("/illustrations/chap2.6.png")
 
-#figfull("/figures/fig_ch2_obs1_ellipse_overflow.pdf")
+#figcap("/figures/fig_ch2_obs1_ellipse_overflow.pdf", [Observation — l'ellipse équivalente déborde de l'objet])
 
 === L'intention
 On cherche le résumé le plus dépouillé d'une silhouette : une seule ellipse qui répartit sa masse comme la forme réelle — même centre, même orientation, même façon de s'étaler.
@@ -458,7 +479,7 @@ Canvas : `Image Source` → `Background Subtract` → `Image Moments (weighted)`
 
 // ============================================================
 
-== chaque détail se paie en fragilité
+== Chaque détail se paie en fragilité
 
 Les moments héritent de toutes les erreurs de segmentation, mais pas au même degré. Chaque montée en ordre élève les écarts au centroïde à une puissance de plus : les pixels du bord — précisément ceux que la segmentation place mal — pèsent de plus en plus lourd. D'où l'échelle de fragilité du chapitre :
 
@@ -474,5 +495,112 @@ Vous connaissez peut-être cette hiérarchie sous une autre forme : en statistiq
 Le chapitre 1 montrait qu'un descripteur garde une chose et en jette une autre ; les moments ajoutent que chaque supplément de détail se paie en fragilité. Le chapitre 6 retrouvera presque mot pour mot cet échange, quand dériver une image — l'analogue continu de la montée en ordre — amplifiera le bruit de la même manière.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 2
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Localiser le centre d'un panneau pour le suivre
+
+#figtodo("ex_ch2_panneaux", [Plaque de signalisation routière vue de face sur fond uni : un panneau triangula...])
+
+
+*Ce que vous voyez.* Trois formes géométriques simples, bien contrastées sur fond blanc. La mission : trouver le centre exact de chacune, comme le ferait un système d'aide à la conduite.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+
+Le nœud `Image Moments` marque le centre de gravité de chaque panneau et affiche son aire dans l'inspecteur.
+
+
+
+
+*Questions*
+
+
++ Pour chaque panneau, lisez l'aire et la position du centre. Le centre tombe-t-il bien au milieu visuel de la forme ? Comparez l'aire des trois panneaux.
+
++ Déplacez un panneau vers la droite dans l'image source. Sa position de centre change-t-elle ? Son aire change-t-elle ? Qu'est-ce que cela implique pour suivre un panneau qui se déplace d'image en image ?
+
++ Éloignez la « caméra » (réduisez l'image). L'aire diminue-t-elle ? Le centre reste-t-il au bon endroit ? Lequel des deux est fiable pour reconnaître un panneau, lequel dépend de la distance ?
+
++ *Défi.* Rapprochez deux panneaux jusqu'à ce qu'ils se touchent. Le nœud les voit-il comme un seul objet (un seul centre) ou deux ? Réglez le seuillage pour les re-séparer et retrouver deux centres distincts.
+
+
+
+=== Exercice 2 · Mesurer l'inclinaison de cristaux par l'ellipse équivalente
+
+#figtodo("ex_ch2_cristaux_sel", [Vue microscopique de cristaux de sel gemme : cubes parfaits vus de face apparais...])
+
+
+*Ce que vous voyez.* Des cristaux dont la face visible va du carré parfait au losange étiré selon leur inclinaison. La mission : mesurer cette inclinaison automatiquement.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+
+Activez l'affichage de l'ellipse équivalente : le nœud dessine sur chaque cristal une ellipse qui épouse son allongement et son orientation.
+
+
+
+
+*Questions*
+
+
++ Sur un cristal vu de face (carré), à quoi ressemble l'ellipse dessinée : un cercle ou une ellipse étirée ? Et sur un cristal incliné ?
+
++ Le nœud affiche l'angle d'orientation de chaque ellipse. Relevez-le pour trois cristaux d'inclinaisons différentes. L'angle suit-il bien la direction visible de chaque losange ?
+
++ Sur un cristal parfaitement carré, l'orientation devient instable et saute d'une mesure à l'autre. Pourquoi une forme sans direction privilégiée rend-elle l'angle impossible à fixer ?
+
++ *Défi.* Triez les cristaux en deux tas : « vus de face » (ellipse presque ronde) et « inclinés » (ellipse étirée). Quel critère d'allongement de l'ellipse sépare proprement les deux tas ? Combien de cristaux inclinés comptez-vous ?
+
+
+
+=== Exercice 3 · Reconnaître un chiffre manuscrit malgré la taille et l'inclinaison
+
+#figtodo("ex_ch2_chiffres", [Six chiffres arabes manuscrits (1 à 6) tracés à la main sur fond blanc, dans des...])
+
+
+*Ce que vous voyez.* Les mêmes chiffres écrits par la même personne, mais avec des variations de taille et d'inclinaison. La mission : trouver une « empreinte » de forme qui reste la même malgré ces variations.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Output Display`
+
+Le nœud calcule pour chaque chiffre ses sept invariants de Hu, une empreinte numérique de sa forme.
+
+
+
+
+*Questions*
+
+
++ Relevez l'empreinte de Hu d'un même chiffre écrit en deux tailles différentes. Les valeurs restent-elles proches ? Qu'est-ce que cela promet pour reconnaître un chiffre quelle que soit sa taille ?
+
++ Faites pivoter un chiffre de 30° dans l'image source. Son empreinte de Hu change-t-elle beaucoup, ou tient-elle bon ? Comparez avec son aire, qui, elle, n'est pas invariante.
+
++ Comparez les empreintes de deux chiffres différents (par exemple le 1 et le 8). Sont-elles nettement distinctes ? L'empreinte sert-elle bien à les distinguer ?
+
++ *Défi.* Retournez un chiffre comme dans un miroir (un 2 devient un 2 inversé). Son empreinte de Hu bouge-t-elle ? Trouvez lequel des sept nombres réagit au miroir alors que les autres l'ignorent — c'est lui qui distingue une forme de son reflet.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

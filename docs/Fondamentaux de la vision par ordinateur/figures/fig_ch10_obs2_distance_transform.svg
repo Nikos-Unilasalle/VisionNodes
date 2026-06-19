@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 1059.00 232.00" width="1059.00" height="232.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
 <rect x="-28.00" y="-54.00" width="1059.00" height="232.00" fill="#ffffff"/>
-<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation 10.2 — la transformée de distance : chaque pixel connaît son éloignement</text>
+<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation — la transformée de distance : chaque pixel connaît son éloignement</text>
 <path d="M150.00,42.00 C179.00,42.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M358.00,42.00 C387.00,42.00 387.00,42.00 416.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
 <path d="M587.00,42.00 C616.00,42.00 616.00,42.00 645.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>

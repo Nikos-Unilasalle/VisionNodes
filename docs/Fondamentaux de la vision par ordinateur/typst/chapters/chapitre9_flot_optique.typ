@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Le flot optique], toc: false)[
@@ -159,7 +179,7 @@ Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow 
 
 #figfull("/illustrations/chap9.4.png")
 
-#figfull("/figures/fig_ch9_obs2_horn_schunck.pdf")
+#figcap("/figures/fig_ch9_obs2_horn_schunck.pdf", [Observation — Horn-Schunck : α règle le curseur données / régularisation])
 
 === L'intention
 Là où Lucas-Kanade renonce aux zones sans coin, on voudrait un champ de mouvement *partout* — y compris dans les régions uniformes — en propageant l'information depuis les zones fiables.
@@ -210,7 +230,7 @@ Dans votre canvas :
 
 Le nœud `Flow Visualize` traduit les composantes horizontal `u` et vertical `v` du flot optique en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme *Lucas-Kanade Tracker*). Régler le paramètre *Pyramid Levels* sur `0` avec une *Window Size* de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre *Pyramid Levels* à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
+*Exercice de dépannage :* L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme *Lucas-Kanade Tracker*). Régler le paramètre *Pyramid Levels* sur `0` avec une *Window Size* de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre *Pyramid Levels* à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
 
 ---
 ]
@@ -267,12 +287,122 @@ Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow 
 
 // ============================================================
 
-== comprendre une méthode, c'est connaître son pari
+== Comprendre une méthode, c'est connaître son pari
 
 Le flot optique est l'exemple le plus transparent d'un *problème mal posé* : une équation par pixel pour deux inconnues par pixel. La formule est impitoyable, un contre deux, et aucun algorithme ne peut extraire deux inconnues d'une seule équation sans ajouter de l'information extérieure aux données. Cette information, c'est l'*a priori* : une hypothèse sur le monde, formulée avant d'avoir vu les images. Lucas-Kanade dit « le mouvement est localement rigide » ; Horn-Schunck « il varie doucement » ; RAFT « il ressemble à ce que j'ai vu dans des millions de scènes annotées ». Trois paris, et la qualité d'une méthode tient autant à la justesse de son pari qu'à celle de ses calculs.
 
 Le schéma — données insuffisantes + a priori = solution déterminée — court dans tout le livre : un filtre (chapitre 5) est un a priori sur les fréquences du signal, une distance (chapitre 3) un a priori sur ce qui se ressemble, et la segmentation par coupe de graphe (chapitre 12) minimisera la même énergie « coller aux données + rester régulier » que Horn-Schunck. Le choix de l'a priori décide de ce que la méthode réussit et de ce qu'elle rate : un lissage global échoue aux frontières d'objets (un bras devant un mur), une rigidité locale échoue sur les déformations (un drapeau qui ondule), un a priori appris sur des scènes intérieures échoue sur des images satellite. Le chapitre 12 reprendra exactement cette énergie, appliquée cette fois à l'appartenance d'un pixel à une région.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 9
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Suivre une barre qui glisse, et voir où le suivi échoue
+
+#figtodo("ex_ch9_barre_mouvement", [Barre verticale noire se déplaçant horizontalement sur fond gris : deux images s...])
+
+
+*Ce que vous voyez.* Un mouvement simple et connu. La mission : voir où le suivi de mouvement réussit et où il se trompe, pour comprendre ses limites avant de lui faire confiance.
+
+*Pipeline VNStudio*
+`Image Source (t)` + `Image Source (t+1)` → `Optical Flow LK` *(à créer)* → `Draw Overlay` → `Output Display`
+
+Le nœud pose des flèches de mouvement sur les points qu'il sait suivre.
+
+
+
+
+*Questions*
+
+
++ Sur le bord latéral de la barre, la flèche pointe-t-elle bien vers la droite ? Sur le bord supérieur (horizontal), les flèches sont-elles cohérentes ou parties dans tous les sens ?
+
++ En regardant uniquement le bord supérieur horizontal de la barre, pourriez-vous dire qu'elle va vers la droite ? Pourquoi un bord ne renseigne-t-il que sur le mouvement perpendiculaire à lui-même ?
+
++ Faites glisser la barre en diagonale (45°). Les flèches sur le coin de la barre s'orientent-elles correctement ? Les coins suivent-ils mieux le vrai mouvement que les bords plats ?
+
++ *Défi.* Faites glisser deux barres en sens opposés dans la même image. Le suivi distingue-t-il les deux mouvements ? Qu'est-ce qui pourrait lui faire confondre une barre avec l'autre, et comment l'éviter ?
+
+
+
+=== Exercice 2 · Doser le lissage du mouvement sur une personne qui marche
+
+#figtodo("ex_ch9_personne_couloir", [Deux images successives d'une personne marchant dans un couloir : torse et jambe...])
+
+
+*Ce que vous voyez.* Un sujet en mouvement avec des zones faciles à suivre (texturées) et des zones ambiguës (chemise unie). La mission : régler un curseur qui « remplit » le mouvement des zones sans détail à partir des zones voisines.
+
+*Pipeline VNStudio*
+`Image Source (t)` + `Image Source (t+1)` → `Optical Flow Dense` *(à créer)* → `Colormap` (teinte = direction, intensité = vitesse) → `Output Display`
+
+Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui propage l'information des zones nettes vers les zones vides.
+
+
+
+
+*Questions*
+
+
++ Réglez le lissage au minimum. Sur la chemise unie, le mouvement est-il cohérent ou bruité ? Pourquoi une zone sans détail ne sait-elle pas, seule, dans quel sens elle bouge ?
+
++ Poussez le lissage au maximum. Le champ devient régulier, mais que se passe-t-il à la frontière du corps ? Le mouvement « bave »-t-il sur le fond immobile ?
+
++ À lissage moyen, comparez le mouvement mesuré sur les cheveux et sur la chemise. Si la chemise paraît immobile alors que la personne marche, quel problème cela pose pour découper le sujet par son mouvement ?
+
++ *Défi.* Trouvez le réglage de lissage qui donne le meilleur compromis : un corps qui bouge d'un seul tenant, des bords nets, pas de débordement sur le fond. Décrivez ce que vous gagnez et perdez en tournant le curseur dans un sens ou dans l'autre.
+
+
+
+=== Exercice 3 · Choisir entre suivi de points et carte de mouvement complète
+
+#figtodo("ex_ch9_echecs", [Vue de dessus d'une partie d'échecs : la main du joueur déplace une pièce. Le pl...])
+
+
+*Ce que vous voyez.* Une scène mêlant zones très texturées (cases, pièces) et zones uniformes (cases noires lisses). La mission : comparer deux manières de mesurer le mouvement et choisir selon le besoin.
+
+*Pipeline VNStudio*
+`Image Source (t)` + `Image Source (t+1)` → `Split Half` :
+— gauche : `Optical Flow LK` *(à créer)* → flèches
+— droite : `Optical Flow Dense` *(à créer)* → carte colorée
+→ `Output Display`
+
+À gauche, un suivi de points choisis ; à droite, un champ de mouvement partout.
+
+
+
+
+*Questions*
+
+
++ Sur les coins du damier, le suivi de points donne-t-il des flèches précises ? Pose-t-il des flèches sur les cases noires uniformes ? Pourquoi évite-t-il ces zones ?
+
++ Sur la carte dense, les cases noires reçoivent-elles quand même un mouvement ? Est-il fiable, ou deviné à partir des voisins ?
+
++ La main bouge vite. Le mouvement mesuré est-il le même partout sur la main, ou plus fort sur les doigts texturés que sur la paume lisse ?
+
++ *Défi.* Pour savoir quelle pièce a été déplacée et vers quelle case, lequel des deux outils est le plus adapté ? Esquissez un pipeline qui repère automatiquement la case de départ et la case d'arrivée du coup joué.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

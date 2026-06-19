@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Couleur et photométrie], toc: false)[
@@ -137,7 +157,7 @@ Canvas : `Image Source` → `Color Convert (HSV)` → `Threshold by Hue` → `Ou
 
 #subtitle[Une carte à équidistance : un même pas paraît un même écart, partout]
 
-#figfull("/figures/fig_ch7_obs2_deltaE.pdf")
+#figcap("/figures/fig_ch7_obs2_deltaE.pdf", [Observation — ΔE en Lab : même écart RGB, perception différente])
 
 === L'intention
 Dans RGB ou HSV, une même différence numérique peut correspondre à des écarts perçus très inégaux : l'œil distingue finement les verts, beaucoup moins les bleus saturés. On veut un espace où *des différences numériques égales correspondent à des différences perçues égales* — pour _mesurer_ un écart de couleur, pas pour l'afficher.
@@ -262,7 +282,7 @@ Dans votre canvas :
 
 Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les couleurs) et expose les curseurs `Contrast Limit` (plafond de contraste) et `Grid Size` (taille de grille) dans l'inspecteur. En réglant ces paramètres, vous pouvez observer l'équilibre entre la visibilité des détails dans les ombres et l'apparition du bruit de fond.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger une image couleur représentant un objet rouge sous un éclairage variable (mi-ombre, mi-soleil). Tenter d'isoler cet objet en appliquant un seuillage binaire direct sur le canal R (Rouge) dans le format BGR d'origine. Le lecteur constate que le seuil capture le sol clair ensoleillé mais rate l'objet à l'ombre. Remplacer ce seuil en convertissant d'abord l'image en HSV à l'aide d'un nœud *Color Space Conversion*, puis en appliquant le seuillage sur le canal H (Teinte). Le lecteur observe que l'objet est alors parfaitement isolé, illustrant l'importance de décorréler la couleur de la luminosité pour résister aux variations d'éclairage.
+*Exercice de dépannage :* L'exercice consiste à charger une image couleur représentant un objet rouge sous un éclairage variable (mi-ombre, mi-soleil). Tenter d'isoler cet objet en appliquant un seuillage binaire direct sur le canal R (Rouge) dans le format BGR d'origine. Le lecteur constate que le seuil capture le sol clair ensoleillé mais rate l'objet à l'ombre. Remplacer ce seuil en convertissant d'abord l'image en HSV à l'aide d'un nœud *Color Space Conversion*, puis en appliquant le seuillage sur le canal H (Teinte). Le lecteur observe que l'objet est alors parfaitement isolé, illustrant l'importance de décorréler la couleur de la luminosité pour résister aux variations d'éclairage.
 
 ---
 ]
@@ -273,9 +293,9 @@ Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les c
 
 #subtitle[Le monde est gris en moyenne — quand il l'est vraiment]
 
-#figfull("/figures/fig_ch7_obs1_gamma.pdf")
+#figcap("/figures/fig_ch7_obs1_gamma.pdf", [Observation — correction gamma : profil perceptuel vs linéaire])
 
-#figfull("/figures/fig_ch7_obs3_white_balance.pdf")
+#figcap("/figures/fig_ch7_obs3_white_balance.pdf", [Observation — balance des blancs : choisir ce qu'on déclare « blanc »])
 
 === L'intention
 Deux besoins distincts. D'abord comprendre le *gamma*, cette courbe de compression évoquée plusieurs fois. Ensuite corriger une dominante de couleur due à l'éclairage, pour retrouver des teintes neutres.
@@ -343,7 +363,7 @@ Canvas : `Image Source` → `White Balance (Gray World)` → `Output Display`. L
 
 // ============================================================
 
-== savoir, à chaque étape, dans quel espace on se trouve
+== Savoir, à chaque étape, dans quel espace on se trouve
 
 Chaque espace colorimétrique n'est pas une vérité mais un *contrat* : il définit ce qui compte et ce qui est ignoré. RGB linéaire suppose que ce qui compte est la physique de la lumière. HSV suppose que c'est la teinte, séparée de la luminosité. CIELAB suppose que c'est la différence telle que l'œil la perçoit, non telle que le capteur la mesure. CMYK suppose que le support est de l'encre sur du papier, pas de la lumière sur un écran.
 
@@ -352,5 +372,115 @@ Choisir un espace pour une opération, c'est donc formuler une hypothèse sur la
 Le chapitre 3 posait la même question pour les distances, le chapitre 10 la reprendra en termes de bases — où changer de base, c'est choisir où le problème devient simple. La couleur en est l'exemple le plus quotidien : le même pixel, dans deux espaces différents, est un objet de nature entièrement différente. La rigueur photométrique ne consiste pas à connaître toutes les formules de conversion, mais à savoir, à chaque étape d'un pipeline, dans quel espace l'on se trouve et ce qu'il suppose.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 7
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Redresser un dégradé qui ment à l'œil
+
+#figtodo("ex_ch7_degrade_gris", [Dégradé de gris imprimé puis photographié : dix bandes censées être régulièremen...])
+
+
+*Ce que vous voyez.* Un dégradé qui semble irrégulier alors qu'il a été conçu régulier. La mission : comprendre et corriger l'encodage gamma qui déforme les valeurs sombres dans tout fichier d'image.
+
+*Pipeline VNStudio*
+`Image Source` → `Split Half` :
+— gauche : image brute → `Line Profile`
+— droite : `Gamma Correction` *(à créer)* → `Line Profile`
+→ `Output Display`
+
+Le profil de ligne trace la luminosité le long du dégradé ; comparez avant et après correction.
+
+
+
+
+*Questions*
+
+
++ Tracez le profil sur les deux moitiés. Lequel forme une belle droite régulière, lequel est courbé ? Le côté corrigé colle-t-il mieux à l'idée d'un dégradé uniforme ?
+
++ La correction relève surtout les tons sombres. Sur le profil, où l'écart entre brut et corrigé est-il le plus grand : dans les noirs ou dans les blancs ? Pourquoi l'œil et le fichier « tassent » les valeurs sombres ?
+
++ Floutez l'image avant correction, puis après correction, et comparez les deux résultats. Sont-ils identiques ? Lequel ressemble à un vrai flou d'objectif ?
+
++ *Défi.* Sur une photo d'objet blanc sous lampe orangée, faites une balance des blancs avant correction, puis après. Dans quel cas le blanc redevient-il vraiment neutre ? Concluez sur l'ordre correct des opérations couleur.
+
+
+
+=== Exercice 2 · Trier des fruits par couleur malgré l'éclairage inégal
+
+#figtodo("ex_ch7_fruits", [Corbeille de fruits mélangés (pommes rouges, citrons jaunes, oranges), un côté e...])
+
+
+*Ce que vous voyez.* Des fruits de teintes distinctes mais d'éclairages variables. La mission : les trier par couleur sans qu'une pomme à l'ombre soit confondue avec une orange au soleil.
+
+*Pipeline VNStudio*
+`Image Source` → `Color Space` (RGB → HSV) → `Channel Split` → `Output Display`
+
+En HSV, la teinte est séparée de la luminosité : un objet garde sa teinte qu'il soit éclairé ou ombré.
+
+
+
+
+*Questions*
+
+
++ Sur le canal de teinte, une pomme rouge au soleil et une pomme rouge à l'ombre ont-elles la même valeur ? Comparez avec le canal rouge brut : lequel reste stable malgré l'éclairage ?
+
++ Isolez le rouge en seuillant la seule teinte. Les pommes à l'ombre restent-elles dans le masque ? Combien auraient été perdues avec un tri sur les couleurs brutes ?
+
++ Montez un tri à trois sorties : pommes rouges, oranges, citrons jaunes, chacun sur sa plage de teinte. Combien de fruits de chaque type comptez-vous ? Un fruit tombe-t-il dans la mauvaise catégorie ?
+
++ *Défi.* Sur un reflet blanc brillant (une pomme cirée), la teinte devient instable et saute. Ajoutez une condition sur la saturation pour ignorer ces reflets ternes. Le tri redevient-il propre ? Pourquoi une couleur délavée n'a-t-elle plus de teinte fiable ?
+
+
+
+=== Exercice 3 · Mesurer une différence de couleur comme l'œil la perçoit
+
+#figtodo("ex_ch7_peinture_bleus", [Deux échantillons de peinture bleu roi côte à côte : l'un légèrement plus chaud,...])
+
+
+*Ce que vous voyez.* Deux couleurs que les valeurs brutes jugent presque identiques mais que l'œil distingue sans peine. La mission : mesurer la différence de couleur d'une façon fidèle à la perception, pour un contrôle qualité de teinte.
+
+*Pipeline VNStudio*
+`Image Source` → `Color Space` (RGB → Lab) → `Color Distance` → `Output Display`
+
+L'espace Lab est construit pour que les écarts de couleur collent à la perception ; le nœud y mesure la distance perceptuelle entre deux zones.
+
+
+
+
+*Questions*
+
+
++ Mesurez l'écart entre les deux bleus avec les couleurs brutes, puis en Lab. Laquelle des deux mesures reflète mieux la différence que vous voyez à l'œil ?
+
++ Comparez deux autres paires : un bleu très foncé contre un noir (à peine distinguables) et un orange vif contre un rouge (franchement différents). Dans quel cas les deux mesures s'accordent-elles, dans quel cas se contredisent-elles ?
+
++ La différence entre les deux bleus est-elle surtout une affaire de clair/foncé, ou de chaud/froid ? Le nœud peut isoler chaque aspect : lequel domine ici ?
+
++ *Défi.* Réglez un seuil de différence perceptuelle pour qu'une chaîne de contrôle accepte un échantillon « assez proche » de la teinte cible et rejette les autres. Testez sur plusieurs échantillons. Le seuil basé sur la perception est-il plus fiable que celui sur les couleurs brutes ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]
