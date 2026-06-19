@@ -1803,6 +1803,18 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
     [ports]
   );
 
+  // Chart series keys: union of declared ports AND any live numeric/array data the engine
+  // emits for this node. Decoupling the chart from data.ports keeps it working for legacy
+  // scenes (saved before dynamic ports) and any time ports drift out of sync with the data.
+  const seriesKeys = React.useMemo(() => {
+    const keys = new Set<string>(portKeys);
+    for (const k of Object.keys(nd || {})) {
+      const v = (nd as any)[k];
+      if (typeof v === 'number' || Array.isArray(v)) keys.add(k);
+    }
+    return Array.from(keys);
+  }, [nd, portKeys]);
+
   const [histories, setHistories] = React.useState<Record<string, number[]>>({});
 
   React.useEffect(() => {
@@ -1810,7 +1822,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
     setHistories(prev => {
       const next: Record<string, number[]> = {};
       let changed = false;
-      for (const k of portKeys) {
+      for (const k of seriesKeys) {
         const v = (nd as any)[k];
         const cur = prev[k] ?? [];
         if (v === undefined || v === null) { next[k] = cur; continue; }
@@ -1825,24 +1837,24 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
         } else { next[k] = cur; }
       }
       const prevKeys = Object.keys(prev);
-      return (changed || prevKeys.length !== portKeys.length || prevKeys.some(k => !portKeys.includes(k))) ? next : prev;
+      return (changed || prevKeys.length !== seriesKeys.length || prevKeys.some(k => !seriesKeys.includes(k))) ? next : prev;
     });
-  }, [nd, bufSize, frozen, portKeys]);
+  }, [nd, bufSize, frozen, seriesKeys]);
 
   const chartData = React.useMemo(() => {
-    const maxLen = Math.max(0, ...portKeys.map(k => histories[k]?.length ?? 0));
+    const maxLen = Math.max(0, ...seriesKeys.map(k => histories[k]?.length ?? 0));
     if (maxLen === 0) return [];
     return Array.from({ length: maxLen }, (_, i) => {
       const pt: any = { t: i };
-      for (const k of portKeys) {
+      for (const k of seriesKeys) {
         const arr = histories[k];
         if (arr && i < arr.length) pt[k] = arr[i];
       }
       return pt;
     });
-  }, [histories, portKeys]);
+  }, [histories, seriesKeys]);
 
-  const activeSeries = portKeys.filter(k => (histories[k]?.length ?? 0) > 0);
+  const activeSeries = seriesKeys.filter(k => (histories[k]?.length ?? 0) > 0);
   const minY = data.params?.min_y;
   const maxY = data.params?.max_y;
   const yDomain: [any, any] = (minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : ['auto', 'auto'];
@@ -1900,7 +1912,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
         <div className="ml-auto flex items-center gap-2">
           {activeSeries.map(k => (
             <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
-                 style={{ backgroundColor: SERIES_COLORS[portKeys.indexOf(k) % SERIES_COLORS.length] }} />
+                 style={{ backgroundColor: SERIES_COLORS[seriesKeys.indexOf(k) % SERIES_COLORS.length] }} />
           ))}
           <button
             className="nodrag pointer-events-auto ml-1 transition-opacity hover:opacity-100"
@@ -1925,7 +1937,7 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
                 <YAxis hide domain={yDomain} />
                 {activeSeries.map(k => (
                   <Line key={k} type="monotone" dataKey={k}
-                    stroke={SERIES_COLORS[portKeys.indexOf(k) % SERIES_COLORS.length]} strokeWidth={1.5}
+                    stroke={SERIES_COLORS[seriesKeys.indexOf(k) % SERIES_COLORS.length]} strokeWidth={1.5}
                     dot={false} isAnimationActive={false} />
                 ))}
               </LineChart>
