@@ -89,7 +89,7 @@ Le seul réglage qui compte est σ (« sigma »), la largeur de la cloche : il f
 
 Ce n'est pas un choix esthétique. La gaussienne est l'**unique** cloche qui réunit plusieurs bonnes propriétés à la fois. D'abord, elle **ne crée jamais de structure** : élargir le flou ne fait jamais apparaître de nouveau détail qui n'existait pas — un moyenneur en boîte, lui, peut créer de fausses ondulations. C'est le fondement de la « pyramide d'échelle », cette suite de versions de plus en plus floues d'une image, sur laquelle on cherche les structures à différentes tailles. Ensuite, elle est **séparable** (§5.1), donc rapide. Enfin, elle a la propriété d'**auto-similarité** : flouter deux fois de suite équivaut à flouter une seule fois un peu plus fort, ce qui rend ces pyramides prévisibles et stables. Ces qualités font de la gaussienne le filtre de lissage de référence.
 
-### Exemple chiffré
+### Exemple
 
 Un petit noyau gaussien 3×3, avec les coefficients entiers couramment utilisés :
 
@@ -122,7 +122,7 @@ Dans votre canvas :
 
 Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à appliquer un flou avec un **Kernel Size** très large (ex. : 21x21) sur une image claire, en réglant le paramètre **Border Type** sur **Constant (0)** (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
+**Exercice de dépannage :** L'exercice consiste à appliquer un flou avec un **Kernel Size** très large (ex. : 21x21) sur une image claire, en réglant le paramètre **Border Type** sur **Constant (0)** (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
 
 ---
 
@@ -151,7 +151,7 @@ Le **DoG** (*Difference of Gaussians*, différence de deux gaussiennes) approxim
 
 C'est la brique du détecteur de points SIFT : en calculant la DoG à plusieurs σ, on repère des blobs **et leur taille** — le même point d'intérêt se retrouve dans une image zoomée ou tournée. En microscopie, cela mesure automatiquement le diamètre de centaines de vésicules en une passe. ∎
 
-### Exemple chiffré
+### Exemple
 
 Au centre exact d'un blob clair sur fond sombre, la formule du LoG se simplifie : le terme entre parenthèses devient −2σ², et la réponse vaut −2/σ² × G(0,0), **fortement négative**. La courbure de l'intensité y est maximale. Chercher les minima (les valeurs les plus négatives) de la réponse localise les centres de blobs clairs ; pour des blobs sombres, on cherche les maxima.
 
@@ -183,7 +183,7 @@ Le détail importe peu ; l'essentiel est qu'il y a **deux cloches gaussiennes mu
 
 Deux réglages indépendants. σs (spatial) fixe la taille du voisinage ; σr (intensité) fixe la tolérance aux différences de teinte. Un petit σr ne moyenne que des teintes presque identiques (contours bien gardés, lissage faible) ; un grand σr rend le filtre indifférent aux différences et le ramène à un simple gaussien. ∎
 
-### Exemple chiffré
+### Exemple
 
 Pixel p sur un contour, d'intensité 200. À gauche, voisins à 195 (même côté) ; à droite, voisins à 50 (autre côté). Avec une tolérance σr = 30 :
 
@@ -228,7 +228,7 @@ Le premier facteur est l'enveloppe (la fenêtre gaussienne), le second l'ondulat
 
 Un seul Gabor ne capte qu'une fréquence et une orientation. En pratique on construit un **banc** : plusieurs longueurs d'onde × plusieurs orientations (souvent 0°, 45°, 90°, 135°). La réponse de l'image à tout le banc forme une signature de texture riche. C'est ainsi qu'on reconnaît un iris dans un passeport biométrique, ou qu'on distingue les types de couvert végétal sur une image satellite.
 
-### Exemple chiffré
+### Exemple
 
 Pour détecter des stries verticales espacées de 8 pixels : on règle la longueur d'onde sur 8 et l'orientation pour que l'ondulation varie horizontalement (ce qui détecte des stries verticales). Une zone à cette périodicité exacte produit une réponse maximale ; une zone lisse ou striée autrement, une réponse quasi nulle. En balayant les orientations, on obtient en chaque pixel l'orientation dominante de la texture.
 

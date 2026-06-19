@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Mesure de qualité], toc: false)[
@@ -51,6 +70,8 @@ La qualité d'image recoud des outils dispersés dans tout le livre. Le MSE est 
 == Modèles de bruit (Poisson–Gauss) : modéliser la dégradation physique
 
 #subtitle[Compter des photons sous une averse de pluie tout en écoutant le grésillement électrique du capteur]
+
+#figfull("/nvlle illu/replace_the_scientist_with_a_202606191413.jpeg")
 
 On parle du bruit comme d'un voile gris uniforme posé sur l'image. C'est faux deux fois. Le bruit dominant en imagerie n'est pas additif et n'est pas uniforme : il *dépend du signal*, parce qu'il vient pour l'essentiel du comptage des photons eux-mêmes. Une zone claire est, en valeur absolue, plus bruitée qu'une zone sombre. Le fil de la section est là : un modèle de bruit est un a priori sur la façon dont la mesure s'écarte de la vérité, et le débruiteur que l'on choisit ne fait qu'épouser ce modèle. Tout le reste du chapitre mesure des écarts ; ici on dit de quelle nature ils sont.
 
@@ -144,8 +165,6 @@ La MAD est insensible aux quelques contours réels et ne mesure que le fond alé
 
 #figfull("/figures/fig_ch14_obs1_mse_shift.svg")
 
-#figfull("/figures/fig_ch14_obs1_mse_shift.svg")
-
 === L'intention
 On veut le plus simple des verdicts : de combien l'image dégradée s'écarte-t-elle de l'originale ? Un seul nombre, calculé sans rien supposer de qui regarde. On verra que ce « rien supposer » est lui-même une hypothèse — celle d'un observateur qui ne voit que des pixels.
 
@@ -207,7 +226,7 @@ Dans votre canvas :
 
 Le nœud `PSNR` calcule l'erreur quadratique moyenne pixel par pixel. L'inspecteur affiche le MSE et le PSNR en décibels. Expérimenter en décalant l'image d'un seul pixel via un nœud de translation permet d'observer l'effondrement immédiat du PSNR vers 0 dB, illustrant de façon tangible la sensibilité excessive de cette métrique à la structure absolue.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger deux images identiques converties au format virgule flottante normalisée entre \[0.0, 1.0\]. Connecter ces images au nœud `PSNR` et laisser le paramètre *Dynamic Range (MAX)* réglé sur `255` au lieu de `1.0`. Le lecteur constate dans l'inspecteur que la valeur du PSNR s'effondre de près de 48 dB, affichant un score de bruit catastrophique alors que les deux images sont strictement identiques. Cet échec contrôlé démontre l'impact critique du choix de l'échelle de clarté de référence lors du calcul des métriques de bruit.
+*Exercice de dépannage :* L'exercice consiste à charger deux images identiques converties au format virgule flottante normalisée entre \[0.0, 1.0\]. Connecter ces images au nœud `PSNR` et laisser le paramètre *Dynamic Range (MAX)* réglé sur `255` au lieu de `1.0`. Le lecteur constate dans l'inspecteur que la valeur du PSNR s'effondre de près de 48 dB, affichant un score de bruit catastrophique alors que les deux images sont strictement identiques. Cet échec contrôlé démontre l'impact critique du choix de l'échelle de clarté de référence lors du calcul des métriques de bruit.
 
 ---
 ]
@@ -217,8 +236,6 @@ Le nœud `PSNR` calcule l'erreur quadratique moyenne pixel par pixel. L'inspecte
 == SSIM : modéliser l'observateur par luminance, contraste, structure
 
 #subtitle[Comparer trois choses séparément : la clarté, le contraste, et le dessin]
-
-#figfull("/figures/fig_ch14_obs2_ssim.svg")
 
 #figfull("/figures/fig_ch14_obs2_ssim.svg")
 
@@ -320,8 +337,6 @@ Canvas : `Image Source` → `Grayscale` → `Image Entropy` → `Inspector`. Le 
 == Mesures de netteté sans référence : variance du Laplacien, énergie de gradient
 
 #subtitle[Un bord franc devient une pente douce sous le flou — on mesure ce qui reste de raideur]
-
-#figfull("/figures/fig_ch14_obs3_sharpness.svg")
 
 #figfull("/figures/fig_ch14_obs3_sharpness.svg")
 
@@ -440,7 +455,7 @@ _État de l'art :_ le PSNR domine encore les rapports de codecs par tradition, S
 
 // ============================================================
 
-== une métrique de qualité est un observateur déguisé
+== Une métrique de qualité est un observateur déguisé
 
 Le chapitre raconte une seule histoire, déclinée six fois : il n'existe pas de « qualité » dans l'absolu, seulement une qualité _pour un observateur_, et chaque métrique en est un.
 
@@ -460,5 +475,112 @@ D'un bout à l'autre, ce que la métrique pénalise est ce que son observateur p
 C'est le fil du chapitre 3 transposé de la comparaison de vecteurs à celle d'images (« une distance déclare ce qui compte »), et la reprise du chapitre 4 (« aucune métrique unique ne capture tout », d'où l'usage conjoint PSNR + SSIM + LPIPS). Comme un espace colorimétrique encode un usage (chapitre 7) et un filtre un a priori sur le signal (chapitre 5), une métrique de qualité encode un a priori sur qui regarde. Le chapitre 15 prendra ces mesures par l'autre bout : SSIM et LPIPS y deviendront des fonctions de coût qu'un réseau cherche à minimiser.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 14
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Deux dégradations, un même score chiffré, une perception opposée
+
+#figtodo("ex_ch14_portrait_compare", [Trois versions d'un portrait : (A) original net, (B) version grenue couverte de ...])
+
+
+*Ce que vous voyez.* Deux façons d'abîmer une image qui paraissent très différentes à l'œil. La mission : constater qu'une note « pixel à pixel » peut les déclarer équivalentes, et qu'une note « de structure » les départage.
+
+*Pipeline VNStudio*
+`Image Source (A)` + `Image Source (B ou C)` → `SSIM / PSNR` *(à créer)* → `Output Display`
+
+Le nœud affiche deux notes : le PSNR (écart pixel à pixel) et le SSIM (ressemblance de structure), plus une carte qui montre où la structure se dégrade.
+
+
+
+
+*Questions*
+
+
++ Réglez le bruit de B et le flou de C jusqu'à ce que leur PSNR soit identique. À PSNR égal, les deux images vous semblent-elles vraiment de même qualité ?
+
++ Lisez maintenant leur SSIM. Lequel est le plus élevé ? La structure (visage, contours) tient-elle mieux sous le bruit ou sous le flou ?
+
++ Sur la carte de structure de l'image floue, quelles zones s'effondrent le plus : le fond uni ou les cheveux et la peau ? Pourquoi le flou frappe-t-il d'abord les détails fins ?
+
++ *Défi.* Remplacez le bruit de B par quelques pixels « grillés » épars (sel et poivre). Pour un même PSNR, le SSIM juge-t-il cette dégradation pire ou plus douce que le flou ? Quelle note correspond le mieux à votre propre jugement visuel ?
+
+
+
+=== Exercice 2 · Classer une rafale de photos de la plus floue à la plus nette
+
+#figtodo("ex_ch14_serie_nettet", [Série de 6 photos d'un même paysage à mise au point croissante : la 1 très floue...])
+
+
+*Ce que vous voyez.* Une rafale de netteté croissante. La mission : faire trier ces images automatiquement, sans image de référence — exactement ce que fait l'autofocus d'un appareil.
+
+*Pipeline VNStudio*
+`Image Source` → `Focus Metric` → `Output Display`
+
+Le nœud attribue à chaque image un score de netteté, d'autant plus élevé que les détails fins sont présents.
+
+
+
+
+*Questions*
+
+
++ Mesurez le score de netteté des 6 photos. Le classement par score correspond-il à l'ordre visuel du plus flou au plus net ? Y a-t-il une inversion ?
+
++ Le nœud propose plusieurs façons de mesurer la netteté. Essayez-en deux et comparez les classements obtenus. Tombent-ils d'accord, ou une photo change-t-elle de rang ?
+
++ Sur la photo la plus nette, mesurez le score sur trois zones : le feuillage texturé, le ciel uni, l'herbe. Où le score est-il le plus haut ? Qu'est-ce que cela implique si une scène est en partie vide de détails ?
+
++ *Défi.* Servez-vous du score pour bâtir un autofocus : parmi la rafale, lequel choisiriez-vous comme « meilleure prise » ? Floutez ensuite légèrement la gagnante et vérifiez que son score retombe sous celui de la vraie meilleure. Le critère est-il fiable pour décider tout seul ?
+
+
+
+=== Exercice 3 · Reconnaître la signature de deux bruits de capteur
+
+#figtodo("ex_ch14_bruit_compare", [Trois images de la même scène (objet sur fond uni) : (A) propre, (B) bruit de ca...])
+
+
+*Ce que vous voyez.* Deux bruits d'origine physique différente. La mission : reconnaître lequel est lequel rien qu'en observant comment le bruit se répartit selon la luminosité, pour choisir le bon débruitage.
+
+*Pipeline VNStudio*
+`Image Source` → `Noise Profile` → `Output Display`
+
+Le nœud mesure l'intensité du bruit séparément dans les zones sombres et claires, et la trace en fonction de la luminosité.
+
+
+
+
+*Questions*
+
+
++ Sur l'image B, le bruit est-il plus fort dans les zones claires ou sombres ? Sur l'image C, varie-t-il avec la luminosité, ou reste-t-il constant partout ?
+
++ À partir de ces profils, attribuez à chaque image son type de bruit : celui qui « grandit avec la lumière » (capteur) et celui qui « est partout pareil » (amplificateur). Qu'est-ce qui les trahit ?
+
++ Appliquez un filtre médian à chaque image bruitée. Sur laquelle le résultat est-il le plus propre ? Pourquoi le médian excelle-t-il contre les pixels isolés qui sautent dans les zones sombres ?
+
++ *Défi.* Choisissez le débruitage adapté à chaque bruit (médian pour les pixels isolés, lissage doux pour le bruit uniforme). Comparez le résultat à un débruitage unique appliqué aux deux. Connaître la signature du bruit améliore-t-il vraiment le nettoyage ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

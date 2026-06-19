@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Gradients et contours], toc: false)[
@@ -140,7 +160,7 @@ Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` (ou `Scharr Gradien
 
 #subtitle[Lisser, dériver, affiner à un pixel, puis relier ce qui se prolonge]
 
-#figfull("/figures/fig_ch6_obs3_canny_nms.pdf")
+#figcap("/figures/fig_ch6_obs3_canny_nms.pdf", [Observation — suppression des non-maxima : du bord épais au bord d'un pixel])
 
 === L'intention
 On veut des contours qui satisfont trois exigences à la fois : peu de faux contours, des contours bien placés, et un seul pixel de large (pas un ruban épais). Aucun pochoir seul n'y parvient.
@@ -204,7 +224,7 @@ Dans votre canvas :
 
 En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer directement la mécanique de l'hystérésis : augmenter le seuil haut élimine les détails de texture parasites, tandis que diminuer le seuil bas reconnecte les lignes de contours interrompues. Le nœud expose également l'option de calcul automatique par la médiane et l'inspecteur affiche la densité de pixels de contour pour faciliter le réglage.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à inverser les seuils dans le nœud *Canny Edge Detector* en réglant *Low Threshold* sur 150 et *High Threshold* sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
+*Exercice de dépannage :* L'exercice consiste à inverser les seuils dans le nœud *Canny Edge Detector* en réglant *Low Threshold* sur 150 et *High Threshold* sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
 
 ---
 ]
@@ -217,7 +237,7 @@ En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer 
 
 #figfull("/illustrations/chap6.4.png")
 
-#figfull("/figures/fig_ch6_obs1_structure_tensor.pdf")
+#figcap("/figures/fig_ch6_obs1_structure_tensor.pdf", [Observation — le tenseur de structure : coin, bord ou zone plate])
 
 === L'intention
 Le gradient décrit un pixel isolé. On veut caractériser un *voisinage* entier : est-ce une région plate, un bord, ou un coin ? Cela demande de rassembler l'information de plusieurs pixels.
@@ -327,7 +347,7 @@ Canvas : `Image Source` → `Grayscale` → `Harris Corners` (ou `Good Features 
 
 // ============================================================
 
-== la vraie question n'est pas s'il faut lisser, mais à quelle échelle
+== La vraie question n'est pas s'il faut lisser, mais à quelle échelle
 
 Tout le chapitre tourne autour d'une même tension :
 
@@ -341,5 +361,115 @@ Chaque outil dose ces deux opérations antagonistes : le gradient pur dérive à
 Comme un descripteur du chapitre 1 ou un filtre du chapitre 5, choisir cette échelle encode une hypothèse sur ce qui compte : un petit σ déclare que les variations au niveau du pixel sont significatives, un grand σ que seules les structures de plusieurs pixels méritent attention. Le chapitre 10 retrouvera ce lien entre échelle et représentation, où changer de point de vue permettra de lire la même image à plusieurs résolutions à la fois.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 6
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Extraire le contour propre d'une feuille
+
+#figtodo("ex_ch6_feuille", [Photographie d'une feuille d'automne posée sur le sol : nervures très fines sur ...])
+
+
+*Ce que vous voyez.* Une structure avec des bords de contraste très inégal : contour extérieur fort, nervures secondaires à peine marquées. La mission : en tirer un tracé de contour propre et fin.
+
+*Pipeline VNStudio*
+`Image Source` → `Split Half` :
+— gauche : `Sobel Edge Detector` → `Colormap`
+— droite : `Canny Edge Detector` *(à créer)*
+→ `Output Display`
+
+Sobel montre la « force » des bords en dégradé ; Canny en tire un trait fin. Canny propose un seuil bas et un seuil haut.
+
+
+
+
+*Questions*
+
+
++ Comparez les deux moitiés sur une nervure. Laquelle donne un trait large et flou, laquelle un trait fin d'un pixel ? Pour compter ou suivre des nervures, laquelle est exploitable ?
+
++ Réglez Canny avec ses deux seuils rapprochés, puis écartez-les. Quelles nervures fines apparaissent seulement quand l'écart est grand ? Qu'est-ce que ce double seuil permet de récupérer sans laisser entrer le bruit ?
+
++ Augmentez le pré-lissage de Canny. Quels détails fins disparaissent en premier ? Pourquoi un peu de flou avant la détection aide, et qu'est-ce qu'on perd à en mettre trop ?
+
++ *Défi.* Réglez Canny pour obtenir le contour extérieur complet de la feuille en un seul trait fermé, sans les nervures internes ni le bruit du sol. Branchez `Find Contours` derrière et vérifiez qu'il ne compte bien qu'une seule feuille.
+
+
+
+=== Exercice 2 · Distinguer une surface plane, un bord et un coin
+
+#figtodo("ex_ch6_coin_table", [Coin d'une table en bois vu de haut : la surface plane uniforme, le bord rectili...])
+
+
+*Ce que vous voyez.* Les trois situations de base réunies : du plat, une ligne, un coin. La mission : faire repérer automatiquement les coins, points d'ancrage stables pour le suivi et l'assemblage de panoramas.
+
+*Pipeline VNStudio*
+`Image Source` → `Harris / Shi-Tomasi` *(à créer)* → `Colormap` → `Output Display`
+
+Le nœud allume fortement les coins, faiblement les bords, et reste éteint sur les zones plates.
+
+
+
+
+*Questions*
+
+
++ Sur la carte de réponse, repérez la zone plate, le bord et le coin. Lequel s'allume le plus ? Lequel reste éteint ? La détection colle-t-elle à votre intuition ?
+
++ Montez le seuil de détection. Les points sur le bord disparaissent-ils avant ceux du coin ? Pourquoi un coin est-il un repère plus « sûr » qu'un point posé sur une ligne ?
+
++ Comparez les deux modes du nœud (Harris et Shi-Tomasi) sur le même coin. Détectent-ils le même point ? L'un attrape-t-il plus de points sur les bords obliques que l'autre ?
+
++ *Défi.* Faites pivoter l'image de 45°. Les coins détectés suivent-ils fidèlement la table, ou de nouveaux points apparaissent-ils n'importe où ? Le détecteur est-il fiable quel que soit l'angle de prise de vue ?
+
+
+
+=== Exercice 3 · Pourquoi un bord seul ne révèle pas le vrai mouvement
+
+#figtodo("ex_ch6_balle_rayee", [Vue stroboscopique d'une balle rayée (rayures noires et blanches) se déplaçant h...])
+
+
+*Ce que vous voyez.* Un objet rayé qui se déplace horizontalement. La mission : comprendre, en regardant les flèches de gradient, pourquoi un bord isolé ne suffit jamais à dire dans quelle direction un objet bouge — le fameux « problème de la fenêtre ».
+
+*Pipeline VNStudio*
+`Image Source` → `Image Gradient` → `Draw Overlay` (flèches) → `Output Display`
+
+Le nœud dessine en chaque point une petite flèche pointant à travers le bord local, dans le sens où l'image s'éclaircit.
+
+
+
+
+*Questions*
+
+
++ Sur le bord latéral (vertical) de la balle, dans quel sens pointe la flèche ? Indique-t-elle bien le déplacement horizontal réel de la balle ?
+
++ Sur une rayure horizontale, dans quel sens pointe la flèche ? À partir de cette seule flèche, pourriez-vous deviner que la balle va vers la droite ?
+
++ En regardant uniquement une rayure horizontale, le mouvement « vers la droite » et « vers le haut » donnent la même apparence locale. Pourquoi un bord ne renseigne-t-il que sur le déplacement perpendiculaire à lui-même, jamais le long de lui ?
+
++ *Défi.* Couvrez tout sauf une petite fenêtre posée sur une rayure droite, et essayez de deviner le mouvement de la balle. Impossible ? Élargissez la fenêtre jusqu'à inclure un coin ou le bord latéral. À partir de quel moment le mouvement devient-il déterminé ? C'est exactement ce que font les algorithmes de flot en regardant un voisinage plutôt qu'un point.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

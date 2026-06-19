@@ -39,7 +39,7 @@ Y = 0.2126·R + 0.7152·G + 0.0722·B   (coefficients haute définition, BT.709)
 
 Y est la **luminance** (la clarté) ; R, G, B sont les trois canaux. Les coefficients très inégaux traduisent les sensibilités de l'œil. Il existe deux jeux de coefficients selon l'âge des écrans (télévision standard contre haute définition), qui diffèrent de quelques pour-cent — négligeable à l'affichage, détectable en mesure précise. En imagerie médicale, une moyenne simple aplatirait des contrastes tissulaires que les bons coefficients font ressortir comme l'œil les voit. ∎
 
-### Exemple chiffré
+### Exemple
 
 Pixel vert-jaune vif R, G, B = (180, 220, 30) :
 
@@ -82,7 +82,7 @@ H = angle déduit de la position de R, G, B  (exprimé en degrés sur la roue)
 
 La valeur est le canal le plus fort, la saturation l'écart relatif entre le plus fort et le plus faible, la teinte l'angle qui repère la couleur dominante. Ce découplage rend HSV idéal pour la segmentation par couleur : isoler les objets rouges revient à garder une plage d'angles autour du rouge, là où la même opération en RGB demanderait de découper un volume 3D peu intuitif. L'espace HSV encode une hypothèse : la teinte est le critère qui compte, l'intensité une nuisance à éliminer. ∎
 
-### Exemple chiffré
+### Exemple
 
 Pixel orange vif R, G, B = (255, 128, 0), ramené entre 0 et 1 :
 
@@ -141,7 +141,7 @@ C'est la distance euclidienne du chapitre 3, appliquée aux trois coordonnées L
 
 La formule ΔE de base reste imparfaite (elle surestime les écarts dans les bleus saturés) ; une version affinée, ΔE2000, corrige cela et sert de standard industriel pour le contrôle qualité couleur. ∎
 
-### Exemple chiffré
+### Exemple
 
 Contrôle qualité textile, fil « bleu marine de référence » Lab = (22, 4, −28), lot de production Lab = (24, 5, −25) :
 
@@ -175,7 +175,7 @@ La conversion naïve est directe (le cyan vaut « tout sauf le rouge », etc.), 
 
 Quand une couleur d'écran tombe hors du gamut d'impression, il faut décider comment la « faire entrer ». Plusieurs stratégies (les *intents de rendu*) : comprimer harmonieusement tout le gamut (bon pour les photos), garder exactes les couleurs atteignables et rabattre seulement les autres (bon pour un logo dont le rouge doit rester fidèle), ou privilégier la vivacité sur l'exactitude (graphiques). Le choix est éditorial, pas technique. ∎
 
-### Exemple chiffré
+### Exemple
 
 Un vert vif de logo RGB = (0, 210, 90). La simulation avec un profil d'impression standard indique que ce vert est **hors gamut** : le rendu imprimé sera notablement plus terne. L'écart, mesuré en ΔE2000 (§7.3) entre la cible et la valeur imprimée simulée, vaut environ 8,5 — une différence bien visible à l'œil nu.
 
@@ -205,7 +205,7 @@ L'image utile est celle d'un accordéon. Un histogramme concentré, c'est un acc
 
 L'égalisation globale applique une seule correction à toute l'image : une zone localement peu contrastée (une ombre dans une radiographie) reste noyée si le reste de l'image domine l'histogramme. Le **CLAHE** (égalisation adaptative à contraste limité) corrige cela par deux idées. D'abord, **adaptatif** : on découpe l'image en tuiles et on égalise chaque tuile séparément, en raccordant les tuiles en douceur pour éviter un effet de damier. Ensuite, **à contraste limité** : avant d'égaliser une tuile, on plafonne son histogramme à une hauteur maximale et on redistribue le surplus. Sans ce plafond, une tuile presque uniforme (un coin de ciel) verrait son minuscule contraste étiré à l'extrême, amplifiant énormément le bruit du capteur. Ce plafond est le réglage clé : trop bas, l'effet est faible ; trop haut, le bruit explose.
 
-### Exemple chiffré
+### Exemple
 
 Image de fond d'œil dont les intensités s'entassent entre 0 et 80 sur une plage de 0 à 255. L'égalisation étire [0, 80] sur [0, 255], révélant les vaisseaux. Mais ce segment contient aussi du bruit de capteur, étiré du même facteur (environ 3,2× = 255/80) : un bruit de 2 niveaux devient 6 niveaux. D'où l'utilité du plafond du CLAHE, qui borne ce gain et empêche le bruit d'exploser.
 
@@ -231,7 +231,7 @@ Dans votre canvas :
 
 Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les couleurs) et expose les curseurs `Contrast Limit` (plafond de contraste) et `Grid Size` (taille de grille) dans l'inspecteur. En réglant ces paramètres, vous pouvez observer l'équilibre entre la visibilité des détails dans les ombres et l'apparition du bruit de fond.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image couleur représentant un objet rouge sous un éclairage variable (mi-ombre, mi-soleil). Tenter d'isoler cet objet en appliquant un seuillage binaire direct sur le canal R (Rouge) dans le format BGR d'origine. Le lecteur constate que le seuil capture le sol clair ensoleillé mais rate l'objet à l'ombre. Remplacer ce seuil en convertissant d'abord l'image en HSV à l'aide d'un nœud **Color Space Conversion**, puis en appliquant le seuillage sur le canal H (Teinte). Le lecteur observe que l'objet est alors parfaitement isolé, illustrant l'importance de décorréler la couleur de la luminosité pour résister aux variations d'éclairage.
+**Exercice de dépannage :** L'exercice consiste à charger une image couleur représentant un objet rouge sous un éclairage variable (mi-ombre, mi-soleil). Tenter d'isoler cet objet en appliquant un seuillage binaire direct sur le canal R (Rouge) dans le format BGR d'origine. Le lecteur constate que le seuil capture le sol clair ensoleillé mais rate l'objet à l'ombre. Remplacer ce seuil en convertissant d'abord l'image en HSV à l'aide d'un nœud **Color Space Conversion**, puis en appliquant le seuillage sur le canal H (Teinte). Le lecteur observe que l'objet est alors parfaitement isolé, illustrant l'importance de décorréler la couleur de la luminosité pour résister aux variations d'éclairage.
 
 ---
 
@@ -270,7 +270,7 @@ nouveau B = B × (moyenne du vert / moyenne du bleu)
 
 (on prend le vert comme référence, le canal le plus stable.) Cette hypothèse est raisonnable pour des scènes générales (un bureau, une salle d'opération) mais **fausse** dès qu'une couleur domine la scène : un champ de colza, une radiographie, une forêt vue du ciel. La correction y introduit alors une distorsion inverse. Les méthodes modernes (estimation de l'éclairage par réseau de neurones) sont plus robustes, mais reposent toutes sur une hypothèse — explicite ou apprise — sur la scène.
 
-### Exemple chiffré
+### Exemple
 
 Image à dominante jaune (lampe halogène) : moyennes rouge = 180, vert = 170, bleu = 120.
 

@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Les transformées], toc: false)[
@@ -95,6 +114,8 @@ Canvas : `Image Source` → `Grayscale` → `FFT` → `Output Display`. Le nœud
 == Le théorème de convolution : le pont avec le chapitre 5
 
 #subtitle[Faire glisser un noyau, ou multiplier deux spectres — le même geste]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191401.jpeg")
 
 === L'intention
 Au chapitre 5, on affirmait que les filtres agissent sur les fréquences sans le prouver. On veut maintenant le lien exact entre la convolution spatiale (faire glisser un pochoir) et le domaine des fréquences.
@@ -218,7 +239,7 @@ Dans votre canvas :
 
 Le nœud `Hough Lines` prend la carte de contours binaires produite par Canny et accumule les votes. En modifiant le curseur `Votes Threshold` (seuil de votes) dans l'inspecteur, vous déterminez le niveau de sélectivité nécessaire pour filtrer les lignes dominantes de la scène. Un nœud `Hough Circles` fait de même pour les cercles, et l'inspecteur compte les formes trouvées.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger une image bruitée et à régler le curseur *Votes Threshold* sur une valeur extrêmement basse (ex. : 10 votes) dans le nœud *Hough Lines*. Le lecteur observe à l'écran une quantité géante de lignes parasites traversant l'image de part en part. Cela montre comment des alignements fortuits de pixels de bruit s'accumulent au-dessus du seuil de tolérance, démontrant l'importance d'adapter ce seuil à la taille physique des objets recherchés.
+*Exercice de dépannage :* L'exercice consiste à charger une image bruitée et à régler le curseur *Votes Threshold* sur une valeur extrêmement basse (ex. : 10 votes) dans le nœud *Hough Lines*. Le lecteur observe à l'écran une quantité géante de lignes parasites traversant l'image de part en part. Cela montre comment des alignements fortuits de pixels de bruit s'accumulent au-dessus du seuil de tolérance, démontrant l'importance d'adapter ce seuil à la taille physique des objets recherchés.
 
 ---
 ]
@@ -276,7 +297,7 @@ Canvas : `Image Source` → `Threshold` → `Distance Transform` → `Output Dis
 
 // ============================================================
 
-== reconnaître la base où la question devient facile
+== Reconnaître la base où la question devient facile
 
 Un problème difficile dans un domaine peut devenir trivial dans un autre :
 
@@ -296,5 +317,112 @@ Aucune transformée n'ajoute d'information : l'image reste la même, seul le sys
 Choisir un descripteur (chapitre 1), une distance (chapitre 3) ou un filtre (chapitre 5), c'était déjà décider ce qui mérite d'être vu ; choisir une base, c'est décider dans quel espace une propriété — fréquence, compacité, paramètre géométrique, profondeur — devient lisible. Le chapitre 12 s'appuiera sur la transformée de distance pour séparer des objets accolés par watershed.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 10
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Effacer un motif de tissu sans toucher au reste
+
+#figtodo("ex_ch10_tissu_carreaux", [Tissu à carreaux réguliers photographié à plat : motif périodique de lignes bleu...])
+
+
+*Ce que vous voyez.* Un motif parfaitement périodique. La mission : passer dans l'espace des fréquences pour repérer la signature du quadrillage, puis le faire disparaître à volonté.
+
+*Pipeline VNStudio*
+`Image Source` → `FFT Analysis` → `Output Display` (spectre) + `Colormap`
+
+Le nœud affiche le spectre de fréquences et permet d'appliquer un filtre passe-bas ou passe-haut avant de reconstruire l'image.
+
+
+
+
+*Questions*
+
+
++ Observez le spectre : voyez-vous des points brillants bien nets, ou une tache diffuse ? Que disent ces points sur la régularité du tissu ? Repérez ceux qui correspondent aux lignes horizontales et ceux des verticales.
+
++ Appliquez un filtre passe-bas. Le quadrillage survit-il dans l'image reconstruite, ou s'efface-t-il ? Qu'a-t-on retiré au juste ?
+
++ Appliquez un filtre passe-haut. L'image reconstruite ne garde-t-elle que les contours du motif ? Pourquoi le fond uni a-t-il disparu ?
+
++ *Défi.* Passez la FFT sur un visage au lieu du tissu. Le spectre montre-t-il des points nets comme le tissu, ou une tache continue qui s'éteint depuis le centre ? Qu'est-ce que cela révèle sur la différence entre un motif fabriqué et une image naturelle ?
+
+
+
+=== Exercice 2 · Retrouver les routes d'un carrefour par le vote
+
+#figtodo("ex_ch10_carrefour", [Vue aérienne d'un carrefour en étoile : cinq routes rectilignes convergent vers ...])
+
+
+*Ce que vous voyez.* Plusieurs droites bien marquées dans la scène. La mission : les faire retrouver automatiquement, sans dire au système où elles sont.
+
+*Pipeline VNStudio*
+`Image Source` → `Canny Edge Detector` *(à créer)* → `Hough Transform` *(à créer)* → `Draw Overlay` → `Output Display`
+
+Le nœud trace les droites détectées sur l'image et expose un seuil de vote qui décide combien de lignes ressortent.
+
+
+
+
+*Questions*
+
+
++ Lancez le pipeline. Les cinq routes sont-elles toutes tracées ? Leur direction colle-t-elle à ce que vous voyez ?
+
++ Le rond-point central est un cercle. Le détecteur de droites trace-t-il une ligne dessus ? Pourquoi un bord qui tourne en rond ne réunit-il pas assez de votes pour une seule direction ?
+
++ Baissez le seuil de vote. Combien de fausses lignes apparaissent en plus ? D'où viennent-elles dans la scène (marquages, trottoirs, ombres) ?
+
++ *Défi.* Passez le détecteur sur une feuille de papier millimétré : il devrait ne trouver que deux familles de lignes (horizontales et verticales). Vérifiez. Faites ensuite pivoter la feuille de 15° et observez les deux familles tourner d'autant. Le détecteur suit-il la rotation ?
+
+
+
+=== Exercice 3 · Trouver le cœur d'une forme pour préparer une découpe
+
+#figtodo("ex_ch10_etoile_masque", [Masque binaire d'une étoile à cinq branches : fond noir, étoile blanche, branche...])
+
+
+*Ce que vous voyez.* Une forme à bras fins et centre épais. La mission : mesurer « l'épaisseur intérieure » en chaque point pour trouver les cœurs des régions, étape clé avant de séparer des objets collés.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Colormap` (LUT chaud) → `Output Display`
+
+La carte colore chaque pixel selon son éloignement du bord le plus proche : froid près des bords, chaud au cœur.
+
+
+
+
+*Questions*
+
+
++ Sur la carte colorée, où se trouve le point le plus « chaud » de l'étoile : au centre du pentagone ou au bout d'une branche ? Pourquoi ?
+
++ Comparez la couleur au cœur d'une branche fine et au cœur du pentagone. Laquelle est la plus chaude ? Que dit cette couleur sur l'épaisseur locale de la forme ?
+
++ Cette carte sert de relief pour séparer des objets collés : on plante un germe à chaque sommet chaud. Combien de sommets chauds distincts comptez-vous sur l'étoile ? Un par branche plus un au centre, ou un seul ?
+
++ *Défi.* Collez deux étoiles par le bout d'une branche et relancez la carte. Y a-t-il toujours deux cœurs bien séparés ? Branchez un `Watershed` qui part de ces cœurs et vérifiez qu'il recoupe les deux étoiles à l'endroit du collage.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

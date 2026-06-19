@@ -48,7 +48,7 @@ B est l'élément structurant (la sonde). Le passage du noir et blanc aux niveau
 
 L'érosion rétrécit le clair, supprime les détails plus fins que la sonde, déconnecte les ponts minces ; la dilatation épaissit, comble, fusionne. L'angle mort majeur : **ces opérations perdent de l'information.** Un détail plus étroit que la sonde, une fois effacé, est perdu pour de bon. Éroder puis dilater ne reconstruit pas l'image d'origine — c'est l'ouverture (§11.2), structurellement plus petite. La sonde décide ce qui est « trop fin pour survivre ». ∎
 
-### Exemple chiffré
+### Exemple
 
 Signal `[3, 1, 4, 1, 5, 9, 2, 6]`, sonde plate de largeur 3 (le pixel et ses deux voisins) :
 
@@ -96,7 +96,7 @@ Une ouverture, c'est une érosion suivie d'une dilatation par la même sonde : l
 
 En ouvrant avec des sondes de taille croissante et en mesurant l'aire perdue à chaque pas, on obtient une **granulométrie** — un tamisage virtuel qui donne la distribution des tailles d'objets, prolongeant le diamètre équivalent du chapitre 1. ∎
 
-### Exemple chiffré
+### Exemple
 
 Signal `[3, 1, 4, 1, 5, 9, 2, 6]`, sonde plate de largeur 3 :
 
@@ -139,7 +139,7 @@ Dans une zone plate, le maximum et le minimum du voisinage sont égaux : leur di
 
 C'est tout : la valeur la plus haute du voisinage moins la plus basse. Sur une zone constante, les deux sont égales, le gradient est nul. Près d'une marche, la magnitude est exacte, mais la **largeur** du contour détecté est imposée par la sonde, pas par l'image : une grande sonde donne des bords épais. Le gradient morphologique est **plus robuste au bruit aléatoire** que Sobel (minimum et maximum sont moins sensibles que la dérivée) mais **plus sensible aux pixels aberrants** (un seul pixel très brillant gonfle le maximum). ∎
 
-### Exemple chiffré
+### Exemple
 
 Marche d'intensité `[10, 10, 10, 50, 50, 50]`, sonde plate de largeur 3 :
 
@@ -193,7 +193,7 @@ Pour comprendre pourquoi le top-hat fonctionne, décomposons son comportement pi
 
 La condition essentielle de réussite repose sur une **fenêtre d'échelle** : la sonde doit être strictement plus grande que les objets d'intérêt pour pouvoir les effacer, mais plus petite que la distance sur laquelle le fond varie. Si les variations d'éclairage se produisent à la même échelle de taille que vos objets, aucune sonde ne pourra les séparer géométriquement. ∎
 
-### Exemple chiffré
+### Exemple
 
 Imaginons une ligne de pixels représentant une rampe d'éclairage avec un pic clair localisé à l'indice 4 (le détail à détecter, d'intensité 48) :
 
@@ -234,7 +234,7 @@ Dans VNStudio (nœud `Top Hat` / `Black Hat`) ou en Python (`cv2.morphologyEx` a
     *   Dans VNStudio, ce paramètre correspond au menu déroulant **Border Type** ; en Python (OpenCV), il correspond à l'argument `borderType` dans `cv2.morphologyEx`.
     *   Définit comment OpenCV estime les pixels manquants lorsque la sonde dépasse des bords de l'image (ex. : `cv2.BORDER_CONSTANT` qui suppose un fond noir, ou `cv2.BORDER_REPLICATE` qui duplique la dernière ligne). C'est ce paramètre qui contrôle l'intensité des artefacts de bord observés aux extrémités de l'image.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image binaire contenant des trous noirs circulaires de 10 pixels de diamètre au sein d'une forme blanche. Tenter de combler ces trous en appliquant une fermeture morphologique (nœud **Closing**). Régler le paramètre **Structuring Element Size** sur 5 pixels. Le lecteur observe dans l'inspecteur que les trous restent ouverts et inchangés. Régler ensuite la taille de l'élément à 15 pixels. Le lecteur constate que tous les trous disparaissent instantanément. Cet échec contrôlé démontre que la taille du noyau doit être strictement supérieure à l'épaisseur du défaut à combler pour que l'opération réussisse.
+**Exercice de dépannage :** L'exercice consiste à charger une image binaire contenant des trous noirs circulaires de 10 pixels de diamètre au sein d'une forme blanche. Tenter de combler ces trous en appliquant une fermeture morphologique (nœud **Closing**). Régler le paramètre **Structuring Element Size** sur 5 pixels. Le lecteur observe dans l'inspecteur que les trous restent ouverts et inchangés. Régler ensuite la taille de l'élément à 15 pixels. Le lecteur constate que tous les trous disparaissent instantanément. Cet échec contrôlé démontre que la taille du noyau doit être strictement supérieure à l'épaisseur du défaut à combler pour que l'opération réussisse.
 
 ### Dans VNStudio
 
@@ -263,7 +263,7 @@ Le **squelette** réduit une forme à son **axe central** — le lieu des centre
 
 La transformée tout-ou-rien est précise au pixel près (motifs réguliers : texte, circuits) mais fragile au bruit — un pixel manquant annule la détection. Le squelette est topologiquement riche mais **instable** : une petite bosse du contour crée une branche parasite (une « barbe »). Les deux supposent un masque propre, d'où un nettoyage préalable par ouverture ou fermeture.
 
-### Exemple chiffré
+### Exemple
 
 Détecter les **pixels isolés** : première sonde = un pixel central allumé, seconde sonde = ses huit voisins, tous censés appartenir au fond. Un pixel d'objet entouré uniquement de fond satisfait les deux conditions ; tout pixel ayant un voisin allumé est rejeté. On obtient ainsi la carte des pixels solitaires — pour compter ou retirer le bruit « poivre » d'un masque, complément du bruit « sel » que l'ouverture retire.
 

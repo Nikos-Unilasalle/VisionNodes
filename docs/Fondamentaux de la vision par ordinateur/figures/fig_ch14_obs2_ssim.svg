@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 858 280" width="858" height="280" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
 <rect x="-30" y="-56" width="858" height="280" fill="#ffffff"/>
-<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 14.2 — SSIM : luminance décalée, structure intacte</text>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation — SSIM : luminance décalée, structure intacte</text>
 <path d="M158.0,53.0 C289.0,53.0 289.0,53.0 420.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M158.0,53.0 C289.0,53.0 289.0,145.0 420.0,145.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M158.0,53.0 C184.0,53.0 184.0,119.0 210.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>

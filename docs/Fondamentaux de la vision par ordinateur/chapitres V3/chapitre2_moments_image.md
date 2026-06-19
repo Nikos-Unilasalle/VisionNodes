@@ -51,7 +51,7 @@ M₁₁ = produit d'inertie     (la masse penche-t-elle en diagonale ?)
 
 Cette correspondance n'est pas décorative : les propriétés des sections suivantes — centre de gravité, axes principaux — ne sont pas des recettes de vision inventées pour l'occasion, mais des résultats de mécanique connus de longue date, transposés tels quels à une image. ∎
 
-### Exemple chiffré — le masque jouet du chapitre
+### Exemple — le masque jouet du chapitre
 
 Tout le chapitre s'appuie sur un même masque 3 × 3, assez petit pour que chaque calcul tienne sur un coin de feuille :
 
@@ -98,7 +98,7 @@ Dans votre canvas :
 
 Le nœud `Image Moments` calcule en continu l'ensemble des moments bruts et centrés d'après les formules ci-dessus. Le nœud de conversion `Grayscale` placé en amont garantit que les images couleur sont correctement projetées sur un seul canal avant le calcul.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image contenant deux disques blancs distincts et identiques sur fond noir. En connectant cette image au nœud `Image Moments`, le lecteur constate dans l'inspecteur que le centroïde calculé se positionne au milieu du vide séparant les deux disques, là où il n'y a aucun pixel d'objet. Cela illustre de façon flagrante comment l'hypothèse tacite d'une seule silhouette connexe fait échouer la localisation géométrique de l'objet réel dès que les composants se séparent dans l'image.
+**Exercice de dépannage :** L'exercice consiste à charger une image contenant deux disques blancs distincts et identiques sur fond noir. En connectant cette image au nœud `Image Moments`, le lecteur constate dans l'inspecteur que le centroïde calculé se positionne au milieu du vide séparant les deux disques, là où il n'y a aucun pixel d'objet. Cela illustre de façon flagrante comment l'hypothèse tacite d'une seule silhouette connexe fait échouer la localisation géométrique de l'objet réel dès que les composants se séparent dans l'image.
 
 ---
 
@@ -122,7 +122,7 @@ x̄ = M₁₀ / M₀₀ ,   ȳ = M₀₁ / M₀₀
 
 La barre au-dessus de x̄ se lit « x barre » et désigne une moyenne. La formule dit cela exactement : la somme des positions (M₁₀) divisée par le nombre de pixels (M₀₀). Diviser une somme par un effectif, c'est faire une moyenne — le centroïde n'est rien d'autre que la position moyenne des pixels. Voir la forme `a/b`, annexe C : une mise en proportion qui efface l'effectif. ∎
 
-### Exemple chiffré
+### Exemple
 
 Sur le masque jouet : x̄ = 7/7 = 1 et ȳ = 7/7 = 1. Le centroïde tombe sur le pixel central — cohérent avec la symétrie de la forme, dont les deux coins manquants se compensent.
 
@@ -170,7 +170,7 @@ La lettre μ se lit « mu ». La seule différence avec les moments bruts est qu
 
 Inutile de retenir ces formules ; il suffit de savoir qu'elles existent, ce qui permet de tout calculer en un seul passage sur l'image. ∎
 
-### Exemple chiffré (suite du masque jouet)
+### Exemple (suite du masque jouet)
 
 ```
 μ₂₀ = 11 − 1×7 = 4
@@ -226,7 +226,7 @@ Pour comprendre cette formule géométriquement, faisons une expérience de pens
 
 Ce n'est pas un nombre choisi au hasard : c'est la seule valeur géométrique qui rende le rapport insensible au zoom. ∎
 
-### Exemple chiffré
+### Exemple
 
 Sur le masque jouet : η₂₀ = μ₂₀/μ₀₀² = 4/49 ≈ 0,0816 (à l'ordre 2, γ = 2). Agrandissons mentalement la forme d'un facteur 10 : elle compte désormais 700 pixels, μ₂₀ devient environ 4 × 10⁴ et μ₀₀² environ 49 × 10⁴. Le rapport reste ≈ 0,0816 — c'est cette stabilité qui permet de reconnaître la même forme à toutes les tailles.
 
@@ -262,7 +262,7 @@ L'analogie mécanique donne l'image directement. Prenez une règle plate : elle 
 
 θ se lit « thêta » et désigne l'angle cherché. La fonction `arctan2` est une variante de l'arc tangente qui, contrairement à la simple `arctan`, tient compte du quadrant : elle distingue un axe penché vers le haut d'un axe penché vers le bas, là où `arctan` les confondrait. Un point mérite d'être compris, car il explique la forme de la formule : on y trouve l'angle **double** 2θ, pas θ. La raison est qu'un axe n'a pas de sens de parcours — une règle orientée à 30° ou à 30° + 180° pointe dans la même direction. Travailler avec 2θ encode naturellement cette ambiguïté, et le facteur ½ ramène le résultat dans l'intervalle utile. ∎
 
-### Exemple chiffré
+### Exemple
 
 Masque jouet : 2μ₁₁ = −4 et μ₂₀ − μ₀₂ = 0. Donc arctan2(−4, 0) = −90°, et **θ = −45°**. La forme est orientée le long de la diagonale descendante — ce que le signe de μ₁₁ annonçait en 2.3, et qu'on vérifie d'un coup d'œil sur le dessin (rappel du §2.1 : l'angle se lit dans le repère image, y vers le bas).
 
@@ -310,7 +310,7 @@ excentricité   : e = √(1 − λ₂/λ₁)
 
 L'excentricité n'est rien d'autre que la comparaison des deux étalements — l'excentricité promise au chapitre 1, enfin reliée à sa source. Étalements égaux (forme ronde) : le rapport λ₂/λ₁ vaut 1, et e tombe à 0. Petit étalement minuscule face au grand (forme en aiguille) : le rapport tend vers 0, et e tend vers 1. ∎
 
-### Exemple chiffré (suite et fin du masque jouet)
+### Exemple (suite et fin du masque jouet)
 
 En combinant μ₂₀ = 4, μ₀₂ = 4 et μ₁₁ = −2 :
 
@@ -387,7 +387,7 @@ centroïde pondéré  : barycentre lumineux (tiré vers les zones claires)
 
 Le masque binaire traite tous les pixels comme aussi lourds les uns que les autres ; la version pondérée rend les pixels clairs plus lourds. Le point d'équilibre se déplace alors vers les zones lumineuses. ∎
 
-### Exemple chiffré
+### Exemple
 
 En astronomie, une étoile s'étale sur quelques pixels avec un profil lumineux en cloche ; le centroïde pondéré moyenne ce profil et localise la source au **sous-pixel** — bien plus finement que le simple pixel le plus brillant. C'est le principe des mesures astrométriques de précision. De même, en caractérisation de faisceau laser, les moments pondérés d'ordre 2 définissent la largeur du faisceau (méthode D4σ, norme ISO 11146).
 

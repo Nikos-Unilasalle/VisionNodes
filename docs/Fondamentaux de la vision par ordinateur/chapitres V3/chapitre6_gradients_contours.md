@@ -42,7 +42,7 @@ orientation : θ = arctan2(Iᵧ, Iₓ)        → « dans quelle direction ? »
 
 Le symbole ∇ (« nabla ») désigne le gradient ; Iₓ est la variation d'intensité dans le sens horizontal, Iᵧ dans le sens vertical. La **magnitude** (la longueur de la flèche) est leur combinaison à la Pythagore ; l'**orientation** est l'angle de la flèche. Sur une grille de pixels, on approche ces variations par des **différences finies** — la différence entre un pixel et son voisin. La version la plus précise est la différence « centrée » : on compare le voisin de droite au voisin de gauche, ce qui place le contour exactement au bon endroit, sans décalage d'un demi-pixel. ∎
 
-### Exemple chiffré
+### Exemple
 
 Ligne d'intensités `[10, 10, 10, 80, 90, 90, 90]`. La variation centrée en chaque point (moitié de l'écart entre voisins) :
 
@@ -84,7 +84,7 @@ Sₓ = [−1  0  +1]      Sᵧ = [−1  −2  −1]
 
 Sₓ détecte les bords verticaux (variation horizontale), Sᵧ les bords horizontaux. La variante **Scharr** remplace le poids (1, 2, 1) par (3, 10, 3), réglé pour que la réponse soit la même quelle que soit l'orientation du bord — un bord à 45° donne alors la même magnitude qu'un bord à 0°. Pour des mesures d'angle précises (l'inclinaison d'une pièce en vision industrielle, l'orientation de fibres en microscopie), Scharr est préférable. ∎
 
-### Exemple chiffré
+### Exemple
 
 Petit carré 3×3 avec un bord vertical net (gauche sombre = 0, droite claire = 100). On applique Sₓ au pixel central :
 
@@ -139,7 +139,7 @@ entre les deux              → gardé seulement s'il touche un pixel certain
 
 L'idée : un pixel faible isolé est probablement du bruit, mais un pixel faible qui **prolonge un contour fort** est probablement la suite du même bord. On se sert du voisinage comme preuve de réalité.
 
-### Exemple chiffré
+### Exemple
 
 Chaîne de magnitudes le long d'un contour candidat, seuil bas = 50, seuil haut = 100 :
 
@@ -175,7 +175,7 @@ Dans votre canvas :
 
 En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer directement la mécanique de l'hystérésis : augmenter le seuil haut élimine les détails de texture parasites, tandis que diminuer le seuil bas reconnecte les lignes de contours interrompues. Le nœud expose également l'option de calcul automatique par la médiane et l'inspecteur affiche la densité de pixels de contour pour faciliter le réglage.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à inverser les seuils dans le nœud **Canny Edge Detector** en réglant **Low Threshold** sur 150 et **High Threshold** sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
+**Exercice de dépannage :** L'exercice consiste à inverser les seuils dans le nœud **Canny Edge Detector** en réglant **Low Threshold** sur 150 et **High Threshold** sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
 
 ---
 
@@ -254,7 +254,7 @@ Chez **Harris**, le terme retranché pénalise le cas « une seule grande valeur
 
 Les deux sont **invariants en rotation** (un coin reste un coin si on tourne l'image) mais **pas invariants à l'échelle** : un coin vu de loin peut ressembler à une texture. Cette limite a motivé les détecteurs multi-échelles comme SIFT, qui cherche les coins à plusieurs niveaux de flou à la fois — une réponse plus élaborée au même fil. ∎
 
-### Exemple chiffré
+### Exemple
 
 Trois voisinages, avec les valeurs propres de leur tenseur :
 

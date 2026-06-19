@@ -91,3 +91,6 @@ graphify-out/
 
 # Runtime export artifacts (segmentation/classification/crops)
 exports/
+
+# Book exercise archives (too large for GitHub)
+docs/Fondamentaux de la vision par ordinateur/Exercices/*.zip

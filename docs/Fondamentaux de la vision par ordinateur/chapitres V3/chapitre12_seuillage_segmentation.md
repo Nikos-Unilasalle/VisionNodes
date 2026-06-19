@@ -48,7 +48,7 @@ Ici ω₀ et ω₁ sont les proportions de pixels dans chaque groupe (au seuil t
 
 Otsu place ainsi la décision dans l'espace de l'**histogramme** plutôt que dans l'image. C'est un résumé qui jette la position des pixels, comme les moments du chapitre 2 ne gardaient que la répartition de la masse. L'a priori est « il y a deux classes d'intensité bien séparées » ; quand cet a priori est faux — histogramme à une seule bosse, ou une classe minuscule (un petit défaut perdu sur une grande surface lisse, qui n'apparaît presque pas dans l'histogramme) — Otsu place le seuil n'importe où. ∎
 
-### Exemple chiffré
+### Exemple
 
 Histogramme jouet sur les niveaux 0 à 4, 16 pixels, effectifs `[5, 3, 0, 3, 5]` :
 
@@ -95,7 +95,7 @@ T(x, y) = moyenne_locale(x, y) − C
 
 Le pixel est de l'objet si son niveau passe sous ce seuil local (cas d'un texte sombre sur fond clair). La constante C est la marge de sécurité. Le raisonnement : si le fond suit une nappe lentement variable et que l'objet est toujours un peu plus sombre que cette nappe, alors « pixel nettement sous la moyenne locale » désigne exactement les pixels d'objet. On gagne la robustesse à l'éclairage inégal, on perd la vision d'ensemble : un objet **plus grand que le voisinage** devient invisible, car son intérieur ressemble localement à un fond uniforme. L'angle mort est donc la taille du voisinage. ∎
 
-### Exemple chiffré
+### Exemple
 
 Une ligne de pixels, fond en dégradé `[200, 200, 100, 100]`, texte toujours 50 niveaux sous le fond local (donc 150 en zone claire, 50 en zone sombre) :
 
@@ -137,7 +137,7 @@ Dans votre canvas :
 
 En faisant glisser le curseur `Block Size` de manière à ce qu'il dépasse la taille des motifs d'intérêt, et en ajustant le curseur `C` pour éliminer le bruit du fond, vous obtiendrez un masque binaire parfaitement net de vos objets, quel que soit l'éclairage de la scène.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image de texte sous un éclairage oblique très asymétrique. Tenter d'abord d'isoler les lettres avec un nœud **Threshold** en mode automatique d'Otsu. Le lecteur constate que le masque sépare simplement l'image en deux zones (ombre et lumière) sans extraire le texte. Remplacer par un nœud **Adaptive Threshold** en réglant le **Block Size** sur une valeur trop petite de 3 pixels. Le lecteur observe que le texte s'évide, ne laissant que de fins contours illisibles. Monter enfin le **Block Size** à 21 pixels (dépassant la largeur des lettres) pour voir le texte se dessiner proprement, prouvant la supériorité de l'adaptation locale et la nécessité d'un calibrage d'échelle de référence.
+**Exercice de dépannage :** L'exercice consiste à charger une image de texte sous un éclairage oblique très asymétrique. Tenter d'abord d'isoler les lettres avec un nœud **Threshold** en mode automatique d'Otsu. Le lecteur constate que le masque sépare simplement l'image en deux zones (ombre et lumière) sans extraire le texte. Remplacer par un nœud **Adaptive Threshold** en réglant le **Block Size** sur une valeur trop petite de 3 pixels. Le lecteur observe que le texte s'évide, ne laissant que de fins contours illisibles. Monter enfin le **Block Size** à 21 pixels (dépassant la largeur des lettres) pour voir le texte se dessiner proprement, prouvant la supériorité de l'adaptation locale et la nécessité d'un calibrage d'échelle de référence.
 
 *Domaines :* OCR sur pages photographiées sous éclairage oblique, lecture de plaques sous éclairage inégal, défauts sur surfaces non uniformément éclairées.
 
@@ -178,7 +178,7 @@ f = −DT(M)
 
 Le watershed mesure une **topologie de bassins**. Son angle mort principal est la **sur-segmentation** : le bruit crée de faux minima locaux, ouvrant chacun un bassin. C'est pourquoi on utilise le watershed *par marqueurs* (inonder uniquement depuis des sources imposées). De plus, il scinde à tort les objets fortement concaves (qui génèrent plusieurs maxima de `DT`) et ne peut séparer des objets accolés sans pincement physique (comme deux carrés parfaits bord à bord).
 
-### Exemple chiffré
+### Exemple
 
 Masque binaire 7×13 : deux blobs reliés par un pont d'un pixel de large (ligne 3, colonne 6 pincée).
 
@@ -277,7 +277,7 @@ Trouver le découpage parfait est en théorie hors de portée pour un grand nomb
 
 Pourquoi le centre ? Parce que la moyenne est précisément le point qui minimise la somme des distances au carré (rappel du chapitre 3 : la moyenne est le « point d'équilibre »). On répète ces deux gestes jusqu'à ce que plus rien ne bouge. Le résultat est un **minimum local** : un bon découpage, mais pas forcément le meilleur dans l'absolu — selon les repères de départ, on peut tomber sur un creux ou sur un autre. L'a priori de K-means est que les groupes sont des amas **ronds, de tailles comparables** ; sur des amas allongés, imbriqués, ou de densités très différentes, il se trompe. Et K doit être fixé d'avance. ∎
 
-### Exemple chiffré
+### Exemple
 
 Points sur une ligne {1, 2, 9, 10, 11}, K = 2, repères de départ 1 et 10 :
 
@@ -327,7 +327,7 @@ Sous cette apparence touffue, c'est une moyenne pondérée : chaque voisin xᵢ 
 
 L'avantage : mean-shift épouse des amas de **forme quelconque** (aucune hypothèse de rondeur, contrairement à K-means) et trouve le nombre de groupes tout seul. L'angle mort se déplace sur **h**, la largeur de la fenêtre : trop petit, chaque petite bosse devient un groupe (sur-découpage) ; trop grand, toutes les collines fusionnent en une (sous-découpage). Et le calcul est lourd, car chaque bille doit consulter beaucoup de voisins à chaque pas. ∎
 
-### Exemple chiffré
+### Exemple
 
 Points groupés autour de 2 et de 10, fenêtre h = 3, bille lâchée en x = 4 :
 
@@ -381,7 +381,7 @@ Il n'existe pas de formule donnant directement la meilleure courbe. On procède 
 
 Le snake produit un contour lisse et fermé, idéal pour un objet unique aux bords doux (un organe, une silhouette). Ses angles morts : il faut le **poser près** de l'objet au départ, sinon il s'accroche au mauvais bord ou s'effondre ; il ne **change pas de forme topologique** (une seule courbe ne peut se scinder pour entourer deux objets séparés) ; et il a du mal à pénétrer dans les creux profonds. ∎
 
-### Exemple chiffré
+### Exemple
 
 L'élasticité préfère des points **régulièrement espacés**. Pour trois points consécutifs, sa contribution est à peu près la somme des carrés des écarts entre points :
 
@@ -438,7 +438,7 @@ La structure est identique à Horn-Schunck (§9.4) : le terme de lissage du mouv
 
 C'est exactement le même curseur fidélité/régularité que le α de Horn-Schunck. ∎
 
-### Exemple chiffré
+### Exemple
 
 Deux pixels voisins. p ressemble nettement à l'objet (coût 1 pour « objet », 8 pour « fond ») ; q est ambigu (coût 5 pour « objet », 4 pour « fond »). Le désaccord entre voisins coûte 2.
 

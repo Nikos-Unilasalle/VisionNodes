@@ -3,18 +3,38 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Métriques de segmentation], toc: false)[
@@ -116,7 +136,7 @@ Dans votre canvas :
 
 Le nœud `IoU` effectue l'intersection et l'union logiques des deux masques binaires. L'inspecteur affiche instantanément l'IoU (Jaccard) et le coefficient de Dice (F1). Le nœud colore également l'image de sortie (vert pour les Vrais Positifs, rouge pour les Faux Positifs, bleu pour les Faux Négatifs), ce qui révèle aussitôt si l'erreur penche vers la sur- ou la sous-segmentation, sans biais lié à la taille de l'arrière-plan.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
+*Exercice de dépannage :* L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
 
 ---
 ]
@@ -245,9 +265,9 @@ Canvas : `Prediction Mask` + `Ground Truth Mask` → `Precision-Recall` → `Ins
 
 #subtitle[Juger le détecteur à tous ses réglages d'un coup, pas à un seul]
 
-#figfull("/figures/fig_ch4_obs1_pr_curve.pdf")
+#figcap("/figures/fig_ch4_obs1_pr_curve.pdf", [Observation — balayer le seuil de confiance trace la courbe PR])
 
-#figfull("/figures/fig_ch4_obs2_ap_area.pdf")
+#figcap("/figures/fig_ch4_obs2_ap_area.pdf", [Observation — l'AP résume la courbe PR en un seul nombre])
 
 === L'intention
 Le F1 ne vaut que pour un seuil de décision fixé. On voudrait une note qui résume la performance du détecteur *à tous les seuils possibles* à la fois, pour ne pas dépendre d'un choix arbitraire.
@@ -412,7 +432,7 @@ Canvas : `Prediction Mask` + `Ground Truth Mask` → `Boundary F1` → `Inspecto
 
 // ============================================================
 
-== une note unique cache toujours quelque chose
+== Une note unique cache toujours quelque chose
 
 Le mode d'échec le plus répandu dans les publications de vision par ordinateur n'est pas un mauvais modèle, c'est une *évaluation incomplète*. Le chapitre l'a montré section après section : l'IoU cache si l'erreur est en sur- ou sous-segmentation ; le Dice ne distingue pas un fort rappel d'une forte précision ; l'AP ne reflète pas le seuil de déploiement ; la PQ masque le déséquilibre détection / délimitation tant qu'on ne la décompose pas ; le BF est muet sur la surface.
 
@@ -421,5 +441,112 @@ Ce n'est pas un déficit corrigeable par une meilleure formule. Une métrique de
 La conduite pratique en découle : une comparaison honnête combine au moins une métrique de surface (IoU ou Dice) et une métrique de frontière (BF ou HD95), en précisant les seuils, la tolérance, la convention employée et la répartition par taille d'objet. Le chapitre 5 quittera l'évaluation pour la transformation des images, où le choix d'un filtre encodera, lui aussi, une hypothèse sur le signal.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 4
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Noter un masque de poumon contre l'avis de l'expert
+
+#figtodo("ex_ch4_radio_poumon", [Radiographie thoracique en niveaux de gris avec deux contours superposés : en ve...])
+
+
+*Ce que vous voyez.* Un masque automatique et un masque expert sur le même organe. La mission : leur attribuer une note de recouvrement et comprendre ce que cette note récompense ou pardonne.
+
+*Pipeline VNStudio*
+`Image Source` → `Threshold (Advanced)` (masque auto) → `Mask Overlap` → `Output Display`
+
+Chargez le masque expert comme seconde entrée. Le nœud affiche le score de recouvrement (IoU et Dice) et colorie la zone de désaccord.
+
+
+
+
+*Questions*
+
+
++ Lisez les deux scores affichés. Lequel est le plus élevé pour ce même masque ? Repérez sur l'image la bande colorée de désaccord, sur le centre ou sur les bords ?
+
++ Rétrécissez le masque automatique (érodez-le de quelques pixels). Les deux scores baissent ; lequel chute le plus vite ? Pour noter un petit organe, lequel est le plus « indulgent » ?
+
++ Trouvez la zone où les deux masques divergent le plus. Plus cette zone est large, plus le score baisse : pourquoi le désaccord pèse-t-il deux fois (compté à la fois comme manque et comme excès) ?
+
++ *Défi.* Réglez le seuillage pour que le masque automatique tienne entièrement à l'intérieur du contour expert (aucun débordement). Le score atteint-il 100 % ? Sinon, qu'est-ce qui l'en empêche, et que faut-il pour le maximiser ?
+
+
+
+=== Exercice 2 · Régler un détecteur d'empreintes entre prudence et excès de zèle
+
+#figtodo("ex_ch4_empreintes", [Scène de relevé d'empreintes : surface granuleuse avec plusieurs empreintes, cer...])
+
+
+*Ce que vous voyez.* Un détecteur qui trouve presque toutes les empreintes mais en invente quelques-unes sur le fond texturé. La mission : trouver le bon seuil de confiance selon l'enjeu.
+
+*Pipeline VNStudio*
+`Image Source` → `Print Detector` → `Detection Score` → `Output Display`
+
+Le nœud affiche, pour le seuil de confiance choisi, le nombre de bonnes détections, de fausses alarmes et d'empreintes ratées, ainsi que la précision et le rappel.
+
+
+
+
+*Questions*
+
+
++ Réglez le seuil très bas (0,1). Le détecteur attrape-t-il toutes les empreintes ? Combien de fausses alarmes invente-t-il en échange ?
+
++ Montez le seuil jusqu'à 0,9. Les fausses alarmes disparaissent-elles ? Combien de vraies empreintes perdez-vous au passage ? Décrivez le compromis que vous voyez basculer.
+
++ Trouvez le seuil qui efface toutes les fausses alarmes. À ce réglage, combien d'empreintes manquent encore ? Et le seuil qui n'en rate aucune : combien de fausses alarmes laisse-t-il ?
+
++ *Défi.* Dans une enquête, rater une empreinte coûte plus cher qu'une fausse alarme à vérifier. Quel seuil privilégier ? Justifiez votre choix avec les chiffres relevés, puis trouvez celui de l'enquête inverse (où chaque vérification est coûteuse).
+
+
+
+=== Exercice 3 · Départager deux découpages de parcelles agricoles
+
+#figtodo("ex_ch4_parcelles", [Image satellitaire de parcelles agricoles délimitées de deux façons : version A ...])
+
+
+*Ce que vous voyez.* Deux découpages qui reconnaissent les mêmes parcelles, mais tracent leurs bords avec un soin différent. La mission : trouver la note qui sait voir cette différence de qualité de bord.
+
+*Pipeline VNStudio*
+`Image Source` → `Boundary Score` → `Output Display`
+
+Le nœud compare deux segmentations à une référence et affiche, au choix, le recouvrement global (IoU) ou la note de bord (qualité du tracé des frontières).
+
+
+
+
+*Questions*
+
+
++ Notez A et B avec le recouvrement global. La note distingue-t-elle clairement les deux versions, ou les juge-t-elle presque équivalentes ?
+
++ Passez à la note de bord. Cette fois, l'écart entre A et B se creuse-t-il ? Laquelle des deux versions est récompensée pour ses contours fins ?
+
++ Élargissez la tolérance de la note de bord (le rayon où un bord prédit compte comme « bien placé »). À partir de quelle tolérance les deux versions redeviennent-elles équivalentes ? Pour une cartographie fine, faut-il une tolérance serrée ou large ?
+
++ *Défi.* Épaississez volontairement les bords de la version A. Sa note de recouvrement bouge-t-elle ? Sa note de bord se dégrade-t-elle ? Expliquez pourquoi un cadastre de précision doit être évalué sur les bords, pas seulement sur le recouvrement des surfaces.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

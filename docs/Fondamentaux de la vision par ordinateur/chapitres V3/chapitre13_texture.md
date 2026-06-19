@@ -48,7 +48,7 @@ La variance mesure l'amplitude des fluctuations de niveau : un fond uniforme a �
 
 Par construction, ces descripteurs ignorent l'arrangement spatial : ils résument la relation la plus pauvre possible, un pixel seul, sans voisin. Une zone lisse et une zone poivre-et-sel qui partagent le même histogramme leur sont rigoureusement indiscernables. Ce n'est pas un défaut accidentel mais le vide exact que les sections suivantes comblent, en réintroduisant la géométrie qu'on vient de jeter.
 
-### Exemple chiffré
+### Exemple
 
 Deux patchs 1×4 de même histogramme `{0, 1, 2, 3}` (chaque niveau une fois) :
 
@@ -100,7 +100,7 @@ Après normalisation, `P(i, j)` est la probabilité qu'un pixel de niveau i ait,
 
 La GLCM encode la co-variation locale : sur la diagonale, les paires de niveaux semblables (zones lisses) ; loin d'elle, les transitions brusques (bords, rugosité). Trois angles morts. Elle dépend du couple (d, θ) : une texture rayée verticalement est invisible si on n'interroge que θ = 0°. Elle explose en taille (L×L) et se vide si L est grand — d'où la quantification quasi obligatoire à 8–32 niveaux. Et elle n'est pas invariante en rotation, sauf à moyenner sur plusieurs θ.
 
-### Exemple chiffré
+### Exemple
 
 Image-jouet 3×3 à trois niveaux, décalage horizontal `d = 1, θ = 0°`, matrice symétrique :
 
@@ -148,7 +148,7 @@ Dans votre canvas :
 
 Le nœud `GLCM` quantifie en interne l'image d'entrée et calcule la matrice statistique. L'inspecteur affiche des résumés numériques (contraste, corrélation, homogénéité, énergie, entropie) calculés d'après les formules ci-dessus, et transmet la matrice au nœud `Haralick Features` du §13.3.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud **GLCM** et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
+**Exercice de dépannage :** L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud **GLCM** et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
 
 ---
 
@@ -182,7 +182,7 @@ Corrélation  = Σᵢⱼ (i−μᵢ)(j−μⱼ)·P(i,j) / (σᵢ·σⱼ)
 
 μᵢ, σᵢ sont la moyenne et l'écart-type des marges de la GLCM. Les cinq scalaires héritent du choix de (d, θ) ; ils sont le résumé compact de la statistique de la paire. ∎
 
-### Exemple chiffré
+### Exemple
 
 Sur la GLCM normalisée du §13.2 (six cases à 1/6) :
 
@@ -245,7 +245,7 @@ g_c est le niveau du centre, g_p celui de chaque voisin sur le cercle (P points,
 
 LBP capte les micro-structures à l'échelle R. Deux variantes comptent. Le **LBP uniforme** ne garde distinctement que les motifs à au plus 2 transitions 0↔1 dans le code circulaire (les motifs « propres » : coins, bords, arcs) et regroupe tous les autres, bruités, dans une seule case fourre-tout — ce qui réduit la dimension et la sensibilité au bruit. Le **LBP rotation-invariant** prend la plus petite rotation circulaire du code, pour ne pas distinguer `00001111` de `00111100`. Angles morts : LBP est mono-échelle (un seul R à la fois ; on empile plusieurs R pour le multi-échelle), fragile au bruit quand g_p ≈ g_c (un grain peut basculer le signe), et il jette l'**amplitude** des différences pour n'en garder que le signe — perdant l'information de contraste absolu.
 
-### Exemple chiffré
+### Exemple
 
 Voisinage 3×3 (P = 8, R = 1), centre g_c = 50, voisins parcourus depuis le coin haut-gauche en sens horaire :
 
@@ -297,7 +297,7 @@ Le premier facteur est l'enveloppe (la fenêtre gaussienne), le second l'ondulat
 
 Le banc répond fort là où la texture possède une périodicité à la fréquence et à l'orientation du filtre. Une trame régulière (tissu, grille, mire) allume un pic net ; une texture aléatoire (sable, bruit blanc) étale l'énergie uniformément. Angles morts : le pas d'échantillonnage (λ, θ) fixe la résolution — un motif de période intermédiaire entre deux bandes λ est mal vu ; le banc est coûteux (autant de convolutions que de filtres) ; et l'énergie seule ignore la **phase**, si bien que deux textures de même spectre mais d'agencement différent peuvent se confondre — l'angle mort du §13.1, transposé au domaine fréquentiel.
 
-### Exemple chiffré
+### Exemple
 
 Mire sinusoïdale verticale de **période 4 pixels** → fréquence 1/4 cycle/pixel, orientation 0° :
 

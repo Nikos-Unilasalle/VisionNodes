@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [Statistiques robustes], toc: false)[
@@ -51,8 +70,6 @@ Les statistiques robustes traversent tout le livre et en révèlent la face « m
 == Médiane et point de rupture : la robustesse comme influence bornée
 
 #subtitle[Un capteur fou tire sur la moyenne de tout son poids ; sur la médiane, d'un seul cran]
-
-#figfull("/figures/fig_ch16_obs1_median.svg")
 
 #figfull("/figures/fig_ch16_obs1_median.svg")
 
@@ -101,6 +118,8 @@ Canvas : `Scalar List` → `Robust Location` → `Inspector`. Le nœud affiche m
 == MAD : l'échelle robuste qui définit l'aberration
 
 #subtitle[Avant de dire qu'une mesure est « loin », il faut un mètre que l'aberration ne tord pas]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191414.jpeg")
 
 === L'intention
 Pour borner une influence « à ±k », encore faut-il savoir ce que k signifie en unités de bruit. L'écart-type classique serait le mètre-étalon naturel, mais il est lui-même détruit par un seul outlier (il contient une somme de carrés). On veut une mesure de dispersion que l'aberration ne puisse pas gonfler.
@@ -152,8 +171,6 @@ Canvas : `Scalar List` → `MAD Scale` → `Inspector`. Le nœud sort la médian
 == M-estimateurs : de Huber à Tukey, doser l'influence
 
 #subtitle[Jusqu'à quelle distance un résidu a-t-il le droit de tirer sur l'estimation]
-
-#figfull("/figures/fig_ch16_obs2_mestimators.svg")
 
 #figfull("/figures/fig_ch16_obs2_mestimators.svg")
 
@@ -272,8 +289,6 @@ Canvas : `Data Points` → `IRLS Fit` → `Inspector`. Le nœud part d'une initi
 
 #figfull("/figures/fig_ch16_obs3_ransac.svg")
 
-#figfull("/figures/fig_ch16_obs3_ransac.svg")
-
 === L'intention
 Quand les outliers sont nombreux — la moitié des appariements entre deux images peuvent être faux —, même les M-estimateurs cèdent. On veut une méthode qui tolère une *majorité* de données corrompues, en les excluant carrément plutôt qu'en les atténuant.
 
@@ -338,7 +353,7 @@ Dans votre canvas :
 
 Le nœud `Find Homography (RANSAC)` filtre en continu les correspondances aberrantes. L'inspecteur affiche le nombre d'appariements, le nombre d'inliers, le taux estimé de points valides (inliers) retenus, et permet d'ajuster le curseur du seuil de tolérance pour voir en temps réel comment l'algorithme rejette ou accepte les points selon leur cohérence géométrique.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à apparier deux images présentant un bruit de numérisation normal. Dans le nœud *Find Homography (RANSAC)*, régler le paramètre *Reprojection Threshold* sur une valeur extrêmement basse (ex. : 0.1 pixel). Le lecteur observe dans l'inspecteur que le nombre d'inliers retenus s'effondre à 0, provoquant l'échec de l'alignement. Cet échec contrôlé démontre que le bruit de mesure naturel des pixels sains dépasse cette tolérance excessivement stricte, les faisant classer à tort comme des données aberrantes.
+*Exercice de dépannage :* L'exercice consiste à apparier deux images présentant un bruit de numérisation normal. Dans le nœud *Find Homography (RANSAC)*, régler le paramètre *Reprojection Threshold* sur une valeur extrêmement basse (ex. : 0.1 pixel). Le lecteur observe dans l'inspecteur que le nombre d'inliers retenus s'effondre à 0, provoquant l'échec de l'alignement. Cet échec contrôlé démontre que le bruit de mesure naturel des pixels sains dépasse cette tolérance excessivement stricte, les faisant classer à tort comme des données aberrantes.
 
 ---
 ]
@@ -412,7 +427,7 @@ Canvas : `Image A` + `Image B` → `Feature Matching` → `Robust Fit` → `Insp
 
 // ============================================================
 
-== être robuste, c'est décider à l'avance ce qu'on refuse de croire
+== Être robuste, c'est décider à l'avance ce qu'on refuse de croire
 
 Le fil du chapitre tient en une fonction, ψ, et une question : jusqu'où une seule donnée a-t-elle le droit de déplacer le résultat ? Tous les estimateurs ne sont que des réponses différentes, lisibles sur la forme de ψ.
 
@@ -430,5 +445,112 @@ Le lien avec le chapitre 15 boucle une équivalence exacte : ψ est la dérivée
 C'est la dernière pièce du méta-fil de l'ouvrage. Un descripteur, un filtre, une distance, une base, un coût encodaient déjà chacun une hypothèse sur ce qui compte ; l'estimation robuste y ajoute une hypothèse sur ce dont il faut se *méfier* — fixée à l'avance, en bornant le poids qu'une observation pourra prendre. À chaque fois, le même geste : le bon cadre rend le problème presque résolu. La conclusion du livre reprendra ce fil pour le nouer.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 16
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Compter une température fiable malgré les capteurs chauds
+
+#figtodo("ex_ch16_thermique", [Image thermique d'un atelier en fausses couleurs : fond bleu-vert uniforme autou...])
+
+
+*Ce que vous voyez.* Une scène où quelques pixels extrêmes (les moteurs chauds) risquent de fausser l'estimation de la température ambiante. La mission : estimer la température du fond sans se laisser tromper par les points chauds.
+
+*Pipeline VNStudio*
+`Image Source` → `Region Properties` → `Output Display`
+
+Le nœud affiche dans l'inspecteur la moyenne, la médiane et l'écart absolu médian (MAD) de la zone sélectionnée.
+
+
+
+
+*Questions*
+
+
++ Relevez la moyenne et la médiane de l'image entière. Laquelle annonce une température proche du fond réel (20 °C) ? De combien de degrés la moyenne s'éloigne-t-elle à cause des moteurs ?
+
++ Avec l'outil de sélection, masquez les trois moteurs chauds, puis relisez les deux valeurs. Laquelle a bougé, laquelle est restée stable ? Qu'est-ce que cela vous apprend sur la valeur à privilégier pour un capteur de surveillance ?
+
++ Comparez l'écart-type classique et le MAD affichés. Le premier est gonflé par les moteurs, le second non. Lequel utiliseriez-vous pour fixer un seuil d'alerte « température anormale » qui ne se déclenche pas en permanence ?
+
++ *Défi.* Ajoutez de plus en plus de points chauds (peignez des zones rouges dans l'image source). À partir de quelle proportion de pixels chauds la médiane se met-elle enfin à grimper ? Vérifiez qu'elle tient bon presque jusqu'à ce que la moitié de l'image soit chaude.
+
+
+
+=== Exercice 2 · Retrouver la ligne d'horizon dans une scène encombrée
+
+#figtodo("ex_ch16_horizon", [Photographie d'un bord de mer : l'horizon sépare nettement ciel et mer, mais la ...])
+
+
+*Ce que vous voyez.* Une ligne dominante (l'horizon) noyée parmi des éléments qui ne la respectent pas. La mission : faire trouver l'horizon automatiquement malgré ces intrus.
+
+*Pipeline VNStudio*
+`Image Source` → `Canny Edge Detector` → `RANSAC Line Fit` → `Draw Overlay` → `Output Display`
+
+Le nœud RANSAC trace la droite consensus et affiche le nombre de points qui la soutiennent (inliers).
+
+
+
+
+*Questions*
+
+
++ Lancez le pipeline. La droite tracée suit-elle bien l'horizon, ou se laisse-t-elle attirer par le ponton et le voilier ? Notez le nombre d'inliers affiché.
+
++ Remplacez RANSAC par un simple ajustement de droite sur tous les points de contour (option « moindres carrés » du nœud). La droite penche-t-elle maintenant vers les intrus ? Comparez les deux tracés superposés.
+
++ Augmentez le seuil de tolérance de RANSAC (la distance en pixels pour qu'un point compte comme inlier). À partir de quelle valeur le ponton commence-t-il à être avalé dans le consensus et à fausser l'horizon ?
+
++ *Défi.* Couvrez la moitié de l'image de fausses lignes (ajoutez des objets inclinés). RANSAC retrouve-t-il toujours l'horizon ? Augmentez le nombre d'itérations du nœud et observez à partir de combien de tirages le résultat redevient stable d'un lancement à l'autre.
+
+
+
+=== Exercice 3 · Calibrer un capteur de distance avec des mesures parasites
+
+#figtodo("ex_ch16_calibration_capteur", [Nuage de points d'une calibration de télémètre : distance mesurée en fonction de...])
+
+
+*Ce que vous voyez.* Des mesures fiables pour la plupart, avec quatre relevés aberrants dus à des réflexions. La mission : trouver la vraie droite de calibration sans que ces quatre points la tordent.
+
+*Pipeline VNStudio*
+`CSV Reader` (mesures) → `Robust Line Fit` → `Scatter Plot` → `Output Display`
+
+Le nœud propose trois modes d'ajustement : ordinaire (L2), Huber (résistant), médian (très résistant). Il affiche la pente trouvée et superpose la droite au nuage.
+
+
+
+
+*Questions*
+
+
++ Ajustez en mode ordinaire. La droite passe-t-elle au milieu des bons points, ou est-elle tirée vers le haut par les quatre parasites ? Notez la pente.
+
++ Basculez en mode Huber, puis médian. La droite revient-elle se poser sur la tendance correcte ? Comparez les trois pentes : laquelle colle le mieux à la grappe des bonnes mesures ?
+
++ Réglez le curseur de tolérance du mode Huber du plus serré au plus large. Trouvez la plage où la droite ignore les quatre parasites tout en suivant fidèlement les bons points. Que se passe-t-il si vous serrez trop ?
+
++ *Défi.* Ajoutez quelques parasites supplémentaires dans le CSV. Jusqu'à combien de mesures erronées le mode médian tient-il avant de basculer ? Comparez avec le mode ordinaire, qui décroche dès le premier parasite. Pour un capteur embarqué, quel mode choisiriez-vous ?
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

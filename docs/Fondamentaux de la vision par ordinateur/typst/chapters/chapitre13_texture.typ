@@ -3,18 +3,37 @@
 // --- Helpers locaux ---
 #let subtitle(t) = block(above: 0.2em, below: 1.2em, sticky: true)[#text(style: "italic", fill: rgb("#64748b"))[#t]]
 
-#let figtodo(id, desc) = figure(
-  block(width: 100%, inset: 14pt, radius: 6pt,
-    fill: luma(246), stroke: (dash: "dashed", thickness: 0.8pt, paint: luma(170)))[
-    #align(center)[#text(fill: luma(110), style: "italic", size: 0.9em)[
-      Figure à créer — #raw(id)\
-      #desc
-    ]]
+#let figtodo(id, desc) = block(above: 2em, below: 2em, width: 100%)[
+  #block(width: 100%, inset: (x: 16pt, y: 14pt), radius: 6pt,
+    fill: rgb("#fdf3f5"), stroke: 1pt + rgb("#d0a0aa"))[
+    #grid(columns: (1fr, auto), column-gutter: 14pt, align: horizon,
+      align(left)[
+        #text(size: 0.78em, weight: "bold", fill: rgb("#c1002a"), font: "Roboto")[▪ IMAGE]
+        #v(0.4em)
+        #text(size: 0.9em, fill: rgb("#334155"), font: "Roboto")[#raw(id)]
+      ],
+      box(width: 42pt, height: 34pt, radius: 3pt, fill: rgb("#fff0f2"), stroke: 1pt + rgb("#c1002a"), clip: true)[
+        #align(center)[
+          #v(5pt)
+          #circle(radius: 4pt, fill: rgb("#c1002a").lighten(35%), stroke: none)
+          #v(2pt)
+          #polygon(fill: rgb("#c1002a").lighten(55%), stroke: none,
+            (0pt, 9pt), (13pt, 0pt), (26pt, 9pt))
+          #v(2pt)
+        ]
+      ]
+    )
   ]
-)
+]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
-#let canvas(body) = tip-box(title: "Dans VNStudio")[#body]
+#let canvas(body) = tip-box(title: "Dans VNStudio")[
+  #show heading: it => block(above: 0.5em, below: 0em)[
+    #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
+  ]
+  #set heading(numbering: none)
+  #body
+]
 
 
 #chapter(title: [La texture], toc: false)[
@@ -51,6 +70,8 @@ La texture est un carrefour du livre. Les statistiques du premier ordre sont les
 == Statistiques du premier ordre : la texture que l'histogramme rate
 
 #subtitle[Vider l'image dans un sac, secouer, compter les billes — sans noter d'où elles venaient]
+
+#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191408.jpeg")
 
 === L'intention
 Avant tout outil sophistiqué, on tente le plus simple : décrire une région par la statistique de ses niveaux de gris — sa clarté moyenne, l'amplitude de ses variations, son désordre. On verra que cette description, juste mais aveugle, échoue sur la texture, et c'est cet échec qui motive tout le reste du chapitre.
@@ -104,8 +125,6 @@ Canvas : `Image Source` → `Grayscale` → `First Order Stats` → `Inspector`.
 == Matrice de cooccurrence (GLCM) : la statistique des paires
 
 #subtitle[Compter non plus les billes, mais les paires de billes voisines]
-
-#figfull("/figures/fig_ch13_obs1_glcm.svg")
 
 #figfull("/figures/fig_ch13_obs1_glcm.svg")
 
@@ -174,7 +193,7 @@ Dans votre canvas :
 
 Le nœud `GLCM` quantifie en interne l'image d'entrée et calcule la matrice statistique. L'inspecteur affiche des résumés numériques (contraste, corrélation, homogénéité, énergie, entropie) calculés d'après les formules ci-dessus, et transmet la matrice au nœud `Haralick Features` du §13.3.
 
-*Exercice de dépannage (échec contrôlé) :* L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud *GLCM* et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
+*Exercice de dépannage :* L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud *GLCM* et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
 
 ---
 ]
@@ -241,8 +260,6 @@ Canvas : `Image Source` → `Grayscale` → `GLCM` → `Haralick Features` → `
 
 #figfull("/figures/fig_ch13_obs2_lbp.svg")
 
-#figfull("/figures/fig_ch13_obs2_lbp.svg")
-
 === L'intention
 La GLCM compte des paires. On veut maintenant décrire chaque pixel par la *forme* de son voisinage immédiat — bord, coin, point, zone plate — et résumer la région par la fréquence de ces formes. On vise au passage une robustesse à l'éclairage que les niveaux bruts n'offrent pas.
 
@@ -301,8 +318,6 @@ Canvas : `Image Source` → `Grayscale` → `LBP` → `Inspector`. Le nœud expo
 == Bancs de filtres et énergie de Gabor : la texture comme spectre orienté
 
 #subtitle[Un peigne accordé à une fréquence et une direction, qui vibre fort sur la bonne trame]
-
-#figfull("/figures/fig_ch13_obs3_gabor.svg")
 
 #figfull("/figures/fig_ch13_obs3_gabor.svg")
 
@@ -373,7 +388,7 @@ _État de l'art :_ ces familles précèdent l'apprentissage profond, qui domine 
 
 // ============================================================
 
-== la texture est une relation, pas une valeur
+== La texture est une relation, pas une valeur
 
 Le chapitre raconte une seule histoire, déclinée quatre fois : un pixel n'a pas de texture, seule une relation entre pixels en a une. Chaque section a construit cette relation un peu plus finement.
 
@@ -389,5 +404,112 @@ D'un bout à l'autre, le même mouvement : on ajoute la géométrie que le premi
 C'est le fil du chapitre 1 transposé du contour au motif : un descripteur garde une chose et en jette une autre. Comme une distance déclare ce qui rapproche deux points (chapitre 3) et un filtre encode un a priori sur le signal (chapitre 5), décrire une texture revient à choisir le couple relation-échelle où la régularité cherchée devient visible. Le chapitre 14 quittera la description pour la mesure de la qualité d'une image, où la même entropie de Shannon reparaîtra, cette fois comme juge de l'information.
 
 ---
+
+
+// ============================================================
+// EXERCICES — CHAPITRE 13
+// ============================================================
+
+#pagebreak()
+== Exercices pratiques
+
+
+
+
+=== Exercice 1 · Classer quatre matériaux par leur grain
+
+#figtodo("ex_ch13_textures_glcm", [Quatre carrés de texture côte à côte sur fond gris : (A) tissu de coton blanc un...])
+
+
+*Ce que vous voyez.* Quatre matériaux dont le grain est radicalement différent. La mission : trouver les chiffres qui les distinguent automatiquement, comme le ferait un système de tri de matériaux.
+
+*Pipeline VNStudio*
+`Image Source` (recadrez sur chaque texture) → `GLCM Features` → `Output Display`
+
+Le nœud mesure trois indicateurs de texture : le contraste (rugosité), l'homogénéité (régularité), l'énergie (répétition d'un motif).
+
+
+
+
+*Questions*
+
+
++ Relevez les trois indicateurs pour chaque texture. Lequel des quatre matériaux a le contraste le plus fort ? Lequel a l'homogénéité la plus haute ?
+
++ Le bois a des veines horizontales. Faites mesurer la texture dans le sens des veines, puis perpendiculairement. Le contraste change-t-il selon la direction ? Qu'est-ce que cela révèle sur l'orientation du grain ?
+
++ Le béton est désordonné, la céramique très répétitive. Lequel des deux a l'énergie la plus haute ? Pourquoi un motif qui se répète à l'identique « concentre » sa signature au lieu de l'étaler ?
+
++ *Défi.* Réglez les indicateurs pour séparer les quatre matériaux sans erreur : quel duo de chiffres suffit à les ranger en quatre tas distincts ? Faites ensuite pivoter le bois de 90° et vérifiez s'il atterrit toujours dans le bon tas, ou s'il faut mesurer dans plusieurs directions pour devenir insensible à la rotation.
+
+
+
+=== Exercice 2 · Reconnaître une texture à l'échelle du micro-motif
+
+#figtodo("ex_ch13_textures_lbp", [Les mêmes quatre matériaux qu'à l'exercice 1, mais à fort grossissement : fibres...])
+
+
+*Ce que vous voyez.* Les mêmes textures vues au plus près, à l'échelle du motif élémentaire. La mission : construire une signature de texture fondée sur ces micro-motifs.
+
+*Pipeline VNStudio*
+`Image Source` → `LBP` *(à créer)* → `Histogram` → `Output Display`
+
+Le nœud résume le voisinage de chaque pixel en un code de micro-motif, et l'histogramme de ces codes devient la signature de la texture. Modes disponibles : classique, ou insensible à la rotation.
+
+
+
+
+*Questions*
+
+
++ Calculez la signature des quatre textures et affichez les histogrammes côte à côte. Lequel est très « pointu » (un ou deux motifs dominants) ? Lequel est étalé (tous les motifs présents) ? Reliez cela à la régularité visuelle.
+
++ Comparez deux à deux les signatures. Quelle paire de matériaux a les histogrammes les plus ressemblants ? Êtes-vous surpris du résultat à l'œil ?
+
++ Faites pivoter le bois de 45°. En mode classique, sa signature change-t-elle ? En mode insensible à la rotation, reste-t-elle stable ? Quel mode choisir pour reconnaître un matériau quelle que soit son orientation, et que perd-on en finesse ?
+
++ *Défi.* Pour la paire la plus difficile à séparer (question 2), réglez le rayon du voisinage du nœud LBP jusqu'à ce que leurs signatures se distinguent enfin. Quel rayon y arrive ? Vérifiez que les autres matériaux restent bien séparés à ce réglage.
+
+
+
+=== Exercice 3 · Cartographier l'orientation des crêtes d'une empreinte
+
+#figtodo("ex_ch13_empreinte", [Photographie d'une empreinte digitale sur fond blanc : crêtes noires parallèles ...])
+
+
+*Ce que vous voyez.* Une texture quasi-périodique dont l'orientation tourne lentement, avec des points singuliers (les fourches). La mission : dresser la carte d'orientation des crêtes, première étape de toute reconnaissance d'empreinte.
+
+*Pipeline VNStudio*
+`Image Source` → `Gabor Bank` *(à créer)* (8 orientations, espacement 12 px) → `Colormap` → `Output Display`
+
+Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation qui répond le plus fort. Le résultat est une carte d'orientation locale.
+
+
+
+
+*Questions*
+
+
++ Sur une zone de crêtes horizontales, quelle orientation le banc retient-il ? Et sur une zone où les crêtes montent en diagonale ? La carte suit-elle bien la direction visible des crêtes ?
+
++ Suivez la carte d'orientation le long d'une boucle de l'empreinte. La transition d'une orientation à l'autre est-elle brutale ou douce ? Qu'est-ce que cela dit de la façon dont les crêtes tournent ?
+
++ Repérez les fourches (minuties) : sur la carte d'énergie, ressortent-elles en zones sombres (réponse faible et ambiguë) ? Pourquoi une fourche casse-t-elle la belle régularité locale des crêtes ?
+
++ *Défi.* Réglez l'espacement du banc bien au-delà de 12 pixels. L'empreinte est-elle encore détectée, ou la réponse s'effondre-t-elle ? Trouvez la plage d'espacement où les crêtes ressortent le mieux — c'est elle qui correspond à leur vraie fréquence.
+
+
+
+
+
+
+#v(2em)
+#align(center)[
+  #image("/QR Code.png", width: 60pt)
+  #v(4pt)
+  #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
+]
+
+
 
 ]

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 868 188" width="868" height="188" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
 <rect x="-30" y="-56" width="868" height="188" fill="#ffffff"/>
-<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 17.4 — SIFT : l&#x27;orientation dominante tourne la carte locale du descripteur</text>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation — SIFT : l&#x27;orientation dominante tourne la carte locale du descripteur</text>
 <path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M375.0,53.0 C402.5,53.0 402.5,79.0 430.0,79.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M158.0,53.0 C294.0,53.0 294.0,53.0 430.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>

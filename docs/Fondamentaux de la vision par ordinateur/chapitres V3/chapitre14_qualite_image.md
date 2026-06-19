@@ -50,7 +50,7 @@ Où `I` est l'intensité du pixel, `a` représente le gain (part Poisson) et `b`
 ### Ce qu'il mesure, et son angle mort
 Ce modèle mesure la dispersion des pixels. Il montre que le rapport signal sur bruit (SNR) croît comme la racine carrée du signal moyen (`SNR = √λ`) : doubler l'exposition ne multiplie le SNR que par `√2`. Son angle mort classique est de croire qu'une image sombre est « propre » parce qu'une fluctuation absolue faible y réside ; en réalité, son signal est si faible que son SNR est désastreux.
 
-### Exemple chiffré
+### Exemple
 Soit un capteur avec un bruit de lecture de `σ_r = 5 e⁻` (variance `25 e⁻²`). Comparons deux pixels de clartés moyennes différentes :
 
 | Zone | Signal `λ` (e⁻) | Variance totale (λ + σ_r²) | Écart-type `σ` | Rapport SNR (λ/σ) | Régime dominant |
@@ -122,7 +122,7 @@ N est le nombre de pixels, MAX la valeur maximale représentable (255 en 8 bits,
 
 L'observateur modélisé pose les deux images l'une sur l'autre et somme les écarts au carré, chaque pixel traité indépendamment et à l'identique. Il n'a aucune notion de structure, de voisinage, ni de *où* l'erreur se trouve. D'où deux échecs symétriques : une dégradation globale mais bénigne — léger décalage de luminance, faible désalignement — gonfle le MSE alors que l'œil ne voit rien ; à l'inverse, une atteinte locale mais grave — une lettre effacée en OCR, une micro-fissure sur une pièce — reste noyée dans la moyenne de millions de pixels intacts. Le MSE dit *combien* les valeurs diffèrent en moyenne, jamais *comment* ni *où*.
 
-### Exemple chiffré
+### Exemple
 
 Patch 2×2 (8 bits), un seul pixel altéré de 8 niveaux :
 
@@ -166,7 +166,7 @@ Dans votre canvas :
 
 Le nœud `PSNR` calcule l'erreur quadratique moyenne pixel par pixel. L'inspecteur affiche le MSE et le PSNR en décibels. Expérimenter en décalant l'image d'un seul pixel via un nœud de translation permet d'observer l'effondrement immédiat du PSNR vers 0 dB, illustrant de façon tangible la sensibilité excessive de cette métrique à la structure absolue.
 
-**Exercice de dépannage (échec contrôlé) :** L'exercice consiste à charger deux images identiques converties au format virgule flottante normalisée entre [0.0, 1.0]. Connecter ces images au nœud `PSNR` et laisser le paramètre **Dynamic Range (MAX)** réglé sur `255` au lieu de `1.0`. Le lecteur constate dans l'inspecteur que la valeur du PSNR s'effondre de près de 48 dB, affichant un score de bruit catastrophique alors que les deux images sont strictement identiques. Cet échec contrôlé démontre l'impact critique du choix de l'échelle de clarté de référence lors du calcul des métriques de bruit.
+**Exercice de dépannage :** L'exercice consiste à charger deux images identiques converties au format virgule flottante normalisée entre [0.0, 1.0]. Connecter ces images au nœud `PSNR` et laisser le paramètre **Dynamic Range (MAX)** réglé sur `255` au lieu de `1.0`. Le lecteur constate dans l'inspecteur que la valeur du PSNR s'effondre de près de 48 dB, affichant un score de bruit catastrophique alors que les deux images sont strictement identiques. Cet échec contrôlé démontre l'impact critique du choix de l'échelle de clarté de référence lors du calcul des métriques de bruit.
 
 ---
 
@@ -199,7 +199,7 @@ Chaque terme a la forme `2ab/(a²+b²)`, qui vaut 1 si et seulement si a = b et 
 
 L'observateur modélisé juge la similarité structurelle locale, peu sensible aux décalages de luminance et de contraste — un modèle artisanal de la vision humaine. Quatre angles morts. C'est une approximation codée à la main, pas la perception réelle : elle ne capte ni le masquage de texture, ni la couleur (SSIM standard ne travaille que sur la luminance). Elle est mono-échelle — la fenêtre 11×11 confond des flous de niveaux différents, d'où MS-SSIM qui combine plusieurs sous-échantillonnages (le choix d'échelle des chapitres 5 et 6). Comme le MSE, elle suppose les images **recalées** — un décalage d'un pixel abîme la structure. Et elle reste *full-reference* : sans l'original, rien à mesurer.
 
-### Exemple chiffré
+### Exemple
 
 Reprenons la dégradation que le MSE punissait : un décalage uniforme de +10. Patch de moyenne μₓ = 100, écart-type σₓ = 5 ; on pose ŷ = x + 10, donc μᵧ = 110, σᵧ = 5, et la covariance vaut 25 (corrélation parfaite, structure intacte) :
 
@@ -249,7 +249,7 @@ p(g) est la fréquence du niveau g. Par la concavité de −x·log x, H est maxi
 
 L'observateur ne pose qu'une question — « y a-t-il de l'information ? » — sans jamais regarder *où* elle se trouve. C'est la mesure du premier ordre par excellence, aveugle à l'arrangement spatial (l'angle mort du §13.1) : une image nette et la même image aux pixels mélangés au hasard ont exactement la même entropie. Pire, le **bruit augmente l'entropie** (il étale l'histogramme), si bien qu'une image plus bruitée peut scorer « mieux » qu'une image propre — l'entropie confond information utile et bruit. Son vrai créneau : l'exposition, le seuillage à entropie maximale (chapitre 12), et l'information mutuelle pour le recalage multimodal (scanner ↔ IRM).
 
-### Exemple chiffré
+### Exemple
 
 Deux images 2×2 calculables à la main :
 
@@ -301,7 +301,7 @@ Trois proxys de la même grandeur, l'énergie haute-fréquence : la variance des
 
 L'observateur est un détecteur de mise au point, sans mémoire de l'original. Angle mort majeur : la valeur absolue n'est **pas comparable d'une scène à l'autre** — un ciel uniforme parfaitement net a peu de hautes fréquences, donc un score bas malgré sa netteté ; ces mesures ne sont monotones qu'au sein d'une *même* scène parcourue en focus. Comme l'entropie, elles sont dupées par le **bruit**, qui injecte des hautes fréquences (une image bruitée floue peut battre une image nette propre). Et elles ne disent rien des autres dégradations : couleur, artefacts de compression, distorsion.
 
-### Exemple chiffré
+### Exemple
 
 Laplacien 1-D discret (noyau `[1 −2 1]`) sur un front net puis flouté :
 
