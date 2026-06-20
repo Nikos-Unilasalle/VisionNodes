@@ -100,7 +100,7 @@ M₁₁ = produit d'inertie     (la masse penche-t-elle en diagonale ?)
 
 Cette correspondance n'est pas décorative : les propriétés des sections suivantes — centre de gravité, axes principaux — ne sont pas des recettes de vision inventées pour l'occasion, mais des résultats de mécanique connus de longue date, transposés tels quels à une image. ∎
 
-#question-box(title: "Exemple chiffré — le masque jouet du chapitre")[
+#question-box(title: "Exemple — le masque jouet du chapitre")[
 Tout le chapitre s'appuie sur un même masque 3 × 3, assez petit pour que chaque calcul tienne sur un coin de feuille :
 
 ```
@@ -141,7 +141,7 @@ Dans le nœud `Image Moments` (ou via `cv2.moments` en Python), le comportement 
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Threshold` ──> `Image Moments` ──> `Inspector`.
+`Image File` ──> `Threshold` ──> `Image Moments` ──> `Display`.
 
 Le nœud `Image Moments` calcule en continu l'ensemble des moments bruts et centrés d'après les formules ci-dessus. Le nœud de conversion `Grayscale` placé en amont garantit que les images couleur sont correctement projetées sur un seul canal avant le calcul.
 
@@ -170,7 +170,7 @@ x̄ = M₁₀ / M₀₀ ,   ȳ = M₀₁ / M₀₀
 
 La barre au-dessus de x̄ se lit « x barre » et désigne une moyenne. La formule dit cela exactement : la somme des positions (M₁₀) divisée par le nombre de pixels (M₀₀). Diviser une somme par un effectif, c'est faire une moyenne — le centroïde n'est rien d'autre que la position moyenne des pixels. Voir la forme `a/b`, annexe C : une mise en proportion qui efface l'effectif. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Sur le masque jouet : x̄ = 7/7 = 1 et ȳ = 7/7 = 1. Le centroïde tombe sur le pixel central — cohérent avec la symétrie de la forme, dont les deux coins manquants se compensent.
 
 Le centroïde est l'ancrage de presque toute analyse spatiale. En vidéo, suivre un objet revient souvent à suivre la suite de ses centroïdes. En astronomie, le centroïde d'une étoile sur le capteur localise la source avec une précision *inférieure au pixel* (le §2.8 expliquera pourquoi). En recalage d'images, aligner deux acquisitions commence souvent par superposer leurs barycentres.
@@ -185,7 +185,7 @@ Les outils ne rangent pas les coordonnées dans le même ordre : les uns raisonn
 ]
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. L'inspecteur affiche les coordonnées du centroïde et le nœud le dessine en surimpression sur l'objet ; on voit immédiatement s'il tombe hors de la forme (cas du U ou du croissant).
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. L'inspecteur affiche les coordonnées du centroïde et le nœud le dessine en surimpression sur l'objet ; on voit immédiatement s'il tombe hors de la forme (cas du U ou du croissant).
 
 ---
 ]
@@ -195,6 +195,8 @@ Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. L'i
 == Moments centraux : décrire la forme depuis son propre centre
 
 #subtitle[Mesurer les écarts au centroïde, pas au coin de l'image]
+
+#figfull("/figures/fig_ch2_obs2_mu30_asymmetry.pdf")
 
 === L'intention
 Les moments bruts mélangent deux choses : la forme de l'objet et l'endroit où il se trouve dans l'image. On veut ne garder que la forme, pour qu'un objet déplacé reste identique à lui-même.
@@ -220,7 +222,7 @@ La lettre μ se lit « mu ». La seule différence avec les moments bruts est qu
 
 Inutile de retenir ces formules ; il suffit de savoir qu'elles existent, ce qui permet de tout calculer en un seul passage sur l'image. ∎
 
-#question-box(title: "Exemple chiffré (suite du masque jouet)")[
+#question-box(title: "Exemple (suite du masque jouet)")[
 ```
 μ₂₀ = 11 − 1×7 = 4
 μ₀₂ = 11 − 1×7 = 4
@@ -231,9 +233,6 @@ Le signe de μ₁₁ se lit comme une tendance : négatif, il signifie que lorsq
 ]
 
 === Les moments d'ordre 3 mesurent l'asymétrie
-
-#figcap("/figures/fig_ch2_obs2_mu30_asymmetry.pdf", [Observation — μ₃₀ change de signe, pas de magnitude (asymétrie)])
-
 À l'ordre 2, les écarts au centroïde sont élevés au carré : un pixel à gauche et un pixel à droite contribuent pareil, car le carré efface le signe (un nombre négatif au carré devient positif). À l'ordre 3, le cube *conserve le signe* : les deux côtés ne se compensent plus, et le moment mesure de quel côté la masse penche.
 
 ```
@@ -244,7 +243,7 @@ Le signe de μ₁₁ se lit comme une tendance : négatif, il signifie que lorsq
 Un caractère manuscrit comme « e » ou « a » a une asymétrie marquée que μ₃₀ capture ; un « o » symétrique a μ₃₀ ≈ μ₀₃ ≈ 0. Ces moments d'ordre 3 sont la matière première des invariants de Hu (§2.7). Pour le fil du chapitre, retenez que le cube amplifie les pixels lointains bien plus que le carré : l'ordre 3 est plus expressif, et plus fragile.
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les moments centraux figurent dans la sortie du même nœud, à côté des moments bruts ; l'inspecteur les liste séparément.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Les moments centraux figurent dans la sortie du même nœud, à côté des moments bruts ; l'inspecteur les liste séparément.
 
 ---
 ]
@@ -278,7 +277,7 @@ Pour comprendre cette formule géométriquement, faisons une expérience de pens
 
 Ce n'est pas un nombre choisi au hasard : c'est la seule valeur géométrique qui rende le rapport insensible au zoom. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Sur le masque jouet : η₂₀ = μ₂₀/μ₀₀² = 4/49 ≈ 0,0816 (à l'ordre 2, γ = 2). Agrandissons mentalement la forme d'un facteur 10 : elle compte désormais 700 pixels, μ₂₀ devient environ 4 × 10⁴ et μ₀₀² environ 49 × 10⁴. Le rapport reste ≈ 0,0816 — c'est cette stabilité qui permet de reconnaître la même forme à toutes les tailles.
 ]
 
@@ -287,7 +286,7 @@ Le raisonnement suppose qu'agrandir une forme multiplie proprement ses pixels. E
 ]
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les moments normalisés sont une troisième famille de sorties du nœud ; relier deux tailles d'un même objet à deux branches du canvas permet de vérifier d'un coup d'œil qu'ils coïncident.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Les moments normalisés sont une troisième famille de sorties du nœud ; relier deux tailles d'un même objet à deux branches du canvas permet de vérifier d'un coup d'œil qu'ils coïncident.
 
 ---
 ]
@@ -300,7 +299,7 @@ Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les
 
 #figfull("/illustrations/chap2.5.png")
 
-#figcap("/figures/fig_ch2_obs3_orientation.pdf", [Observation — l'orientation est instable sur une forme isotrope])
+#figfull("/figures/fig_ch2_obs3_orientation.pdf")
 
 === L'intention
 On veut connaître l'axe le long duquel la forme s'allonge — pour redresser un caractère, aligner une empreinte, normaliser la pose d'une cellule avant de la classer.
@@ -316,7 +315,7 @@ L'analogie mécanique donne l'image directement. Prenez une règle plate : elle 
 
 θ se lit « thêta » et désigne l'angle cherché. La fonction `arctan2` est une variante de l'arc tangente qui, contrairement à la simple `arctan`, tient compte du quadrant : elle distingue un axe penché vers le haut d'un axe penché vers le bas, là où `arctan` les confondrait. Un point mérite d'être compris, car il explique la forme de la formule : on y trouve l'angle *double* 2θ, pas θ. La raison est qu'un axe n'a pas de sens de parcours — une règle orientée à 30° ou à 30° + 180° pointe dans la même direction. Travailler avec 2θ encode naturellement cette ambiguïté, et le facteur ½ ramène le résultat dans l'intervalle utile. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Masque jouet : 2μ₁₁ = −4 et μ₂₀ − μ₀₂ = 0. Donc arctan2(−4, 0) = −90°, et *θ = −45°*. La forme est orientée le long de la diagonale descendante — ce que le signe de μ₁₁ annonçait en 2.3, et qu'on vérifie d'un coup d'œil sur le dessin (rappel du §2.1 : l'angle se lit dans le repère image, y vers le bas).
 
 En télédétection, l'histogramme des orientations de bâtiments révèle la trame d'une ville ; en microscopie, celui des fibres de collagène quantifie l'anisotropie d'un tissu.
@@ -335,7 +334,7 @@ Elle vaut 0 pour un disque (aucune direction privilégiée) et tend vers 1 pour 
 ]
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`. Le nœud trace l'axe principal par-dessus l'objet et l'inspecteur donne l'angle et l'anisotropie côte à côte, ce qui signale d'emblée les formes rondes où l'angle n'a pas de sens.
+Canvas : `Image File` → `Threshold` → `Region Properties` → `Display`. Le nœud trace l'axe principal par-dessus l'objet et l'inspecteur donne l'angle et l'anisotropie côte à côte, ce qui signale d'emblée les formes rondes où l'angle n'a pas de sens.
 
 ---
 ]
@@ -348,7 +347,7 @@ Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`.
 
 #figfull("/illustrations/chap2.6.png")
 
-#figcap("/figures/fig_ch2_obs1_ellipse_overflow.pdf", [Observation — l'ellipse équivalente déborde de l'objet])
+#figfull("/figures/fig_ch2_obs1_ellipse_overflow.pdf")
 
 === L'intention
 On cherche le résumé le plus dépouillé d'une silhouette : une seule ellipse qui répartit sa masse comme la forme réelle — même centre, même orientation, même façon de s'étaler.
@@ -366,7 +365,7 @@ excentricité   : e = √(1 − λ₂/λ₁)
 
 L'excentricité n'est rien d'autre que la comparaison des deux étalements — l'excentricité promise au chapitre 1, enfin reliée à sa source. Étalements égaux (forme ronde) : le rapport λ₂/λ₁ vaut 1, et e tombe à 0. Petit étalement minuscule face au grand (forme en aiguille) : le rapport tend vers 0, et e tend vers 1. ∎
 
-#question-box(title: "Exemple chiffré (suite et fin du masque jouet)")[
+#question-box(title: "Exemple (suite et fin du masque jouet)")[
 En combinant μ₂₀ = 4, μ₀₂ = 4 et μ₁₁ = −2 :
 
 ```
@@ -385,7 +384,7 @@ Pour mesurer la dimension réelle d'une pièce, d'une bactérie ou d'un trait, o
 ]
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`. Le nœud superpose l'ellipse équivalente sur l'objet et l'inspecteur donne grand axe, petit axe et excentricité. Une vérification utile : tracer un rectangle synthétique de longueur connue et constater que le grand axe ressort ~15 % trop grand.
+Canvas : `Image File` → `Threshold` → `Region Properties` → `Display`. Le nœud superpose l'ellipse équivalente sur l'objet et l'inspecteur donne grand axe, petit axe et excentricité. Une vérification utile : tracer un rectangle synthétique de longueur connue et constater que le grand axe ressort ~15 % trop grand.
 
 ---
 ]
@@ -417,7 +416,7 @@ C'est l'application historique. Un « A » conserve sa signature petit, grand, t
 Pour la reconnaissance générale, les descripteurs appris (réseaux de neurones) dominent largement. Les moments de Hu gardent trois créneaux bien réels : quand on a peu ou pas de données d'entraînement ; quand il faut une invariance *prouvable* et non simplement constatée (métrologie, certification industrielle) ; quand le budget de calcul est minuscule (capteurs embarqués). La question utile n'est pas « Hu ou réseau de neurones ? » mais « mon problème exige-t-il une garantie mathématique, ou une performance statistique ? ».
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Hu Moments` → `Inspector`. Le nœud sort les sept invariants déjà ramenés en échelle logarithmique. Brancher le même objet tourné sur une seconde branche montre que la signature reste stable, sauf le signe de φ₇ pour une image en miroir.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Le nœud sort les sept invariants déjà ramenés en échelle logarithmique. Brancher le même objet tourné sur une seconde branche montre que la signature reste stable, sauf le signe de φ₇ pour une image en miroir.
 
 ---
 ]
@@ -442,7 +441,7 @@ centroïde pondéré  : barycentre lumineux (tiré vers les zones claires)
 
 Le masque binaire traite tous les pixels comme aussi lourds les uns que les autres ; la version pondérée rend les pixels clairs plus lourds. Le point d'équilibre se déplace alors vers les zones lumineuses. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 En astronomie, une étoile s'étale sur quelques pixels avec un profil lumineux en cloche ; le centroïde pondéré moyenne ce profil et localise la source au *sous-pixel* — bien plus finement que le simple pixel le plus brillant. C'est le principe des mesures astrométriques de précision. De même, en caractérisation de faisceau laser, les moments pondérés d'ordre 2 définissent la largeur du faisceau (méthode D4σ, norme ISO 11146).
 ]
 
@@ -451,7 +450,7 @@ Les moments pondérés héritent de tout ce qui affecte l'intensité : vignettag
 ]
 
 #canvas[
-Canvas : `Image Source` → `Background Subtract` → `Image Moments (weighted)` → `Inspector`. En branchant aussi le masque binaire sur une seconde entrée, l'inspecteur affiche l'écart entre le centroïde géométrique et le centroïde lumineux — la quantité exploitée en astrométrie.
+Canvas : `Image File` → `Background Subtractor (MOG2)` → `Image Moments` → `Display`. En branchant aussi le masque binaire sur une seconde entrée, l'inspecteur affiche l'écart entre le centroïde géométrique et le centroïde lumineux — la quantité exploitée en astrométrie.
 
 ---
 ]
@@ -479,7 +478,7 @@ Canvas : `Image Source` → `Background Subtract` → `Image Moments (weighted)`
 
 // ============================================================
 
-== Chaque détail se paie en fragilité
+== chaque détail se paie en fragilité
 
 Les moments héritent de toutes les erreurs de segmentation, mais pas au même degré. Chaque montée en ordre élève les écarts au centroïde à une puissance de plus : les pixels du bord — précisément ceux que la segmentation place mal — pèsent de plus en plus lourd. D'où l'échelle de fragilité du chapitre :
 
@@ -496,34 +495,26 @@ Le chapitre 1 montrait qu'un descripteur garde une chose et en jette une autre ;
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 2
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Localiser le centre d'un panneau pour le suivre
 
-#figtodo("ex_ch2_panneaux", [Plaque de signalisation routière vue de face sur fond uni : un panneau triangula...])
-
+#figtodo("ex_ch2_panneaux", [Plaque de signalisation routière vue de face sur fond uni : un panneau triangula])
 
 *Ce que vous voyez.* Trois formes géométriques simples, bien contrastées sur fond blanc. La mission : trouver le centre exact de chacune, comme le ferait un système d'aide à la conduite.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display` → `Display`
 
 Le nœud `Image Moments` marque le centre de gravité de chaque panneau et affiche son aire dans l'inspecteur.
 
 
 
-
 *Questions*
-
 
 + Pour chaque panneau, lisez l'aire et la position du centre. Le centre tombe-t-il bien au milieu visuel de la forme ? Comparez l'aire des trois panneaux.
 
@@ -534,24 +525,20 @@ Le nœud `Image Moments` marque le centre de gravité de chaque panneau et affic
 + *Défi.* Rapprochez deux panneaux jusqu'à ce qu'ils se touchent. Le nœud les voit-il comme un seul objet (un seul centre) ou deux ? Réglez le seuillage pour les re-séparer et retrouver deux centres distincts.
 
 
-
 === Exercice 2 · Mesurer l'inclinaison de cristaux par l'ellipse équivalente
 
-#figtodo("ex_ch2_cristaux_sel", [Vue microscopique de cristaux de sel gemme : cubes parfaits vus de face apparais...])
-
+#figtodo("ex_ch2_cristaux_sel", [Vue microscopique de cristaux de sel gemme : cubes parfaits vus de face apparais])
 
 *Ce que vous voyez.* Des cristaux dont la face visible va du carré parfait au losange étiré selon leur inclinaison. La mission : mesurer cette inclinaison automatiquement.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display` → `Display`
 
 Activez l'affichage de l'ellipse équivalente : le nœud dessine sur chaque cristal une ellipse qui épouse son allongement et son orientation.
 
 
 
-
 *Questions*
-
 
 + Sur un cristal vu de face (carré), à quoi ressemble l'ellipse dessinée : un cercle ou une ellipse étirée ? Et sur un cristal incliné ?
 
@@ -562,24 +549,20 @@ Activez l'affichage de l'ellipse équivalente : le nœud dessine sur chaque cris
 + *Défi.* Triez les cristaux en deux tas : « vus de face » (ellipse presque ronde) et « inclinés » (ellipse étirée). Quel critère d'allongement de l'ellipse sépare proprement les deux tas ? Combien de cristaux inclinés comptez-vous ?
 
 
-
 === Exercice 3 · Reconnaître un chiffre manuscrit malgré la taille et l'inclinaison
 
-#figtodo("ex_ch2_chiffres", [Six chiffres arabes manuscrits (1 à 6) tracés à la main sur fond blanc, dans des...])
-
+#figtodo("ex_ch2_chiffres", [Six chiffres arabes manuscrits (1 à 6) tracés à la main sur fond blanc, dans des])
 
 *Ce que vous voyez.* Les mêmes chiffres écrits par la même personne, mais avec des variations de taille et d'inclinaison. La mission : trouver une « empreinte » de forme qui reste la même malgré ces variations.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display`
 
 Le nœud calcule pour chaque chiffre ses sept invariants de Hu, une empreinte numérique de sa forme.
 
 
 
-
 *Questions*
-
 
 + Relevez l'empreinte de Hu d'un même chiffre écrit en deux tailles différentes. Les valeurs restent-elles proches ? Qu'est-ce que cela promet pour reconnaître un chiffre quelle que soit sa taille ?
 
@@ -591,16 +574,11 @@ Le nœud calcule pour chaque chiffre ses sept invariants de Hu, une empreinte nu
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

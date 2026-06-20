@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Une surface plane vue de biais. La mission : la remettre à plat, face caméra, comme un scanner — l'opération de base pour numériser un document photographié.
 
 **Pipeline VNStudio**
-`Image Source` → `RANSAC Homography` (4 coins) → `Output Display`
+`Image File` → `RANSAC Homography` (4 coins) → `Display`
 
 Pointez les quatre coins de l'affiche dans l'image, puis les quatre coins du rectangle voulu. Le nœud redresse la surface.
 
@@ -34,7 +34,7 @@ Pointez les quatre coins de l'affiche dans l'image, puis les quatre coins du rec
 **Ce que vous voyez.** Des lignes que l'on sait droites, mais que l'objectif a bombées. La mission : redresser cette déformation, indispensable avant toute mesure géométrique sur une photo grand-angle.
 
 **Pipeline VNStudio**
-`Image Source` → `Distortion Correction` *(à créer)* → `Output Display`
+`Image File` → `Distortion Correction` → `Display`
 
 Le nœud propose un curseur de correction qui redresse progressivement les lignes courbées.
 
@@ -59,7 +59,7 @@ Le nœud propose un curseur de correction qui redresse progressivement les ligne
 **Ce que vous voyez.** La même scène vue par deux yeux légèrement écartés. La mission : transformer ce décalage en carte de profondeur, comme la vision binoculaire humaine.
 
 **Pipeline VNStudio**
-`Image Source (gauche)` + `Image Source (droite)` → `Stereo Disparity` *(à créer)* → `Colormap` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `Stereo Disparity` → `Display`
 
 Le nœud mesure, pour chaque point, son décalage entre les deux vues et en déduit une carte colorée de proche à lointain.
 

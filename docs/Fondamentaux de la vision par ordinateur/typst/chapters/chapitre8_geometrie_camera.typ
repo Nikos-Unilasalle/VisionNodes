@@ -72,7 +72,7 @@ Le fil du chapitre tient en une phrase : *une caméra encode une perte précise,
 
 #figfull("/illustrations/chap8.1.png")
 
-#figcap("/figures/fig_ch8_obs1_homogeneous.pdf", [Observation — coordonnées homogènes : T·R·S en une seule matrice])
+#figfull("/figures/fig_ch8_obs1_homogeneous.pdf")
 
 === L'intention
 Quand on veut fusionner deux images d'une même scène — assembler un panorama, recaler un plan sur une photo aérienne, incruster un objet 3D en réalité augmentée —, on doit calculer comment un pixel de la première image correspond à un pixel de la seconde. Cette correspondance implique une division par la profondeur, et une division rend tout *non-linéaire* : on ne peut plus chaîner les calculs en multipliant des matrices. On voudrait une écriture qui garde la projection linéaire d'un bout à l'autre.
@@ -143,7 +143,7 @@ K = [ fx   0   cx ]
 - *fx, fy* : la focale en pixels (distance focale ÷ taille physique d'un pixel)
 - *cx, cy* : le centre optique — là où l'axe optique touche le capteur ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 f = 500 px, centre (320, 240). Un point à Zc = 2 m, décalé de 30 cm sur le côté et 10 cm en hauteur :
 
 ```
@@ -185,7 +185,7 @@ Des poses toutes frontales et centrées laissent certains paramètres mal contra
 ]
 
 #canvas[
-Canvas : `Camera Input` → `Checkerboard Detector` → `Camera Calibration`. L'inspecteur affiche le RMS en direct à chaque nouvelle pose ajoutée, et exporte K au format JSON.
+Canvas : `Webcam` → `Distortion Correction` → `Display`. Renseigner manuellement les coefficients k1/k2 dans le nœud `Distortion Correction` ; le nœud `Display` permet de comparer la sortie corrigée en temps réel sur chaque image.
 
 ---
 ]
@@ -222,12 +222,12 @@ x'  ∼  H · x          (H : matrice 3×3, 8 degrés de liberté)
 
 La raison de fond : pour les points d'un plan Z = 0, la colonne de R associée à Z disparaît du produit K·\[R|t\]. Il reste une matrice 3×3 — exactement H. La perte de profondeur devient ici un avantage : pour un plan, Z est connu (nul), donc le terme problématique s'annule de lui-même. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Vue aérienne d'un parking depuis une caméra inclinée à 45°. Quatre coins de la zone d'intérêt sont identifiés dans l'image, leurs coordonnées métriques au sol connues → H se calcule → chaque image est redressée en vue de dessus. Les véhicules deviennent mesurables en mètres.
 ]
 
 #canvas[
-Canvas : `Camera Input` → `Feature Matching` → `Find Homography (RANSAC)` → `Warp Perspective` → `Output`. L'inspecteur affiche le nombre d'inliers : un bon H dépasse généralement 80 % d'inliers sur des correspondances ORB filtrées.
+Canvas : `Image File` → `Feature Matcher` → `RANSAC Homography` → `Perspective Warp` → `Display`. Le nœud `Display` affiche le résultat redressé ; l'inspecteur du nœud `RANSAC Homography` indique le nombre d'inliers : un bon H dépasse généralement 80 % d'inliers sur des correspondances ORB filtrées.
 
 ---
 ]
@@ -302,7 +302,7 @@ Z  =  f · B / d
 
 *3. La baseline est un arbitrage de conception.* Grande baseline → grandes disparités → meilleure précision en profondeur, mais recouvrement réduit entre les deux images et appariement plus difficile pour les objets proches. Chaque application a son B optimal. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 f = 800 px, B = 12 cm, disparité d = 40 px :
 
 ```
@@ -317,7 +317,7 @@ Le vrai défi est de *mesurer la disparité* : trouver pour chaque pixel gauche 
 ]
 
 #canvas[
-Canvas : `Camera Left` + `Camera Right` → `Stereo Rectify` → `StereoSGBM` → `Depth Map` → `Colorize`. La carte de profondeur s'affiche en fausses couleurs ; l'inspecteur donne les valeurs min/max/médiane en mètres.
+Canvas : `Image File` (gauche) + `Image File` (droite) → `Stereo Disparity` → `Display`. Le nœud `Stereo Disparity` calcule la carte de disparité en fausses couleurs via SGBM ; le paramètre *Colormap* règle l'échelle de couleur, et les valeurs min/max s'affichent dans l'inspecteur.
 
 ---
 ]
@@ -328,7 +328,7 @@ Canvas : `Camera Left` + `Camera Right` → `Stereo Rectify` → `StereoSGBM` �
 
 #subtitle[Un miroir déformant qui laisse le centre intact et tord les bords]
 
-#figcap("/figures/fig_ch8_obs2_radial_distortion.pdf", [Observation — distorsion radiale : les droites courbent puis se redressent])
+#figfull("/figures/fig_ch8_obs2_radial_distortion.pdf")
 
 === L'intention
 Un objectif réel n'est pas parfait : les lignes droites de la scène arrivent légèrement courbées dans l'image, surtout en périphérie. En métrologie ou en cartographie, cette déformation biaise toutes les mesures ; en vision, elle fausse la détection de coins et la précision des homographies. Il faut la corriger avant tout le reste.
@@ -369,7 +369,7 @@ C'est la métrique de référence de tout le chapitre — calibration, reconstru
   [> 1,0 px], [Poses insuffisamment diversifiées, ou mauvaise détection des coins],
 )
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Le modèle prédit le coin d'un damier en (320,0 ; 240,0), détecté à (320,8 ; 239,4) :
 
 ```
@@ -378,7 +378,7 @@ erreur²  =  0,8² + 0,6²  =  0,64 + 0,36  =  1,00 px²     →  RMS = 1,0 px s
 ]
 
 #info-box(title: "Paramètres opérationnels (VNStudio / Python)")[
-Dans le nœud `Undistort` (ou via `cv2.undistort` en Python), la correction géométrique repose sur les paramètres opérationnels suivants :
+Dans le nœud `Distortion Correction` (ou via `cv2.undistort` en Python), la correction géométrique repose sur les paramètres opérationnels suivants :
 
 - *Matrice de la caméra (K)* :
 - Dans VNStudio, ce paramètre se configure via le fichier de calibration de la caméra ou les champs *Camera Matrix (K)* ; en Python (OpenCV), il correspond à l'argument `cameraMatrix` dans la fonction `cv2.undistort`.
@@ -393,11 +393,11 @@ Dans le nœud `Undistort` (ou via `cv2.undistort` en Python), la correction géo
 
 #canvas[
 Dans votre canvas :
-`Camera Source` ──> `Undistort` ──> `Output Display`.
+`Image File` ──> `Distortion Correction` ──> `Display`.
 
-Le nœud `Undistort` prend en entrée l'image déformée et lui applique la matrice de calibration préalablement estimée. Il se place toujours en début de pipeline et précalcule les cartes de remapping au chargement des paramètres. La correction s'applique ensuite en temps réel sans coût supplémentaire par image, redressant instantanément les lignes courbes de l'objectif grand angle en lignes droites parfaites, particulièrement près des bords.
+Le nœud `Distortion Correction` prend en entrée l'image déformée et lui applique la matrice de calibration préalablement estimée. Il se place toujours en début de pipeline et précalcule les cartes de remapping au chargement des paramètres. La correction s'applique ensuite en temps réel sans coût supplémentaire par image, redressant instantanément les lignes courbes de l'objectif grand angle en lignes droites parfaites, particulièrement près des bords.
 
-*Exercice de dépannage :* L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud *Find Homography (RANSAC)*. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
+*Exercice de dépannage :* L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud *RANSAC Homography*. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
 
 ---
 ]
@@ -425,7 +425,7 @@ Le nœud `Undistort` prend en entrée l'image déformée et lui applique la matr
 
 // ============================================================
 
-== Défaire ce qu'une caméra a fait
+== défaire ce qu'une caméra a fait
 
 La caméra est l'entrée de tout pipeline de vision, et elle impose d'emblée une contrainte : elle a aplati un espace à trois dimensions sur un plan, en sacrifiant la profondeur. Tant qu'on ne comprend pas comment cette perte s'est produite, on ne peut ni mesurer, ni recaler, ni reconstruire correctement.
 
@@ -435,34 +435,26 @@ On retrouve la logique des chapitres 5 et 3 : un filtre encode un a priori sur c
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 8
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Redresser une affiche photographiée de travers
 
-#figtodo("ex_ch8_affiche_oblique", [Photographie d'une affiche de concert collée en oblique sur un mur : le texte es...])
-
+#figtodo("ex_ch8_affiche_oblique", [Photographie d'une affiche de concert collée en oblique sur un mur : le texte es])
 
 *Ce que vous voyez.* Une surface plane vue de biais. La mission : la remettre à plat, face caméra, comme un scanner — l'opération de base pour numériser un document photographié.
 
 *Pipeline VNStudio*
-`Image Source` → `RANSAC Homography` (4 coins) → `Output Display`
+`Image File` → `RANSAC Homography` (4 coins) → `Display`
 
 Pointez les quatre coins de l'affiche dans l'image, puis les quatre coins du rectangle voulu. Le nœud redresse la surface.
 
 
 
-
 *Questions*
-
 
 + Après redressement, les lignes de texte sont-elles bien horizontales ? L'affiche forme-t-elle un vrai rectangle ? Vérifiez avec un profil de ligne posé sur une ligne de texte.
 
@@ -473,24 +465,20 @@ Pointez les quatre coins de l'affiche dans l'image, puis les quatre coins du rec
 + *Défi.* Essayez de redresser une affiche collée sur un mur courbé. Quelle partie ressort bien droite, quelle partie reste déformée ? Concluez sur la limite de l'outil quand la surface n'est pas vraiment plane.
 
 
-
 === Exercice 2 · Corriger les lignes courbées d'un objectif grand-angle
 
-#figtodo("ex_ch8_fenetre_grandangle", [Fenêtre à croisillons photographiée au grand-angle : les barres horizontales se ...])
-
+#figtodo("ex_ch8_fenetre_grandangle", [Fenêtre à croisillons photographiée au grand-angle : les barres horizontales se ])
 
 *Ce que vous voyez.* Des lignes que l'on sait droites, mais que l'objectif a bombées. La mission : redresser cette déformation, indispensable avant toute mesure géométrique sur une photo grand-angle.
 
 *Pipeline VNStudio*
-`Image Source` → `Distortion Correction` *(à créer)* → `Output Display`
+`Image File` → `Distortion Correction` → `Display`
 
 Le nœud propose un curseur de correction qui redresse progressivement les lignes courbées.
 
 
 
-
 *Questions*
-
 
 + Sans correction, posez un profil de ligne sur une barre horizontale. La courbe est-elle bombée ? Où la déformation est-elle la plus forte : au centre ou sur les bords ?
 
@@ -501,24 +489,20 @@ Le nœud propose un curseur de correction qui redresse progressivement les ligne
 + *Défi.* Après correction, toutes les barres sont-elles parfaitement droites, ou certaines penchent-elles encore ? Enchaînez un redressement de perspective (exercice 1) pour aligner le croisillon sur une grille parfaite. Quelle déformation relève de l'objectif, laquelle relève de l'angle de prise de vue ?
 
 
-
 === Exercice 3 · Mesurer la profondeur d'une scène avec deux caméras
 
-#figtodo("ex_ch8_stereo_bibliotheque", [Paire d'images stéréo d'une bibliothèque : vue gauche et vue droite décalées de ...])
-
+#figtodo("ex_ch8_stereo_bibliotheque", [Paire d'images stéréo d'une bibliothèque : vue gauche et vue droite décalées de ])
 
 *Ce que vous voyez.* La même scène vue par deux yeux légèrement écartés. La mission : transformer ce décalage en carte de profondeur, comme la vision binoculaire humaine.
 
 *Pipeline VNStudio*
-`Image Source (gauche)` + `Image Source (droite)` → `Stereo Disparity` *(à créer)* → `Colormap` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `Stereo Disparity` → `Display`
 
 Le nœud mesure, pour chaque point, son décalage entre les deux vues et en déduit une carte colorée de proche à lointain.
 
 
 
-
 *Questions*
-
 
 + Sur la carte colorée, les livres du premier plan ressortent-ils en « proche » ou en « loin » ? Pourquoi un objet proche se décale-t-il davantage entre les deux vues qu'un objet lointain ?
 
@@ -530,16 +514,11 @@ Le nœud mesure, pour chaque point, son décalage entre les deux vues et en déd
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

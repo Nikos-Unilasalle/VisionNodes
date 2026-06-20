@@ -69,7 +69,7 @@ Le seuil d'Otsu se calcule sur une image en **niveaux de gris** (un seul canal, 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Otsu Threshold` → `Output Display`. Le nœud de seuillage affiche dans l'inspecteur le seuil trouvé et superpose l'histogramme avec le trait de coupe, ce qui permet de voir d'un coup d'œil si l'histogramme est vraiment bimodal.
+Canvas : `Image File` → `Grayscale` → `Threshold (Advanced)` → `Display`. Dans le nœud `Threshold (Advanced)`, sélectionner le mode *Otsu* : le seuil est calculé automatiquement et affiché dans l'inspecteur, avec l'histogramme et le trait de coupe, ce qui permet de voir d'un coup d'œil si l'histogramme est vraiment bimodal.
 
 *Domaines :* binarisation de documents (OCR), tri de grains sur fond contrasté, masquage de cellules colorées en microscopie.
 
@@ -133,7 +133,7 @@ Dans le nœud `Adaptive Threshold` (ou via `cv2.adaptiveThreshold` en Python), l
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Adaptive Threshold` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Adaptive Threshold` ──> `Display`.
 
 En faisant glisser le curseur `Block Size` de manière à ce qu'il dépasse la taille des motifs d'intérêt, et en ajustant le curseur `C` pour éliminer le bruit du fond, vous obtiendrez un masque binaire parfaitement net de vos objets, quel que soit l'éclairage de la scène.
 
@@ -224,7 +224,7 @@ Deux maxima isolés à `DT = 3` (centres en (3,3) et (3,9)), séparés par une s
 
 ### Dans VNStudio
 
-Canvas : `Image Source` -> `Threshold` -> `Distance Transform` -> `Python Node (watershed)` -> `Output Display`
+Canvas : `Image File` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Display`. Sélectionner le mode *Otsu* dans `Threshold (Advanced)` pour binariser le masque, puis laisser `Watershed` calculer les marqueurs à partir des maxima de la transformée de distance.
 
 ### Schéma de nœuds
 
@@ -295,7 +295,7 @@ Si l'on mélange couleur (de 0 à 255) et position (de 0 à 2000 pixels) sans pr
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Color Convert (BGR→Lab)` → `K-Means` → `Output Display`. Le nœud `K-Means` expose le nombre de classes K et le nombre d'essais ; l'inspecteur affiche le nombre de pixels par classe et recolore l'image avec la couleur moyenne de chaque groupe.
+Canvas : `Image File` → `K-Means Segmentation` → `Display`. Dans le nœud `K-Means Segmentation`, choisir *Color Space : Lab* (les distances Lab correspondent mieux à la perception, cf. ch7) et régler *K Clusters* ; l'inspecteur indique le K utilisé et recolore chaque pixel avec la couleur centroïde de son groupe.
 
 *Domaines :* segmentation couleur en télédétection (couvert végétal, zones urbaines), réduction du nombre de couleurs, classification de tissus en histologie.
 
@@ -344,7 +344,7 @@ h est le seul vrai réglage, et il n'a pas de valeur universelle : on le choisit
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Mean Shift` → `Output Display`. Le nœud expose les deux rayons (spatial et couleur) ; l'inspecteur indique le nombre de régions distinctes obtenues après convergence, ce qui rend visible l'effet de h sur le sur- ou sous-découpage.
+Canvas : `Image File` → `Mean Shift Segmentation` → `Display`. Le nœud expose les deux rayons (spatial et couleur) ; l'inspecteur indique le nombre de régions distinctes obtenues après convergence, ce qui rend visible l'effet de h sur le sur- ou sous-découpage.
 
 *Domaines :* simplification d'images satellite, détection de régions d'intérêt sans nombre de classes connu, lissage de textures en conservant les contours.
 
@@ -398,7 +398,7 @@ Tout se joue sur la courbe de départ : posée trop loin de l'objet, elle abouti
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Gaussian Blur` → `Active Contour` → `Output Display`. Le nœud `Active Contour` prend une courbe initiale (un cercle posé sur l'objet) et expose les curseurs d'élasticité et de rigidité ; il superpose la courbe finale sur l'image et l'inspecteur en donne le centre et le nombre de points.
+Canvas : `Image File` → `Grayscale` → `Blur` → `Active Contour (Snake)` → `Display`. Le nœud `Active Contour (Snake)` prend une courbe initiale (un cercle posé sur l'objet) et expose les curseurs d'élasticité et de rigidité ; il superpose la courbe finale sur l'image et l'inspecteur en donne le centre et le nombre de points.
 
 *Domaines :* segmentation d'organes en imagerie médicale, suivi de silhouette en vidéo, délimitation de cellules isolées.
 
@@ -457,7 +457,7 @@ La version interactive (GrabCut) a besoin d'une **amorce** : un rectangle grossi
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `GrabCut` → `Output Display`. Le nœud `GrabCut` prend l'amorce (un rectangle tracé sur l'image, ou des traits objet/fond) et le curseur λ ; il sort le masque objet/fond et l'inspecteur compte les pixels de chaque côté.
+Canvas : `Image File` → `GrabCut (Graph Cut)` → `Display`. Le nœud `GrabCut (Graph Cut)` prend l'amorce (un rectangle tracé sur l'image, ou des traits objet/fond) et le curseur λ ; il sort le masque objet/fond et l'inspecteur compte les pixels de chaque côté.
 
 *Domaines :* détourage semi-automatique en retouche, segmentation interactive d'organes (un radiologue trace l'amorce), séparation objet/fond en robotique de saisie.
 

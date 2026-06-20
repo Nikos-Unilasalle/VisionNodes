@@ -58,7 +58,7 @@ L'orientation se calcule avec `arctan2`, une variante de l'arc tangente qui tien
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` → `Output Display`. Le nœud sort la carte de magnitude (les contours s'allument en clair) et, dans l'inspecteur, le gradient moyen et maximal ainsi que le nombre de pixels au-dessus d'un seuil de contour.
+Canvas : `Image File` → `Grayscale` → `Image Gradient` → `Display`. Le nœud sort la carte de magnitude (les contours s'allument en clair) et, dans l'inspecteur, le gradient moyen et maximal ainsi que le nombre de pixels au-dessus d'un seuil de contour.
 
 ---
 
@@ -101,7 +101,7 @@ Un bord clair→sombre donne une variation négative. Si l'on stocke le résulta
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` (ou `Scharr Gradient`) → `Output Display`. Le nœud calcule en interne en nombres à virgule et expose au choix Sobel ou Scharr ; l'inspecteur compare leurs magnitudes maximales sur la même image.
+Canvas : `Image File` → `Grayscale` → `Image Gradient` (ou `Image Gradient`) → `Display`. Le nœud calcule en interne en nombres à virgule et expose au choix Sobel ou Scharr ; l'inspecteur compare leurs magnitudes maximales sur la même image.
 
 ---
 
@@ -171,11 +171,11 @@ Dans le nœud `Canny` (ou via `cv2.Canny` en Python), la détection repose sur t
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Canny Edge Detector` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Canny Edge` ──> `Display`.
 
 En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer directement la mécanique de l'hystérésis : augmenter le seuil haut élimine les détails de texture parasites, tandis que diminuer le seuil bas reconnecte les lignes de contours interrompues. Le nœud expose également l'option de calcul automatique par la médiane et l'inspecteur affiche la densité de pixels de contour pour faciliter le réglage.
 
-**Exercice de dépannage :** L'exercice consiste à inverser les seuils dans le nœud **Canny Edge Detector** en réglant **Low Threshold** sur 150 et **High Threshold** sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
+**Exercice de dépannage :** L'exercice consiste à inverser les seuils dans le nœud **Canny Edge** en réglant **Low Threshold** sur 150 et **High Threshold** sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
 
 ---
 
@@ -214,7 +214,7 @@ Les deux valeurs propres de ce tableau `T` (notées `λ₁` et `λ₂`) correspo
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Structure Tensor` → `Output Display`. Le nœud colore chaque pixel selon le cas diagnostiqué (plat / bord / coin) d'après ses deux valeurs propres, ce qui donne à voir la géométrie locale d'un coup d'œil.
+Canvas : `Image File` → `Grayscale` → `Structure Tensor` → `Display`. Le nœud colore chaque pixel selon le cas diagnostiqué (plat / bord / coin) d'après ses deux valeurs propres, ce qui donne à voir la géométrie locale d'un coup d'œil.
 
 ---
 
@@ -268,7 +268,7 @@ Les deux critères donnent le même diagnostic : seul le troisième voisinage es
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Harris Corners` (ou `Good Features To Track`) → `Output Display`. Le nœud marque les coins détectés sur l'image et l'inspecteur en donne le nombre ; un réglage de sensibilité fait varier combien de coins ressortent.
+Canvas : `Image File` → `Grayscale` → `Harris Corners` (ou `Harris Corners`) → `Display`. Le nœud marque les coins détectés sur l'image et l'inspecteur en donne le nombre ; un réglage de sensibilité fait varier combien de coins ressortent.
 
 ---
 

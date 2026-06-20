@@ -9,9 +9,9 @@
 **Ce que vous voyez.** Une scène où coexistent des détails fins, moyens et larges. La mission : un filtre qui ne garde qu'une seule échelle à la fois, comme on règle la « clarté » ou le « grain » dans un logiciel de retouche.
 
 **Pipeline VNStudio**
-`Image Source` → `Gaussian Filter` (doux) → branche A
-`Image Source` → `Gaussian Filter` (plus large) → branche B
-`Difference` (A − B) → `Colormap` → `Output Display`
+`Image File` → `Blur` (doux) → branche A
+`Image File` → `Blur` (plus large) → branche B
+`Python Node` (A − B) → `Colormap` → `Display`
 
 La différence de deux flous garde uniquement les détails situés entre les deux échelles. Réglez les deux flous du plus serré au plus large.
 
@@ -36,10 +36,10 @@ La différence de deux flous garde uniquement les détails situés entre les deu
 **Ce que vous voyez.** Une surface à lisser (la texture de peinture) avec des détails à sauver absolument (la fissure, le bord porte/mur). La mission : nettoyer le bruit sans noyer les contours.
 
 **Pipeline VNStudio**
-`Image Source` → `Split Half` :
-— gauche : `Gaussian Filter`
+`Image File` → `Split Half` :
+— gauche : `Blur`
 — droite : `Bilateral Filter` *(à créer)*
-→ `Output Display`
+→ `Display`
 
 L'affichage côte à côte compare un flou ordinaire et un flou qui « respecte les bords ».
 
@@ -64,7 +64,7 @@ L'affichage côte à côte compare un flou ordinaire et un flou qui « respecte 
 **Ce que vous voyez.** Une texture dont les orientations dominantes sautent aux yeux. La mission : un filtre qui ne réagit qu'à une direction et une finesse données, pour cartographier les fils.
 
 **Pipeline VNStudio**
-`Image Source` → `Gabor Filter` *(à créer)* (4 orientations) → `Grid Compare` → `Output Display`
+`Image File` → `Gabor Bank` (4 orientations) → `Grid Compare Dashboard` → `Display`
 
 Chaque filtre ne s'allume que pour les fils qui suivent son orientation. La grille compare les quatre réponses.
 

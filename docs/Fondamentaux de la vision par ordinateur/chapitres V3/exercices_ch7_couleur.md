@@ -9,10 +9,10 @@
 **Ce que vous voyez.** Un dégradé qui semble irrégulier alors qu'il a été conçu régulier. La mission : comprendre et corriger l'encodage gamma qui déforme les valeurs sombres dans tout fichier d'image.
 
 **Pipeline VNStudio**
-`Image Source` → `Split Half` :
+`Image File` → `Split Half` :
 — gauche : image brute → `Line Profile`
 — droite : `Gamma Correction` *(à créer)* → `Line Profile`
-→ `Output Display`
+→ `Display`
 
 Le profil de ligne trace la luminosité le long du dégradé ; comparez avant et après correction.
 
@@ -37,7 +37,7 @@ Le profil de ligne trace la luminosité le long du dégradé ; comparez avant et
 **Ce que vous voyez.** Des fruits de teintes distinctes mais d'éclairages variables. La mission : les trier par couleur sans qu'une pomme à l'ombre soit confondue avec une orange au soleil.
 
 **Pipeline VNStudio**
-`Image Source` → `Color Space` (RGB → HSV) → `Channel Split` → `Output Display`
+`Image File` → `Color Space` → `Channel Split` → `Display`
 
 En HSV, la teinte est séparée de la luminosité : un objet garde sa teinte qu'il soit éclairé ou ombré.
 
@@ -62,7 +62,7 @@ En HSV, la teinte est séparée de la luminosité : un objet garde sa teinte qu'
 **Ce que vous voyez.** Deux couleurs que les valeurs brutes jugent presque identiques mais que l'œil distingue sans peine. La mission : mesurer la différence de couleur d'une façon fidèle à la perception, pour un contrôle qualité de teinte.
 
 **Pipeline VNStudio**
-`Image Source` → `Color Space` (RGB → Lab) → `Color Distance` → `Output Display`
+`Image File` → `Color Space` → `Color Distance` → `Display`
 
 L'espace Lab est construit pour que les écarts de couleur collent à la perception ; le nœud y mesure la distance perceptuelle entre deux zones.
 

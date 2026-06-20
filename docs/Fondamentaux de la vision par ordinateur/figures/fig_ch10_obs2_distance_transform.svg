@@ -1,58 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-28.00 -54.00 1059.00 232.00" width="1059.00" height="232.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif">
-<rect x="-28.00" y="-54.00" width="1059.00" height="232.00" fill="#ffffff"/>
-<text x="0.00" y="-14.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#7a1338" letter-spacing="0.3">Observation — la transformée de distance : chaque pixel connaît son éloignement</text>
-<path d="M150.00,42.00 C179.00,42.00 179.00,42.00 208.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
-<path d="M358.00,42.00 C387.00,42.00 387.00,42.00 416.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
-<path d="M587.00,42.00 C616.00,42.00 616.00,42.00 645.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
-<path d="M795.00,42.00 C824.00,42.00 824.00,42.00 853.00,42.00" fill="none" stroke="#d12f6b" stroke-width="2" stroke-linecap="round"/>
-<rect x="0.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
-<rect x="0.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
-<path d="M0.00,30.00 L0.00,9.00 Q0.00,0.00 9.00,0.00 L141.00,0.00 Q150.00,0.00 150.00,9.00 L150.00,30.00 Z" fill="#fde7ee"/>
-<line x1="0.00" y1="30.00" x2="150.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
-<rect x="10.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
-<text x="26.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Image Loader</text>
-<circle cx="150.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="137.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
-<rect x="208.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
-<rect x="208.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
-<path d="M208.00,30.00 L208.00,9.00 Q208.00,0.00 217.00,0.00 L349.00,0.00 Q358.00,0.00 358.00,9.00 L358.00,30.00 Z" fill="#fde7ee"/>
-<line x1="208.00" y1="30.00" x2="358.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
-<rect x="218.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
-<text x="234.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Threshold</text>
-<circle cx="208.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="221.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
-<circle cx="358.00" cy="42.00" r="6" fill="#d12f6b"/><circle cx="358.00" cy="42.00" r="2.70" fill="#ffffff"/>
-<text x="345.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">mask</text>
-<rect x="416.00" y="2.00" width="171" height="150" rx="9" fill="#fbd7e3"/>
-<rect x="416.00" y="0.00" width="171" height="150" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
-<path d="M416.00,30.00 L416.00,9.00 Q416.00,0.00 425.00,0.00 L578.00,0.00 Q587.00,0.00 587.00,9.00 L587.00,30.00 Z" fill="#fde7ee"/>
-<line x1="416.00" y1="30.00" x2="587.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
-<rect x="426.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
-<text x="442.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Distance Transform</text>
-<circle cx="416.00" cy="42.00" r="6" fill="#d12f6b"/><circle cx="416.00" cy="42.00" r="2.70" fill="#ffffff"/>
-<text x="429.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">mask</text>
-<circle cx="587.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="574.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">dist</text>
-<clipPath id="clip_dt"><rect x="426.00" y="62.00" width="151.00" height="64.00" rx="6"/></clipPath>
-<rect x="426.00" y="62.00" width="151.00" height="64.00" rx="6" fill="#fdeef3" stroke="#f0a8c2" stroke-width="1"/>
-<g clip-path="url(#clip_dt)"><ellipse cx="501.5" cy="94.0" rx="23.7" ry="17.0" fill="#e0588f" fill-opacity="0.09"/><ellipse cx="501.5" cy="94.0" rx="17.5" ry="12.6" fill="#e0588f" fill-opacity="0.14"/><ellipse cx="501.5" cy="94.0" rx="11.8" ry="8.5" fill="#e0588f" fill-opacity="0.22"/><ellipse cx="501.5" cy="94.0" rx="6.7" ry="4.8" fill="#e0588f" fill-opacity="0.38"/><circle cx="501.5" cy="94.0" r="2.8" fill="#e0588f"/></g>
-<text x="501.50" y="138.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="middle" font-style="italic" fill="#a85d78">iso-contours = éloignement</text>
-<rect x="645.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
-<rect x="645.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
-<path d="M645.00,30.00 L645.00,9.00 Q645.00,0.00 654.00,0.00 L786.00,0.00 Q795.00,0.00 795.00,9.00 L795.00,30.00 Z" fill="#fde7ee"/>
-<line x1="645.00" y1="30.00" x2="795.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
-<rect x="655.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
-<text x="671.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Colormap / LUT</text>
-<circle cx="645.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="658.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
-<circle cx="795.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="782.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" text-anchor="end" fill="#a85d78">image</text>
-<rect x="853.00" y="2.00" width="150" height="54" rx="9" fill="#fbd7e3"/>
-<rect x="853.00" y="0.00" width="150" height="54" rx="9" fill="#ffffff" stroke="#d12f6b" stroke-width="1.5"/>
-<path d="M853.00,30.00 L853.00,9.00 Q853.00,0.00 862.00,0.00 L994.00,0.00 Q1003.00,0.00 1003.00,9.00 L1003.00,30.00 Z" fill="#fde7ee"/>
-<line x1="853.00" y1="30.00" x2="1003.00" y2="30.00" stroke="#f0a8c2" stroke-width="1"/>
-<rect x="863.00" y="11.00" width="8" height="8" rx="2" fill="#d12f6b"/>
-<text x="879.00" y="19.00" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#7a1338">Output Display</text>
-<circle cx="853.00" cy="42.00" r="6" fill="#d12f6b"/>
-<text x="866.00" y="45.50" font-family="DejaVu Sans, Inter, Helvetica, Arial, sans-serif" font-size="10.5" fill="#a85d78">image</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 1018 188" width="1018" height="188" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="1018" height="188" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 10.2 — Transform. de distance : iso-contours = éloignement du bord</text>
+<path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M368.0,79.0 C384.0,79.0 384.0,53.0 400.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M585.0,53.0 C612.5,53.0 612.5,53.0 640.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M798.0,53.0 C799.0,53.0 799.0,53.0 800.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image File</text>
+<circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<rect x="210" y="0" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M210,30 L210,10 Q210,0 220,0 L358,0 Q368,0 368,10 L368,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="289" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Threshold</text>
+<circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="222" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="368.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="356" y="57" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<circle cx="368.0" cy="79.0" r="5.5" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="356" y="83" font-size="11" text-anchor="end" fill="#9a5566">mask</text>
+<rect x="400" y="0" width="185" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M400,30 L400,10 Q400,0 410,0 L575,0 Q585,0 585,10 L585,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="492" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Distance Transform</text>
+<circle cx="400.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="400.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="412" y="57" font-size="11" fill="#9a5566">mask</text>
+<circle cx="585.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="573" y="57" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<circle cx="585.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="585.0" cy="79.0" r="2" fill="#b51d44"/>
+<text x="573" y="83" font-size="11" text-anchor="end" fill="#9a5566">dist_map</text>
+<rect x="640" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M640,30 L640,10 Q640,0 650,0 L788,0 Q798,0 798,10 L798,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="719" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Colormap / LUT</text>
+<circle cx="640.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="640.0" cy="53.0" r="2" fill="#b51d44"/>
+<text x="652" y="57" font-size="11" fill="#9a5566">image</text>
+<circle cx="798.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="786" y="57" font-size="11" text-anchor="end" fill="#9a5566">main</text>
+<rect x="800" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M800,30 L800,10 Q800,0 810,0 L948,0 Q958,0 958,10 L958,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="879" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Display</text>
+<circle cx="800.0" cy="53.0" r="5.5" fill="#b51d44"/>
+<text x="812" y="57" font-size="11" fill="#9a5566">main</text>
 </svg>

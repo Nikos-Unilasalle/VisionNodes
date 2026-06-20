@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Deux familles de cellules côte à côte. Les globules rouges sont des disques réguliers. Les neutrophiles ont un contour très découpé, mais leur silhouette globale reste compacte. La mission : les séparer automatiquement par la forme.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold` → `Find Contours` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Region Properties` → `Display`
 
 Réglez `Retrieval Mode` sur `RETR_EXTERNAL` et `Contour Approximation` sur `CHAIN_APPROX_SIMPLE`. L'inspecteur affiche pour chaque cellule sa circularité et sa rondeur.
 
@@ -34,7 +34,7 @@ Réglez `Retrieval Mode` sur `RETR_EXTERNAL` et `Contour Approximation` sur `CHA
 **Ce que vous voyez.** Trois populations dans le même bac : graines saines, graines fendues, paires collées. Une chaîne de tri doit les séparer toute seule.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold` → `Find Contours` → `Convex Hull` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Contour Properties` → `Region Properties` → `Display`
 
 Activez l'overlay de l'enveloppe convexe pour la voir se dessiner par-dessus chaque graine.
 
@@ -59,7 +59,7 @@ Activez l'overlay de l'enveloppe convexe pour la voir se dessiner par-dessus cha
 **Ce que vous voyez.** Les mêmes pièces, mêmes dimensions, mais orientées différemment selon leur chute sur le tapis. Le système de tri doit reconnaître les résistances quelle que soit leur inclinaison.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold` → `Find Contours` → `Min Area Rect` → `Bounding Rect` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Oriented Bounding Box` → `Region Properties` → `Region Properties` → `Display`
 
 Activez les overlays de la boîte droite (bleue) et de la boîte orientée (orange).
 

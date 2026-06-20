@@ -69,7 +69,7 @@ En haute dimension (des vecteurs à plusieurs centaines de nombres), un phénom�
 
 ### Dans VNStudio
 
-Canvas : `Vector A` + `Vector B` → `Distance Metrics` → `Inspector`. Le nœud calcule L1, L2 et L∞ simultanément et les affiche côte à côte, ce qui rend visible l'ordre L∞ ≤ L2 ≤ L1 sur n'importe quelle paire de vecteurs.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. Le nœud calcule L1, L2 et L∞ simultanément et les affiche côte à côte, ce qui rend visible l'ordre L∞ ≤ L2 ≤ L1 sur n'importe quelle paire de vecteurs.
 
 ---
 
@@ -114,7 +114,7 @@ Si l'on a moins de points que de dimensions, le tableau de covariance ne peut pa
 
 ### Dans VNStudio
 
-Canvas : `Point Cloud` + `Test Point` → `Mahalanobis` → `Inspector`. Le nœud estime la covariance sur le nuage fourni, redresse l'espace, et affiche la distance de Mahalanobis du point testé ainsi qu'un drapeau « anomalie » quand elle dépasse trois variations typiques.
+Canvas : `Image File` → `Python Node` → `Display`. Le nœud estime la covariance sur le nuage fourni, redresse l'espace, et affiche la distance de Mahalanobis du point testé ainsi qu'un drapeau « anomalie » quand elle dépasse trois variations typiques.
 
 ---
 
@@ -157,7 +157,7 @@ x = (2, 0), y = (3, 0) : colinéaires → cos = 6 / (2·3) = 1, similarité maxi
 
 ### Dans VNStudio
 
-Canvas : `Vector A` + `Vector B` → `Cosine Similarity` → `Inspector`. L'inspecteur affiche le cosinus et la distance 1 − cos ; mettre à l'échelle l'un des vecteurs (le multiplier par 10) montre que le cosinus ne bouge pas, contrairement à une distance euclidienne.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. L'inspecteur affiche le cosinus et la distance 1 − cos ; mettre à l'échelle l'un des vecteurs (le multiplier par 10) montre que le cosinus ne bouge pas, contrairement à une distance euclidienne.
 
 ---
 
@@ -212,7 +212,7 @@ Toutes ces mesures comparent les cases **une à une**, sans savoir lesquelles so
 
 ### Paramètres opérationnels (VNStudio / Python)
 
-Dans le nœud `Histogram Distance` (ou via `cv2.compareHist` en Python), le comportement de la comparaison est déterminé par les options suivantes :
+Dans le nœud `Histogram Compare` (ou via `cv2.compareHist` en Python), le comportement de la comparaison est déterminé par les options suivantes :
 
 *   **Type de comparaison (`method`)** :
     *   Dans VNStudio, ce paramètre correspond au menu déroulant **Comparison Method** ; en Python (OpenCV), il se nomme `method` dans la fonction `cv2.compareHist`.
@@ -225,11 +225,11 @@ Dans le nœud `Histogram Distance` (ou via `cv2.compareHist` en Python), le comp
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image A` ──> `Histogram` ──┐
-                          ├──> `Histogram Distance` ──> `Inspector`.
-`Image B` ──> `Histogram` ──┘
+`Image File` ──> `Histogram` ──┐
+                          ├──> `Histogram Compare` ──> `Display`.
+`Image File` ──> `Histogram` ──┘
 
-Le nœud `Histogram Distance` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
+Le nœud `Histogram Compare` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
 
 **Exercice de dépannage :** L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
 
@@ -275,7 +275,7 @@ Le cas général (2-D et au-delà) n'a pas de formule simple : il faut résoudre
 
 ### Dans VNStudio
 
-Canvas : `Histogram A` + `Histogram B` → `Wasserstein 1D` → `Inspector`. Le nœud affiche l'EMD en nombre de cases, et superpose les deux courbes cumulées dont l'aire entre elles *est* la distance — ce qui donne à voir directement le « déplacement » à effectuer.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. Le nœud affiche l'EMD en nombre de cases, et superpose les deux courbes cumulées dont l'aire entre elles *est* la distance — ce qui donne à voir directement le « déplacement » à effectuer.
 
 ---
 
@@ -319,7 +319,7 @@ Le « pire cas » rend la Hausdorff extrêmement sensible à un point aberrant :
 
 ### Dans VNStudio
 
-Canvas : `Contour A` + `Contour B` → `Hausdorff Distance` → `Inspector`. Le nœud affiche la distance symétrique, les deux distances dirigées, et trace le segment du « pire » point à son plus proche voisin, ce qui localise immédiatement le désaccord maximal.
+Canvas : `Image File` (A) + `Image File` (B) → `Hausdorff Distance` → `Display`. Le nœud affiche la distance symétrique, les deux distances dirigées, et trace le segment du « pire » point à son plus proche voisin, ce qui localise immédiatement le désaccord maximal.
 
 ---
 

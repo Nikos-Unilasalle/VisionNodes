@@ -65,7 +65,7 @@ Trois points donnent un résultat faux et silencieux s'ils sont négligés. **Qu
 
 ### Dans VNStudio
 
-Canvas : `Mask` → `Erode` et `Mask` → `Dilate` → `Output Display`. Les deux nœuds exposent la forme et la taille de la sonde (disque, carré, croix, segment) ; l'inspecteur compte les pixels retirés par l'érosion ou ajoutés par la dilatation.
+Canvas : `Image File` → `Morphology` (Operation = Erode) et `Image File` → `Morphology` (Operation = Dilate) → `Display`. Les deux nœuds exposent la forme et la taille de la sonde (disque, carré, croix, segment) ; l'inspecteur compte les pixels retirés par l'érosion ou ajoutés par la dilatation.
 
 ---
 
@@ -113,7 +113,7 @@ Sur un masque de cellules en microscopie, ouvrir d'abord (retirer le bruit blanc
 
 ### Dans VNStudio
 
-Canvas : `Mask` → `Morph Open` et `Mask` → `Morph Close` → `Output Display`. Les nœuds exposent forme et taille de la sonde ; l'inspecteur indique les pixels supprimés par l'ouverture et ajoutés par la fermeture.
+Canvas : `Image File` → `Morphology (Advanced)` (Operation = Opening) et `Image File` → `Morphology (Advanced)` (Operation = Closing) → `Display`. Les nœuds exposent forme et taille de la sonde ; l'inspecteur indique les pixels supprimés par l'ouverture et ajoutés par la fermeture.
 
 ---
 
@@ -157,7 +157,7 @@ Pour un watershed par marqueurs (chapitre 12), on veut un gradient fin : une pet
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Morph Gradient` → `Output Display`. Le nœud sort la carte de contraste local ; réduire la taille de la sonde montre les contours s'affiner.
+Canvas : `Image File` → `Grayscale` → `Morphology (Advanced)` (Operation = Gradient) → `Display`. Le nœud sort la carte de contraste local ; réduire la taille de la sonde montre les contours s'affiner.
 
 ---
 
@@ -217,7 +217,7 @@ La rampe d'éclairage (le gradient de 10 à 20) a complètement disparu. Le pic 
 
 ### Paramètres opérationnels (VNStudio / Python)
 
-Dans VNStudio (nœud `Top Hat` / `Black Hat`) ou en Python (`cv2.morphologyEx` avec `cv2.MORPH_TOPHAT` ou `cv2.MORPH_BLACKHAT`), les réglages suivants déterminent la qualité du résultat :
+Dans VNStudio (nœud `Morphology (Advanced)`, Operation = Top Hat ou Black Hat) ou en Python (`cv2.morphologyEx` avec `cv2.MORPH_TOPHAT` ou `cv2.MORPH_BLACKHAT`), les réglages suivants déterminent la qualité du résultat :
 
 *   **Type d'élément structurant (`shape`)** :
     *   Dans VNStudio, ce paramètre correspond au menu déroulant **Structuring Element Shape** ; en Python (OpenCV), il se nomme `shape` (ex. `cv2.MORPH_ELLIPSE`) dans la fonction `cv2.getStructuringElement`.
@@ -239,9 +239,9 @@ Dans VNStudio (nœud `Top Hat` / `Black Hat`) ou en Python (`cv2.morphologyEx` a
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Top Hat` (ou `Black Hat`) ──> `Adaptive Threshold` (ou `Threshold` simple) ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Morphology (Advanced)` (Operation = Top Hat ou Black Hat) ──> `Threshold` ──> `Display`.
 
-Le nœud `Top Hat` applique les paramètres ci-dessus. En réglant le curseur `Sonde` à une valeur supérieure à la largeur des détails recherchés, vous verrez l'image de fond devenir instantanément noire et homogène, rendant le seuillage qui suit extrêmement simple et stable.
+Le nœud `Morphology (Advanced)` (Top Hat ou Black Hat) applique les paramètres ci-dessus. En réglant le curseur `Sonde` à une valeur supérieure à la largeur des détails recherchés, vous verrez l'image de fond devenir instantanément noire et homogène, rendant le seuillage qui suit extrêmement simple et stable.
 
 ---
 
@@ -269,7 +269,7 @@ Détecter les **pixels isolés** : première sonde = un pixel central allumé, s
 
 ### Dans VNStudio
 
-Canvas : `Mask` → `Skeleton` → `Output Display` pour l'axe médian ; `Mask` → `Hit or Miss` → `Output Display` avec la sonde « pixel isolé » pour détecter les points solitaires. L'inspecteur donne la longueur du squelette et l'épaisseur maximale de la forme.
+Canvas : `Image File` → `Skeleton` → `Display` pour l'axe médian ; `Image File` → `Morphology (Advanced)` → `Display` (Operation = Opening avec une petite sonde) pour retirer les pixels isolés. L'inspecteur du nœud `Skeleton` donne la longueur du squelette et l'épaisseur maximale de la forme.
 
 ---
 

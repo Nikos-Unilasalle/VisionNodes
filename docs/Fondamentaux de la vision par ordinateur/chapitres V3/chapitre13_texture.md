@@ -69,7 +69,7 @@ Moyenne et variance calculées sur des valeurs encodées en gamma (ce qu'on lit 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `First Order Stats` → `Inspector`. Le nœud sort moyenne, variance, uniformité et entropie sur la région. Brancher les deux patchs A et B sur deux branches montre les sorties identiques — la démonstration en acte de l'angle mort du premier ordre.
+Canvas : `Image File` → `Grayscale` → `First Order Statistics` → `Inspector`. Le nœud sort moyenne, variance, uniformité et entropie sur la région. Brancher les deux patchs A et B sur deux branches montre les sorties identiques — la démonstration en acte de l'angle mort du premier ordre.
 
 ---
 
@@ -144,11 +144,11 @@ Dans le nœud `GLCM` (ou via les fonctions de `skimage.feature.graycomatrix` en 
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `GLCM` ──> `Inspector`.
+`Image File` ──> `Grayscale` ──> `GLCM` ──> `Inspector`.
 
-Le nœud `GLCM` quantifie en interne l'image d'entrée et calcule la matrice statistique. L'inspecteur affiche des résumés numériques (contraste, corrélation, homogénéité, énergie, entropie) calculés d'après les formules ci-dessus, et transmet la matrice au nœud `Haralick Features` du §13.3.
+Le nœud `GLCM` quantifie en interne l'image d'entrée, calcule la matrice de cooccurrence et sort les cinq descripteurs d'Haralick (contraste, homogénéité, énergie, entropie, corrélation) directement dans l'inspecteur.
 
-**Exercice de dépannage :** L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud **GLCM** et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
+**Exercice de dépannage :** L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud **GLCM** et régler le *Displacement Steps* sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste chute à une valeur proche de 0 (on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
 
 ---
 
@@ -202,7 +202,7 @@ Trois conventions divergentes, chacune source de résultats faux et silencieux. 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `GLCM` → `Haralick Features` → `Inspector`. Le nœud `Haralick Features` lit la matrice du §13.2 et sort les cinq scalaires, moyennés sur les quatre orientations pour l'invariance directionnelle ; l'inspecteur les affiche côte à côte.
+Canvas : `Image File` → `Grayscale` → `GLCM` → `Inspector`. Le nœud `GLCM` calcule directement les cinq descripteurs d'Haralick (contraste, homogénéité, énergie, entropie, corrélation), moyennés sur les quatre orientations (*Directions : 0°+45°+90°+135°*) pour l'invariance directionnelle ; l'inspecteur les affiche côte à côte.
 
 ---
 
@@ -264,7 +264,7 @@ L'ordre des voisins est une convention : scikit-image démarre au voisin de droi
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `LBP` → `Inspector`. Le nœud expose P, R et la variante (uniforme, rotation-invariant) ; il sort l'histogramme des codes comme vecteur descripteur, à comparer ensuite via le nœud `Histogram Distance` (chapitre 3) en mode χ².
+Canvas : `Image File` → `Grayscale` → `Local Binary Pattern` → `Inspector`. Le nœud expose P (*Points*), R (*Radius*) et la variante (uniforme, rotation-invariant) ; il sort l'histogramme des codes comme vecteur descripteur, à comparer ensuite via le nœud `Histogram Compare` (chapitre 3) en mode χ².
 
 ---
 
@@ -319,7 +319,7 @@ Normaliser les noyaux (somme nulle pour la composante cosinus, énergie unité) 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Inspector`. Le nœud `Gabor Bank` (déjà rencontré au chapitre 5) applique plusieurs λ et θ et sort le vecteur d'énergies — la signature fréquence-orientation ; l'inspecteur la présente comme une petite carte (échelle × orientation) où le pic de résonance saute aux yeux.
+Canvas : `Image File` → `Grayscale` → `Gabor Bank` → `Inspector`. Le nœud `Gabor Bank` applique N orientations à la longueur d'onde réglée et sort la carte d'orientation (hue = direction dominante) et la carte d'énergie ; l'inspecteur indique le nombre d'orientations actives et permet de voir le pic de résonance sauter aux yeux pour une texture striée.
 
 ---
 

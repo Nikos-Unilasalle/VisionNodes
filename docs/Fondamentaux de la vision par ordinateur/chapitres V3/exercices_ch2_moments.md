@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Trois formes géométriques simples, bien contrastées sur fond blanc. La mission : trouver le centre exact de chacune, comme le ferait un système d'aide à la conduite.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display` → `Display`
 
 Le nœud `Image Moments` marque le centre de gravité de chaque panneau et affiche son aire dans l'inspecteur.
 
@@ -34,7 +34,7 @@ Le nœud `Image Moments` marque le centre de gravité de chaque panneau et affic
 **Ce que vous voyez.** Des cristaux dont la face visible va du carré parfait au losange étiré selon leur inclinaison. La mission : mesurer cette inclinaison automatiquement.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display` → `Display`
 
 Activez l'affichage de l'ellipse équivalente : le nœud dessine sur chaque cristal une ellipse qui épouse son allongement et son orientation.
 
@@ -59,7 +59,7 @@ Activez l'affichage de l'ellipse équivalente : le nœud dessine sur chaque cris
 **Ce que vous voyez.** Les mêmes chiffres écrits par la même personne, mais avec des variations de taille et d'inclinaison. La mission : trouver une « empreinte » de forme qui reste la même malgré ces variations.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` *(à créer)* → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Connected Components` → `Image Moments` → `Display`
 
 Le nœud calcule pour chaque chiffre ses sept invariants de Hu, une empreinte numérique de sa forme.
 

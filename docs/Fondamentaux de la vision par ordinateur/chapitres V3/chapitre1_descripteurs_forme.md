@@ -77,9 +77,9 @@ Dans le nœud `Find Contours` (ou en Python via `cv2.findContours`), le lecteur 
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Threshold` ──> `Find Contours` ──> `Shape Descriptors` ──> `Output Display`.
+`Image File` ──> `Threshold` ──> `Find Contours` ──> `Region Properties` ──> `Display`.
 
-Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Shape Descriptors` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
+Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Region Properties` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
 
 **Exercice de dépannage :** L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre **Simplification (Epsilon)** sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
 
@@ -119,7 +119,7 @@ Un globule rouge : `E ≈ 1,0`. Une bactérie en bâtonnet : `E ≈ 5 à 8`. Une
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte orientée est dessinée en surimpression sur l'objet, ce qui rend l'inclinaison visible directement.
+Canvas : `Find Contours` → `Oriented Bounding Box` → `Region Properties`. La boîte orientée est dessinée en surimpression sur l'objet, ce qui rend l'inclinaison visible directement.
 
 ---
 
@@ -197,7 +197,7 @@ Les trous entièrement internes — l'intérieur d'un anneau, par exemple — so
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. L'enveloppe convexe se superpose en pointillés sur l'objet, et le creux comblé saute aux yeux.
+Canvas : `Find Contours` → `Contour Properties` → `Region Properties`. L'enveloppe convexe se superpose en pointillés sur l'objet, et le creux comblé saute aux yeux.
 
 ---
 
@@ -232,7 +232,7 @@ Un galet ébréché : contour réel tortueux `P = 380 px`, enveloppe directe `P_
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. Mêmes nœuds qu'en 1.4 ; il suffit de lire la sortie convexité au lieu de la solidité, les deux venant de la même enveloppe.
+Canvas : `Find Contours` → `Contour Properties` → `Region Properties`. Mêmes nœuds qu'en 1.4 ; il suffit de lire la sortie convexité au lieu de la solidité, les deux venant de la même enveloppe.
 
 ---
 
@@ -262,7 +262,7 @@ Un rectangle posé à plat remplit sa boîte à presque 100 % (`Ext ≈ 0,95`). 
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Bounding Rect` → `Shape Descriptors`. La boîte droite s'affiche sur l'objet ; on voit immédiatement l'espace vide se creuser dès qu'une pièce arrive de travers.
+Canvas : `Find Contours` → `Region Properties` → `Region Properties`. La boîte droite s'affiche sur l'objet ; on voit immédiatement l'espace vide se creuser dès qu'une pièce arrive de travers.
 
 ---
 
@@ -292,7 +292,7 @@ Contrairement aux précédents, le diamètre équivalent **dépend de l'échelle
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Shape Descriptors` (sortie diamètre équivalent) → `Scale Calibration`. Le nœud de calibrage convertit les pixels en unité physique si la résolution est renseignée.
+Canvas : `Find Contours` → `Region Properties` (sortie diamètre équivalent) → `Unit Calibration`. Le nœud de calibrage convertit les pixels en unité physique si la résolution est renseignée.
 
 ---
 
@@ -324,7 +324,7 @@ Un composant rectangulaire `A = 4800 px²` dans une boîte ajustée de 122 × 42
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte orientée s'affiche par-dessus l'objet ; coins vides ou remplis se lisent au premier regard.
+Canvas : `Find Contours` → `Oriented Bounding Box` → `Region Properties`. La boîte orientée s'affiche par-dessus l'objet ; coins vides ou remplis se lisent au premier regard.
 
 ---
 
@@ -358,7 +358,7 @@ Une particule abrasive : `A = 3100 px²`, grand axe `L_max = 68 px`. Rondeur `Rd
 
 ### Dans VNStudio
 
-Canvas : `Find Contours` → `Shape Descriptors`. Les sorties circularité et rondeur sont disponibles côte à côte ; un nœud `Math` peut calculer leur différence pour isoler la rugosité.
+Canvas : `Find Contours` → `Region Properties`. Les sorties circularité et rondeur sont disponibles côte à côte ; un nœud `Math` peut calculer leur différence pour isoler la rugosité.
 
 ---
 

@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Une scène où la cible (les voitures) est écrasée sous une masse de fond identique. C'est le déséquilibre que la focal loss corrige à l'entraînement : ici on observe ses conséquences sur un détecteur déjà entraîné.
 
 **Pipeline VNStudio**
-`Image Source` → `Object Detection (YOLO)` → `Draw Overlay` → `Output Display`
+`Image File` → `YOLO Detector` → `Display` → `Display`
 
 Le nœud affiche les boîtes détectées avec leur score de confiance.
 
@@ -34,9 +34,9 @@ Le nœud affiche les boîtes détectées avec leur score de confiance.
 **Ce que vous voyez.** Deux masques de la même cellule. La mission : mesurer leur recouvrement, car c'est exactement ce que la Dice loss optimise pendant l'entraînement.
 
 **Pipeline VNStudio**
-`Image Source` → `SAM Segmenter` → `Mask Overlap` → `Output Display`
+`Image File` → `SAM Segmenter` → `Mask Metrics` → `Display`
 
-Le nœud `Mask Overlap` compare le masque automatique au masque de référence et affiche le score de recouvrement (IoU et Dice).
+Le nœud `Mask Metrics` compare le masque automatique au masque de référence et affiche le score de recouvrement (IoU et Dice).
 
 ---
 
@@ -59,7 +59,7 @@ Le nœud `Mask Overlap` compare le masque automatique au masque de référence e
 **Ce que vous voyez.** Une boîte à ajuster autour d'un objet, perturbée par quelques points parasites. C'est le rôle de la Smooth L1 (Huber) en détection : suivre les bons points sans se laisser tirer par les rares aberrants.
 
 **Pipeline VNStudio**
-`Image Source` → `Find Contours` → `Robust Box Fit` → `Draw Overlay` → `Output Display`
+`Image File` → `Find Contours` → `Region Properties` → `Display` → `Display`
 
 Le nœud ajuste la boîte avec un mode ordinaire (sensible aux parasites) ou robuste (Huber).
 

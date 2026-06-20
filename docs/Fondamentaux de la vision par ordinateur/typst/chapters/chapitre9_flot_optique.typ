@@ -86,7 +86,7 @@ Iₓ·u + Iᵧ·v + Iₜ = 0          (équation du flot optique)
 
 Iₓ et Iᵧ sont les variations spatiales d'intensité (le gradient, horizontal et vertical) ; Iₜ est la variation temporelle, c'est-à-dire la simple différence entre les deux images au même pixel ; u et v sont l'inconnue cherchée — le déplacement horizontal et vertical. Tout est mesurable sauf u et v. Et là est le problème : *une seule équation, deux inconnues*. Les données ne suffisent pas à les déterminer ; il faudra ajouter une hypothèse. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un bord vertical dans une image de scanner : fort gradient horizontal (Iₓ = 50), aucun gradient vertical (Iᵧ = 0). Entre deux images, la région s'éclaircit (Iₜ = −100) :
 
 ```
@@ -101,7 +101,7 @@ L'équation suppose des déplacements de l'ordre de 1 à 2 pixels entre deux ima
 ]
 
 #canvas[
-Canvas : `Frame t` + `Frame t+1` → `Optical Flow Constraint` → `Inspector`. Le nœud calcule en un point les trois variations Iₓ, Iᵧ, Iₜ et affiche le résidu de l'équation, ce qui rend tangible l'idée « une équation, deux inconnues ».
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. Le nœud calcule le déplacement image par image ; le tenseur de structure (§9.2) indique aux endroits à flux fiable les variations Iₓ, Iᵧ qui satisfont la contrainte de luminosité.
 
 ---
 ]
@@ -128,7 +128,7 @@ Calculer le flot sur toute l'image donne un résultat « complet », mais dans l
 ]
 
 #canvas[
-Canvas : `Frame t` → `Structure Tensor` → `Output Display`. La carte « plat / bord / coin » du chapitre 6 indique directement où le flot sera fiable (les coins) et où il sera ambigu (les bords, les zones plates).
+Canvas : `Image File` → `Structure Tensor` → `Display`. La carte « plat / bord / coin » du chapitre 6 indique directement où le flot sera fiable (les coins) et où il sera ambigu (les bords, les zones plates).
 
 ---
 ]
@@ -161,12 +161,12 @@ Le problème d'ouverture réapparaît donc sous forme chiffrée : le flot n'est 
 
 Pour les grands déplacements (où l'équation du §9.1 s'effondre), on utilise une *pyramide d'images* : on réduit la résolution par deux à chaque niveau, si bien qu'un déplacement de 20 pixels n'en fait plus que 2 ou 3 au niveau le plus grossier ; on y calcule le flot, puis on l'affine niveau par niveau jusqu'à la pleine résolution. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Fenêtre 5×5 sur le coin d'un marqueur : valeurs propres λ₁ = 1200, λ₂ = 950 — toutes deux grandes, la solution sort sans ambiguïté. Fenêtre sur le bord droit d'un couloir : gradients tous horizontaux, λ₁ = 1100 mais λ₂ ≈ 3. Le rapport 1100/3 ≈ 367 indique une solution numériquement instable, à rejeter — c'est le problème d'ouverture qui frappe.
 ]
 
 #canvas[
-Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow (Lucas-Kanade)` → `Flow Overlay`. Le premier nœud choisit les coins fiables, le second les suit par pyramide, et la superposition trace une flèche par point suivi ; l'inspecteur donne le déplacement moyen.
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. Le nœud détecte automatiquement les coins fiables (Shi-Tomasi) et les suit par pyramide entre les images successives ; le port `Overlay` trace une flèche par point suivi et l'inspecteur donne le déplacement moyen.
 
 ---
 ]
@@ -179,7 +179,7 @@ Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow 
 
 #figfull("/illustrations/chap9.4.png")
 
-#figcap("/figures/fig_ch9_obs2_horn_schunck.pdf", [Observation — Horn-Schunck : α règle le curseur données / régularisation])
+#figfull("/figures/fig_ch9_obs2_horn_schunck.pdf")
 
 === L'intention
 Là où Lucas-Kanade renonce aux zones sans coin, on voudrait un champ de mouvement *partout* — y compris dans les régions uniformes — en propageant l'information depuis les zones fiables.
@@ -204,7 +204,7 @@ Le *terme de données* mesure à quel point le champ respecte l'équation du flo
 
 Le cœur de l'affaire est le terme de lissage. Là où les données ne disent rien (zones plates, bords droits — le problème d'ouverture), il *propage* le mouvement depuis les zones fiables (les coins) vers les zones ambiguës, par une sorte de diffusion. Horn-Schunck remplit les trous que Lucas-Kanade laissait vides. Le prix : un champ *dense* (une flèche par pixel) mais *flou aux frontières* (objet et fond voient leurs vitesses se mélanger si α est grand). On atteint le minimum non par une formule directe, mais *par petits pas* : on ajuste le champ itérativement jusqu'à ce qu'il se stabilise — la même mécanique que les snakes du chapitre 12. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Sur une image de vélocimétrie (suivi de particules dans un fluide), un grand α donne un champ lisse où les tourbillons sont visibles mais les bords du vaisseau flous ; un petit α restitue les gradients de vitesse à la paroi mais introduit du bruit au cœur du flux peu contrasté. Le bon réglage dépend de l'échelle du mouvement attendu — un lien direct avec le chapitre 5.
 
 Horn-Schunck (1981) et Lucas-Kanade (1981) fondent le domaine ; le flot dense de haute précision repose aujourd'hui sur l'apprentissage profond (RAFT, PWC-Net). La structure reste identique — coller aux données + rester régulier — mais l'a priori de régularité n'est plus posé à la main : il est *appris* sur des milliers de scènes annotées.
@@ -226,9 +226,9 @@ Dans les nœuds de flot optique (ou via OpenCV en Python), le comportement de la
 
 #canvas[
 Dans votre canvas :
-`Frame t` + `Frame t+1` ──> `Optical Flow (Farneback)` ──> `Flow Visualize` ──> `Output Display`.
+`Webcam` ──> `Optical Flow` ──> `Flow Visualizer` ──> `Display`.
 
-Le nœud `Flow Visualize` traduit les composantes horizontal `u` et vertical `v` du flot optique en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
+Le nœud `Flow Visualizer` traduit les composantes horizontal `u` et vertical `v` du flot optique (Farneback) en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
 
 *Exercice de dépannage :* L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme *Lucas-Kanade Tracker*). Régler le paramètre *Pyramid Levels* sur `0` avec une *Window Size* de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre *Pyramid Levels* à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
 
@@ -262,7 +262,7 @@ La question n'est pas « lequel est meilleur ? » mais « ai-je besoin du mouvem
 Ensemble, les deux familles couvrent un large spectre : suivi d'objets et odométrie (robots, drones), stabilisation vidéo, compression vidéo (les vecteurs de mouvement de MPEG sont un flot épars par blocs), analyse de perfusion en IRM cardiaque, ralenti par interpolation d'images, reconnaissance d'actions, suivi de glaciers entre images satellite.
 
 #canvas[
-Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow (Lucas-Kanade)` → `Flow Overlay`. La superposition dessine une flèche par point suivi et un point sur sa position de départ ; l'inspecteur résume le nombre de points suivis et leur déplacement moyen.
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. La superposition dessine une flèche par point suivi et un point sur sa position de départ ; l'inspecteur résume le nombre de points suivis et leur déplacement moyen.
 
 ---
 ]
@@ -287,7 +287,7 @@ Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow 
 
 // ============================================================
 
-== Comprendre une méthode, c'est connaître son pari
+== comprendre une méthode, c'est connaître son pari
 
 Le flot optique est l'exemple le plus transparent d'un *problème mal posé* : une équation par pixel pour deux inconnues par pixel. La formule est impitoyable, un contre deux, et aucun algorithme ne peut extraire deux inconnues d'une seule équation sans ajouter de l'information extérieure aux données. Cette information, c'est l'*a priori* : une hypothèse sur le monde, formulée avant d'avoir vu les images. Lucas-Kanade dit « le mouvement est localement rigide » ; Horn-Schunck « il varie doucement » ; RAFT « il ressemble à ce que j'ai vu dans des millions de scènes annotées ». Trois paris, et la qualité d'une méthode tient autant à la justesse de son pari qu'à celle de ses calculs.
 
@@ -295,34 +295,26 @@ Le schéma — données insuffisantes + a priori = solution déterminée — cou
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 9
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Suivre une barre qui glisse, et voir où le suivi échoue
 
-#figtodo("ex_ch9_barre_mouvement", [Barre verticale noire se déplaçant horizontalement sur fond gris : deux images s...])
-
+#figtodo("ex_ch9_barre_mouvement", [Barre verticale noire se déplaçant horizontalement sur fond gris : deux images s])
 
 *Ce que vous voyez.* Un mouvement simple et connu. La mission : voir où le suivi de mouvement réussit et où il se trompe, pour comprendre ses limites avant de lui faire confiance.
 
 *Pipeline VNStudio*
-`Image Source (t)` + `Image Source (t+1)` → `Optical Flow LK` *(à créer)* → `Draw Overlay` → `Output Display`
+`Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`
 
 Le nœud pose des flèches de mouvement sur les points qu'il sait suivre.
 
 
 
-
 *Questions*
-
 
 + Sur le bord latéral de la barre, la flèche pointe-t-elle bien vers la droite ? Sur le bord supérieur (horizontal), les flèches sont-elles cohérentes ou parties dans tous les sens ?
 
@@ -333,24 +325,20 @@ Le nœud pose des flèches de mouvement sur les points qu'il sait suivre.
 + *Défi.* Faites glisser deux barres en sens opposés dans la même image. Le suivi distingue-t-il les deux mouvements ? Qu'est-ce qui pourrait lui faire confondre une barre avec l'autre, et comment l'éviter ?
 
 
-
 === Exercice 2 · Doser le lissage du mouvement sur une personne qui marche
 
-#figtodo("ex_ch9_personne_couloir", [Deux images successives d'une personne marchant dans un couloir : torse et jambe...])
-
+#figtodo("ex_ch9_personne_couloir", [Deux images successives d'une personne marchant dans un couloir : torse et jambe])
 
 *Ce que vous voyez.* Un sujet en mouvement avec des zones faciles à suivre (texturées) et des zones ambiguës (chemise unie). La mission : régler un curseur qui « remplit » le mouvement des zones sans détail à partir des zones voisines.
 
 *Pipeline VNStudio*
-`Image Source (t)` + `Image Source (t+1)` → `Optical Flow Dense` *(à créer)* → `Colormap` (teinte = direction, intensité = vitesse) → `Output Display`
+`Webcam` → `Optical Flow` → `Flow Visualizer` → `Display`
 
-Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui propage l'information des zones nettes vers les zones vides.
-
+Le nœud `Optical Flow` (Farneback) calcule un champ de mouvement partout ; `Flow Visualizer` code la direction en teinte et la vitesse en saturation. Le curseur de lissage propage l'information des zones nettes vers les zones vides.
 
 
 
 *Questions*
-
 
 + Réglez le lissage au minimum. Sur la chemise unie, le mouvement est-il cohérent ou bruité ? Pourquoi une zone sans détail ne sait-elle pas, seule, dans quel sens elle bouge ?
 
@@ -361,27 +349,23 @@ Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui p
 + *Défi.* Trouvez le réglage de lissage qui donne le meilleur compromis : un corps qui bouge d'un seul tenant, des bords nets, pas de débordement sur le fond. Décrivez ce que vous gagnez et perdez en tournant le curseur dans un sens ou dans l'autre.
 
 
-
 === Exercice 3 · Choisir entre suivi de points et carte de mouvement complète
 
-#figtodo("ex_ch9_echecs", [Vue de dessus d'une partie d'échecs : la main du joueur déplace une pièce. Le pl...])
-
+#figtodo("ex_ch9_echecs", [Vue de dessus d'une partie d'échecs : la main du joueur déplace une pièce. Le pl])
 
 *Ce que vous voyez.* Une scène mêlant zones très texturées (cases, pièces) et zones uniformes (cases noires lisses). La mission : comparer deux manières de mesurer le mouvement et choisir selon le besoin.
 
 *Pipeline VNStudio*
-`Image Source (t)` + `Image Source (t+1)` → `Split Half` :
-— gauche : `Optical Flow LK` *(à créer)* → flèches
-— droite : `Optical Flow Dense` *(à créer)* → carte colorée
-→ `Output Display`
+`Webcam` → `Split Half` :
+— gauche : `Optical Flow (Lucas-Kanade)` → flèches
+— droite : `Optical Flow` → `Flow Visualizer` → carte colorée
+→ `Display`
 
 À gauche, un suivi de points choisis ; à droite, un champ de mouvement partout.
 
 
 
-
 *Questions*
-
 
 + Sur les coins du damier, le suivi de points donne-t-il des flèches précises ? Pose-t-il des flèches sur les cases noires uniformes ? Pourquoi évite-t-il ces zones ?
 
@@ -393,16 +377,11 @@ Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui p
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

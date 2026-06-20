@@ -15,10 +15,11 @@ except ImportError:
     category='measure',
     icon='Database',
     description=(
-        "Extract shape and intensity features from a labeled region map (from Connected Components). "
-        "Outputs a list of dicts: area, perimeter, circularity, aspect_ratio, solidity, eccentricity, "
-        "equivalent_diameter, orientation, centroid_x/y, bbox. "
-        "Connects image input for mean/max/std intensity per region."
+        "Extract shape and intensity features from a labeled region map. "
+        "Outputs: area, perimeter, circularity, aspect_ratio (elongation), "
+        "eccentricity, solidity, convexity, extent, rectangularity, roundness, "
+        "anisotropy, equivalent_diameter, orientation, centroid, bbox. "
+        "Connect image for mean/max/min/std intensity per region."
     ),
     inputs=[
         {'id': 'labels_map', 'color': 'markers', 'label': 'Label Map'},
@@ -63,19 +64,64 @@ class RegionPropsNode(NodeProcessor):
         regions = []
 
         if _SKIMAGE:
+            # Pre-compute contour per label (needed for convexity, extent, rectangularity)
+            cnt_map = {}
+            for lbl in np.unique(label_img):
+                if lbl == 0:
+                    continue
+                mask_l = (label_img == lbl).astype(np.uint8) * 255
+                cnts_l, _ = cv2.findContours(mask_l, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if cnts_l:
+                    cnt_map[int(lbl)] = cnts_l[0]
+
             props = _regionprops(label_img, intensity_image=intensity_img)
             for p in props:
-                area_px = int(p.area)
+                area_px  = int(p.area)
                 perim_px = float(p.perimeter) if p.perimeter > 0 else 1.0
-                circ  = round(4.0 * np.pi * area_px / (perim_px ** 2), 4)
-                maj   = float(p.axis_major_length)
-                mino  = float(p.axis_minor_length)
-                ar    = round(maj / mino, 4) if mino > 0 else 0.0
-                cy, cx = p.centroid
-                bb = p.bbox
-                area_cal  = round(area_px  * um2_per_px2, 4)
-                perim_cal = round(perim_px * um_per_px,   4)
-                eqdiam_cal = round(float(p.equivalent_diameter_area) * um_per_px, 4)
+                circ     = round(4.0 * np.pi * area_px / (perim_px ** 2), 4)
+                maj      = float(p.axis_major_length)
+                mino     = float(p.axis_minor_length)
+                ar       = round(maj / mino, 4) if mino > 0 else 0.0
+                cy, cx   = p.centroid
+                bb       = p.bbox
+
+                area_cal    = round(area_px  * um2_per_px2, 4)
+                perim_cal   = round(perim_px * um_per_px,   4)
+                eqdiam_cal  = round(float(p.equivalent_diameter_area) * um_per_px, 4)
+
+                # Contour-based descriptors
+                cnt = cnt_map.get(int(p.label))
+                if cnt is not None and len(cnt) >= 3:
+                    hull       = cv2.convexHull(cnt)
+                    hull_perim = float(cv2.arcLength(hull, True))
+                    # Convexity: Cv = P_convex / P (ch1 §1.5)
+                    convexity  = round(hull_perim / perim_px, 4) if perim_px > 0 else 1.0
+                    # Extent: Ext = A / (W_bbox * H_bbox), axis-aligned (ch1 §1.6)
+                    bx, by, bw, bh = cv2.boundingRect(cnt)
+                    extent = round(area_px / (bw * bh), 4) if bw * bh > 0 else 0.0
+                    # Rectangularity: R = A / A_minRect, oriented bbox (ch1 §1.8)
+                    rect      = cv2.minAreaRect(cnt)
+                    rect_area = rect[1][0] * rect[1][1]
+                    rectangularity = round(area_px / rect_area, 4) if rect_area > 0 else 0.0
+                    lmax_px = float(max(rect[1]))
+                else:
+                    convexity = extent = rectangularity = 0.0
+                    lmax_px = maj
+
+                # Roundness: Rd = 4A / (π · L_max²) — shape overall, blind to edge (ch1 §1.9)
+                try:
+                    lmax_px = float(p.feret_diameter_max)
+                except AttributeError:
+                    pass  # keep lmax_px from above
+                roundness = round(4.0 * area_px / (np.pi * lmax_px ** 2), 4) if lmax_px > 0 else 0.0
+
+                # Anisotropy: reliability of orientation (ch2 §2.5)
+                # = √((μ₂₀-μ₀₂)² + 4μ₁₁²) / (μ₂₀+μ₀₂); 0=circle, →1=needle
+                itr    = p.inertia_tensor
+                mu20, mu02, mu11 = float(itr[0, 0]), float(itr[1, 1]), float(itr[0, 1])
+                denom  = mu20 + mu02
+                anisotropy = round(float(np.sqrt((mu20 - mu02) ** 2 + 4 * mu11 ** 2)) / denom, 4) if denom > 0 else 0.0
+
                 r = {
                     'id':                   int(p.label),
                     'area':                 area_cal,
@@ -85,7 +131,12 @@ class RegionPropsNode(NodeProcessor):
                     'circularity':          circ,
                     'aspect_ratio':         ar,
                     'solidity':             round(float(p.solidity), 4),
+                    'convexity':            convexity,
+                    'extent':               extent,
+                    'rectangularity':       rectangularity,
+                    'roundness':            roundness,
                     'eccentricity':         round(float(p.eccentricity), 4),
+                    'anisotropy':           anisotropy,
                     'equivalent_diameter':  eqdiam_cal,
                     'orientation':          round(float(p.orientation), 4),
                     'centroid_x':           round(float(cx), 1),
@@ -100,58 +151,75 @@ class RegionPropsNode(NodeProcessor):
                     r['std_intensity']  = round(float(np.std(px)), 2)
                 regions.append(r)
         else:
-            # cv2 fallback — basic props without skimage
+            # cv2 fallback — no skimage
             unique = np.unique(label_img)
             unique = unique[unique > 0]
-            solid_mask = (label_img > 0).astype(np.uint8) * 255
-            cnts_all, _ = cv2.findContours(solid_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-            cnt_by_label = {}
-            for c in cnts_all:
-                M = cv2.moments(c)
-                if M['m00'] == 0:
-                    continue
-                cx_ = int(M['m10'] / M['m00'])
-                cy_ = int(M['m01'] / M['m00'])
-                lbl_at = int(label_img[cy_, cx_]) if 0 <= cy_ < label_img.shape[0] and 0 <= cx_ < label_img.shape[1] else 0
-                if lbl_at > 0:
-                    cnt_by_label[lbl_at] = c
             for lbl in unique:
                 mask_l = (label_img == lbl).astype(np.uint8)
                 area   = int(np.sum(mask_l))
                 cnts_l, _ = cv2.findContours(mask_l * 255, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 if not cnts_l:
                     continue
-                cnt = cnts_l[0]
+                cnt   = cnts_l[0]
                 perim = float(cv2.arcLength(cnt, True))
                 circ  = round(4.0 * np.pi * area / (perim ** 2), 4) if perim > 0 else 0.0
-                hull  = cv2.convexHull(cnt)
-                hull_area = float(cv2.contourArea(hull))
-                solidity = round(area / hull_area, 4) if hull_area > 0 else 1.0
+
+                hull       = cv2.convexHull(cnt)
+                hull_area  = float(cv2.contourArea(hull))
+                hull_perim = float(cv2.arcLength(hull, True))
+                solidity     = round(area / hull_area, 4) if hull_area > 0 else 1.0
+                # Convexity: Cv = P_convex / P (ch1 §1.5)
+                convexity    = round(hull_perim / perim, 4) if perim > 0 else 1.0
+
                 rect = cv2.minAreaRect(cnt)
                 ww, hh = rect[1]
                 ar = round(max(ww, hh) / min(ww, hh), 4) if min(ww, hh) > 0 else 0.0
+                rect_area = ww * hh
+                # Rectangularity: R = A / A_minRect (ch1 §1.8)
+                rectangularity = round(area / rect_area, 4) if rect_area > 0 else 0.0
+                # Roundness: Rd = 4A / (π · L_max²) (ch1 §1.9)
+                lmax   = float(max(ww, hh))
+                roundness = round(4.0 * area / (np.pi * lmax ** 2), 4) if lmax > 0 else 0.0
+
                 M = cv2.moments(cnt)
                 if M['m00'] == 0:
                     continue
                 cx_ = M['m10'] / M['m00']
                 cy_ = M['m01'] / M['m00']
+
+                # Extent: Ext = A / (W_bbox * H_bbox) (ch1 §1.6)
                 bx, by, bw, bh = cv2.boundingRect(cnt)
+                extent = round(area / (bw * bh), 4) if bw * bh > 0 else 0.0
+
                 eq_diam_px = float(np.sqrt(4.0 * area / np.pi))
+
+                # Anisotropy from central moments (ch2 §2.5)
+                mu20   = M['mu20']
+                mu02   = M['mu02']
+                mu11   = M['mu11']
+                denom  = mu20 + mu02
+                anisotropy = round(float(np.sqrt((mu20 - mu02) ** 2 + 4 * mu11 ** 2)) / denom, 4) if denom > 0 else 0.0
+
                 r = {
-                    'id': int(lbl),
-                    'area':               round(area * um2_per_px2, 4),
-                    'area_unit':          unit_area,
-                    'perimeter':          round(perim * um_per_px, 4),
-                    'length_unit':        unit_len,
-                    'circularity':        circ,
-                    'aspect_ratio':       ar,
-                    'solidity':           solidity,
-                    'eccentricity':       0.0,
+                    'id':                  int(lbl),
+                    'area':                round(area * um2_per_px2, 4),
+                    'area_unit':           unit_area,
+                    'perimeter':           round(perim * um_per_px, 4),
+                    'length_unit':         unit_len,
+                    'circularity':         circ,
+                    'aspect_ratio':        ar,
+                    'solidity':            solidity,
+                    'convexity':           convexity,
+                    'extent':              extent,
+                    'rectangularity':      rectangularity,
+                    'roundness':           roundness,
+                    'eccentricity':        0.0,
+                    'anisotropy':          anisotropy,
                     'equivalent_diameter': round(eq_diam_px * um_per_px, 4),
-                    'orientation':        0.0,
-                    'centroid_x':         round(float(cx_), 1),
-                    'centroid_y':         round(float(cy_), 1),
-                    'bbox':               [bx, by, bw, bh],
+                    'orientation':         0.0,
+                    'centroid_x':          round(float(cx_), 1),
+                    'centroid_y':          round(float(cy_), 1),
+                    'bbox':                [bx, by, bw, bh],
                 }
                 if do_intensity and intensity_img is not None:
                     px = intensity_img[label_img == lbl]

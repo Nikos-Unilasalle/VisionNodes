@@ -76,9 +76,9 @@ Sur une image et sa copie transformée (tournée de 30°, zoomée de 20%, éclai
 #### Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
 - **Pipeline :**
   ```
-  Image Loader ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) [Vue B]
-  Image Loader ─┬─> Features (ORB) ─┐
-  Vue B  ───────┴─> Features (ORB) ─┴─> Python Node (appariement + ratio) ──> Draw Lines ──> Output Display
+  Image File ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) [Vue B]
+  Image File ─┬─> ORB Detector ─┐
+  Vue B  ───────┴─> ORB Detector ─┴─> Python Node (appariement + ratio) ──> Display ──> Display
   ```
 - **Missions :**
   1. Lancez l'appariement ORB. Constatez les lignes d'appariement parallèles reliant les points homologues.
@@ -142,8 +142,8 @@ Sur une image avec points SIFT affichés sous forme de cercles de rayon proporti
 #### Observation 17.B — Le cercle qui suit le zoom
 - **Pipeline :**
   ```
-  Image Loader ─┬──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue A)
-                └──> Resize (x2) ──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue B)
+  Image File ─┬──> ORB Detector ──> Display ──> Display (Vue A)
+                └──> Resize (x2) ──> ORB Detector ──> Display ──> Display (Vue B)
   ```
   *(Comparez les deux vues via le nœud Split Half).*
 - **Missions :**
@@ -198,8 +198,8 @@ En visualisant les glyphes HOG (étoiles d'orientations) sur un piéton :
 #### 📷 Observation 17.C — HOG : sensible à la rotation, insensible à la lumière
 - **Pipeline :**
   ```
-  Image Loader ─┬─> Brightness/Contrast ──> Python Node (HOG, visualize) ──> Output Display
-                └─> Rotate ──────────────> Python Node (HOG, visualize) ──> Output Display
+  Image File ─┬─> Brightness/Contrast ──> Python Node (HOG, visualize) ──> Display
+                └─> Rotate ──────────────> Python Node (HOG, visualize) ──> Display
   ```
   *(Comparez via Grid Compare).*
 - **Missions :**
@@ -257,8 +257,8 @@ Sur deux vues d'une même affiche, l'une tournée de 45° :
 #### Observation 17.D — Les flèches qui tournent
 - **Pipeline :**
   ```
-  Image Loader (vue droite)  ──> Features (SIFT, dessine orientation) ─┐
-  Image Loader (vue inclinée) ──> Features (SIFT, dessine orientation) ─┴─> Python Node (match + ratio) ──> Draw Lines ──> Output Display
+  Image File (vue droite)  ──> ORB Detector ─┐
+  Image File (vue inclinée) ──> ORB Detector ─┴─> Python Node (match + ratio) ──> Display ──> Display
   ```
 - **Missions :**
   1. Observez les flèches d'orientation pour un même détail physique. Vérifiez que l'écart angulaire correspond à la rotation.
@@ -320,8 +320,8 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 #### Observation 17.E — Mesurer le compromis ORB/SIFT
 - **Pipeline :**
   ```
-  Paire d'images ─┬─> Features (ORB) ──> Python Node (match + chrono) ─┐
-                  └─> Features (SIFT) ─> Python Node (match + chrono) ─┴─> Draw Lines ──> Grid Compare
+  Paire d'images ─┬─> ORB Detector ──> Python Node (match + chrono) ─┐
+                  └─> ORB Detector ─> Python Node (match + chrono) ─┴─> Display ──> Grid Compare
   ```
 - **Missions :**
   1. Relevez le temps d'exécution et le nombre d'appariements pour ORB et SIFT.
@@ -392,7 +392,7 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
 #### Observation 17.F — Le curseur du ratio test
 - **Pipeline :**
   ```
-  Paire d'images (facile vs répétitive) ──> Features (ORB) ──> Python Node (ratio τ réglable) ──> Draw Lines ──> Output Display
+  Paire d'images (facile vs répétitive) ──> ORB Detector ──> Python Node (ratio τ réglable) ──> Display ──> Display
   ```
 - **Missions :**
   1. Sur l'image facile, faites varier `τ` de 0,95 à 0,6. Notez à quelle valeur le bruit visuel s'éteint.
@@ -449,9 +449,9 @@ Le seuil de tolérance (distance de reprojection) est exprimé en pixels et doit
 #### Observation 17.G — Voir le panorama se former
 - **Pipeline :**
   ```
-  Image A ─┬─> Features (SIFT) ─┐
-  Image B ─┼─> Features (SIFT) ─┴─> Python Node (match + RANSAC homographie) ─┬─> [inliers/outliers] ──> Draw Lines ──> Output Display
-           └──────────────────────────────────────────────────────────────────┴─> [H] ──> Warp Perspective (A) ──> Draw Overlay (sur B) ──> Output Display
+  Image A ─┬─> ORB Detector ─┐
+  Image B ─┼─> ORB Detector ─┴─> Python Node (match + RANSAC homographie) ─┬─> [inliers/outliers] ──> Display ──> Display
+           └──────────────────────────────────────────────────────────────────┴─> [H] ──> Warp Perspective (A) ──> Display (sur B) ──> Display
   ```
 - **Missions :**
   1. Affichez les lignes vertes et rouges. Notez le ratio d'inliers trouvés par RANSAC.

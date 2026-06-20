@@ -136,7 +136,7 @@ Des poses toutes frontales et centrées laissent certains paramètres mal contra
 
 ### Dans VNStudio
 
-Canvas : `Camera Input` → `Checkerboard Detector` → `Camera Calibration`. L'inspecteur affiche le RMS en direct à chaque nouvelle pose ajoutée, et exporte K au format JSON.
+Canvas : `Webcam` → `Distortion Correction` → `Display`. Renseigner manuellement les coefficients k1/k2 dans le nœud `Distortion Correction` ; le nœud `Display` permet de comparer la sortie corrigée en temps réel sur chaque image.
 
 ---
 
@@ -176,7 +176,7 @@ Vue aérienne d'un parking depuis une caméra inclinée à 45°. Quatre coins de
 
 ### Dans VNStudio
 
-Canvas : `Camera Input` → `Feature Matching` → `Find Homography (RANSAC)` → `Warp Perspective` → `Output`. L'inspecteur affiche le nombre d'inliers : un bon H dépasse généralement 80 % d'inliers sur des correspondances ORB filtrées.
+Canvas : `Image File` → `Feature Matcher` → `RANSAC Homography` → `Perspective Warp` → `Display`. Le nœud `Display` affiche le résultat redressé ; l'inspecteur du nœud `RANSAC Homography` indique le nombre d'inliers : un bon H dépasse généralement 80 % d'inliers sur des correspondances ORB filtrées.
 
 ---
 
@@ -260,7 +260,7 @@ Le vrai défi est de **mesurer la disparité** : trouver pour chaque pixel gauch
 
 ### Dans VNStudio
 
-Canvas : `Camera Left` + `Camera Right` → `Stereo Rectify` → `StereoSGBM` → `Depth Map` → `Colorize`. La carte de profondeur s'affiche en fausses couleurs ; l'inspecteur donne les valeurs min/max/médiane en mètres.
+Canvas : `Image File` (gauche) + `Image File` (droite) → `Stereo Disparity` → `Display`. Le nœud `Stereo Disparity` calcule la carte de disparité en fausses couleurs via SGBM ; le paramètre **Colormap** règle l'échelle de couleur, et les valeurs min/max s'affichent dans l'inspecteur.
 
 ---
 
@@ -318,7 +318,7 @@ erreur²  =  0,8² + 0,6²  =  0,64 + 0,36  =  1,00 px²     →  RMS = 1,0 px s
 
 ### Paramètres opérationnels (VNStudio / Python)
 
-Dans le nœud `Undistort` (ou via `cv2.undistort` en Python), la correction géométrique repose sur les paramètres opérationnels suivants :
+Dans le nœud `Distortion Correction` (ou via `cv2.undistort` en Python), la correction géométrique repose sur les paramètres opérationnels suivants :
 
 *   **Matrice de la caméra (K)** :
     *   Dans VNStudio, ce paramètre se configure via le fichier de calibration de la caméra ou les champs **Camera Matrix (K)** ; en Python (OpenCV), il correspond à l'argument `cameraMatrix` dans la fonction `cv2.undistort`.
@@ -333,11 +333,11 @@ Dans le nœud `Undistort` (ou via `cv2.undistort` en Python), la correction géo
 ### Dans VNStudio
 
 Dans votre canvas :
-`Camera Source` ──> `Undistort` ──> `Output Display`.
+`Image File` ──> `Distortion Correction` ──> `Display`.
 
-Le nœud `Undistort` prend en entrée l'image déformée et lui applique la matrice de calibration préalablement estimée. Il se place toujours en début de pipeline et précalcule les cartes de remapping au chargement des paramètres. La correction s'applique ensuite en temps réel sans coût supplémentaire par image, redressant instantanément les lignes courbes de l'objectif grand angle en lignes droites parfaites, particulièrement près des bords.
+Le nœud `Distortion Correction` prend en entrée l'image déformée et lui applique la matrice de calibration préalablement estimée. Il se place toujours en début de pipeline et précalcule les cartes de remapping au chargement des paramètres. La correction s'applique ensuite en temps réel sans coût supplémentaire par image, redressant instantanément les lignes courbes de l'objectif grand angle en lignes droites parfaites, particulièrement près des bords.
 
-**Exercice de dépannage :** L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud **Find Homography (RANSAC)**. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
+**Exercice de dépannage :** L'exercice consiste à estimer une homographie entre deux images à l'aide d'un nœud **RANSAC Homography**. Introduire volontairement un point d'appariement faux (un outlier reliant deux zones n'ayant aucun rapport géométrique) et désactiver RANSAC en sélectionnant la méthode des moindres carrés standard (méthode `0` au lieu de `RANSAC`). Le lecteur observe que l'image projetée se distord de manière aberrante et s'étire à l'infini, démontrant comment un seul outlier suffit à détruire l'estimation géométrique en moindres carrés.
 
 ---
 

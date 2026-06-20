@@ -72,7 +72,7 @@ Le chapitre construit la convolution depuis ses propriétés, puis dérive les f
 
 #subtitle[Une petite grille de nombres, posée sur chaque pixel à son tour]
 
-#figcap("/figures/fig_ch5_obs3_conv_vs_corr.pdf", [Observation — convolution ≠ corrélation (le noyau est retourné)])
+#figfull("/figures/fig_ch5_obs3_conv_vs_corr.pdf")
 
 === L'intention
 On veut une opération qui exploite le voisinage de chaque pixel, mais une opération *uniforme* : le même traitement partout, réglé une seule fois, applicable à l'image entière.
@@ -107,7 +107,7 @@ Beaucoup de bibliothèques calculent en réalité une *corrélation* — la conv
 ]
 
 #canvas[
-Canvas : `Image Source` → `Convolution` → `Output Display`. Le nœud `Convolution` prend un noyau au choix (un moyenneur 5×5 incarne l'a priori « localement constant ») et expose la convention de bord. Pour les noyaux directionnels, une option de retournement garantit le comportement de convolution stricte.
+Canvas : `Image File` → `Blur` → `Display`. Le nœud `Blur` propose le flou moyenneur (Box), gaussien et médian ; pour un noyau personnalisé, le nœud `Python Node` peut implémenter `cv2.filter2D` avec n'importe quel noyau et expose la même convention de bord.
 
 ---
 ]
@@ -137,7 +137,7 @@ Le seul réglage qui compte est σ (« sigma »), la largeur de la cloche : il f
 === Pourquoi la gaussienne et pas une autre cloche ?
 Ce n'est pas un choix esthétique. La gaussienne est l'*unique* cloche qui réunit plusieurs bonnes propriétés à la fois. D'abord, elle *ne crée jamais de structure* : élargir le flou ne fait jamais apparaître de nouveau détail qui n'existait pas — un moyenneur en boîte, lui, peut créer de fausses ondulations. C'est le fondement de la « pyramide d'échelle », cette suite de versions de plus en plus floues d'une image, sur laquelle on cherche les structures à différentes tailles. Ensuite, elle est *séparable* (§5.1), donc rapide. Enfin, elle a la propriété d'*auto-similarité* : flouter deux fois de suite équivaut à flouter une seule fois un peu plus fort, ce qui rend ces pyramides prévisibles et stables. Ces qualités font de la gaussienne le filtre de lissage de référence.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un petit noyau gaussien 3×3, avec les coefficients entiers couramment utilisés :
 
 ```
@@ -150,7 +150,7 @@ La somme des coefficients vaut 16, d'où la division par 16. Un filtre de lissag
 ]
 
 #info-box(title: "Paramètres opérationnels (VNStudio / Python)")[
-Dans le nœud `Gaussian Blur` (ou via `cv2.GaussianBlur` en Python), le comportement du lissage est contrôlé par les paramètres opérationnels suivants :
+Dans le nœud `Blur` (ou via `cv2.GaussianBlur` en Python), le comportement du lissage est contrôlé par les paramètres opérationnels suivants :
 
 - *Taille du noyau (`ksize`)* :
 - Dans VNStudio, ce paramètre correspond au curseur *Kernel Size* ; en Python (OpenCV), il se nomme `ksize` dans `cv2.GaussianBlur`.
@@ -165,9 +165,9 @@ Dans le nœud `Gaussian Blur` (ou via `cv2.GaussianBlur` en Python), le comporte
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Gaussian Blur` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Blur` ──> `Display`.
 
-Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
+Le nœud `Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
 
 *Exercice de dépannage :* L'exercice consiste à appliquer un flou avec un *Kernel Size* très large (ex. : 21x21) sur une image claire, en réglant le paramètre *Border Type* sur *Constant (0)* (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
 
@@ -180,7 +180,7 @@ Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et
 
 #subtitle[Le chapeau mexicain qui s'allume sur les taches et les bords]
 
-#figcap("/figures/fig_ch5_obs1_dog_bandpass.pdf", [Observation — la DoG est un filtre passe-bande])
+#figfull("/figures/fig_ch5_obs1_dog_bandpass.pdf")
 
 === L'intention
 Après les filtres qui voient ce qui est lisse, on veut détecter ce qui _change_ — contours, taches, petits blobs. Mais mesurer un changement (dériver) amplifie le bruit ; il faut donc lisser avant.
@@ -188,7 +188,7 @@ Après les filtres qui voient ce qui est lisse, on veut détecter ce qui _change
 === La forme recherchée
 La logique procède en deux temps. D'abord, on lisse avec un gaussien, ce qui efface le bruit fin qui rendrait toute mesure de variation instable — l'a priori reste que le signal utile est plus lisse que le bruit. Ensuite, on regarde la *courbure* de l'intensité : à quel point elle s'incurve. Sur une crête lumineuse, l'intensité culmine puis redescend, courbure forte ; à une transition franche (un bord), la courbure change de signe et passe par zéro. Détecter un contour revient à chercher ces *passages par zéro*.
 
-Le filtre qui réalise les deux temps d'un coup a la forme d'un *chapeau mexicain* : positif au centre (il s'allume sur une tache claire entourée de sombre), négatif en couronne autour. On le nomme LoG (_Laplacian of Gaussian_, le laplacien d'une gaussienne — le laplacien étant l'outil mathématique standard qui mesure la courbure).
+Le filtre qui réalise les deux temps d'un coup a la forme d'un *chapeau mexicain* : positif au centre (il s'allume sur une tache claire entourée de sombre), négatif en couronne autour. On le nomme LoG (Laplacian of Gaussian, le laplacien d'une gaussienne — le laplacien étant l'outil mathématique standard qui mesure la courbure) ; dans VNStudio, le nœud `Laplacian` approche ce comportement.
 
 #info-box(title: "La formule")[
 ```
@@ -201,12 +201,12 @@ Le *DoG* (_Difference of Gaussians_, différence de deux gaussiennes) approxime 
 
 C'est la brique du détecteur de points SIFT : en calculant la DoG à plusieurs σ, on repère des blobs *et leur taille* — le même point d'intérêt se retrouve dans une image zoomée ou tournée. En microscopie, cela mesure automatiquement le diamètre de centaines de vésicules en une passe. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Au centre exact d'un blob clair sur fond sombre, la formule du LoG se simplifie : le terme entre parenthèses devient −2σ², et la réponse vaut −2/σ² × G(0,0), *fortement négative*. La courbure de l'intensité y est maximale. Chercher les minima (les valeurs les plus négatives) de la réponse localise les centres de blobs clairs ; pour des blobs sombres, on cherche les maxima.
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Laplacian of Gaussian` → `Output Display`. Le nœud calcule en nombres à virgule (indispensable : la réponse a deux signes, et un calcul en entiers effacerait la moitié négative) et propose une variante DoG plus rapide pour le même effet.
+Canvas : `Image File` → `Grayscale` → `Laplacian` → `Display`. Le nœud calcule en nombres à virgule (indispensable : la réponse a deux signes, et un calcul en entiers effacerait la moitié négative) et propose une variante DoG plus rapide pour le même effet.
 
 ---
 ]
@@ -235,7 +235,7 @@ Le détail importe peu ; l'essentiel est qu'il y a *deux cloches gaussiennes mul
 
 Deux réglages indépendants. σs (spatial) fixe la taille du voisinage ; σr (intensité) fixe la tolérance aux différences de teinte. Un petit σr ne moyenne que des teintes presque identiques (contours bien gardés, lissage faible) ; un grand σr rend le filtre indifférent aux différences et le ramène à un simple gaussien. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Pixel p sur un contour, d'intensité 200. À gauche, voisins à 195 (même côté) ; à droite, voisins à 50 (autre côté). Avec une tolérance σr = 30 :
 
 ```
@@ -251,7 +251,7 @@ Le filtre est sensible à l'échelle des valeurs : une tolérance réglée pour 
 ]
 
 #canvas[
-Canvas : `Image Source` → `Bilateral Filter` → `Output Display`. Le nœud expose les deux rayons (spatial et intensité) ; baisser le rayon d'intensité montre les contours se figer pendant que l'intérieur des régions se lisse.
+Canvas : `Image File` → `Bilateral Filter` → `Display`. Le nœud expose les deux rayons (spatial et intensité) ; baisser le rayon d'intensité montre les contours se figer pendant que l'intérieur des régions se lisse.
 
 ---
 ]
@@ -262,7 +262,7 @@ Canvas : `Image Source` → `Bilateral Filter` → `Output Display`. Le nœud ex
 
 #subtitle[Un peigne à dents régulières, incliné, dont l'empreinte s'estompe vers les bords]
 
-#figcap("/figures/fig_ch5_obs2_gabor.pdf", [Observation — Gabor sélectionne une fréquence ET une orientation])
+#figfull("/figures/fig_ch5_obs2_gabor.pdf")
 
 === L'intention
 Certains signaux sont des *ondulations* localisées et orientées : une strie sur un tissu, une nervure de feuille, un sillon d'empreinte digitale. On veut un filtre qui réponde fortement là où l'image ondule à une fréquence donnée, dans une direction donnée.
@@ -281,7 +281,7 @@ Le premier facteur est l'enveloppe (la fenêtre gaussienne), le second l'ondulat
 === Le banc de filtres
 Un seul Gabor ne capte qu'une fréquence et une orientation. En pratique on construit un *banc* : plusieurs longueurs d'onde × plusieurs orientations (souvent 0°, 45°, 90°, 135°). La réponse de l'image à tout le banc forme une signature de texture riche. C'est ainsi qu'on reconnaît un iris dans un passeport biométrique, ou qu'on distingue les types de couvert végétal sur une image satellite.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Pour détecter des stries verticales espacées de 8 pixels : on règle la longueur d'onde sur 8 et l'orientation pour que l'ondulation varie horizontalement (ce qui détecte des stries verticales). Une zone à cette périodicité exacte produit une réponse maximale ; une zone lisse ou striée autrement, une réponse quasi nulle. En balayant les orientations, on obtient en chaque pixel l'orientation dominante de la texture.
 ]
 
@@ -290,7 +290,7 @@ Les noyaux de Gabor n'ont pas tous la même « énergie » selon leurs réglages
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Output Display`. Le nœud `Gabor Bank` applique plusieurs orientations et longueurs d'onde et sort la réponse maximale en chaque pixel, ce qui fait ressortir les textures orientées comme une carte d'intensité.
+Canvas : `Image File` → `Grayscale` → `Gabor Bank` → `Display`. Le nœud `Gabor Bank` applique plusieurs orientations et longueurs d'onde et sort la réponse maximale en chaque pixel, ce qui fait ressortir les textures orientées comme une carte d'intensité.
 
 ---
 ]
@@ -316,7 +316,7 @@ Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Output Display`. L
 
 // ============================================================
 
-== Quand l'hypothèse est fausse, le filtre dégrade
+== quand l'hypothèse est fausse, le filtre dégrade
 
 Chaque filtre du chapitre porte une déclaration sur le signal, inscrite dans ses nombres et appliquée aveuglément à chaque pixel. Quand l'a priori est vrai — signal effectivement lisse (gaussien), effectivement à sauts nets (bilatéral), effectivement strié à telle fréquence (Gabor) — le filtre excelle. Quand il est faux, il dégrade le signal précisément là où on voulait l'améliorer : le gaussien dit « les variations brusques sont du bruit » et efface alors les contours qu'on voulait garder.
 
@@ -326,36 +326,28 @@ Le chapitre 6 enchaînera directement : tout détecteur de contour est un filtre
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 5
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Isoler une échelle de détail dans un portrait
 
-#figtodo("ex_ch5_portrait", [Portrait à contre-jour : fond légèrement flou, grain de peau visible, rides marq...])
-
+#figtodo("ex_ch5_portrait", [Portrait à contre-jour : fond légèrement flou, grain de peau visible, rides marq])
 
 *Ce que vous voyez.* Une scène où coexistent des détails fins, moyens et larges. La mission : un filtre qui ne garde qu'une seule échelle à la fois, comme on règle la « clarté » ou le « grain » dans un logiciel de retouche.
 
 *Pipeline VNStudio*
-`Image Source` → `Gaussian Filter` (doux) → branche A
-`Image Source` → `Gaussian Filter` (plus large) → branche B
-`Difference` (A − B) → `Colormap` → `Output Display`
+`Image File` → `Blur` (doux) → branche A
+`Image File` → `Blur` (plus large) → branche B
+`Python Node` (A − B) → `Colormap` → `Display`
 
 La différence de deux flous garde uniquement les détails situés entre les deux échelles. Réglez les deux flous du plus serré au plus large.
 
 
 
-
 *Questions*
-
 
 + Avec deux flous très doux, quels détails ressortent : le grain de peau, les rides ou le contour du visage ? Élargissez les deux flous : quelle échelle s'allume maintenant ?
 
@@ -366,27 +358,23 @@ La différence de deux flous garde uniquement les détails situés entre les deu
 + *Défi.* Appliquez le même filtre à une photo de tissu à carreaux. Trouvez le réglage qui fait disparaître complètement le quadrillage. Que se passe-t-il aux croisements des lignes, là où deux bords se rencontrent ?
 
 
-
 === Exercice 2 · Lisser une surface sans baver sur les bords
 
-#figtodo("ex_ch5_porte", [Photographie d'une porte en bois peinte : surface lisse à légère texture de pein...])
-
+#figtodo("ex_ch5_porte", [Photographie d'une porte en bois peinte : surface lisse à légère texture de pein])
 
 *Ce que vous voyez.* Une surface à lisser (la texture de peinture) avec des détails à sauver absolument (la fissure, le bord porte/mur). La mission : nettoyer le bruit sans noyer les contours.
 
 *Pipeline VNStudio*
-`Image Source` → `Split Half` :
-— gauche : `Gaussian Filter`
-— droite : `Bilateral Filter` *(à créer)*
-→ `Output Display`
+`Image File` → `Split Half` :
+— gauche : `Blur`
+— droite : `Bilateral Filter` _(à créer)_
+→ `Display`
 
 L'affichage côte à côte compare un flou ordinaire et un flou qui « respecte les bords ».
 
 
 
-
 *Questions*
-
 
 + Sur le bord porte/mur, comparez les deux moitiés. Laquelle bave et crée un halo, laquelle garde le bord net tout en lissant la surface ?
 
@@ -397,24 +385,20 @@ L'affichage côte à côte compare un flou ordinaire et un flou qui « respecte 
 + *Défi.* Réglez le bilatéral pour effacer entièrement la texture de peinture tout en gardant nets la fissure, le nœud et le bord. Existe-t-il un réglage parfait, ou faut-il sacrifier un peu de l'un pour gagner sur l'autre ? Décrivez le compromis.
 
 
-
 === Exercice 3 · Détecter l'orientation des fils d'un tissu
 
-#figtodo("ex_ch5_tissu_ecossais", [Morceau de tissu écossais : bandes de couleur formant un quadrillage, avec des f...])
-
+#figtodo("ex_ch5_tissu_ecossais", [Morceau de tissu écossais : bandes de couleur formant un quadrillage, avec des f])
 
 *Ce que vous voyez.* Une texture dont les orientations dominantes sautent aux yeux. La mission : un filtre qui ne réagit qu'à une direction et une finesse données, pour cartographier les fils.
 
 *Pipeline VNStudio*
-`Image Source` → `Gabor Filter` *(à créer)* (4 orientations) → `Grid Compare` → `Output Display`
+`Image File` → `Gabor Bank` (4 orientations) → `Grid Compare Dashboard` → `Display`
 
 Chaque filtre ne s'allume que pour les fils qui suivent son orientation. La grille compare les quatre réponses.
 
 
 
-
 *Questions*
-
 
 + Parmi les quatre cartes (horizontale, verticale, et deux diagonales), laquelle s'allume le plus fort ? Correspond-elle à la direction dominante que vous voyez dans le tissu ?
 
@@ -426,16 +410,11 @@ Chaque filtre ne s'allume que pour les fils qui suivent son orientation. La gril
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

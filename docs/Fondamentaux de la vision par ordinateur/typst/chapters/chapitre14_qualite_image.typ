@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -107,7 +108,7 @@ Où `I` est l'intensité du pixel, `a` représente le gain (part Poisson) et `b`
 === Ce qu'il mesure, et son angle mort
 Ce modèle mesure la dispersion des pixels. Il montre que le rapport signal sur bruit (SNR) croît comme la racine carrée du signal moyen (`SNR = √λ`) : doubler l'exposition ne multiplie le SNR que par `√2`. Son angle mort classique est de croire qu'une image sombre est « propre » parce qu'une fluctuation absolue faible y réside ; en réalité, son signal est si faible que son SNR est désastreux.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Soit un capteur avec un bruit de lecture de `σ_r = 5 e⁻` (variance `25 e⁻²`). Comparons deux pixels de clartés moyennes différentes :
 
 #table(
@@ -123,7 +124,7 @@ Dans la zone claire, le bruit de lecture est négligeable ; le SNR vaut environ 
 ]
 
 #canvas[
-Canvas : `Image Source` -> `Noise (Gaussian)` -> `Python Node (noise estimation)` -> `Output Display`
+Canvas : `Image File` -> `Gaussian Noise` -> `Python Node` -> `Display`
 ]
 
 === Schéma de nœuds
@@ -165,6 +166,8 @@ La MAD est insensible aux quelques contours réels et ne mesure que le fond alé
 
 #figfull("/figures/fig_ch14_obs1_mse_shift.svg")
 
+#figfull("/figures/fig_ch14_obs1_mse_shift.svg")
+
 === L'intention
 On veut le plus simple des verdicts : de combien l'image dégradée s'écarte-t-elle de l'originale ? Un seul nombre, calculé sans rien supposer de qui regarde. On verra que ce « rien supposer » est lui-même une hypothèse — celle d'un observateur qui ne voit que des pixels.
 
@@ -183,7 +186,7 @@ N est le nombre de pixels, MAX la valeur maximale représentable (255 en 8 bits,
 === Ce qu'elle mesure, et son angle mort
 L'observateur modélisé pose les deux images l'une sur l'autre et somme les écarts au carré, chaque pixel traité indépendamment et à l'identique. Il n'a aucune notion de structure, de voisinage, ni de _où_ l'erreur se trouve. D'où deux échecs symétriques : une dégradation globale mais bénigne — léger décalage de luminance, faible désalignement — gonfle le MSE alors que l'œil ne voit rien ; à l'inverse, une atteinte locale mais grave — une lettre effacée en OCR, une micro-fissure sur une pièce — reste noyée dans la moyenne de millions de pixels intacts. Le MSE dit _combien_ les valeurs diffèrent en moyenne, jamais _comment_ ni _où_.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Patch 2×2 (8 bits), un seul pixel altéré de 8 niveaux :
 
 ```
@@ -239,6 +242,8 @@ Le nœud `PSNR` calcule l'erreur quadratique moyenne pixel par pixel. L'inspecte
 
 #figfull("/figures/fig_ch14_obs2_ssim.svg")
 
+#figfull("/figures/fig_ch14_obs2_ssim.svg")
+
 === L'intention
 L'œil ne somme pas des écarts de pixels : il perçoit des structures. Une dérive globale de luminosité sur une photo satellite ne choque pas ; une ligne de texte effacée est catastrophique, même si tous les autres pixels sont parfaits. On veut une mesure qui épouse cette hiérarchie — indulgente sur ce que l'œil tolère, sévère sur ce qui le heurte.
 
@@ -259,7 +264,7 @@ Chaque terme a la forme `2ab/(a²+b²)`, qui vaut 1 si et seulement si a = b et 
 === Ce qu'elle mesure, et son angle mort
 L'observateur modélisé juge la similarité structurelle locale, peu sensible aux décalages de luminance et de contraste — un modèle artisanal de la vision humaine. Quatre angles morts. C'est une approximation codée à la main, pas la perception réelle : elle ne capte ni le masquage de texture, ni la couleur (SSIM standard ne travaille que sur la luminance). Elle est mono-échelle — la fenêtre 11×11 confond des flous de niveaux différents, d'où MS-SSIM qui combine plusieurs sous-échantillonnages (le choix d'échelle des chapitres 5 et 6). Comme le MSE, elle suppose les images *recalées* — un décalage d'un pixel abîme la structure. Et elle reste _full-reference_ : sans l'original, rien à mesurer.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Reprenons la dégradation que le MSE punissait : un décalage uniforme de +10. Patch de moyenne μₓ = 100, écart-type σₓ = 5 ; on pose ŷ = x + 10, donc μᵧ = 110, σᵧ = 5, et la covariance vaut 25 (corrélation parfaite, structure intacte) :
 
 ```
@@ -280,7 +285,7 @@ La plage dynamique doit être donnée explicitement (255 en 8 bits, 1,0 en flott
 ]
 
 #canvas[
-Canvas : `Reference` + `Degraded` → `SSIM` → `Output Display`. Le nœud sort le score global *et* la carte locale de SSIM, qui montre _où_ siège la dégradation — un avantage décisif sur le PSNR, qui ne livre qu'un scalaire muet sur la localisation.
+Canvas : `Reference` + `Degraded` → `SSIM` → `Display`. Le nœud sort le score global *et* la carte locale de SSIM, qui montre _où_ siège la dégradation — un avantage décisif sur le PSNR, qui ne livre qu'un scalaire muet sur la localisation.
 
 ---
 ]
@@ -308,7 +313,7 @@ p(g) est la fréquence du niveau g. Par la concavité de −x·log x, H est maxi
 === Ce qu'elle mesure, et son angle mort
 L'observateur ne pose qu'une question — « y a-t-il de l'information ? » — sans jamais regarder _où_ elle se trouve. C'est la mesure du premier ordre par excellence, aveugle à l'arrangement spatial (l'angle mort du §13.1) : une image nette et la même image aux pixels mélangés au hasard ont exactement la même entropie. Pire, le *bruit augmente l'entropie* (il étale l'histogramme), si bien qu'une image plus bruitée peut scorer « mieux » qu'une image propre — l'entropie confond information utile et bruit. Son vrai créneau : l'exposition, le seuillage à entropie maximale (chapitre 12), et l'information mutuelle pour le recalage multimodal (scanner ↔ IRM).
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux images 2×2 calculables à la main :
 
 ```
@@ -327,7 +332,7 @@ La base du logarithme fixe l'unité (bits avec log₂, nats avec ln, facteur 0,6
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Image Entropy` → `Inspector`. Le nœud affiche l'entropie globale, le taux d'occupation de la plage dynamique, et produit une carte d'entropie locale (fenêtre glissante) routable vers un `Output Display` colorisé.
+Canvas : `Image File` → `Grayscale` → `First Order Statistics` → `Display`. Le nœud affiche l'entropie globale, le taux d'occupation de la plage dynamique, et produit une carte d'entropie locale (fenêtre glissante) routable vers un `Display` colorisé.
 
 ---
 ]
@@ -337,6 +342,8 @@ Canvas : `Image Source` → `Grayscale` → `Image Entropy` → `Inspector`. Le 
 == Mesures de netteté sans référence : variance du Laplacien, énergie de gradient
 
 #subtitle[Un bord franc devient une pente douce sous le flou — on mesure ce qui reste de raideur]
+
+#figfull("/figures/fig_ch14_obs3_sharpness.svg")
 
 #figfull("/figures/fig_ch14_obs3_sharpness.svg")
 
@@ -359,7 +366,7 @@ Trois proxys de la même grandeur, l'énergie haute-fréquence : la variance des
 === Ce qu'elle mesure, et son angle mort
 L'observateur est un détecteur de mise au point, sans mémoire de l'original. Angle mort majeur : la valeur absolue n'est *pas comparable d'une scène à l'autre* — un ciel uniforme parfaitement net a peu de hautes fréquences, donc un score bas malgré sa netteté ; ces mesures ne sont monotones qu'au sein d'une _même_ scène parcourue en focus. Comme l'entropie, elles sont dupées par le *bruit*, qui injecte des hautes fréquences (une image bruitée floue peut battre une image nette propre). Et elles ne disent rien des autres dégradations : couleur, artefacts de compression, distorsion.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Laplacien 1-D discret (noyau `[1 −2 1]`) sur un front net puis flouté :
 
 ```
@@ -380,7 +387,7 @@ On n'utilise jamais un seuil universel de netteté : seul l'ordre relatif sur un
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Sharpness` → `Inspector`. Le nœud sort la variance du Laplacien et le Tenengrad. Brancher une pile de mises au point successives sur l'inspecteur fait apparaître le pic de netteté — le point que l'autofocus retiendrait.
+Canvas : `Image File` → `Grayscale` → `Focus Metric` → `Display`. Le nœud sort la variance du Laplacien et le Tenengrad. Brancher une pile de mises au point successives sur l'inspecteur fait apparaître le pic de netteté — le point que l'autofocus retiendrait.
 
 ---
 ]
@@ -427,7 +434,7 @@ Deux backbones différents (VGG, AlexNet) donnent des scores incomparables : on 
 ]
 
 #canvas[
-Canvas : `Reference` + `Degraded` → `Perceptual Distance` → `Inspector`. Le nœud charge un backbone pré-entraîné (sélectionnable) et sort la distance perceptuelle ; le chargement du modèle est asynchrone, comme les autres nœuds ML du studio. À défaut de GPU, un nœud `Histogram Distance` (chapitre 3) en corrélation donne un proxy léger et interprétable, suffisant pour détecter une divergence chromatique grossière.
+Canvas : `Reference` + `Degraded` → `Histogram Compare` → `Display`. Le nœud charge un backbone pré-entraîné (sélectionnable) et sort la distance perceptuelle ; le chargement du modèle est asynchrone, comme les autres nœuds ML du studio. À défaut de GPU, un nœud `Histogram Compare` (chapitre 3) en corrélation donne un proxy léger et interprétable, suffisant pour détecter une divergence chromatique grossière.
 
 ---
 ]
@@ -455,7 +462,7 @@ _État de l'art :_ le PSNR domine encore les rapports de codecs par tradition, S
 
 // ============================================================
 
-== Une métrique de qualité est un observateur déguisé
+== une métrique de qualité est un observateur déguisé
 
 Le chapitre raconte une seule histoire, déclinée six fois : il n'existe pas de « qualité » dans l'absolu, seulement une qualité _pour un observateur_, et chaque métrique en est un.
 
@@ -476,34 +483,26 @@ C'est le fil du chapitre 3 transposé de la comparaison de vecteurs à celle d'i
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 14
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Deux dégradations, un même score chiffré, une perception opposée
 
-#figtodo("ex_ch14_portrait_compare", [Trois versions d'un portrait : (A) original net, (B) version grenue couverte de ...])
-
+#figtodo("ex_ch14_portrait_compare", [Trois versions d'un portrait : (A) original net, (B) version grenue couverte de ])
 
 *Ce que vous voyez.* Deux façons d'abîmer une image qui paraissent très différentes à l'œil. La mission : constater qu'une note « pixel à pixel » peut les déclarer équivalentes, et qu'une note « de structure » les départage.
 
 *Pipeline VNStudio*
-`Image Source (A)` + `Image Source (B ou C)` → `SSIM / PSNR` *(à créer)* → `Output Display`
+`Image File` (A) + `Image File` (B) → `SSIM / PSNR` → `Display`
 
 Le nœud affiche deux notes : le PSNR (écart pixel à pixel) et le SSIM (ressemblance de structure), plus une carte qui montre où la structure se dégrade.
 
 
 
-
 *Questions*
-
 
 + Réglez le bruit de B et le flou de C jusqu'à ce que leur PSNR soit identique. À PSNR égal, les deux images vous semblent-elles vraiment de même qualité ?
 
@@ -514,24 +513,20 @@ Le nœud affiche deux notes : le PSNR (écart pixel à pixel) et le SSIM (ressem
 + *Défi.* Remplacez le bruit de B par quelques pixels « grillés » épars (sel et poivre). Pour un même PSNR, le SSIM juge-t-il cette dégradation pire ou plus douce que le flou ? Quelle note correspond le mieux à votre propre jugement visuel ?
 
 
-
 === Exercice 2 · Classer une rafale de photos de la plus floue à la plus nette
 
-#figtodo("ex_ch14_serie_nettet", [Série de 6 photos d'un même paysage à mise au point croissante : la 1 très floue...])
-
+#figtodo("ex_ch14_serie_nettet", [Série de 6 photos d'un même paysage à mise au point croissante : la 1 très floue])
 
 *Ce que vous voyez.* Une rafale de netteté croissante. La mission : faire trier ces images automatiquement, sans image de référence — exactement ce que fait l'autofocus d'un appareil.
 
 *Pipeline VNStudio*
-`Image Source` → `Focus Metric` → `Output Display`
+`Image File` → `Focus Metric` → `Display`
 
 Le nœud attribue à chaque image un score de netteté, d'autant plus élevé que les détails fins sont présents.
 
 
 
-
 *Questions*
-
 
 + Mesurez le score de netteté des 6 photos. Le classement par score correspond-il à l'ordre visuel du plus flou au plus net ? Y a-t-il une inversion ?
 
@@ -542,24 +537,20 @@ Le nœud attribue à chaque image un score de netteté, d'autant plus élevé qu
 + *Défi.* Servez-vous du score pour bâtir un autofocus : parmi la rafale, lequel choisiriez-vous comme « meilleure prise » ? Floutez ensuite légèrement la gagnante et vérifiez que son score retombe sous celui de la vraie meilleure. Le critère est-il fiable pour décider tout seul ?
 
 
-
 === Exercice 3 · Reconnaître la signature de deux bruits de capteur
 
-#figtodo("ex_ch14_bruit_compare", [Trois images de la même scène (objet sur fond uni) : (A) propre, (B) bruit de ca...])
-
+#figtodo("ex_ch14_bruit_compare", [Trois images de la même scène (objet sur fond uni) : (A) propre, (B) bruit de ca])
 
 *Ce que vous voyez.* Deux bruits d'origine physique différente. La mission : reconnaître lequel est lequel rien qu'en observant comment le bruit se répartit selon la luminosité, pour choisir le bon débruitage.
 
 *Pipeline VNStudio*
-`Image Source` → `Noise Profile` → `Output Display`
+`Image File` → `First Order Statistics` → `Display`
 
 Le nœud mesure l'intensité du bruit séparément dans les zones sombres et claires, et la trace en fonction de la luminosité.
 
 
 
-
 *Questions*
-
 
 + Sur l'image B, le bruit est-il plus fort dans les zones claires ou sombres ? Sur l'image C, varie-t-il avec la luminosité, ou reste-t-il constant partout ?
 
@@ -571,16 +562,11 @@ Le nœud mesure l'intensité du bruit séparément dans les zones sombres et cla
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

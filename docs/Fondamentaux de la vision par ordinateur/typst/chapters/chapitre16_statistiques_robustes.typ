@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -73,6 +74,8 @@ Les statistiques robustes traversent tout le livre et en révèlent la face « m
 
 #figfull("/figures/fig_ch16_obs1_median.svg")
 
+#figfull("/figures/fig_ch16_obs1_median.svg")
+
 === L'intention
 On veut résumer un échantillon par un point central qui ne se laisse pas emporter par une valeur folle. La moyenne échoue à cette tâche ; on cherche un estimateur dont une donnée aberrante ne puisse pas détourner le résultat.
 
@@ -88,7 +91,7 @@ médiane :  m̂ = argmin_m Σᵢ |xᵢ − m|      (minimise L1)
 
 Deux notions chiffrent la robustesse. Le *point de rupture* est la fraction de données qu'on peut corrompre avant que l'estimation parte à l'infini : 1/n → 0 % pour la moyenne (un seul point suffit), 50 % pour la médiane (il faut corrompre plus de la moitié de l'échantillon). La *fonction d'influence* ψ mesure l'effet d'ajouter une observation en x — l'image du levier : combien la balance bascule quand on pose un poids en x. Pour la moyenne, ψ(x) = x − μ, non bornée ; pour la médiane, ψ(x) ∝ sign(x − m), bornée. Borner ψ, c'est être robuste. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Cinq mesures d'un capteur de distance (cm), dont la dernière déraille sur un reflet :
 
 ```
@@ -136,7 +139,7 @@ MAD = médiane(|xᵢ − médiane(x)|)
 
 L'influence de la MAD est bornée : une aberration ne peut pas gonfler l'échelle estimée au-delà d'un plafond. C'est ce qui la rend indispensable pour paramétrer Huber (§16.3) et le seuil d'inlier de RANSAC (§16.5) : sans mètre-étalon robuste, « borner l'influence à ±k » n'a pas de sens, car k doit s'exprimer en unités de bruit, pas en pixels bruts. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Les deux échantillons du §16.1 :
 
 ```
@@ -174,6 +177,8 @@ Canvas : `Scalar List` → `MAD Scale` → `Inspector`. Le nœud sort la médian
 
 #figfull("/figures/fig_ch16_obs2_mestimators.svg")
 
+#figfull("/figures/fig_ch16_obs2_mestimators.svg")
+
 === L'intention
 La médiane est robuste mais grossière (elle ne lit que des signes) ; les moindres carrés sont précis mais fragiles (influence non bornée). On veut un réglage continu entre les deux : précis près de la cible, robuste au loin, et avec un curseur pour décider _à partir d'où_ on se méfie.
 
@@ -208,7 +213,7 @@ Tukey      → ψ redescend à 0    influence annulée au-delà du seuil, rejett
 
 Les seuils `k = 1,345·σ̂` (Huber) et `c = 4,685·σ̂` (Tukey) donnent tous deux *95 % d'efficacité* sous bruit gaussien : on ne perd que 5 % de précision sur données propres, tout en gagnant la robustesse. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Quatre résidus d'un ajustement de profil en imagerie industrielle, dont un aberrant (éclat de métal), seuil k = 2 :
 
 ```
@@ -256,7 +261,7 @@ Huber :  w(e) = 1       si |e| ≤ k       Tukey :  w(e) = (1−(e/k)²)²  si |
 
 Huber dégrade le poids des grands résidus comme 1/|e| (jamais à zéro) ; Tukey le met à zéro au-delà du seuil. Un ajustement robuste n'est donc qu'un moindres carrés où les outliers sont progressivement éteints par leur propre influence bornée. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Estimer une profondeur en reconstruction 3D à partir de y = \[10,0 ; 10,2 ; 9,8 ; 25,0\], dont *25,0* est aberrant (mauvaise triangulation sur un fond spéculaire) :
 
 ```
@@ -289,6 +294,8 @@ Canvas : `Data Points` → `IRLS Fit` → `Inspector`. Le nœud part d'une initi
 
 #figfull("/figures/fig_ch16_obs3_ransac.svg")
 
+#figfull("/figures/fig_ch16_obs3_ransac.svg")
+
 === L'intention
 Quand les outliers sont nombreux — la moitié des appariements entre deux images peuvent être faux —, même les M-estimateurs cèdent. On veut une méthode qui tolère une *majorité* de données corrompues, en les excluant carrément plutôt qu'en les atténuant.
 
@@ -317,7 +324,7 @@ N = log(1 − p) / log(1 − wⁿ)
 
 p est la probabilité souhaitée de toucher au moins un tirage pur, n la taille de l'échantillon minimal (2 pour une droite, 4 pour une homographie, 8 pour la matrice fondamentale — chapitre 8). Point capital : N dépend exponentiellement de n et de w, mais *pas de la taille du jeu de données*. L'influence de RANSAC est binaire — un point est inlier (poids 1, il fonde le modèle) ou outlier (poids 0, ignoré). Son point de rupture peut *dépasser 50 %* (il tolère une majorité d'outliers, à condition d'allonger N), là où aucun M-estimateur ne va. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Combien de tirages pour p = 0,99 dans trois scénarios courants ?
 
 ```
@@ -378,7 +385,7 @@ MLESAC :  score = vraisemblance d'un mélange inliers/outliers
 ```
 ]
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux modèles candidats, même nombre d'inliers (3 sur 4, t = 2), départagés par MSAC :
 
 ```
@@ -427,7 +434,7 @@ Canvas : `Image A` + `Image B` → `Feature Matching` → `Robust Fit` → `Insp
 
 // ============================================================
 
-== Être robuste, c'est décider à l'avance ce qu'on refuse de croire
+== être robuste, c'est décider à l'avance ce qu'on refuse de croire
 
 Le fil du chapitre tient en une fonction, ψ, et une question : jusqu'où une seule donnée a-t-elle le droit de déplacer le résultat ? Tous les estimateurs ne sont que des réponses différentes, lisibles sur la forme de ψ.
 
@@ -446,34 +453,26 @@ C'est la dernière pièce du méta-fil de l'ouvrage. Un descripteur, un filtre, 
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 16
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Compter une température fiable malgré les capteurs chauds
 
-#figtodo("ex_ch16_thermique", [Image thermique d'un atelier en fausses couleurs : fond bleu-vert uniforme autou...])
-
+#figtodo("ex_ch16_thermique", [Image thermique d'un atelier en fausses couleurs : fond bleu-vert uniforme autou])
 
 *Ce que vous voyez.* Une scène où quelques pixels extrêmes (les moteurs chauds) risquent de fausser l'estimation de la température ambiante. La mission : estimer la température du fond sans se laisser tromper par les points chauds.
 
 *Pipeline VNStudio*
-`Image Source` → `Region Properties` → `Output Display`
+`Image File` → `Region Properties` → `Display`
 
 Le nœud affiche dans l'inspecteur la moyenne, la médiane et l'écart absolu médian (MAD) de la zone sélectionnée.
 
 
 
-
 *Questions*
-
 
 + Relevez la moyenne et la médiane de l'image entière. Laquelle annonce une température proche du fond réel (20 °C) ? De combien de degrés la moyenne s'éloigne-t-elle à cause des moteurs ?
 
@@ -484,24 +483,20 @@ Le nœud affiche dans l'inspecteur la moyenne, la médiane et l'écart absolu m�
 + *Défi.* Ajoutez de plus en plus de points chauds (peignez des zones rouges dans l'image source). À partir de quelle proportion de pixels chauds la médiane se met-elle enfin à grimper ? Vérifiez qu'elle tient bon presque jusqu'à ce que la moitié de l'image soit chaude.
 
 
-
 === Exercice 2 · Retrouver la ligne d'horizon dans une scène encombrée
 
-#figtodo("ex_ch16_horizon", [Photographie d'un bord de mer : l'horizon sépare nettement ciel et mer, mais la ...])
-
+#figtodo("ex_ch16_horizon", [Photographie d'un bord de mer : l'horizon sépare nettement ciel et mer, mais la ])
 
 *Ce que vous voyez.* Une ligne dominante (l'horizon) noyée parmi des éléments qui ne la respectent pas. La mission : faire trouver l'horizon automatiquement malgré ces intrus.
 
 *Pipeline VNStudio*
-`Image Source` → `Canny Edge Detector` → `RANSAC Line Fit` → `Draw Overlay` → `Output Display`
+`Image File` → `Canny Edge` → `Python Node` → `Display` → `Display`
 
 Le nœud RANSAC trace la droite consensus et affiche le nombre de points qui la soutiennent (inliers).
 
 
 
-
 *Questions*
-
 
 + Lancez le pipeline. La droite tracée suit-elle bien l'horizon, ou se laisse-t-elle attirer par le ponton et le voilier ? Notez le nombre d'inliers affiché.
 
@@ -512,24 +507,20 @@ Le nœud RANSAC trace la droite consensus et affiche le nombre de points qui la 
 + *Défi.* Couvrez la moitié de l'image de fausses lignes (ajoutez des objets inclinés). RANSAC retrouve-t-il toujours l'horizon ? Augmentez le nombre d'itérations du nœud et observez à partir de combien de tirages le résultat redevient stable d'un lancement à l'autre.
 
 
-
 === Exercice 3 · Calibrer un capteur de distance avec des mesures parasites
 
-#figtodo("ex_ch16_calibration_capteur", [Nuage de points d'une calibration de télémètre : distance mesurée en fonction de...])
-
+#figtodo("ex_ch16_calibration_capteur", [Nuage de points d'une calibration de télémètre : distance mesurée en fonction de])
 
 *Ce que vous voyez.* Des mesures fiables pour la plupart, avec quatre relevés aberrants dus à des réflexions. La mission : trouver la vraie droite de calibration sans que ces quatre points la tordent.
 
 *Pipeline VNStudio*
-`CSV Reader` (mesures) → `Robust Line Fit` → `Scatter Plot` → `Output Display`
+`CSV Reader` (mesures) → `Python Node` → `Scatter Plot` → `Display`
 
 Le nœud propose trois modes d'ajustement : ordinaire (L2), Huber (résistant), médian (très résistant). Il affiche la pente trouvée et superpose la droite au nuage.
 
 
 
-
 *Questions*
-
 
 + Ajustez en mode ordinaire. La droite passe-t-elle au milieu des bons points, ou est-elle tirée vers le haut par les quatre parasites ? Notez la pente.
 
@@ -541,16 +532,11 @@ Le nœud propose trois modes d'ajustement : ordinaire (L2), Huber (résistant), 
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

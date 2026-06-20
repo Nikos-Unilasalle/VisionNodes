@@ -57,7 +57,7 @@ La transformée suppose que l'image se répète à l'infini dans toutes les dire
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `FFT` → `Output Display`. Le nœud affiche le spectre d'amplitude (les pics de fréquence) ; le brancher sur un `FFT Filter` permet d'annuler des fréquences précises (les deux pics d'une rayure) puis de revenir à l'image nettoyée.
+Canvas : `Image File` → `Grayscale` → `FFT Analysis` → `Display`. Le nœud affiche le spectre d'amplitude (les pics de fréquence) ; son paramètre **Filter Type** permet d'annuler des fréquences précises (les deux pics d'une rayure) et le port **Filtered** renvoie l'image nettoyée.
 
 ---
 
@@ -92,7 +92,7 @@ Un flou gaussien atténue les hautes fréquences : c'est un **passe-bas**. Un d�
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `FFT Filter (low-pass)` → `Output Display`. Le nœud applique un masque de fréquences (passe-bas, passe-haut ou passe-bande) directement dans le domaine de Fourier ; comparer son résultat à un `Gaussian Blur` montre que les deux donnent le même flou.
+Canvas : `Image File` → `FFT Analysis` → `Display` (paramètre **Filter Type** = Low-pass). Le nœud applique un masque de fréquences (passe-bas, passe-haut ou passe-bande) directement dans le domaine de Fourier ; comparer son résultat à un `Blur` (mode Gaussien) montre que les deux donnent le même flou.
 
 ---
 
@@ -131,7 +131,7 @@ Un bloc 8×8 pris dans un ciel uniforme : après DCT, un seul nombre (la moyenne
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `DCT Block` → `Output Display`. Le nœud découpe en blocs 8×8, montre la concentration d'énergie de chaque bloc, et permet de ne garder que les N plus grands nombres pour visualiser la perte de compression.
+Canvas : `Image File` → `Grayscale` → `DCT Analysis` → `Display`. Le nœud découpe en blocs 8×8, montre la concentration d'énergie de chaque bloc, et permet de ne garder que les N plus grands nombres pour visualiser la perte de compression.
 
 ---
 
@@ -183,7 +183,7 @@ Dans le nœud `Hough Lines` (ou via `cv2.HoughLines` et `cv2.HoughLinesP` en Pyt
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Edge Detector (Canny)` ──> `Hough Lines` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Canny Edge` ──> `Hough Lines` ──> `Display`.
 
 Le nœud `Hough Lines` prend la carte de contours binaires produite par Canny et accumule les votes. En modifiant le curseur `Votes Threshold` (seuil de votes) dans l'inspecteur, vous déterminez le niveau de sélectivité nécessaire pour filtrer les lignes dominantes de la scène. Un nœud `Hough Circles` fait de même pour les cercles, et l'inspecteur compte les formes trouvées.
 
@@ -219,7 +219,7 @@ Un disque binaire de rayon 10 pixels : la carte vaut 0 sur le bord, croît vers 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Distance Transform` → `Output Display`. Le nœud sort la carte de relief en fausses couleurs et l'inspecteur indique le point le plus intérieur et le rayon maximal inscrit — directement exploitables pour placer un marqueur ou amorcer un watershed.
+Canvas : `Image File` → `Threshold` → `Distance Transform` → `Display`. Le nœud sort la carte de relief en fausses couleurs et l'inspecteur indique le point le plus intérieur et le rayon maximal inscrit — directement exploitables pour placer un marqueur ou amorcer un watershed.
 
 ---
 
