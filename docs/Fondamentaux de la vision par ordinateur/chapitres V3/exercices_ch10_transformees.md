@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Un motif parfaitement périodique. La mission : passer dans l'espace des fréquences pour repérer la signature du quadrillage, puis le faire disparaître à volonté.
 
 **Pipeline VNStudio**
-`Image Source` → `FFT Analysis` → `Output Display` (spectre) + `Colormap`
+`Image File` → `FFT Analysis` → `Display`
 
 Le nœud affiche le spectre de fréquences et permet d'appliquer un filtre passe-bas ou passe-haut avant de reconstruire l'image.
 
@@ -34,7 +34,7 @@ Le nœud affiche le spectre de fréquences et permet d'appliquer un filtre passe
 **Ce que vous voyez.** Plusieurs droites bien marquées dans la scène. La mission : les faire retrouver automatiquement, sans dire au système où elles sont.
 
 **Pipeline VNStudio**
-`Image Source` → `Canny Edge Detector` *(à créer)* → `Hough Transform` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Canny Edge` → `Hough Lines` → `Display`
 
 Le nœud trace les droites détectées sur l'image et expose un seuil de vote qui décide combien de lignes ressortent.
 
@@ -59,7 +59,7 @@ Le nœud trace les droites détectées sur l'image et expose un seuil de vote qu
 **Ce que vous voyez.** Une forme à bras fins et centre épais. La mission : mesurer « l'épaisseur intérieure » en chaque point pour trouver les cœurs des régions, étape clé avant de séparer des objets collés.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Colormap` (LUT chaud) → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Distance Transform` → `Apply Colormap` → `Display`
 
 La carte colore chaque pixel selon son éloignement du bord le plus proche : froid près des bords, chaud au cœur.
 

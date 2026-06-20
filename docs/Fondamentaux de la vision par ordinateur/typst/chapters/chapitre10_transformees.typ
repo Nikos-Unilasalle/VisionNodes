@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -95,7 +96,7 @@ Pour vous représenter cette formule physiquement :
 
 On calcule cette décomposition pour toutes les fréquences possibles grâce à la *FFT* (transformée de Fourier rapide), un algorithme extrêmement optimisé capable de traiter une image haute définition en temps réel. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une image de rayures verticales espacées de 10 pixels a une transformée presque entièrement vide, *sauf deux pics* symétriques à la fréquence correspondant à cet espacement. Toute la structure « rayures » tient dans deux nombres. Pour les effacer — sur une radiographie, un scan de document —, on annule ces deux nombres puis on revient dans l'espace des pixels : les rayures ont disparu sans toucher au reste. Trivial dans la base de Fourier, laborieux dans les pixels.
 ]
 
@@ -104,7 +105,7 @@ La transformée suppose que l'image se répète à l'infini dans toutes les dire
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `FFT` → `Output Display`. Le nœud affiche le spectre d'amplitude (les pics de fréquence) ; le brancher sur un `FFT Filter` permet d'annuler des fréquences précises (les deux pics d'une rayure) puis de revenir à l'image nettoyée.
+Canvas : `Image File` → `Grayscale` → `FFT Analysis` → `Display`. Le nœud affiche le spectre d'amplitude (les pics de fréquence) ; son paramètre *Filter Type* permet d'annuler des fréquences précises (les deux pics d'une rayure) et le port *Filtered* renvoie l'image nettoyée.
 
 ---
 ]
@@ -141,7 +142,7 @@ DoG / Gabor         →   ne laisse passer qu'une bande              (passe-band
 Un flou gaussien atténue les hautes fréquences : c'est un *passe-bas*. Un dérivateur les exalte : c'est un *passe-haut*. Concevoir un filtre revient alors à dessiner quelles fréquences il laisse passer — souvent plus intuitif que de choisir des nombres dans un pochoir. Conséquence pratique : pour un très grand pochoir, passer par les fréquences (transformer, multiplier, retransformer) est bien plus rapide que de le faire glisser pixel par pixel.
 
 #canvas[
-Canvas : `Image Source` → `FFT Filter (low-pass)` → `Output Display`. Le nœud applique un masque de fréquences (passe-bas, passe-haut ou passe-bande) directement dans le domaine de Fourier ; comparer son résultat à un `Gaussian Blur` montre que les deux donnent le même flou.
+Canvas : `Image File` → `FFT Analysis` → `Display` (paramètre *Filter Type* = Low-pass). Le nœud applique un masque de fréquences (passe-bas, passe-haut ou passe-bande) directement dans le domaine de Fourier ; comparer son résultat à un `Blur` (mode Gaussien) montre que les deux donnent le même flou.
 
 ---
 ]
@@ -176,12 +177,12 @@ Sa propriété reine est la *compaction d'énergie* : pour les images naturelles
 
 La quantification est la seule étape destructive, et elle exploite la perception : l'œil tolère mal les erreurs dans les zones lisses (basses fréquences) mais bien dans les détails fins (hautes fréquences). Poussée trop loin, elle produit les fameux *artefacts en blocs* : les frontières des carrés de 8×8 deviennent visibles, révélant l'unité de calcul que le changement de base avait réussi à faire oublier.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un bloc 8×8 pris dans un ciel uniforme : après DCT, un seul nombre (la moyenne du bloc) concentre presque toute l'énergie, les 63 autres sont proches de zéro. On stocke un nombre au lieu de 64. Un bloc pris dans du feuillage serré étale son énergie sur des dizaines de nombres : il se compresse moins bien. La DCT n'améliore pas l'image, elle rend visible la compressibilité déjà présente.
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `DCT Block` → `Output Display`. Le nœud découpe en blocs 8×8, montre la concentration d'énergie de chaque bloc, et permet de ne garder que les N plus grands nombres pour visualiser la perte de compression.
+Canvas : `Image File` → `Grayscale` → `DCT Analysis` → `Display`. Le nœud découpe en blocs 8×8, montre la concentration d'énergie de chaque bloc, et permet de ne garder que les N plus grands nombres pour visualiser la perte de compression.
 
 ---
 ]
@@ -213,7 +214,7 @@ une DROITE dans l'image  →   un POINT dans l'espace des paramètres (un pic de
 
 Plusieurs points alignés produisent des courbes qui *se croisent toutes au même endroit* : les paramètres de leur droite commune. On compte les votes dans une grille (l'*accumulateur*) et on cherche les pics. Pour les cercles, même principe avec trois paramètres (centre et rayon). La force de Hough est sa *robustesse aux occlusions et au bruit* : une droite partiellement masquée accumule moins de votes mais reste détectable, et le bruit ne forme aucun pic. Sa faiblesse : le coût de l'accumulateur, surtout pour les cercles, et la sensibilité à la finesse de la grille. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Trois pixels alignés horizontalement à hauteur 5 : ils votent tous, entre autres, pour « la droite horizontale à hauteur 5 ». Cette case de l'accumulateur reçoit trois votes, toutes les autres au plus un. Le pic est sans ambiguïté : la droite est détectée.
 ]
 
@@ -235,7 +236,7 @@ Dans le nœud `Hough Lines` (ou via `cv2.HoughLines` et `cv2.HoughLinesP` en Pyt
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Edge Detector (Canny)` ──> `Hough Lines` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Canny Edge` ──> `Hough Lines` ──> `Display`.
 
 Le nœud `Hough Lines` prend la carte de contours binaires produite par Canny et accumule les votes. En modifiant le curseur `Votes Threshold` (seuil de votes) dans l'inspecteur, vous déterminez le niveau de sélectivité nécessaire pour filtrer les lignes dominantes de la scène. Un nœud `Hough Circles` fait de même pour les cercles, et l'inspecteur compte les formes trouvées.
 
@@ -268,12 +269,12 @@ DT(p) = distance du pixel p au pixel de fond le plus proche
 
 On peut choisir la distance (euclidienne, Manhattan… chapitre 3). Un algorithme rapide la calcule en deux passages sur l'image. Elle sert au *watershed* (le relief où l'eau monte sépare des objets accolés, chapitre 12), à la *squelettisation* (réduire une forme à son axe : chiffres manuscrits, réseaux vasculaires) et à la *navigation* (distance à l'obstacle le plus proche en tout point). ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un disque binaire de rayon 10 pixels : la carte vaut 0 sur le bord, croît vers le centre, et atteint exactement 10 au centre — le rayon. Le point le plus haut donne d'un coup le centre et le rayon, sans calculer ni contour ni centre de gravité. Pour un rectangle, la carte forme une arête centrale dont la hauteur donne le demi-côté.
 ]
 
 #canvas[
-Canvas : `Image Source` → `Threshold` → `Distance Transform` → `Output Display`. Le nœud sort la carte de relief en fausses couleurs et l'inspecteur indique le point le plus intérieur et le rayon maximal inscrit — directement exploitables pour placer un marqueur ou amorcer un watershed.
+Canvas : `Image File` → `Threshold` → `Distance Transform` → `Display`. Le nœud sort la carte de relief en fausses couleurs et l'inspecteur indique le point le plus intérieur et le rayon maximal inscrit — directement exploitables pour placer un marqueur ou amorcer un watershed.
 
 ---
 ]
@@ -297,7 +298,7 @@ Canvas : `Image Source` → `Threshold` → `Distance Transform` → `Output Dis
 
 // ============================================================
 
-== Reconnaître la base où la question devient facile
+== reconnaître la base où la question devient facile
 
 Un problème difficile dans un domaine peut devenir trivial dans un autre :
 
@@ -318,34 +319,26 @@ Choisir un descripteur (chapitre 1), une distance (chapitre 3) ou un filtre (cha
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 10
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Effacer un motif de tissu sans toucher au reste
 
-#figtodo("ex_ch10_tissu_carreaux", [Tissu à carreaux réguliers photographié à plat : motif périodique de lignes bleu...])
-
+#figtodo("ex_ch10_tissu_carreaux", [Tissu à carreaux réguliers photographié à plat : motif périodique de lignes bleu])
 
 *Ce que vous voyez.* Un motif parfaitement périodique. La mission : passer dans l'espace des fréquences pour repérer la signature du quadrillage, puis le faire disparaître à volonté.
 
 *Pipeline VNStudio*
-`Image Source` → `FFT Analysis` → `Output Display` (spectre) + `Colormap`
+`Image File` → `FFT Analysis` → `Display`
 
 Le nœud affiche le spectre de fréquences et permet d'appliquer un filtre passe-bas ou passe-haut avant de reconstruire l'image.
 
 
 
-
 *Questions*
-
 
 + Observez le spectre : voyez-vous des points brillants bien nets, ou une tache diffuse ? Que disent ces points sur la régularité du tissu ? Repérez ceux qui correspondent aux lignes horizontales et ceux des verticales.
 
@@ -356,24 +349,20 @@ Le nœud affiche le spectre de fréquences et permet d'appliquer un filtre passe
 + *Défi.* Passez la FFT sur un visage au lieu du tissu. Le spectre montre-t-il des points nets comme le tissu, ou une tache continue qui s'éteint depuis le centre ? Qu'est-ce que cela révèle sur la différence entre un motif fabriqué et une image naturelle ?
 
 
-
 === Exercice 2 · Retrouver les routes d'un carrefour par le vote
 
-#figtodo("ex_ch10_carrefour", [Vue aérienne d'un carrefour en étoile : cinq routes rectilignes convergent vers ...])
-
+#figtodo("ex_ch10_carrefour", [Vue aérienne d'un carrefour en étoile : cinq routes rectilignes convergent vers ])
 
 *Ce que vous voyez.* Plusieurs droites bien marquées dans la scène. La mission : les faire retrouver automatiquement, sans dire au système où elles sont.
 
 *Pipeline VNStudio*
-`Image Source` → `Canny Edge Detector` *(à créer)* → `Hough Transform` *(à créer)* → `Draw Overlay` → `Output Display`
+`Image File` → `Canny Edge` → `Hough Lines` → `Display`
 
 Le nœud trace les droites détectées sur l'image et expose un seuil de vote qui décide combien de lignes ressortent.
 
 
 
-
 *Questions*
-
 
 + Lancez le pipeline. Les cinq routes sont-elles toutes tracées ? Leur direction colle-t-elle à ce que vous voyez ?
 
@@ -384,24 +373,20 @@ Le nœud trace les droites détectées sur l'image et expose un seuil de vote qu
 + *Défi.* Passez le détecteur sur une feuille de papier millimétré : il devrait ne trouver que deux familles de lignes (horizontales et verticales). Vérifiez. Faites ensuite pivoter la feuille de 15° et observez les deux familles tourner d'autant. Le détecteur suit-il la rotation ?
 
 
-
 === Exercice 3 · Trouver le cœur d'une forme pour préparer une découpe
 
-#figtodo("ex_ch10_etoile_masque", [Masque binaire d'une étoile à cinq branches : fond noir, étoile blanche, branche...])
-
+#figtodo("ex_ch10_etoile_masque", [Masque binaire d'une étoile à cinq branches : fond noir, étoile blanche, branche])
 
 *Ce que vous voyez.* Une forme à bras fins et centre épais. La mission : mesurer « l'épaisseur intérieure » en chaque point pour trouver les cœurs des régions, étape clé avant de séparer des objets collés.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Colormap` (LUT chaud) → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Distance Transform` → `Apply Colormap` → `Display`
 
 La carte colore chaque pixel selon son éloignement du bord le plus proche : froid près des bords, chaud au cœur.
 
 
 
-
 *Questions*
-
 
 + Sur la carte colorée, où se trouve le point le plus « chaud » de l'étoile : au centre du pentagone ou au bout d'une branche ? Pourquoi ?
 
@@ -413,16 +398,11 @@ La carte colore chaque pixel selon son éloignement du bord le plus proche : fro
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

@@ -91,7 +91,7 @@ orientation : θ = arctan2(Iᵧ, Iₓ)        → « dans quelle direction ? »
 
 Le symbole ∇ (« nabla ») désigne le gradient ; Iₓ est la variation d'intensité dans le sens horizontal, Iᵧ dans le sens vertical. La *magnitude* (la longueur de la flèche) est leur combinaison à la Pythagore ; l'*orientation* est l'angle de la flèche. Sur une grille de pixels, on approche ces variations par des *différences finies* — la différence entre un pixel et son voisin. La version la plus précise est la différence « centrée » : on compare le voisin de droite au voisin de gauche, ce qui place le contour exactement au bon endroit, sans décalage d'un demi-pixel. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Ligne d'intensités `[10, 10, 10, 80, 90, 90, 90]`. La variation centrée en chaque point (moitié de l'écart entre voisins) :
 
 ```
@@ -106,7 +106,7 @@ L'orientation se calcule avec `arctan2`, une variante de l'arc tangente qui tien
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` → `Output Display`. Le nœud sort la carte de magnitude (les contours s'allument en clair) et, dans l'inspecteur, le gradient moyen et maximal ainsi que le nombre de pixels au-dessus d'un seuil de contour.
+Canvas : `Image File` → `Grayscale` → `Image Gradient` → `Display`. Le nœud sort la carte de magnitude (les contours s'allument en clair) et, dans l'inspecteur, le gradient moyen et maximal ainsi que le nombre de pixels au-dessus d'un seuil de contour.
 
 ---
 ]
@@ -133,7 +133,7 @@ Sₓ = [−1  0  +1]      Sᵧ = [−1  −2  −1]
 
 Sₓ détecte les bords verticaux (variation horizontale), Sᵧ les bords horizontaux. La variante *Scharr* remplace le poids (1, 2, 1) par (3, 10, 3), réglé pour que la réponse soit la même quelle que soit l'orientation du bord — un bord à 45° donne alors la même magnitude qu'un bord à 0°. Pour des mesures d'angle précises (l'inclinaison d'une pièce en vision industrielle, l'orientation de fibres en microscopie), Scharr est préférable. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Petit carré 3×3 avec un bord vertical net (gauche sombre = 0, droite claire = 100). On applique Sₓ au pixel central :
 
 ```
@@ -149,7 +149,7 @@ Un bord clair→sombre donne une variation négative. Si l'on stocke le résulta
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` (ou `Scharr Gradient`) → `Output Display`. Le nœud calcule en interne en nombres à virgule et expose au choix Sobel ou Scharr ; l'inspecteur compare leurs magnitudes maximales sur la même image.
+Canvas : `Image File` → `Grayscale` → `Image Gradient` (ou `Image Gradient`) → `Display`. Le nœud calcule en interne en nombres à virgule et expose au choix Sobel ou Scharr ; l'inspecteur compare leurs magnitudes maximales sur la même image.
 
 ---
 ]
@@ -160,7 +160,7 @@ Canvas : `Image Source` → `Grayscale` → `Sobel Gradient` (ou `Scharr Gradien
 
 #subtitle[Lisser, dériver, affiner à un pixel, puis relier ce qui se prolonge]
 
-#figcap("/figures/fig_ch6_obs3_canny_nms.pdf", [Observation — suppression des non-maxima : du bord épais au bord d'un pixel])
+#figfull("/figures/fig_ch6_obs3_canny_nms.pdf")
 
 === L'intention
 On veut des contours qui satisfont trois exigences à la fois : peu de faux contours, des contours bien placés, et un seul pixel de large (pas un ruban épais). Aucun pochoir seul n'y parvient.
@@ -189,7 +189,7 @@ entre les deux              → gardé seulement s'il touche un pixel certain
 
 L'idée : un pixel faible isolé est probablement du bruit, mais un pixel faible qui *prolonge un contour fort* est probablement la suite du même bord. On se sert du voisinage comme preuve de réalité.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Chaîne de magnitudes le long d'un contour candidat, seuil bas = 50, seuil haut = 100 :
 
 ```
@@ -220,11 +220,11 @@ Dans le nœud `Canny` (ou via `cv2.Canny` en Python), la détection repose sur t
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Canny Edge Detector` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Canny Edge` ──> `Display`.
 
 En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer directement la mécanique de l'hystérésis : augmenter le seuil haut élimine les détails de texture parasites, tandis que diminuer le seuil bas reconnecte les lignes de contours interrompues. Le nœud expose également l'option de calcul automatique par la médiane et l'inspecteur affiche la densité de pixels de contour pour faciliter le réglage.
 
-*Exercice de dépannage :* L'exercice consiste à inverser les seuils dans le nœud *Canny Edge Detector* en réglant *Low Threshold* sur 150 et *High Threshold* sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
+*Exercice de dépannage :* L'exercice consiste à inverser les seuils dans le nœud *Canny Edge* en réglant *Low Threshold* sur 150 et *High Threshold* sur 50. Le lecteur observe que l'hystérésis est rompue : les contours deviennent extrêmement fragmentés et la plupart disparaissent. Cela s'explique par le fait qu'aucun point de départ solide (supérieur au seuil haut) ne peut être raccordé à une chaîne de points de confiance (supérieurs au seuil bas), puisque le seuil bas est plus restrictif que le seuil haut.
 
 ---
 ]
@@ -237,7 +237,7 @@ En ajustant les deux curseurs de seuils dans l'inspecteur, vous pouvez observer 
 
 #figfull("/illustrations/chap6.4.png")
 
-#figcap("/figures/fig_ch6_obs1_structure_tensor.pdf", [Observation — le tenseur de structure : coin, bord ou zone plate])
+#figfull("/figures/fig_ch6_obs1_structure_tensor.pdf")
 
 === L'intention
 Le gradient décrit un pixel isolé. On veut caractériser un *voisinage* entier : est-ce une région plate, un bord, ou un coin ? Cela demande de rassembler l'information de plusieurs pixels.
@@ -267,7 +267,7 @@ Pour comprendre intuitivement pourquoi nous construisons ce tableau avec ces mul
 Les deux valeurs propres de ce tableau `T` (notées `λ₁` et `λ₂`) correspondent aux longueurs des demi-axes de l'ellipse qui décrit la distribution des gradients, de la même manière qu'au chapitre 2 sur les moments. Un contour n'a qu'une seule direction de variation (une grande et une petite valeur propre) ; un coin n'en a aucune de privilégiée (deux grandes). La pondération gaussienne plutôt qu'une fenêtre carrée évite les artefacts de bord et traite toutes les directions équitablement ; sa largeur fixe l'échelle des structures détectées. ∎
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Structure Tensor` → `Output Display`. Le nœud colore chaque pixel selon le cas diagnostiqué (plat / bord / coin) d'après ses deux valeurs propres, ce qui donne à voir la géométrie locale d'un coup d'œil.
+Canvas : `Image File` → `Grayscale` → `Structure Tensor` → `Display`. Le nœud colore chaque pixel selon le cas diagnostiqué (plat / bord / coin) d'après ses deux valeurs propres, ce qui donne à voir la géométrie locale d'un coup d'œil.
 
 ---
 ]
@@ -308,7 +308,7 @@ Chez *Harris*, le terme retranché pénalise le cas « une seule grande valeur p
 
 Les deux sont *invariants en rotation* (un coin reste un coin si on tourne l'image) mais *pas invariants à l'échelle* : un coin vu de loin peut ressembler à une texture. Cette limite a motivé les détecteurs multi-échelles comme SIFT, qui cherche les coins à plusieurs niveaux de flou à la fois — une réponse plus élaborée au même fil. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Trois voisinages, avec les valeurs propres de leur tenseur :
 
 ```
@@ -321,7 +321,7 @@ Les deux critères donnent le même diagnostic : seul le troisième voisinage es
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Harris Corners` (ou `Good Features To Track`) → `Output Display`. Le nœud marque les coins détectés sur l'image et l'inspecteur en donne le nombre ; un réglage de sensibilité fait varier combien de coins ressortent.
+Canvas : `Image File` → `Grayscale` → `Harris Corners` (ou `Harris Corners`) → `Display`. Le nœud marque les coins détectés sur l'image et l'inspecteur en donne le nombre ; un réglage de sensibilité fait varier combien de coins ressortent.
 
 ---
 ]
@@ -347,7 +347,7 @@ Canvas : `Image Source` → `Grayscale` → `Harris Corners` (ou `Good Features 
 
 // ============================================================
 
-== La vraie question n'est pas s'il faut lisser, mais à quelle échelle
+== la vraie question n'est pas s'il faut lisser, mais à quelle échelle
 
 Tout le chapitre tourne autour d'une même tension :
 
@@ -362,37 +362,29 @@ Comme un descripteur du chapitre 1 ou un filtre du chapitre 5, choisir cette éc
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 6
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Extraire le contour propre d'une feuille
 
-#figtodo("ex_ch6_feuille", [Photographie d'une feuille d'automne posée sur le sol : nervures très fines sur ...])
-
+#figtodo("ex_ch6_feuille", [Photographie d'une feuille d'automne posée sur le sol : nervures très fines sur ])
 
 *Ce que vous voyez.* Une structure avec des bords de contraste très inégal : contour extérieur fort, nervures secondaires à peine marquées. La mission : en tirer un tracé de contour propre et fin.
 
 *Pipeline VNStudio*
-`Image Source` → `Split Half` :
+`Image File` → `Split Half` :
 — gauche : `Sobel Edge Detector` → `Colormap`
-— droite : `Canny Edge Detector` *(à créer)*
-→ `Output Display`
+— droite : `Canny Edge`
+→ `Display`
 
 Sobel montre la « force » des bords en dégradé ; Canny en tire un trait fin. Canny propose un seuil bas et un seuil haut.
 
 
 
-
 *Questions*
-
 
 + Comparez les deux moitiés sur une nervure. Laquelle donne un trait large et flou, laquelle un trait fin d'un pixel ? Pour compter ou suivre des nervures, laquelle est exploitable ?
 
@@ -403,24 +395,20 @@ Sobel montre la « force » des bords en dégradé ; Canny en tire un trait fin.
 + *Défi.* Réglez Canny pour obtenir le contour extérieur complet de la feuille en un seul trait fermé, sans les nervures internes ni le bruit du sol. Branchez `Find Contours` derrière et vérifiez qu'il ne compte bien qu'une seule feuille.
 
 
-
 === Exercice 2 · Distinguer une surface plane, un bord et un coin
 
-#figtodo("ex_ch6_coin_table", [Coin d'une table en bois vu de haut : la surface plane uniforme, le bord rectili...])
-
+#figtodo("ex_ch6_coin_table", [Coin d'une table en bois vu de haut : la surface plane uniforme, le bord rectili])
 
 *Ce que vous voyez.* Les trois situations de base réunies : du plat, une ligne, un coin. La mission : faire repérer automatiquement les coins, points d'ancrage stables pour le suivi et l'assemblage de panoramas.
 
 *Pipeline VNStudio*
-`Image Source` → `Harris / Shi-Tomasi` *(à créer)* → `Colormap` → `Output Display`
+`Image File` → `Harris Corners` → `Apply Colormap` → `Display`
 
 Le nœud allume fortement les coins, faiblement les bords, et reste éteint sur les zones plates.
 
 
 
-
 *Questions*
-
 
 + Sur la carte de réponse, repérez la zone plate, le bord et le coin. Lequel s'allume le plus ? Lequel reste éteint ? La détection colle-t-elle à votre intuition ?
 
@@ -431,24 +419,20 @@ Le nœud allume fortement les coins, faiblement les bords, et reste éteint sur 
 + *Défi.* Faites pivoter l'image de 45°. Les coins détectés suivent-ils fidèlement la table, ou de nouveaux points apparaissent-ils n'importe où ? Le détecteur est-il fiable quel que soit l'angle de prise de vue ?
 
 
-
 === Exercice 3 · Pourquoi un bord seul ne révèle pas le vrai mouvement
 
-#figtodo("ex_ch6_balle_rayee", [Vue stroboscopique d'une balle rayée (rayures noires et blanches) se déplaçant h...])
-
+#figtodo("ex_ch6_balle_rayee", [Vue stroboscopique d'une balle rayée (rayures noires et blanches) se déplaçant h])
 
 *Ce que vous voyez.* Un objet rayé qui se déplace horizontalement. La mission : comprendre, en regardant les flèches de gradient, pourquoi un bord isolé ne suffit jamais à dire dans quelle direction un objet bouge — le fameux « problème de la fenêtre ».
 
 *Pipeline VNStudio*
-`Image Source` → `Image Gradient` → `Draw Overlay` (flèches) → `Output Display`
+`Image File` → `Image Gradient` → `Display` → `Display`
 
 Le nœud dessine en chaque point une petite flèche pointant à travers le bord local, dans le sens où l'image s'éclaircit.
 
 
 
-
 *Questions*
-
 
 + Sur le bord latéral (vertical) de la balle, dans quel sens pointe la flèche ? Indique-t-elle bien le déplacement horizontal réel de la balle ?
 
@@ -460,16 +444,11 @@ Le nœud dessine en chaque point une petite flèche pointant à travers le bord 
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

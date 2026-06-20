@@ -94,7 +94,7 @@ Dans le nœud `Image Moments` (ou via `cv2.moments` en Python), le comportement 
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Threshold` ──> `Image Moments` ──> `Inspector`.
+`Image File` ──> `Threshold` ──> `Image Moments` ──> `Display`.
 
 Le nœud `Image Moments` calcule en continu l'ensemble des moments bruts et centrés d'après les formules ci-dessus. Le nœud de conversion `Grayscale` placé en amont garantit que les images couleur sont correctement projetées sur un seul canal avant le calcul.
 
@@ -138,7 +138,7 @@ Les outils ne rangent pas les coordonnées dans le même ordre : les uns raisonn
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. L'inspecteur affiche les coordonnées du centroïde et le nœud le dessine en surimpression sur l'objet ; on voit immédiatement s'il tombe hors de la forme (cas du U ou du croissant).
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. L'inspecteur affiche les coordonnées du centroïde et le nœud le dessine en surimpression sur l'objet ; on voit immédiatement s'il tombe hors de la forme (cas du U ou du croissant).
 
 ---
 
@@ -193,7 +193,7 @@ Un caractère manuscrit comme « e » ou « a » a une asymétrie marquée que �
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les moments centraux figurent dans la sortie du même nœud, à côté des moments bruts ; l'inspecteur les liste séparément.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Les moments centraux figurent dans la sortie du même nœud, à côté des moments bruts ; l'inspecteur les liste séparément.
 
 ---
 
@@ -236,7 +236,7 @@ Le raisonnement suppose qu'agrandir une forme multiplie proprement ses pixels. E
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Image Moments` → `Inspector`. Les moments normalisés sont une troisième famille de sorties du nœud ; relier deux tailles d'un même objet à deux branches du canvas permet de vérifier d'un coup d'œil qu'ils coïncident.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Les moments normalisés sont une troisième famille de sorties du nœud ; relier deux tailles d'un même objet à deux branches du canvas permet de vérifier d'un coup d'œil qu'ils coïncident.
 
 ---
 
@@ -282,7 +282,7 @@ Elle vaut 0 pour un disque (aucune direction privilégiée) et tend vers 1 pour 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`. Le nœud trace l'axe principal par-dessus l'objet et l'inspecteur donne l'angle et l'anisotropie côte à côte, ce qui signale d'emblée les formes rondes où l'angle n'a pas de sens.
+Canvas : `Image File` → `Threshold` → `Region Properties` → `Display`. Le nœud trace l'axe principal par-dessus l'objet et l'inspecteur donne l'angle et l'anisotropie côte à côte, ce qui signale d'emblée les formes rondes où l'angle n'a pas de sens.
 
 ---
 
@@ -330,7 +330,7 @@ Pour mesurer la dimension réelle d'une pièce, d'une bactérie ou d'un trait, o
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Region Properties` → `Inspector`. Le nœud superpose l'ellipse équivalente sur l'objet et l'inspecteur donne grand axe, petit axe et excentricité. Une vérification utile : tracer un rectangle synthétique de longueur connue et constater que le grand axe ressort ~15 % trop grand.
+Canvas : `Image File` → `Threshold` → `Region Properties` → `Display`. Le nœud superpose l'ellipse équivalente sur l'objet et l'inspecteur donne grand axe, petit axe et excentricité. Une vérification utile : tracer un rectangle synthétique de longueur connue et constater que le grand axe ressort ~15 % trop grand.
 
 ---
 
@@ -364,7 +364,7 @@ Pour la reconnaissance générale, les descripteurs appris (réseaux de neurones
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Threshold` → `Hu Moments` → `Inspector`. Le nœud sort les sept invariants déjà ramenés en échelle logarithmique. Brancher le même objet tourné sur une seconde branche montre que la signature reste stable, sauf le signe de φ₇ pour une image en miroir.
+Canvas : `Image File` → `Threshold` → `Image Moments` → `Display`. Le nœud sort les sept invariants déjà ramenés en échelle logarithmique. Brancher le même objet tourné sur une seconde branche montre que la signature reste stable, sauf le signe de φ₇ pour une image en miroir.
 
 ---
 
@@ -397,7 +397,7 @@ Les moments pondérés héritent de tout ce qui affecte l'intensité : vignettag
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Background Subtract` → `Image Moments (weighted)` → `Inspector`. En branchant aussi le masque binaire sur une seconde entrée, l'inspecteur affiche l'écart entre le centroïde géométrique et le centroïde lumineux — la quantité exploitée en astrométrie.
+Canvas : `Image File` → `Background Subtractor (MOG2)` → `Image Moments` → `Display`. En branchant aussi le masque binaire sur une seconde entrée, l'inspecteur affiche l'écart entre le centroïde géométrique et le centroïde lumineux — la quantité exploitée en astrométrie.
 
 ---
 

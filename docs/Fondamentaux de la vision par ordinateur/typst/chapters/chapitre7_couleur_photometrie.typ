@@ -86,7 +86,7 @@ Y = 0.2126·R + 0.7152·G + 0.0722·B   (coefficients haute définition, BT.709)
 
 Y est la *luminance* (la clarté) ; R, G, B sont les trois canaux. Les coefficients très inégaux traduisent les sensibilités de l'œil. Il existe deux jeux de coefficients selon l'âge des écrans (télévision standard contre haute définition), qui diffèrent de quelques pour-cent — négligeable à l'affichage, détectable en mesure précise. En imagerie médicale, une moyenne simple aplatirait des contrastes tissulaires que les bons coefficients font ressortir comme l'œil les voit. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Pixel vert-jaune vif R, G, B = (180, 220, 30) :
 
 ```
@@ -102,7 +102,7 @@ Voici le piège le plus souvent ignoré. Les images stockées (JPEG, PNG) ne con
 ]
 
 #canvas[
-Canvas : `Image Source` → `Luminance` → `Output Display`. Le nœud propose les deux jeux de coefficients (TV standard / haute définition) et une option « linéariser le gamma » qui distingue le luma rapide de la luminance physique ; l'écart entre les deux se voit sur un dégradé.
+Canvas : `Image File` → `Grayscale` → `Display`. Le nœud `Grayscale` propose les deux jeux de coefficients (TV standard / haute définition) et une option « linéariser le gamma » qui distingue le luma rapide de la luminance physique ; l'écart entre les deux se voit sur un dégradé. Ajouter un nœud `Gamma Correct` en amont pour travailler en espace linéarisé.
 
 ---
 ]
@@ -129,7 +129,7 @@ H = angle déduit de la position de R, G, B  (exprimé en degrés sur la roue)
 
 La valeur est le canal le plus fort, la saturation l'écart relatif entre le plus fort et le plus faible, la teinte l'angle qui repère la couleur dominante. Ce découplage rend HSV idéal pour la segmentation par couleur : isoler les objets rouges revient à garder une plage d'angles autour du rouge, là où la même opération en RGB demanderait de découper un volume 3D peu intuitif. L'espace HSV encode une hypothèse : la teinte est le critère qui compte, l'intensité une nuisance à éliminer. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Pixel orange vif R, G, B = (255, 128, 0), ramené entre 0 et 1 :
 
 ```
@@ -146,7 +146,7 @@ Quand la saturation tend vers zéro (gris, blanc, noir), la teinte n'a plus de s
 ]
 
 #canvas[
-Canvas : `Image Source` → `Color Convert (HSV)` → `Threshold by Hue` → `Output Display`. Le nœud de seuillage par teinte expose une plage d'angles et un seuil minimal de saturation (pour écarter les gris) ; il sort un masque des objets de la couleur visée.
+Canvas : `Image File` → `Color Space` → `Color Mask` → `Display`. Dans `Color Space`, choisir HSV comme espace cible. Le nœud `Color Mask` expose une plage d'angles H et un seuil minimal de saturation (pour écarter les gris) ; il sort un masque des objets de la couleur visée.
 
 ---
 ]
@@ -157,7 +157,7 @@ Canvas : `Image Source` → `Color Convert (HSV)` → `Threshold by Hue` → `Ou
 
 #subtitle[Une carte à équidistance : un même pas paraît un même écart, partout]
 
-#figcap("/figures/fig_ch7_obs2_deltaE.pdf", [Observation — ΔE en Lab : même écart RGB, perception différente])
+#figfull("/figures/fig_ch7_obs2_deltaE.pdf")
 
 === L'intention
 Dans RGB ou HSV, une même différence numérique peut correspondre à des écarts perçus très inégaux : l'œil distingue finement les verts, beaucoup moins les bleus saturés. On veut un espace où *des différences numériques égales correspondent à des différences perçues égales* — pour _mesurer_ un écart de couleur, pas pour l'afficher.
@@ -192,7 +192,7 @@ C'est la distance euclidienne du chapitre 3, appliquée aux trois coordonnées L
 
 La formule ΔE de base reste imparfaite (elle surestime les écarts dans les bleus saturés) ; une version affinée, ΔE2000, corrige cela et sert de standard industriel pour le contrôle qualité couleur. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Contrôle qualité textile, fil « bleu marine de référence » Lab = (22, 4, −28), lot de production Lab = (24, 5, −25) :
 
 ```
@@ -203,7 +203,7 @@ Un ΔE de 3,7 est perceptible à l'œil nu — le lot sera refusé si la norme e
 ]
 
 #canvas[
-Canvas : `Image A` + `Image B` → `Delta E (CIE2000)` → `Output Display`. Le nœud convertit les deux images en Lab, calcule le ΔE en chaque pixel, et affiche une carte des écarts plus une statistique (moyen, maximal, 95ᵉ percentile) — directement exploitable en contrôle qualité.
+Canvas : `Image File` (image A) + `Image File` (image B) → `Delta E` → `Display`. Le nœud `Delta E` convertit les deux images en Lab, calcule le ΔE en chaque pixel selon la formule choisie (CIE76 ou CIE2000), et affiche une carte des écarts plus une statistique (moyen, maximal, 95ᵉ percentile) — directement exploitable en contrôle qualité.
 
 ---
 ]
@@ -226,7 +226,7 @@ La conversion naïve est directe (le cyan vaut « tout sauf le rouge », etc.), 
 
 Quand une couleur d'écran tombe hors du gamut d'impression, il faut décider comment la « faire entrer ». Plusieurs stratégies (les _intents de rendu_) : comprimer harmonieusement tout le gamut (bon pour les photos), garder exactes les couleurs atteignables et rabattre seulement les autres (bon pour un logo dont le rouge doit rester fidèle), ou privilégier la vivacité sur l'exactitude (graphiques). Le choix est éditorial, pas technique. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un vert vif de logo RGB = (0, 210, 90). La simulation avec un profil d'impression standard indique que ce vert est *hors gamut* : le rendu imprimé sera notablement plus terne. L'écart, mesuré en ΔE2000 (§7.3) entre la cible et la valeur imprimée simulée, vaut environ 8,5 — une différence bien visible à l'œil nu.
 ]
 
@@ -235,7 +235,7 @@ Convertir tôt en CMYK fait perdre des couleurs sans retour. La bonne pratique t
 ]
 
 #canvas[
-Canvas : `Image Source` → `CMYK Soft Proof` → `Output Display`. Le nœud simule le rendu CMYK (profil au choix), signale en surimpression les zones hors gamut, et affiche le ΔE2000 moyen entre l'original et le rendu simulé.
+Canvas : `Image File` → `Color Space` → `Delta E` → `Display`. Convertir d'abord en Lab avec `Color Space`, puis comparer avec une version simulée CMYK (gamut réduit) via `Delta E` : les zones hors gamut apparaissent en rouge vif sur la carte ΔE.
 
 ---
 ]
@@ -257,7 +257,7 @@ L'image utile est celle d'un accordéon. Un histogramme concentré, c'est un acc
 === Pourquoi l'égalisation globale échoue — CLAHE
 L'égalisation globale applique une seule correction à toute l'image : une zone localement peu contrastée (une ombre dans une radiographie) reste noyée si le reste de l'image domine l'histogramme. Le *CLAHE* (égalisation adaptative à contraste limité) corrige cela par deux idées. D'abord, *adaptatif* : on découpe l'image en tuiles et on égalise chaque tuile séparément, en raccordant les tuiles en douceur pour éviter un effet de damier. Ensuite, *à contraste limité* : avant d'égaliser une tuile, on plafonne son histogramme à une hauteur maximale et on redistribue le surplus. Sans ce plafond, une tuile presque uniforme (un coin de ciel) verrait son minuscule contraste étiré à l'extrême, amplifiant énormément le bruit du capteur. Ce plafond est le réglage clé : trop bas, l'effet est faible ; trop haut, le bruit explose.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Image de fond d'œil dont les intensités s'entassent entre 0 et 80 sur une plage de 0 à 255. L'égalisation étire \[0, 80\] sur \[0, 255\], révélant les vaisseaux. Mais ce segment contient aussi du bruit de capteur, étiré du même facteur (environ 3,2× = 255/80) : un bruit de 2 niveaux devient 6 niveaux. D'où l'utilité du plafond du CLAHE, qui borne ce gain et empêche le bruit d'exploser.
 ]
 
@@ -278,7 +278,7 @@ Dans le nœud `CLAHE` (ou via `cv2.createCLAHE` en Python), l'amélioration loca
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `CLAHE` ──> `Output Display`.
+`Image File` ──> `CLAHE (Contrast)` ──> `Display`.
 
 Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les couleurs) et expose les curseurs `Contrast Limit` (plafond de contraste) et `Grid Size` (taille de grille) dans l'inspecteur. En réglant ces paramètres, vous pouvez observer l'équilibre entre la visibilité des détails dans les ombres et l'apparition du bruit de fond.
 
@@ -293,9 +293,9 @@ Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les c
 
 #subtitle[Le monde est gris en moyenne — quand il l'est vraiment]
 
-#figcap("/figures/fig_ch7_obs1_gamma.pdf", [Observation — correction gamma : profil perceptuel vs linéaire])
+#figfull("/figures/fig_ch7_obs1_gamma.pdf")
 
-#figcap("/figures/fig_ch7_obs3_white_balance.pdf", [Observation — balance des blancs : choisir ce qu'on déclare « blanc »])
+#figfull("/figures/fig_ch7_obs3_white_balance.pdf")
 
 === L'intention
 Deux besoins distincts. D'abord comprendre le *gamma*, cette courbe de compression évoquée plusieurs fois. Ensuite corriger une dominante de couleur due à l'éclairage, pour retrouver des teintes neutres.
@@ -325,7 +325,7 @@ nouveau B = B × (moyenne du vert / moyenne du bleu)
 
 (on prend le vert comme référence, le canal le plus stable.) Cette hypothèse est raisonnable pour des scènes générales (un bureau, une salle d'opération) mais *fausse* dès qu'une couleur domine la scène : un champ de colza, une radiographie, une forêt vue du ciel. La correction y introduit alors une distorsion inverse. Les méthodes modernes (estimation de l'éclairage par réseau de neurones) sont plus robustes, mais reposent toutes sur une hypothèse — explicite ou apprise — sur la scène.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Image à dominante jaune (lampe halogène) : moyennes rouge = 180, vert = 170, bleu = 120.
 
 ```
@@ -337,7 +337,7 @@ Après correction, les trois moyennes valent 170, la dominante jaune disparaît.
 ]
 
 #canvas[
-Canvas : `Image Source` → `White Balance (Gray World)` → `Output Display`. Le nœud calcule les gains par canal et corrige la dominante ; un nœud `Gamma Correct` placé en amont permet de travailler en espace linéarisé quand les opérations suivantes l'exigent.
+Canvas : `Image File` → `White Balance` → `Display`. Le nœud `White Balance` calcule les gains par canal (méthode Gray World) et corrige la dominante ; un nœud `Gamma Correct` placé en amont permet de travailler en espace linéarisé quand les opérations suivantes l'exigent.
 
 ---
 ]
@@ -363,7 +363,7 @@ Canvas : `Image Source` → `White Balance (Gray World)` → `Output Display`. L
 
 // ============================================================
 
-== Savoir, à chaque étape, dans quel espace on se trouve
+== savoir, à chaque étape, dans quel espace on se trouve
 
 Chaque espace colorimétrique n'est pas une vérité mais un *contrat* : il définit ce qui compte et ce qui est ignoré. RGB linéaire suppose que ce qui compte est la physique de la lumière. HSV suppose que c'est la teinte, séparée de la luminosité. CIELAB suppose que c'est la différence telle que l'œil la perçoit, non telle que le capteur la mesure. CMYK suppose que le support est de l'encre sur du papier, pas de la lumière sur un écran.
 
@@ -373,37 +373,29 @@ Le chapitre 3 posait la même question pour les distances, le chapitre 10 la rep
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 7
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Redresser un dégradé qui ment à l'œil
 
-#figtodo("ex_ch7_degrade_gris", [Dégradé de gris imprimé puis photographié : dix bandes censées être régulièremen...])
-
+#figtodo("ex_ch7_degrade_gris", [Dégradé de gris imprimé puis photographié : dix bandes censées être régulièremen])
 
 *Ce que vous voyez.* Un dégradé qui semble irrégulier alors qu'il a été conçu régulier. La mission : comprendre et corriger l'encodage gamma qui déforme les valeurs sombres dans tout fichier d'image.
 
 *Pipeline VNStudio*
-`Image Source` → `Split Half` :
+`Image File` → `Split Half` :
 — gauche : image brute → `Line Profile`
-— droite : `Gamma Correction` *(à créer)* → `Line Profile`
-→ `Output Display`
+— droite : `Gamma Correction` _(à créer)_ → `Line Profile`
+→ `Display`
 
 Le profil de ligne trace la luminosité le long du dégradé ; comparez avant et après correction.
 
 
 
-
 *Questions*
-
 
 + Tracez le profil sur les deux moitiés. Lequel forme une belle droite régulière, lequel est courbé ? Le côté corrigé colle-t-il mieux à l'idée d'un dégradé uniforme ?
 
@@ -414,24 +406,20 @@ Le profil de ligne trace la luminosité le long du dégradé ; comparez avant et
 + *Défi.* Sur une photo d'objet blanc sous lampe orangée, faites une balance des blancs avant correction, puis après. Dans quel cas le blanc redevient-il vraiment neutre ? Concluez sur l'ordre correct des opérations couleur.
 
 
-
 === Exercice 2 · Trier des fruits par couleur malgré l'éclairage inégal
 
-#figtodo("ex_ch7_fruits", [Corbeille de fruits mélangés (pommes rouges, citrons jaunes, oranges), un côté e...])
-
+#figtodo("ex_ch7_fruits", [Corbeille de fruits mélangés (pommes rouges, citrons jaunes, oranges), un côté e])
 
 *Ce que vous voyez.* Des fruits de teintes distinctes mais d'éclairages variables. La mission : les trier par couleur sans qu'une pomme à l'ombre soit confondue avec une orange au soleil.
 
 *Pipeline VNStudio*
-`Image Source` → `Color Space` (RGB → HSV) → `Channel Split` → `Output Display`
+`Image File` → `Color Space` → `Channel Split` → `Display`
 
 En HSV, la teinte est séparée de la luminosité : un objet garde sa teinte qu'il soit éclairé ou ombré.
 
 
 
-
 *Questions*
-
 
 + Sur le canal de teinte, une pomme rouge au soleil et une pomme rouge à l'ombre ont-elles la même valeur ? Comparez avec le canal rouge brut : lequel reste stable malgré l'éclairage ?
 
@@ -442,24 +430,20 @@ En HSV, la teinte est séparée de la luminosité : un objet garde sa teinte qu'
 + *Défi.* Sur un reflet blanc brillant (une pomme cirée), la teinte devient instable et saute. Ajoutez une condition sur la saturation pour ignorer ces reflets ternes. Le tri redevient-il propre ? Pourquoi une couleur délavée n'a-t-elle plus de teinte fiable ?
 
 
-
 === Exercice 3 · Mesurer une différence de couleur comme l'œil la perçoit
 
-#figtodo("ex_ch7_peinture_bleus", [Deux échantillons de peinture bleu roi côte à côte : l'un légèrement plus chaud,...])
-
+#figtodo("ex_ch7_peinture_bleus", [Deux échantillons de peinture bleu roi côte à côte : l'un légèrement plus chaud,])
 
 *Ce que vous voyez.* Deux couleurs que les valeurs brutes jugent presque identiques mais que l'œil distingue sans peine. La mission : mesurer la différence de couleur d'une façon fidèle à la perception, pour un contrôle qualité de teinte.
 
 *Pipeline VNStudio*
-`Image Source` → `Color Space` (RGB → Lab) → `Color Distance` → `Output Display`
+`Image File` → `Color Space` → `Color Distance` → `Display`
 
 L'espace Lab est construit pour que les écarts de couleur collent à la perception ; le nœud y mesure la distance perceptuelle entre deux zones.
 
 
 
-
 *Questions*
-
 
 + Mesurez l'écart entre les deux bleus avec les couleurs brutes, puis en Lab. Laquelle des deux mesures reflète mieux la différence que vous voyez à l'œil ?
 
@@ -471,16 +455,11 @@ L'espace Lab est construit pour que les écarts de couleur collent à la percept
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

@@ -61,7 +61,7 @@ Beaucoup de bibliothèques calculent en réalité une **corrélation** — la co
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Convolution` → `Output Display`. Le nœud `Convolution` prend un noyau au choix (un moyenneur 5×5 incarne l'a priori « localement constant ») et expose la convention de bord. Pour les noyaux directionnels, une option de retournement garantit le comportement de convolution stricte.
+Canvas : `Image File` → `Blur` → `Display`. Le nœud `Blur` propose le flou moyenneur (Box), gaussien et médian ; pour un noyau personnalisé, le nœud `Python Node` peut implémenter `cv2.filter2D` avec n'importe quel noyau et expose la même convention de bord.
 
 ---
 
@@ -103,7 +103,7 @@ La somme des coefficients vaut 16, d'où la division par 16. Un filtre de lissag
 
 ### Paramètres opérationnels (VNStudio / Python)
 
-Dans le nœud `Gaussian Blur` (ou via `cv2.GaussianBlur` en Python), le comportement du lissage est contrôlé par les paramètres opérationnels suivants :
+Dans le nœud `Blur` (ou via `cv2.GaussianBlur` en Python), le comportement du lissage est contrôlé par les paramètres opérationnels suivants :
 
 *   **Taille du noyau (`ksize`)** :
     *   Dans VNStudio, ce paramètre correspond au curseur **Kernel Size** ; en Python (OpenCV), il se nomme `ksize` dans `cv2.GaussianBlur`.
@@ -118,9 +118,9 @@ Dans le nœud `Gaussian Blur` (ou via `cv2.GaussianBlur` en Python), le comporte
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Gaussian Blur` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Blur` ──> `Display`.
 
-Le nœud `Gaussian Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
+Le nœud `Blur` expose les curseurs `Kernel Size` (taille de grille) et `Sigma` dans l'inspecteur, permettant d'observer en direct le lissage du bruit et la disparition des détails les plus fins au fur et à mesure que la cloche s'élargit.
 
 **Exercice de dépannage :** L'exercice consiste à appliquer un flou avec un **Kernel Size** très large (ex. : 21x21) sur une image claire, en réglant le paramètre **Border Type** sur **Constant (0)** (ce qui remplit le hors-bord de noir). Le lecteur observe sur l'image de sortie un halo sombre artificiel qui bave depuis les bordures vers l'intérieur de l'image. Cela illustre comment un mauvais choix de gestion des bords corrompt l'intensité des pixels périphériques lors des calculs de moyenne locale.
 
@@ -138,7 +138,7 @@ Après les filtres qui voient ce qui est lisse, on veut détecter ce qui *change
 
 La logique procède en deux temps. D'abord, on lisse avec un gaussien, ce qui efface le bruit fin qui rendrait toute mesure de variation instable — l'a priori reste que le signal utile est plus lisse que le bruit. Ensuite, on regarde la **courbure** de l'intensité : à quel point elle s'incurve. Sur une crête lumineuse, l'intensité culmine puis redescend, courbure forte ; à une transition franche (un bord), la courbure change de signe et passe par zéro. Détecter un contour revient à chercher ces **passages par zéro**.
 
-Le filtre qui réalise les deux temps d'un coup a la forme d'un **chapeau mexicain** : positif au centre (il s'allume sur une tache claire entourée de sombre), négatif en couronne autour. On le nomme LoG (*Laplacian of Gaussian*, le laplacien d'une gaussienne — le laplacien étant l'outil mathématique standard qui mesure la courbure).
+Le filtre qui réalise les deux temps d'un coup a la forme d'un **chapeau mexicain** : positif au centre (il s'allume sur une tache claire entourée de sombre), négatif en couronne autour. On le nomme LoG (Laplacian of Gaussian, le laplacien d'une gaussienne — le laplacien étant l'outil mathématique standard qui mesure la courbure) ; dans VNStudio, le nœud `Laplacian` approche ce comportement.
 
 ### La formule
 
@@ -157,7 +157,7 @@ Au centre exact d'un blob clair sur fond sombre, la formule du LoG se simplifie 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Laplacian of Gaussian` → `Output Display`. Le nœud calcule en nombres à virgule (indispensable : la réponse a deux signes, et un calcul en entiers effacerait la moitié négative) et propose une variante DoG plus rapide pour le même effet.
+Canvas : `Image File` → `Grayscale` → `Laplacian` → `Display`. Le nœud calcule en nombres à virgule (indispensable : la réponse a deux signes, et un calcul en entiers effacerait la moitié négative) et propose une variante DoG plus rapide pour le même effet.
 
 ---
 
@@ -200,7 +200,7 @@ Le filtre est sensible à l'échelle des valeurs : une tolérance réglée pour 
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Bilateral Filter` → `Output Display`. Le nœud expose les deux rayons (spatial et intensité) ; baisser le rayon d'intensité montre les contours se figer pendant que l'intérieur des régions se lisse.
+Canvas : `Image File` → `Bilateral Filter` → `Display`. Le nœud expose les deux rayons (spatial et intensité) ; baisser le rayon d'intensité montre les contours se figer pendant que l'intérieur des régions se lisse.
 
 ---
 
@@ -238,7 +238,7 @@ Les noyaux de Gabor n'ont pas tous la même « énergie » selon leurs réglages
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Output Display`. Le nœud `Gabor Bank` applique plusieurs orientations et longueurs d'onde et sort la réponse maximale en chaque pixel, ce qui fait ressortir les textures orientées comme une carte d'intensité.
+Canvas : `Image File` → `Grayscale` → `Gabor Bank` → `Display`. Le nœud `Gabor Bank` applique plusieurs orientations et longueurs d'onde et sort la réponse maximale en chaque pixel, ce qui fait ressortir les textures orientées comme une carte d'intensité.
 
 ---
 

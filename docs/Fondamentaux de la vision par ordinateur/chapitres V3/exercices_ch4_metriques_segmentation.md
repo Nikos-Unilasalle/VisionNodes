@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Un masque automatique et un masque expert sur le même organe. La mission : leur attribuer une note de recouvrement et comprendre ce que cette note récompense ou pardonne.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` (masque auto) → `Mask Overlap` → `Output Display`
+`Image File` → `Threshold (Advanced)` (masque auto) → `Mask Metrics` → `Display`
 
 Chargez le masque expert comme seconde entrée. Le nœud affiche le score de recouvrement (IoU et Dice) et colorie la zone de désaccord.
 
@@ -34,7 +34,7 @@ Chargez le masque expert comme seconde entrée. Le nœud affiche le score de rec
 **Ce que vous voyez.** Un détecteur qui trouve presque toutes les empreintes mais en invente quelques-unes sur le fond texturé. La mission : trouver le bon seuil de confiance selon l'enjeu.
 
 **Pipeline VNStudio**
-`Image Source` → `Print Detector` → `Detection Score` → `Output Display`
+`Image File` → `Mask Metrics` → `Display`
 
 Le nœud affiche, pour le seuil de confiance choisi, le nombre de bonnes détections, de fausses alarmes et d'empreintes ratées, ainsi que la précision et le rappel.
 
@@ -59,7 +59,7 @@ Le nœud affiche, pour le seuil de confiance choisi, le nombre de bonnes détect
 **Ce que vous voyez.** Deux découpages qui reconnaissent les mêmes parcelles, mais tracent leurs bords avec un soin différent. La mission : trouver la note qui sait voir cette différence de qualité de bord.
 
 **Pipeline VNStudio**
-`Image Source` → `Boundary Score` → `Output Display`
+`Image File` → `Boundary F1` → `Display`
 
 Le nœud compare deux segmentations à une référence et affiche, au choix, le recouvrement global (IoU) ou la note de bord (qualité du tracé des frontières).
 

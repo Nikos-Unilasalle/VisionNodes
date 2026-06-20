@@ -56,7 +56,7 @@ Voici le piège le plus souvent ignoré. Les images stockées (JPEG, PNG) ne con
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Luminance` → `Output Display`. Le nœud propose les deux jeux de coefficients (TV standard / haute définition) et une option « linéariser le gamma » qui distingue le luma rapide de la luminance physique ; l'écart entre les deux se voit sur un dégradé.
+Canvas : `Image File` → `Grayscale` → `Display`. Le nœud `Grayscale` propose les deux jeux de coefficients (TV standard / haute définition) et une option « linéariser le gamma » qui distingue le luma rapide de la luminance physique ; l'écart entre les deux se voit sur un dégradé. Ajouter un nœud `Gamma Correct` en amont pour travailler en espace linéarisé.
 
 ---
 
@@ -100,7 +100,7 @@ Quand la saturation tend vers zéro (gris, blanc, noir), la teinte n'a plus de s
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Color Convert (HSV)` → `Threshold by Hue` → `Output Display`. Le nœud de seuillage par teinte expose une plage d'angles et un seuil minimal de saturation (pour écarter les gris) ; il sort un masque des objets de la couleur visée.
+Canvas : `Image File` → `Color Space` → `Color Mask` → `Display`. Dans `Color Space`, choisir HSV comme espace cible. Le nœud `Color Mask` expose une plage d'angles H et un seuil minimal de saturation (pour écarter les gris) ; il sort un masque des objets de la couleur visée.
 
 ---
 
@@ -153,7 +153,7 @@ Un ΔE de 3,7 est perceptible à l'œil nu — le lot sera refusé si la norme e
 
 ### Dans VNStudio
 
-Canvas : `Image A` + `Image B` → `Delta E (CIE2000)` → `Output Display`. Le nœud convertit les deux images en Lab, calcule le ΔE en chaque pixel, et affiche une carte des écarts plus une statistique (moyen, maximal, 95ᵉ percentile) — directement exploitable en contrôle qualité.
+Canvas : `Image File` (image A) + `Image File` (image B) → `Delta E` → `Display`. Le nœud `Delta E` convertit les deux images en Lab, calcule le ΔE en chaque pixel selon la formule choisie (CIE76 ou CIE2000), et affiche une carte des écarts plus une statistique (moyen, maximal, 95ᵉ percentile) — directement exploitable en contrôle qualité.
 
 ---
 
@@ -185,7 +185,7 @@ Convertir tôt en CMYK fait perdre des couleurs sans retour. La bonne pratique t
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `CMYK Soft Proof` → `Output Display`. Le nœud simule le rendu CMYK (profil au choix), signale en surimpression les zones hors gamut, et affiche le ΔE2000 moyen entre l'original et le rendu simulé.
+Canvas : `Image File` → `Color Space` → `Delta E` → `Display`. Convertir d'abord en Lab avec `Color Space`, puis comparer avec une version simulée CMYK (gamut réduit) via `Delta E` : les zones hors gamut apparaissent en rouge vif sur la carte ΔE.
 
 ---
 
@@ -227,7 +227,7 @@ Dans le nœud `CLAHE` (ou via `cv2.createCLAHE` en Python), l'amélioration loca
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `CLAHE` ──> `Output Display`.
+`Image File` ──> `CLAHE (Contrast)` ──> `Display`.
 
 Le nœud `CLAHE` travaille en interne sur le canal de clarté (préservant les couleurs) et expose les curseurs `Contrast Limit` (plafond de contraste) et `Grid Size` (taille de grille) dans l'inspecteur. En réglant ces paramètres, vous pouvez observer l'équilibre entre la visibilité des détails dans les ombres et l'apparition du bruit de fond.
 
@@ -283,7 +283,7 @@ Après correction, les trois moyennes valent 170, la dominante jaune disparaît.
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `White Balance (Gray World)` → `Output Display`. Le nœud calcule les gains par canal et corrige la dominante ; un nœud `Gamma Correct` placé en amont permet de travailler en espace linéarisé quand les opérations suivantes l'exigent.
+Canvas : `Image File` → `White Balance` → `Display`. Le nœud `White Balance` calcule les gains par canal (méthode Gray World) et corrige la dominante ; un nœud `Gamma Correct` placé en amont permet de travailler en espace linéarisé quand les opérations suivantes l'exigent.
 
 ---
 

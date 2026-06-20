@@ -9,10 +9,10 @@
 **Ce que vous voyez.** Une structure avec des bords de contraste très inégal : contour extérieur fort, nervures secondaires à peine marquées. La mission : en tirer un tracé de contour propre et fin.
 
 **Pipeline VNStudio**
-`Image Source` → `Split Half` :
+`Image File` → `Split Half` :
 — gauche : `Sobel Edge Detector` → `Colormap`
-— droite : `Canny Edge Detector` *(à créer)*
-→ `Output Display`
+— droite : `Canny Edge`
+→ `Display`
 
 Sobel montre la « force » des bords en dégradé ; Canny en tire un trait fin. Canny propose un seuil bas et un seuil haut.
 
@@ -37,7 +37,7 @@ Sobel montre la « force » des bords en dégradé ; Canny en tire un trait fin.
 **Ce que vous voyez.** Les trois situations de base réunies : du plat, une ligne, un coin. La mission : faire repérer automatiquement les coins, points d'ancrage stables pour le suivi et l'assemblage de panoramas.
 
 **Pipeline VNStudio**
-`Image Source` → `Harris / Shi-Tomasi` *(à créer)* → `Colormap` → `Output Display`
+`Image File` → `Harris Corners` → `Apply Colormap` → `Display`
 
 Le nœud allume fortement les coins, faiblement les bords, et reste éteint sur les zones plates.
 
@@ -62,7 +62,7 @@ Le nœud allume fortement les coins, faiblement les bords, et reste éteint sur 
 **Ce que vous voyez.** Un objet rayé qui se déplace horizontalement. La mission : comprendre, en regardant les flèches de gradient, pourquoi un bord isolé ne suffit jamais à dire dans quelle direction un objet bouge — le fameux « problème de la fenêtre ».
 
 **Pipeline VNStudio**
-`Image Source` → `Image Gradient` → `Draw Overlay` (flèches) → `Output Display`
+`Image File` → `Image Gradient` → `Display` → `Display`
 
 Le nœud dessine en chaque point une petite flèche pointant à travers le bord local, dans le sens où l'image s'éclaircit.
 

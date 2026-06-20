@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -94,7 +95,7 @@ B est l'élément structurant (la sonde). Le passage du noir et blanc aux niveau
 
 L'érosion rétrécit le clair, supprime les détails plus fins que la sonde, déconnecte les ponts minces ; la dilatation épaissit, comble, fusionne. L'angle mort majeur : *ces opérations perdent de l'information.* Un détail plus étroit que la sonde, une fois effacé, est perdu pour de bon. Éroder puis dilater ne reconstruit pas l'image d'origine — c'est l'ouverture (§11.2), structurellement plus petite. La sonde décide ce qui est « trop fin pour survivre ». ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Signal `[3, 1, 4, 1, 5, 9, 2, 6]`, sonde plate de largeur 3 (le pixel et ses deux voisins) :
 
 ```
@@ -110,7 +111,7 @@ Trois points donnent un résultat faux et silencieux s'ils sont négligés. *Que
 ]
 
 #canvas[
-Canvas : `Mask` → `Erode` et `Mask` → `Dilate` → `Output Display`. Les deux nœuds exposent la forme et la taille de la sonde (disque, carré, croix, segment) ; l'inspecteur compte les pixels retirés par l'érosion ou ajoutés par la dilatation.
+Canvas : `Image File` → `Morphology` (Operation = Erode) et `Image File` → `Morphology` (Operation = Dilate) → `Display`. Les deux nœuds exposent la forme et la taille de la sonde (disque, carré, croix, segment) ; l'inspecteur compte les pixels retirés par l'érosion ou ajoutés par la dilatation.
 
 ---
 ]
@@ -144,7 +145,7 @@ Une ouverture, c'est une érosion suivie d'une dilatation par la même sonde : l
 
 En ouvrant avec des sondes de taille croissante et en mesurant l'aire perdue à chaque pas, on obtient une *granulométrie* — un tamisage virtuel qui donne la distribution des tailles d'objets, prolongeant le diamètre équivalent du chapitre 1. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Signal `[3, 1, 4, 1, 5, 9, 2, 6]`, sonde plate de largeur 3 :
 
 ```
@@ -160,7 +161,7 @@ Sur un masque de cellules en microscopie, ouvrir d'abord (retirer le bruit blanc
 ]
 
 #canvas[
-Canvas : `Mask` → `Morph Open` et `Mask` → `Morph Close` → `Output Display`. Les nœuds exposent forme et taille de la sonde ; l'inspecteur indique les pixels supprimés par l'ouverture et ajoutés par la fermeture.
+Canvas : `Image File` → `Morphology (Advanced)` (Operation = Opening) et `Image File` → `Morphology (Advanced)` (Operation = Closing) → `Display`. Les nœuds exposent forme et taille de la sonde ; l'inspecteur indique les pixels supprimés par l'ouverture et ajoutés par la fermeture.
 
 ---
 ]
@@ -187,7 +188,7 @@ Dans une zone plate, le maximum et le minimum du voisinage sont égaux : leur di
 
 C'est tout : la valeur la plus haute du voisinage moins la plus basse. Sur une zone constante, les deux sont égales, le gradient est nul. Près d'une marche, la magnitude est exacte, mais la *largeur* du contour détecté est imposée par la sonde, pas par l'image : une grande sonde donne des bords épais. Le gradient morphologique est *plus robuste au bruit aléatoire* que Sobel (minimum et maximum sont moins sensibles que la dérivée) mais *plus sensible aux pixels aberrants* (un seul pixel très brillant gonfle le maximum). ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Marche d'intensité `[10, 10, 10, 50, 50, 50]`, sonde plate de largeur 3 :
 
 ```
@@ -204,7 +205,7 @@ Pour un watershed par marqueurs (chapitre 12), on veut un gradient fin : une pet
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Morph Gradient` → `Output Display`. Le nœud sort la carte de contraste local ; réduire la taille de la sonde montre les contours s'affiner.
+Canvas : `Image File` → `Grayscale` → `Morphology (Advanced)` (Operation = Gradient) → `Display`. Le nœud sort la carte de contraste local ; réduire la taille de la sonde montre les contours s'affiner.
 
 ---
 ]
@@ -241,7 +242,7 @@ Pour comprendre pourquoi le top-hat fonctionne, décomposons son comportement pi
 
 La condition essentielle de réussite repose sur une *fenêtre d'échelle* : la sonde doit être strictement plus grande que les objets d'intérêt pour pouvoir les effacer, mais plus petite que la distance sur laquelle le fond varie. Si les variations d'éclairage se produisent à la même échelle de taille que vos objets, aucune sonde ne pourra les séparer géométriquement. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Imaginons une ligne de pixels représentant une rampe d'éclairage avec un pic clair localisé à l'indice 4 (le détail à détecter, d'intensité 48) :
 
 ```
@@ -263,28 +264,32 @@ Top-hat (I − (I ∘ B))    = [ 0,  0,  0,  0, 32,  4]
 La rampe d'éclairage (le gradient de 10 à 20) a complètement disparu. Le pic à l'indice 4 ressort avec une intensité nette de 32 (sa hauteur relative par rapport au fond local qui valait 16). La valeur 4 à l'extrémité est un artefact de bordure inévitable, dû au fait que la sonde déborde de l'image lors du calcul de l'ouverture.
 ]
 
-#info-box(title: "Paramètres opérationnels — forme et taille")[
-Dans VNStudio (nœud `Top Hat` / `Black Hat`) ou en Python (`cv2.morphologyEx`), les deux réglages principaux :
+#info-box(title: "Paramètres opérationnels (VNStudio / Python)")[
+Dans VNStudio (nœud `Morphology (Advanced)`, Operation = Top Hat ou Black Hat) ou en Python (`cv2.morphologyEx` avec `cv2.MORPH_TOPHAT` ou `cv2.MORPH_BLACKHAT`), les réglages suivants déterminent la qualité du résultat :
 
-- *Type d'élément structurant (`shape`)* — menu déroulant *Structuring Element Shape* dans VNStudio, argument `shape` dans `cv2.getStructuringElement` :
-  - `cv2.MORPH_RECT` : objets rectangulaires (codes-barres, caractères d'imprimerie).
-  - `cv2.MORPH_ELLIPSE` : choix le plus robuste pour les objets naturels ou circulaires (cellules, grains) — évite les artefacts anguleux.
-  - `cv2.MORPH_CROSS` : lignes fines orthogonales ou calcul plus rapide.
-- *Taille de la sonde (`ksize`)* — curseur *Structuring Element Size* dans VNStudio : régler à *1,5–2× l'épaisseur* des objets cibles (si les objets font 10 px, choisir 15×15 ou 21×21). Trop petite : la soustraction détruit les objets ; trop grande : artefacts de bordure plus larges.
-]
+- *Type d'élément structurant (`shape`)* :
+- Dans VNStudio, ce paramètre correspond au menu déroulant *Structuring Element Shape* ; en Python (OpenCV), il se nomme `shape` (ex. `cv2.MORPH_ELLIPSE`) dans la fonction `cv2.getStructuringElement`.
+- `cv2.MORPH_RECT` (Rectangle) : À utiliser pour les objets rectangulaires (ex. : codes-barres, caractères d'imprimerie).
+- `cv2.MORPH_ELLIPSE` (Ellipse) : Le choix le plus robuste pour les objets naturels ou circulaires (ex. : cellules, grains). Il évite de créer des artefacts anguleux dans les coins des objets isolés.
+- `cv2.MORPH_CROSS` (Croix) : Utile pour isoler des lignes fines orthogonales ou réduire le temps de calcul.
+- *Taille de la sonde (`kernel size` ou `ksize`)* :
+- Dans VNStudio, ce paramètre correspond au curseur *Structuring Element Size* ; en Python (OpenCV), il se nomme `ksize` dans `cv2.getStructuringElement`.
+- Ce paramètre (ex. : 15×15) est le plus sensible. La règle d'or est de mesurer l'épaisseur moyenne de vos objets en pixels. La taille de la sonde doit être choisie environ *1,5 à 2 fois supérieure* à cette épaisseur. Si vos objets font 10 pixels de large, configurez une sonde de 15×15 ou 21×21. Une sonde trop petite détruira vos objets lors de la soustraction ; une sonde trop grande ralentira inutilement le calcul et augmentera la taille des artefacts de bordure.
+- *Nombre d'itérations (`iterations`)* :
+- Dans VNStudio, ce paramètre correspond au champ *Iterations* ; en Python (OpenCV), il correspond à l'argument `iterations` de `cv2.morphologyEx`.
+- Répéter l'opération. Pour le top-hat, faire 2 itérations avec une sonde 3×3 équivaut à utiliser une sonde de 5×5. Il est généralement préférable de régler directement la taille de la sonde plutôt que de multiplier les itérations, pour des raisons de clarté.
+- *Gestion des bordures (`borderType`)* :
+- Dans VNStudio, ce paramètre correspond au menu déroulant *Border Type* ; en Python (OpenCV), il correspond à l'argument `borderType` dans `cv2.morphologyEx`.
+- Définit comment OpenCV estime les pixels manquants lorsque la sonde dépasse des bords de l'image (ex. : `cv2.BORDER_CONSTANT` qui suppose un fond noir, ou `cv2.BORDER_REPLICATE` qui duplique la dernière ligne). C'est ce paramètre qui contrôle l'intensité des artefacts de bord observés aux extrémités de l'image.
 
-#info-box(title: "Paramètres opérationnels — itérations et bordures")[
-- *Nombre d'itérations (`iterations`)* — champ *Iterations* dans VNStudio : 2 itérations avec sonde 3×3 ≡ sonde 5×5. Préférer régler directement la taille plutôt que multiplier les itérations.
-- *Gestion des bordures (`borderType`)* — menu *Border Type* dans VNStudio : `cv2.BORDER_CONSTANT` (fond noir) ou `cv2.BORDER_REPLICATE` (duplication du bord). Ce paramètre contrôle l'intensité des artefacts aux extrémités de l'image.
-
-*Exercice de dépannage :* image binaire avec trous noirs de 10 px de diamètre. Appliquer une fermeture avec sonde 5×5 — les trous restent ouverts. Passer à 15×15 — ils disparaissent. La taille du noyau doit être strictement supérieure à l'épaisseur du défaut à combler.
+*Exercice de dépannage :* L'exercice consiste à charger une image binaire contenant des trous noirs circulaires de 10 pixels de diamètre au sein d'une forme blanche. Tenter de combler ces trous en appliquant une fermeture morphologique (nœud *Closing*). Régler le paramètre *Structuring Element Size* sur 5 pixels. Le lecteur observe dans l'inspecteur que les trous restent ouverts et inchangés. Régler ensuite la taille de l'élément à 15 pixels. Le lecteur constate que tous les trous disparaissent instantanément. Cet échec contrôlé démontre que la taille du noyau doit être strictement supérieure à l'épaisseur du défaut à combler pour que l'opération réussisse.
 ]
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Top Hat` (ou `Black Hat`) ──> `Adaptive Threshold` (ou `Threshold` simple) ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Morphology (Advanced)` (Operation = Top Hat ou Black Hat) ──> `Threshold` ──> `Display`.
 
-Le nœud `Top Hat` applique les paramètres ci-dessus. En réglant le curseur `Sonde` à une valeur supérieure à la largeur des détails recherchés, vous verrez l'image de fond devenir instantanément noire et homogène, rendant le seuillage qui suit extrêmement simple et stable.
+Le nœud `Morphology (Advanced)` (Top Hat ou Black Hat) applique les paramètres ci-dessus. En réglant le curseur `Sonde` à une valeur supérieure à la largeur des détails recherchés, vous verrez l'image de fond devenir instantanément noire et homogène, rendant le seuillage qui suit extrêmement simple et stable.
 
 ---
 ]
@@ -307,12 +312,12 @@ Le *squelette* réduit une forme à son *axe central* — le lieu des centres de
 
 La transformée tout-ou-rien est précise au pixel près (motifs réguliers : texte, circuits) mais fragile au bruit — un pixel manquant annule la détection. Le squelette est topologiquement riche mais *instable* : une petite bosse du contour crée une branche parasite (une « barbe »). Les deux supposent un masque propre, d'où un nettoyage préalable par ouverture ou fermeture.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Détecter les *pixels isolés* : première sonde = un pixel central allumé, seconde sonde = ses huit voisins, tous censés appartenir au fond. Un pixel d'objet entouré uniquement de fond satisfait les deux conditions ; tout pixel ayant un voisin allumé est rejeté. On obtient ainsi la carte des pixels solitaires — pour compter ou retirer le bruit « poivre » d'un masque, complément du bruit « sel » que l'ouverture retire.
 ]
 
 #canvas[
-Canvas : `Mask` → `Skeleton` → `Output Display` pour l'axe médian ; `Mask` → `Hit or Miss` → `Output Display` avec la sonde « pixel isolé » pour détecter les points solitaires. L'inspecteur donne la longueur du squelette et l'épaisseur maximale de la forme.
+Canvas : `Image File` → `Skeleton` → `Display` pour l'axe médian ; `Image File` → `Morphology (Advanced)` → `Display` (Operation = Opening avec une petite sonde) pour retirer les pixels isolés. L'inspecteur du nœud `Skeleton` donne la longueur du squelette et l'épaisseur maximale de la forme.
 
 ---
 ]
@@ -341,7 +346,7 @@ Canvas : `Mask` → `Skeleton` → `Output Display` pour l'axe médian ; `Mask` 
 
 // ============================================================
 
-== Le difficile, c'est de choisir la sonde
+== le difficile, c'est de choisir la sonde
 
 La morphologie pousse à sa forme la plus géométrique l'idée qui traverse le livre :
 
@@ -359,34 +364,26 @@ Cela fixe aussi la place de la morphologie dans les pipelines modernes : les ré
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 11
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Filtrer des grains de pollen par leur forme
 
-#figtodo("ex_ch11_pollen", [Image microscopique de pollen : grains circulaires lisses (tournesol), grains ép...])
-
+#figtodo("ex_ch11_pollen", [Image microscopique de pollen : grains circulaires lisses (tournesol), grains ép])
 
 *Ce que vous voyez.* Trois formes de pollen mélangées. La mission : n'en garder qu'une à la fois en choisissant la bonne sonde, comme un tamis qui ne laisse passer qu'une forme.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Morphology (Advanced)` → `Connected Components` → `Region Properties` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Morphology (Advanced)` → `Connected Components` → `Region Properties` → `Display`
 
 Le nœud de morphologie applique une sonde de forme et de taille réglables ; l'inspecteur compte les grains survivants.
 
 
 
-
 *Questions*
-
 
 + Appliquez une ouverture avec une sonde ronde de rayon moyen. Quels grains survivent : les plus gros, les plus ronds ? Lesquels disparaissent ? Comptez les survivants.
 
@@ -397,24 +394,20 @@ Le nœud de morphologie applique une sonde de forme et de taille réglables ; l'
 + *Défi.* Réglez une chaîne complète pour ne compter que les grains ronds de tournesol, en éliminant les épineux et les allongés. Quelle combinaison de sonde et de filtre d'aire y arrive ? Combien de grains de tournesol comptez-vous ?
 
 
-
 === Exercice 2 · Faire ressortir un texte sur un fond inégal
 
-#figtodo("ex_ch11_carte_ancienne", [Ancienne carte géographique manuscrite : fond jauni à éclairage inégal, noms de ...])
-
+#figtodo("ex_ch11_carte_ancienne", [Ancienne carte géographique manuscrite : fond jauni à éclairage inégal, noms de ])
 
 *Ce que vous voyez.* Un fond qui s'assombrit lentement d'un coin à l'autre, sur lequel se détachent de petits détails sombres. La mission : effacer ce fond inégal pour ne garder que le texte, étape clé avant toute lecture automatique.
 
 *Pipeline VNStudio*
-`Image Source` → `Morphology (Advanced)` (Top Hat) → `Colormap` → `Output Display`
+`Image File` → `Morphology (Advanced)` (Operation = Top Hat) → `Apply Colormap` → `Display`
 
 Le top-hat estime le fond avec une grande sonde puis le soustrait, ne laissant que les détails plus petits que la sonde.
 
 
 
-
 *Questions*
-
 
 + Appliquez le top-hat avec une grande sonde. Qu'est-ce qui ressort : le texte ou le fond jauni ? Le fond inégal a-t-il disparu, devenu uniforme ?
 
@@ -425,27 +418,23 @@ Le top-hat estime le fond avec une grande sonde puis le soustrait, ne laissant q
 + *Défi.* Enchaînez top-hat, seuillage et comptage pour extraire tous les caractères de la carte. Combien de morceaux sont détectés ? Ajoutez un filtre d'aire pour jeter les résidus de bruit. Combien de vrais caractères reste-t-il ?
 
 
-
 === Exercice 3 · Extraire le contour et l'ossature d'une feuille
 
-#figtodo("ex_ch11_feuille_chene", [Silhouette binaire d'une feuille de chêne : forme blanche sur fond noir, lobes c...])
-
+#figtodo("ex_ch11_feuille_chene", [Silhouette binaire d'une feuille de chêne : forme blanche sur fond noir, lobes c])
 
 *Ce que vous voyez.* Une silhouette à lobes et à axe central fin. La mission : en tirer un contour propre puis une « ossature » réduite à l'essentiel, utile pour identifier l'espèce.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Split Half` :
+`Image File` → `Threshold (Advanced)` → `Split Half` :
 — gauche : `Morphology (Advanced)` (gradient morphologique)
 — droite : `Sobel Edge Detector`
-→ `Output Display`
+→ `Display`
 
 Le gradient morphologique trace le contour par différence entre dilatation et érosion ; comparez-le au contour classique.
 
 
 
-
 *Questions*
-
 
 + Comparez les deux contours sur un bord lisse, puis sur un coin de lobe. Lequel donne un trait plus régulier ? Lequel est plus fin ?
 
@@ -453,10 +442,7 @@ Le gradient morphologique trace le contour par différence entre dilatation et �
 
 + Érodez la feuille étape par étape et observez. Quand le pétiole fin disparaît-il ? Et les lobes ? Quelle partie de la feuille résiste le plus longtemps ?
 
-+ *Défi.* Réduisez la feuille à son ossature centrale (squelette) avec le mode dédié du nœud de morphologie. Combien de branches obtenez-vous ? Y a-t-il autant de branches que de lobes ? Cette ossature suffirait-elle à reconnaître un chêne parmi d'autres feuilles ?
-
-
-
++ *Défi.* Réduisez la feuille à son ossature centrale (squelette) avec le nœud `Skeleton`. Combien de branches obtenez-vous ? Y a-t-il autant de branches que de lobes ? Cette ossature suffirait-elle à reconnaître un chêne parmi d'autres feuilles ?
 
 
 
@@ -466,7 +452,5 @@ Le gradient morphologique trace le contour par différence entre dilatation et �
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

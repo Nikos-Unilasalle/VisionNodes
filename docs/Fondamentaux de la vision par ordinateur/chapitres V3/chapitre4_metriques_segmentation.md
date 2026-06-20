@@ -69,7 +69,7 @@ Pour un objet de quelques pixels, une erreur de 1 px de frontière fait beaucoup
 
 ### Paramètres opérationnels (VNStudio / Python)
 
-Dans le nœud `IoU` (ou lors du codage d'une boucle d'évaluation en Python), le comportement des métriques de détection s'appuie sur deux réglages opérationnels :
+Dans le nœud `Mask Metrics` (ou lors du codage d'une boucle d'évaluation en Python), le comportement des métriques de détection s'appuie sur deux réglages opérationnels :
 
 *   **Seuil de confiance (`confidence threshold`)** :
     *   Dans VNStudio, ce paramètre correspond au curseur **Confidence Threshold** ; en Python, c'est le seuil appliqué aux scores de probabilité sortis par le modèle.
@@ -81,13 +81,13 @@ Dans le nœud `IoU` (ou lors du codage d'une boucle d'évaluation en Python), le
 ### Dans VNStudio
 
 Dans votre canvas :
-`Prediction Mask` ──┐
-                   ├──> `IoU` ──> `Inspector`.
-`Ground Truth` ──┘
+`Image File` (prédiction) ──┐
+                   ├──> `Mask Metrics` ──> `Display`.
+`Image File` (vérité) ──┘
 
 Le nœud `IoU` effectue l'intersection et l'union logiques des deux masques binaires. L'inspecteur affiche instantanément l'IoU (Jaccard) et le coefficient de Dice (F1). Le nœud colore également l'image de sortie (vert pour les Vrais Positifs, rouge pour les Faux Positifs, bleu pour les Faux Négatifs), ce qui révèle aussitôt si l'erreur penche vers la sur- ou la sous-segmentation, sans biais lié à la taille de l'arrière-plan.
 
-**Exercice de dépannage :** L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
+**Exercice de dépannage :** L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `Mask Metrics` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
 
 ---
 
@@ -141,7 +141,7 @@ Dice ignore les vrais négatifs, ce qui est un avantage quand l'objet est minusc
 
 ### Dans VNStudio
 
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Dice` → `Inspector`. L'inspecteur affiche Dice et IoU côte à côte avec la vérification de conversion, ce qui montre concrètement que les deux mesures se suivent.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Mask Metrics` → `Display`. L'inspecteur affiche Dice et IoU côte à côte avec la vérification de conversion, ce qui montre concrètement que les deux mesures se suivent.
 
 ---
 
@@ -198,7 +198,7 @@ Le F1 = 0,667 reflète que ni précision ni rappel ne sont excellents — sans d
 
 ### Dans VNStudio
 
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Precision-Recall` → `Inspector`. Le nœud affiche précision, rappel et F1 avec le détail VP / FP / FN, et expose un réglage pour pencher le compromis vers le rappel ou la précision selon l'enjeu.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Mask Metrics` → `Display`. Le nœud affiche précision, rappel et F1 avec le détail VP / FP / FN, et expose un réglage pour pencher le compromis vers le rappel ou la précision selon l'enjeu.
 
 ---
 
@@ -247,7 +247,7 @@ L'AP intègre sur tous les seuils de confiance — sa vertu (pas de seuil arbitr
 
 ### Dans VNStudio
 
-Canvas : `Detections (scores + labels)` → `Average Precision` → `Inspector`. Le nœud trace la courbe précision-rappel et sa version lissée, et affiche l'aire (l'AP). Faire varier le seuil d'IoU montre directement l'écart entre conventions stricte et permissive.
+Canvas : `Image File` → `Mask Metrics` → `Display`. Le nœud trace la courbe précision-rappel et sa version lissée, et affiche l'aire (l'AP). Faire varier le seuil d'IoU montre directement l'écart entre conventions stricte et permissive.
 
 ---
 
@@ -294,7 +294,7 @@ Lecture immédiate : la segmentation est correcte (SQ = 0,85) mais la reconnaiss
 
 ### Dans VNStudio
 
-Canvas : `Instances prédites` + `Instances vérité` → `Panoptic Quality` → `Inspector`. Le nœud affiche PQ, SQ et RQ séparément — l'essentiel, car c'est la décomposition, pas la PQ globale, qui dit où porter l'effort.
+Canvas : `Image File` (prédiction) + `Image File` (vérité) → `Mask Metrics` → `Display`. Le nœud affiche PQ, SQ et RQ séparément — l'essentiel, car c'est la décomposition, pas la PQ globale, qui dit où porter l'effort.
 
 ---
 
@@ -338,7 +338,7 @@ Le BF dépend du couple (tolérance, résolution de l'image). Doubler la résolu
 
 ### Dans VNStudio
 
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Boundary F1` → `Inspector`. Le nœud extrait les deux contours, mesure leur recouvrement dans la tolérance choisie, et affiche le BF avec ses composantes précision et rappel de bord.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Boundary F1` → `Display`. Le nœud extrait les deux contours, mesure leur recouvrement dans la tolérance choisie, et affiche le BF avec ses composantes précision et rappel de bord.
 
 ---
 

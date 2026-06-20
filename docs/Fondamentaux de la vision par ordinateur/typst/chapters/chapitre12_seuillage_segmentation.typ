@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -94,7 +95,7 @@ Ici ω₀ et ω₁ sont les proportions de pixels dans chaque groupe (au seuil t
 
 Otsu place ainsi la décision dans l'espace de l'*histogramme* plutôt que dans l'image. C'est un résumé qui jette la position des pixels, comme les moments du chapitre 2 ne gardaient que la répartition de la masse. L'a priori est « il y a deux classes d'intensité bien séparées » ; quand cet a priori est faux — histogramme à une seule bosse, ou une classe minuscule (un petit défaut perdu sur une grande surface lisse, qui n'apparaît presque pas dans l'histogramme) — Otsu place le seuil n'importe où. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Histogramme jouet sur les niveaux 0 à 4, 16 pixels, effectifs `[5, 3, 0, 3, 5]` :
 
 ```
@@ -114,7 +115,7 @@ Le seuil d'Otsu se calcule sur une image en *niveaux de gris* (un seul canal, do
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Otsu Threshold` → `Output Display`. Le nœud de seuillage affiche dans l'inspecteur le seuil trouvé et superpose l'histogramme avec le trait de coupe, ce qui permet de voir d'un coup d'œil si l'histogramme est vraiment bimodal.
+Canvas : `Image File` → `Grayscale` → `Threshold (Advanced)` → `Display`. Dans le nœud `Threshold (Advanced)`, sélectionner le mode _Otsu_ : le seuil est calculé automatiquement et affiché dans l'inspecteur, avec l'histogramme et le trait de coupe, ce qui permet de voir d'un coup d'œil si l'histogramme est vraiment bimodal.
 
 _Domaines :_ binarisation de documents (OCR), tri de grains sur fond contrasté, masquage de cellules colorées en microscopie.
 
@@ -141,7 +142,7 @@ T(x, y) = moyenne_locale(x, y) − C
 
 Le pixel est de l'objet si son niveau passe sous ce seuil local (cas d'un texte sombre sur fond clair). La constante C est la marge de sécurité. Le raisonnement : si le fond suit une nappe lentement variable et que l'objet est toujours un peu plus sombre que cette nappe, alors « pixel nettement sous la moyenne locale » désigne exactement les pixels d'objet. On gagne la robustesse à l'éclairage inégal, on perd la vision d'ensemble : un objet *plus grand que le voisinage* devient invisible, car son intérieur ressemble localement à un fond uniforme. L'angle mort est donc la taille du voisinage. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une ligne de pixels, fond en dégradé `[200, 200, 100, 100]`, texte toujours 50 niveaux sous le fond local (donc 150 en zone claire, 50 en zone sombre) :
 
 ```
@@ -178,7 +179,7 @@ Dans le nœud `Adaptive Threshold` (ou via `cv2.adaptiveThreshold` en Python), l
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `Adaptive Threshold` ──> `Output Display`.
+`Image File` ──> `Grayscale` ──> `Adaptive Threshold` ──> `Display`.
 
 En faisant glisser le curseur `Block Size` de manière à ce qu'il dépasse la taille des motifs d'intérêt, et en ajustant le curseur `C` pour éliminer le bruit du fond, vous obtiendrez un masque binaire parfaitement net de vos objets, quel que soit l'éclairage de la scène.
 
@@ -227,7 +228,7 @@ f = −DT(M)
 === Ce qu'il mesure, et son angle mort
 Le watershed mesure une *topologie de bassins*. Son angle mort principal est la *sur-segmentation* : le bruit crée de faux minima locaux, ouvrant chacun un bassin. C'est pourquoi on utilise le watershed _par marqueurs_ (inonder uniquement depuis des sources imposées). De plus, il scinde à tort les objets fortement concaves (qui génèrent plusieurs maxima de `DT`) et ne peut séparer des objets accolés sans pincement physique (comme deux carrés parfaits bord à bord).
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Masque binaire 7×13 : deux blobs reliés par un pont d'un pixel de large (ligne 3, colonne 6 pincée).
 
 ```
@@ -272,7 +273,7 @@ Deux maxima isolés à `DT = 3` (centres en (3,3) et (3,9)), séparés par une s
 ]
 
 #canvas[
-Canvas : `Image Source` -> `Threshold` -> `Distance Transform` -> `Python Node (watershed)` -> `Output Display`
+Canvas : `Image File` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Display`. Sélectionner le mode _Otsu_ dans `Threshold (Advanced)` pour binariser le masque, puis laisser `Watershed` calculer les marqueurs à partir des maxima de la transformée de distance.
 ]
 
 === Schéma de nœuds
@@ -327,7 +328,7 @@ Trouver le découpage parfait est en théorie hors de portée pour un grand nomb
 
 Pourquoi le centre ? Parce que la moyenne est précisément le point qui minimise la somme des distances au carré (rappel du chapitre 3 : la moyenne est le « point d'équilibre »). On répète ces deux gestes jusqu'à ce que plus rien ne bouge. Le résultat est un *minimum local* : un bon découpage, mais pas forcément le meilleur dans l'absolu — selon les repères de départ, on peut tomber sur un creux ou sur un autre. L'a priori de K-means est que les groupes sont des amas *ronds, de tailles comparables* ; sur des amas allongés, imbriqués, ou de densités très différentes, il se trompe. Et K doit être fixé d'avance. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Points sur une ligne {1, 2, 9, 10, 11}, K = 2, repères de départ 1 et 10 :
 
 ```
@@ -344,7 +345,7 @@ Si l'on mélange couleur (de 0 à 255) et position (de 0 à 2000 pixels) sans pr
 ]
 
 #canvas[
-Canvas : `Image Source` → `Color Convert (BGR→Lab)` → `K-Means` → `Output Display`. Le nœud `K-Means` expose le nombre de classes K et le nombre d'essais ; l'inspecteur affiche le nombre de pixels par classe et recolore l'image avec la couleur moyenne de chaque groupe.
+Canvas : `Image File` → `K-Means Segmentation` → `Display`. Dans le nœud `K-Means Segmentation`, choisir _Color Space : Lab_ (les distances Lab correspondent mieux à la perception, cf. ch7) et régler _K Clusters_ ; l'inspecteur indique le K utilisé et recolore chaque pixel avec la couleur centroïde de son groupe.
 
 _Domaines :_ segmentation couleur en télédétection (couvert végétal, zones urbaines), réduction du nombre de couleurs, classification de tissus en histologie.
 
@@ -377,7 +378,7 @@ Sous cette apparence touffue, c'est une moyenne pondérée : chaque voisin xᵢ 
 
 L'avantage : mean-shift épouse des amas de *forme quelconque* (aucune hypothèse de rondeur, contrairement à K-means) et trouve le nombre de groupes tout seul. L'angle mort se déplace sur *h*, la largeur de la fenêtre : trop petit, chaque petite bosse devient un groupe (sur-découpage) ; trop grand, toutes les collines fusionnent en une (sous-découpage). Et le calcul est lourd, car chaque bille doit consulter beaucoup de voisins à chaque pas. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Points groupés autour de 2 et de 10, fenêtre h = 3, bille lâchée en x = 4 :
 
 ```
@@ -393,7 +394,7 @@ h est le seul vrai réglage, et il n'a pas de valeur universelle : on le choisit
 ]
 
 #canvas[
-Canvas : `Image Source` → `Mean Shift` → `Output Display`. Le nœud expose les deux rayons (spatial et couleur) ; l'inspecteur indique le nombre de régions distinctes obtenues après convergence, ce qui rend visible l'effet de h sur le sur- ou sous-découpage.
+Canvas : `Image File` → `Mean Shift Segmentation` → `Display`. Le nœud expose les deux rayons (spatial et couleur) ; l'inspecteur indique le nombre de régions distinctes obtenues après convergence, ce qui rend visible l'effet de h sur le sur- ou sous-découpage.
 
 _Domaines :_ simplification d'images satellite, détection de régions d'intérêt sans nombre de classes connu, lissage de textures en conservant les contours.
 
@@ -433,7 +434,7 @@ Il n'existe pas de formule donnant directement la meilleure courbe. On procède 
 
 Le snake produit un contour lisse et fermé, idéal pour un objet unique aux bords doux (un organe, une silhouette). Ses angles morts : il faut le *poser près* de l'objet au départ, sinon il s'accroche au mauvais bord ou s'effondre ; il ne *change pas de forme topologique* (une seule courbe ne peut se scinder pour entourer deux objets séparés) ; et il a du mal à pénétrer dans les creux profonds. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 L'élasticité préfère des points *régulièrement espacés*. Pour trois points consécutifs, sa contribution est à peu près la somme des carrés des écarts entre points :
 
 ```
@@ -449,7 +450,7 @@ Tout se joue sur la courbe de départ : posée trop loin de l'objet, elle abouti
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Gaussian Blur` → `Active Contour` → `Output Display`. Le nœud `Active Contour` prend une courbe initiale (un cercle posé sur l'objet) et expose les curseurs d'élasticité et de rigidité ; il superpose la courbe finale sur l'image et l'inspecteur en donne le centre et le nombre de points.
+Canvas : `Image File` → `Grayscale` → `Blur` → `Active Contour (Snake)` → `Display`. Le nœud `Active Contour (Snake)` prend une courbe initiale (un cercle posé sur l'objet) et expose les curseurs d'élasticité et de rigidité ; il superpose la courbe finale sur l'image et l'inspecteur en donne le centre et le nombre de points.
 
 _Domaines :_ segmentation d'organes en imagerie médicale, suivi de silhouette en vidéo, délimitation de cellules isolées.
 
@@ -494,7 +495,7 @@ La structure est identique à Horn-Schunck (§9.4) : le terme de lissage du mouv
 
 C'est exactement le même curseur fidélité/régularité que le α de Horn-Schunck. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux pixels voisins. p ressemble nettement à l'objet (coût 1 pour « objet », 8 pour « fond ») ; q est ambigu (coût 5 pour « objet », 4 pour « fond »). Le désaccord entre voisins coûte 2.
 
 ```
@@ -512,7 +513,7 @@ La version interactive (GrabCut) a besoin d'une *amorce* : un rectangle grossier
 ]
 
 #canvas[
-Canvas : `Image Source` → `GrabCut` → `Output Display`. Le nœud `GrabCut` prend l'amorce (un rectangle tracé sur l'image, ou des traits objet/fond) et le curseur λ ; il sort le masque objet/fond et l'inspecteur compte les pixels de chaque côté.
+Canvas : `Image File` → `GrabCut (Graph Cut)` → `Display`. Le nœud `GrabCut (Graph Cut)` prend l'amorce (un rectangle tracé sur l'image, ou des traits objet/fond) et le curseur λ ; il sort le masque objet/fond et l'inspecteur compte les pixels de chaque côté.
 
 _Domaines :_ détourage semi-automatique en retouche, segmentation interactive d'organes (un radiologue trace l'amorce), séparation objet/fond en robotique de saisie.
 
@@ -543,7 +544,7 @@ _État de l'art :_ ces méthodes précèdent l'apprentissage profond (U-Net, Mas
 
 // ============================================================
 
-== Un seul axe, six fois
+== un seul axe, six fois
 
 Le chapitre raconte une histoire déclinée sept fois : l'image seule ne tranche pas, il faut *ajouter une hypothèse* et choisir *où* placer la décision.
 
@@ -563,37 +564,29 @@ D'un bout à l'autre, le même axe : à gauche le pur attachement aux données (
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 12
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Binariser une page ancienne mal éclairée
 
-#figtodo("ex_ch12_livre_ancien", [Page d'un livre ancien en lumière rasante : encre noire sur papier ivoire, mais ...])
-
+#figtodo("ex_ch12_livre_ancien", [Page d'un livre ancien en lumière rasante : encre noire sur papier ivoire, mais ])
 
 *Ce que vous voyez.* Un document dont le fond s'assombrit d'un côté. La mission : obtenir un texte noir net sur fond blanc partout, première étape de toute lecture automatique de document.
 
 *Pipeline VNStudio*
-`Image Source` → `Split Half` :
-— gauche : `Threshold (Advanced)` (seuil global)
-— droite : `Threshold (Advanced)` (seuil adaptatif)
-→ `Output Display`
+`Image File` → `Split Half` :
+— gauche : `Threshold (Advanced)` (mode Otsu, seuil global)
+— droite : `Adaptive Threshold` (seuil adaptatif local)
+→ `Display`
 
 Le seuil global cherche une seule coupure pour toute l'image ; le seuil adaptatif s'ajuste localement.
 
 
 
-
 *Questions*
-
 
 + Sur le seuil global, le texte du côté sombre ressort-il, ou se noie-t-il dans un fond noirci ? Le seuil adaptatif fait-il mieux sur cette zone ? Comparez les deux moitiés.
 
@@ -604,24 +597,20 @@ Le seuil global cherche une seule coupure pour toute l'image ; le seuil adaptati
 + *Défi.* Réglez la chaîne pour produire un texte lisible sur toute la page, des deux côtés, sans que les taches d'oxydation ressortent comme des lettres. Quel réglage y arrive ? Combien de mots restent illisibles malgré tout ?
 
 
-
 === Exercice 2 · Séparer des cellules qui se touchent
 
-#figtodo("ex_ch12_cellules_confluentes", [Vue microscopique de cellules en culture serrées : certaines isolées, d'autres c...])
-
+#figtodo("ex_ch12_cellules_confluentes", [Vue microscopique de cellules en culture serrées : certaines isolées, d'autres c])
 
 *Ce que vous voyez.* Des cellules collées que le simple seuillage voit comme une seule masse. La mission : les recompter une par une, problème quotidien en biologie.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Region Properties` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Region Properties` → `Display`
 
 Le watershed part du cœur de chaque cellule (les points les plus profonds de la carte de distance) et fait monter les bassins jusqu'à ce qu'ils se rencontrent.
 
 
 
-
 *Questions*
-
 
 + Avec le seuillage seul, combien de régions le comptage trouve-t-il pour un amas de trois cellules collées ? Avec le watershed, combien en obtient-on ?
 
@@ -632,28 +621,24 @@ Le watershed part du cœur de chaque cellule (les points les plus profonds de la
 + *Défi.* Sur une image bruitée, le watershed découpe parfois une cellule en plusieurs morceaux (sur-découpage). Lissez la carte de distance avant de chercher les cœurs. À partir de quel lissage le sur-découpage disparaît-il sans souder deux cellules proches ? Recomptez et comparez au comptage manuel.
 
 
-
 === Exercice 3 · Découper une plage en zones de couleur
 
-#figtodo("ex_ch12_plage", [Photographie d'une plage tropicale à quatre zones nettes : ciel bleu, mer turquo...])
-
+#figtodo("ex_ch12_plage", [Photographie d'une plage tropicale à quatre zones nettes : ciel bleu, mer turquo])
 
 *Ce que vous voyez.* Une scène à quatre régions de couleur bien distinctes mais aux frontières floues. La mission : comparer deux façons de découper l'image par la couleur et voir laquelle colle le mieux au réel.
 
 *Pipeline VNStudio*
-`Image Source` → `Grid Compare` :
-— K-Means (4 groupes), lancé deux fois
-— Mean Shift *(à créer)*
+`Image File` → `Grid Compare Dashboard` :
+— `K-Means Segmentation` (4 groupes), lancé deux fois avec des départs différents
+— `Mean Shift Segmentation`
 — image originale
-→ `Output Display`
+→ `Display`
 
-K-Means exige qu'on lui dise le nombre de zones ; Mean Shift le découvre seul.
-
+`K-Means Segmentation` exige qu'on lui dise le nombre de zones ; `Mean Shift Segmentation` le découvre seul.
 
 
 
 *Questions*
-
 
 + Lancez K-Means deux fois. Les deux découpages sont-ils identiques ? Où voyez-vous des différences ? Pourquoi un démarrage au hasard donne-t-il des résultats variables ?
 
@@ -665,16 +650,11 @@ K-Means exige qu'on lui dise le nombre de zones ; Mean Shift le découvre seul.
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

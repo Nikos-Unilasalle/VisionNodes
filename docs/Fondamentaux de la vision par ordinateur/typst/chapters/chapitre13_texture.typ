@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -95,7 +96,7 @@ La variance mesure l'amplitude des fluctuations de niveau : un fond uniforme a �
 === Son angle mort est définitionnel
 Par construction, ces descripteurs ignorent l'arrangement spatial : ils résument la relation la plus pauvre possible, un pixel seul, sans voisin. Une zone lisse et une zone poivre-et-sel qui partagent le même histogramme leur sont rigoureusement indiscernables. Ce n'est pas un défaut accidentel mais le vide exact que les sections suivantes comblent, en réintroduisant la géométrie qu'on vient de jeter.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux patchs 1×4 de même histogramme `{0, 1, 2, 3}` (chaque niveau une fois) :
 
 ```
@@ -115,7 +116,7 @@ Moyenne et variance calculées sur des valeurs encodées en gamma (ce qu'on lit 
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `First Order Stats` → `Inspector`. Le nœud sort moyenne, variance, uniformité et entropie sur la région. Brancher les deux patchs A et B sur deux branches montre les sorties identiques — la démonstration en acte de l'angle mort du premier ordre.
+Canvas : `Image File` → `Grayscale` → `First Order Statistics` → `Inspector`. Le nœud sort moyenne, variance, uniformité et entropie sur la région. Brancher les deux patchs A et B sur deux branches montre les sorties identiques — la démonstration en acte de l'angle mort du premier ordre.
 
 ---
 ]
@@ -125,6 +126,8 @@ Canvas : `Image Source` → `Grayscale` → `First Order Stats` → `Inspector`.
 == Matrice de cooccurrence (GLCM) : la statistique des paires
 
 #subtitle[Compter non plus les billes, mais les paires de billes voisines]
+
+#figfull("/figures/fig_ch13_obs1_glcm.svg")
 
 #figfull("/figures/fig_ch13_obs1_glcm.svg")
 
@@ -146,7 +149,7 @@ Après normalisation, `P(i, j)` est la probabilité qu'un pixel de niveau i ait,
 === Ce qu'elle mesure, et son angle mort
 La GLCM encode la co-variation locale : sur la diagonale, les paires de niveaux semblables (zones lisses) ; loin d'elle, les transitions brusques (bords, rugosité). Trois angles morts. Elle dépend du couple (d, θ) : une texture rayée verticalement est invisible si on n'interroge que θ = 0°. Elle explose en taille (L×L) et se vide si L est grand — d'où la quantification quasi obligatoire à 8–32 niveaux. Et elle n'est pas invariante en rotation, sauf à moyenner sur plusieurs θ.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Image-jouet 3×3 à trois niveaux, décalage horizontal `d = 1, θ = 0°`, matrice symétrique :
 
 ```
@@ -189,11 +192,11 @@ Dans le nœud `GLCM` (ou via les fonctions de `skimage.feature.graycomatrix` en 
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Grayscale` ──> `GLCM` ──> `Inspector`.
+`Image File` ──> `Grayscale` ──> `GLCM` ──> `Inspector`.
 
-Le nœud `GLCM` quantifie en interne l'image d'entrée et calcule la matrice statistique. L'inspecteur affiche des résumés numériques (contraste, corrélation, homogénéité, énergie, entropie) calculés d'après les formules ci-dessus, et transmet la matrice au nœud `Haralick Features` du §13.3.
+Le nœud `GLCM` quantifie en interne l'image d'entrée, calcule la matrice de cooccurrence et sort les cinq descripteurs d'Haralick (contraste, homogénéité, énergie, entropie, corrélation) directement dans l'inspecteur.
 
-*Exercice de dépannage :* L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud *GLCM* et régler la distance de décalage horizontale sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste d'Haralick chute à une valeur proche de 0 (la texture paraît lisse car on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
+*Exercice de dépannage :* L'exercice consiste à charger une image d'une texture striée verticalement présentant une période d'alternance de 4 pixels. Brancher cette image à un nœud *GLCM* et régler le _Displacement Steps_ sur 4 pixels. Le lecteur constate dans l'inspecteur que le contraste chute à une valeur proche de 0 (on compare des pixels en phase). Régler ensuite le décalage sur 2 pixels. Le lecteur observe le contraste remonter à sa valeur maximale, illustrant comment le choix du pas peut éteindre ou allumer la sensibilité de la GLCM en fonction de la périodicité du motif.
 
 ---
 ]
@@ -228,7 +231,7 @@ Corrélation  = Σᵢⱼ (i−μᵢ)(j−μⱼ)·P(i,j) / (σᵢ·σⱼ)
 
 μᵢ, σᵢ sont la moyenne et l'écart-type des marges de la GLCM. Les cinq scalaires héritent du choix de (d, θ) ; ils sont le résumé compact de la statistique de la paire. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Sur la GLCM normalisée du §13.2 (six cases à 1/6) :
 
 ```
@@ -247,7 +250,7 @@ Trois conventions divergentes, chacune source de résultats faux et silencieux. 
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `GLCM` → `Haralick Features` → `Inspector`. Le nœud `Haralick Features` lit la matrice du §13.2 et sort les cinq scalaires, moyennés sur les quatre orientations pour l'invariance directionnelle ; l'inspecteur les affiche côte à côte.
+Canvas : `Image File` → `Grayscale` → `GLCM` → `Inspector`. Le nœud `GLCM` calcule directement les cinq descripteurs d'Haralick (contraste, homogénéité, énergie, entropie, corrélation), moyennés sur les quatre orientations (_Directions : 0°+45°+90°+135°_) pour l'invariance directionnelle ; l'inspecteur les affiche côte à côte.
 
 ---
 ]
@@ -257,6 +260,8 @@ Canvas : `Image Source` → `Grayscale` → `GLCM` → `Haralick Features` → `
 == Local Binary Pattern (LBP) : le micro-motif local
 
 #subtitle[Demander à chaque voisin : es-tu plus clair que moi ? oui/non, et lire le mot binaire]
+
+#figfull("/figures/fig_ch13_obs2_lbp.svg")
 
 #figfull("/figures/fig_ch13_obs2_lbp.svg")
 
@@ -290,7 +295,7 @@ g_c est le niveau du centre, g_p celui de chaque voisin sur le cercle (P points,
 === Ce qu'elle mesure, et son angle mort
 LBP capte les micro-structures à l'échelle R. Deux variantes comptent. Le *LBP uniforme* ne garde distinctement que les motifs à au plus 2 transitions 0↔1 dans le code circulaire (les motifs « propres » : coins, bords, arcs) et regroupe tous les autres, bruités, dans une seule case fourre-tout — ce qui réduit la dimension et la sensibilité au bruit. Le *LBP rotation-invariant* prend la plus petite rotation circulaire du code, pour ne pas distinguer `00001111` de `00111100`. Angles morts : LBP est mono-échelle (un seul R à la fois ; on empile plusieurs R pour le multi-échelle), fragile au bruit quand g_p ≈ g_c (un grain peut basculer le signe), et il jette l'*amplitude* des différences pour n'en garder que le signe — perdant l'information de contraste absolu.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Voisinage 3×3 (P = 8, R = 1), centre g_c = 50, voisins parcourus depuis le coin haut-gauche en sens horaire :
 
 ```
@@ -308,7 +313,7 @@ L'ordre des voisins est une convention : scikit-image démarre au voisin de droi
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `LBP` → `Inspector`. Le nœud expose P, R et la variante (uniforme, rotation-invariant) ; il sort l'histogramme des codes comme vecteur descripteur, à comparer ensuite via le nœud `Histogram Distance` (chapitre 3) en mode χ².
+Canvas : `Image File` → `Grayscale` → `Local Binary Pattern` → `Inspector`. Le nœud expose P (_Points_), R (_Radius_) et la variante (uniforme, rotation-invariant) ; il sort l'histogramme des codes comme vecteur descripteur, à comparer ensuite via le nœud `Histogram Compare` (chapitre 3) en mode χ².
 
 ---
 ]
@@ -318,6 +323,8 @@ Canvas : `Image Source` → `Grayscale` → `LBP` → `Inspector`. Le nœud expo
 == Bancs de filtres et énergie de Gabor : la texture comme spectre orienté
 
 #subtitle[Un peigne accordé à une fréquence et une direction, qui vibre fort sur la bonne trame]
+
+#figfull("/figures/fig_ch13_obs3_gabor.svg")
 
 #figfull("/figures/fig_ch13_obs3_gabor.svg")
 
@@ -341,7 +348,7 @@ Le premier facteur est l'enveloppe (la fenêtre gaussienne), le second l'ondulat
 === Ce qu'elle mesure, et son angle mort
 Le banc répond fort là où la texture possède une périodicité à la fréquence et à l'orientation du filtre. Une trame régulière (tissu, grille, mire) allume un pic net ; une texture aléatoire (sable, bruit blanc) étale l'énergie uniformément. Angles morts : le pas d'échantillonnage (λ, θ) fixe la résolution — un motif de période intermédiaire entre deux bandes λ est mal vu ; le banc est coûteux (autant de convolutions que de filtres) ; et l'énergie seule ignore la *phase*, si bien que deux textures de même spectre mais d'agencement différent peuvent se confondre — l'angle mort du §13.1, transposé au domaine fréquentiel.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Mire sinusoïdale verticale de *période 4 pixels* → fréquence 1/4 cycle/pixel, orientation 0° :
 
 ```
@@ -362,7 +369,7 @@ Normaliser les noyaux (somme nulle pour la composante cosinus, énergie unité) 
 ]
 
 #canvas[
-Canvas : `Image Source` → `Grayscale` → `Gabor Bank` → `Inspector`. Le nœud `Gabor Bank` (déjà rencontré au chapitre 5) applique plusieurs λ et θ et sort le vecteur d'énergies — la signature fréquence-orientation ; l'inspecteur la présente comme une petite carte (échelle × orientation) où le pic de résonance saute aux yeux.
+Canvas : `Image File` → `Grayscale` → `Gabor Bank` → `Inspector`. Le nœud `Gabor Bank` applique N orientations à la longueur d'onde réglée et sort la carte d'orientation (hue = direction dominante) et la carte d'énergie ; l'inspecteur indique le nombre d'orientations actives et permet de voir le pic de résonance sauter aux yeux pour une texture striée.
 
 ---
 ]
@@ -388,7 +395,7 @@ _État de l'art :_ ces familles précèdent l'apprentissage profond, qui domine 
 
 // ============================================================
 
-== La texture est une relation, pas une valeur
+== la texture est une relation, pas une valeur
 
 Le chapitre raconte une seule histoire, déclinée quatre fois : un pixel n'a pas de texture, seule une relation entre pixels en a une. Chaque section a construit cette relation un peu plus finement.
 
@@ -405,34 +412,26 @@ C'est le fil du chapitre 1 transposé du contour au motif : un descripteur garde
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 13
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Classer quatre matériaux par leur grain
 
-#figtodo("ex_ch13_textures_glcm", [Quatre carrés de texture côte à côte sur fond gris : (A) tissu de coton blanc un...])
-
+#figtodo("ex_ch13_textures_glcm", [Quatre carrés de texture côte à côte sur fond gris : (A) tissu de coton blanc un])
 
 *Ce que vous voyez.* Quatre matériaux dont le grain est radicalement différent. La mission : trouver les chiffres qui les distinguent automatiquement, comme le ferait un système de tri de matériaux.
 
 *Pipeline VNStudio*
-`Image Source` (recadrez sur chaque texture) → `GLCM Features` → `Output Display`
+`Image File` (recadrez sur chaque texture) → `GLCM` → `Display`
 
-Le nœud mesure trois indicateurs de texture : le contraste (rugosité), l'homogénéité (régularité), l'énergie (répétition d'un motif).
-
+Le nœud mesure cinq indicateurs de texture : le contraste (rugosité), l'homogénéité (régularité), l'énergie (répétition d'un motif), l'entropie (désordre) et la corrélation (prévisibilité du voisin).
 
 
 
 *Questions*
-
 
 + Relevez les trois indicateurs pour chaque texture. Lequel des quatre matériaux a le contraste le plus fort ? Lequel a l'homogénéité la plus haute ?
 
@@ -443,24 +442,20 @@ Le nœud mesure trois indicateurs de texture : le contraste (rugosité), l'homog
 + *Défi.* Réglez les indicateurs pour séparer les quatre matériaux sans erreur : quel duo de chiffres suffit à les ranger en quatre tas distincts ? Faites ensuite pivoter le bois de 90° et vérifiez s'il atterrit toujours dans le bon tas, ou s'il faut mesurer dans plusieurs directions pour devenir insensible à la rotation.
 
 
-
 === Exercice 2 · Reconnaître une texture à l'échelle du micro-motif
 
-#figtodo("ex_ch13_textures_lbp", [Les mêmes quatre matériaux qu'à l'exercice 1, mais à fort grossissement : fibres...])
-
+#figtodo("ex_ch13_textures_lbp", [Les mêmes quatre matériaux qu'à l'exercice 1, mais à fort grossissement : fibres])
 
 *Ce que vous voyez.* Les mêmes textures vues au plus près, à l'échelle du motif élémentaire. La mission : construire une signature de texture fondée sur ces micro-motifs.
 
 *Pipeline VNStudio*
-`Image Source` → `LBP` *(à créer)* → `Histogram` → `Output Display`
+`Image File` → `Local Binary Pattern` → `Histogram` → `Display`
 
 Le nœud résume le voisinage de chaque pixel en un code de micro-motif, et l'histogramme de ces codes devient la signature de la texture. Modes disponibles : classique, ou insensible à la rotation.
 
 
 
-
 *Questions*
-
 
 + Calculez la signature des quatre textures et affichez les histogrammes côte à côte. Lequel est très « pointu » (un ou deux motifs dominants) ? Lequel est étalé (tous les motifs présents) ? Reliez cela à la régularité visuelle.
 
@@ -471,24 +466,20 @@ Le nœud résume le voisinage de chaque pixel en un code de micro-motif, et l'hi
 + *Défi.* Pour la paire la plus difficile à séparer (question 2), réglez le rayon du voisinage du nœud LBP jusqu'à ce que leurs signatures se distinguent enfin. Quel rayon y arrive ? Vérifiez que les autres matériaux restent bien séparés à ce réglage.
 
 
-
 === Exercice 3 · Cartographier l'orientation des crêtes d'une empreinte
 
-#figtodo("ex_ch13_empreinte", [Photographie d'une empreinte digitale sur fond blanc : crêtes noires parallèles ...])
-
+#figtodo("ex_ch13_empreinte", [Photographie d'une empreinte digitale sur fond blanc : crêtes noires parallèles ])
 
 *Ce que vous voyez.* Une texture quasi-périodique dont l'orientation tourne lentement, avec des points singuliers (les fourches). La mission : dresser la carte d'orientation des crêtes, première étape de toute reconnaissance d'empreinte.
 
 *Pipeline VNStudio*
-`Image Source` → `Gabor Bank` *(à créer)* (8 orientations, espacement 12 px) → `Colormap` → `Output Display`
+`Image File` → `Gabor Bank` (8 orientations, _Wavelength_ ≈ 12 px) → `Colormap / LUT` → `Display`
 
-Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation qui répond le plus fort. Le résultat est une carte d'orientation locale.
-
+Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation qui répond le plus fort. Le résultat est une carte d'orientation locale, codée en couleur.
 
 
 
 *Questions*
-
 
 + Sur une zone de crêtes horizontales, quelle orientation le banc retient-il ? Et sur une zone où les crêtes montent en diagonale ? La carte suit-elle bien la direction visible des crêtes ?
 
@@ -500,16 +491,11 @@ Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation 
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

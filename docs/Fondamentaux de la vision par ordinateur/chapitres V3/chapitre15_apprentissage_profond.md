@@ -101,9 +101,9 @@ La sortie penche vers la première valeur, parce que sa clé ressemblait le plus
 ### Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `DINOv2 Classifier` ──> `Attention Map` ──> `Output Display`.
+`Image File` ──> `DINOv2 Classifier` ──> `Display` ──> `Display`.
 
-Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
+Le nœud `Display` permet de visualiser les zones d'attention du réseau.
 
 **Exercice de dépannage :** L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique **L2 Loss** (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type **L1 Loss** (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
 
@@ -165,7 +165,7 @@ Calculer le softmax puis le logarithme séparément est numériquement instable 
 
 ### Dans VNStudio
 
-Canvas : `Logits` + `Target Class` → `Cross Entropy` → `Inspector`. Le nœud prend les logits bruts et la classe cible, sort le coût et le vecteur de gradient ŷ − y, et affiche le softmax. Pousser un logit à la main montre le gradient s'annuler dès que la prédiction rejoint la cible.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud prend les logits bruts et la classe cible, sort le coût et le vecteur de gradient ŷ − y, et affiche le softmax. Pousser un logit à la main montre le gradient s'annuler dès que la prédiction rejoint la cible.
 
 ---
 
@@ -208,7 +208,7 @@ Sans ε, une image sans objet (g entièrement nul) et une prédiction vide donne
 
 ### Dans VNStudio
 
-Canvas : `Prediction Probs` + `Ground Truth Mask` → `Dice Loss` → `Inspector`. Le nœud sort le Dice soft et le coût ; il colore la carte de gradient par pixel, qui montre où le réseau est tiré vers le haut (objets ratés) ou vers le bas (faux positifs).
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud sort le Dice soft et le coût ; il colore la carte de gradient par pixel, qui montre où le réseau est tiré vers le haut (objets ratés) ou vers le bas (faux positifs).
 
 ---
 
@@ -259,7 +259,7 @@ L'exemple facile est divisé par 100, le difficile seulement par 4. Le rapport d
 
 ### Dans VNStudio
 
-Canvas : `Logits` + `Target Class` → `Focal Loss` → `Inspector`. Le nœud expose γ et α en curseurs et affiche, à côté du coût, le facteur de modulation et le rapport d'atténuation facile/difficile. Monter γ montre la contribution des exemples faciles fondre vers zéro.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud expose γ et α en curseurs et affiche, à côté du coût, le facteur de modulation et le rapport d'atténuation facile/difficile. Monter γ montre la contribution des exemples faciles fondre vers zéro.
 
 ---
 
@@ -311,7 +311,7 @@ En L2, l'aberration (★) pèse 36 sur 37 du coût total et fournit un gradient 
 
 ### Dans VNStudio
 
-Canvas : `Prediction` + `Target` → `Smooth L1` → `Inspector`. Le nœud expose β et affiche, par résidu, le coût et le gradient en regard de la L2 pure — la branche plafonnée saute aux yeux dès qu'un résidu dépasse β.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud expose β et affiche, par résidu, le coût et le gradient en regard de la L2 pure — la branche plafonnée saute aux yeux dès qu'un résidu dépasse β.
 
 ---
 
@@ -367,7 +367,7 @@ Les conventions de coordonnées sont une source d'erreur permanente : (x, y, w, 
 
 ### Dans VNStudio
 
-Canvas : `Predicted Box` + `Target Box` → `IoU Loss` → `Inspector`. Le nœud trace les deux boîtes et la boîte englobante C, affiche IoU, GIoU et le terme correctif ; déplacer la boîte prédite montre le GIoU décroître continûment là où l'IoU reste bloqué à zéro.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud trace les deux boîtes et la boîte englobante C, affiche IoU, GIoU et le terme correctif ; déplacer la boîte prédite montre le GIoU décroître continûment là où l'IoU reste bloqué à zéro.
 
 ---
 
@@ -410,7 +410,7 @@ Trois points. La similarité cosinus suppose des vecteurs normalisés (de longue
 
 ### Dans VNStudio
 
-Canvas : `Anchor` + `Positive` + `Negatives` → `Contrastive Loss` → `Inspector`. Le nœud normalise les vecteurs, calcule les similarités cosinus, expose τ, et affiche le coût avec la probabilité attribuée au positif. Baisser τ montre la probabilité du positif grimper et le gradient s'éteindre.
+Canvas : `Image File` + `Image File` + `Image File` → `Python Node` → `Display`. Le nœud normalise les vecteurs, calcule les similarités cosinus, expose τ, et affiche le coût avec la probabilité attribuée au positif. Baisser τ montre la probabilité du positif grimper et le gradient s'éteindre.
 
 ---
 

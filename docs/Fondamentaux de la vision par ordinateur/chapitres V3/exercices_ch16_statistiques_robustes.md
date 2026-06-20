@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Une scène où quelques pixels extrêmes (les moteurs chauds) risquent de fausser l'estimation de la température ambiante. La mission : estimer la température du fond sans se laisser tromper par les points chauds.
 
 **Pipeline VNStudio**
-`Image Source` → `Region Properties` → `Output Display`
+`Image File` → `Region Properties` → `Display`
 
 Le nœud affiche dans l'inspecteur la moyenne, la médiane et l'écart absolu médian (MAD) de la zone sélectionnée.
 
@@ -34,7 +34,7 @@ Le nœud affiche dans l'inspecteur la moyenne, la médiane et l'écart absolu m�
 **Ce que vous voyez.** Une ligne dominante (l'horizon) noyée parmi des éléments qui ne la respectent pas. La mission : faire trouver l'horizon automatiquement malgré ces intrus.
 
 **Pipeline VNStudio**
-`Image Source` → `Canny Edge Detector` → `RANSAC Line Fit` → `Draw Overlay` → `Output Display`
+`Image File` → `Canny Edge` → `Python Node` → `Display` → `Display`
 
 Le nœud RANSAC trace la droite consensus et affiche le nombre de points qui la soutiennent (inliers).
 
@@ -59,7 +59,7 @@ Le nœud RANSAC trace la droite consensus et affiche le nombre de points qui la 
 **Ce que vous voyez.** Des mesures fiables pour la plupart, avec quatre relevés aberrants dus à des réflexions. La mission : trouver la vraie droite de calibration sans que ces quatre points la tordent.
 
 **Pipeline VNStudio**
-`CSV Reader` (mesures) → `Robust Line Fit` → `Scatter Plot` → `Output Display`
+`CSV Reader` (mesures) → `Python Node` → `Scatter Plot` → `Display`
 
 Le nœud propose trois modes d'ajustement : ordinaire (L2), Huber (résistant), médian (très résistant). Il affiche la pente trouvée et superpose la droite au nuage.
 

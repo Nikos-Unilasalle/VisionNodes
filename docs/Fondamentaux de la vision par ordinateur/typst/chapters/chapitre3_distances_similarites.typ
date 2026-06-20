@@ -72,7 +72,7 @@ Le fil du chapitre tient en une phrase : *une distance déclare ce qui compte.* 
 
 #figfull("/illustrations/chap3.1.png")
 
-#figcap("/figures/fig_ch3_obs3_lp_balls.pdf", [Observation — la boule unité change de forme avec p])
+#figfull("/figures/fig_ch3_obs3_lp_balls.pdf")
 
 === L'intention
 On veut comparer deux vecteurs nombre par nombre, mais sans figer d'avance la façon de combiner les écarts : tantôt en les additionnant tous, tantôt en ne retenant que le plus grand. Un seul mécanisme réglable couvrirait toute la gamme.
@@ -102,7 +102,7 @@ Le symbole Σ additionne sur toutes les coordonnées ; les barres |…| sont la 
 - p = 2 : distance euclidienne (L2)
 - p → ∞ : distance de Tchebychev (L∞) ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 x = (1, 2, 3), y = (4, 0, 3) → écarts (3, 2, 0) :
 
 ```
@@ -119,7 +119,7 @@ En haute dimension (des vecteurs à plusieurs centaines de nombres), un phénom�
 ]
 
 #canvas[
-Canvas : `Vector A` + `Vector B` → `Distance Metrics` → `Inspector`. Le nœud calcule L1, L2 et L∞ simultanément et les affiche côte à côte, ce qui rend visible l'ordre L∞ ≤ L2 ≤ L1 sur n'importe quelle paire de vecteurs.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. Le nœud calcule L1, L2 et L∞ simultanément et les affiche côte à côte, ce qui rend visible l'ordre L∞ ≤ L2 ≤ L1 sur n'importe quelle paire de vecteurs.
 
 ---
 ]
@@ -130,7 +130,7 @@ Canvas : `Vector A` + `Vector B` → `Distance Metrics` → `Inspector`. Le nœu
 
 #subtitle[Un mètre d'écart, banal sur l'autoroute, énorme en travers d'un couloir]
 
-#figcap("/figures/fig_ch3_obs1_mahalanobis.pdf", [Observation — Mahalanobis : l'ellipse d'iso-distance suit le nuage])
+#figfull("/figures/fig_ch3_obs1_mahalanobis.pdf")
 
 === L'intention
 La distance euclidienne suppose en secret que toutes les directions se valent et que les axes sont indépendants. C'est rarement vrai. On voudrait une distance qui tienne compte de la dispersion propre à chaque direction : un écart doit compter peu là où les données varient déjà beaucoup, et beaucoup là où elles varient peu.
@@ -148,7 +148,7 @@ d(x, y) = √( (x − y)ᵀ Σ⁻¹ (x − y) )
 
 Le détail des symboles importe peu : Σ⁻¹ (l'« inverse » de la covariance) est l'outil qui réalise le redressement, et le reste est une distance euclidienne dans l'espace ainsi redressé. En clair : c'est la distance ordinaire, mais mesurée après avoir rendu le nuage de données parfaitement rond. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Données très étirées horizontalement, dix fois plus dispersées en x qu'en y. Depuis le centre, comparons deux points à la même distance euclidienne : a = (10, 0) et b = (0, 10).
 
 ```
@@ -166,7 +166,7 @@ Si l'on a moins de points que de dimensions, le tableau de covariance ne peut pa
 ]
 
 #canvas[
-Canvas : `Point Cloud` + `Test Point` → `Mahalanobis` → `Inspector`. Le nœud estime la covariance sur le nuage fourni, redresse l'espace, et affiche la distance de Mahalanobis du point testé ainsi qu'un drapeau « anomalie » quand elle dépasse trois variations typiques.
+Canvas : `Image File` → `Python Node` → `Display`. Le nœud estime la covariance sur le nuage fourni, redresse l'espace, et affiche la distance de Mahalanobis du point testé ainsi qu'un drapeau « anomalie » quand elle dépasse trois variations typiques.
 
 ---
 ]
@@ -203,12 +203,12 @@ C'est pourquoi la recherche documentaire, les systèmes de recommandation et la 
 === Le pont avec l'euclidienne
 Si l'on ramène d'abord les vecteurs à une longueur de 1 (on dit qu'on les *normalise*), distance euclidienne et distance cosinus deviennent deux façons de dire la même chose : l'une croît exactement avec l'autre. D'où une habitude répandue : on normalise les embeddings avant de les ranger dans un index, ce qui permet d'utiliser un moteur de recherche euclidien rapide tout en raisonnant, au fond, en cosinus.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 x = (2, 0), y = (3, 0) : colinéaires → cos = 6 / (2·3) = 1, similarité maximale malgré des longueurs différentes. x = (1, 0), y = (0, 1) : perpendiculaires → cos = 0.
 ]
 
 #canvas[
-Canvas : `Vector A` + `Vector B` → `Cosine Similarity` → `Inspector`. L'inspecteur affiche le cosinus et la distance 1 − cos ; mettre à l'échelle l'un des vecteurs (le multiplier par 10) montre que le cosinus ne bouge pas, contrairement à une distance euclidienne.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. L'inspecteur affiche le cosinus et la distance 1 − cos ; mettre à l'échelle l'un des vecteurs (le multiplier par 10) montre que le cosinus ne bouge pas, contrairement à une distance euclidienne.
 
 ---
 ]
@@ -249,7 +249,7 @@ d_B(h, g) = −ln( BC(h, g) )
 
 ---
 
-=== 3.4.3 — Exemple chiffré
+=== 3.4.3 — Exemple
 h = (0,5 ; 0,5 ; 0), g = (0 ; 0,5 ; 0,5) — deux histogrammes qui ne se recouvrent que sur une seule case :
 
 ```
@@ -262,7 +262,7 @@ Toutes ces mesures comparent les cases *une à une*, sans savoir lesquelles sont
 ]
 
 #info-box(title: "Paramètres opérationnels (VNStudio / Python)")[
-Dans le nœud `Histogram Distance` (ou via `cv2.compareHist` en Python), le comportement de la comparaison est déterminé par les options suivantes :
+Dans le nœud `Histogram Compare` (ou via `cv2.compareHist` en Python), le comportement de la comparaison est déterminé par les options suivantes :
 
 - *Type de comparaison (`method`)* :
 - Dans VNStudio, ce paramètre correspond au menu déroulant *Comparison Method* ; en Python (OpenCV), il se nomme `method` dans la fonction `cv2.compareHist`.
@@ -275,11 +275,11 @@ Dans le nœud `Histogram Distance` (ou via `cv2.compareHist` en Python), le comp
 
 #canvas[
 Dans votre canvas :
-`Image A` ──> `Histogram` ──┐
-                          ├──> `Histogram Distance` ──> `Inspector`.
-`Image B` ──> `Histogram` ──┘
+`Image File` ──> `Histogram` ──┐
+                          ├──> `Histogram Compare` ──> `Display`.
+`Image File` ──> `Histogram` ──┘
 
-Le nœud `Histogram Distance` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
+Le nœud `Histogram Compare` compare les deux distributions normalisées. Il calcule en parallèle les métriques définies ci-dessus et permet à l'utilisateur de sélectionner dans l'inspecteur le type de comparaison adapté à son problème (Chi-Square pour les détails rares, Bhattacharyya pour la stabilité globale).
 
 *Exercice de dépannage :* L'exercice consiste à charger deux images identiques, à en décaler une d'un seul pixel, puis à mesurer leur distance Euclidienne L2 pixel à pixel via un nœud `Vector Distance`. Le lecteur constate dans l'inspecteur que la distance L2 saute immédiatement d'une valeur nulle à un score massif, alors que les images paraissent indiscernables à l'œil. Cela met en évidence la fragilité extrême des métriques de comparaison directe pixel par pixel par rapport au moindre décalage spatial.
 
@@ -292,7 +292,7 @@ Le nœud `Histogram Distance` compare les deux distributions normalisées. Il ca
 
 #subtitle[Combien de travail pour remodeler un tas de sable en un autre]
 
-#figcap("/figures/fig_ch3_obs2_wasserstein_chi2.pdf", [Observation — Wasserstein voit le glissement, χ² voit case par case])
+#figfull("/figures/fig_ch3_obs2_wasserstein_chi2.pdf")
 
 === L'intention
 Les distances case-à-case (§3.4) ignorent la proximité des cases entre elles : un décalage d'une seule teinte les déclare maximalement différentes. On veut une mesure qui *connaisse la géométrie des cases* — où déplacer de la masse vers une case voisine coûte peu, vers une case lointaine coûte cher.
@@ -310,7 +310,7 @@ EMD₁(h, g) = Σᵢ |H(i) − G(i)|     où H, G sont les cumuls de h, g
 
 C'est l'aire entre les deux courbes cumulées, calculable d'un trait en parcourant les cases une fois. ∎
 
-#question-box(title: "Exemple chiffré (cas 1-D)")[
+#question-box(title: "Exemple (cas 1-D)")[
 h = (0,5 ; 0,5 ; 0), g = (0 ; 0,5 ; 0,5), cases équidistantes :
 
 ```
@@ -327,7 +327,7 @@ Le cas général (2-D et au-delà) n'a pas de formule simple : il faut résoudre
 ]
 
 #canvas[
-Canvas : `Histogram A` + `Histogram B` → `Wasserstein 1D` → `Inspector`. Le nœud affiche l'EMD en nombre de cases, et superpose les deux courbes cumulées dont l'aire entre elles _est_ la distance — ce qui donne à voir directement le « déplacement » à effectuer.
+Canvas : `Image File` (A) + `Image File` (B) → `Histogram Compare` → `Display`. Le nœud affiche l'EMD en nombre de cases, et superpose les deux courbes cumulées dont l'aire entre elles _est_ la distance — ce qui donne à voir directement le « déplacement » à effectuer.
 
 ---
 ]
@@ -353,7 +353,7 @@ H(A, B) = max( h(A, B), h(B, A) )              (distance symétrique)
 
 Le `min` cherche le plus proche voisin (la plus petite distance), le `max` retient le pire cas (la plus grande de ces distances). La distance symétrique prend le pire des deux sens. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 A = {(0,0), (1,0)}, B = {(0,0), (1,0), (6,0)} :
 
 ```
@@ -371,7 +371,7 @@ Le « pire cas » rend la Hausdorff extrêmement sensible à un point aberrant :
 ]
 
 #canvas[
-Canvas : `Contour A` + `Contour B` → `Hausdorff Distance` → `Inspector`. Le nœud affiche la distance symétrique, les deux distances dirigées, et trace le segment du « pire » point à son plus proche voisin, ce qui localise immédiatement le désaccord maximal.
+Canvas : `Image File` (A) + `Image File` (B) → `Hausdorff Distance` → `Display`. Le nœud affiche la distance symétrique, les deux distances dirigées, et trace le segment du « pire » point à son plus proche voisin, ce qui localise immédiatement le désaccord maximal.
 
 ---
 ]
@@ -400,7 +400,7 @@ Canvas : `Contour A` + `Contour B` → `Hausdorff Distance` → `Inspector`. Le 
 
 // ============================================================
 
-== Chaque mesure cache une hypothèse
+== chaque mesure cache une hypothèse
 
 Le fil du chapitre se déroule d'une mesure à l'autre :
 
@@ -419,34 +419,26 @@ Un descripteur (chapitre 1) garde une chose et en jette une autre ; un moment (c
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 3
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Choisir la bonne distance pour comparer deux couleurs
 
-#figtodo("ex_ch3_nuancier", [Nuancier de peinture : une couleur de référence au centre, entourée de huit écha...])
-
+#figtodo("ex_ch3_nuancier", [Nuancier de peinture : une couleur de référence au centre, entourée de huit écha])
 
 *Ce que vous voyez.* Une couleur de référence et ses voisines. La mission : trouver laquelle est « la plus proche », et constater que la réponse change selon la façon de mesurer l'écart.
 
 *Pipeline VNStudio*
-`Image Source` → `Color Distance` → `Colormap` → `Output Display`
+`Image File` → `Histogram Compare` → `Apply Colormap` → `Display`
 
 Le nœud calcule la distance de chaque pixel à la couleur de référence, au choix en mode L1 (somme des écarts), L2 (distance directe) ou L∞ (plus grand écart sur un canal).
 
 
 
-
 *Questions*
-
 
 + En mode L2, quelle teinte du nuancier ressort comme la plus proche de la référence ? Repérez-la sur la carte de distance.
 
@@ -457,24 +449,20 @@ Le nœud calcule la distance de chaque pixel à la couleur de référence, au ch
 + *Défi.* Réglez le mode et le seuil pour qu'une chaîne de contrôle qualité accepte les échantillons « assez proches » de la référence et rejette les autres. Combien d'échantillons passent ? Le résultat change-t-il selon le mode de distance choisi ?
 
 
-
 === Exercice 2 · Repérer une anomalie discrète sur un fond qui varie
 
-#figtodo("ex_ch3_pelouse", [Pelouse vue du dessus : fond vert dont la teinte varie naturellement, quelques p...])
-
+#figtodo("ex_ch3_pelouse", [Pelouse vue du dessus : fond vert dont la teinte varie naturellement, quelques p])
 
 *Ce que vous voyez.* Un fond dont la couleur varie beaucoup tout seul. L'intrus à trouver (la fleur) est petit ; la terre, plus étendue, n'est pas vraiment une anomalie. La mission : détecter ce qui sort vraiment de l'ordinaire.
 
 *Pipeline VNStudio*
-`Image Source` → `Color Space` (RGB → HSV) → `Anomaly Distance` → `Colormap` → `Output Display`
+`Image File` → `Color Convert (BGR→HSV)` → `Histogram Compare` → `Apply Colormap` → `Display`
 
 Le nœud apprend la couleur « normale » sur une zone de pelouse que vous sélectionnez, puis allume chaque pixel selon son étrangeté en tenant compte de la façon dont la pelouse varie.
 
 
 
-
 *Questions*
-
 
 + Sélectionnez une zone de pelouse comme référence, puis lancez le calcul. Qu'est-ce qui s'allume le plus fort sur la carte : la fleur violette ou la terre brune ?
 
@@ -485,24 +473,20 @@ Le nœud apprend la couleur « normale » sur une zone de pelouse que vous séle
 + *Défi.* Réglez le seuil pour ne marquer que la fleur, sans aucune fausse alarme sur la pelouse ou la terre. Existe-t-il un réglage parfait, ou faut-il accepter un compromis ? Ajoutez une deuxième petite fleur et vérifiez qu'elle est aussi détectée.
 
 
-
 === Exercice 3 · Distinguer une variation de lot d'un vrai changement de produit
 
-#figtodo("ex_ch3_cereales", [Trois boîtes de céréales côte à côte : deux de la même marque mais de lots diffé...])
-
+#figtodo("ex_ch3_cereales", [Trois boîtes de céréales côte à côte : deux de la même marque mais de lots diffé])
 
 *Ce que vous voyez.* Deux produits presque identiques (simple variation d'impression) et un produit vraiment différent. La mission : régler une comparaison qui tolère la variation de lot mais détecte le vrai changement.
 
 *Pipeline VNStudio*
-`Image Source` → `Color Space` (→ canal L de Lab) → `Histogram` → `Histogram Compare` → `Output Display`
+`Image File` → `Color Convert (BGR→Lab)` → `Histogram` → `Histogram Compare` → `Display`
 
 Le nœud compare les histogrammes deux à deux et affiche leur écart, au choix avec une mesure « case par case » (χ²) ou une mesure « de glissement » (Wasserstein, sensible au décalage d'ensemble).
 
 
 
-
 *Questions*
-
 
 + Comparez les deux boîtes de la même marque. La mesure de glissement les juge-t-elle proches ? La mesure case par case est-elle d'accord, ou les déclare-t-elle très différentes à cause du léger décalage de luminosité ?
 
@@ -514,16 +498,11 @@ Le nœud compare les histogrammes deux à deux et affiche leur écart, au choix 
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

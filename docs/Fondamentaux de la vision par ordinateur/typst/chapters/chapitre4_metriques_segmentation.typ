@@ -101,7 +101,7 @@ Cette décomposition montre la double pénalité de l'IoU : il sanctionne d'un m
 === Le seuil 0,5
 En détection, on déclare une prédiction « correcte » (un VP) si son IoU avec la vérité dépasse un seuil. Le seuil historique de 0,5 est un compromis : assez permissif pour tolérer une localisation imparfaite, assez strict pour rejeter les recouvrements fortuits. Les benchmarks modernes moyennent sur plusieurs seuils (de 0,50 à 0,95) pour ne pas dépendre de ce choix.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux carrés de côté 10 px, décalés de 3 px à l'horizontale (recouvrement 7 × 10 px) :
 
 ```
@@ -118,7 +118,7 @@ Pour un objet de quelques pixels, une erreur de 1 px de frontière fait beaucoup
 ]
 
 #info-box(title: "Paramètres opérationnels (VNStudio / Python)")[
-Dans le nœud `IoU` (ou lors du codage d'une boucle d'évaluation en Python), le comportement des métriques de détection s'appuie sur deux réglages opérationnels :
+Dans le nœud `Mask Metrics` (ou lors du codage d'une boucle d'évaluation en Python), le comportement des métriques de détection s'appuie sur deux réglages opérationnels :
 
 - *Seuil de confiance (`confidence threshold`)* :
 - Dans VNStudio, ce paramètre correspond au curseur *Confidence Threshold* ; en Python, c'est le seuil appliqué aux scores de probabilité sortis par le modèle.
@@ -130,13 +130,13 @@ Dans le nœud `IoU` (ou lors du codage d'une boucle d'évaluation en Python), le
 
 #canvas[
 Dans votre canvas :
-`Prediction Mask` ──┐
-                   ├──> `IoU` ──> `Inspector`.
-`Ground Truth` ──┘
+`Image File` (prédiction) ──┐
+                   ├──> `Mask Metrics` ──> `Display`.
+`Image File` (vérité) ──┘
 
 Le nœud `IoU` effectue l'intersection et l'union logiques des deux masques binaires. L'inspecteur affiche instantanément l'IoU (Jaccard) et le coefficient de Dice (F1). Le nœud colore également l'image de sortie (vert pour les Vrais Positifs, rouge pour les Faux Positifs, bleu pour les Faux Négatifs), ce qui révèle aussitôt si l'erreur penche vers la sur- ou la sous-segmentation, sans biais lié à la taille de l'arrière-plan.
 
-*Exercice de dépannage :* L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `IoU` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
+*Exercice de dépannage :* L'exercice consiste à charger deux masques de prédiction pour un très petit objet de 10x10 pixels, l'un décalé de 5 pixels par rapport à la vérité terrain. Brancher ces masques au nœud `Mask Metrics` et noter le score (qui s'effondre à 0.33). Charger ensuite deux masques pour un grand objet de 100x100 pixels, décalé de la même distance de 5 pixels. Brancher ces derniers et constater dans l'inspecteur que le score remonte à 0.90. Le lecteur expérimente ainsi de manière directe le biais de sévérité de l'IoU contre les petits objets pour une même imprécision spatiale.
 
 ---
 ]
@@ -180,7 +180,7 @@ Dice = 2·VP / (2·VP + FP + FN)
 
 C'est exactement le *F1-score* (vu en 4.3) appliqué pixel par pixel au lieu d'objet par objet. Dice en imagerie et F1 en apprentissage sont la même quantité dans deux vocabulaires. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Les deux carrés du §4.1 (intersection 70 px², chaque carré 100 px²) :
 
 ```
@@ -195,7 +195,7 @@ Dice ignore les vrais négatifs, ce qui est un avantage quand l'objet est minusc
 ]
 
 #canvas[
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Dice` → `Inspector`. L'inspecteur affiche Dice et IoU côte à côte avec la vérification de conversion, ce qui montre concrètement que les deux mesures se suivent.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Mask Metrics` → `Display`. L'inspecteur affiche Dice et IoU côte à côte avec la vérification de conversion, ce qui montre concrètement que les deux mesures se suivent.
 
 ---
 ]
@@ -240,7 +240,7 @@ La moyenne ordinaire masquerait le déséquilibre ; l'harmonique refuse de réco
 
 Quand une dimension importe plus que l'autre, on penche le compromis avec un réglage : favoriser le rappel pour un dépistage médical (mieux vaut une fausse alerte qu'un cancer manqué), favoriser la précision pour un filtre anti-spam (mieux vaut laisser passer un spam que bloquer un vrai message). ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un détecteur de cellules malades trouve 80 régions suspectes : 60 vraies, 20 du tissu sain pris pour malade, et 40 cellules malades passées inaperçues.
 
 ```
@@ -254,7 +254,7 @@ Le F1 = 0,667 reflète que ni précision ni rappel ne sont excellents — sans d
 ]
 
 #canvas[
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Precision-Recall` → `Inspector`. Le nœud affiche précision, rappel et F1 avec le détail VP / FP / FN, et expose un réglage pour pencher le compromis vers le rappel ou la précision selon l'enjeu.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Mask Metrics` → `Display`. Le nœud affiche précision, rappel et F1 avec le détail VP / FP / FN, et expose un réglage pour pencher le compromis vers le rappel ou la précision selon l'enjeu.
 
 ---
 ]
@@ -265,9 +265,9 @@ Canvas : `Prediction Mask` + `Ground Truth Mask` → `Precision-Recall` → `Ins
 
 #subtitle[Juger le détecteur à tous ses réglages d'un coup, pas à un seul]
 
-#figcap("/figures/fig_ch4_obs1_pr_curve.pdf", [Observation — balayer le seuil de confiance trace la courbe PR])
+#figfull("/figures/fig_ch4_obs1_pr_curve.pdf")
 
-#figcap("/figures/fig_ch4_obs2_ap_area.pdf", [Observation — l'AP résume la courbe PR en un seul nombre])
+#figfull("/figures/fig_ch4_obs2_ap_area.pdf")
 
 === L'intention
 Le F1 ne vaut que pour un seuil de décision fixé. On voudrait une note qui résume la performance du détecteur *à tous les seuils possibles* à la fois, pour ne pas dépendre d'un choix arbitraire.
@@ -283,7 +283,7 @@ AP = aire sous la courbe précision-rappel
 
 (AP pour _Average Precision_, la précision moyenne ; sa moyenne sur toutes les catégories d'objets s'appelle mAP.) La courbe brute étant en dents de scie, on la « repasse » d'abord : à chaque niveau de rappel, on retient la meilleure précision atteignable au-delà, ce qui lisse les irrégularités dues à l'ordre exact des détections. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Cinq détections triées par confiance décroissante, sur 3 objets réels :
 
 ```
@@ -307,7 +307,7 @@ L'AP intègre sur tous les seuils de confiance — sa vertu (pas de seuil arbitr
 ]
 
 #canvas[
-Canvas : `Detections (scores + labels)` → `Average Precision` → `Inspector`. Le nœud trace la courbe précision-rappel et sa version lissée, et affiche l'aire (l'AP). Faire varier le seuil d'IoU montre directement l'écart entre conventions stricte et permissive.
+Canvas : `Image File` → `Mask Metrics` → `Display`. Le nœud trace la courbe précision-rappel et sa version lissée, et affiche l'aire (l'AP). Faire varier le seuil d'IoU montre directement l'écart entre conventions stricte et permissive.
 
 ---
 ]
@@ -344,7 +344,7 @@ RQ (Recognition Quality)  = F1-score au niveau des objets (pas des pixels)
 
 La *SQ* mesure la qualité de délimitation des objets _trouvés_ ; la *RQ* mesure la capacité à trouver les bons objets. La factorisation sépare proprement les deux questions. Un modèle médical peut exceller en RQ (il repère toutes les lésions) mais faiblir en SQ (ses contours sont flous) : la PQ seule masque ce diagnostic, la décomposition le révèle. L'appariement à IoU > 0,5 a une propriété commode : il est forcément *unique* (deux prédictions séparées ne peuvent dépasser 0,5 avec la même vérité), ce qui évite toute ambiguïté. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Scène de télédétection, 3 bâtiments à segmenter. Le modèle en prédit 4 : 2 bien appariés (IoU = 0,80 et 0,90), 1 prédiction sans correspondant (FP), 1 bâtiment réel non trouvé (FN).
 
 ```
@@ -358,7 +358,7 @@ Lecture immédiate : la segmentation est correcte (SQ = 0,85) mais la reconnaiss
 ]
 
 #canvas[
-Canvas : `Instances prédites` + `Instances vérité` → `Panoptic Quality` → `Inspector`. Le nœud affiche PQ, SQ et RQ séparément — l'essentiel, car c'est la décomposition, pas la PQ globale, qui dit où porter l'effort.
+Canvas : `Image File` (prédiction) + `Image File` (vérité) → `Mask Metrics` → `Display`. Le nœud affiche PQ, SQ et RQ séparément — l'essentiel, car c'est la décomposition, pas la PQ globale, qui dit où porter l'effort.
 
 ---
 ]
@@ -387,7 +387,7 @@ BF  = 2 · P_c · R_c / (P_c + R_c)
 
 C'est un F1 (la moyenne harmonique de 4.3) appliqué aux pixels de frontière. Le BF et la distance de Hausdorff (§3.6) mesurent tous deux l'erreur de frontière, différemment : la Hausdorff rapporte le _pire_ écart ponctuel (sensible à un point aberrant), le BF une _proportion_ de frontière correcte dans la tolérance (robuste, borné entre 0 et 1). Les deux se complètent — BF pour la qualité globale du contour, HD95 pour garantir l'absence d'excursion grave. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Lésion dermique. Frontière vérité 200 px, frontière prédite 210 px, tolérance 2 px. 190 pixels prédits trouvent un voisin vérité proche, 185 pixels vérité trouvent un voisin prédit proche :
 
 ```
@@ -404,7 +404,7 @@ Le BF dépend du couple (tolérance, résolution de l'image). Doubler la résolu
 ]
 
 #canvas[
-Canvas : `Prediction Mask` + `Ground Truth Mask` → `Boundary F1` → `Inspector`. Le nœud extrait les deux contours, mesure leur recouvrement dans la tolérance choisie, et affiche le BF avec ses composantes précision et rappel de bord.
+Canvas : `Image File` (prédiction) + `Image File` (vérité terrain) → `Boundary F1` → `Display`. Le nœud extrait les deux contours, mesure leur recouvrement dans la tolérance choisie, et affiche le BF avec ses composantes précision et rappel de bord.
 
 ---
 ]
@@ -432,7 +432,7 @@ Canvas : `Prediction Mask` + `Ground Truth Mask` → `Boundary F1` → `Inspecto
 
 // ============================================================
 
-== Une note unique cache toujours quelque chose
+== une note unique cache toujours quelque chose
 
 Le mode d'échec le plus répandu dans les publications de vision par ordinateur n'est pas un mauvais modèle, c'est une *évaluation incomplète*. Le chapitre l'a montré section après section : l'IoU cache si l'erreur est en sur- ou sous-segmentation ; le Dice ne distingue pas un fort rappel d'une forte précision ; l'AP ne reflète pas le seuil de déploiement ; la PQ masque le déséquilibre détection / délimitation tant qu'on ne la décompose pas ; le BF est muet sur la surface.
 
@@ -442,34 +442,26 @@ La conduite pratique en découle : une comparaison honnête combine au moins une
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 4
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Noter un masque de poumon contre l'avis de l'expert
 
-#figtodo("ex_ch4_radio_poumon", [Radiographie thoracique en niveaux de gris avec deux contours superposés : en ve...])
-
+#figtodo("ex_ch4_radio_poumon", [Radiographie thoracique en niveaux de gris avec deux contours superposés : en ve])
 
 *Ce que vous voyez.* Un masque automatique et un masque expert sur le même organe. La mission : leur attribuer une note de recouvrement et comprendre ce que cette note récompense ou pardonne.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold (Advanced)` (masque auto) → `Mask Overlap` → `Output Display`
+`Image File` → `Threshold (Advanced)` (masque auto) → `Mask Metrics` → `Display`
 
 Chargez le masque expert comme seconde entrée. Le nœud affiche le score de recouvrement (IoU et Dice) et colorie la zone de désaccord.
 
 
 
-
 *Questions*
-
 
 + Lisez les deux scores affichés. Lequel est le plus élevé pour ce même masque ? Repérez sur l'image la bande colorée de désaccord, sur le centre ou sur les bords ?
 
@@ -480,24 +472,20 @@ Chargez le masque expert comme seconde entrée. Le nœud affiche le score de rec
 + *Défi.* Réglez le seuillage pour que le masque automatique tienne entièrement à l'intérieur du contour expert (aucun débordement). Le score atteint-il 100 % ? Sinon, qu'est-ce qui l'en empêche, et que faut-il pour le maximiser ?
 
 
-
 === Exercice 2 · Régler un détecteur d'empreintes entre prudence et excès de zèle
 
-#figtodo("ex_ch4_empreintes", [Scène de relevé d'empreintes : surface granuleuse avec plusieurs empreintes, cer...])
-
+#figtodo("ex_ch4_empreintes", [Scène de relevé d'empreintes : surface granuleuse avec plusieurs empreintes, cer])
 
 *Ce que vous voyez.* Un détecteur qui trouve presque toutes les empreintes mais en invente quelques-unes sur le fond texturé. La mission : trouver le bon seuil de confiance selon l'enjeu.
 
 *Pipeline VNStudio*
-`Image Source` → `Print Detector` → `Detection Score` → `Output Display`
+`Image File` → `Mask Metrics` → `Display`
 
 Le nœud affiche, pour le seuil de confiance choisi, le nombre de bonnes détections, de fausses alarmes et d'empreintes ratées, ainsi que la précision et le rappel.
 
 
 
-
 *Questions*
-
 
 + Réglez le seuil très bas (0,1). Le détecteur attrape-t-il toutes les empreintes ? Combien de fausses alarmes invente-t-il en échange ?
 
@@ -508,24 +496,20 @@ Le nœud affiche, pour le seuil de confiance choisi, le nombre de bonnes détect
 + *Défi.* Dans une enquête, rater une empreinte coûte plus cher qu'une fausse alarme à vérifier. Quel seuil privilégier ? Justifiez votre choix avec les chiffres relevés, puis trouvez celui de l'enquête inverse (où chaque vérification est coûteuse).
 
 
-
 === Exercice 3 · Départager deux découpages de parcelles agricoles
 
-#figtodo("ex_ch4_parcelles", [Image satellitaire de parcelles agricoles délimitées de deux façons : version A ...])
-
+#figtodo("ex_ch4_parcelles", [Image satellitaire de parcelles agricoles délimitées de deux façons : version A ])
 
 *Ce que vous voyez.* Deux découpages qui reconnaissent les mêmes parcelles, mais tracent leurs bords avec un soin différent. La mission : trouver la note qui sait voir cette différence de qualité de bord.
 
 *Pipeline VNStudio*
-`Image Source` → `Boundary Score` → `Output Display`
+`Image File` → `Boundary F1` → `Display`
 
 Le nœud compare deux segmentations à une référence et affiche, au choix, le recouvrement global (IoU) ou la note de bord (qualité du tracé des frontières).
 
 
 
-
 *Questions*
-
 
 + Notez A et B avec le recouvrement global. La note distingue-t-elle clairement les deux versions, ou les juge-t-elle presque équivalentes ?
 
@@ -537,16 +521,11 @@ Le nœud compare deux segmentations à une référence et affiche, au choix, le 
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

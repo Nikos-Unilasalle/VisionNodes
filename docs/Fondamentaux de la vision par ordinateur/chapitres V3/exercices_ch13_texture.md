@@ -9,9 +9,9 @@
 **Ce que vous voyez.** Quatre matériaux dont le grain est radicalement différent. La mission : trouver les chiffres qui les distinguent automatiquement, comme le ferait un système de tri de matériaux.
 
 **Pipeline VNStudio**
-`Image Source` (recadrez sur chaque texture) → `GLCM Features` → `Output Display`
+`Image File` (recadrez sur chaque texture) → `GLCM` → `Display`
 
-Le nœud mesure trois indicateurs de texture : le contraste (rugosité), l'homogénéité (régularité), l'énergie (répétition d'un motif).
+Le nœud mesure cinq indicateurs de texture : le contraste (rugosité), l'homogénéité (régularité), l'énergie (répétition d'un motif), l'entropie (désordre) et la corrélation (prévisibilité du voisin).
 
 ---
 
@@ -34,7 +34,7 @@ Le nœud mesure trois indicateurs de texture : le contraste (rugosité), l'homog
 **Ce que vous voyez.** Les mêmes textures vues au plus près, à l'échelle du motif élémentaire. La mission : construire une signature de texture fondée sur ces micro-motifs.
 
 **Pipeline VNStudio**
-`Image Source` → `LBP` *(à créer)* → `Histogram` → `Output Display`
+`Image File` → `Local Binary Pattern` → `Histogram` → `Display`
 
 Le nœud résume le voisinage de chaque pixel en un code de micro-motif, et l'histogramme de ces codes devient la signature de la texture. Modes disponibles : classique, ou insensible à la rotation.
 
@@ -59,9 +59,9 @@ Le nœud résume le voisinage de chaque pixel en un code de micro-motif, et l'hi
 **Ce que vous voyez.** Une texture quasi-périodique dont l'orientation tourne lentement, avec des points singuliers (les fourches). La mission : dresser la carte d'orientation des crêtes, première étape de toute reconnaissance d'empreinte.
 
 **Pipeline VNStudio**
-`Image Source` → `Gabor Bank` *(à créer)* (8 orientations, espacement 12 px) → `Colormap` → `Output Display`
+`Image File` → `Gabor Bank` (8 orientations, *Wavelength* ≈ 12 px) → `Colormap / LUT` → `Display`
 
-Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation qui répond le plus fort. Le résultat est une carte d'orientation locale.
+Le banc passe huit filtres orientés et garde, pour chaque pixel, l'orientation qui répond le plus fort. Le résultat est une carte d'orientation locale, codée en couleur.
 
 ---
 

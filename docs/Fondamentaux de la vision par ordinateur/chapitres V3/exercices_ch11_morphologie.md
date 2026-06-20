@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Trois formes de pollen mélangées. La mission : n'en garder qu'une à la fois en choisissant la bonne sonde, comme un tamis qui ne laisse passer qu'une forme.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Morphology (Advanced)` → `Connected Components` → `Region Properties` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Morphology (Advanced)` → `Connected Components` → `Region Properties` → `Display`
 
 Le nœud de morphologie applique une sonde de forme et de taille réglables ; l'inspecteur compte les grains survivants.
 
@@ -34,7 +34,7 @@ Le nœud de morphologie applique une sonde de forme et de taille réglables ; l'
 **Ce que vous voyez.** Un fond qui s'assombrit lentement d'un coin à l'autre, sur lequel se détachent de petits détails sombres. La mission : effacer ce fond inégal pour ne garder que le texte, étape clé avant toute lecture automatique.
 
 **Pipeline VNStudio**
-`Image Source` → `Morphology (Advanced)` (Top Hat) → `Colormap` → `Output Display`
+`Image File` → `Morphology (Advanced)` (Operation = Top Hat) → `Apply Colormap` → `Display`
 
 Le top-hat estime le fond avec une grande sonde puis le soustrait, ne laissant que les détails plus petits que la sonde.
 
@@ -59,10 +59,10 @@ Le top-hat estime le fond avec une grande sonde puis le soustrait, ne laissant q
 **Ce que vous voyez.** Une silhouette à lobes et à axe central fin. La mission : en tirer un contour propre puis une « ossature » réduite à l'essentiel, utile pour identifier l'espèce.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Split Half` :
+`Image File` → `Threshold (Advanced)` → `Split Half` :
 — gauche : `Morphology (Advanced)` (gradient morphologique)
 — droite : `Sobel Edge Detector`
-→ `Output Display`
+→ `Display`
 
 Le gradient morphologique trace le contour par différence entre dilatation et érosion ; comparez-le au contour classique.
 
@@ -76,7 +76,7 @@ Le gradient morphologique trace le contour par différence entre dilatation et �
 
 3. Érodez la feuille étape par étape et observez. Quand le pétiole fin disparaît-il ? Et les lobes ? Quelle partie de la feuille résiste le plus longtemps ?
 
-4. **Défi.** Réduisez la feuille à son ossature centrale (squelette) avec le mode dédié du nœud de morphologie. Combien de branches obtenez-vous ? Y a-t-il autant de branches que de lobes ? Cette ossature suffirait-elle à reconnaître un chêne parmi d'autres feuilles ?
+4. **Défi.** Réduisez la feuille à son ossature centrale (squelette) avec le nœud `Skeleton`. Combien de branches obtenez-vous ? Y a-t-il autant de branches que de lobes ? Cette ossature suffirait-elle à reconnaître un chêne parmi d'autres feuilles ?
 
 ---
 

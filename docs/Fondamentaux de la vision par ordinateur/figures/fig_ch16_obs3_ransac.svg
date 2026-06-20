@@ -1,29 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 1258 254" width="1258" height="254" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
-<rect x="-30" y="-56" width="1258" height="254" fill="#ffffff"/>
-<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation — RANSAC : consensus contre le mensonge des outliers</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -56 883 302" width="883" height="302" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif">
+<rect x="-30" y="-56" width="883" height="302" fill="#ffffff"/>
+<text x="0" y="-32" font-size="14" font-weight="600" fill="#7a1330">Observation 16.3 — RANSAC : consensus contre le mensonge des outliers</text>
 <path d="M158.0,53.0 C184.0,53.0 184.0,53.0 210.0,53.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <path d="M158.0,119.0 C184.0,119.0 184.0,119.0 210.0,119.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
-<path d="M375.0,79.0 C402.5,79.0 402.5,86.0 430.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
-<path d="M375.0,145.0 C402.5,145.0 402.5,112.0 430.0,112.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
-<path d="M595.0,86.0 C622.5,86.0 622.5,86.0 650.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
-<path d="M815.0,86.0 C842.5,86.0 842.5,86.0 870.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
-<path d="M1028.0,112.0 C1034.0,112.0 1034.0,86.0 1040.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,53.0 C402.5,53.0 402.5,63.0 430.0,63.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,119.0 C402.5,119.0 402.5,89.0 430.0,89.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,79.0 C402.5,79.0 402.5,115.0 430.0,115.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M375.0,145.0 C402.5,145.0 402.5,141.0 430.0,141.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,53.0 C294.0,53.0 294.0,167.0 430.0,167.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M158.0,119.0 C294.0,119.0 294.0,193.0 430.0,193.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
+<path d="M615.0,63.0 C640.0,63.0 640.0,86.0 665.0,86.0" fill="none" stroke="#c8607a" stroke-width="2" stroke-linecap="round"/>
 <rect x="0" y="0" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
 <path d="M0,30 L0,10 Q0,0 10,0 L148,0 Q158,0 158,10 L158,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<text x="79" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image File</text>
 <circle cx="158.0" cy="53.0" r="5.5" fill="#b51d44"/>
-<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<text x="146" y="57" font-size="11" text-anchor="end" fill="#9a5566">main</text>
 <rect x="0" y="66" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
 <path d="M0,96 L0,76 Q0,66 10,66 L148,66 Q158,66 158,76 L158,96 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="79" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image Loader</text>
+<text x="79" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Image File</text>
 <circle cx="158.0" cy="119.0" r="5.5" fill="#b51d44"/>
-<text x="146" y="123" font-size="11" text-anchor="end" fill="#9a5566">image</text>
+<text x="146" y="123" font-size="11" text-anchor="end" fill="#9a5566">main</text>
 <rect x="210" y="0" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
 <path d="M210,30 L210,10 Q210,0 220,0 L365,0 Q375,0 375,10 L375,30 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
 <text x="292" y="20" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">ORB Detector</text>
 <circle cx="210.0" cy="53.0" r="5.5" fill="#b51d44"/>
 <text x="222" y="57" font-size="11" fill="#9a5566">image</text>
-<circle cx="375.0" cy="53.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="53.0" r="2" fill="#b51d44"/>
+<path d="M375.0,46.5 L381.5,53.0 L375.0,59.5 L368.5,53.0 Z" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
 <text x="363" y="57" font-size="11" text-anchor="end" fill="#9a5566">keypoints</text>
 <circle cx="375.0" cy="79.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="79.0" r="2" fill="#b51d44"/>
 <text x="363" y="83" font-size="11" text-anchor="end" fill="#9a5566">descriptors</text>
@@ -32,40 +34,30 @@
 <text x="292" y="86" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">ORB Detector</text>
 <circle cx="210.0" cy="119.0" r="5.5" fill="#b51d44"/>
 <text x="222" y="123" font-size="11" fill="#9a5566">image</text>
-<circle cx="375.0" cy="119.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="119.0" r="2" fill="#b51d44"/>
+<path d="M375.0,112.5 L381.5,119.0 L375.0,125.5 L368.5,119.0 Z" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
 <text x="363" y="123" font-size="11" text-anchor="end" fill="#9a5566">keypoints</text>
 <circle cx="375.0" cy="145.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="375.0" cy="145.0" r="2" fill="#b51d44"/>
 <text x="363" y="149" font-size="11" text-anchor="end" fill="#9a5566">descriptors</text>
-<rect x="430" y="33" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
-<path d="M430,63 L430,43 Q430,33 440,33 L585,33 Q595,33 595,43 L595,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="512" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">BFMatcher</text>
-<circle cx="430.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="442" y="90" font-size="11" fill="#9a5566">desc1</text>
-<circle cx="430.0" cy="112.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="112.0" r="2" fill="#b51d44"/>
-<text x="442" y="116" font-size="11" fill="#9a5566">desc2</text>
-<circle cx="595.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="595.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="583" y="90" font-size="11" text-anchor="end" fill="#9a5566">matches</text>
-<rect x="650" y="33" width="165" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
-<path d="M650,63 L650,43 Q650,33 660,33 L805,33 Q815,33 815,43 L815,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="732" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">RANSAC Filter</text>
-<circle cx="650.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="650.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="662" y="90" font-size="11" fill="#9a5566">matches</text>
-<circle cx="815.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="815.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="803" y="90" font-size="11" text-anchor="end" fill="#9a5566">inliers</text>
-<circle cx="815.0" cy="112.0" r="5.5" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
-<text x="803" y="116" font-size="11" text-anchor="end" fill="#9a5566">mask</text>
-<rect x="870" y="33" width="158" height="102" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
-<path d="M870,63 L870,43 Q870,33 880,33 L1018,33 Q1028,33 1028,43 L1028,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="949" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Homography</text>
-<circle cx="870.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="870.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="882" y="90" font-size="11" fill="#9a5566">inliers</text>
-<circle cx="1028.0" cy="86.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="1028.0" cy="86.0" r="2" fill="#b51d44"/>
-<text x="1016" y="90" font-size="11" text-anchor="end" fill="#9a5566">H</text>
-<circle cx="1028.0" cy="112.0" r="5.5" fill="#b51d44"/>
-<text x="1016" y="116" font-size="11" text-anchor="end" fill="#9a5566">warped</text>
-<rect x="1040" y="33" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
-<path d="M1040,63 L1040,43 Q1040,33 1050,33 L1188,33 Q1198,33 1198,43 L1198,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
-<text x="1119" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Output Display</text>
-<circle cx="1040.0" cy="86.0" r="5.5" fill="#b51d44"/>
-<text x="1052" y="90" font-size="11" fill="#9a5566">image</text>
+<rect x="430" y="10" width="185" height="206" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M430,40 L430,20 Q430,10 440,10 L605,10 Q615,10 615,20 L615,40 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="522" y="30" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">RANSAC Homography</text>
+<path d="M430.0,56.5 L436.5,63.0 L430.0,69.5 L423.5,63.0 Z" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="442" y="67" font-size="11" fill="#9a5566">kp1</text>
+<path d="M430.0,82.5 L436.5,89.0 L430.0,95.5 L423.5,89.0 Z" fill="#ffffff" stroke="#b51d44" stroke-width="2"/>
+<text x="442" y="93" font-size="11" fill="#9a5566">kp2</text>
+<circle cx="430.0" cy="115.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="115.0" r="2" fill="#b51d44"/>
+<text x="442" y="119" font-size="11" fill="#9a5566">des1</text>
+<circle cx="430.0" cy="141.0" r="6.5" fill="#ffffff" stroke="#b51d44" stroke-width="1.5"/><circle cx="430.0" cy="141.0" r="2" fill="#b51d44"/>
+<text x="442" y="145" font-size="11" fill="#9a5566">des2</text>
+<circle cx="430.0" cy="167.0" r="5.5" fill="#b51d44"/>
+<text x="442" y="171" font-size="11" fill="#9a5566">img1</text>
+<circle cx="430.0" cy="193.0" r="5.5" fill="#b51d44"/>
+<text x="442" y="197" font-size="11" fill="#9a5566">img2</text>
+<circle cx="615.0" cy="63.0" r="5.5" fill="#b51d44"/>
+<text x="603" y="67" font-size="11" text-anchor="end" fill="#9a5566">warped</text>
+<rect x="665" y="33" width="158" height="76" rx="10" fill="#fdf3f5" stroke="#7a1330" stroke-width="1.5"/>
+<path d="M665,63 L665,43 Q665,33 675,33 L813,33 Q823,33 823,43 L823,63 Z" fill="#f3d3da" stroke="#7a1330" stroke-width="1.5"/>
+<text x="744" y="53" font-size="12.5" font-weight="600" text-anchor="middle" fill="#7a1330">Display</text>
+<circle cx="665.0" cy="86.0" r="5.5" fill="#b51d44"/>
+<text x="677" y="90" font-size="11" fill="#9a5566">main</text>
 </svg>

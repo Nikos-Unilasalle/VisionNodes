@@ -9,10 +9,10 @@
 **Ce que vous voyez.** Un document dont le fond s'assombrit d'un côté. La mission : obtenir un texte noir net sur fond blanc partout, première étape de toute lecture automatique de document.
 
 **Pipeline VNStudio**
-`Image Source` → `Split Half` :
-— gauche : `Threshold (Advanced)` (seuil global)
-— droite : `Threshold (Advanced)` (seuil adaptatif)
-→ `Output Display`
+`Image File` → `Split Half` :
+— gauche : `Threshold (Advanced)` (mode Otsu, seuil global)
+— droite : `Adaptive Threshold` (seuil adaptatif local)
+→ `Display`
 
 Le seuil global cherche une seule coupure pour toute l'image ; le seuil adaptatif s'ajuste localement.
 
@@ -37,7 +37,7 @@ Le seuil global cherche une seule coupure pour toute l'image ; le seuil adaptati
 **Ce que vous voyez.** Des cellules collées que le simple seuillage voit comme une seule masse. La mission : les recompter une par une, problème quotidien en biologie.
 
 **Pipeline VNStudio**
-`Image Source` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Region Properties` → `Output Display`
+`Image File` → `Threshold (Advanced)` → `Distance Transform` → `Watershed` → `Region Properties` → `Display`
 
 Le watershed part du cœur de chaque cellule (les points les plus profonds de la carte de distance) et fait monter les bassins jusqu'à ce qu'ils se rencontrent.
 
@@ -62,13 +62,13 @@ Le watershed part du cœur de chaque cellule (les points les plus profonds de la
 **Ce que vous voyez.** Une scène à quatre régions de couleur bien distinctes mais aux frontières floues. La mission : comparer deux façons de découper l'image par la couleur et voir laquelle colle le mieux au réel.
 
 **Pipeline VNStudio**
-`Image Source` → `Grid Compare` :
-— K-Means (4 groupes), lancé deux fois
-— Mean Shift *(à créer)*
+`Image File` → `Grid Compare Dashboard` :
+— `K-Means Segmentation` (4 groupes), lancé deux fois avec des départs différents
+— `Mean Shift Segmentation`
 — image originale
-→ `Output Display`
+→ `Display`
 
-K-Means exige qu'on lui dise le nombre de zones ; Mean Shift le découvre seul.
+`K-Means Segmentation` exige qu'on lui dise le nombre de zones ; `Mean Shift Segmentation` le découvre seul.
 
 ---
 

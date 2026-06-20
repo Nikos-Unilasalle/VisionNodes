@@ -61,7 +61,7 @@ Soit un capteur avec un bruit de lecture de `σ_r = 5 e⁻` (variance `25 e⁻²
 Dans la zone claire, le bruit de lecture est négligeable ; le SNR vaut environ `√900 = 30`. Dans la zone sombre, le bruit de lecture dégrade massivement le SNR, qui s'effondre à 2,5 au lieu de `√16 = 4`.
 
 ### Dans VNStudio
-Canvas : `Image Source` -> `Noise (Gaussian)` -> `Python Node (noise estimation)` -> `Output Display`
+Canvas : `Image File` -> `Gaussian Noise` -> `Python Node` -> `Display`
 
 ### Schéma de nœuds
 ```
@@ -221,7 +221,7 @@ La plage dynamique doit être donnée explicitement (255 en 8 bits, 1,0 en flott
 
 ### Dans VNStudio
 
-Canvas : `Reference` + `Degraded` → `SSIM` → `Output Display`. Le nœud sort le score global **et** la carte locale de SSIM, qui montre *où* siège la dégradation — un avantage décisif sur le PSNR, qui ne livre qu'un scalaire muet sur la localisation.
+Canvas : `Reference` + `Degraded` → `SSIM` → `Display`. Le nœud sort le score global **et** la carte locale de SSIM, qui montre *où* siège la dégradation — un avantage décisif sur le PSNR, qui ne livre qu'un scalaire muet sur la localisation.
 
 ---
 
@@ -269,7 +269,7 @@ La base du logarithme fixe l'unité (bits avec log₂, nats avec ln, facteur 0,6
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Image Entropy` → `Inspector`. Le nœud affiche l'entropie globale, le taux d'occupation de la plage dynamique, et produit une carte d'entropie locale (fenêtre glissante) routable vers un `Output Display` colorisé.
+Canvas : `Image File` → `Grayscale` → `First Order Statistics` → `Display`. Le nœud affiche l'entropie globale, le taux d'occupation de la plage dynamique, et produit une carte d'entropie locale (fenêtre glissante) routable vers un `Display` colorisé.
 
 ---
 
@@ -323,7 +323,7 @@ On n'utilise jamais un seuil universel de netteté : seul l'ordre relatif sur un
 
 ### Dans VNStudio
 
-Canvas : `Image Source` → `Grayscale` → `Sharpness` → `Inspector`. Le nœud sort la variance du Laplacien et le Tenengrad. Brancher une pile de mises au point successives sur l'inspecteur fait apparaître le pic de netteté — le point que l'autofocus retiendrait.
+Canvas : `Image File` → `Grayscale` → `Focus Metric` → `Display`. Le nœud sort la variance du Laplacien et le Tenengrad. Brancher une pile de mises au point successives sur l'inspecteur fait apparaître le pic de netteté — le point que l'autofocus retiendrait.
 
 ---
 
@@ -371,7 +371,7 @@ Deux backbones différents (VGG, AlexNet) donnent des scores incomparables : on 
 
 ### Dans VNStudio
 
-Canvas : `Reference` + `Degraded` → `Perceptual Distance` → `Inspector`. Le nœud charge un backbone pré-entraîné (sélectionnable) et sort la distance perceptuelle ; le chargement du modèle est asynchrone, comme les autres nœuds ML du studio. À défaut de GPU, un nœud `Histogram Distance` (chapitre 3) en corrélation donne un proxy léger et interprétable, suffisant pour détecter une divergence chromatique grossière.
+Canvas : `Reference` + `Degraded` → `Histogram Compare` → `Display`. Le nœud charge un backbone pré-entraîné (sélectionnable) et sort la distance perceptuelle ; le chargement du modèle est asynchrone, comme les autres nœuds ML du studio. À défaut de GPU, un nœud `Histogram Compare` (chapitre 3) en corrélation donne un proxy léger et interprétable, suffisant pour détecter une divergence chromatique grossière.
 
 ---
 

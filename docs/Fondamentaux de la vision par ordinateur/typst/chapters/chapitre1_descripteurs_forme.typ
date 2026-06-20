@@ -70,7 +70,7 @@ Deux mots de vocabulaire avant de commencer. Une *région* désigne l'ensemble d
 
 #subtitle[Le ballon de baudruche qui cherche la forme la plus économe]
 
-#figcap("/figures/fig_ch1_obs1_circ_roundness.pdf", [Observation — circularité ≠ rondeur (le bord vs la forme d'ensemble)])
+#figfull("/figures/fig_ch1_obs1_circ_roundness.pdf")
 
 === L'intention
 On veut séparer automatiquement les objets ronds des objets allongés ou déchiquetés. En reconnaissance de caractères, distinguer un « O » d'un « I ». En biologie, repérer les cellules saines (rondes) parmi des débris. Il nous faut un nombre qui vaut son maximum pour un cercle parfait, et qui chute dès que la forme s'éloigne du disque.
@@ -93,7 +93,7 @@ La circularité baisse pour *deux raisons* que rien ne permet de distinguer : la
 
 Elle reste en revanche insensible à la translation, à la rotation et à l'échelle : un cercle est un cercle, où qu'il soit, quelle que soit sa taille.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un « O » bien formé donne environ `C ≈ 0,9`. Un « I » modélisé par une barre de 40 px de haut sur 4 de large : `C = 4π · 160 / 88² ≈ 0,26`. Un simple seuil à 0,5 sépare d'emblée les caractères ronds des caractères linéaires.
 ]
 
@@ -121,9 +121,9 @@ Dans le nœud `Find Contours` (ou en Python via `cv2.findContours`), le lecteur 
 
 #canvas[
 Dans votre canvas :
-`Image Source` ──> `Threshold` ──> `Find Contours` ──> `Shape Descriptors` ──> `Output Display`.
+`Image File` ──> `Threshold` ──> `Find Contours` ──> `Region Properties` ──> `Display`.
 
-Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Shape Descriptors` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
+Le nœud `Find Contours` applique les paramètres ci-dessus. Le nœud `Region Properties` lit les coordonnées des contours simplifiés pour en extraire l'aire, le périmètre corrigé et la circularité dans l'inspecteur, permettant de router automatiquement les objets selon les critères dimensionnels choisis.
 
 *Exercice de dépannage :* L'exercice consiste à connecter une image d'un disque parfait au nœud `Find Contours` et à régler le paramètre *Simplification (Epsilon)* sur une valeur très élevée (ex. : 20 pixels). Le lecteur constate dans l'inspecteur la valeur de la circularité : elle s'effondre de 1.0 à environ 0.65, car le cercle parfait s'est transformé en un simple polygone grossier. Cela illustre comment une approximation trop agressive détruit la signature géométrique d'une forme.
 
@@ -153,7 +153,7 @@ où `L_max` et `L_min` sont la longueur et la largeur de la *boîte englobante o
 === Ce qu'elle mesure, et son angle mort
 L'élongation dit si la forme générale est trapue ou étirée, rien de plus. Son angle mort est béant : elle ignore tout ce qui se passe _à l'intérieur_ de la boîte. Une équerre en « L » et une barre en diagonale peuvent partager la même boîte orientée, donc la même élongation, alors que leur matière est répartie de façons radicalement différentes.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un globule rouge : `E ≈ 1,0`. Une bactérie en bâtonnet : `E ≈ 5 à 8`. Une fibre : souvent `E > 20`.
 ]
 
@@ -162,7 +162,7 @@ Un globule rouge : `E ≈ 1,0`. Une bactérie en bâtonnet : `E ≈ 5 à 8`. Une
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte orientée est dessinée en surimpression sur l'objet, ce qui rend l'inclinaison visible directement.
+Canvas : `Find Contours` → `Oriented Bounding Box` → `Region Properties`. La boîte orientée est dessinée en surimpression sur l'objet, ce qui rend l'inclinaison visible directement.
 
 ---
 ]
@@ -193,7 +193,7 @@ Le rapport `λ₂/λ₁` compare les deux envergures. S'il vaut 1 (nuage rond), 
 Pourquoi deux outils pour mesurer l'allongement ? Parce qu'ils ne regardent pas la même chose. Une forme en croix a une boîte englobante carrée — élongation 1, l'air trapu — mais l'excentricité, en pesant la répartition réelle des pixels des deux barres, en révèle la vraie géométrie. Et surtout, l'excentricité est *stable* : un pixel de bruit isolé change la boîte de l'élongation, mais ne déplace presque pas la masse globale.
 ]
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un nuage deux fois et demie plus étalé en longueur (`λ₁ = 2500`) qu'en largeur (`λ₂ = 400`) : `e = √(1 − 400/2500) = √0,84 ≈ 0,916`.
 ]
 
@@ -209,7 +209,7 @@ Canvas : `Find Contours` → `Region Properties`. Le nœud calcule l'ellipse d'i
 
 #subtitle[La pellicule plastique tendue qui ignore les creux]
 
-#figcap("/figures/fig_ch1_obs2_solidity_convexity.pdf", [Observation — solidité ≠ convexité (aires vs périmètres de l'enveloppe)])
+#figfull("/figures/fig_ch1_obs2_solidity_convexity.pdf")
 
 === L'intention
 Quand deux cellules se touchent, le traitement d'image les fond parfois en une seule forme en « 8 ». On veut détecter ces fusions accidentelles — repérer qu'une forme a un creux profond, là où on attendait un objet plein.
@@ -230,7 +230,7 @@ Sans aucune cavité, l'objet touche son enveloppe convexe partout et `S = 1`. Pl
 === Ce qu'elle détecte le mieux
 C'est le descripteur des fusions d'objets. Deux cellules collées en « 8 » : l'enveloppe convexe recouvre le creux central, ce vide fait chuter la solidité autour de 0,85, bien en dessous de ce qu'on attend d'une cellule isolée. Son angle mort : la rugosité fine du bord, qui retire très peu de surface et la laisse donc presque insensible.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une forme à deux lobes : aire `A = 3100 px²`, enveloppe convexe `A_convexe = 3720 px²`. Solidité `S = 3100 / 3720 ≈ 0,83`.
 ]
 
@@ -239,7 +239,7 @@ Les trous entièrement internes — l'intérieur d'un anneau, par exemple — so
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. L'enveloppe convexe se superpose en pointillés sur l'objet, et le creux comblé saute aux yeux.
+Canvas : `Find Contours` → `Contour Properties` → `Region Properties`. L'enveloppe convexe se superpose en pointillés sur l'objet, et le creux comblé saute aux yeux.
 
 ---
 ]
@@ -268,12 +268,12 @@ Les deux descripteurs travaillent en équipe, et c'est leur combinaison qui info
 - Un contour très granuleux mais sans gros renfoncement : *convexité basse, solidité haute* → un bord abîmé, une structure saine.
 - Un croissant de lune parfaitement lisse : *convexité haute, solidité basse* → un bord net, mais une grande concavité de masse.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un galet ébréché : contour réel tortueux `P = 380 px`, enveloppe directe `P_convexe = 322 px`. Convexité `Cv = 322 / 380 ≈ 0,84`. Couplée à une solidité élevée, cette valeur dit à la machine : surface détériorée, structure intacte.
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. Mêmes nœuds qu'en 1.4 ; il suffit de lire la sortie convexité au lieu de la solidité, les deux venant de la même enveloppe.
+Canvas : `Find Contours` → `Contour Properties` → `Region Properties`. Mêmes nœuds qu'en 1.4 ; il suffit de lire la sortie convexité au lieu de la solidité, les deux venant de la même enveloppe.
 
 ---
 ]
@@ -284,7 +284,7 @@ Canvas : `Find Contours` → `Convex Hull` → `Shape Descriptors`. Mêmes nœud
 
 #subtitle[Le rectangle rigide, aligné sur l'image, qui assume sa naïveté]
 
-#figcap("/figures/fig_ch1_obs3_extent_rect.pdf", [Observation — l'étendue dépend de l'orientation, pas la rectangularité])
+#figfull("/figures/fig_ch1_obs3_extent_rect.pdf")
 
 === L'intention
 Sur une chaîne de tri où les composants arrivent toujours dans la même orientation, on veut une mesure de remplissage instantanée, sans le coût d'extraire et d'analyser des contours complexes.
@@ -302,7 +302,7 @@ Ext = A / (W_boîte · H_boîte)
 Un rectangle posé à plat remplit sa boîte à presque 100 % (`Ext ≈ 0,95`). Inclinez-le à 45° : la boîte horizontale-verticale qui le contient devient bien plus grande, à moitié vide (`Ext ≈ 0,5`). L'étendue change donc radicalement si l'objet tourne — elle n'est invariante ni à la rotation. Elle ne vaut que là où l'orientation est fixe et connue : tri de composants alignés, lecture de caractères sur une même ligne.
 
 #canvas[
-Canvas : `Find Contours` → `Bounding Rect` → `Shape Descriptors`. La boîte droite s'affiche sur l'objet ; on voit immédiatement l'espace vide se creuser dès qu'une pièce arrive de travers.
+Canvas : `Find Contours` → `Region Properties` → `Region Properties`. La boîte droite s'affiche sur l'objet ; on voit immédiatement l'espace vide se creuser dès qu'une pièce arrive de travers.
 
 ---
 ]
@@ -325,14 +325,14 @@ D_eq = √(4 · A / π)
 ```
 ]
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un grain de sable à `A = 3100 px²` sous un microscope réglé à 0,5 µm/pixel : `D_eq = √(4 · 3100 / π) ≈ 62,8 px`, soit environ *31 µm* de diamètre réel. C'est ce descripteur qui dresse les courbes granulométriques.
 
 Contrairement aux précédents, le diamètre équivalent *dépend de l'échelle* — c'est tout son intérêt. Il mesure une taille absolue, là où les rapports l'effaçaient.
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Shape Descriptors` (sortie diamètre équivalent) → `Scale Calibration`. Le nœud de calibrage convertit les pixels en unité physique si la résolution est renseignée.
+Canvas : `Find Contours` → `Region Properties` (sortie diamètre équivalent) → `Unit Calibration`. Le nœud de calibrage convertit les pixels en unité physique si la résolution est renseignée.
 
 ---
 ]
@@ -358,12 +358,12 @@ R = A / A_minRect
 === Son angle mort surprenant
 La rectangularité est totalement aveugle à l'allongement. Prenez n'importe quelle ellipse — un ovale presque rond ou un ovale étiré comme un lacet : elle remplit toujours sa boîte ajustée à la même proportion, `π/4 ≈ 0,785`. La rectangularité ne lit que l'occupation des *coins*, pas les proportions d'ensemble. Un descripteur qui vaut 0,785 signale donc « bords arrondis, coins vides », sans rien dire de la forme générale.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un composant rectangulaire `A = 4800 px²` dans une boîte ajustée de 122 × 42 px (5124 px²) : `R = 4800 / 5124 ≈ 0,93` — une forme franchement rectangulaire.
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte orientée s'affiche par-dessus l'objet ; coins vides ou remplis se lisent au premier regard.
+Canvas : `Find Contours` → `Oriented Bounding Box` → `Region Properties`. La boîte orientée s'affiche par-dessus l'objet ; coins vides ou remplis se lisent au premier regard.
 
 ---
 ]
@@ -374,7 +374,7 @@ Canvas : `Find Contours` → `Min Area Rect` → `Shape Descriptors`. La boîte 
 
 #subtitle[La circularité débarrassée de ce qui la trompait]
 
-#figcap("/figures/fig_ch1_obs1_circ_roundness.pdf", [Observation — circularité ≠ rondeur (le bord vs la forme d'ensemble)])
+#figfull("/figures/fig_ch1_obs1_circ_roundness.pdf")
 
 === L'intention
 La circularité (§1.1) avait un défaut : un bord dentelé la faisait chuter, même quand la forme globale restait bien ronde. On veut mesurer la rondeur *d'ensemble*, en ignorant les aspérités du contour.
@@ -391,12 +391,12 @@ Rd = 4 · A / (π · L_max²)
 === Ce que l'écart avec la circularité révèle
 Un disque dentelé garde une rondeur élevée (`Rd ≈ 0,95`) tandis que sa circularité s'effondre. C'est tout l'intérêt de garder les deux : leur *différence* isole la rugosité du bord, débarrassée de la forme d'ensemble.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une particule abrasive : `A = 3100 px²`, grand axe `L_max = 68 px`. Rondeur `Rd = 4 · 3100 / (π · 68²) ≈ 0,85` — forme globalement compacte. Mais sa circularité ne vaut que `C ≈ 0,55`, à cause du bord déchiqueté. La soustraction `0,85 − 0,55 = 0,30` donne une mesure pure de l'état du bord, indépendante de la silhouette.
 ]
 
 #canvas[
-Canvas : `Find Contours` → `Shape Descriptors`. Les sorties circularité et rondeur sont disponibles côte à côte ; un nœud `Math` peut calculer leur différence pour isoler la rugosité.
+Canvas : `Find Contours` → `Region Properties`. Les sorties circularité et rondeur sont disponibles côte à côte ; un nœud `Math` peut calculer leur différence pour isoler la rugosité.
 
 ---
 ]
@@ -427,7 +427,7 @@ _(T = translation, R = rotation, E = échelle.)_ Aucun descripteur ne suffit seu
 
 // ============================================================
 
-== Une invariance est une information qu'on accepte de perdre
+== une invariance est une information qu'on accepte de perdre
 
 Une invariance rend un descripteur aveugle à une transformation. C'est utile quand cette transformation ne porte aucune information pour la tâche, coûteux quand elle en porte. La circularité ignore la taille : l'utiliser, c'est déclarer que la dimension n'a aucune importance pour le problème posé. Refuser le diamètre équivalent parce qu'il varie avec la taille, c'est oublier qu'il a été conçu exactement pour ça. La bonne question de conception n'est donc pas « ce descripteur est-il invariant ? » mais « à quoi dois-je être aveugle pour cette tâche ? ».
 
@@ -435,34 +435,26 @@ On retrouvera cette question à chaque chapitre, sous d'autres noms. Un filtre g
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 1
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Trier des cellules par la forme de leur contour
 
-#figtodo("ex_ch1_cellules_sang", [Vue en microscopie optique de cellules sanguines : au centre, quelques globules ...])
-
+#figtodo("ex_ch1_cellules_sang", [Vue en microscopie optique de cellules sanguines : au centre, quelques globules ])
 
 *Ce que vous voyez.* Deux familles de cellules côte à côte. Les globules rouges sont des disques réguliers. Les neutrophiles ont un contour très découpé, mais leur silhouette globale reste compacte. La mission : les séparer automatiquement par la forme.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold` → `Find Contours` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Region Properties` → `Display`
 
 Réglez `Retrieval Mode` sur `RETR_EXTERNAL` et `Contour Approximation` sur `CHAIN_APPROX_SIMPLE`. L'inspecteur affiche pour chaque cellule sa circularité et sa rondeur.
 
 
 
-
 *Questions*
-
 
 + Cliquez sur un globule rouge, puis sur un neutrophile, et relevez leur circularité et leur rondeur. Pour quelle famille les deux nombres sont-ils proches ? Pour laquelle s'écartent-ils nettement ?
 
@@ -473,24 +465,20 @@ Réglez `Retrieval Mode` sur `RETR_EXTERNAL` et `Contour Approximation` sur `CHA
 + *Défi.* Branchez un `Filter Contours` sur la circularité. Trouvez le seuil qui ne laisse passer que les globules rouges. Combien en comptez-vous ? Existe-t-il une cellule à la frontière que le seuil classe mal ?
 
 
-
 === Exercice 2 · Détecter les graines abîmées sur une chaîne de tri
 
-#figtodo("ex_ch1_haricots", [Graines de haricots vues de dessus sur fond blanc : certaines entières et bien b...])
-
+#figtodo("ex_ch1_haricots", [Graines de haricots vues de dessus sur fond blanc : certaines entières et bien b])
 
 *Ce que vous voyez.* Trois populations dans le même bac : graines saines, graines fendues, paires collées. Une chaîne de tri doit les séparer toute seule.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold` → `Find Contours` → `Convex Hull` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Contour Properties` → `Region Properties` → `Display`
 
 Activez l'overlay de l'enveloppe convexe pour la voir se dessiner par-dessus chaque graine.
 
 
 
-
 *Questions*
-
 
 + Relevez la solidité et la convexité d'une graine de chaque population. Pour quelle population la solidité chute-t-elle le plus ? Pour laquelle la convexité chute-t-elle ?
 
@@ -501,24 +489,20 @@ Activez l'overlay de l'enveloppe convexe pour la voir se dessiner par-dessus cha
 + *Défi.* Réglez les filtres pour que la chaîne accepte les graines saines et rejette les deux autres populations, en un seul passage. Quelle combinaison de seuils (solidité, convexité) y arrive ? Reste-t-il un cas ambigu que le tri laisse passer à tort ?
 
 
-
 === Exercice 3 · Reconnaître une pièce quelle que soit son orientation
 
-#figtodo("ex_ch1_composants", [Composants électroniques sur un tapis de contrôle : des résistances cylindriques...])
-
+#figtodo("ex_ch1_composants", [Composants électroniques sur un tapis de contrôle : des résistances cylindriques])
 
 *Ce que vous voyez.* Les mêmes pièces, mêmes dimensions, mais orientées différemment selon leur chute sur le tapis. Le système de tri doit reconnaître les résistances quelle que soit leur inclinaison.
 
 *Pipeline VNStudio*
-`Image Source` → `Threshold` → `Find Contours` → `Min Area Rect` → `Bounding Rect` → `Shape Descriptors` → `Output Display`
+`Image File` → `Threshold` → `Find Contours` → `Oriented Bounding Box` → `Region Properties` → `Region Properties` → `Display`
 
 Activez les overlays de la boîte droite (bleue) et de la boîte orientée (orange).
 
 
 
-
 *Questions*
-
 
 + Relevez l'étendue et la rectangularité d'une résistance à 0°, 45° et 90°. Lequel des deux nombres s'effondre quand la pièce tourne ? Lequel reste stable ?
 
@@ -530,16 +514,11 @@ Activez les overlays de la boîte droite (bleue) et de la boîte orientée (oran
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

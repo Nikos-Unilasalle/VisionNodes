@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Une couleur de référence et ses voisines. La mission : trouver laquelle est « la plus proche », et constater que la réponse change selon la façon de mesurer l'écart.
 
 **Pipeline VNStudio**
-`Image Source` → `Color Distance` → `Colormap` → `Output Display`
+`Image File` → `Histogram Compare` → `Apply Colormap` → `Display`
 
 Le nœud calcule la distance de chaque pixel à la couleur de référence, au choix en mode L1 (somme des écarts), L2 (distance directe) ou L∞ (plus grand écart sur un canal).
 
@@ -34,7 +34,7 @@ Le nœud calcule la distance de chaque pixel à la couleur de référence, au ch
 **Ce que vous voyez.** Un fond dont la couleur varie beaucoup tout seul. L'intrus à trouver (la fleur) est petit ; la terre, plus étendue, n'est pas vraiment une anomalie. La mission : détecter ce qui sort vraiment de l'ordinaire.
 
 **Pipeline VNStudio**
-`Image Source` → `Color Space` (RGB → HSV) → `Anomaly Distance` → `Colormap` → `Output Display`
+`Image File` → `Color Convert (BGR→HSV)` → `Histogram Compare` → `Apply Colormap` → `Display`
 
 Le nœud apprend la couleur « normale » sur une zone de pelouse que vous sélectionnez, puis allume chaque pixel selon son étrangeté en tenant compte de la façon dont la pelouse varie.
 
@@ -59,7 +59,7 @@ Le nœud apprend la couleur « normale » sur une zone de pelouse que vous séle
 **Ce que vous voyez.** Deux produits presque identiques (simple variation d'impression) et un produit vraiment différent. La mission : régler une comparaison qui tolère la variation de lot mais détecte le vrai changement.
 
 **Pipeline VNStudio**
-`Image Source` → `Color Space` (→ canal L de Lab) → `Histogram` → `Histogram Compare` → `Output Display`
+`Image File` → `Color Convert (BGR→Lab)` → `Histogram` → `Histogram Compare` → `Display`
 
 Le nœud compare les histogrammes deux à deux et affiche leur écart, au choix avec une mesure « case par case » (χ²) ou une mesure « de glissement » (Wasserstein, sensible au décalage d'ensemble).
 

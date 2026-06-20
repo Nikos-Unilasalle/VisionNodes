@@ -55,7 +55,7 @@ L'équation suppose des déplacements de l'ordre de 1 à 2 pixels entre deux ima
 
 ### Dans VNStudio
 
-Canvas : `Frame t` + `Frame t+1` → `Optical Flow Constraint` → `Inspector`. Le nœud calcule en un point les trois variations Iₓ, Iᵧ, Iₜ et affiche le résidu de l'équation, ce qui rend tangible l'idée « une équation, deux inconnues ».
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. Le nœud calcule le déplacement image par image ; le tenseur de structure (§9.2) indique aux endroits à flux fiable les variations Iₓ, Iᵧ qui satisfont la contrainte de luminosité.
 
 ---
 
@@ -81,7 +81,7 @@ Calculer le flot sur toute l'image donne un résultat « complet », mais dans l
 
 ### Dans VNStudio
 
-Canvas : `Frame t` → `Structure Tensor` → `Output Display`. La carte « plat / bord / coin » du chapitre 6 indique directement où le flot sera fiable (les coins) et où il sera ambigu (les bords, les zones plates).
+Canvas : `Image File` → `Structure Tensor` → `Display`. La carte « plat / bord / coin » du chapitre 6 indique directement où le flot sera fiable (les coins) et où il sera ambigu (les bords, les zones plates).
 
 ---
 
@@ -117,7 +117,7 @@ Fenêtre 5×5 sur le coin d'un marqueur : valeurs propres λ₁ = 1200, λ₂ = 
 
 ### Dans VNStudio
 
-Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow (Lucas-Kanade)` → `Flow Overlay`. Le premier nœud choisit les coins fiables, le second les suit par pyramide, et la superposition trace une flèche par point suivi ; l'inspecteur donne le déplacement moyen.
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. Le nœud détecte automatiquement les coins fiables (Shi-Tomasi) et les suit par pyramide entre les images successives ; le port `Overlay` trace une flèche par point suivi et l'inspecteur donne le déplacement moyen.
 
 ---
 
@@ -173,9 +173,9 @@ Dans les nœuds de flot optique (ou via OpenCV en Python), le comportement de la
 ### Dans VNStudio
 
 Dans votre canvas :
-`Frame t` + `Frame t+1` ──> `Optical Flow (Farneback)` ──> `Flow Visualize` ──> `Output Display`.
+`Webcam` ──> `Optical Flow` ──> `Flow Visualizer` ──> `Display`.
 
-Le nœud `Flow Visualize` traduit les composantes horizontal `u` et vertical `v` du flot optique en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
+Le nœud `Flow Visualizer` traduit les composantes horizontal `u` et vertical `v` du flot optique (Farneback) en un code couleur HSV : la direction du mouvement est codée par la teinte (couleur) et la vitesse par la saturation. Un nœud aval peut router le champ brut (deux composantes par pixel) vers une analyse ultérieure via le port `flow` dédié.
 
 **Exercice de dépannage :** L'exercice consiste à utiliser deux images successives présentant un mouvement rapide d'un objet (déplacement supérieur à 30 pixels). Brancher ces images à un nœud de flot optique éparse (comme **Lucas-Kanade Tracker**). Régler le paramètre **Pyramid Levels** sur `0` avec une **Window Size** de 7x7. Le lecteur observe dans l'inspecteur que le suivi décroche complètement et renvoie des vecteurs de mouvement nuls. Repasser le paramètre **Pyramid Levels** à `3`. Le lecteur constate que le suivi réussit immédiatement à capter le grand déplacement, illustrant ainsi l'apport crucial du schéma pyramidal pour la capture de mouvements à grande échelle.
 
@@ -209,7 +209,7 @@ Ensemble, les deux familles couvrent un large spectre : suivi d'objets et odomé
 
 ### Dans VNStudio
 
-Canvas : `Frame t` + `Frame t+1` → `Good Features To Track` → `Optical Flow (Lucas-Kanade)` → `Flow Overlay`. La superposition dessine une flèche par point suivi et un point sur sa position de départ ; l'inspecteur résume le nombre de points suivis et leur déplacement moyen.
+Canvas : `Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`. La superposition dessine une flèche par point suivi et un point sur sa position de départ ; l'inspecteur résume le nombre de points suivis et leur déplacement moyen.
 
 ---
 

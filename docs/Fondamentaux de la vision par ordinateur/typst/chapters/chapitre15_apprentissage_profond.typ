@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -149,9 +150,9 @@ La sortie penche vers la première valeur, parce que sa clé ressemblait le plus
 === Dans VNStudio
 
 Dans votre canvas :
-`Image Source` ──> `DINOv2 Classifier` ──> `Attention Map` ──> `Output Display`.
+`Image File` ──> `DINOv2 Classifier` ──> `Display` ──> `Display`.
 
-Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
+Le nœud `Display` permet de visualiser les zones d'attention du réseau.
 
 *Exercice de dépannage :* L'exercice consiste à entraîner un petit auto-encodeur sur des images contenant du bruit poivre-et-sel (des pixels isolés blancs et noirs aberrants) en utilisant d'abord une perte quadratique *L2 Loss* (erreur au carré). Le lecteur constate que le modèle produit des images floues, lissant les textures nettes pour tenter de minimiser la pénalité gigantesque des pixels aberrants. Remplacer la fonction de coût par une perte robuste de type *L1 Loss* (ou Smooth L1). Le lecteur observe que les images retrouvent leur netteté et que le modèle ignore les pixels aberrants, démontrant l'aversion au risque de la distance L2 par rapport à la stabilité de la L1.
 
@@ -162,6 +163,8 @@ Le nœud `Attention Map` permet de visualiser les zones d'attention du réseau.
 == Entropie croisée et softmax : quand le gradient est l'erreur elle-même
 
 #subtitle[Punir non pas l'erreur en général, mais la confiance mal placée]
+
+#figfull("/figures/fig_ch15_obs1_crossentropy.svg")
 
 #figfull("/figures/fig_ch15_obs1_crossentropy.svg")
 
@@ -189,7 +192,7 @@ gradient sur les logits = ŷ − y
 
 Pas de facteur parasite, pas de saturation cachée : si le réseau prédit 0,7 là où il fallait 1, le logit reçoit une poussée de −0,3 ; s'il a déjà raison, le gradient s'annule de lui-même. (La démonstration de cette simplification figure en annexe maths.) C'est ce qui rend l'entropie croisée si docile à entraîner.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Un classifieur de chiffres manuscrits sort z = \[2,0 ; 1,0 ; 0,1\] pour {« 3 », « 8 », « 5 »}, la vérité étant « 3 » (y = \[1, 0, 0\]) :
 
 ```
@@ -210,7 +213,7 @@ Calculer le softmax puis le logarithme séparément est numériquement instable 
 ]
 
 #canvas[
-Canvas : `Logits` + `Target Class` → `Cross Entropy` → `Inspector`. Le nœud prend les logits bruts et la classe cible, sort le coût et le vecteur de gradient ŷ − y, et affiche le softmax. Pousser un logit à la main montre le gradient s'annuler dès que la prédiction rejoint la cible.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud prend les logits bruts et la classe cible, sort le coût et le vecteur de gradient ŷ − y, et affiche le softmax. Pousser un logit à la main montre le gradient s'annuler dès que la prédiction rejoint la cible.
 
 ---
 ]
@@ -235,7 +238,7 @@ Dice « soft » :  L = 1 − 2·Σ(p·g) / (Σp + Σg + ε)
 
 p est la carte de probabilités prédite (valeurs continues dans \[0, 1\]), g le masque de vérité binaire, ε un petit terme de stabilité. La propriété décisive est dans son gradient : le dénominateur *normalise par la taille des régions*. Que l'objet occupe 1 % ou 50 % de l'image, l'échelle du gradient reste comparable — là où l'entropie croisée serait noyée par les millions de pixels de fond, le Dice rapporte tout au chevauchement relatif. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une coupe IRM montre une petite lésion ; le masque de vérité compte 4 pixels positifs. Le réseau prédit :
 
 ```
@@ -253,7 +256,7 @@ Sans ε, une image sans objet (g entièrement nul) et une prédiction vide donne
 ]
 
 #canvas[
-Canvas : `Prediction Probs` + `Ground Truth Mask` → `Dice Loss` → `Inspector`. Le nœud sort le Dice soft et le coût ; il colore la carte de gradient par pixel, qui montre où le réseau est tiré vers le haut (objets ratés) ou vers le bas (faux positifs).
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud sort le Dice soft et le coût ; il colore la carte de gradient par pixel, qui montre où le réseau est tiré vers le haut (objets ratés) ou vers le bas (faux positifs).
 
 ---
 ]
@@ -285,7 +288,7 @@ L = −α · (1 − pₜ)^γ · log(pₜ)        pₜ = proba prédite de la VRA
 
 α équilibre les fréquences de classes, γ ≥ 0 est le facteur de focalisation. À γ = 0, on retrouve l'entropie croisée pondérée. Le parallèle avec Huber (chapitre 16) est instructif par opposition : Huber réduit l'influence des _grandes_ erreurs (les aberrations à ignorer), focal celle des _petites_ erreurs (les exemples faciles, déjà appris). ∎
 
-#question-box(title: "Exemple chiffré (γ = 2)")[
+#question-box(title: "Exemple (γ = 2)")[
 Détection de défauts rares sur des pièces conformes :
 
 ```
@@ -304,7 +307,7 @@ L'exemple facile est divisé par 100, le difficile seulement par 4. Le rapport d
 ]
 
 #canvas[
-Canvas : `Logits` + `Target Class` → `Focal Loss` → `Inspector`. Le nœud expose γ et α en curseurs et affiche, à côté du coût, le facteur de modulation et le rapport d'atténuation facile/difficile. Monter γ montre la contribution des exemples faciles fondre vers zéro.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud expose γ et α en curseurs et affiche, à côté du coût, le facteur de modulation et le rapport d'atténuation facile/difficile. Monter γ montre la contribution des exemples faciles fondre vers zéro.
 
 ---
 ]
@@ -337,7 +340,7 @@ L(x) = 0,5·x²/β      si |x| < β
 
 x est l'erreur de régression, β le seuil de transition (souvent 1). Le lien avec le chapitre 8 est direct : l'erreur de reprojection du bundle adjustment est une somme de carrés L2, dominée par une seule correspondance aberrante ; la remplacer par un noyau de Huber est la correction qui rend le recalage robuste aux faux appariements. ∎
 
-#question-box(title: "Exemple chiffré (β = 1)")[
+#question-box(title: "Exemple (β = 1)")[
 Quatre résidus d'un détecteur embarqué, dont un aberrant dû à une annotation imprécise :
 
 ```
@@ -356,7 +359,7 @@ En L2, l'aberration (★) pèse 36 sur 37 du coût total et fournit un gradient 
 ]
 
 #canvas[
-Canvas : `Prediction` + `Target` → `Smooth L1` → `Inspector`. Le nœud expose β et affiche, par résidu, le coût et le gradient en regard de la L2 pure — la branche plafonnée saute aux yeux dès qu'un résidu dépasse β.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud expose β et affiche, par résidu, le coût et le gradient en regard de la L2 pure — la branche plafonnée saute aux yeux dès qu'un résidu dépasse β.
 
 ---
 ]
@@ -366,6 +369,8 @@ Canvas : `Prediction` + `Target` → `Smooth L1` → `Inspector`. Le nœud expos
 == IoU loss et GIoU : optimiser la métrique, et combler ses zones plates
 
 #subtitle[Quand deux boîtes ne se touchent pas, la métrique est aveugle — on lui rend la vue]
+
+#figfull("/figures/fig_ch15_obs2_giou.svg")
 
 #figfull("/figures/fig_ch15_obs2_giou.svg")
 
@@ -388,7 +393,7 @@ L_GIoU = 1 − IoU + |C \ (A ∪ B)| / |C|
 
 A est la boîte prédite, B la cible, C la plus petite boîte les englobant toutes deux. Le terme correctif sculpte un gradient là où la métrique seule était aveugle — exactement la logique du substitut dérivable. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Deux boîtes *disjointes*, format (x₁, y₁, x₂, y₂), en imagerie aérienne :
 
 ```
@@ -411,7 +416,7 @@ Les conventions de coordonnées sont une source d'erreur permanente : (x, y, w, 
 ]
 
 #canvas[
-Canvas : `Predicted Box` + `Target Box` → `IoU Loss` → `Inspector`. Le nœud trace les deux boîtes et la boîte englobante C, affiche IoU, GIoU et le terme correctif ; déplacer la boîte prédite montre le GIoU décroître continûment là où l'IoU reste bloqué à zéro.
+Canvas : `Image File` + `Image File` → `Python Node` → `Display`. Le nœud trace les deux boîtes et la boîte englobante C, affiche IoU, GIoU et le terme correctif ; déplacer la boîte prédite montre le GIoU décroître continûment là où l'IoU reste bloqué à zéro.
 
 ---
 ]
@@ -440,7 +445,7 @@ L = −log( exp(sim(zᵢ, zⱼ⁺)/τ) / Σₖ exp(sim(zᵢ, zₖ)/τ) )
 
 zᵢ est l'ancre, zⱼ⁺ le positif, zₖ l'ensemble des candidats (positif + négatifs), `sim` le cosinus, τ la température. Réécrit, c'est exactement l'entropie croisée du §15.1 appliquée au quiz artificiel : le gradient pousse vers le haut la similarité avec le positif, vers le bas celle des négatifs — d'autant plus fort qu'un négatif est, à tort, jugé proche. ∎
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Une ancre microscopique (une cellule), son positif (même cellule, autre contraste, sim = 0,9) et deux négatifs (sim = 0,3 et 0,2). Effet de la température :
 
 ```
@@ -456,7 +461,7 @@ Trois points. La similarité cosinus suppose des vecteurs normalisés (de longue
 ]
 
 #canvas[
-Canvas : `Anchor` + `Positive` + `Negatives` → `Contrastive Loss` → `Inspector`. Le nœud normalise les vecteurs, calcule les similarités cosinus, expose τ, et affiche le coût avec la probabilité attribuée au positif. Baisser τ montre la probabilité du positif grimper et le gradient s'éteindre.
+Canvas : `Image File` + `Image File` + `Image File` → `Python Node` → `Display`. Le nœud normalise les vecteurs, calcule les similarités cosinus, expose τ, et affiche le coût avec la probabilité attribuée au positif. Baisser τ montre la probabilité du positif grimper et le gradient s'éteindre.
 
 ---
 ]
@@ -485,7 +490,7 @@ Canvas : `Anchor` + `Positive` + `Negatives` → `Contrastive Loss` → `Inspect
 
 // ============================================================
 
-== Le coût n'est pas la cible, c'est la pente vers elle
+== le coût n'est pas la cible, c'est la pente vers elle
 
 Le chapitre tient en un principe qui structure tout l'apprentissage profond : on ne minimise jamais ce qu'on veut, mais un substitut dont le gradient y conduit. Et ce substitut n'est pas choisi au hasard — chaque coût répond à une faille précise de la métrique qu'il remplace.
 
@@ -508,34 +513,26 @@ Choisir une distance (chapitre 3), c'est déclarer ce qui compte ; choisir une b
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 15
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Détecter des objets rares sans noyer la cible dans le fond
 
-#figtodo("ex_ch15_parking", [Vue aérienne d'un parking quasi vide : des dizaines de places de stationnement v...])
-
+#figtodo("ex_ch15_parking", [Vue aérienne d'un parking quasi vide : des dizaines de places de stationnement v])
 
 *Ce que vous voyez.* Une scène où la cible (les voitures) est écrasée sous une masse de fond identique. C'est le déséquilibre que la focal loss corrige à l'entraînement : ici on observe ses conséquences sur un détecteur déjà entraîné.
 
 *Pipeline VNStudio*
-`Image Source` → `Object Detection (YOLO)` → `Draw Overlay` → `Output Display`
+`Image File` → `YOLO Detector` → `Display` → `Display`
 
 Le nœud affiche les boîtes détectées avec leur score de confiance.
 
 
 
-
 *Questions*
-
 
 + Lancez la détection avec un seuil de confiance bas (0,1). Combien de boîtes apparaissent ? Combien sont de vraies voitures, combien sont des fausses alarmes posées sur des places vides ?
 
@@ -546,24 +543,20 @@ Le nœud affiche les boîtes détectées avec leur score de confiance.
 + *Défi.* Trouvez une scène encore plus déséquilibrée (un seul objet minuscule dans une grande image uniforme) et comptez les fausses détections à seuil bas. Comparez avec une scène équilibrée (autant d'objets que de fond). Sur laquelle le détecteur se trompe-t-il le plus, et pourquoi ?
 
 
-
 === Exercice 2 · Mesurer la qualité d'une segmentation par le recouvrement
 
-#figtodo("ex_ch15_segmentation_overlap", [Vue microscopique d'une cellule : à gauche le contour tracé à la main par un bio...])
-
+#figtodo("ex_ch15_segmentation_overlap", [Vue microscopique d'une cellule : à gauche le contour tracé à la main par un bio])
 
 *Ce que vous voyez.* Deux masques de la même cellule. La mission : mesurer leur recouvrement, car c'est exactement ce que la Dice loss optimise pendant l'entraînement.
 
 *Pipeline VNStudio*
-`Image Source` → `SAM Segmenter` → `Mask Overlap` → `Output Display`
+`Image File` → `SAM Segmenter` → `Mask Metrics` → `Display`
 
-Le nœud `Mask Overlap` compare le masque automatique au masque de référence et affiche le score de recouvrement (IoU et Dice).
-
+Le nœud `Mask Metrics` compare le masque automatique au masque de référence et affiche le score de recouvrement (IoU et Dice).
 
 
 
 *Questions*
-
 
 + Segmentez la cellule, puis lisez le score de recouvrement. Le masque automatique colle-t-il bien à la référence, ou déborde-t-il ? Repérez visuellement où ils divergent.
 
@@ -574,24 +567,20 @@ Le nœud `Mask Overlap` compare le masque automatique au masque de référence e
 + *Défi.* Segmentez un amas de plusieurs cellules collées d'un seul clic. Le masque englobe-t-il tout l'amas ou une seule cellule ? Réglez SAM (points positifs et négatifs) pour isoler une seule cellule et faire remonter le score de recouvrement avec son contour de référence.
 
 
-
 === Exercice 3 · Ajuster une boîte englobante malgré des points parasites
 
-#figtodo("ex_ch15_bbox_fit", [Photo d'un panneau routier rectangulaire détecté : la majorité des points de con...])
-
+#figtodo("ex_ch15_bbox_fit", [Photo d'un panneau routier rectangulaire détecté : la majorité des points de con])
 
 *Ce que vous voyez.* Une boîte à ajuster autour d'un objet, perturbée par quelques points parasites. C'est le rôle de la Smooth L1 (Huber) en détection : suivre les bons points sans se laisser tirer par les rares aberrants.
 
 *Pipeline VNStudio*
-`Image Source` → `Find Contours` → `Robust Box Fit` → `Draw Overlay` → `Output Display`
+`Image File` → `Find Contours` → `Region Properties` → `Display` → `Display`
 
 Le nœud ajuste la boîte avec un mode ordinaire (sensible aux parasites) ou robuste (Huber).
 
 
 
-
 *Questions*
-
 
 + Ajustez la boîte en mode ordinaire. Englobe-t-elle juste le panneau, ou s'étire-t-elle pour avaler l'autocollant ? Mesurez de combien elle déborde.
 
@@ -603,16 +592,11 @@ Le nœud ajuste la boîte avec un mode ordinaire (sensible aux parasites) ou rob
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

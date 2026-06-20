@@ -27,6 +27,7 @@
 ]
 
 #let figfull(path) = block(above: 1em, below: 1.4em, width: 100%)[#image(path, width: 100%)]
+#let figcap(path, cap) = block(above: 1em, below: 1.4em, width: 100%)[#text(weight: "bold", size: 0.95em, fill: rgb("#7a1330"))[#cap]#v(0.35em)#image(path, width: 100%)]
 #let canvas(body) = tip-box(title: "Dans VNStudio")[
   #show heading: it => block(above: 0.5em, below: 0em)[
     #text(font: "Roboto", weight: "regular", size: 0.95em)[#it.body]
@@ -108,7 +109,7 @@ Ce choix naïf échoue car il ne possède aucune invariance. Les invariances doi
 === Ce qu'elle mesure, et son angle mort
 Le descripteur mesure la ressemblance locale. L'angle mort de cette invariance est qu'en jetant de l'information pour devenir insensible aux transformations, on perd en distinctivité. Un descripteur invariant en rotation ne distingue plus un motif de sa version tournée, ce qui peut créer des faux positifs. Les descripteurs classiques ne gèrent pas non plus les forts changements de point de vue perspectifs ou les déformations non rigides.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Soit un patch `P` de valeur moyenne 100 et sa copie `Pt` éclaircie par un gain de 1.3 puis assombrie par un offset de −10 (`Pt = 1.3·P − 10`). L'écart moyen par pixel est de `0.3·100 − 10 = 20`. Le SSD pixel à pixel vaut `20² = 400` par pixel, soit des dizaines de milliers sur un patch 16×16, alors que c'est le même point. Le gradient, lui, élimine l'offset (`∇(I − 10) = ∇I`) et le gain est réduit à un facteur d'échelle que la normalisation efface.
 ]
 
@@ -125,9 +126,9 @@ Sur une image et sa copie transformée (tournée de 30°, zoomée de 20%, éclai
 ==== Observation 17.A — Pixels bruts contre descripteurs : qui survit ?
 - *Pipeline :*
   ```
-  Image Loader ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) \[Vue B\]
-  Image Loader ─┬─> Features (ORB) ─┐
-  Vue B  ───────┴─> Features (ORB) ─┴─> Python Node (appariement + ratio) ──> Draw Lines ──> Output Display
+  Image File ──> Rotate (30°) ──> Resize (x1.2) ──> Brightness/Contrast (+40) \[Vue B\]
+  Image File ─┬─> ORB Detector ─┐
+  Vue B  ───────┴─> ORB Detector ─┴─> Python Node (appariement + ratio) ──> Display ──> Display
   ```
 - *Missions :*
 + Lancez l'appariement ORB. Constatez les lignes d'appariement parallèles reliant les points homologues.
@@ -178,7 +179,7 @@ Multiplier par `σ²` compense la baisse d'amplitude naturelle de `∇²G_σ` à
 === Ce qu'elle mesure, et son angle mort
 Elle mesure la position et l'échelle caractéristique `σ₀` d'une structure isotrope (un blob). Son angle mort principal est les contours rectilignes : la courbure transverse crée une réponse forte le long des arêtes. SIFT résout cela en rejetant les points où le rapport des valeurs propres de la matrice hessienne du DoG dépasse un seuil (typiquement 10), excluant ainsi les contours comme le faisait le critère de Harris (§6.5).
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Pour un blob gaussien d'écart-type `s = 6` pixels, balayer `σ` de 2 à 12 montre que la réponse normalisée du LoG atteint son maximum exact à `σ = 6,00`. Le descripteur extrait à cette taille sera identique, que l'image soit zoomée ou non.
 ]
 
@@ -195,8 +196,8 @@ Sur une image avec points SIFT affichés sous forme de cercles de rayon proporti
 ==== Observation 17.B — Le cercle qui suit le zoom
 - *Pipeline :*
   ```
-  Image Loader ─┬──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue A)
-                └──> Resize (x2) ──> Features (SIFT, dessine échelle) ──> Draw Overlay ──> Output Display (Vue B)
+  Image File ─┬──> ORB Detector ──> Display ──> Display (Vue A)
+                └──> Resize (x2) ──> ORB Detector ──> Display ──> Display (Vue B)
   ```
   _(Comparez les deux vues via le nœud Split Half)._
 - *Missions :*
@@ -236,7 +237,7 @@ Bloc : regroupement de cellules voisines et normalisation L2
 === Ce qu'elle mesure, et son angle mort
 HOG mesure la distribution locale des orientations de contours. Son angle mort majeur est qu'il n'est *pas invariant en rotation* : tourner l'image décale circulairement les bins des histogrammes. C'est un choix assumé pour la détection à pose connue.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Dans une cellule 8×8 traversée par un dégradé à 45° où en chaque pixel `Iₓ = 10, Iᵧ = 10` : la magnitude vaut `‖∇I‖ = 14,14` et l'angle `θ = 45°`. Les 36 pixels intérieurs accumulent un vote total de `36 × 14,14 = 509,1` qui tombe entièrement dans le bin `[40°, 60°)`.
 ]
 
@@ -250,11 +251,11 @@ En visualisant les glyphes HOG (étoiles d'orientations) sur un piéton :
 - Modifier la luminosité ou le contraste ne change pas les glyphes (grâce au gradient et à la normalisation de bloc).
 - Tourner la silhouette de 20° fait tourner toutes les étoiles, modifiant le vecteur final.
 
-==== Observation 17.C — HOG : sensible à la rotation, insensible à la lumière
+==== 📷 Observation 17.C — HOG : sensible à la rotation, insensible à la lumière
 - *Pipeline :*
   ```
-  Image Loader ─┬─> Brightness/Contrast ──> Python Node (HOG, visualize) ──> Output Display
-                └─> Rotate ──────────────> Python Node (HOG, visualize) ──> Output Display
+  Image File ─┬─> Brightness/Contrast ──> Python Node (HOG, visualize) ──> Display
+                └─> Rotate ──────────────> Python Node (HOG, visualize) ──> Display
   ```
   _(Comparez via Grid Compare)._
 - *Missions :*
@@ -297,7 +298,7 @@ Le seuillage à 0,2 élimine l'influence excessive des variations d'éclairage n
 === Ce qu'elle mesure, et son angle mort
 Il mesure la structure fine des gradients dans le repère propre du point. Son angle mort est qu'il suppose une déformation purement plane et isotrope (similitude). Il tolère mal les grands angles de perspective (cisaillement) et se fait piéger par les motifs répétés (carrelages, fenêtres).
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Si un point-clé a une orientation dominante de 40° et qu'un gradient y est mesuré à 85° dans l'image, il est consigné à `85° − 40° = 45°` dans le descripteur. Si l'image tourne de 30°, l'orientation dominante passe à 70° et le gradient à 115°. La valeur consignée reste `115° − 70° = 45°`.
 ]
 
@@ -314,8 +315,8 @@ Sur deux vues d'une même affiche, l'une tournée de 45° :
 ==== Observation 17.D — Les flèches qui tournent
 - *Pipeline :*
   ```
-  Image Loader (vue droite)  ──> Features (SIFT, dessine orientation) ─┐
-  Image Loader (vue inclinée) ──> Features (SIFT, dessine orientation) ─┴─> Python Node (match + ratio) ──> Draw Lines ──> Output Display
+  Image File (vue droite)  ──> ORB Detector ─┐
+  Image File (vue inclinée) ──> ORB Detector ─┴─> Python Node (match + ratio) ──> Display ──> Display
   ```
 - *Missions :*
 + Observez les flèches d'orientation pour un même détail physique. Vérifiez que l'écart angulaire correspond à la rotation.
@@ -357,7 +358,7 @@ L'angle d'orientation dominante est estimé par les moments d'ordre 1 (§2) : �
 === Ce qu'elle mesure, et son angle mort
 Il mesure un motif de comparaison relative de clarté. Son angle mort est sa sensibilité aux déformations sévères (zoom important, distorsions) et sa distinctivité plus faible que celle de SIFT, ce qui génère plus de faux appariements.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Soient deux descripteurs 8 bits :
 ```
 d1  = 1 0 1 1 0 0 1 0
@@ -378,8 +379,8 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 ==== Observation 17.E — Mesurer le compromis ORB/SIFT
 - *Pipeline :*
   ```
-  Paire d'images ─┬─> Features (ORB) ──> Python Node (match + chrono) ─┐
-                  └─> Features (SIFT) ─> Python Node (match + chrono) ─┴─> Draw Lines ──> Grid Compare
+  Paire d'images ─┬─> ORB Detector ──> Python Node (match + chrono) ─┐
+                  └─> ORB Detector ─> Python Node (match + chrono) ─┴─> Display ──> Grid Compare
   ```
 - *Missions :*
 + Relevez le temps d'exécution et le nombre d'appariements pour ORB et SIFT.
@@ -394,8 +395,6 @@ L'utilisation de la distance de Hamming (`cv2.NORM_HAMMING`) est nécessaire pou
 == Le ratio test de Lowe : rejeter l'ambiguïté
 
 #subtitle[Exiger un coup de cœur, éliminer le doute]
-
-#figfull("/nvlle illu/A_humorous,_highly_stylized_line-art_202606191409.jpeg")
 
 === L'intention
 Les points-clés situés sur des zones répétitives ou du bruit génèrent de faux appariements à faible distance. On veut les rejeter sans utiliser de seuil de distance absolu, qui varie d'une image à l'autre.
@@ -418,7 +417,7 @@ où `d₁` est la distance au plus proche voisin dans l'espace des descripteurs,
 === Ce qu'elle fait, et son angle mort
 Elle élimine les appariements ambigus. Son angle mort est les structures répétitives légitimes (carrelages, fenêtres de gratte-ciel) : elle rejette les correspondances réelles car elles se ressemblent toutes, affamant le pipeline.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Sur deux points comparés :
 - Point distinctif : `d₁ = 0,32, d₂ = 0,51`. Ratio = `0,32 / 0,51 = 0,63 < 0,8` ──> *Accepté*.
 - Motif répété : `d₁ = 0,45, d₂ = 0,49`. Ratio = `0,45 / 0,49 = 0,92 ≥ 0,8` ──> *Rejeté*.
@@ -452,7 +451,7 @@ Dans les nœuds d'extraction et d'appariement de descripteurs (ou via les classe
 ==== Observation 17.F — Le curseur du ratio test
 - *Pipeline :*
   ```
-  Paire d'images (facile vs répétitive) ──> Features (ORB) ──> Python Node (ratio τ réglable) ──> Draw Lines ──> Output Display
+  Paire d'images (facile vs répétitive) ──> ORB Detector ──> Python Node (ratio τ réglable) ──> Display ──> Display
   ```
 - *Missions :*
 + Sur l'image facile, faites varier `τ` de 0,95 à 0,6. Notez à quelle valeur le bruit visuel s'éteint.
@@ -493,7 +492,7 @@ où `w` est la proportion de vrais appariements (inliers) et `n` le nombre de po
 === Ce qu'elle fait, et son angle mort
 Elle estime le modèle géométrique dominant (homographie, matrice fondamentale) et filtre les correspondances aberrantes. Son angle mort est les configurations dégénérées (4 points alignés) et les scènes multi-plans : RANSAC ne capture que le plan dominant et rejette le reste comme du bruit ; il faut alors l'appliquer en séquence.
 
-#question-box(title: "Exemple chiffré")[
+#question-box(title: "Exemple")[
 Avec `w = 0,5` (50% de vrais appariements) et `p = 0,99`, RANSAC demande `N = 72` tirages. Si `w = 0,3` (sans ratio test préalable), il faut `N = 567` tirages. Préfiltrer les appariements par le ratio test de Lowe divise le coût calculatoire de RANSAC par huit.
 ]
 
@@ -509,9 +508,9 @@ Le seuil de tolérance (distance de reprojection) est exprimé en pixels et doit
 ==== Observation 17.G — Voir le panorama se former
 - *Pipeline :*
   ```
-  Image A ─┬─> Features (SIFT) ─┐
-  Image B ─┼─> Features (SIFT) ─┴─> Python Node (match + RANSAC homographie) ─┬─> \[inliers/outliers\] ──> Draw Lines ──> Output Display
-           └──────────────────────────────────────────────────────────────────┴─> \[H\] ──> Warp Perspective (A) ──> Draw Overlay (sur B) ──> Output Display
+  Image A ─┬─> ORB Detector ─┐
+  Image B ─┼─> ORB Detector ─┴─> Python Node (match + RANSAC homographie) ─┬─> \[inliers/outliers\] ──> Display ──> Display
+           └──────────────────────────────────────────────────────────────────┴─> \[H\] ──> Warp Perspective (A) ──> Display (sur B) ──> Display
   ```
 - *Missions :*
 + Affichez les lignes vertes et rouges. Notez le ratio d'inliers trouvés par RANSAC.
@@ -567,7 +566,7 @@ Ces méthodes apprises résolvent l'appariement sur des surfaces peu texturées 
 
 // ============================================================
 
-== L'invariance est un tri
+== l'invariance est un tri
 
 Tout ce chapitre tient dans une décision prise quatre fois : que faut-il ignorer ? On ignore la position en n'extrayant qu'aux points-clés, l'échelle en mesurant l'échelle caractéristique, la rotation en travaillant dans un référentiel tourné, le gain et l'offset par le gradient et la normalisation. Ce que le descripteur jette n'est pas une perte : c'est ce qui changeait d'une vue à l'autre, et qui l'empêchait de reconnaître un même point.
 
@@ -575,34 +574,26 @@ La même logique relie les étapes. Le ratio test élève le taux d'inliers, ce 
 
 ---
 
-
-// ============================================================
 // EXERCICES — CHAPITRE 17
 // ============================================================
 
 #pagebreak()
 == Exercices pratiques
 
-
-
-
 === Exercice 1 · Décrire une silhouette par ses orientations
 
-#figtodo("ex_ch17_pieton", [Photographie d'un piéton de face sur un trottoir : silhouette bien contrastée su...])
-
+#figtodo("ex_ch17_pieton", [Photographie d'un piéton de face sur un trottoir : silhouette bien contrastée su])
 
 *Ce que vous voyez.* Une silhouette humaine dont la « rose des vents » des contours est très caractéristique. La mission : en tirer une signature de forme stable, à la base de la détection de piétons.
 
 *Pipeline VNStudio*
-`Image Source` → `HOG Features` → `Draw Overlay` → `Output Display`
+`Image File` → `Python Node` (HOG) → `Display` → `Display`
 
 Le nœud découpe l'image en cellules et dessine dans chacune les orientations de contour dominantes.
 
 
 
-
 *Questions*
-
 
 + Sur la visualisation, où les traits d'orientation sont-ils les plus marqués : sur les bords du corps, la peau, ou le fond ? Pointent-ils en travers des contours, comme attendu ?
 
@@ -613,24 +604,20 @@ Le nœud découpe l'image en cellules et dessine dans chacune les orientations d
 + *Défi.* Comparez la signature d'un piéton et celle d'un cycliste. Sont-elles plus proches entre elles qu'entre deux piétons différents ? Si les deux se confondent, quel trait de silhouette partagent-ils, et que faudrait-il ajouter pour les distinguer ?
 
 
-
 === Exercice 2 · Apparier deux vues d'un livre en rejetant les erreurs
 
-#figtodo("ex_ch17_livre_appariement", [Deux photos du même livre : de face à gauche, légèrement en angle et plus éclair...])
-
+#figtodo("ex_ch17_livre_appariement", [Deux photos du même livre : de face à gauche, légèrement en angle et plus éclair])
 
 *Ce que vous voyez.* Deux vues du même objet avec un léger changement d'angle et de lumière. Certains appariements sont justes, d'autres faux. La mission : ne garder que les bons, étape clé pour la reconnaissance d'objet et les panoramas.
 
 *Pipeline VNStudio*
-`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `ORB Detector` → `Feature Matcher` → `Display`
 
 Le détecteur trouve des points caractéristiques ; le matcher les relie et applique un test pour rejeter les appariements ambigus.
 
 
 
-
 *Questions*
-
 
 + Comptez les appariements verts (gardés) et rouges (rejetés). Quelle part le test rejette-t-il ? Serrez le test : combien d'appariements restent, et paraissent-ils plus sûrs à l'œil ?
 
@@ -638,27 +625,23 @@ Le détecteur trouve des points caractéristiques ; le matcher les relie et appl
 
 + Montez le nombre de points détectés. Le nombre de bons appariements grimpe-t-il autant, ou les nouveaux points sont-ils surtout du bruit ? Le rapport bons/total s'améliore-t-il ?
 
-+ *Défi.* Éclaircissez fortement l'image de droite. Les appariements tiennent-ils malgré ce changement de lumière ? Comparez avec un descripteur SIFT *(à créer)*. Lequel résiste le mieux, et lequel choisiriez-vous pour des photos prises à des heures différentes ?
-
++ *Défi.* Éclaircissez fortement l'image de droite. Les appariements tiennent-ils malgré ce changement de lumière ? Comparez avec un descripteur SIFT _(à créer)_. Lequel résiste le mieux, et lequel choisiriez-vous pour des photos prises à des heures différentes ?
 
 
 === Exercice 3 · Imposer une cohérence géométrique pour redresser une affiche
 
-#figtodo("ex_ch17_affiche_ransac", [Deux vues d'une affiche : de face et à 30° de côté. Avant nettoyage, quelques ap...])
-
+#figtodo("ex_ch17_affiche_ransac", [Deux vues d'une affiche : de face et à 30° de côté. Avant nettoyage, quelques ap])
 
 *Ce que vous voyez.* Des appariements bruts encore truffés d'erreurs. La mission : ne garder que ceux qui racontent tous le même mouvement, puis s'en servir pour remettre l'affiche de face.
 
 *Pipeline VNStudio*
-`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `RANSAC Homography` → `Draw Overlay` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `ORB Detector` → `Feature Matcher` → `RANSAC Homography` → `Display` → `Display`
 
 RANSAC cherche la transformation que soutient le plus grand nombre d'appariements et écarte les autres comme intrus.
 
 
 
-
 *Questions*
-
 
 + Notez le nombre d'appariements avant RANSAC, puis le nombre d'inliers gardés après. Quelle proportion d'intrus le test simple avait-il laissé passer ?
 
@@ -670,16 +653,11 @@ RANSAC cherche la transformation que soutient le plus grand nombre d'appariement
 
 
 
-
-
-
 #v(2em)
 #align(center)[
   #image("/QR Code.png", width: 60pt)
   #v(4pt)
   #text(size: 0.8em, style: "italic", fill: rgb("#64748b"))[Télécharger les images de référence]
 ]
-
-
 
 ]

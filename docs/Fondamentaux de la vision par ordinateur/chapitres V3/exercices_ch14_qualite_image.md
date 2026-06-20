@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Deux façons d'abîmer une image qui paraissent très différentes à l'œil. La mission : constater qu'une note « pixel à pixel » peut les déclarer équivalentes, et qu'une note « de structure » les départage.
 
 **Pipeline VNStudio**
-`Image Source (A)` + `Image Source (B ou C)` → `SSIM / PSNR` *(à créer)* → `Output Display`
+`Image File` (A) + `Image File` (B) → `SSIM / PSNR` → `Display`
 
 Le nœud affiche deux notes : le PSNR (écart pixel à pixel) et le SSIM (ressemblance de structure), plus une carte qui montre où la structure se dégrade.
 
@@ -34,7 +34,7 @@ Le nœud affiche deux notes : le PSNR (écart pixel à pixel) et le SSIM (ressem
 **Ce que vous voyez.** Une rafale de netteté croissante. La mission : faire trier ces images automatiquement, sans image de référence — exactement ce que fait l'autofocus d'un appareil.
 
 **Pipeline VNStudio**
-`Image Source` → `Focus Metric` → `Output Display`
+`Image File` → `Focus Metric` → `Display`
 
 Le nœud attribue à chaque image un score de netteté, d'autant plus élevé que les détails fins sont présents.
 
@@ -59,7 +59,7 @@ Le nœud attribue à chaque image un score de netteté, d'autant plus élevé qu
 **Ce que vous voyez.** Deux bruits d'origine physique différente. La mission : reconnaître lequel est lequel rien qu'en observant comment le bruit se répartit selon la luminosité, pour choisir le bon débruitage.
 
 **Pipeline VNStudio**
-`Image Source` → `Noise Profile` → `Output Display`
+`Image File` → `First Order Statistics` → `Display`
 
 Le nœud mesure l'intensité du bruit séparément dans les zones sombres et claires, et la trace en fonction de la luminosité.
 

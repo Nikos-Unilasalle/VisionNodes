@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Un mouvement simple et connu. La mission : voir où le suivi de mouvement réussit et où il se trompe, pour comprendre ses limites avant de lui faire confiance.
 
 **Pipeline VNStudio**
-`Image Source (t)` + `Image Source (t+1)` → `Optical Flow LK` *(à créer)* → `Draw Overlay` → `Output Display`
+`Webcam` → `Optical Flow (Lucas-Kanade)` → `Display`
 
 Le nœud pose des flèches de mouvement sur les points qu'il sait suivre.
 
@@ -34,9 +34,9 @@ Le nœud pose des flèches de mouvement sur les points qu'il sait suivre.
 **Ce que vous voyez.** Un sujet en mouvement avec des zones faciles à suivre (texturées) et des zones ambiguës (chemise unie). La mission : régler un curseur qui « remplit » le mouvement des zones sans détail à partir des zones voisines.
 
 **Pipeline VNStudio**
-`Image Source (t)` + `Image Source (t+1)` → `Optical Flow Dense` *(à créer)* → `Colormap` (teinte = direction, intensité = vitesse) → `Output Display`
+`Webcam` → `Optical Flow` → `Flow Visualizer` → `Display`
 
-Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui propage l'information des zones nettes vers les zones vides.
+Le nœud `Optical Flow` (Farneback) calcule un champ de mouvement partout ; `Flow Visualizer` code la direction en teinte et la vitesse en saturation. Le curseur de lissage propage l'information des zones nettes vers les zones vides.
 
 ---
 
@@ -59,10 +59,10 @@ Le nœud calcule un champ de mouvement partout, avec un curseur de lissage qui p
 **Ce que vous voyez.** Une scène mêlant zones très texturées (cases, pièces) et zones uniformes (cases noires lisses). La mission : comparer deux manières de mesurer le mouvement et choisir selon le besoin.
 
 **Pipeline VNStudio**
-`Image Source (t)` + `Image Source (t+1)` → `Split Half` :
-— gauche : `Optical Flow LK` *(à créer)* → flèches
-— droite : `Optical Flow Dense` *(à créer)* → carte colorée
-→ `Output Display`
+`Webcam` → `Split Half` :
+— gauche : `Optical Flow (Lucas-Kanade)` → flèches
+— droite : `Optical Flow` → `Flow Visualizer` → carte colorée
+→ `Display`
 
 À gauche, un suivi de points choisis ; à droite, un champ de mouvement partout.
 

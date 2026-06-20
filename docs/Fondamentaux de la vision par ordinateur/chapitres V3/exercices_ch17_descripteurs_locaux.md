@@ -9,7 +9,7 @@
 **Ce que vous voyez.** Une silhouette humaine dont la « rose des vents » des contours est très caractéristique. La mission : en tirer une signature de forme stable, à la base de la détection de piétons.
 
 **Pipeline VNStudio**
-`Image Source` → `HOG Features` → `Draw Overlay` → `Output Display`
+`Image File` → `Python Node` (HOG) → `Display` → `Display`
 
 Le nœud découpe l'image en cellules et dessine dans chacune les orientations de contour dominantes.
 
@@ -34,7 +34,7 @@ Le nœud découpe l'image en cellules et dessine dans chacune les orientations d
 **Ce que vous voyez.** Deux vues du même objet avec un léger changement d'angle et de lumière. Certains appariements sont justes, d'autres faux. La mission : ne garder que les bons, étape clé pour la reconnaissance d'objet et les panoramas.
 
 **Pipeline VNStudio**
-`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `ORB Detector` → `Feature Matcher` → `Display`
 
 Le détecteur trouve des points caractéristiques ; le matcher les relie et applique un test pour rejeter les appariements ambigus.
 
@@ -59,7 +59,7 @@ Le détecteur trouve des points caractéristiques ; le matcher les relie et appl
 **Ce que vous voyez.** Des appariements bruts encore truffés d'erreurs. La mission : ne garder que ceux qui racontent tous le même mouvement, puis s'en servir pour remettre l'affiche de face.
 
 **Pipeline VNStudio**
-`Image Source (gauche)` + `Image Source (droite)` → `ORB Detector` → `Feature Matcher` → `RANSAC Homography` → `Draw Overlay` → `Output Display`
+`Image File` (gauche) + `Image File` (droite) → `ORB Detector` → `Feature Matcher` → `RANSAC Homography` → `Display` → `Display`
 
 RANSAC cherche la transformation que soutient le plus grand nombre d'appariements et écarte les autres comme intrus.
 
