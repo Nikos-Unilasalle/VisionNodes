@@ -157,6 +157,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   geo_copernicus:             N.CopernicusNode,
   raster_colorizer:           N.RasterColorizerNode,
   df_editor:                  N.DataFrameEditorNode,
+  df_plot:                    withNodeResizer(N.DataFramePlotNode, 320, 260),
   geo_netcdf_reader:          N.GenericCustomNode,
   ml_grid_pca:                N.GenericCustomNode,
   viz_grid_compare:           N.GenericCustomNode,

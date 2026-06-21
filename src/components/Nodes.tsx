@@ -1949,6 +1949,78 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   );
 });
 
+// Generic DataFrame chart node: renders the engine-produced matplotlib image
+// (base64 `preview`) directly in a resizable node body, plus image + dict outputs.
+export const DataFramePlotNode = memo(({ selected, data }: any) => {
+  const { customBg } = useNodeColor();
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const nd = useNodeData(nodeId) as any;
+  const preview: string | null = nd?.preview_b64 || (typeof nd?.preview === 'string' ? nd.preview : null);
+
+  const CHART_TYPES = ['Line', 'Bar', 'Scatter', 'Histogram', 'Box', 'Area', 'Pie'];
+  const ctIdx = Number(data.params?.chart_type ?? 0);
+  const chartLabel = CHART_TYPES[ctIdx] ?? 'Chart';
+
+  // Static ports: 2 inputs (table, img_size), 2 outputs (main, df_meta). Pixel tops.
+  const HANDLE_TOP_START = 45;
+  const HANDLE_SPACING = 32;
+  const inTop = (i: number) => `${HANDLE_TOP_START + i * HANDLE_SPACING}px`;
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [nodeId, updateNodeInternals]);
+
+  return (
+    <div className="relative w-full h-full" style={{ minHeight: 150 }}>
+      <div
+        className={`rounded-xl bg-[#2c333f] border-2 shadow-2xl flex flex-col w-full h-full transition-all duration-300 relative ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
+        style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
+      >
+        {/* Inputs */}
+        {[
+          { id: 'table', color: 'data', label: 'DataFrame' },
+          { id: 'x', color: 'list', label: 'X values' },
+          { id: 'y', color: 'list', label: 'Y values' },
+          { id: 'img_size', color: 'list', label: 'Img Size' },
+        ].map((inp, i) => (
+          <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10"
+               style={{ top: inTop(i), transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" />
+            <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 truncate">{inp.label}</span>
+          </div>
+        ))}
+
+        {/* Outputs */}
+        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10" style={{ top: '22px', transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
+          <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+        </div>
+        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10" style={{ top: '54px', transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">cols</span>
+          <StyledHandle type="source" position={Position.Right} id="df_meta" color="dict" top="50%" />
+        </div>
+
+        {/* Header */}
+        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+          <BarChart2 size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest truncate" style={customBg ? { color: customBg } : { color: '#ffffff' }}>
+            {data.label || 'DF Plot'}
+          </span>
+          <span className="ml-auto text-[8px] font-mono text-accent/70 uppercase tracking-widest shrink-0">{chartLabel}</span>
+        </div>
+
+        {/* Chart image fills the body */}
+        <div className="flex-1 min-h-0 w-full p-1 overflow-hidden flex items-center justify-center">
+          {preview
+            ? <img src={`data:image/jpeg;base64,${preview}`} alt="Chart"
+                   className="max-w-full max-h-full w-full h-full object-contain rounded-lg" draggable={false} />
+            : <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect dataframe</span>}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 const PRO_COLORS = ['#ff6464', '#64ff64', '#ffb43c', '#64ffff', '#ff64ff', '#ffff64', '#c896ff', '#64c8ff'];
 
 export const PlotterProNode = memo(({ selected, data }: any) => {
