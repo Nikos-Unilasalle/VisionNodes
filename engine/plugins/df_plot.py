@@ -22,20 +22,31 @@ _CLABELS = ['Tab10', 'Set1', 'Set2', 'Viridis', 'Plasma', 'Coolwarm', 'RdYlGn']
 
 _CHART_TYPES = ['Line', 'Bar', 'Scatter', 'Histogram', 'Box', 'Area', 'Pie']
 
-_MPL_DARK = {
-    'figure.facecolor':  '#161616',
-    'axes.facecolor':    '#1e1e1e',
-    'axes.edgecolor':    '#555555',
-    'axes.labelcolor':   '#cccccc',
-    'text.color':        '#cccccc',
-    'xtick.color':       '#aaaaaa',
-    'ytick.color':       '#aaaaaa',
-    'grid.color':        '#333333',
-    'grid.linestyle':    '--',
-    'grid.linewidth':    0.5,
-    'legend.facecolor':  '#2a2a2a',
-    'legend.edgecolor':  '#555555',
-}
+# Node body colour (BaseNode bg). The in-node preview is rendered on this so the
+# chart blends into the node, giving a transparent look.
+_NODE_BG = '#2c333f'
+
+
+def _style_rc(bg):
+    """Matplotlib rc for a background mode: 'node' | 'white' | 'transparent' | 'dark'.
+
+    Colours (text, edges, grid) are driven entirely through rc so every renderer
+    inherits them — no hard-coded greys in the chart code.
+    """
+    if bg in ('white', 'transparent'):
+        fg, face, edge, grid = '#222222', '#ffffff', '#cccccc', '#dddddd'
+    elif bg == 'dark':
+        fg, face, edge, grid = '#cccccc', '#1e1e1e', '#555555', '#333333'
+    else:  # node
+        fg, face, edge, grid = '#d2d6dc', _NODE_BG, '#4f5b6b', '#3a414d'
+    return {
+        'figure.facecolor': face, 'axes.facecolor': face, 'savefig.facecolor': face,
+        'axes.edgecolor': edge, 'axes.labelcolor': fg,
+        'text.color': fg, 'xtick.color': fg, 'ytick.color': fg,
+        'grid.color': grid, 'grid.linestyle': '--', 'grid.linewidth': 0.5,
+        'legend.facecolor': face, 'legend.edgecolor': edge,
+        'boxplot.medianprops.color': fg,
+    }
 
 
 def _get_mpl():
@@ -45,13 +56,15 @@ def _get_mpl():
     return matplotlib, plt
 
 
-def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
+def _fig_to_img(fig, dpi=100, transparent=False) -> np.ndarray:
+    """Render a figure to a BGR (or BGRA when transparent) uint8 array."""
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi)
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=dpi, transparent=transparent)
     buf.seek(0)
     arr = np.frombuffer(buf.read(), dtype=np.uint8)
     buf.close()
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    flag = cv2.IMREAD_UNCHANGED if transparent else cv2.IMREAD_COLOR
+    img = cv2.imdecode(arr, flag)
     return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
@@ -175,6 +188,7 @@ def _df_from_xy(x_in, y_in):
         {'id': 'legend',     'label': 'Legend', 'type': 'bool', 'default': True},
         {'id': 'x_log',      'label': 'Log X', 'type': 'bool', 'default': False},
         {'id': 'y_log',      'label': 'Log Y', 'type': 'bool', 'default': False},
+        {'id': 'export_bg',  'label': 'Export background', 'type': 'enum', 'options': ['White', 'Transparent'], 'default': 0},
         {'id': 'out_dpi',    'label': 'Export DPI (100=screen, 300=pub)', 'type': 'int', 'default': 100, 'min': 72, 'max': 600},
         {'id': 'out_w',      'label': 'Export width px (0 = node size)',  'type': 'int', 'default': 0, 'min': 0, 'max': 5000},
         {'id': 'out_h',      'label': 'Export height px (0 = node size)', 'type': 'int', 'default': 0, 'min': 0, 'max': 5000},
@@ -234,48 +248,63 @@ class DataFramePlotNode(NodeProcessor):
 
         y_cols = xy_y if xy_df is not None else _resolve_y_cols(work, params.get('y_cols', ''))
         cmap_obj = mpl.colormaps[cmap]
+        x = work[x_col] if (x_col and x_col in work.columns) else None
+
+        draw_kw = dict(chart=chart, work=work, x=x, x_col=x_col, y_cols=y_cols,
+                       hue_col=hue_col, bins=bins, horiz=horiz, stacked=stacked,
+                       cmap=cmap, cmap_obj=cmap_obj, alpha=alpha, msize=msize,
+                       title=title, grid=grid, legend=legend, x_log=x_log, y_log=y_log)
+
+        def render(bg, transparent):
+            with plt.rc_context(_style_rc(bg)):
+                fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+                self._draw(ax, **draw_kw)
+                fig.tight_layout()
+                out = _fig_to_img(fig, dpi, transparent=transparent)
+                plt.close(fig)
+            return out
 
         try:
-            with plt.rc_context(_MPL_DARK):
-                fig, ax = plt.subplots(figsize=(fig_w, fig_h))
-                x = work[x_col] if (x_col and x_col in work.columns) else None
-
-                if chart == 'Scatter':
-                    self._scatter(ax, work, x_col, y_cols, hue_col, cmap, cmap_obj, alpha, msize)
-                elif chart == 'Histogram':
-                    self._histogram(ax, work, y_cols, bins, alpha, cmap_obj)
-                elif chart == 'Box':
-                    self._box(ax, work, y_cols, cmap_obj)
-                elif chart == 'Pie':
-                    self._pie(ax, work, x_col, y_cols, cmap_obj)
-                    legend = False
-                elif chart == 'Bar':
-                    self._bar(ax, work, x, y_cols, horiz, stacked, alpha, cmap_obj)
-                else:  # Line / Area
-                    self._line(ax, work, x, y_cols, alpha, msize, cmap_obj, fill=(chart == 'Area'))
-
-                if chart not in ('Pie',):
-                    if x_log:
-                        ax.set_xscale('log')
-                    if y_log:
-                        ax.set_yscale('log')
-                    ax.grid(grid)
-                    if x_col and chart not in ('Histogram', 'Box'):
-                        ax.set_xlabel(x_col)
-                    # Line / Area / Bar manage multi-series via labelled artists; others
-                    # (Scatter, Histogram, Box) add their own legend inside the renderer.
-                    if legend and chart in ('Line', 'Area', 'Bar') and len(y_cols) > 1:
-                        ax.legend(fontsize=7, labelcolor='#cccccc', framealpha=0.4, loc='best')
-
-                ax.set_title(title or f'{chart} chart', fontsize=10)
-                fig.tight_layout()
-                img = _fig_to_bgr(fig, dpi)
-                plt.close(fig)
+            # In-node preview blends with the node body; export uses white/transparent.
+            preview_img = render('node', transparent=False)
+            transparent = int(params.get('export_bg', 0)) == 1
+            main_img = render('transparent' if transparent else 'white', transparent=transparent)
         except Exception as e:
             send_notification(f"DataFrame Plot: {e}", level='warning', notif_id=_NOTIF_ID)
             return {'df_meta': df_meta}
 
-        return {'main': img, 'preview': _bgr_to_b64(img), 'df_meta': df_meta}
+        return {'main': main_img, 'preview': _bgr_to_b64(preview_img), 'df_meta': df_meta}
+
+    # ── draw dispatch ──────────────────────────────────────────────────────────
+    def _draw(self, ax, chart, work, x, x_col, y_cols, hue_col, bins, horiz, stacked,
+              cmap, cmap_obj, alpha, msize, title, grid, legend, x_log, y_log):
+        if chart == 'Scatter':
+            self._scatter(ax, work, x_col, y_cols, hue_col, cmap, cmap_obj, alpha, msize)
+        elif chart == 'Histogram':
+            self._histogram(ax, work, y_cols, bins, alpha, cmap_obj)
+        elif chart == 'Box':
+            self._box(ax, work, y_cols, cmap_obj)
+        elif chart == 'Pie':
+            self._pie(ax, work, x_col, y_cols, cmap_obj)
+            legend = False
+        elif chart == 'Bar':
+            self._bar(ax, work, x, y_cols, horiz, stacked, alpha, cmap_obj)
+        else:  # Line / Area
+            self._line(ax, work, x, y_cols, alpha, msize, cmap_obj, fill=(chart == 'Area'))
+
+        if chart != 'Pie':
+            if x_log:
+                ax.set_xscale('log')
+            if y_log:
+                ax.set_yscale('log')
+            ax.grid(grid)
+            if x_col and chart not in ('Histogram', 'Box'):
+                ax.set_xlabel(x_col)
+            # Line / Area / Bar carry labelled artists; others add their own legend.
+            if legend and chart in ('Line', 'Area', 'Bar') and len(y_cols) > 1:
+                ax.legend(fontsize=7, framealpha=0.4, loc='best')
+
+        ax.set_title(title or f'{chart} chart', fontsize=10)
 
     # ── chart renderers ────────────────────────────────────────────────────────
     def _colors(self, cmap_obj, n):
@@ -329,7 +358,7 @@ class DataFramePlotNode(NodeProcessor):
                 m = work[hue_col] == cls
                 ax.scatter(work[x_col][m], work[y_col][m], color=color, alpha=alpha,
                            s=msize, edgecolors='none', label=str(cls))
-            ax.legend(fontsize=7, labelcolor='#cccccc', framealpha=0.4, title=hue_col, title_fontsize=7)
+            ax.legend(fontsize=7, framealpha=0.4, title=hue_col, title_fontsize=7)
         else:
             ax.scatter(work[x_col], work[y_col], c=np.arange(len(work)), cmap=cmap,
                        alpha=alpha, s=msize, edgecolors='none')
@@ -342,25 +371,26 @@ class DataFramePlotNode(NodeProcessor):
                     edgecolor='none', label=str(col))
         ax.set_ylabel('Count')
         if len(y_cols) > 1:
-            ax.legend(fontsize=7, labelcolor='#cccccc', framealpha=0.4)
+            ax.legend(fontsize=7, framealpha=0.4)
 
     def _box(self, ax, work, y_cols, cmap_obj):
+        # Median colour comes from rc 'boxplot.medianprops.color' (set per theme).
         data = [work[c].dropna().values for c in y_cols]
         bp = ax.boxplot(data, labels=[str(c) for c in y_cols], patch_artist=True)
         colors = self._colors(cmap_obj, len(y_cols))
         for patch, color in zip(bp['boxes'], colors):
             patch.set_facecolor(color)
             patch.set_alpha(0.7)
-        for med in bp['medians']:
-            med.set_color('#ffffff')
 
     def _pie(self, ax, work, x_col, y_cols, cmap_obj):
         if not y_cols:
             raise ValueError('Pie needs a Y column')
+        import matplotlib
+        tc = matplotlib.rcParams['text.color']  # active theme text colour
         vals = work[y_cols[0]].values.astype(float)
         vals = np.abs(vals)
         labels = [str(v) for v in work[x_col].values] if (x_col and x_col in work.columns) else None
         colors = self._colors(cmap_obj, len(vals))
         ax.pie(vals, labels=labels, colors=colors, autopct='%1.1f%%',
-               textprops={'fontsize': 7, 'color': '#dddddd'})
+               textprops={'fontsize': 7, 'color': tc})
         ax.set_aspect('equal')
