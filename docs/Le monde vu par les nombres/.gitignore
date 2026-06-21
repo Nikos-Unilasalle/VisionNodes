@@ -1,0 +1,13 @@
+# Large binary files — tracked locally, not pushed to git
+*.pdf
+*.af
+*.af~lock~
+fonts/
+illustrations/
+figures/*.pdf
+nvlle illu/
+sketchs/
+typst/vnstudio_logo.png
+typst/book_kdp.pdf
+Exercices/
+*.zip
