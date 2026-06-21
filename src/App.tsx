@@ -1794,10 +1794,9 @@ function App() {
               } else if (edgeConflictMap.has(edge.id)) {
                 // Conflicting edge: a plain click activates it (never deletes).
                 activateEdge(edge.id);
-              } else {
-                pushSnapshot();
-                setViewEdges(eds => eds.filter(e => e.id !== edge.id));
               }
+              // Deletion is right-click only (onEdgeContextMenu) so it never clashes
+              // with the pastille activation click.
             }}
             onEdgeContextMenu={(event, edge) => {
               // Right-click always deletes a link (the way to remove a conflicting edge).

@@ -133,8 +133,11 @@ export function useConnectionHandling({
       }
     }
 
-    setViewEdges((eds: any) => addEdge({ ...params, id: `e-${Date.now()}` },
-      eds.filter((e: any) => !(e.target === params.target && e.targetHandle === params.targetHandle))));
+    // Normal (static) input handle: KEEP any existing edge so multiple links can
+    // coexist on one input. The conflict/pastille system (App.edgeConflictMap) then
+    // marks exactly one active; the inactive duplicates are filtered before the
+    // graph is sent to the engine. Removing the old edge here would defeat that.
+    setViewEdges((eds: any) => addEdge({ ...params, id: `e-${Date.now()}` }, eds));
   }, [pushSnapshot, setViewNodes, setViewEdges, nodesRef, edgesRef, groupStackRef, activeCanvasIdRef, setCanvases]);
 
   return { onConnect };
