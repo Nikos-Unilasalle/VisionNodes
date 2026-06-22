@@ -99,19 +99,17 @@ _MPL_DARK = {
         {'id': 'main',  'color': 'image', 'label': 'Bar chart'},
     ],
     params=[
-        # ── DataFrame mode ────────────────────────────────────────────────────
-        {'id': 'x_col',      'label': 'Category column (DataFrame mode)',
+        {'id': 'x_col',      'label': 'Category column (DataFrame)',
          'type': 'string', 'default': ''},
-        {'id': 'y_col',      'label': 'Value column (DataFrame mode)',
+        {'id': 'y_col',      'label': 'Value column (DataFrame)',
          'type': 'string', 'default': ''},
         {'id': 'hue_col',    'label': 'Group by (hue)',
          'type': 'string', 'default': ''},
-        # ── Dict mode (auto when table absent) ───────────────────────────────
         {'id': 'dict_key_a', 'label': 'Dict A label (legend)',
          'type': 'string', 'default': 'Series A'},
         {'id': 'dict_key_b', 'label': 'Dict B label (legend)',
          'type': 'string', 'default': 'Series B'},
-        # ── Layout ────────────────────────────────────────────────────────────
+        {'id': '_sec_layout', 'label': 'Layout', 'type': 'section'},
         {'id': 'orientation', 'label': 'Orientation',
          'type': 'enum', 'options': ['Vertical', 'Horizontal'], 'default': 0},
         {'id': 'sorted',      'label': 'Sort by value',
@@ -124,13 +122,14 @@ _MPL_DARK = {
          'type': 'string', 'default': ''},
         {'id': 'ylabel',      'label': 'Y axis label',
          'type': 'string', 'default': ''},
-        # ── Style ─────────────────────────────────────────────────────────────
+        {'id': '_sec_style', 'label': 'Style', 'type': 'section'},
         {'id': 'colormap',   'label': 'Colormap',
          'type': 'enum', 'options': _CMAP_LABELS, 'default': 0},
         {'id': 'bar_width',  'label': 'Bar width',
          'type': 'float', 'default': 0.75, 'min': 0.1, 'max': 1.0},
         {'id': 'alpha',      'label': 'Opacity',
          'type': 'float', 'default': 0.85, 'min': 0.1, 'max': 1.0},
+        {'id': '_sec_export', 'label': 'Export', 'type': 'section'},
         *_EXPORT_PARAMS,
     ],
     resizable=True, min_width=300, min_height=240,

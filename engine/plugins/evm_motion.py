@@ -27,10 +27,12 @@ _INT_W, _INT_H = 320, 240  # fixed internal resolution for motion EVM
         {'id': 'motion_vis', 'color': 'image'},
     ],
     params=[
+        {'id': '_sec_bandpass', 'label': 'Bandpass Filter', 'type': 'section'},
         {'id': 'alpha',       'min': 0,    'max': 200,  'step': 1, 'default': 30},
         {'id': 'low_cutoff',  'min': 0,    'max': 5000, 'step': 1, 'default': 400},
         {'id': 'high_cutoff', 'min': 0,    'max': 5000, 'step': 1, 'default': 3000},
         {'id': 'fps',         'min': 10,   'max': 120,  'step': 1, 'default': 30},
+        {'id': '_sec_pyramid', 'label': 'Pyramid', 'type': 'section'},
         {'id': 'levels',      'min': 1,    'max': 6,    'step': 1, 'default': 6},
         {'id': 'lambda_c',   'min': 1,    'max': 1000, 'step': 1, 'default': 16},
         {'id': 'attenuation','min': 1,    'max': 100,  'step': 1, 'default': 10},

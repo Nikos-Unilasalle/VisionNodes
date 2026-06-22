@@ -42,12 +42,13 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
         {'id': 'thickness',    'label': 'Box Thickness',         'min': 1, 'max': 10, 'step': 1, 'default': 2},
         {'id': 'font_scale',   'label': 'Font Scale (%)',        'min': 1, 'max': 100, 'step': 1, 'default': 40},
         {'id': 'fill_alpha',   'label': 'Box Fill Alpha (%)',    'min': 0, 'max': 60, 'step': 1, 'default': 10},
+        {'id': '_sec_point',        'label': 'Point Overlay', 'type': 'section'},
         {'id': 'show_point',        'label': 'Show Point',          'type': 'bool', 'default': False},
         {'id': 'point_radius',      'label': 'Point Radius',        'min': 1, 'max': 40, 'step': 1, 'default': 6},
-        {'id': 'point_use_id_color','label': 'Point: use ID color', 'type': 'bool', 'default': True},
-        {'id': 'point_r',           'label': 'Point R',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
-        {'id': 'point_g',           'label': 'Point G',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
-        {'id': 'point_b',           'label': 'Point B',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
+        {'id': 'point_use_id_color','label': 'Use ID color', 'type': 'bool', 'default': True},
+        {'id': 'point_r',           'label': 'R',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
+        {'id': 'point_g',           'label': 'G',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
+        {'id': 'point_b',           'label': 'B',             'min': 0, 'max': 255, 'step': 1,   'default': 255},
     ]
 )
 class TrackVisualizerNode(NodeProcessor):

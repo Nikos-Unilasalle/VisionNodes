@@ -64,8 +64,10 @@ class LabelAreaFilterNode(NodeProcessor):
     inputs=[{'id': 'mask', 'color': 'mask'}],
     outputs=[{'id': 'mask', 'color': 'mask'}],
     params=[
+        {'id': '_sec_area', 'label': 'Area Threshold', 'type': 'section'},
         {'id': 'min_area_pct', 'label': 'Min Area (%)', 'type': 'number', 'default': 0.1, 'min': 0, 'max': 20, 'step': 0.05},
         {'id': 'min_area_px',  'label': 'Min Area (px)', 'type': 'number', 'default': 0,   'min': 0, 'max': 500000, 'step': 100},
+        {'id': '_sec_options', 'label': 'Options', 'type': 'section'},
         {'id': 'fill_holes',   'label': 'Fill Holes (Contours mode)', 'type': 'boolean', 'default': False},
         {'id': 'invert',       'label': 'Invert Input', 'type': 'boolean', 'default': False},
         {'id': 'mode',         'label': 'Mode', 'type': 'enum', 'options': ['Keep Matches', 'Remove Matches'], 'default': 0}

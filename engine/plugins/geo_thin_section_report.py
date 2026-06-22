@@ -187,12 +187,14 @@ def _classification_hint(modal_stats: dict | None) -> str:
         {'id': 'main', 'color': 'image', 'label': 'Report'},
     ],
     params=[
+        {'id': '_sec_metadata', 'label': 'Sample Info', 'type': 'section'},
         {'id': 'sample_name',  'label': 'Sample Name',  'type': 'string', 'default': 'Sample 01'},
         {'id': 'rock_type',    'label': 'Rock Type',    'type': 'string', 'default': 'Unknown'},
         {'id': 'formation',    'label': 'Formation',    'type': 'string', 'default': ''},
         {'id': 'analyst',      'label': 'Analyst',      'type': 'string', 'default': 'Anonymous'},
         {'id': 'location',     'label': 'Location',     'type': 'string', 'default': ''},
         {'id': 'age',          'label': 'Age / Period', 'type': 'string', 'default': ''},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'accent_color', 'label': 'Accent Color', 'type': 'color',  'default': '#4ade80'},
     ]
 )

@@ -43,10 +43,12 @@ _NOTIF = 'shp_rasterizer'
         {'id': 'n_feat',  'color': 'scalar',  'label': 'Features burned'},
     ],
     params=[
+        {'id': '_sec_source', 'label': 'Source', 'type': 'section'},
         {'id': 'file_path',    'type': 'string', 'default': '',
          'label': 'Vector file path (.shp / .geojson / .gpkg)'},
         {'id': 'layer',        'type': 'string', 'default': '',
          'label': 'Layer name (GeoPackage, blank = first)'},
+        {'id': '_sec_rasterization', 'label': 'Rasterization', 'type': 'section'},
         {'id': 'burn_field',   'type': 'string', 'default': '',
          'label': 'Attribute field to burn (blank = burn value below)'},
         {'id': 'burn_value',   'type': 'float',  'default': 1.0,

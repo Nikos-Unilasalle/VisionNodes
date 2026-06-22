@@ -29,10 +29,12 @@ _INT_W, _INT_H = 160, 120
         {'id': 'filtered_vis', 'color': 'image'},
     ],
     params=[
-        {'id': 'alpha',       'min': 0,   'max': 250, 'step': 1, 'default': 50},
+        {'id': '_sec_bandpass', 'label': 'Bandpass', 'type': 'section'},
         {'id': 'low_cutoff',  'min': 0,   'max': 5000,'step': 1, 'default': 830},
         {'id': 'high_cutoff', 'min': 0,   'max': 5000,'step': 1, 'default': 1000},
         {'id': 'fps',         'min': 10,  'max': 120, 'step': 1, 'default': 30},
+        {'id': '_sec_amplification', 'label': 'Amplification', 'type': 'section'},
+        {'id': 'alpha',       'min': 0,   'max': 250, 'step': 1, 'default': 50},
         {'id': 'levels',      'min': 1,   'max': 5,   'step': 1, 'default': 4},
         {'id': 'attenuation', 'min': 1,   'max': 100, 'step': 1, 'default': 3},
     ]

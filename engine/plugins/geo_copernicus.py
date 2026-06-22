@@ -268,6 +268,7 @@ _CLASS_PALETTES = {
     params=[
         {'id': 'client_id',     'type': 'string', 'default': '', 'label': 'Client ID (CDSE)'},
         {'id': 'client_secret', 'type': 'string', 'default': '', 'label': 'Client Secret'},
+        {'id': '_sec_query', 'label': 'Query', 'type': 'section'},
         {'id': 'collection',    'type': 'enum',   'options': list(COLLECTIONS.keys()), 'default': 0, 'label': 'Collection'},
         {'id': 'date_start',    'type': 'string', 'default': '2024-01-01', 'label': 'Start Date'},
         {'id': 'date_end',      'type': 'string', 'default': '2024-06-01', 'label': 'End Date'},
@@ -278,10 +279,12 @@ _CLASS_PALETTES = {
         {'id': 'resolution',    'type': 'int',    'default': 10, 'min': 1, 'max': 1000, 'label': 'Resolution (m/px)'},
         {'id': 'bands',         'type': 'string', 'default': 'B04,B03,B02,B08', 'label': 'Bands (set via editor)'},
         {'id': 'bbox',          'type': 'string', 'default': '', 'label': 'Bounding Box (set via editor)'},
+        {'id': '_sec_download', 'label': 'Download', 'type': 'section'},
         {'id': 'max_tile_px',   'type': 'int',    'default': 2500, 'min': 256, 'max': 5000, 'label': 'Max tile size (px)'},
         {'id': 'cache_dir',     'type': 'string', 'default': 'copernicus_cache', 'label': 'Cache Dir'},
 
         # ── STAC-only parameters (ignored for SentinelHub collections) ────
+        {'id': '_sec_stac', 'label': 'STAC Options', 'type': 'section'},
         {'id': 'stac_polarization', 'type': 'enum', 'options': ['Both', 'VV', 'VH'],
          'default': 0, 'label': 'STAC: Polarization (S1-RTC)'},
         {'id': 'stac_orbit',        'type': 'enum', 'options': ['Any', 'Ascending', 'Descending'],
@@ -298,6 +301,7 @@ _CLASS_PALETTES = {
         {'id': 'stac_min_ok',       'type': 'int',  'default': 3,  'min': 1, 'max': 100,
          'label': 'STAC: Min scenes OK to accept result (else retry)'},
 
+        {'id': '_sec_control', 'label': 'Control', 'type': 'section'},
         {'id': 'fetch',         'type': 'trigger','default': 0,  'label': 'Fetch'},
     ],
     resizable=True, min_width=280, min_height=200,

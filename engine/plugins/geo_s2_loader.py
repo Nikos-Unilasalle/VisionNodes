@@ -105,6 +105,7 @@ def _auto_detect_bands(img_data_dir):
     ],
     params=[
         {'id': 'img_data_path', 'type': 'string', 'default': '', 'label': '📁 IMG_DATA (auto-detect)'},
+        {'id': '_sec_bands', 'label': 'Band Overrides', 'type': 'section'},
         {'id': 'b3_path',       'type': 'string', 'default': '', 'label': 'B3 Green override'},
         {'id': 'b4_path',       'type': 'string', 'default': '', 'label': 'B4 Red override'},
         {'id': 'b8_path',       'type': 'string', 'default': '', 'label': 'B8 NIR override'},

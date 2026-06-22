@@ -30,8 +30,10 @@ _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
         {'id': 'meta',       'color': 'dict',   'label': 'Meta'},
     ],
     params=[
+        {'id': '_sec_credentials', 'label': 'Credentials', 'type': 'section'},
         {'id': 'username',      'label': 'Username (Copernicus)',   'type': 'string', 'default': ''},
         {'id': 'password',      'label': 'Password (Copernicus)',   'type': 'string', 'default': ''},
+        {'id': '_sec_dataset', 'label': 'Dataset', 'type': 'section'},
         {'id': 'dataset_id',    'label': 'Dataset ID',              'type': 'string', 'default': 'cmems_mod_glo_phy_anfc_0.083deg_PT1D-m'},
         {'id': 'variable',      'label': 'Variable name',           'type': 'string', 'default': 'thetao'},
         {'id': 'date_start',    'label': 'Start Date (YYYY-MM-DD)', 'type': 'string', 'default': '2023-01-01'},
@@ -41,7 +43,9 @@ _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
         {'id': 'max_depth',     'label': 'Profondeur Max (m)',      'type': 'float',  'default': 0.0},
         {'id': 'depth_idx',     'label': 'Index Profondeur (4D)',   'type': 'int',    'default': 0, 'min': 0, 'max': 100},
         {'id': 'service',       'label': 'Service / Protocole',     'type': 'enum',   'options': ['auto', 'arco-geo-series', 'arco-time-series', 'opendap', 'motu'], 'default': 0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'colormap',      'label': 'Palette Couleur',          'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno'], 'default': 0},
+        {'id': '_sec_control', 'label': 'Cache & Control', 'type': 'section'},
         {'id': 'cache_dir',     'label': 'Dossier Cache',           'type': 'string', 'default': 'copernicus_marine_cache'},
         {'id': 'fetch',         'label': 'Télécharger',             'type': 'trigger', 'default': 0},
     ]

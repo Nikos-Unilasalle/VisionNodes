@@ -61,19 +61,19 @@ const RightPanel: React.FC<RightPanelProps> = ({
         </div>
         
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto p-10 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
             {selectedNode ? (
-              <div className="space-y-12 animate-in slide-in-from-right-10 duration-500">
-                <div className="flex items-center gap-5">
-                   <div className="w-16 h-16 bg-accent/5 rounded-3xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
-                      <Cpu size={32} />
+              <div className="space-y-8 animate-in slide-in-from-right-10 duration-500">
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-accent/5 rounded-2xl border border-accent/20 flex items-center justify-center text-accent shadow-inner">
+                      <Cpu size={24} />
                    </div>
                    <div>
                       <h2 className="text-[14px] font-black text-white uppercase tracking-wider">{selectedNode.data.label}</h2>
                       {selectedNode.data.description && (
-                        <p className="text-[10px] text-gray-400 italic mt-1 leading-relaxed opacity-80">{selectedNode.data.description}</p>
+                        <p className="text-[10px] text-gray-400 mt-1 leading-relaxed opacity-80">{selectedNode.data.description}</p>
                       )}
-                      <span className="text-[9px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
+                      <span className="text-[8px] text-gray-600 font-mono italic opacity-40 leading-none">{selectedNode.id}</span>
                    </div>
                 </div>
 

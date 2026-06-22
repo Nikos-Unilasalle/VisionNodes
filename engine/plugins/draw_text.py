@@ -18,8 +18,10 @@ from registry import vision_node, NodeProcessor
     outputs=[{'id': 'main', 'color': 'image'}, {'id': 'graphic', 'color': 'dict'}],
     params=[
         {'id': 'text', 'label': 'Text', 'type': 'string', 'default': 'Hello'},
+        {'id': '_sec_position', 'label': 'Position', 'type': 'section'},
         {'id': 'x', 'label': 'X Pos', 'type': 'scalar', 'min': 0, 'max': 1, 'step': 0.01, 'default': 0.5},
         {'id': 'y', 'label': 'Y Pos', 'type': 'scalar', 'min': 0, 'max': 1, 'step': 0.01, 'default': 0.5},
+        {'id': '_sec_style', 'label': 'Style', 'type': 'section'},
         {'id': 'font_scale', 'label': 'Size', 'type': 'scalar', 'min': 0.1, 'max': 5, 'step': 0.1, 'default': 1.0},
         {'id': 'thickness', 'label': 'Thickness', 'type': 'scalar', 'min': 1, 'max': 10, 'step': 1, 'default': 2},
         {'id': 'color', 'label': 'Color', 'type': 'color', 'default': '#FFFFFF'}

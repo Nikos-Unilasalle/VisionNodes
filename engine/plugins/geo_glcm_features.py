@@ -151,6 +151,7 @@ def _preview_band(arr: np.ndarray) -> np.ndarray:
             'default': 0, 'min': 0, 'max': 31,
             'label': 'Band index to process (0 = first band)',
         },
+        {'id': '_sec_glcm_config', 'label': 'GLCM Config', 'type': 'section'},
         {
             'id': 'window_size', 'type': 'int',
             'default': 9, 'min': 3, 'max': 31,
@@ -171,6 +172,7 @@ def _preview_band(arr: np.ndarray) -> np.ndarray:
             'default': '1,2',
             'label': 'GLCM distances (comma-sep ints)',
         },
+        {'id': '_sec_features', 'label': 'Features', 'type': 'section'},
         {
             'id': 'contrast',      'type': 'bool', 'default': True,  'label': 'Contrast' },
         {
@@ -181,6 +183,7 @@ def _preview_band(arr: np.ndarray) -> np.ndarray:
             'id': 'correlation',   'type': 'bool', 'default': True,  'label': 'Correlation' },
         {
             'id': 'dissimilarity', 'type': 'bool', 'default': False, 'label': 'Dissimilarity' },
+        {'id': '_sec_output', 'label': 'Output', 'type': 'section'},
         {
             'id': 'band_suffix',   'type': 'string', 'default': 'VH',
             'label': 'Band name suffix (e.g. VH → contrast_VH, …)' },

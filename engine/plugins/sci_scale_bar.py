@@ -13,9 +13,11 @@ _POSITIONS = ['Bottom Right', 'Bottom Left', 'Top Right', 'Top Left']
     inputs=[{'id': 'image', 'color': 'any'}],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
+        {'id': '_sec_calibration', 'label': 'Calibration', 'type': 'section'},
         {'id': 'pixels_per_unit', 'label': 'Pixels / Unit',      'type': 'float',  'default': 100.0, 'min': 0.1},
         {'id': 'bar_length',      'label': 'Bar Length (units)',  'type': 'float',  'default': 1.0,   'min': 0.01},
         {'id': 'unit_name',       'label': 'Unit Name',           'type': 'string', 'default': 'mm'},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'position',        'label': 'Position',            'type': 'enum',   'options': _POSITIONS, 'default': 0},
         {'id': 'color',           'label': 'Color',               'type': 'color',  'default': '#FFFFFF'},
         {'id': 'thickness',       'label': 'Thickness (px)',      'type': 'int',    'default': 3,  'min': 1, 'max': 10},

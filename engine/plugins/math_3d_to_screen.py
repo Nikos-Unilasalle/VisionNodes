@@ -20,9 +20,11 @@ import cv2
         {'id': 'point', 'color': 'dict', 'label': 'Graphics Point'}
     ],
     params=[
+        {'id': '_sec_projection', 'label': 'Projection', 'type': 'section'},
         {'id': 'focal_length', 'label': 'Focal Length', 'type': 'float', 'default': 1.0,  'min': 0.1, 'max': 5.0, 'step': 0.1},
         {'id': 'scale_x',      'label': 'Scale X',     'type': 'float', 'default': 1.0,  'min': 0.1, 'max': 10.0, 'step': 0.05},
         {'id': 'scale_y',      'label': 'Scale Y',     'type': 'float', 'default': 1.0,  'min': 0.1, 'max': 10.0, 'step': 0.05},
+        {'id': '_sec_transform', 'label': 'Transform', 'type': 'section'},
         {'id': 'offset_x',     'label': 'Offset X',    'type': 'float', 'default': 0.0,  'min': -1.0, 'max': 1.0, 'step': 0.01},
         {'id': 'offset_y',     'label': 'Offset Y',    'type': 'float', 'default': 0.0,  'min': -1.0, 'max': 1.0, 'step': 0.01},
         {'id': 'flip_x',       'label': 'Flip X',      'type': 'bool',  'default': False},

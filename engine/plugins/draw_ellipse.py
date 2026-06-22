@@ -17,11 +17,13 @@ from registry import vision_node, NodeProcessor
         {'id': 'draw', 'color': 'dict'}
     ],
     params=[
+        {'id': '_sec_geometry', 'label': 'Geometry', 'type': 'section'},
         {'id': 'cx',        'label': 'Center X',   'type': 'float', 'default': 0.5,  'min': 0.0, 'max': 1.0, 'step': 0.01},
         {'id': 'cy',        'label': 'Center Y',   'type': 'float', 'default': 0.5,  'min': 0.0, 'max': 1.0, 'step': 0.01},
         {'id': 'rx',        'label': 'Radius X',   'type': 'float', 'default': 0.2,  'min': 0.0, 'max': 1.0, 'step': 0.01},
         {'id': 'ry',        'label': 'Radius Y',   'type': 'float', 'default': 0.1,  'min': 0.0, 'max': 1.0, 'step': 0.01},
         {'id': 'angle',     'label': 'Angle (°)',  'type': 'float', 'default': 0.0,  'min': 0.0, 'max': 360.0, 'step': 1.0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'color',     'label': 'Color',      'type': 'color', 'default': '#00FF00'},
         {'id': 'thickness', 'label': 'Thickness',  'type': 'int',   'default': 2,    'min': 1,   'max': 20},
         {'id': 'fill',      'label': 'Fill',       'type': 'bool',  'default': False},

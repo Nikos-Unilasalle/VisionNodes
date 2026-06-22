@@ -298,9 +298,11 @@ def _null_audio():
     params=[
         {'id': 'full_file',  'label': 'Full File',   'type': 'bool',  'default': False},
         {'id': 'window_sec', 'label': 'Window (s)',  'type': 'float', 'default': 5.0,  'min': 0.5, 'max': 60.0},
+        {'id': '_sec_fft', 'label': 'FFT Config', 'type': 'section'},
         {'id': 'n_fft',      'label': 'N-FFT',       'type': 'int',   'default': 2048, 'min': 256, 'max': 8192},
         {'id': 'hop_length', 'label': 'Hop Length',  'type': 'int',   'default': 512,  'min': 64,  'max': 2048},
         {'id': 'n_mels',     'label': 'Mel Bands',   'type': 'int',   'default': 128,  'min': 32,  'max': 256},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'colormap',   'label': 'Colormap',    'type': 'enum',  'default': 'Magma',
          'options': ['Magma', 'Viridis', 'Inferno', 'Hot', 'Jet']},
     ]
@@ -683,10 +685,12 @@ class AudioInfoNode(NodeProcessor):
     ],
     outputs=_AUDIO_OUTPUTS + [{'id': 'sr', 'color': 'scalar'}],
     params=[
+        {'id': '_sec_fft_cfg', 'label': 'FFT Config', 'type': 'section'},
         {'id': 'sr',         'label': 'Sample Rate',   'type': 'int', 'default': 22050},
         {'id': 'n_fft',      'label': 'N-FFT',         'type': 'int', 'default': 2048},
         {'id': 'hop_length', 'label': 'Hop Length',    'type': 'int', 'default': 512},
         {'id': 'iterations', 'label': 'GL Iterations', 'type': 'int', 'default': 32, 'min': 4, 'max': 128},
+        {'id': '_sec_control', 'label': 'Control', 'type': 'section'},
         {'id': 'run',        'label': 'Reconstruct',    'type': 'trigger'},
     ]
 )

@@ -28,11 +28,13 @@ from registry import vision_node, NodeProcessor
     ],
     params=[
         {'id': 'focal', 'label': 'Focal (xW)', 'type': 'float', 'min': 0.3, 'max': 3.0, 'default': 1.0},
+        {'id': '_sec_distortion', 'label': 'Distortion', 'type': 'section'},
         {'id': 'k1', 'label': 'k1 (radial)', 'type': 'float', 'min': -1.0, 'max': 1.0, 'default': 0.0},
         {'id': 'k2', 'label': 'k2 (radial)', 'type': 'float', 'min': -1.0, 'max': 1.0, 'default': 0.0},
         {'id': 'p1', 'label': 'p1 (tangential)', 'type': 'float', 'min': -0.1, 'max': 0.1, 'default': 0.0},
         {'id': 'p2', 'label': 'p2 (tangential)', 'type': 'float', 'min': -0.1, 'max': 0.1, 'default': 0.0},
         {'id': 'k3', 'label': 'k3 (radial)', 'type': 'float', 'min': -1.0, 'max': 1.0, 'default': 0.0},
+        {'id': '_sec_output', 'label': 'Output', 'type': 'section'},
         {'id': 'crop_valid', 'label': 'Crop Valid ROI', 'type': 'bool', 'default': False},
     ],
 )

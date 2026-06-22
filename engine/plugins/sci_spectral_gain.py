@@ -16,9 +16,11 @@ import numpy as np
         {'id': 'preview',       'color': 'image', 'label': 'Spectrum Preview'},
     ],
     params=[
+        {'id': '_sec_gain', 'label': 'Band Gain', 'type': 'section'},
         {'id': 'low_gain',       'label': 'Low Freq %',     'type': 'int', 'min': 0, 'max': 400, 'step': 1, 'default': 100},
         {'id': 'mid_gain',       'label': 'Mid Freq %',     'type': 'int', 'min': 0, 'max': 400, 'step': 1, 'default': 100},
         {'id': 'high_gain',      'label': 'High Freq %',    'type': 'int', 'min': 0, 'max': 400, 'step': 1, 'default': 100},
+        {'id': '_sec_splits', 'label': 'Band Splits', 'type': 'section'},
         {'id': 'low_mid_split',  'label': 'Low/Mid split %','type': 'int', 'min': 1, 'max': 98,  'step': 1, 'default': 15},
         {'id': 'mid_high_split', 'label': 'Mid/High split %','type': 'int','min': 2, 'max': 99,  'step': 1, 'default': 50},
     ]

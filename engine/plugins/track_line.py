@@ -16,9 +16,11 @@ import math
         {'id': 'draw', 'color': 'dict'}
     ],
     params=[
+        {'id': '_sec_points', 'label': 'Points', 'type': 'section'},
         {'id': 'pt_a', 'min': 0, 'max': 477, 'step': 1, 'default': 4},
         {'id': 'pt_b', 'min': 0, 'max': 477, 'step': 1, 'default': 8},
         {'id': 'absolute', 'label': 'Absolute Coords', 'type': 'bool', 'default': False},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'thickness', 'min': 1, 'max': 20, 'step': 1, 'default': 4},
         {'id': 'r', 'min': 0, 'max': 255, 'step': 1, 'default': 0},
         {'id': 'g', 'min': 0, 'max': 255, 'step': 1, 'default': 255},
