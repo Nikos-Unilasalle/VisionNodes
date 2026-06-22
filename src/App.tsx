@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import ReactFlow, {
   Background, Controls, ControlButton, applyEdgeChanges, applyNodeChanges,
   Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant,
-  NodeRemoveChange,
+  NodeRemoveChange, useViewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -62,6 +62,26 @@ const PythonEditorModal = React.lazy(() =>
 const DataFrameEditorModal = React.lazy(() =>
   import('./components/DataFrameEditorModal').then(m => ({ default: m.DataFrameEditorModal }))
 );
+
+// Blender-style insertion cursor: a small cross marking where the next added
+// node will be placed. Positioned in flow space, so it tracks pan/zoom.
+function InsertionCursor({ pos }: { pos: { x: number; y: number } }) {
+  const vp = useViewport();
+  const screenX = vp.x + pos.x * vp.zoom;
+  const screenY = vp.y + pos.y * vp.zoom;
+  return (
+    <div
+      className="absolute pointer-events-none z-0"
+      style={{ left: screenX, top: screenY, transform: 'translate(-50%, -50%)' }}
+    >
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <line x1="11" y1="2" x2="11" y2="20" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="2" y1="11" x2="20" y2="11" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="11" cy="11" r="2.5" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" fill="none" />
+      </svg>
+    </div>
+  );
+}
 
 function App() {
   const [canvases, setCanvases] = useState<Canvas[]>(makeInitialCanvases);
@@ -1232,34 +1252,33 @@ function App() {
         ? (instance?.screenToFlowPosition({ x: pendingConnection.clientX, y: pendingConnection.clientY }) ?? { x: pendingConnection.clientX, y: pendingConnection.clientY })
         : { x: cursorFlowPosRef.current.x - nw / 2, y: cursorFlowPosRef.current.y - nh / 2 };
     }
-    setViewNodes((nds) => {
-      const nextNodes = [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }];
-      if (pendingConnection && pendingConnection.sourceNode) {
-        setTimeout(() => {
-          const newEl = document.querySelector(`[data-id="${id}"]`);
-          if (!newEl) return;
-          const expectedColor = pendingConnection.sourceHandle.split('__')[0];
-          const targetClass = pendingConnection.type === 'source' ? 'target' : 'source';
-          const handles = Array.from(newEl.querySelectorAll(`.react-flow__handle.${targetClass}`));
-          const match = handles.find(h => h.getAttribute('data-handleid')?.startsWith(`${expectedColor}__`)) || handles[0];
-          if (match) {
-            const matchedHandleId = match.getAttribute('data-handleid');
-            if (matchedHandleId) {
-              setViewEdges(eds => {
-                return [...eds, {
-                  id: `e-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  source: pendingConnection.type === 'source' ? pendingConnection.sourceNode : id,
-                  target: pendingConnection.type === 'source' ? id : pendingConnection.sourceNode,
-                  sourceHandle: pendingConnection.type === 'source' ? pendingConnection.sourceHandle : matchedHandleId,
-                  targetHandle: pendingConnection.type === 'source' ? matchedHandleId : pendingConnection.sourceHandle
-                }];
-              });
-            }
+    setViewNodes((nds) => [...nds, { id, type, position, style: nodeStyle, data: { label, params: initialParams, schema } }]);
+    // NOTE: this side effect must live OUTSIDE the setViewNodes updater. React
+    // StrictMode double-invokes state updaters in dev, which would schedule the
+    // edge creation twice and create a duplicate edge on the same input handle
+    // (showing a spurious conflict pastille).
+    if (pendingConnection && pendingConnection.sourceNode) {
+      setTimeout(() => {
+        const newEl = document.querySelector(`[data-id="${id}"]`);
+        if (!newEl) return;
+        const expectedColor = pendingConnection.sourceHandle.split('__')[0];
+        const targetClass = pendingConnection.type === 'source' ? 'target' : 'source';
+        const handles = Array.from(newEl.querySelectorAll(`.react-flow__handle.${targetClass}`));
+        const match = handles.find(h => h.getAttribute('data-handleid')?.startsWith(`${expectedColor}__`)) || handles[0];
+        if (match) {
+          const matchedHandleId = match.getAttribute('data-handleid');
+          if (matchedHandleId) {
+            setViewEdges(eds => [...eds, {
+              id: `e-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              source: pendingConnection.type === 'source' ? pendingConnection.sourceNode : id,
+              target: pendingConnection.type === 'source' ? id : pendingConnection.sourceNode,
+              sourceHandle: pendingConnection.type === 'source' ? pendingConnection.sourceHandle : matchedHandleId,
+              targetHandle: pendingConnection.type === 'source' ? matchedHandleId : pendingConnection.sourceHandle
+            }]);
           }
-        }, 50);
-      }
-      return nextNodes;
-    });
+        }
+      }, 50);
+    }
     setIsAddMenuOpen(false);
     setPendingConnection(null);
   }, [pushSnapshot, pendingConnection, instance, setViewNodes, setViewEdges, setIsAddMenuOpen, setPendingConnection]);
@@ -1816,7 +1835,8 @@ function App() {
             }}
             onPaneContextMenu={(e) => {
               e.preventDefault(); setMenu(null);
-              if (instance) setCursorFlowPos(instance.screenToFlowPosition({ x: e.clientX, y: e.clientY }));
+              // Note: right-click does NOT move the insertion cursor. Only left-click
+              // (onPaneClick) marks the spot where the next node will be placed.
               const selectedCount = nodes.filter(n => n.selected).length;
               if (selectedCount > 1) { setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY }); }
               else { setIsAddMenuOpen(true); }
@@ -1827,6 +1847,7 @@ function App() {
             fitView
           >
             <Background color="rgba(255, 255, 255, 0.04)" variant={BackgroundVariant.Lines} gap={40} size={1} />
+            <InsertionCursor pos={cursorFlowPos} />
             <Controls className="bg-[#3d4452] border-[#4f5b6b] fill-white">
               {(() => {
                 const isFav = !!activeFilePath && favoriteFiles[activeCanvasId] === activeFilePath;

@@ -112,7 +112,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                     {isCollapsed
                       ? <Maximize size={16} className="text-accent group-hover:text-white" />
                       : <Minimize2 size={16} className="text-accent group-hover:text-white" />}
-                    <span>{isCollapsed ? 'Déplier' : 'Replier'}</span>
+                    <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
                   </button>
                 </>
               );

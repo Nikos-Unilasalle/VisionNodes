@@ -4413,7 +4413,7 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
   const isCollapsed = !!(data.params?.collapsed);
   const palIdx = data?.activePaletteIndex ?? 6;
   const cIdx = data?.params?.color_index;
-  const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#333333');
+  const bgColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.bg : (data?.params?.bg_color || '#6b8cb5');
   const textColor = cIdx !== undefined ? PALETTES[palIdx]?.colors[cIdx % 5]?.dark : (data?.params?.text_color || '#ffffff');
 
   return (
@@ -4444,7 +4444,7 @@ export const CanvasFrameNode = memo(({ selected, data }: any) => {
         </span>
         <button
           className="shrink-0 opacity-0 group-hover/frame:opacity-60 hover:!opacity-100 transition-opacity"
-          title={isCollapsed ? 'Déplier' : 'Replier'}
+          title={isCollapsed ? 'Expand' : 'Collapse'}
           onPointerDown={e => e.stopPropagation()}
           onDoubleClick={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); data.onToggleCollapse?.(); }}
