@@ -50,11 +50,14 @@ from registry import vision_node, NodeProcessor
         {'id': 'stats',       'label': 'Stats',         'color': 'dict'},
     ],
     params=[
+        {'id': '_sec_sampling',   'label': 'Sampling',   'type': 'section'},
         {'id': 'n_iterations', 'label': 'Iterations',      'type': 'int',  'default': 40,  'min': 5,  'max': 300},
         {'id': 'subsample',    'label': 'Subsample (%)',   'type': 'float','default': 30.0,'min': 1.0,'max': 100.0, 'step': 1.0},
+        {'id': '_sec_clustering', 'label': 'Clustering', 'type': 'section'},
         {'id': 'n_clusters',   'label': 'Clusters (K)',    'type': 'int',  'default': 2,   'min': 2,  'max': 12},
         {'id': 'ref_channel',  'label': 'Anchor Channel',  'type': 'int',  'default': 0,   'min': 0,  'max': 31},
         {'id': 'anchor_rule',  'label': 'Target Cluster',  'type': 'enum', 'options': ['Highest on channel', 'Lowest on channel'], 'default': 0},
+        {'id': '_sec_display',    'label': 'Display',    'type': 'section'},
         {'id': 'colormap',     'label': 'Colormap',        'type': 'enum', 'options': ['Inferno', 'Viridis', 'Jet', 'Ocean'], 'default': 0},
         {'id': 'seed',         'label': 'Random Seed',     'type': 'int',  'default': 0,   'min': 0,  'max': 9999},
     ]

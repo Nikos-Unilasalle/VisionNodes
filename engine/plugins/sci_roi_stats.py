@@ -18,10 +18,12 @@ from registry import vision_node, NodeProcessor
         {'id': 'count', 'color': 'scalar', 'label': 'Pixel Count'},
     ],
     params=[
+        {'id': '_sec_geometry', 'label': 'Geometry', 'type': 'section'},
         {'id': 'x',          'label': 'X (%)',      'type': 'float', 'default': 25.0, 'min': 0.0, 'max': 99.0},
         {'id': 'y',          'label': 'Y (%)',      'type': 'float', 'default': 25.0, 'min': 0.0, 'max': 99.0},
         {'id': 'w',          'label': 'Width (%)',  'type': 'float', 'default': 50.0, 'min': 1.0, 'max': 100.0},
         {'id': 'h',          'label': 'Height (%)', 'type': 'float', 'default': 50.0, 'min': 1.0, 'max': 100.0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'channel',    'label': 'Channel',    'type': 'enum',  'options': ['Luminance', 'Red', 'Green', 'Blue'], 'default': 0},
         {'id': 'color',      'label': 'Overlay Color', 'type': 'color', 'default': '#00FFA0'},
         {'id': 'show_stats', 'label': 'Show Stats', 'type': 'bool',  'default': True},

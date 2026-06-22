@@ -12,9 +12,11 @@ import cv2
     inputs=[{'id': 'geotiff', 'color': 'geotiff'}],
     outputs=[{'id': 'image', 'color': 'image'}],
     params=[
+        {'id': '_sec_band_mapping', 'label': 'Band Mapping', 'type': 'section'},
         {'id': 'r_band',    'type': 'int',  'default': 1,    'min': 1, 'max': 20, 'label': 'R Band'},
         {'id': 'g_band',    'type': 'int',  'default': 2,    'min': 1, 'max': 20, 'label': 'G Band'},
         {'id': 'b_band',    'type': 'int',  'default': 3,    'min': 1, 'max': 20, 'label': 'B Band'},
+        {'id': '_sec_stretch', 'label': 'Stretch', 'type': 'section'},
         {'id': 'stretch',   'type': 'bool', 'default': True,           'label': 'Auto Stretch'},
         {'id': 'percentile','type': 'int',  'default': 2,    'min': 0, 'max': 10, 'label': 'Stretch %'},
     ]

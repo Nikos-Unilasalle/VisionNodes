@@ -14,6 +14,7 @@ from registry import vision_node, NodeProcessor
     params=[
         {'id': 'path', 'type': 'file_path', 'default': 'output.svg', 'label': 'File Path'},
         {'id': 'trigger', 'type': 'trigger', 'label': 'Save SVG'},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'stroke_color', 'type': 'color', 'default': '#000000', 'label': 'Stroke Color'},
         {'id': 'fill_color', 'type': 'color', 'default': '#ffffff', 'label': 'Fill Color'},
         {'id': 'stroke_width', 'type': 'number', 'default': 1.5, 'min': 0.5, 'max': 10, 'label': 'Stroke Width'},

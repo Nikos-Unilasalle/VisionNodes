@@ -35,6 +35,7 @@ from registry import vision_node, NodeProcessor
          'default': 3.0, 'min': 1.0, 'max': 10.0, 'step': 0.5},
         {'id': 'k_harris',    'label': 'Harris k',    'type': 'float',
          'default': 0.04, 'min': 0.01, 'max': 0.10, 'step': 0.01},
+        {'id': '_sec_classification', 'label': 'Classification', 'type': 'section'},
         {'id': 'flat_thresh', 'label': 'Flat Threshold',  'type': 'float',
          'default': 0.001, 'min': 0.0, 'max': 0.1, 'step': 0.001},
         {'id': 'edge_ratio',  'label': 'Edge Ratio (λ₁/λ₂)', 'type': 'float',
