@@ -68,9 +68,11 @@ def _info_panel(lines: list[str], w: int = 420, h: int = 200, title: str = '') -
         {'id': 'points_mapped', 'color': 'scalar',  'label': 'Points mapped'},
     ],
     params=[
+        {'id': '_sec_columns', 'label': 'Column Mapping', 'type': 'section'},
         {'id': 'lat_col',    'label': 'Latitude column',            'type': 'string', 'default': 'lat'},
         {'id': 'lon_col',    'label': 'Longitude column',           'type': 'string', 'default': 'lon'},
         {'id': 'value_cols', 'label': 'Value columns (comma, blank=all numeric)', 'type': 'string', 'default': ''},
+        {'id': '_sec_aggregation', 'label': 'Aggregation', 'type': 'section'},
         {'id': 'aggregation','label': 'Aggregation per pixel',      'type': 'enum',   'options': _AGG, 'default': 0},
         {'id': 'nodata_val', 'label': 'NoData (pixels with no point)', 'type': 'float', 'default': -9999.0},
     ],

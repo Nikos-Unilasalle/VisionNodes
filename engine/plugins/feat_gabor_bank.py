@@ -25,6 +25,7 @@ from registry import vision_node, NodeProcessor
     ],
     params=[
         {'id': 'n_theta',   'label': 'Orientations',      'type': 'int',   'default': 8,  'min': 2, 'max': 16},
+        {'id': '_sec_filter', 'label': 'Filter', 'type': 'section'},
         {'id': 'wavelength','label': 'Wavelength (px)',   'type': 'float', 'default': 8.0,'min': 2.0,'max': 64.0},
         {'id': 'sigma',     'label': 'Sigma',             'type': 'float', 'default': 4.0,'min': 1.0,'max': 32.0},
         {'id': 'gamma',     'label': 'Aspect Ratio',      'type': 'float', 'default': 0.5,'min': 0.1,'max': 1.0},

@@ -29,6 +29,7 @@ _IDS   = [i for _, i in _COLORMAPS]
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
         {'id': 'colormap',   'label': 'Colormap',   'type': 'enum',  'options': _NAMES, 'default': 0},
+        {'id': '_sec_range', 'label': 'Range', 'type': 'section'},
         {'id': 'auto_range', 'label': 'Auto Range',  'type': 'bool',  'default': True},
         {'id': 'in_min',     'label': 'Input Min',   'type': 'float', 'default': 0.0,   'min': 0.0, 'max': 65535.0},
         {'id': 'in_max',     'label': 'Input Max',   'type': 'float', 'default': 255.0, 'min': 0.0, 'max': 65535.0},

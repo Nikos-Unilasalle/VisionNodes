@@ -261,6 +261,7 @@ def _render_report(
         {'id': 'oa',        'color': 'scalar', 'label': 'Overall agreement'},
     ],
     params=[
+        {'id': '_sec_mapping', 'label': 'Class Mapping', 'type': 'section'},
         {
             'id': 'pred_mapping', 'type': 'string',
             'default': _DEFAULT_PRED_MAPPING,
@@ -276,6 +277,7 @@ def _render_report(
             'default': _DEFAULT_COMMON_LABELS,
             'label': 'Common class labels (e.g. 5=Mangrove,2=Water,…)',
         },
+        {'id': '_sec_export', 'label': 'Export', 'type': 'section'},
         {
             'id': 'dpi', 'type': 'int',
             'default': 110, 'min': 72, 'max': 300,

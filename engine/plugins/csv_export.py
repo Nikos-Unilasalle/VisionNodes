@@ -15,8 +15,10 @@ _SCALAR = (int, float, str, bool, type(None))
     inputs=[],
     outputs=[],
     params=[
+        {'id': '_sec_control',      'label': 'Control',         'type': 'section'},
         {'id': 'record',          'label': 'Recording',       'type': 'toggle', 'default': False},
         {'id': 'snapshot',        'label': 'Snapshot',        'type': 'trigger', 'default': 0},
+        {'id': '_sec_export',     'label': 'Export',          'type': 'section'},
         {'id': 'filename',        'label': 'Base Name',       'type': 'string',  'default': 'capture'},
         {'id': 'path',            'label': 'Folder Path',     'type': 'string',  'default': 'exports'},
         {'id': 'auto_timestamp',  'label': 'Auto Timestamp',  'type': 'bool',    'default': True},
