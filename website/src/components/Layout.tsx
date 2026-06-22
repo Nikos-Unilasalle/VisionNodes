@@ -15,7 +15,7 @@ import nodesData from '../data/nodes.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace' | 'agro-root-anatomy';
+type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace' | 'agro-root-anatomy' | 'learn';
 
 interface Port {
   id: string;
@@ -165,6 +165,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'wiki',      label: 'Node Wiki' },
   { id: 'gallery',   label: 'Gallery'   },
   { id: 'tutorials', label: 'Tutorials' },
+  { id: 'learn',     label: 'Learn CV'  },
   { id: 'community', label: 'Share'     },
   { id: 'download',  label: 'Download'  },
   // { id: 'marketplace', label: 'Marketplace' },
@@ -677,14 +678,59 @@ const InstitutionalSection = () => (
   </section>
 );
 
+// ─── Book Teaser Section ──────────────────────────────────────────────────────
+
+const BookTeaserSection = ({ onLearn }: { onLearn: () => void }) => (
+  <section className="section-full section-alt border-t border-[var(--border)]">
+    <div className="container-lg">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="vn-card-flat overflow-hidden grid md:grid-cols-2 gap-0 items-center"
+      >
+        {/* Cover */}
+        <button onClick={onLearn} className="relative p-10 md:p-14 flex justify-center bg-[var(--bg-alt)]">
+          <img
+            src={`${BASE}book/cover_fr.jpg`}
+            alt="Le monde vu par les nombres"
+            className="w-full max-w-[280px] rounded-lg shadow-2xl transition-transform hover:scale-[1.03]"
+            style={{ boxShadow: '0 24px 48px -18px rgba(0,0,0,0.45)' }}
+          />
+        </button>
+
+        {/* Text */}
+        <div className="p-10 md:p-14">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-[var(--accent)] text-[11px] font-bold uppercase tracking-widest mb-5">
+            <Book size={13} /> Learn Computer Vision
+          </span>
+          <h2 className="text-[30px] md:text-[40px] text-[var(--text-main)] mb-4 leading-tight">
+            The book behind the nodes
+          </h2>
+          <p className="text-[16px] text-[var(--text-dim)] leading-relaxed mb-8">
+            <strong className="text-[var(--text-main)]">Le monde vu par les nombres</strong> — a free
+            formulary of Computer Vision that builds the intuition behind every formula, illustrated with
+            VisionNodes pipelines. Available in French and English.
+          </p>
+          <button onClick={onLearn} className="btn-primary text-[15px]">
+            <Book size={16} /> Explore the book <ArrowRight size={15} />
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  </section>
+);
+
 // ─── Home Page ────────────────────────────────────────────────────────────────
 
-const HomePage = ({ onDownload }: { onDownload: () => void }) => (
+const HomePage = ({ onDownload, onLearn }: { onDownload: () => void; onLearn: () => void }) => (
   <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
     <HeroSection onDownload={onDownload} />
     <ManifestoSection />
     <FeaturesSection />
     <UpgradesSection />
+    <BookTeaserSection onLearn={onLearn} />
     <InstitutionalSection />
   </motion.div>
 );

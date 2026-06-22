@@ -6,6 +6,7 @@ import WikiPage from './components/WikiPage';
 import TutorialsPage from './components/TutorialsPage';
 import CommunityPage from './components/CommunityPage';
 import DownloadPage from './components/DownloadPage';
+import LearnPage from './components/LearnPage';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
 import GalleryPage from './components/GalleryPage';
@@ -28,6 +29,7 @@ const Footer = ({ setActiveTab }: { setActiveTab: (t: Tab) => void }) => (
             { label: 'About',       tab: 'about'       as Tab },
             { label: 'Node Wiki',   tab: 'wiki'        as Tab },
             { label: 'Tutorials',   tab: 'tutorials'   as Tab },
+            { label: 'Learn CV',    tab: 'learn'       as Tab },
             { label: 'Download',    tab: 'download'    as Tab },
             // { label: 'Marketplace', tab: 'marketplace' as Tab },
           ].map(l => (
@@ -115,10 +117,11 @@ export default function App() {
 
       <main>
         <AnimatePresence mode="wait">
-          {activeTab === 'home'      && <HomePage      key="home"      onDownload={() => goTo('download')} />}
+          {activeTab === 'home'      && <HomePage      key="home"      onDownload={() => goTo('download')} onLearn={() => goTo('learn')} />}
           {activeTab === 'about'     && <AboutPage     key="about"     />}
           {activeTab === 'wiki'      && <WikiPage      key="wiki"      onCommunity={() => goTo('community')} />}
           {activeTab === 'tutorials' && <TutorialsPage key="tutorials" />}
+          {activeTab === 'learn'     && <LearnPage     key="learn"     />}
           {activeTab === 'community' && <CommunityPage key="community" />}
           {activeTab === 'gallery'   && <GalleryPage   key="gallery"   />}
           {activeTab === 'marketplace' && <MarketplacePage key="marketplace" onProductClick={(link) => goTo(link.replace('/marketplace/', '') as any)} />}
