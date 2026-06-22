@@ -14,10 +14,12 @@ from registry import vision_node, NodeProcessor
     ],
     outputs=[{'id': 'draw', 'color': 'dict'}],
     params=[
+        {'id': '_sec_geometry', 'label': 'Geometry', 'type': 'section'},
         {'id': 'x1',        'label': 'X1',        'type': 'float', 'default': 0.2, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'y1',        'label': 'Y1',        'type': 'float', 'default': 0.5, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'x2',        'label': 'X2',        'type': 'float', 'default': 0.8, 'min': 0, 'max': 1, 'step': 0.01},
         {'id': 'y2',        'label': 'Y2',        'type': 'float', 'default': 0.5, 'min': 0, 'max': 1, 'step': 0.01},
+        {'id': '_sec_style', 'label': 'Style', 'type': 'section'},
         {'id': 'color',     'label': 'Color',     'type': 'color', 'default': '#FF6600'},
         {'id': 'thickness', 'label': 'Thickness', 'type': 'int',   'default': 2, 'min': 1, 'max': 20},
         {'id': 'tip_length','label': 'Tip Length','type': 'float', 'default': 0.3, 'min': 0.05, 'max': 1.0, 'step': 0.05},

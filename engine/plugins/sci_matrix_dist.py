@@ -31,6 +31,7 @@ def _parse_hex(s, fallback=(0, 212, 170)):
         {'id': 'log_scale',  'label': 'Log Scale',  'type': 'toggle', 'default': False},
         {'id': 'cumulative', 'label': 'Cumulative',  'type': 'toggle', 'default': False},
         {'id': 'show_stats', 'label': 'Show Stats',  'type': 'toggle', 'default': True},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'bar_color',  'label': 'Bar Color',  'type': 'color',  'default': '#00d4aa'},
     ],
     resizable=True, min_width=200, min_height=120

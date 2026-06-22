@@ -108,8 +108,10 @@ class DnNormalizeNode(NodeProcessor):
         {'id': 'preview', 'color': 'image',   'label': 'Preview'},
     ],
     params=[
+        {'id': '_sec_bands', 'label': 'Band Config', 'type': 'section'},
         {'id': 'nir_band',   'type': 'int',   'default': 3,    'min': 1, 'max': 20, 'label': 'NIR Band (B8)'},
         {'id': 'vis_bands',  'type': 'string','default': '1,2', 'label': 'Visible Bands (B3,B4) comma list'},
+        {'id': '_sec_correction', 'label': 'Correction', 'type': 'section'},
         {'id': 'mode',       'type': 'enum',  'options': ['Auto (regression)', 'Fixed k'], 'default': 'Auto (regression)', 'label': 'Mode'},
         {'id': 'k_fixed',    'type': 'float', 'default': 1.0,  'min': 0.0, 'max': 5.0, 'label': 'k (Fixed mode)'},
         {'id': 'percentile', 'type': 'int',   'default': 10,   'min': 1, 'max': 50, 'label': 'Dark water percentile (Auto)'},
@@ -256,11 +258,14 @@ _TURB_LUT = _turbidity_ntu_lut()
         {'id': 'stats',     'color': 'dict',    'label': 'Stats (NTU)'},
     ],
     params=[
+        {'id': '_sec_model', 'label': 'Model', 'type': 'section'},
         {'id': 'preset',   'type': 'enum',  'options': _PRESET_NAMES, 'default': _PRESET_NAMES[0], 'label': 'Preset'},
         {'id': 'red_band', 'type': 'int',   'default': 2,    'min': 1, 'max': 20,  'label': 'Band index (B4=2 for S2 loader)'},
+        {'id': '_sec_custom', 'label': 'Custom Constants', 'type': 'section'},
         {'id': 'A',        'type': 'float', 'default': 228.1, 'min': 0.0, 'max': 10000.0, 'label': 'A (Custom)'},
         {'id': 'B',        'type': 'float', 'default': 0.1641, 'min': 0.0, 'max': 10.0,   'label': 'B (Custom)'},
         {'id': 'C',        'type': 'float', 'default': 0.1724, 'min': 0.001, 'max': 1.0,  'label': 'C (Custom)'},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'max_ntu',  'type': 'float', 'default': 50.0,  'min': 1.0, 'max': 1000.0, 'label': 'Max NTU (colormap ceiling)'},
         {'id': 'gaussian', 'type': 'int',   'default': 3,    'min': 0, 'max': 15, 'label': 'Gaussian smooth (px, 0=off)'},
     ]

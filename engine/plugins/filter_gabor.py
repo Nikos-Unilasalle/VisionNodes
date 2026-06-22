@@ -25,12 +25,14 @@ from registry import vision_node, NodeProcessor
         {'id': 'kernel', 'label': 'Kernel', 'color': 'image'},
     ],
     params=[
+        {'id': '_sec_kernel', 'label': 'Kernel Config', 'type': 'section'},
         {'id': 'ksize', 'label': 'Kernel Size', 'type': 'int', 'min': 3, 'max': 99, 'default': 31},
         {'id': 'sigma', 'label': 'Sigma', 'type': 'float', 'min': 0.5, 'max': 30.0, 'default': 4.0},
         {'id': 'theta_deg', 'label': 'Orientation (deg)', 'type': 'float', 'min': 0.0, 'max': 180.0, 'default': 0.0},
         {'id': 'lambda', 'label': 'Wavelength', 'type': 'float', 'min': 1.0, 'max': 100.0, 'default': 10.0},
         {'id': 'gamma', 'label': 'Aspect Ratio', 'type': 'float', 'min': 0.1, 'max': 2.0, 'default': 0.5},
         {'id': 'psi_deg', 'label': 'Phase (deg)', 'type': 'float', 'min': 0.0, 'max': 360.0, 'default': 0.0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'show_kernel', 'label': 'Show Kernel', 'type': 'bool', 'default': False},
     ]
 )

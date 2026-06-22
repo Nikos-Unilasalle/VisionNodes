@@ -26,15 +26,18 @@ _NOTIF_ID = 'netcdf_reader'
         {'id': 'path',         'label': 'Path (File or Folder)',    'type': 'string', 'default': ''},
         {'id': 'variable',     'label': 'Variable (blank = auto)',         'type': 'string', 'default': ''},
         {'id': 'depth_idx',    'label': 'Depth Index (if 4D)',      'type': 'int',    'default': 0, 'min': 0, 'max': 500},
+        {'id': '_sec_coordinates', 'label': 'Coordinates', 'type': 'section'},
         {'id': 'lat_range',    'label': 'Latitude Range (e.g., -40,-30)', 'type': 'string', 'default': ''},
         {'id': 'lon_range',    'label': 'Longitude Range (e.g., -40,-30)','type': 'string', 'default': ''},
         {'id': 'lat_coord',    'label': 'Latitude Dim Name (blank = auto)', 'type': 'string', 'default': ''},
         {'id': 'lon_coord',    'label': 'Longitude Dim Name (blank = auto)','type': 'string', 'default': ''},
         {'id': 'time_coord',   'label': 'Time Dim Name (blank = auto)',    'type': 'string', 'default': ''},
         {'id': 'time_slice',   'label': 'Time Slice (e.g., 0:10 or YYYY-MM-DD:YYYY-MM-DD)', 'type': 'string', 'default': ''},
+        {'id': '_sec_processing', 'label': 'Processing', 'type': 'section'},
         {'id': 'spatial_stride','label': 'Spatial Stride',           'type': 'int',    'default': 1, 'min': 1, 'max': 100},
         {'id': 'scale_factor', 'label': 'Scale Factor',             'type': 'float',  'default': 1.0},
         {'id': 'add_offset',   'label': 'Add Offset',              'type': 'float',  'default': 0.0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'colormap',     'label': 'Color Palette',                'type': 'enum',   'options': ['Viridis', 'Plasma', 'Jet', 'Inferno', 'Rainbow'], 'default': 0},
     ]
 )

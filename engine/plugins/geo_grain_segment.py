@@ -21,10 +21,13 @@ import numpy as np
     ],
     params=[
         {'id': 'blur_radius',     'label': 'Blur Radius',          'type': 'int',   'default': 4,   'min': 1,   'max': 15},
+        {'id': '_sec_boundary', 'label': 'Boundary', 'type': 'section'},
         {'id': 'boundary_thresh', 'label': 'Boundary Threshold',  'type': 'int',   'default': 30,  'min': 5,   'max': 120},
         {'id': 'boundary_size',   'label': 'Boundary Kernel (px)','type': 'int',   'default': 5,   'min': 1,   'max': 21},
+        {'id': '_sec_opaques', 'label': 'Opaques', 'type': 'section'},
         {'id': 'opaque_thresh',   'label': 'Opaque Darkness',     'type': 'int',   'default': 35,  'min': 5,   'max': 100},
         {'id': 'opaque_min_px',   'label': 'Opaque Min (px)',     'type': 'int',   'default': 300, 'min': 50,  'max': 20000},
+        {'id': '_sec_grains', 'label': 'Grains', 'type': 'section'},
         {'id': 'min_grain_px',    'label': 'Min Grain (px)',      'type': 'int',   'default': 500, 'min': 50,  'max': 50000},
         {'id': 'fill_radius',     'label': 'Fill Radius (cracks)','type': 'int',   'default': 5,   'min': 0,   'max': 30},
         {'id': 'ppl_weight',      'label': 'PPL Weight',          'type': 'float', 'default': 0.4, 'min': 0.0, 'max': 1.0, 'step': 0.05},

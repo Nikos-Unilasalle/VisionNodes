@@ -16,9 +16,11 @@ from registry import NodeProcessor, vision_node
     ],
     params=[
         {"id": "buffer_size", "label": "History Size", "type": "scalar", "min": 10, "max": 1000, "default": 200},
+        {"id": "_sec_y_axis", "label": "Y Axis", "type": "section"},
         {"id": "min_y", "label": "Y-Axis Min", "type": "float", "default": 0},
         {"id": "max_y", "label": "Y-Axis Max", "type": "float", "default": 100},
         {"id": "auto_scale", "label": "Auto-Scale", "type": "boolean", "default": True},
+        {"id": "_sec_image_size", "label": "Image Size", "type": "section"},
         {"id": "width", "label": "Image Width", "type": "scalar", "min": 100, "max": 1920, "default": 640},
         {"id": "height", "label": "Image Height", "type": "scalar", "min": 100, "max": 1080, "default": 360}
     ]
@@ -168,9 +170,11 @@ class StatsNode(NodeProcessor):
         {"id": "res", "label": "Resolution", "type": "scalar", "min": 16, "max": 256, "default": 64},
         {"id": "decay", "label": "Decay (Fade)", "type": "scalar", "min": 0, "max": 0.1, "step": 0.001, "default": 0.01},
         {"id": "intensity", "label": "Intensity", "type": "scalar", "min": 0.1, "max": 5.0, "default": 1.0},
+        {"id": "_sec_display", "label": "Display", "type": "section"},
         {"id": "blur", "label": "Blur Radius", "type": "scalar", "min": 0, "max": 21, "step": 2, "default": 5},
         {"id": "colormap", "label": "Colormap", "type": "enum", "options": ["Jet", "Hot", "Magma", "Viridis", "Ocean"], "default": 0},
         {"id": "blend", "label": "Alpha Blend", "type": "scalar", "min": 0, "max": 1.0, "step": 0.1, "default": 0.7},
+        {"id": "_sec_control", "label": "Control", "type": "section"},
         {"id": "reset", "label": "Reset Buffer", "type": "trigger", "default": 0}
     ]
 )

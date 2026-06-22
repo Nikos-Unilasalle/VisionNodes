@@ -24,12 +24,15 @@ TRACK_HISTORY_LEN = 15
         {'id': 'data', 'label': 'Stats', 'color': 'dict'}
     ],
     params=[
+        {'id': '_sec_detection', 'label': 'Detection', 'type': 'section'},
         {'id': 'max_corners', 'label': 'Max Corners', 'type': 'int', 'min': 10, 'max': 1000, 'default': 200},
         {'id': 'quality', 'label': 'Quality Level', 'type': 'float', 'min': 0.01, 'max': 0.5, 'default': 0.3},
         {'id': 'min_distance', 'label': 'Min Distance', 'type': 'int', 'min': 1, 'max': 50, 'default': 7},
         {'id': 'win_size', 'label': 'Window Size', 'type': 'int', 'min': 5, 'max': 51, 'default': 15},
         {'id': 'redetect_every', 'label': 'Redetect Every (frames)', 'type': 'int', 'min': 1, 'max': 120, 'default': 20},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'draw', 'label': 'Draw Mode', 'type': 'enum', 'options': ['Tracks', 'Arrows', 'Points'], 'default': 'Tracks'},
+        {'id': '_sec_control', 'label': 'Control', 'type': 'section'},
         {'id': 'reset', 'label': 'Reset Tracks', 'type': 'trigger', 'default': False}
     ]
 )

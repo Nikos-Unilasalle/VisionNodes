@@ -15,10 +15,12 @@ from registry import vision_node, NodeProcessor
         {'id': 'profile', 'color': 'data',  'label': 'Profile Values'},
     ],
     params=[
+        {'id': '_sec_geometry', 'label': 'Line Geometry', 'type': 'section'},
         {'id': 'x1',         'label': 'X1 (%)',         'type': 'float', 'default': 10.0, 'min': 0.0, 'max': 100.0},
         {'id': 'y1',         'label': 'Y1 (%)',         'type': 'float', 'default': 50.0, 'min': 0.0, 'max': 100.0},
         {'id': 'x2',         'label': 'X2 (%)',         'type': 'float', 'default': 90.0, 'min': 0.0, 'max': 100.0},
         {'id': 'y2',         'label': 'Y2 (%)',         'type': 'float', 'default': 50.0, 'min': 0.0, 'max': 100.0},
+        {'id': '_sec_sampling', 'label': 'Sampling', 'type': 'section'},
         {'id': 'samples',    'label': 'Samples',        'type': 'int',   'default': 256,  'min': 16,  'max': 1024},
         {'id': 'line_width', 'label': 'Avg Width (px)', 'type': 'int',   'default': 1,    'min': 1,   'max': 21},
         {'id': 'channel',    'label': 'Channel',        'type': 'enum',  'options': ['Luminance', 'Red', 'Green', 'Blue'], 'default': 0},

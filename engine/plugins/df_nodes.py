@@ -137,6 +137,7 @@ _FMT_LABELS = ['CSV', 'Excel (.xlsx)', 'JSON', 'Parquet']
     outputs=[],
     params=[
         {'id': 'save',      'label': 'Save',            'type': 'trigger', 'default': 0},
+        {'id': '_sec_export', 'label': 'Export Config', 'type': 'section'},
         {'id': 'path',      'label': 'File Path',       'type': 'string',  'default': 'output.csv'},
         {'id': 'format',    'label': 'Format',          'type': 'enum',    'options': _FMT_LABELS, 'default': 0},
         {'id': 'separator', 'label': 'CSV Separator',   'type': 'string',  'default': ','},
@@ -305,8 +306,10 @@ _SAMPLE_MODES = ['head', 'tail', 'sample', 'slice']
     params=[
         {'id': 'mode',  'label': 'Mode', 'type': 'enum', 'options': _SAMPLE_MODES, 'default': 0},
         {'id': 'n',     'label': 'N rows (head/tail/sample)',  'type': 'int', 'default': 10, 'min': 1, 'max': 100000},
+        {'id': '_sec_slice', 'label': 'Slice', 'type': 'section'},
         {'id': 'start', 'label': 'Start index (slice)',        'type': 'int', 'default': 0,  'min': 0, 'max': 100000},
         {'id': 'end',   'label': 'End index   (slice)',        'type': 'int', 'default': 10, 'min': 1, 'max': 100000},
+        {'id': '_sec_sampling', 'label': 'Sampling', 'type': 'section'},
         {'id': 'seed',  'label': 'Random seed (sample)',       'type': 'int', 'default': 42, 'min': 0, 'max': 9999},
     ],
     resizable=True, min_width=240, min_height=160,

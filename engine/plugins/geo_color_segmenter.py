@@ -24,26 +24,26 @@ from registry import vision_node, NodeProcessor
     ],
     params=[
         {'id': 'use_lab', 'label': 'Perceptual Mode (CIELAB)', 'type': 'boolean', 'default': True},
-        
-        {'id': 'c1_active', 'label': 'Phase 1 Active', 'type': 'boolean', 'default': True},
-        {'id': 'c1_label',  'label': 'Phase 1 Label',  'type': 'string',  'default': 'Phase 1'},
-        {'id': 'c1_color',  'label': 'Phase 1 Color',  'type': 'color',   'default': '#FF00FF'},
-        {'id': 'c1_tol',    'label': 'Phase 1 Tol.',   'type': 'int',     'default': 30, 'min': 1, 'max': 200},
-        
-        {'id': 'c2_active', 'label': 'Phase 2 Active', 'type': 'boolean', 'default': True},
-        {'id': 'c2_label',  'label': 'Phase 2 Label',  'type': 'string',  'default': 'Phase 2'},
-        {'id': 'c2_color',  'label': 'Phase 2 Color',  'type': 'color',   'default': '#00FFFF'},
-        {'id': 'c2_tol',    'label': 'Phase 2 Tol.',   'type': 'int',     'default': 30, 'min': 1, 'max': 200},
-        
-        {'id': 'c3_active', 'label': 'Phase 3 Active', 'type': 'boolean', 'default': False},
-        {'id': 'c3_label',  'label': 'Phase 3 Label',  'type': 'string',  'default': 'Phase 3'},
-        {'id': 'c3_color',  'label': 'Phase 3 Color',  'type': 'color',   'default': '#FFFF00'},
-        {'id': 'c3_tol',    'label': 'Phase 3 Tol.',   'type': 'int',     'default': 30, 'min': 1, 'max': 200},
-        
-        {'id': 'c4_active', 'label': 'Phase 4 Active', 'type': 'boolean', 'default': False},
-        {'id': 'c4_label',  'label': 'Phase 4 Label',  'type': 'string',  'default': 'Phase 4'},
-        {'id': 'c4_color',  'label': 'Phase 4 Color',  'type': 'color',   'default': '#00FF00'},
-        {'id': 'c4_tol',    'label': 'Phase 4 Tol.',   'type': 'int',     'default': 30, 'min': 1, 'max': 200},
+        {'id': '_sec_c1', 'label': 'Phase 1', 'type': 'section'},
+        {'id': 'c1_active', 'label': 'Active', 'type': 'boolean', 'default': True},
+        {'id': 'c1_label',  'label': 'Label',  'type': 'string',  'default': 'Phase 1'},
+        {'id': 'c1_color',  'label': 'Color',  'type': 'color',   'default': '#FF00FF'},
+        {'id': 'c1_tol',    'label': 'Tolerance', 'type': 'int',  'default': 30, 'min': 1, 'max': 200},
+        {'id': '_sec_c2', 'label': 'Phase 2', 'type': 'section'},
+        {'id': 'c2_active', 'label': 'Active', 'type': 'boolean', 'default': True},
+        {'id': 'c2_label',  'label': 'Label',  'type': 'string',  'default': 'Phase 2'},
+        {'id': 'c2_color',  'label': 'Color',  'type': 'color',   'default': '#00FFFF'},
+        {'id': 'c2_tol',    'label': 'Tolerance', 'type': 'int',  'default': 30, 'min': 1, 'max': 200},
+        {'id': '_sec_c3', 'label': 'Phase 3', 'type': 'section'},
+        {'id': 'c3_active', 'label': 'Active', 'type': 'boolean', 'default': False},
+        {'id': 'c3_label',  'label': 'Label',  'type': 'string',  'default': 'Phase 3'},
+        {'id': 'c3_color',  'label': 'Color',  'type': 'color',   'default': '#FFFF00'},
+        {'id': 'c3_tol',    'label': 'Tolerance', 'type': 'int',  'default': 30, 'min': 1, 'max': 200},
+        {'id': '_sec_c4', 'label': 'Phase 4', 'type': 'section'},
+        {'id': 'c4_active', 'label': 'Active', 'type': 'boolean', 'default': False},
+        {'id': 'c4_label',  'label': 'Label',  'type': 'string',  'default': 'Phase 4'},
+        {'id': 'c4_color',  'label': 'Color',  'type': 'color',   'default': '#00FF00'},
+        {'id': 'c4_tol',    'label': 'Tolerance', 'type': 'int',  'default': 30, 'min': 1, 'max': 200},
     ]
 )
 class GeoColorSegmenter(NodeProcessor):

@@ -289,9 +289,11 @@ def _apply_op(df, col, op, val):
     ],
     params=[
         {'id': 'enabled',  'label': 'Enable Filter', 'type': 'bool',   'default': True},
+        {'id': '_sec_condition', 'label': 'Filter Condition', 'type': 'section'},
         {'id': 'column',   'label': 'Column',        'type': 'string', 'default': ''},
         {'id': 'operator', 'label': 'Operator',      'type': 'enum',   'options': _OPS_LABELS, 'default': 0},
         {'id': 'value',    'label': 'Value',         'type': 'string', 'default': ''},
+        {'id': '_sec_options', 'label': 'Options', 'type': 'section'},
         {'id': 'dropna',   'label': 'Drop NaN rows', 'type': 'bool',   'default': False},
     ],
     resizable=True,
@@ -356,8 +358,10 @@ _MODES = ['describe()', 'head(10)', 'dtypes + shape', 'value_counts (1 col)']
     ],
     params=[
         {'id': 'mode',    'label': 'Display Mode',          'type': 'enum',   'options': _MODES, 'default': 0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'columns', 'label': 'Columns (blank = all)', 'type': 'string', 'default': ''},
         {'id': 'col_vc',  'label': 'Column (value_counts)', 'type': 'string', 'default': ''},
+        {'id': '_sec_export', 'label': 'Export', 'type': 'section'},
         {'id': 'out_w',   'label': 'Export width px  (0 = auto)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
         {'id': 'out_h',   'label': 'Export height px (0 = auto)', 'type': 'int', 'default': 0, 'min': 0, 'max': 4000},
     ],

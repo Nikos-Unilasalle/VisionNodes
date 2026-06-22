@@ -77,16 +77,20 @@ COLLECTIONS = {
     ],
     params=[
         {'id': 'fetch',       'type': 'trigger', 'default': 0,               'label': 'Fetch'},
+        {'id': '_sec_source', 'label': 'Source', 'type': 'section'},
         {'id': 'gcp_project', 'type': 'string',  'default': '',              'label': 'GCP Project ID (leave empty if saved)'},
         {'id': 'collection',  'type': 'enum',    'options': list(COLLECTIONS.keys()), 'default': 'Sentinel-2 SR', 'label': 'Collection'},
+        {'id': '_sec_location', 'label': 'Location & Date', 'type': 'section'},
         {'id': 'location',    'type': 'string',  'default': 'Paris, France', 'label': 'Location or "lat,lon"'},
         {'id': 'date_start',  'type': 'string',  'default': '2024-01-01',    'label': 'Start Date'},
         {'id': 'date_end',    'type': 'string',  'default': '2024-06-01',    'label': 'End Date'},
         {'id': 'cloud_max',   'type': 'int',     'default': 20, 'min': 0, 'max': 100,  'label': 'Max Clouds %'},
         {'id': 'size_km',     'type': 'int',     'default': 10, 'min': 1, 'max': 100,  'label': 'ROI Size (km)'},
         {'id': 'scale_m',     'type': 'int',     'default': 30, 'min': 10, 'max': 1000,'label': 'Resolution (m/px)'},
+        {'id': '_sec_bands', 'label': 'Band Mapping', 'type': 'section'},
         {'id': 'band_preset', 'type': 'enum',    'options': ['RGB', 'RGB+NIR', 'All'], 'default': 'RGB', 'label': 'Bands'},
         {'id': 'custom_bands','type': 'string',  'default': '',              'label': 'Bands (e.g. B8 — overrides preset)'},
+        {'id': '_sec_cache', 'label': 'Cache', 'type': 'section'},
         {'id': 'cache_dir',   'type': 'string',  'default': 'gee_cache',     'label': 'Cache Dir'},
     ]
 )

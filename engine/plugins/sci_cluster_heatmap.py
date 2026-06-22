@@ -48,9 +48,11 @@ def _find_id(r: dict) -> int | None:
     ],
     params=[
         {'id': 'feature',     'label': 'Feature',        'type': 'string', 'default': 'area', 'hints': 'item_keys'},
+        {'id': '_sec_visualization', 'label': 'Visualization', 'type': 'section'},
         {'id': 'colormap',    'label': 'Colormap',        'type': 'enum',   'options': _CMAP_NAMES, 'default': 0},
         {'id': 'alpha',       'label': 'Heatmap Alpha',   'type': 'float',  'default': 0.85, 'min': 0.0, 'max': 1.0},
         {'id': 'bg_alpha',    'label': 'BG Alpha',        'type': 'float',  'default': 0.25, 'min': 0.0, 'max': 1.0},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'show_values', 'label': 'Show Values',     'type': 'bool',   'default': False},
         {'id': 'colorbar',    'label': 'Show Colorbar',   'type': 'bool',   'default': True},
     ]

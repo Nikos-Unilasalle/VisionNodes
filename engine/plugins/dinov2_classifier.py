@@ -59,6 +59,7 @@ _IMG_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tif', '.tiff')
         {'id': 'ref_dir',    'label': 'Reference Folder (ImageFolder)', 'type': 'string',
          'default': ''},
         {'id': 'build_refs', 'label': 'Build Refs', 'type': 'trigger', 'default': False},
+        {'id': '_sec_inference', 'label': 'Inference', 'type': 'section'},
         {'id': 'k',          'label': 'k (neighbors)', 'type': 'int',
          'default': 5, 'min': 1, 'max': 50},
         {'id': 'metric',     'label': 'Metric', 'type': 'enum',
@@ -69,13 +70,11 @@ _IMG_EXTS = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tif', '.tiff')
          'default': 0.0, 'min': 0.0, 'max': 50.0, 'step': 1.0},
         {'id': 'whole_frame', 'label': 'Classify Whole Frame (ignore boxes)', 'type': 'bool',
          'default': False},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'label_mode', 'label': 'Label Mode', 'type': 'enum',
          'options': ['Label + Score', 'Label', 'None'], 'default': 0},
-
-        # ── Run gate ──
         {'id': 'classify', 'label': 'Classify', 'type': 'trigger', 'default': False},
-
-        # ── Persistence ──
+        {'id': '_sec_save', 'label': 'Save', 'type': 'section'},
         {'id': 'save_path', 'label': 'Save File (.cls.json)', 'type': 'file_path',
          'default': '~/VNStudio/exports/classification.cls.json',
          'filters': [{'name': 'Classification', 'extensions': ['json']}]},

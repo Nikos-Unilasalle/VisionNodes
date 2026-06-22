@@ -150,6 +150,7 @@ class MathDistanceNode(NodeProcessor):
              params=[
                  {'id': 'format', 'label': 'Format', 'type': 'enum', 'options': ['Integer', 'Float'], 'default': 1},
                  {'id': 'value', 'label': 'Value', 'type': 'float', 'default': 0.0},
+                 {'id': '_sec_range', 'label': 'Range', 'type': 'section'},
                  {'id': 'min', 'label': 'Min', 'type': 'float', 'default': 0.0},
                  {'id': 'max', 'label': 'Max', 'type': 'float', 'default': 100.0},
                  {'id': 'step', 'label': 'Step', 'type': 'float', 'default': 1.0}

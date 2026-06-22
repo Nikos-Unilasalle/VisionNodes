@@ -23,6 +23,7 @@ _NOTIF_ID = 'gaze_to_screen'
         {'id': 'point', 'color': 'dict', 'label': 'Graphics Point'}
     ],
     params=[
+        {'id': '_sec_mapping', 'label': 'Mapping', 'type': 'section'},
         {'id': 'scale_x',  'label': 'Scale X',    'type': 'float', 'default': 1.0,  'min': 0.1, 'max': 10.0, 'step': 0.05},
         {'id': 'scale_y',  'label': 'Scale Y',    'type': 'float', 'default': 1.0,  'min': 0.1, 'max': 10.0, 'step': 0.05},
         {'id': 'offset_x', 'label': 'Offset X',   'type': 'float', 'default': 0.0,  'min': -1.0, 'max': 1.0, 'step': 0.01},
@@ -31,9 +32,11 @@ _NOTIF_ID = 'gaze_to_screen'
         {'id': 'clamp',    'label': 'Clamp',      'type': 'bool',  'default': True},
         {'id': 'flip_x',   'label': 'Flip X',     'type': 'bool',  'default': False},
         {'id': 'flip_y',   'label': 'Flip Y',     'type': 'bool',  'default': False},
+        {'id': '_sec_fov', 'label': 'Camera FOV', 'type': 'section'},
         {'id': 'use_fov',  'label': 'Use Camera FOV', 'type': 'bool', 'default': False},
         {'id': 'hfov',     'label': 'H-FOV (deg)',    'type': 'float', 'default': 60.0, 'min': 10.0, 'max': 170.0},
         {'id': 'sep_cal',  'label': '--- Calibration ---', 'type': 'separator'},
+        {'id': '_sec_calibration', 'label': 'Calibration', 'type': 'section'},
         {'id': 'calibration_enabled', 'label': 'Enable Calibration', 'type': 'bool', 'default': False},
         {'id': 'calibrate_tl',    'label': 'Calibrate TL',    'type': 'trigger'},
         {'id': 'calibrate_tr',    'label': 'Calibrate TR',    'type': 'trigger'},

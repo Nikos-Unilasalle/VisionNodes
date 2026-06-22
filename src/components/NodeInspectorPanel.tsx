@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2, PlugZap } from 'lucide-react';
+import { Pause, Play, Pipette, Save, Activity, Calculator, ChevronDown, ChevronRight, Eye, EyeOff, FolderOpen, Pencil, Check, Maximize2, PlugZap } from 'lucide-react';
 import { save as tauriSaveDialog, open as tauriOpenDialog } from '@tauri-apps/plugin-dialog';
 import { PALETTES } from './Nodes';
 import type { ParamSpec, NodeData, VNNode } from '../types/NodeSchema';
@@ -21,14 +21,14 @@ const FLOW_PRESETS: Record<number, Record<string, number>> = {
 
 interface SliderProps { label: string; val: number; min: number; max: number; step?: number; onChange: (v: number) => void; }
 export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps) => (
-  <div className="space-y-4 group">
-    <div className="flex justify-between items-center text-[10px]">
+  <div className="space-y-2 group">
+    <div className="flex justify-between items-center text-[8.5px]">
       <label className="text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
       <input
         type="number"
         min={min} max={max} step={step} value={val}
         onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v)) onChange(v); }}
-        className="bg-black/40 border border-[#4f5b6b] rounded-lg px-3 py-2 text-accent font-black font-mono text-center w-32 outline-none focus:border-accent/60 transition-all text-[13px] shadow-inner"
+        className="bg-black/40 border border-[#4f5b6b] rounded-lg px-2 py-1 text-accent font-black font-mono text-center w-28 outline-none focus:border-accent/60 transition-all text-[13px] shadow-inner"
       />
     </div>
     <input type="range" min={min} max={max} step={step} value={val} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full h-1 bg-[#4f5b6b]/40 rounded-full appearance-none cursor-pointer accent-accent transition-all hover:bg-[#4f5b6b]/60" />
@@ -37,12 +37,12 @@ export const Slider = ({ label, val, min, max, step = 1, onChange }: SliderProps
 
 interface TextInputProps { label: string; val: string; onChange: (v: string) => void; }
 export const TextInput = ({ label, val, onChange }: TextInputProps) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+  <div className="space-y-1.5 group">
+    <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
       type="text" value={val} onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => e.stopPropagation()}
-      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
+      className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-lg px-3 py-1.5 text-[9.5px] text-white outline-none focus:border-accent transition-all"
       placeholder={`Enter ${label.toLowerCase()}...`}
     />
   </div>
@@ -57,21 +57,21 @@ export const FilePathInput = ({ label, val, onChange, filters, mode = 'save' }: 
     if (typeof chosen === 'string' && chosen) onChange(chosen);
   };
   return (
-    <div className="space-y-4 group">
-      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <div className="flex gap-2">
+    <div className="space-y-1.5 group">
+      <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <div className="flex gap-1.5">
         <input
           type="text" value={val} onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.stopPropagation()}
-          className="flex-1 bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-2 text-[11px] text-white outline-none focus:border-accent transition-all"
+          className="flex-1 bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-lg px-3 py-1.5 text-[9.5px] text-white outline-none focus:border-accent transition-all"
           placeholder={`Enter ${label.toLowerCase()}...`}
         />
         <button
           onClick={browse}
-          className="shrink-0 bg-black/20 border border-[#4f5b6b] hover:border-accent/60 hover:bg-accent/10 rounded-xl px-3 py-2 text-gray-400 hover:text-accent transition-all"
+          className="shrink-0 bg-black/20 border border-[#4f5b6b] hover:border-accent/60 hover:bg-accent/10 rounded-lg px-2 py-1.5 text-gray-400 hover:text-accent transition-all"
           title="Browse…"
         >
-          <FolderOpen size={14} />
+          <FolderOpen size={12} />
         </button>
       </div>
     </div>
@@ -108,13 +108,13 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
   };
 
   return (
-    <div className="space-y-4 group">
-      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+    <div className="space-y-1.5 group">
+      <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
       <input
         type="text" value={tempVal} onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
         onKeyDown={(e) => e.stopPropagation()}
-        className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
+        className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-lg px-3 py-1.5 text-[10px] text-white outline-none focus:border-accent transition-all font-mono shadow-inner"
       />
     </div>
   );
@@ -122,27 +122,27 @@ export const NumberInput = ({ label, val, onChange }: NumberInputProps) => {
 
 interface DateInputProps { label: string; val: string; onChange: (v: string) => void; }
 export const DateInput = ({ label, val, onChange }: DateInputProps) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+  <div className="space-y-1.5 group">
+    <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <input
       type="date" value={val} onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => e.stopPropagation()}
-      className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[13px] text-white outline-none focus:border-accent transition-all cursor-pointer font-mono shadow-inner"
+      className="w-full bg-black/40 border border-[#4f5b6b] group-hover:border-accent/40 rounded-lg px-3 py-1.5 text-[10px] text-white outline-none focus:border-accent transition-all cursor-pointer font-mono shadow-inner"
     />
   </div>
 );
 
 interface SelectInputProps { label: string; val: any; options: (string | { label: string; value: any })[]; onChange: (v: any) => void; }
 export const SelectInput = ({ label, val, options, onChange }: SelectInputProps) => (
-  <div className="space-y-4 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+  <div className="space-y-1.5 group">
+    <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <div className="relative">
       <select
         value={val} onChange={(e) => {
           const v = e.target.value;
           onChange(isNaN(Number(v)) ? v : Number(v));
         }}
-        className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-xl px-4 py-3 text-[12px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer font-bold"
+        className="w-full bg-black/20 border border-[#4f5b6b] group-hover:border-accent/40 rounded-lg px-3 py-1.5 text-[10px] text-white outline-none focus:border-accent transition-all appearance-none cursor-pointer font-bold"
       >
         {options.map((opt: any, i: number) => {
           const isObj = typeof opt === 'object';
@@ -151,20 +151,20 @@ export const SelectInput = ({ label, val, options, onChange }: SelectInputProps)
           return <option key={i} value={v} className="bg-[#3d4452]">{l}</option>;
         })}
       </select>
-      <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+      <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
     </div>
   </div>
 );
 
 interface ToggleInputProps { label: string; val: boolean; onChange: (v: boolean) => void; }
 export const ToggleInput = ({ label, val, onChange }: ToggleInputProps) => (
-  <div className="flex items-center justify-between py-2 group">
-    <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+  <div className="flex items-center justify-between py-1 group">
+    <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
     <button
       onClick={() => onChange(!val)}
-      className={`w-10 h-5 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#3d4452]'}`}
+      className={`w-8 h-4 rounded-full transition-all duration-300 relative ${val ? 'bg-accent shadow-[0_0_10px_rgba(var(--color-accent),0.3)]' : 'bg-[#3d4452]'}`}
     >
-      <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${val ? 'left-6' : 'left-1'}`} />
+      <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all duration-300 ${val ? 'left-5' : 'left-0.5'}`} />
     </button>
   </div>
 );
@@ -205,11 +205,11 @@ const highlightPython = (code: string): string => {
 };
 
 interface CodeInputProps { label: string; val: string; onChange: (v: string) => void; liveError?: string; }
-const CODE_GUTTER = 32;  // px — matches w-8
-const CODE_PAD_Y  = 12;  // px — matches py-3
-const CODE_PAD_R  = 16;  // px — matches pr-4
-const CODE_LINE_H = 18;  // px — explicit so textarea & highlight stay in sync
-const CODE_FONT   = 11;  // px
+const CODE_GUTTER = 24;  // px
+const CODE_PAD_Y  = 8;   // px
+const CODE_PAD_R  = 12;  // px
+const CODE_LINE_H = 14;  // px — explicit so textarea & highlight stay in sync
+const CODE_FONT   = 9.5;  // px
 
 const codeAreaStyle: React.CSSProperties = {
   paddingTop:    CODE_PAD_Y,
@@ -234,20 +234,20 @@ export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) =
     <div className="space-y-2">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">{label}</label>
+        <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">{label}</label>
         <div className="flex items-center gap-1.5">
           {hasError && (
-            <span className="text-[8px] text-red-400 bg-red-950/60 border border-red-900/40 px-2 py-0.5 rounded truncate max-w-[140px]" title={liveError}>
+            <span className="text-[7px] text-red-400 bg-red-950/60 border border-red-900/40 px-2 py-0.5 rounded truncate max-w-[140px]" title={liveError}>
               Error
             </span>
           )}
-          <span className="text-[8px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</span>
+          <span className="text-[7px] font-mono text-gray-600 bg-white/10 px-2 py-0.5 rounded">Python 3.x</span>
           <button
             onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1 text-[9px] text-gray-400 hover:text-accent bg-white/5 hover:bg-accent/10 border border-white/10 hover:border-accent/40 px-2 py-1 rounded transition-all duration-200"
+            className="flex items-center gap-1 text-[8px] text-gray-400 hover:text-accent bg-white/5 hover:bg-accent/10 border border-white/10 hover:border-accent/40 px-1.5 py-0.5 rounded transition-all duration-200"
             title="Open full-screen editor"
           >
-            <Maximize2 size={10} />
+            <Maximize2 size={8} />
             <span>Open</span>
           </button>
         </div>
@@ -255,7 +255,7 @@ export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) =
 
       {/* ── Code preview ───────────────────────────────────────────────── */}
       <div
-        className={`relative rounded-xl overflow-hidden border transition-all shadow-inner bg-[#1e2530] cursor-pointer hover:border-accent/40 ${
+        className={`relative rounded-lg overflow-hidden border transition-all shadow-inner bg-[#1e2530] cursor-pointer hover:border-accent/40 ${
           hasError ? 'border-red-900/50' : 'border-[#4f5b6b]'
         }`}
         onClick={() => setModalOpen(true)}
@@ -264,7 +264,7 @@ export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) =
         {/* Line numbers */}
         <div
           className="absolute inset-y-0 left-0 bg-black/15 border-r border-white/5 flex flex-col items-center text-gray-600 select-none pointer-events-none z-10 overflow-hidden"
-          style={{ width: CODE_GUTTER, paddingTop: CODE_PAD_Y, paddingBottom: CODE_PAD_Y, fontSize: 8, fontFamily: codeAreaStyle.fontFamily }}
+          style={{ width: CODE_GUTTER, paddingTop: CODE_PAD_Y, paddingBottom: CODE_PAD_Y, fontSize: 7, fontFamily: codeAreaStyle.fontFamily }}
         >
           {previewLines.map((_, i) => (
             <div key={i} style={{ height: CODE_LINE_H, lineHeight: `${CODE_LINE_H}px` }} className="flex items-center">{i + 1}</div>
@@ -279,15 +279,15 @@ export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) =
         />
         {/* "N more lines" fade */}
         {hasMore && (
-          <div className="flex items-end justify-center h-8 bg-gradient-to-t from-[#1e2530] to-transparent">
-            <span className="text-[8px] text-gray-600 pb-1">{totalLines - 8} more lines…</span>
+          <div className="flex items-end justify-center h-6 bg-gradient-to-t from-[#1e2530] to-transparent">
+            <span className="text-[7px] text-gray-600 pb-0.5">{totalLines - 8} more lines…</span>
           </div>
         )}
       </div>
 
       {/* ── Error detail ───────────────────────────────────────────────── */}
       {hasError && (
-        <div className="text-[8px] text-red-400 bg-red-950/30 border border-red-900/30 rounded-lg px-3 py-2 font-mono break-all">
+        <div className="text-[7px] text-red-400 bg-red-950/30 border border-red-900/30 rounded-lg px-2 py-1 font-mono break-all">
           {liveError}
         </div>
       )}
@@ -346,38 +346,38 @@ export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, is
   }, [isOpen]);
 
   return (
-    <div className="flex items-center justify-between py-2 group" ref={containerRef}>
-      <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
-      <div className="flex items-center gap-3 relative">
-        <div className="text-[10px] font-mono text-gray-500">{currentVal}</div>
+    <div className="flex items-center justify-between py-1 group" ref={containerRef}>
+      <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{label}</label>
+      <div className="flex items-center gap-2 relative">
+        <div className="text-[9px] font-mono text-gray-500">{currentVal}</div>
         {onPickColorToggle && nodeId && (
           <button
             onClick={() => onPickColorToggle(isPicking ? null : nodeId)}
-            className={`p-1.5 rounded-md transition-all ${isPicking ? 'bg-accent text-white shadow-[0_0_10px_rgba(var(--color-accent),0.5)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+            className={`p-1 rounded-md transition-all ${isPicking ? 'bg-accent text-white shadow-[0_0_10px_rgba(var(--color-accent),0.5)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
             title="Pick color from preview"
           >
-            <Pipette size={14} />
+            <Pipette size={11} />
           </button>
         )}
         <button
           ref={swatchRef}
           onClick={togglePicker}
-          className="relative w-10 h-6 rounded-md border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
+          className="relative w-8 h-4.5 rounded border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all overflow-hidden"
           style={{ backgroundColor: currentVal }}
         />
 
         {isOpen && (
-          <div className={`absolute right-0 ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'} z-[100] p-4 bg-[#1e2530] border border-white/10 rounded-2xl shadow-2xl space-y-3`}>
+          <div className={`absolute right-0 ${openUp ? 'bottom-full mb-2' : 'top-full mt-2'} z-[100] p-3 bg-[#1e2530] border border-white/10 rounded-xl shadow-2xl space-y-2`}>
             <div className="custom-color-wheel">
               <HexColorPicker color={currentVal} onChange={(newColor) => onChange(newColor.toUpperCase())} />
             </div>
-            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-              <div className="w-4 h-4 rounded-full border border-white/10" style={{ backgroundColor: currentVal }} />
+            <div className="flex items-center gap-1.5 pt-1.5 border-t border-white/5">
+              <div className="w-3.5 h-3.5 rounded-full border border-white/10" style={{ backgroundColor: currentVal }} />
               <input 
                 type="text" 
                 value={currentVal} 
                 onChange={(e) => onChange(e.target.value.toUpperCase())}
-                className="bg-black/20 border border-white/5 rounded px-2 py-1 text-[10px] font-mono text-gray-300 w-20 outline-none focus:border-accent/50"
+                className="bg-black/20 border border-white/5 rounded px-1.5 py-0.5 text-[9px] font-mono text-gray-300 w-18 outline-none focus:border-accent/50"
               />
             </div>
           </div>
@@ -426,8 +426,17 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   const p = node.data.params;
   const up = (params: Record<string, unknown>) => onUpdateParams(node.id, params);
   const [editingLabel, setEditingLabel] = useState<{ nodeId: string; paramId: string; value: string } | null>(null);
-  const [collapsedSlots, setCollapsedSlots] = useState<Set<string>>(new Set());
+  const [collapsedSlots, setCollapsedSlots] = useState<Set<string>>(() => {
+    const sections = node.data.schema?.params?.filter(p => p.type === 'section') ?? [];
+    return new Set(sections.map(s => `section-${s.id}`));
+  });
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset sections to collapsed whenever the selected node changes
+  React.useEffect(() => {
+    const sections = node.data.schema?.params?.filter(p => p.type === 'section') ?? [];
+    setCollapsedSlots(new Set(sections.map(s => `section-${s.id}`)));
+  }, [node.id]);
 
   const toggleSlot = (slot: string) =>
     setCollapsedSlots(prev => { const s = new Set(prev); s.has(slot) ? s.delete(slot) : s.add(slot); return s; });
@@ -446,17 +455,17 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
   ]);
 
   return (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-5 pb-20">
 
       {/* Custom node label — overrides the header title (type name moves to the corner) */}
       {onSetNodeLabel && node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (
-        <div className="space-y-2 group">
-          <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Label</label>
+        <div className="space-y-1.5 group">
+          <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Label</label>
           <input
             type="text"
             value={(node.data as any).userLabel || ''}
             onChange={e => onSetNodeLabel(node.id, e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-blue-300 font-bold outline-none focus:border-accent/50 transition-all placeholder:text-gray-600 placeholder:font-normal"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[9.5px] text-blue-300 font-bold outline-none focus:border-accent/50 transition-all placeholder:text-gray-600 placeholder:font-normal"
             placeholder={node.data.label || node.type}
           />
         </div>
@@ -464,12 +473,12 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* group_node — exposed params from child nodes */}
       {node.type === 'group_node' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {(!exposedGroupParams || exposedGroupParams.length === 0) ? (
-            <div className="text-center py-12 space-y-3 opacity-40">
-              <EyeOff size={28} className="mx-auto text-gray-500" />
-              <p className="text-[11px] text-gray-400 font-bold">Aucun paramètre exposé</p>
-              <p className="text-[9px] text-gray-600 leading-relaxed">Entrez dans le groupe et cliquez sur<br/>l'icône œil d'un paramètre</p>
+            <div className="text-center py-8 space-y-2 opacity-40">
+              <EyeOff size={20} className="mx-auto text-gray-500" />
+              <p className="text-[9.5px] text-gray-400 font-bold">Aucun paramètre exposé</p>
+              <p className="text-[8px] text-gray-600 leading-relaxed">Entrez dans le groupe et cliquez sur<br/>l'icône œil d'un paramètre</p>
             </div>
           ) : (() => {
             const byNode: Record<string, { label: string; params: ExposedParam[] }> = {};
@@ -478,9 +487,9 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               byNode[ep.nodeId].params.push(ep);
             }
             return Object.entries(byNode).map(([nid, { label, params }]) => (
-              <div key={nid} className="space-y-5">
-                <div className="flex items-center gap-2 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                  <span className="w-2 h-2 rounded-full bg-accent/60 shrink-0" />
+              <div key={nid} className="space-y-3.5">
+                <div className="flex items-center gap-1.5 text-[8px] font-black text-gray-500 uppercase tracking-[0.15em]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
                   {label}
                 </div>
                 {params.map(ep => {
@@ -518,14 +527,14 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   }
 
                   return (
-                    <div key={ep.paramId} className="relative group/ep">
+                     <div key={ep.paramId} className="relative group/ep">
                       {control}
                       {/* Inline label rename — pencil appears on hover */}
                       {isEditingThis ? (
-                        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-1.5 bg-[#2a2f3a] border border-accent/40 rounded-lg px-2 py-1.5 shadow-xl">
+                        <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-1 bg-[#2a2f3a] border border-accent/40 rounded-lg px-1.5 py-1 shadow-xl">
                           <input
                             autoFocus
-                            className="flex-1 bg-transparent text-accent text-[10px] uppercase tracking-widest outline-none font-black min-w-0"
+                            className="flex-1 bg-transparent text-accent text-[8.5px] uppercase tracking-widest outline-none font-black min-w-0"
                             value={editingLabel.value}
                             onChange={e => setEditingLabel({ ...editingLabel, value: e.target.value })}
                             onBlur={() => confirmRename(editingLabel.value)}
@@ -569,10 +578,10 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         return (
           <>
             {node.type === 'canvas_note' ? (
-              <div className="flex flex-col gap-4 mb-6">
-                <div className="space-y-2 group">
-                  <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
-                  <div className="rounded-xl overflow-hidden border border-white/10 transition-all focus-within:border-accent/40" style={{ background: bgColor }}>
+              <div className="flex flex-col gap-3 mb-4">
+                <div className="space-y-1.5 group">
+                  <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note Text</label>
+                  <div className="rounded-lg overflow-hidden border border-white/10 transition-all focus-within:border-accent/40" style={{ background: bgColor }}>
                     <MarkdownToolbar
                       textareaRef={noteTextareaRef}
                       value={p.text || ''}
@@ -582,21 +591,21 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                       ref={noteTextareaRef}
                       value={p.text || ''}
                       onChange={e => up({ text: e.target.value })}
-                      className="w-full px-4 py-3 text-[13px] outline-none resize-y"
+                      className="w-full px-3 py-2 text-[11px] outline-none resize-y"
                       style={{ background: 'transparent', color: textColor, fontFamily: 'Roboto, sans-serif', lineHeight: '1.65', minHeight: 120 }}
                       placeholder="Enter note text (Markdown supported)..."
                     />
                   </div>
                 </div>
                 {/* Input port settings */}
-                <div className="space-y-3 border border-white/5 rounded-xl px-3 py-3 bg-white/[0.02]">
-                  <label className="text-[9px] text-gray-500 uppercase tracking-widest font-black">Text Input Port</label>
+                <div className="space-y-2 border border-white/5 rounded-lg px-2.5 py-2.5 bg-white/[0.02]">
+                  <label className="text-[8px] text-gray-500 uppercase tracking-widest font-black">Text Input Port</label>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-gray-400">Mode</span>
+                    <span className="text-[9px] text-gray-400">Mode</span>
                     <select
                       value={p.mode ?? 0}
                       onChange={e => up({ mode: Number(e.target.value) })}
-                      className="bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white outline-none cursor-pointer"
+                      className="bg-black/30 border border-white/10 rounded-lg px-1.5 py-0.5 text-[9.5px] text-white outline-none cursor-pointer"
                     >
                       <option value={0}>Append</option>
                       <option value={1}>Replace</option>
@@ -604,65 +613,65 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   </div>
                   {(p.mode ?? 0) === 0 && (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-gray-400 shrink-0">Separator</span>
+                      <span className="text-[9px] text-gray-400 shrink-0">Separator</span>
                       <input
                         value={p.separator ?? '\n\n'}
                         onChange={e => up({ separator: e.target.value })}
-                        className="flex-1 bg-black/30 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white outline-none font-mono min-w-0"
+                        className="flex-1 bg-black/30 border border-white/10 rounded-lg px-1.5 py-0.5 text-[9.5px] text-white outline-none font-mono min-w-0"
                         placeholder="\n\n"
                       />
                     </div>
                   )}
                   <button
                     onClick={() => up({ text: '', mode: p.mode ?? 0 })}
-                    className="w-full text-[9px] font-black uppercase tracking-widest text-red-400/70 hover:text-red-400 border border-red-400/10 hover:border-red-400/30 rounded-lg py-1.5 transition-all"
+                    className="w-full text-[8px] font-black uppercase tracking-widest text-red-400/70 hover:text-red-400 border border-red-400/10 hover:border-red-400/30 rounded-lg py-1 transition-all"
                   >
                     Clear
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 group mb-6">
-                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Frame Title</label>
+              <div className="space-y-2 group mb-4">
+                <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Frame Title</label>
                 <input
                   value={p.title || 'Frame Layer'}
                   onChange={e => up({ title: e.target.value })}
-                  className="w-full border rounded-xl px-4 py-3 text-[13px] outline-none transition-all font-black text-center"
+                  className="w-full border rounded-lg px-3 py-2 text-[11px] outline-none transition-all font-black text-center"
                   style={{ background: bgColor, color: textColor, borderColor: 'rgba(0,0,0,0.12)' }}
                   placeholder="Enter frame title…"
                 />
               </div>
             )}
-            <div className="space-y-4">
-              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
-              <div className="flex gap-3 flex-wrap">
+            <div className="space-y-2">
+              <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Background Color</label>
+              <div className="flex gap-2.5 flex-wrap">
                 {currentPalette.map(({ bg, dark, label }: { bg: string; dark: string; label: string }, i: number) => (
-                  <button key={bg} title={label} onClick={() => up({ color_index: i })} className="flex flex-col items-center gap-1.5 group/swatch">
+                  <button key={bg} title={label} onClick={() => up({ color_index: i })} className="flex flex-col items-center gap-1 group/swatch">
                     <div
-                      className="w-10 h-10 rounded-xl transition-all duration-150 group-hover/swatch:scale-110"
+                      className="w-8 h-8 rounded-lg transition-all duration-150 group-hover/swatch:scale-110"
                       style={{
-                        background: bg,
-                        border:     (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '3px solid rgba(0,0,0,0.4)' : '2px solid rgba(0,0,0,0.1)',
-                        boxShadow:  (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '0 0 0 2px rgba(255,255,255,0.6)' : 'none',
+                         background: bg,
+                        border:     (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '2px solid rgba(0,0,0,0.4)' : '1px solid rgba(0,0,0,0.1)',
+                        boxShadow:  (cIdx === i || (cIdx === undefined && bgColor === bg)) ? '0 0 0 1.5px rgba(255,255,255,0.6)' : 'none',
                       }}
                     />
-                    <span className="text-[7px] font-bold text-gray-500 uppercase tracking-wider overflow-hidden max-w-[40px] text-ellipsis whitespace-nowrap">{label}</span>
+                    <span className="text-[6.5px] font-bold text-gray-500 uppercase tracking-wider overflow-hidden max-w-[32px] text-ellipsis whitespace-nowrap">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-between py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Text Color</label>
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between py-1.5">
+              <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Text Color</label>
+              <div className="flex gap-1.5">
                 {['#ffffff', currentPalette[(cIdx !== undefined ? cIdx : 0) % 5]?.dark || '#1a1a1a'].map(c => (
                   <button
                     key={c}
                     onClick={() => up({ text_color: c, color_index: undefined })}
-                    className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
+                    className="w-6 h-6 rounded-full border-2 transition-all hover:scale-110"
                     style={{
                       background:  c,
                       borderColor: textColor === c ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.15)',
-                      boxShadow:   textColor === c ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none',
+                      boxShadow:   textColor === c ? '0 0 0 1.5px rgba(255,255,255,0.5)' : 'none',
                     }}
                   />
                 ))}
@@ -684,22 +693,22 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* input_movie */}
       {node.type === 'input_movie' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <TextInput label="Movie Path" val={p.path || ''} onChange={(v: string) => up({ path: v })} />
-          <div className="flex flex-col gap-4 p-4 bg-white/10 rounded-2xl border border-white/5">
-            <label className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Playback Control</label>
+          <div className="flex flex-col gap-3 p-3 bg-white/10 rounded-xl border border-white/5">
+            <label className="text-[8.5px] text-gray-500 uppercase tracking-widest font-black">Playback Control</label>
             <div className="flex items-center justify-between">
               <button
                 onClick={() => up({ playing: !p.playing })}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold transition-all ${p.playing ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-green-500 text-white shadow-lg shadow-green-500/20'}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all ${p.playing ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-green-500 text-white shadow-lg shadow-green-500/20'}`}
               >
-                {p.playing ? <><Pause size={14} /> Stop</> : <><Play size={14} /> Start</>}
+                {p.playing ? <><Pause size={12} /> Stop</> : <><Play size={12} /> Start</>}
               </button>
-              <div className="text-[10px] font-mono text-gray-400">
+              <div className="text-[9px] font-mono text-gray-400">
                 Frame: {liveData?.current_frame || 0} / {liveData?.total_frames || 0}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Slider label="Start" val={p.start_frame || 0} min={0} max={(liveData?.total_frames || 1) - 1} onChange={v => up({ start_frame: v })} />
               <Slider label="End"   val={p.end_frame ?? (liveData?.total_frames ? liveData.total_frames - 1 : 0)} min={0} max={(liveData?.total_frames || 1) - 1} onChange={v => up({ end_frame: v })} />
             </div>
@@ -724,9 +733,9 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           return 0;
         };
         return (
-          <div className="space-y-6">
-            <div className="p-4 bg-black/20 rounded-2xl border border-white/5 space-y-6">
-              <div className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2 flex justify-between">
+          <div className="space-y-4">
+            <div className="p-3 bg-black/20 rounded-xl border border-white/5 space-y-4">
+              <div className="text-[7.5px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1.5 flex justify-between">
                 <span>Band Configuration</span>
               </div>
               <Slider label="NIR Band"   val={p.nir_band   ?? 4} min={1} max={20} onChange={v => up({ nir_band: v })} />
@@ -775,9 +784,9 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         };
 
         return (
-          <div className="space-y-6">
-            <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10 space-y-4">
-              <div className="text-[8px] font-black text-accent uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+          <div className="space-y-4">
+            <div className="p-3 bg-accent/5 rounded-xl border border-accent/10 space-y-3">
+              <div className="text-[7.5px] font-black text-accent uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
                 <Calculator size={10} /> Preset Generator
               </div>
               <SelectInput label="Sensor" val={sensorIdx} options={sensorOptions} onChange={v => updateExpr(v, indexIdx)} />
@@ -786,7 +795,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
             <CodeInput label="Expression" val={p.expression ?? ""} onChange={v => up({ expression: v, preset: 0 })} />
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <NumberInput label="Clamp Min" val={p.clamp_min ?? -1} onChange={v => up({ clamp_min: v })} />
               <NumberInput label="Clamp Max" val={p.clamp_max ?? 1}  onChange={v => up({ clamp_max: v })} />
             </div>
@@ -816,12 +825,12 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
             {/* Transport */}
             {p.path && (
-              <div className="space-y-3 pt-2">
-                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Playback</label>
+              <div className="space-y-2 pt-1.5">
+                <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Playback</label>
 
                 {/* Progress bar */}
                 <div>
-                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden cursor-pointer"
+                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden cursor-pointer"
                     onClick={e => {
                       const rect = (e.target as HTMLElement).getBoundingClientRect();
                       const ratio = (e.clientX - rect.left) / rect.width;
@@ -831,19 +840,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                       style={{ width: `${progress * 100}%` }} />
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-[8px] text-gray-500 font-mono">{position.toFixed(1)}s</span>
-                    <span className="text-[8px] text-gray-500 font-mono">{duration.toFixed(1)}s</span>
+                    <span className="text-[7.5px] text-gray-500 font-mono">{position.toFixed(1)}s</span>
+                    <span className="text-[7.5px] text-gray-500 font-mono">{duration.toFixed(1)}s</span>
                   </div>
                 </div>
 
                 {/* Controls */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button onClick={() => up({ playing: false, _seek: 0 })}
-                    className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-indigo-500/20 border border-white/10 text-gray-400 hover:text-indigo-300 text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1">
+                    className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-indigo-500/20 border border-white/10 text-gray-400 hover:text-indigo-300 text-[8px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-0.5">
                     ⏮ Rewind
                   </button>
                   <button onClick={() => up({ playing: !isPlaying })}
-                    className={`flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
+                    className={`flex-1 py-1.5 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-0.5 ${
                       isPlaying
                         ? 'bg-indigo-500/30 border-indigo-400/50 text-indigo-200 hover:bg-red-500/20 hover:border-red-400/40'
                         : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/40'
@@ -851,7 +860,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                     {isPlaying ? '⏸ Stop' : '▶ Play'}
                   </button>
                   <button onClick={() => up({ loop: !p.loop })}
-                    className={`px-3 py-2 rounded-xl border text-[9px] font-black transition-all ${
+                    className={`px-2 py-1.5 rounded-lg border text-[8px] font-black transition-all ${
                       p.loop ? 'bg-indigo-500/30 border-indigo-400/50 text-indigo-200' : 'bg-white/5 border-white/10 text-gray-500 hover:text-gray-300'
                     }`} title="Loop">
                     🔁
@@ -918,13 +927,13 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
       {node.type === 'plugin_audio_export' && (
         <>
           <TextInput label="Output Path" val={p.path || 'output.wav'} onChange={v => up({ path: v })} />
-          <div className="space-y-4 group">
-            <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Save Now</label>
+          <div className="space-y-2 group">
+            <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Save Now</label>
             <button
               onClick={() => { up({ save_now: 1 }); setTimeout(() => up({ save_now: 0 }), 400); }}
-              className="w-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black py-4 rounded-3xl hover:bg-indigo-500 hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
+              className="w-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-black py-2.5 rounded-2xl hover:bg-indigo-500 hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95 text-[11px]"
             >
-              <Save size={14} /> Save Audio File
+              <Save size={12} /> Save Audio File
             </button>
           </div>
         </>
@@ -934,15 +943,15 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* util_landmark_selector */}
       {node.type === 'util_landmark_selector' && (
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           <TextInput 
             label="Landmark Indices" 
             val={p.indices || "11,12,24,23"} 
             onChange={v => up({ indices: v })} 
           />
-          <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl space-y-2">
-            <div className="text-[8px] font-black text-blue-400 uppercase tracking-widest">Aide Mémoire (Pose)</div>
-            <div className="text-[9px] text-gray-500 leading-relaxed font-mono">
+          <div className="p-2.5 bg-blue-500/5 border border-blue-500/10 rounded-lg space-y-1.5">
+            <div className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Aide Mémoire (Pose)</div>
+            <div className="text-[8px] text-gray-500 leading-normal font-mono">
               11, 12 : Épaules (L, R)<br/>
               23, 24 : Hanches (L, R)<br/>
               13, 14 : Coudes (L, R)<br/>
@@ -954,19 +963,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* math_vec_to_screen calibration */}
       {node.type === 'math_vec_to_screen' && (
-        <div className="space-y-6">
-          <div className="bg-accent/5 border border-accent/20 rounded-2xl p-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <Activity size={14} className="text-accent" />
-              <span className="text-[9px] font-black text-accent uppercase tracking-widest">Calibration</span>
+        <div className="space-y-4">
+          <div className="bg-accent/5 border border-accent/20 rounded-lg p-3.5 space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Activity size={12} className="text-accent" />
+              <span className="text-[8px] font-black text-accent uppercase tracking-widest">Calibration</span>
             </div>
-            <p className="text-[9px] text-gray-400 leading-relaxed">
+            <p className="text-[8px] text-gray-400 leading-relaxed">
               Regardez chaque coin de l'écran pendant 1 seconde et cliquez sur le bouton correspondant.
               Réalisez les 4 coins, puis activez la calibration.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5">
             {[
               { key: 'calibrate_tl', label: '↖ Top-Left' },
               { key: 'calibrate_tr', label: '↗ Top-Right' },
@@ -977,7 +986,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               return (
                 <button key={corner.key}
                   onClick={() => up({ [corner.key]: true })}
-                  className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl text-[10px] font-bold transition-all border ${
+                  className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-[8.5px] font-bold transition-all border ${
                     done
                       ? 'bg-green-500/10 border-green-500/30 text-green-400'
                       : 'bg-white/5 border-white/10 text-gray-400 hover:bg-accent/10 hover:border-accent/30 hover:text-accent'
@@ -993,7 +1002,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
           {p.calibration_enabled && (
             <button onClick={() => up({ calibrate_reset: true })}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-[8.5px] font-bold transition-all bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
             >
               Reset Calibration
             </button>
@@ -1015,13 +1024,13 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
       {/* Node note — always visible, displayed under the node when non-empty */}
       {node.type !== 'canvas_note' && node.type !== 'canvas_frame' && (
-        <div className="space-y-2 group pt-2 border-t border-white/5">
-          <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note</label>
+        <div className="space-y-1.5 group pt-1.5 border-t border-white/5">
+          <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">Note</label>
           <input
             type="text"
             value={p.node_note || ''}
             onChange={e => up({ node_note: e.target.value || undefined })}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[11px] text-gray-300 outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[9.5px] text-gray-300 outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
             placeholder="Annotation visible sous la node…"
           />
         </div>
@@ -1058,13 +1067,13 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             const isSnapshotSave    = node.type === 'util_snapshot' && sp.id === 'save_to_disk';
             const isSnapshotCapture = node.type === 'util_snapshot' && sp.id === 'capture';
             inner = (
-              <div className="space-y-4 group">
-                <label className="text-[10px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
+              <div className="space-y-1.5 group">
+                <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black group-hover:text-accent transition-all duration-300">{sp.label || sp.id}</label>
                 <button
                   onClick={() => { if (isSnapshotSave) { onRequestCapture(node.id); } else if (isSnapshotCapture) { window.dispatchEvent(new CustomEvent('snapshot-to-node', { detail: { nodeId: node.id } })); } else { up({ [sp.id]: 1 }); setTimeout(() => up({ [sp.id]: 0 }), 400); } }}
-                  className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-4 rounded-3xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-2 active:scale-95"
+                  className="w-full bg-accent/5 border border-accent/20 text-accent font-black py-2.5 rounded-2xl hover:bg-accent hover:text-white transition-all duration-300 shadow-lg shadow-accent/5 flex items-center justify-center gap-1.5 active:scale-95 text-[11px]"
                 >
-                  <Save size={14} /> {sp.label || 'Execute'}
+                  <Save size={12} /> {sp.label || 'Execute'}
                 </button>
               </div>
             );
@@ -1105,7 +1114,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                               if (active) next.delete(col); else next.add(col);
                               up({ [sp.id]: Array.from(next).join(', ') });
                             }}
-                            className={`text-[8px] font-mono px-1.5 py-0.5 rounded border transition-all ${active ? 'bg-accent/20 border-accent/50 text-accent' : 'bg-white/5 border-white/10 text-gray-400 hover:border-accent/30 hover:text-gray-200'}`}
+                            className={`text-[7px] font-mono px-1 py-0.5 rounded border transition-all ${active ? 'bg-accent/20 border-accent/50 text-accent' : 'bg-white/5 border-white/10 text-gray-400 hover:border-accent/30 hover:text-gray-200'}`}
                           >
                             {col}
                           </button>
@@ -1223,23 +1232,23 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           const isCollapsed = collapsedSlots.has(secKey);
           const visibleParams = group.params.filter(passesShowIf);
           return (
-            <div key={secKey} className="rounded-xl overflow-hidden border border-white/[0.07]">
+            <div key={secKey} className="rounded-lg overflow-hidden border border-white/[0.07]">
               <button
-                className="w-full flex items-center gap-2 px-3 py-2 bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left"
+                className="w-full flex items-center gap-1.5 px-2.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left group/sec"
                 onClick={() => toggleSlot(secKey)}
               >
-                <span className="text-gray-400 text-[12px] font-mono w-3 shrink-0 leading-none">
-                  {isCollapsed ? '›' : '∨'}
+                <span className={`text-gray-500 group-hover/sec:text-accent transition-all duration-200 shrink-0 ${isCollapsed ? '' : 'rotate-90'}`}>
+                  <ChevronRight size={9} />
                 </span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-gray-200 truncate flex-1">
+                <span className="text-[8px] font-black uppercase tracking-widest text-gray-300 group-hover/sec:text-white transition-colors truncate flex-1">
                   {sec.label || sec.id}
                 </span>
                 {visibleParams.length > 0 && isCollapsed && (
-                  <span className="text-[8px] text-gray-600 font-mono shrink-0">{visibleParams.length} params</span>
+                  <span className="text-[7px] text-gray-600 font-mono shrink-0">{visibleParams.length}</span>
                 )}
               </button>
               {!isCollapsed && (
-                <div className="px-3 pb-3 pt-2 flex flex-col gap-4 border-t border-white/[0.05]">
+                <div className="px-2.5 pb-2.5 pt-1.5 flex flex-col gap-3 border-t border-white/[0.05]">
                   {renderGroupParams(group.params)}
                 </div>
               )}
@@ -1262,19 +1271,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             return (
               <div key={slot} className="rounded-lg overflow-hidden border border-white/5">
                 <button
-                  className="w-full flex items-center gap-2 px-2 py-1.5 bg-white/[0.03] hover:bg-white/[0.06] transition-colors text-left"
+                  className="w-full flex items-center gap-1.5 px-1.5 py-1 bg-white/[0.03] hover:bg-white/[0.06] transition-colors text-left group/slot"
                   onClick={() => toggleSlot(slot)}
                 >
-                  <span className="text-gray-500 text-[11px] font-mono w-3 shrink-0">
-                    {isCollapsed ? '›' : '∨'}
+                  <span className={`text-gray-500 group-hover/slot:text-accent transition-all duration-200 shrink-0 ${isCollapsed ? '' : 'rotate-90'}`}>
+                    <ChevronRight size={9} />
                   </span>
-                  <span className="w-3 h-3 rounded-sm shrink-0 border border-white/10" style={{ backgroundColor: slotColor }} />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 truncate flex-1">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0 border border-white/10" style={{ backgroundColor: slotColor }} />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-gray-300 truncate flex-1">
                     {slot.toUpperCase()} — {slotLabel}
                   </span>
                 </button>
                 {!isCollapsed && (
-                  <div className="px-2 pb-2 pt-1 flex flex-col gap-3 border-t border-white/5">
+                  <div className="px-1.5 pb-1.5 pt-0.5 gap-2 flex flex-col border-t border-white/5">
                     {group.filter(passesShowIf).map(sp => renderWidget(sp))}
                   </div>
                 )}
@@ -1310,25 +1319,25 @@ const DataFramePanel = ({ meta }: { meta: any }) => {
     <div className="space-y-2">
       {/* Shape + quality bar */}
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-black font-mono text-orange-300">
+        <span className="text-[9.5px] font-black font-mono text-orange-300">
           {shape[0].toLocaleString()} × {shape[1]}
         </span>
         {totalNulls > 0 && (
-          <span className="text-[8px] text-red-400 font-mono">{totalNulls} nulls</span>
+          <span className="text-[7.5px] text-red-400 font-mono">{totalNulls} nulls</span>
         )}
       </div>
 
       {/* Column list */}
-      <div className="space-y-0.5 max-h-40 overflow-y-auto scrollbar-hide">
+      <div className="space-y-0.5 max-h-32 overflow-y-auto scrollbar-hide">
         {columns.map(col => {
           const n = nulls[col] ?? 0;
           const pct = shape[0] > 0 ? (n / shape[0]) * 100 : 0;
           return (
-            <div key={col} className="flex items-center gap-1.5 text-[9px] py-0.5">
+            <div key={col} className="flex items-center gap-1.5 text-[8.5px] py-0.5">
               <span className="text-gray-300 flex-1 truncate font-medium">{col}</span>
               <span className={`font-mono shrink-0 ${dtypeColor(dtypes[col] || '')}`}>{dtypes[col]}</span>
               {n > 0 && (
-                <span className="text-[7px] font-mono text-red-400/80 shrink-0">{pct.toFixed(0)}%∅</span>
+                <span className="text-[6px] font-mono text-red-400/80 shrink-0">{pct.toFixed(0)}%∅</span>
               )}
             </div>
           );
@@ -1339,14 +1348,14 @@ const DataFramePanel = ({ meta }: { meta: any }) => {
       {head.length > 0 && (
         <button
           onClick={() => setShowHead(h => !h)}
-          className="w-full py-1 rounded-lg bg-white/5 border border-white/10 text-[7px] font-black uppercase tracking-widest text-gray-500 hover:text-orange-300 hover:border-orange-500/30 transition-all"
+          className="w-full py-1 rounded bg-white/5 border border-white/10 text-[6.5px] font-black uppercase tracking-widest text-gray-500 hover:text-orange-300 hover:border-orange-500/30 transition-all"
         >
           {showHead ? '▲ Masquer aperçu' : '▼ Aperçu données'}
         </button>
       )}
       {showHead && head.length > 0 && (
         <div className="overflow-x-auto scrollbar-hide rounded-lg border border-white/10">
-          <table className="text-[8px] font-mono w-full">
+          <table className="text-[7.5px] font-mono w-full">
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
                 {columns.slice(0, 6).map(c => (
@@ -1382,21 +1391,21 @@ export const AnalysisDataPanel = ({ liveData }: { liveData: any }) => {
   if (!dfMeta && !hasOther) return null;
 
   return (
-    <div className="p-6 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-4 shadow-2xl shrink-0">
+    <div className="p-4 bg-[#1a1f26]/80 backdrop-blur-md border-t border-[#4f5b6b] space-y-3 shadow-2xl shrink-0">
       {dfMeta && (
         <div className="space-y-2">
-          <div className="text-[9px] font-black text-orange-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-orange-400/5 p-2 rounded-lg border border-orange-400/10">
-            <Activity size={10} /> DataFrame
+          <div className="text-[8px] font-black text-orange-400 uppercase tracking-[0.15em] flex items-center gap-1.5 bg-orange-400/5 p-1.5 rounded-lg border border-orange-400/10">
+            <Activity size={9} /> DataFrame
           </div>
           <DataFramePanel meta={dfMeta} />
         </div>
       )}
       {hasOther && (
         <div className="space-y-2">
-          <div className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 bg-cyan-400/5 p-2 rounded-lg border border-cyan-400/10">
-            <Activity size={10} /> Analysis Data
+          <div className="text-[8px] font-black text-cyan-400 uppercase tracking-[0.15em] flex items-center gap-1.5 bg-cyan-400/5 p-1.5 rounded-lg border border-cyan-400/10">
+            <Activity size={9} /> Analysis Data
           </div>
-          <pre className="text-[9px] font-mono text-green-400/90 max-h-32 overflow-auto scrollbar-hide italic leading-relaxed">
+          <pre className="text-[8px] font-mono text-green-400/90 max-h-24 overflow-auto scrollbar-hide italic leading-relaxed">
             {JSON.stringify(Object.fromEntries(otherKeys.map(k => [k, liveData[k]])), null, 2)}
           </pre>
         </div>

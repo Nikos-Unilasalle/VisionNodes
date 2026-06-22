@@ -23,10 +23,12 @@ import numpy as np
         {'id': 'count',   'color': 'scalar','label': 'Count'},
     ],
     params=[
+        {'id': '_sec_detection', 'label': 'Detection', 'type': 'section'},
         {'id': 'blur_radius',   'label': 'Blur Radius',      'type': 'int',   'default': 4,   'min': 1,  'max': 15},
         {'id': 'dark_thresh',   'label': 'Darkness Threshold','type': 'int',   'default': 35,  'min': 5,  'max': 120},
         {'id': 'opening_size',  'label': 'Opening Size (px)', 'type': 'int',   'default': 15,  'min': 3,  'max': 51},
         {'id': 'min_area',      'label': 'Min Area (px)',     'type': 'int',   'default': 300, 'min': 50, 'max': 50000},
+        {'id': '_sec_display',  'label': 'Display', 'type': 'section'},
         {'id': 'overlay_color', 'label': 'Overlay Color',     'type': 'color', 'default': '#8B0000'},
     ]
 )
@@ -242,9 +244,12 @@ class GeoGrainMarkers(NodeProcessor):
         {'id': 'regions',          'color': 'list',   'label': 'Regions (list)'},
     ],
     params=[
+        {'id': '_sec_filter',    'label': 'Filter', 'type': 'section'},
         {'id': 'min_area',   'label': 'Min Area (px)',  'type': 'int',   'default': 100,  'min': 1,    'max': 100000},
+        {'id': '_sec_histogram', 'label': 'Histogram', 'type': 'section'},
         {'id': 'hist_bins',  'label': 'Histogram Bins', 'type': 'int',   'default': 30,   'min': 5,    'max': 100},
         {'id': 'hist_color', 'label': 'Bar Color',      'type': 'color', 'default': '#4FC3F7'},
+        {'id': '_sec_calibration', 'label': 'Calibration', 'type': 'section'},
         {'id': 'um_per_px',  'label': 'µm / pixel',     'type': 'float', 'default': 1.0,  'min': 0.01, 'max': 1000.0, 'step': 0.1},
     ]
 )

@@ -92,11 +92,14 @@ class SeedsFromBoundariesNode(NodeProcessor):
         {'id': 'count',   'color': 'scalar'}
     ],
     params=[
-        {'id': 'sensitivity', 'label': 'Peak Sensitivity', 'type': 'number', 'default': 30, 'min': 1, 'max': 90},
+        {'id': '_sec_preprocess', 'label': 'Preprocessing', 'type': 'section'},
         {'id': 'contrast',    'label': 'Auto Contrast (CLAHE)', 'type': 'boolean', 'default': True},
         {'id': 'smoothing',   'label': 'Denoise (Blur)',  'type': 'number', 'default': 3, 'min': 0, 'max': 10},
         {'id': 'boundary',    'label': 'Boundary Strength', 'type': 'number', 'default': 5, 'min': 0, 'max': 20},
+        {'id': '_sec_detection', 'label': 'Detection', 'type': 'section'},
+        {'id': 'sensitivity', 'label': 'Peak Sensitivity', 'type': 'number', 'default': 30, 'min': 1, 'max': 90},
         {'id': 'min_size',    'label': 'Min Object Size',   'type': 'number', 'default': 50, 'min': 0, 'max': 5000, 'step': 10},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'mask_thick',  'label': 'Mask Border (px)',  'type': 'number', 'default': 1, 'min': 0, 'max': 10},
         {'id': 'viz_mode',    'label': 'Visualization',     'type': 'enum', 'options': ['Boundaries', 'Colored Objects', 'Full Overlay'], 'default': 2},
     ]
@@ -323,10 +326,12 @@ class RegionSealerNode(NodeProcessor):
         {'id': 'mask',  'color': 'mask'}
     ],
     params=[
+        {'id': '_sec_filter_detection', 'label': 'Detection', 'type': 'section'},
         {'id': 'angle',       'label': 'Target Angle (°)', 'type': 'number', 'default': 0, 'min': 0, 'max': 180},
         {'id': 'tolerance',   'label': 'Tolerance (°)',    'type': 'number', 'default': 10, 'min': 1, 'max': 90},
         {'id': 'min_length',  'label': 'Min Length',       'type': 'number', 'default': 20, 'min': 5, 'max': 500},
         {'id': 'extend',      'label': 'Extension (px)',   'type': 'number', 'default': 0,  'min': 0, 'max': 100},
+        {'id': '_sec_filter_output', 'label': 'Output', 'type': 'section'},
         {'id': 'thickness',   'label': 'Erase Thickness',  'type': 'number', 'default': 5,  'min': 1, 'max': 50},
         {'id': 'mode',        'label': 'Mode',             'type': 'enum', 'options': ['Suppress (Remove)', 'Isolate (Keep)'], 'default': 0},
     ]

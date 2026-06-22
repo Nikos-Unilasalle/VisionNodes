@@ -120,11 +120,14 @@ def _render_phase_cell(pts, w, h, bgr, title="", xl="X", yl="Y"):
     ],
     outputs=[{'id': 'main', 'color': 'image'}],
     params=[
+        {'id': '_sec_labels', 'label': 'Labels', 'type': 'section'},
         {'id': 'title',       'label': 'Title',        'type': 'string', 'default': 'Phase Space'},
         {'id': 'x_label',     'label': 'X Label',      'type': 'string', 'default': 'X'},
         {'id': 'y_label',     'label': 'Y Label',      'type': 'string', 'default': 'Y'},
+        {'id': '_sec_trail', 'label': 'Trail', 'type': 'section'},
         {'id': 'trail_color', 'label': 'Trail Color',  'type': 'color',  'default': '#00ffcc'},
         {'id': 'trail_len',   'label': 'Trail Length', 'type': 'int',    'default': 300, 'min': 10, 'max': 2000},
+        {'id': '_sec_size', 'label': 'Size', 'type': 'section'},
         {'id': 'width',       'label': 'Width',        'type': 'int',    'default': 380, 'min': 150, 'max': 800},
         {'id': 'height',      'label': 'Height',       'type': 'int',    'default': 380, 'min': 150, 'max': 800},
     ]

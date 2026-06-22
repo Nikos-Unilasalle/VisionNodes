@@ -57,48 +57,37 @@ _MODEL_NAMES = list(_HF_MODELS.keys())
         {'id': 'contours',  'color': 'list',   'label': 'Contours List'},
     ],
     params=[
-        # ── Authentication ──
         {'id': 'hf_token', 'label': 'Hugging Face Token (leave empty if saved)', 'type': 'string',
          'default': ''},
-
-        # ── Model Selection ──
         {'id': 'model', 'label': 'Model', 'type': 'enum',
          'options': _MODEL_NAMES, 'default': 0},
-
-        # ── Trigger ──
         {'id': 'segment', 'label': 'Segment', 'type': 'trigger', 'default': False},
-
-        # ── Prompt Mode ──
         {'id': 'prompt_mode', 'label': 'Prompt Mode', 'type': 'enum',
          'options': ['Box (single)', 'Points List Input Port', 'Automatic (Grid)',
                      'Boxes List (all)'],
          'default': 0},
-
-        # ── Automatic Mode Settings ──
-        {'id': 'points_per_side', 'label': 'Points per side (Auto)', 'type': 'int',
+        {'id': '_sec_auto', 'label': 'Auto Mode', 'type': 'section'},
+        {'id': 'points_per_side', 'label': 'Points per side', 'type': 'int',
          'default': 32, 'min': 8, 'max': 128, 'step': 8},
-        {'id': 'pred_iou_thresh', 'label': 'IOU Threshold (Auto)', 'type': 'float',
+        {'id': 'pred_iou_thresh', 'label': 'IOU Threshold', 'type': 'float',
          'default': 0.8, 'min': 0.0, 'max': 1.0, 'step': 0.05},
-        {'id': 'stability_score_thresh', 'label': 'Stability Threshold (Auto)', 'type': 'float',
+        {'id': 'stability_score_thresh', 'label': 'Stability Threshold', 'type': 'float',
          'default': 0.95, 'min': 0.0, 'max': 1.0, 'step': 0.05},
-        {'id': 'box_nms_thresh', 'label': 'Box NMS Threshold (Auto)', 'type': 'float',
+        {'id': 'box_nms_thresh', 'label': 'Box NMS Threshold', 'type': 'float',
          'default': 0.7, 'min': 0.0, 'max': 1.0, 'step': 0.05},
-        {'id': 'crop_n_layers', 'label': 'Crop Layers (Auto)', 'type': 'int',
+        {'id': 'crop_n_layers', 'label': 'Crop Layers', 'type': 'int',
          'default': 0, 'min': 0, 'max': 3, 'step': 1},
-        {'id': 'min_mask_region_area', 'label': 'Min Mask Area px (Auto)', 'type': 'int',
+        {'id': 'min_mask_region_area', 'label': 'Min Mask Area px', 'type': 'int',
          'default': 0, 'min': 0, 'max': 100000, 'step': 50},
-
-        # ── Mask Selection ──
+        {'id': '_sec_output', 'label': 'Output', 'type': 'section'},
         {'id': 'multimask', 'label': 'Multi-mask (3 candidates)',
          'type': 'boolean', 'default': True},
         {'id': 'mask_select', 'label': 'Candidate (if multi-mask)',
          'type': 'enum', 'options': ['Best (IOU auto)', 'Candidate 1', 'Candidate 2', 'Candidate 3'],
          'default': 0},
-        # ── Visualization ──
         {'id': 'overlay_opacity', 'label': 'Overlay Opacity (%)', 'type': 'number',
          'default': 50, 'min': 0, 'max': 100, 'step': 5},
-
-        # ── Persistence ──
+        {'id': '_sec_save', 'label': 'Save', 'type': 'section'},
         {'id': 'save_path', 'label': 'Save File (.seg.json)', 'type': 'file_path',
          'default': '~/VNStudio/exports/segmentation.seg.json',
          'filters': [{'name': 'Segmentation', 'extensions': ['json']}]},

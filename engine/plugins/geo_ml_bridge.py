@@ -202,10 +202,12 @@ _COLORMAPS = ['RdYlGn', 'viridis', 'tab10', 'hot', 'gray', 'plasma', 'coolwarm']
     ],
     params=[
         {'id': 'column',        'label': 'Column to map',       'type': 'string', 'default': 'prediction'},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'colormap',      'label': 'Colormap',            'type': 'enum',   'options': _COLORMAPS, 'default': 0},
         {'id': 'nodata_val',    'label': 'NoData value',        'type': 'float',  'default': -1.0},
         {'id': 'class_0_label', 'label': 'Class 0 legend',     'type': 'string', 'default': 'Class 0'},
         {'id': 'class_1_label', 'label': 'Class 1 legend',     'type': 'string', 'default': 'Class 1'},
+        {'id': '_sec_export', 'label': 'Export', 'type': 'section'},
         {'id': 'file_path',     'label': 'Export path (.tif)',  'type': 'string', 'default': 'output.tif'},
         {'id': 'save',          'label': 'Save GeoTIFF',        'type': 'trigger','default': 0},
     ],

@@ -44,10 +44,12 @@ _MODEL_NAMES = list(_MODELS.keys())
         {'id': 'overlay',   'color': 'image',  'label': 'Image + top-K overlay'},
     ],
     params=[
+        {'id': '_sec_model', 'label': 'Model Config', 'type': 'section'},
         {'id': 'hf_token',    'label': 'HuggingFace Token', 'type': 'string', 'default': ''},
         {'id': 'model',       'label': 'Model', 'type': 'enum',
          'options': _MODEL_NAMES, 'default': 0},
         {'id': 'download',    'label': 'Download Model', 'type': 'trigger', 'default': False},
+        {'id': '_sec_inference', 'label': 'Inference', 'type': 'section'},
         {'id': 'text_labels', 'label': 'Labels (comma-separated)', 'type': 'string',
          'default': 'cat, dog, bird, car, building, water, forest, road'},
         {'id': 'normalize',   'label': 'Normalize embedding', 'type': 'bool', 'default': True},

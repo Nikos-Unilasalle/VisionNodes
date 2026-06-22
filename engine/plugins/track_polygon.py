@@ -16,6 +16,7 @@ import numpy as np
         {'id': 'draw', 'color': 'dict'}
     ],
     params=[
+        {'id': '_sec_points', 'label': 'Points', 'type': 'section'},
         {'id': 'pt_1', 'min': -1, 'max': 477, 'step': 1, 'default': 0},
         {'id': 'pt_2', 'min': -1, 'max': 477, 'step': 1, 'default': 5},
         {'id': 'pt_3', 'min': -1, 'max': 477, 'step': 1, 'default': 9},
@@ -26,8 +27,10 @@ import numpy as np
         {'id': 'pt_8', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
         {'id': 'pt_9', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
         {'id': 'pt_10', 'min': -1, 'max': 477, 'step': 1, 'default': -1},
+        {'id': '_sec_options', 'label': 'Options', 'type': 'section'},
         {'id': 'absolute', 'label': 'Absolute Coords', 'type': 'bool', 'default': False},
         {'id': 'fill',     'label': 'Fill',            'type': 'bool', 'default': True},
+        {'id': '_sec_display', 'label': 'Display', 'type': 'section'},
         {'id': 'thickness', 'min': 1, 'max': 20, 'step': 1, 'default': 2},
         {'id': 'r', 'min': 0, 'max': 255, 'step': 1, 'default': 0},
         {'id': 'g', 'min': 0, 'max': 255, 'step': 1, 'default': 255},
