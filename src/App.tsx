@@ -1288,9 +1288,7 @@ function App() {
   // pre-wired and pre-configured for node-parameter advice (auto-context on).
   const addHelpAssistant = useCallback(() => {
     pushSnapshot();
-    const base = instance?.screenToFlowPosition
-      ? instance.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
-      : { x: 0, y: 0 };
+    const base = cursorFlowPosRef.current;
     const ts = Date.now();
     const rnd = () => Math.random().toString(36).slice(2, 9);
     const qId = `note-q-${ts}-${rnd()}`;
@@ -1352,7 +1350,7 @@ function App() {
 
     setViewNodes(nds => [...nds, qNode, aNode, lNode]);
     setViewEdges(eds => [...eds, e1, e2]);
-  }, [pushSnapshot, instance, setViewNodes, setViewEdges]);
+  }, [pushSnapshot, setViewNodes, setViewEdges]);
 
   useEffect(() => {
     if (lastCommands && lastCommands.length > 0) {
