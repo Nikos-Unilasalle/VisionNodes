@@ -34,12 +34,29 @@ VisionNodes Studio is built on a modern stack: **React / Vite / Tailwind** (Fron
 
 ### Prerequisites
 
-You will need the following dependencies installed on your system:
-- **Node.js** (v18+) and **npm**
-- **Rust** (`rustup default stable`)
-- **Python** (3.10+)
+#### macOS
+- **Node.js** v18+ and **npm**
+- **Rust** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- **Python** 3.10+
 
-*(On Linux, install WebKitGTK and base development packages depending on your distribution. For example, on Arch Linux: `sudo pacman -S webkit2gtk-4.1 gtk3 base-devel`).*
+#### Linux (Ubuntu / Debian)
+```bash
+# Tauri / WebKit system dependencies
+sudo apt install -y \
+  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+  librsvg2-dev patchelf build-essential curl
+
+# Node.js v18+, Rust, Python + venv
+sudo apt install -y nodejs python3 python3-pip
+sudo apt install -y python3.$(python3 -c "import sys; print(sys.version_info.minor)")-venv
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+#### Linux (Arch / Manjaro)
+```bash
+sudo pacman -S webkit2gtk-4.1 gtk3 base-devel nodejs npm python python-pip
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
 ### Setup and Build
 
@@ -49,11 +66,11 @@ You will need the following dependencies installed on your system:
    cd VisionNodes
    ```
 
-2. **Install dependencies and setup the Python environment:**
+2. **Install all dependencies:**
    ```bash
    npm run setup
    ```
-   *This command installs Node packages and creates a local Python virtual environment (`.venv`) with all required ML/CV packages automatically.*
+   This installs Node packages, creates a Python virtual environment (`.venv`), and installs all ML/CV libraries including PyTorch, YOLOv11, SAM-2, and more. Expect 10–20 minutes on first run.
 
 3. **Launch in development mode:**
    ```bash
@@ -65,7 +82,7 @@ You will need the following dependencies installed on your system:
    npm run tauri build
    ```
 
-*(Note for Linux Wayland users: If you experience a white screen upon launch, start the application with `WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run studio`)*.
+For the full installation guide including troubleshooting, see [INSTALL.md](./INSTALL.md).
 
 ---
 
