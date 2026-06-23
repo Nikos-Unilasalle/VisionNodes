@@ -12,9 +12,10 @@ interface NotificationBarProps {
   notifications: Notification[];
   dismissNotification: (id: string) => void;
   cancelNotification?: (id: string) => void;
+  retryInstall?: (id: string) => void;
 }
 
-const NotificationBar: React.FC<NotificationBarProps> = ({ notifications, dismissNotification, cancelNotification }) => {
+const NotificationBar: React.FC<NotificationBarProps> = ({ notifications, dismissNotification, cancelNotification, retryInstall }) => {
   if (notifications.length === 0) return null;
 
   return (
@@ -52,6 +53,16 @@ const NotificationBar: React.FC<NotificationBarProps> = ({ notifications, dismis
                   className="ml-1 shrink-0 opacity-0 group-hover/notif:opacity-100 transition-opacity px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40"
                 >
                   Cancel
+                </button>
+              )}
+
+              {/* Retry button — install errors only */}
+              {isError && n.id.startsWith('install_') && retryInstall && (
+                <button
+                  onClick={() => retryInstall(n.id)}
+                  className="ml-1 shrink-0 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 transition-colors"
+                >
+                  Retry
                 </button>
               )}
 

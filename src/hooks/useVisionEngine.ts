@@ -207,5 +207,12 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
     dismissNotification(notifId);
   }, []);
 
-  return { frame, nodesData: nodesDataRef.current, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, cancelNotification, pushNotification, requestPyExport, computingNodeId };
+  const retryInstall = useCallback((notifId: string) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'retry_install', notif_id: notifId }));
+    }
+    dismissNotification(notifId);
+  }, []);
+
+  return { frame, nodesData: nodesDataRef.current, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, cancelNotification, retryInstall, pushNotification, requestPyExport, computingNodeId };
 }

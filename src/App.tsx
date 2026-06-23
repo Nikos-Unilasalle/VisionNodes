@@ -345,7 +345,7 @@ function App() {
     } catch (err) { console.error('Failed to capture plotter:', err); }
   }, []);
 
-  const { frame, nodesData, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, cancelNotification, pushNotification, requestPyExport, computingNodeId } = useVisionEngine(handleCapture);
+  const { frame, nodesData, nodesDataStore, pluginSchemas, isConnected, updateGraph, requestCapture, requestSnapshotToNode, setPreviewNode, lastCommands, notifications, dismissNotification, cancelNotification, retryInstall, pushNotification, requestPyExport, computingNodeId } = useVisionEngine(handleCapture);
 
   const handlePopout = useCallback(async () => {
     const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
@@ -1925,7 +1925,7 @@ function App() {
 
           <RerouteOverlay isRerouting={isRerouting} rerouteDragRef={rerouteDragRef} reroutePos={reroutePos} />
 
-          <NotificationBar notifications={notifications} dismissNotification={dismissNotification} cancelNotification={cancelNotification} />
+          <NotificationBar notifications={notifications} dismissNotification={dismissNotification} cancelNotification={cancelNotification} retryInstall={retryInstall} />
 
           <AnimatePresence>
             {roiEditingId && (
