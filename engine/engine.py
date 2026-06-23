@@ -680,6 +680,10 @@ class VisionEngine:
                     elif d.get('type') == 'cancel_notif':
                         from registry import request_cancel
                         request_cancel(d.get('notif_id', ''))
+                    elif d.get('type') == 'retry_install':
+                        from registry import reset_install_state
+                        reset_install_state(d.get('notif_id', ''))
+                        self._run_event.set()
                     elif d.get('type') == 'export_py':
                         try:
                             from code_generator import generate_pipeline_script

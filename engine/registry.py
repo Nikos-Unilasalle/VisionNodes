@@ -53,6 +53,16 @@ _notification_queue: queue.Queue = queue.Queue()
 import threading as _threading
 _cancel_flags: dict[str, _threading.Event] = {}
 
+# ── Install-state bus ──────────────────────────────────────────────────────────
+# Keyed by notif_id so reset_install_state() can clear by the same id the
+# frontend received in the error notification.
+_install_states: dict[str, dict] = {}
+
+def reset_install_state(notif_id: str) -> None:
+    """Clear a failed install state so the next engine tick retries it."""
+    _install_states.pop(notif_id, None)
+    print(f"[registry] Install state reset: {notif_id!r}")
+
 def request_cancel(notif_id: str) -> None:
     """Signal cancellation for a running operation identified by notif_id."""
     flag = _cancel_flags.get(notif_id)
@@ -289,19 +299,19 @@ class NodeProcessor(ABC):
         if not missing_indices:
             return True
 
-        # 2. State management for installation
-        if not hasattr(self, '_install_state'):
-            self._install_state = {'installing': False, 'failed': False, 'success': False}
+        # 2. State management for installation (module-level so reset_install_state() can clear it)
+        nid = notif_id or f'install_{self.__class__.__name__}'
+        state = _install_states.setdefault(nid, {'installing': False, 'failed': False, 'success': False})
 
-        if self._install_state['success']:
+        if state['success']:
             return True
-        if self._install_state['failed']:
+        if state['failed']:
             return False
 
         # 3. Trigger installation if not already running
-        if not self._install_state['installing']:
-            self._install_state['installing'] = True
-            
+        if not state['installing']:
+            state['installing'] = True
+
             # Use provided pip names or fallback to import names
             targets = []
             for idx in missing_indices:
@@ -311,35 +321,34 @@ class NodeProcessor(ABC):
                     targets.append(packages[idx])
 
             def _install_thread():
-                nid = notif_id or f'install_{self.__class__.__name__}'
                 try:
                     send_notification(
-                        f"Installing dependencies: {', '.join(targets)}...", 
+                        f"Installing dependencies: {', '.join(targets)}...",
                         progress=0.1, notif_id=nid
                     )
-                    
+
                     # --no-build-isolation reuses packages already in the venv,
                     # avoiding redundant re-downloads of heavy deps like torch.
                     subprocess.check_call([
                         sys.executable, "-m", "pip", "install", "--quiet",
                         "--no-build-isolation"
                     ] + targets)
-                    
-                    self._install_state['success'] = True
+
+                    state['success'] = True
                     send_notification(
-                        f"Dependencies installed ✓", 
+                        f"Dependencies installed ✓",
                         progress=1.0, notif_id=nid
                     )
                     print(f"[{self.__class__.__name__}] Successfully installed {targets}")
                 except Exception as e:
-                    self._install_state['failed'] = True
+                    state['failed'] = True
                     print(f"[{self.__class__.__name__}] Installation FAILED: {e}")
                     send_notification(
-                        f"Install failed: {str(e)[:100]}", 
+                        f"Install failed: {str(e)[:100]}",
                         level='error', notif_id=nid
                     )
                 finally:
-                    self._install_state['installing'] = False
+                    state['installing'] = False
 
             threading.Thread(target=_install_thread, daemon=True).start()
         
