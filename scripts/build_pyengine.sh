@@ -46,7 +46,19 @@ PY="$PYDEST/bin/python3"
 [ -x "$PY" ] || { echo "✗ bundled python missing at $PY"; exit 1; }
 
 # ── 2. Install engine dependencies into the bundled interpreter ──
-echo "▶ Installing dependencies (this is the slow part — torch/sam2/rasterio)…"
+# On Linux the default torch wheel bundles ~2 GB of CUDA/NVIDIA libs, which
+# blows up the AppImage (and risks the squashfs size limit). Install the
+# CPU-only build first; the requirements.txt pass below then sees torch
+# already satisfied and leaves it alone. macOS/Windows default wheels are
+# already CPU-only, so this step is Linux-specific.
+if [ "$(uname -s)" = "Linux" ]; then
+  echo "▶ Installing CPU-only torch (Linux: excludes bundled CUDA)…"
+  uv pip install --break-system-packages \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch torchvision --python "$PY"
+fi
+
+echo "▶ Installing dependencies (this is the slow part — sam2/rasterio…)…"
 uv pip install --break-system-packages -r "$ROOT/engine/requirements.txt" --python "$PY"
 
 # ── 3. Copy engine source into resources (self-contained, no caches/tests) ──
