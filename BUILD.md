@@ -1,4 +1,4 @@
-# Building VisionNodes for distribution (macOS & Windows)
+# Building VisionNodes for distribution (macOS, Windows & Linux)
 
 Goal: a **double-clickable `.app`/`.dmg` (macOS) or `.exe`/`.msi` (Windows)** that students run without installing
 Python or any dependency. A self-contained Python interpreter (with torch, sam2,
@@ -40,6 +40,12 @@ VisionNodes needs.
 - Rust toolchain + Node (already used for dev)
 - Visual Studio Build Tools (Rust/Tauri requirement on Windows)
 
+### Linux
+- x86_64 (build on the oldest glibc you need to support)
+- [`uv`](https://docs.astral.sh/uv/): `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- Rust toolchain + Node, plus the Tauri system deps from `INSTALL.md`
+  (`libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `patchelf`…)
+
 ## Build steps
 
 ### macOS
@@ -76,7 +82,45 @@ src-tauri/target/release/bundle/msi/VisionNodes_0.1.0_x64_en-US.msi
 src-tauri/target/release/VisionNodes.exe
 ```
 
-**Re-run `build_pyengine.sh` (macOS) or `.ps1` (Windows) only when `engine/requirements.txt` changes; otherwise just `npm run tauri build`.**
+### Linux
+
+```bash
+# 1. Bundle the self-contained Python engine into src-tauri/resources/
+#    (build_pyengine.sh is plain bash + uv — works on Linux as on macOS)
+./scripts/build_pyengine.sh
+
+# 2. Build the AppImage + .deb
+npm run tauri build
+```
+
+Output:
+```
+src-tauri/target/release/bundle/appimage/VNStudio_0.1.0_amd64.AppImage
+src-tauri/target/release/bundle/deb/VNStudio_0.1.0_amd64.deb
+```
+
+> The release binary forces `WEBKIT_DISABLE_DMABUF_RENDERER=1` itself (see
+> `src-tauri/src/main.rs`), so the packaged app won't show the Wayland white screen.
+
+**Re-run `build_pyengine.sh` (macOS/Linux) or `.ps1` (Windows) only when `engine/requirements.txt` changes; otherwise just `npm run tauri build`.**
+
+## Runtime dependencies (user overlay)
+
+The bundled interpreter's `site-packages` is **read-only**, so nodes that pull
+extra packages on demand (`ensure_packages` — Copernicus Marine, Sentinel Hub,
+diffusers, user-dropped plugins…) can't install into the bundle. In a packaged
+build the engine detects this and installs into a writable overlay instead:
+
+```
+~/.vnstudio/lib/python3.x/site-packages   (Linux/macOS, via PYTHONUSERBASE)
+```
+
+This dir is added to `sys.path` at engine startup, so freshly installed packages
+import without a restart. `pip --user` resolves against the bundled packages, so
+heavy deps already in the bundle (torch, rasterio…) are reused, not redownloaded.
+`--break-system-packages` is passed because python-build-standalone ships a
+PEP 668 `EXTERNALLY-MANAGED` marker. In **dev** (`.venv`, writable) none of this
+applies — installs go to the venv as before.
 
 ## Bundle size
 

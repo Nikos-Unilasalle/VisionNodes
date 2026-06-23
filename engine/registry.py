@@ -49,6 +49,45 @@ NODE_CLASS_REGISTRY: dict[str, type] = {}
 
 _notification_queue: queue.Queue = queue.Queue()
 
+# ── Writable package overlay (for bundled / read-only installs) ─────────────────
+# In a packaged app (.app/.exe/AppImage) the bundled interpreter's site-packages
+# is read-only, so runtime `pip install` (ensure_packages) would fail. We route
+# such installs into ~/.vnstudio via PYTHONUSERBASE + `pip --user`, and put that
+# user-site on sys.path so the freshly installed packages import immediately.
+# In dev (.venv, writable) this is a no-op and installs go to the venv as before.
+import os as _os
+import sys as _sys
+import site as _site
+import sysconfig as _sysconfig
+
+def _site_is_writable() -> bool:
+    """True when the interpreter's main site-packages can be written to."""
+    p = _sysconfig.get_paths().get('purelib')
+    return bool(p) and _os.access(p, _os.W_OK)
+
+VN_HOME = _os.path.join(_os.path.expanduser('~'), '.vnstudio')
+
+def setup_user_overlay() -> None:
+    """Make ~/.vnstudio a writable, importable package overlay (bundled only)."""
+    _os.makedirs(VN_HOME, exist_ok=True)
+    _os.environ.setdefault('PYTHONUSERBASE', VN_HOME)
+    # site.USER_BASE/USER_SITE were resolved at interpreter start from the default
+    # home; recompute now that PYTHONUSERBASE points at ~/.vnstudio.
+    _site.ENABLE_USER_SITE = True
+    _site.USER_BASE = None
+    _site.USER_SITE = None
+    us = _site.getusersitepackages()
+    _os.makedirs(us, exist_ok=True)
+    if us not in _sys.path:
+        _site.addsitedir(us)
+
+# Only stand up the overlay when the main site-packages is read-only (packaged
+# build). Detecting by writability keeps dev (.venv) on its normal install path,
+# where `pip --user` is refused inside a virtualenv anyway.
+_USE_USER_OVERLAY = not _site_is_writable()
+if _USE_USER_OVERLAY:
+    setup_user_overlay()
+
 # ── Cancel bus ────────────────────────────────────────────────────────────────
 import threading as _threading
 _cancel_flags: dict[str, _threading.Event] = {}
@@ -327,12 +366,26 @@ class NodeProcessor(ABC):
                         progress=0.1, notif_id=nid
                     )
 
-                    # --no-build-isolation reuses packages already in the venv,
+                    # --no-build-isolation reuses packages already installed,
                     # avoiding redundant re-downloads of heavy deps like torch.
-                    subprocess.check_call([
+                    cmd = [
                         sys.executable, "-m", "pip", "install", "--quiet",
-                        "--no-build-isolation"
-                    ] + targets)
+                        "--no-build-isolation",
+                    ]
+                    # Packaged build: site-packages is read-only, so install into
+                    # the ~/.vnstudio user overlay (already on sys.path). pip --user
+                    # still resolves against the bundled packages, so torch & co.
+                    # are reused, not reinstalled. --break-system-packages is
+                    # required because python-build-standalone ships an
+                    # EXTERNALLY-MANAGED marker (PEP 668) that otherwise blocks pip.
+                    if _USE_USER_OVERLAY:
+                        cmd += ["--user", "--break-system-packages"]
+                    subprocess.check_call(cmd + targets)
+
+                    # Make the freshly installed modules importable in this
+                    # already-running interpreter (no engine restart needed).
+                    import importlib
+                    importlib.invalidate_caches()
 
                     state['success'] = True
                     send_notification(
