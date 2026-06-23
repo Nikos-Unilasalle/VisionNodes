@@ -94,6 +94,31 @@ const DownloadPage = () => (
           ))}
         </div>
 
+        {/* macOS Gatekeeper notice */}
+        <div className="vn-card-flat max-w-2xl mx-auto mb-12 p-6 rounded-2xl border border-[#1a1917]/15 bg-[#1a1917]/[0.03]">
+          <div className="flex items-start gap-3">
+            <Apple size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-[var(--text-main)]" />
+            <div>
+              <h4 className="text-[15px] font-semibold text-[var(--text-main)] mb-1">
+                macOS: “VNStudio is damaged and can’t be opened”?
+              </h4>
+              <p className="text-[13px] text-[var(--text-dim)] mb-3">
+                The app is not yet signed with an Apple Developer certificate, so macOS
+                Gatekeeper quarantines it. The app is <em>not</em> damaged. Drag it to{' '}
+                <span className="font-medium text-[var(--text-main)]">Applications</span>, then
+                run this once in Terminal to clear the quarantine flag:
+              </p>
+              <pre className="text-[12.5px] bg-[var(--bg-alt)] rounded-lg p-3 overflow-x-auto font-mono text-[var(--text-main)] mb-2">
+xattr -cr /Applications/VNStudio.app
+              </pre>
+              <p className="text-[12.5px] text-[var(--text-dim)]">
+                Then open it normally. Alternatively: right-click the app →{' '}
+                <span className="font-medium">Open</span> → <span className="font-medium">Open</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Source */}
         <div className="vn-card-flat p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-[var(--bg-alt)]">
           <div>
