@@ -14,6 +14,10 @@ scikit-image>=0.21.0
 trimesh>=4.0.0
 deep-sort-realtime>=1.3.2
 librosa>=0.10.0
+# Pin a modern numba so the resolver doesn't backtrack to numba 0.53.1, whose
+# llvmlite 0.36 has no Python 3.12 wheel and fails to build from source (it caps
+# Python <3.10). numba>=0.60 ships py3.12 wheels and matches numpy>=1.24.
+numba>=0.60.0
 soundfile>=0.12.0
 sounddevice>=0.4.6
 # GIS / Remote Sensing
