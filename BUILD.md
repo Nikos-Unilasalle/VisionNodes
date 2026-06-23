@@ -4,6 +4,20 @@ Goal: a **double-clickable `.app`/`.dmg` (macOS) or `.exe`/`.msi` (Windows)** th
 Python or any dependency. A self-contained Python interpreter (with torch, sam2,
 opencv, rasterio…) is bundled inside the app.
 
+## Recommended: build on GitHub (CI)
+
+The easiest way to produce all binaries is the **`Build binaries`** GitHub
+Actions workflow (`.github/workflows/build-binaries.yml`) — no multi-GB local
+downloads. It builds Linux (AppImage + deb), macOS (arm64 + Intel dmg) and
+Windows (msi + nsis) in parallel:
+
+- **Release:** push a tag `vX.Y.Z` → all platforms build and attach to a **draft**
+  GitHub Release (review, then publish).
+- **Test:** Actions → *Build binaries* → *Run workflow* → installers appear as
+  downloadable workflow artifacts (no release created).
+
+The rest of this document covers **local** builds (for debugging or offline use).
+
 ## How it works
 
 ```
