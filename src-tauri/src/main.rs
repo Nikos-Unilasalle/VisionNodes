@@ -38,8 +38,19 @@ fn main() {
                     .resource_dir()
                     .expect("failed to resolve resource dir");
 
+                // python-build-standalone puts python.exe at the bundle root on
+                // Windows (Scripts/ only holds pip & friends); python3 lives in
+                // bin/ on macOS/Linux. Fall back to Scripts/ if a future layout
+                // differs.
                 #[cfg(target_os = "windows")]
-                let python_path = resource_dir.join("resources/pyengine/Scripts/python.exe");
+                let python_path = {
+                    let root = resource_dir.join("resources/pyengine/python.exe");
+                    if root.exists() {
+                        root
+                    } else {
+                        resource_dir.join("resources/pyengine/Scripts/python.exe")
+                    }
+                };
                 #[cfg(not(target_os = "windows"))]
                 let python_path = resource_dir.join("resources/pyengine/bin/python3");
 
