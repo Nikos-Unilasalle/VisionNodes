@@ -124,9 +124,15 @@ applies — installs go to the venv as before.
 
 ## Bundle size
 
-torch alone is ~2–3 GB. Expect a 3–6 GB `.app`. To trim, edit
-`engine/requirements.txt` (e.g. CPU-only torch) before step 1, or prune unused
-heavy plugins.
+On **Linux**, `build_pyengine.sh` installs **CPU-only torch** automatically
+(`--index-url .../whl/cpu`), excluding ~2 GB of bundled NVIDIA/CUDA libs — the
+AppImage stays around 1.5–2 GB. No GPU acceleration in the Linux bundle (right
+default for laptops/classrooms). To restore GPU, remove the Linux CPU-torch
+branch in `build_pyengine.sh`.
+
+On **macOS** the default wheel is already CPU/MPS-only (smaller). To trim
+further, prune unused heavy plugins from `engine/requirements.txt` before
+bundling.
 
 ## Code signing & security
 
