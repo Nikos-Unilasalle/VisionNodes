@@ -59,6 +59,11 @@ jobs:
         with:
           node-version: 20
 
+      # tauri-action does NOT install npm deps itself; without this the build
+      # fails with exit 127 (tauri CLI not found).
+      - name: Install frontend dependencies
+        run: npm ci
+
       - uses: astral-sh/setup-uv@v3
 
       - name: Cache Rust build
