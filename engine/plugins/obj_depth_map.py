@@ -63,13 +63,7 @@ def _render(obj_path, img_w, img_h, azimuth_deg, elevation_deg, colormap_name):
     try:
         import trimesh
     except ImportError:
-        import subprocess, sys
-        try:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'trimesh>=4.0.0'],
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            import trimesh
-        except Exception as exc:
-            return None, f"trimesh not found and installation failed: {exc}"
+        return None, "trimesh not found — run: npm run setup"
 
     try:
         geo = trimesh.load(obj_path, force='mesh', process=False)

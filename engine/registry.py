@@ -318,10 +318,11 @@ class NodeProcessor(ABC):
                         progress=0.1, notif_id=nid
                     )
                     
-                    # Run pip install
-                    # Use --no-cache-dir to save space and --quiet to reduce logs
+                    # --no-build-isolation reuses packages already in the venv,
+                    # avoiding redundant re-downloads of heavy deps like torch.
                     subprocess.check_call([
-                        sys.executable, "-m", "pip", "install", "--quiet"
+                        sys.executable, "-m", "pip", "install", "--quiet",
+                        "--no-build-isolation"
                     ] + targets)
                     
                     self._install_state['success'] = True
