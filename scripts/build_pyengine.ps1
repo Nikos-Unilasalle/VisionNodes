@@ -64,8 +64,11 @@ if (-not (Test-Path $PY)) {
 }
 
 # -- 2. Install engine dependencies into the bundled interpreter --
-& $PY -m ensurepip --upgrade 2> $null
+# The standalone interpreter already ships pip. Don't call ensurepip: it
+# ignores --break-system-packages and errors on the PEP 668 EXTERNALLY-MANAGED
+# marker (and the resulting native stderr trips ErrorActionPreference=Stop).
 & $PY -m pip install --break-system-packages --upgrade pip setuptools wheel
+if ($LASTEXITCODE -ne 0) { Write-Host "[X] pip bootstrap failed"; exit 1 }
 
 # SAM-2 is a git sdist whose build imports torch. Under pip's default build
 # isolation the build env has no torch, so it re-downloads torch (GBs) and
@@ -78,10 +81,12 @@ $reqLines | Where-Object { $_ -notmatch '^(?i)SAM-2' } | Set-Content $reqNoSam2
 
 Write-Host "> Installing dependencies (slow part - torch/rasterio...)"
 & $PY -m pip install --break-system-packages -r $reqNoSam2
+if ($LASTEXITCODE -ne 0) { Write-Host "[X] dependency install failed"; exit 1 }
 
 if ($sam2) {
   Write-Host "> Installing SAM-2 (no build isolation, reuses installed torch)"
   & $PY -m pip install --break-system-packages --no-build-isolation $sam2
+  if ($LASTEXITCODE -ne 0) { Write-Host "[X] SAM-2 install failed"; exit 1 }
 }
 Remove-Item $reqNoSam2 -ErrorAction SilentlyContinue
 
