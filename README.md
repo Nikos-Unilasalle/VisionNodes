@@ -18,6 +18,20 @@
 
 ---
 
+## ⚠️ macOS: "VNStudio is damaged and can't be opened"
+
+The macOS binaries are **not yet signed** with an Apple Developer certificate, so macOS
+Gatekeeper quarantines downloaded apps and shows a misleading *"damaged"* message. **The app
+is not damaged.** Move it to `/Applications`, then clear the quarantine flag once in Terminal:
+
+```bash
+xattr -cr /Applications/VNStudio.app
+```
+
+Then open it normally. Alternatively, right-click the app → **Open** → **Open**.
+
+---
+
 ## What is VisionNodes?
 
 VisionNodes abstracts the complexity of computer vision pipelines into atomic, composable units. It is designed to accelerate the hypothesis-to-result cycle in scientific research and engineering workflows:

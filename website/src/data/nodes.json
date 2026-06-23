@@ -236,6 +236,11 @@
             "max": 2048
           },
           {
+            "id": "_sec_value_range",
+            "label": "Value Range",
+            "type": "section"
+          },
+          {
             "id": "value_min",
             "label": "Value Min",
             "type": "float",
@@ -252,6 +257,11 @@
             "min": 0.0,
             "max": 1.0,
             "step": 0.01
+          },
+          {
+            "id": "_sec_pattern_config",
+            "label": "Pattern Config",
+            "type": "section"
           },
           {
             "id": "seed_size",
@@ -294,6 +304,11 @@
             "default": 42,
             "min": 0,
             "max": 9999
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "animate",
@@ -747,14 +762,18 @@
     "nodes": [
       {
         "type": "filter_blur",
-        "label": "Gaussian Blur",
+        "label": "Blur",
         "category": "image",
         "icon": "Waves",
-        "description": "Applies a Gaussian blur to smooth the image and reduce noise.",
+        "description": "Smooths the image (Gaussian, Median, Box, Bilateral, Motion). Optional mask input to blur only a region.",
         "inputs": [
           {
             "id": "image",
             "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
           }
         ],
         "outputs": [
@@ -765,10 +784,59 @@
         ],
         "params": [
           {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "Gaussian",
+              "Median",
+              "Box",
+              "Bilateral",
+              "Motion"
+            ],
+            "default": 0
+          },
+          {
             "id": "size",
-            "label": "Kernel Size",
-            "type": "int",
+            "label": "Strength (kernel)",
+            "type": "scalar",
+            "min": 1,
+            "max": 99,
+            "step": 2,
             "default": 5
+          },
+          {
+            "id": "sigma",
+            "label": "Sigma (Gaussian, 0=auto)",
+            "type": "float",
+            "min": 0,
+            "max": 50,
+            "step": 0.5,
+            "default": 0
+          },
+          {
+            "id": "sigma_color",
+            "label": "Sigma Color (Bilateral)",
+            "type": "scalar",
+            "min": 1,
+            "max": 200,
+            "default": 75
+          },
+          {
+            "id": "sigma_space",
+            "label": "Sigma Space (Bilateral)",
+            "type": "scalar",
+            "min": 1,
+            "max": 200,
+            "default": 75
+          },
+          {
+            "id": "angle",
+            "label": "Angle (Motion)",
+            "type": "scalar",
+            "min": 0,
+            "max": 360,
+            "default": 0
           }
         ]
       },
@@ -871,30 +939,67 @@
           {
             "id": "image",
             "color": "image"
+          },
+          {
+            "id": "mask",
+            "color": "mask"
           }
         ],
         "outputs": [
           {
             "id": "main",
             "color": "image"
+          },
+          {
+            "id": "luma",
+            "color": "image"
           }
         ],
         "params": [
           {
+            "id": "auto_clip",
+            "label": "Auto Clip",
+            "type": "bool",
+            "default": false
+          },
+          {
             "id": "clip_limit",
             "label": "Clip Limit",
-            "type": "scalar",
-            "min": 1,
-            "max": 10,
+            "type": "float",
+            "min": 0.5,
+            "max": 40,
+            "step": 0.5,
             "default": 2
           },
           {
             "id": "grid_size",
-            "label": "Grid Size",
+            "label": "Tile Grid Size",
             "type": "scalar",
             "min": 1,
-            "max": 16,
+            "max": 32,
             "default": 8
+          },
+          {
+            "id": "color_space",
+            "label": "Operate On",
+            "type": "enum",
+            "options": [
+              "LAB (luminance)",
+              "YCrCb (luma)",
+              "HSV (value)",
+              "Per-channel RGB",
+              "Grayscale out"
+            ],
+            "default": 0
+          },
+          {
+            "id": "strength",
+            "label": "Strength (blend)",
+            "type": "float",
+            "min": 0,
+            "max": 1,
+            "step": 0.05,
+            "default": 1
           }
         ]
       },
@@ -1223,6 +1328,11 @@
         ],
         "params": [
           {
+            "id": "_sec_filter_detection",
+            "label": "Detection",
+            "type": "section"
+          },
+          {
             "id": "angle",
             "label": "Target Angle (°)",
             "type": "number",
@@ -1253,6 +1363,11 @@
             "default": 0,
             "min": 0,
             "max": 100
+          },
+          {
+            "id": "_sec_filter_output",
+            "label": "Output",
+            "type": "section"
           },
           {
             "id": "thickness",
@@ -1404,6 +1519,98 @@
             "default": 1.0,
             "max": 10.0,
             "step": 0.01
+          }
+        ]
+      },
+      {
+        "type": "filter_gabor",
+        "label": "Gabor Filter",
+        "category": "image",
+        "icon": "Waves",
+        "description": "Oriented Gabor filtering for edge and texture analysis. Builds a Gabor kernel (cv2.getGaborKernel) and convolves the image.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Filtered",
+            "color": "image"
+          },
+          {
+            "id": "kernel",
+            "label": "Kernel",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "_sec_kernel",
+            "label": "Kernel Config",
+            "type": "section"
+          },
+          {
+            "id": "ksize",
+            "label": "Kernel Size",
+            "type": "int",
+            "min": 3,
+            "max": 99,
+            "default": 31
+          },
+          {
+            "id": "sigma",
+            "label": "Sigma",
+            "type": "float",
+            "min": 0.5,
+            "max": 30.0,
+            "default": 4.0
+          },
+          {
+            "id": "theta_deg",
+            "label": "Orientation (deg)",
+            "type": "float",
+            "min": 0.0,
+            "max": 180.0,
+            "default": 0.0
+          },
+          {
+            "id": "lambda",
+            "label": "Wavelength",
+            "type": "float",
+            "min": 1.0,
+            "max": 100.0,
+            "default": 10.0
+          },
+          {
+            "id": "gamma",
+            "label": "Aspect Ratio",
+            "type": "float",
+            "min": 0.1,
+            "max": 2.0,
+            "default": 0.5
+          },
+          {
+            "id": "psi_deg",
+            "label": "Phase (deg)",
+            "type": "float",
+            "min": 0.0,
+            "max": 360.0,
+            "default": 0.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
+            "id": "show_kernel",
+            "label": "Show Kernel",
+            "type": "bool",
+            "default": false
           }
         ]
       }
@@ -2129,6 +2336,11 @@
             "default": 0
           },
           {
+            "id": "_sec_range",
+            "label": "Range",
+            "type": "section"
+          },
+          {
             "id": "auto_range",
             "label": "Auto Range",
             "type": "bool",
@@ -2191,6 +2403,105 @@
               "Rainbow"
             ],
             "default": 0
+          }
+        ]
+      },
+      {
+        "type": "cv_white_balance",
+        "label": "White Balance",
+        "category": "color",
+        "icon": "Sun",
+        "description": "Correct color cast. Gray World scales channels to a common gray mean; White Patch maps the top-percentile brightness to white; Manual applies temperature (R/B) and tint (G/M) gains.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Input",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Balanced",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Data",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "Gray World",
+              "White Patch",
+              "Manual"
+            ],
+            "default": "Gray World"
+          },
+          {
+            "id": "temp",
+            "label": "Temperature",
+            "type": "float",
+            "max": 100.0,
+            "default": 0.0
+          },
+          {
+            "id": "tint",
+            "label": "Tint",
+            "type": "float",
+            "max": 100.0,
+            "default": 0.0
+          },
+          {
+            "id": "percentile",
+            "label": "White Percentile",
+            "type": "float",
+            "min": 90.0,
+            "max": 100.0,
+            "default": 99.0
+          }
+        ]
+      },
+      {
+        "type": "cv_gamma",
+        "label": "Gamma Correct",
+        "category": "color",
+        "icon": "Sun",
+        "description": "Applies a gamma power-law to image intensities (ch7 §7.6).\n\nI_out = I_in ^ gamma   (values normalised to [0, 1])\n\ngamma < 1  →  brightens midtones (e.g. 0.45 = sRGB encode)\ngamma = 1  →  identity\ngamma > 1  →  darkens midtones (e.g. 2.2 = sRGB linearise)\n\nUse 'Linearise (÷ 2.2)' to decode sRGB before linear-space operations (blur, colour arithmetic, luminance computation).",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Corrected",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "gamma",
+            "label": "Gamma (γ)",
+            "type": "float",
+            "default": 2.2,
+            "min": 0.1,
+            "max": 5.0,
+            "step": 0.05
+          },
+          {
+            "id": "linearise",
+            "label": "Linearise (÷ γ)",
+            "type": "bool",
+            "default": true
           }
         ]
       }
@@ -2822,6 +3133,80 @@
         ]
       },
       {
+        "type": "cv_stereo",
+        "label": "Stereo Disparity",
+        "category": "geometry",
+        "icon": "Boxes",
+        "description": "Estimate a disparity (depth) map from a rectified stereo pair using StereoSGBM or StereoBM, rendered as a colored map.",
+        "inputs": [
+          {
+            "id": "left",
+            "label": "Left",
+            "color": "image"
+          },
+          {
+            "id": "right",
+            "label": "Right",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Disparity",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Params",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "num_disparities",
+            "label": "Num Disparities",
+            "type": "int",
+            "min": 16,
+            "max": 256,
+            "default": 64
+          },
+          {
+            "id": "block_size",
+            "label": "Block Size",
+            "type": "int",
+            "min": 3,
+            "max": 15,
+            "default": 7
+          },
+          {
+            "id": "min_disparity",
+            "label": "Min Disparity",
+            "type": "int",
+            "min": 0,
+            "max": 64,
+            "default": 0
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Jet",
+              "Viridis",
+              "Gray"
+            ],
+            "default": "Jet"
+          },
+          {
+            "id": "use_sgbm",
+            "label": "Use SGBM",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
         "type": "box_selection",
         "label": "Box Selection",
         "category": "geometry",
@@ -3097,6 +3482,93 @@
           }
         ],
         "colorable": true
+      },
+      {
+        "type": "cv_undistort",
+        "label": "Distortion Correction",
+        "category": "geometry",
+        "icon": "Frame",
+        "description": "Remove radial/tangential lens distortion using a pinhole camera model built from focal length and distortion coefficients.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Undistorted",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Calibration",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "focal",
+            "label": "Focal (xW)",
+            "type": "float",
+            "min": 0.3,
+            "max": 3.0,
+            "default": 1.0
+          },
+          {
+            "id": "_sec_distortion",
+            "label": "Distortion",
+            "type": "section"
+          },
+          {
+            "id": "k1",
+            "label": "k1 (radial)",
+            "type": "float",
+            "max": 1.0,
+            "default": 0.0
+          },
+          {
+            "id": "k2",
+            "label": "k2 (radial)",
+            "type": "float",
+            "max": 1.0,
+            "default": 0.0
+          },
+          {
+            "id": "p1",
+            "label": "p1 (tangential)",
+            "type": "float",
+            "max": 0.1,
+            "default": 0.0
+          },
+          {
+            "id": "p2",
+            "label": "p2 (tangential)",
+            "type": "float",
+            "max": 0.1,
+            "default": 0.0
+          },
+          {
+            "id": "k3",
+            "label": "k3 (radial)",
+            "type": "float",
+            "max": 1.0,
+            "default": 0.0
+          },
+          {
+            "id": "_sec_output",
+            "label": "Output",
+            "type": "section"
+          },
+          {
+            "id": "crop_valid",
+            "label": "Crop Valid ROI",
+            "type": "bool",
+            "default": false
+          }
+        ]
       }
     ]
   },
@@ -3307,6 +3779,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Geometry",
+            "type": "section"
+          },
+          {
             "id": "center_x",
             "label": "Center X (%)",
             "type": "float",
@@ -3351,6 +3828,11 @@
             "label": "Invert",
             "type": "bool",
             "default": false
+          },
+          {
+            "id": "_sec_fallback",
+            "label": "Fallback Size",
+            "type": "section"
           },
           {
             "id": "img_w",
@@ -3515,6 +3997,11 @@
         ],
         "params": [
           {
+            "id": "_sec_area",
+            "label": "Area Threshold",
+            "type": "section"
+          },
+          {
             "id": "min_area_pct",
             "label": "Min Area (%)",
             "type": "number",
@@ -3531,6 +4018,11 @@
             "min": 0,
             "max": 500000,
             "step": 100
+          },
+          {
+            "id": "_sec_options",
+            "label": "Options",
+            "type": "section"
           },
           {
             "id": "fill_holes",
@@ -4040,6 +4532,11 @@
             "label": "Save SVG"
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "stroke_color",
             "type": "color",
             "default": "#000000",
@@ -4061,6 +4558,158 @@
           }
         ],
         "description": "Converts a binary mask to SVG path data."
+      },
+      {
+        "type": "cv_directional_dilate",
+        "label": "Directional Dilate",
+        "category": "mask",
+        "icon": "Spline",
+        "description": "Orientation-aware dilation. Dilates each pixel with a short line kernel aligned to the local tangent (structure tensor), so collinear gaps (bridges, canopy) close while parallel branches stay separate. Use to repair a broken skeleton / hydrographic network. Fixed-angle mode applies one global direction.",
+        "resizable": true,
+        "min_width": 220,
+        "min_height": 180,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Repaired",
+            "color": "mask"
+          },
+          {
+            "id": "preview",
+            "label": "Preview",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "mode",
+            "label": "Mode",
+            "type": "enum",
+            "options": [
+              "Auto (tangent)",
+              "Fixed angle"
+            ],
+            "default": 0
+          },
+          {
+            "id": "length",
+            "label": "Reach (px)",
+            "type": "int",
+            "default": 11,
+            "min": 3,
+            "max": 81
+          },
+          {
+            "id": "angle",
+            "label": "Angle (deg)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 180
+          },
+          {
+            "id": "bins",
+            "label": "Angle Bins",
+            "type": "int",
+            "default": 8,
+            "min": 2,
+            "max": 18
+          },
+          {
+            "id": "tensor_sigma",
+            "label": "Tensor Smooth",
+            "type": "float",
+            "default": 2.0,
+            "min": 0.5,
+            "max": 8.0,
+            "step": 0.5
+          },
+          {
+            "id": "iterations",
+            "label": "Iterations",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 6
+          },
+          {
+            "id": "then_close",
+            "label": "Final Close",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "cv_skeletonize",
+        "label": "Skeletonize",
+        "category": "mask",
+        "icon": "GitBranch",
+        "description": "Reduces a binary mask to its 1-pixel medial line and outputs it as a clean mask (ready for Directional Dilate). Pre-cleans by removing small blobs and closing holes. Methods: Skeletonize (Zhang-Suen), Medial Axis, or OpenCV thinning fallback.",
+        "resizable": true,
+        "min_width": 220,
+        "min_height": 170,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Skeleton",
+            "color": "mask"
+          },
+          {
+            "id": "preview",
+            "label": "Preview",
+            "color": "image"
+          },
+          {
+            "id": "length_px",
+            "label": "Length",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "Skeletonize",
+              "Medial Axis"
+            ],
+            "default": 0
+          },
+          {
+            "id": "min_size",
+            "label": "Min Blob (px)",
+            "type": "int",
+            "default": 32,
+            "min": 0,
+            "max": 5000
+          },
+          {
+            "id": "close_holes",
+            "label": "Close Holes",
+            "type": "int",
+            "default": 3,
+            "min": 0,
+            "max": 25
+          }
+        ]
       }
     ]
   },
@@ -4073,7 +4722,7 @@
         "label": "Annotator",
         "category": "draw",
         "icon": "PenTool",
-        "description": "Interactive drawing layer: brush, lines, circles, and text directly over the image.",
+        "description": "Interactive drawing board: brush, line, arrow, rectangle, ellipse, circle (filled or outline), text, with a custom background color — over an image or from scratch.",
         "inputs": [
           {
             "id": "image",
@@ -4095,9 +4744,31 @@
           },
           {
             "id": "with_background",
-            "label": "With Background",
+            "label": "Use Input Image",
             "type": "boolean",
             "default": true
+          },
+          {
+            "id": "bg_color",
+            "label": "Background Color",
+            "type": "color",
+            "default": "#0c0c0c"
+          },
+          {
+            "id": "canvas_w",
+            "label": "Board Width",
+            "type": "int",
+            "default": 640,
+            "min": 64,
+            "max": 4096
+          },
+          {
+            "id": "canvas_h",
+            "label": "Board Height",
+            "type": "int",
+            "default": 480,
+            "min": 64,
+            "max": 4096
           }
         ],
         "colorable": true
@@ -4194,6 +4865,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Geometry",
+            "type": "section"
+          },
+          {
             "id": "x1",
             "type": "float",
             "default": 0.2,
@@ -4224,6 +4900,11 @@
             "min": 0,
             "max": 1,
             "step": 0.01
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "color",
@@ -4287,6 +4968,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Geometry",
+            "type": "section"
+          },
+          {
             "id": "cx",
             "label": "Center X",
             "type": "float",
@@ -4330,6 +5016,11 @@
             "min": 0.0,
             "max": 360.0,
             "step": 1.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "color",
@@ -4528,6 +5219,11 @@
             "default": "Hello"
           },
           {
+            "id": "_sec_position",
+            "label": "Position",
+            "type": "section"
+          },
+          {
             "id": "x",
             "label": "X Pos",
             "type": "scalar",
@@ -4544,6 +5240,11 @@
             "max": 1,
             "step": 0.01,
             "default": 0.5
+          },
+          {
+            "id": "_sec_style",
+            "label": "Style",
+            "type": "section"
           },
           {
             "id": "font_scale",
@@ -4647,6 +5348,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Geometry",
+            "type": "section"
+          },
+          {
             "id": "x1",
             "label": "X1",
             "type": "float",
@@ -4681,6 +5387,11 @@
             "min": 0,
             "max": 1,
             "step": 0.01
+          },
+          {
+            "id": "_sec_style",
+            "label": "Style",
+            "type": "section"
           },
           {
             "id": "color",
@@ -4822,6 +5533,11 @@
             "label": "Value",
             "type": "float",
             "default": 0.0
+          },
+          {
+            "id": "_sec_range",
+            "label": "Range",
+            "type": "section"
           },
           {
             "id": "min",
@@ -5361,6 +6077,11 @@
         ],
         "params": [
           {
+            "id": "_sec_projection",
+            "label": "Projection",
+            "type": "section"
+          },
+          {
             "id": "focal_length",
             "label": "Focal Length",
             "type": "float",
@@ -5386,6 +6107,11 @@
             "min": 0.1,
             "max": 10.0,
             "step": 0.05
+          },
+          {
+            "id": "_sec_transform",
+            "label": "Transform",
+            "type": "section"
           },
           {
             "id": "offset_x",
@@ -5465,6 +6191,11 @@
         ],
         "params": [
           {
+            "id": "_sec_mapping",
+            "label": "Mapping",
+            "type": "section"
+          },
+          {
             "id": "scale_x",
             "label": "Scale X",
             "type": "float",
@@ -5526,6 +6257,11 @@
             "default": false
           },
           {
+            "id": "_sec_fov",
+            "label": "Camera FOV",
+            "type": "section"
+          },
+          {
             "id": "use_fov",
             "label": "Use Camera FOV",
             "type": "bool",
@@ -5543,6 +6279,11 @@
             "id": "sep_cal",
             "label": "--- Calibration ---",
             "type": "separator"
+          },
+          {
+            "id": "_sec_calibration",
+            "label": "Calibration",
+            "type": "section"
           },
           {
             "id": "calibration_enabled",
@@ -5862,6 +6603,11 @@
             "default": 0
           },
           {
+            "id": "_sec_signal",
+            "label": "Signal",
+            "type": "section"
+          },
+          {
             "id": "frequency",
             "label": "Frequency (Hz)",
             "min": 0,
@@ -5899,6 +6645,11 @@
             "max": 359,
             "step": 1,
             "default": 0
+          },
+          {
+            "id": "_sec_advanced",
+            "label": "Advanced",
+            "type": "section"
           },
           {
             "id": "duty",
@@ -6438,6 +7189,58 @@
           {
             "id": "preserve_dynamic_range",
             "label": "Scientific Range",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_dct",
+        "label": "DCT Analysis",
+        "category": "signal",
+        "icon": "Waves",
+        "description": "2D Discrete Cosine Transform (the transform behind JPEG). View the log DCT spectrum as a colormap, or reconstruct the image keeping only the top-left NxN block of low-frequency coefficients to visualize lossy compression. Reports the fraction of spectral energy retained by the kept coefficients.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Result",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Info",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "output",
+            "label": "Output",
+            "type": "enum",
+            "options": [
+              "Log Spectrum",
+              "Reconstruction"
+            ],
+            "default": "Log Spectrum"
+          },
+          {
+            "id": "keep_coeffs",
+            "label": "Keep NxN",
+            "type": "int",
+            "min": 1,
+            "max": 256,
+            "default": 32
+          },
+          {
+            "id": "normalize",
+            "label": "Normalize",
             "type": "bool",
             "default": true
           }
@@ -7183,6 +7986,134 @@
             "default": 10
           }
         ]
+      },
+      {
+        "type": "cv_ransac",
+        "label": "RANSAC Homography",
+        "category": "keypoints",
+        "icon": "GitMerge",
+        "description": "Robust homography / affine estimation with RANSAC geometric verification. Matches SIFT/ORB descriptors, rejects outliers, estimates H. Warp Image 1 into Image 2's reference frame. Optional GeoTIFF input: warps all bands with H (attach ref GeoTIFF's transform separately).",
+        "inputs": [
+          {
+            "id": "kp1",
+            "color": "list",
+            "label": "Keypoints 1"
+          },
+          {
+            "id": "kp2",
+            "color": "list",
+            "label": "Keypoints 2"
+          },
+          {
+            "id": "des1",
+            "color": "any",
+            "label": "Descriptors 1"
+          },
+          {
+            "id": "des2",
+            "color": "any",
+            "label": "Descriptors 2"
+          },
+          {
+            "id": "img1",
+            "color": "image",
+            "label": "Image 1 (source)"
+          },
+          {
+            "id": "img2",
+            "color": "image",
+            "label": "Image 2 (reference)"
+          },
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF bands (optional)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "warped",
+            "color": "image",
+            "label": "Warped (img1 → img2)"
+          },
+          {
+            "id": "overlay",
+            "color": "image",
+            "label": "Inlier match overlay"
+          },
+          {
+            "id": "homography",
+            "color": "any",
+            "label": "H matrix (3×3 list)"
+          },
+          {
+            "id": "inliers",
+            "color": "scalar",
+            "label": "Inlier count"
+          },
+          {
+            "id": "geotiff_out",
+            "color": "geotiff",
+            "label": "GeoTIFF warped"
+          }
+        ],
+        "params": [
+          {
+            "id": "norm",
+            "label": "Descriptor norm",
+            "type": "enum",
+            "options": [
+              "L2 — SIFT/SURF",
+              "Hamming — ORB/BRIEF"
+            ],
+            "default": 0
+          },
+          {
+            "id": "ratio",
+            "label": "Lowe's ratio",
+            "type": "float",
+            "min": 0.5,
+            "max": 1.0,
+            "step": 0.01,
+            "default": 0.75
+          },
+          {
+            "id": "ransac_thresh",
+            "label": "RANSAC threshold",
+            "type": "float",
+            "min": 0.5,
+            "max": 20.0,
+            "step": 0.5,
+            "default": 5.0
+          },
+          {
+            "id": "min_inliers",
+            "label": "Min inliers",
+            "type": "int",
+            "min": 4,
+            "max": 500,
+            "default": 10
+          },
+          {
+            "id": "model",
+            "label": "Model",
+            "type": "enum",
+            "options": [
+              "Homography (8-DOF)",
+              "Partial Affine (4-DOF)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "max_display",
+            "label": "Max drawn matches",
+            "type": "int",
+            "min": 1,
+            "max": 300,
+            "default": 60
+          }
+        ],
+        "colorable": true
       }
     ]
   },
@@ -7476,6 +8407,343 @@
             "min": 0.0,
             "max": 1.0,
             "default": 0.5
+          }
+        ]
+      },
+      {
+        "type": "feat_grabcut",
+        "label": "GrabCut (Graph Cut)",
+        "category": "segmentation",
+        "icon": "Scissors",
+        "description": "Interactive foreground extraction via graph-cut (min-cut/max-flow). Drive with Manual Points: green=keep, red=remove.",
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 200,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image"
+          },
+          {
+            "id": "points",
+            "color": "list",
+            "label": "Seeds (Manual Points)"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Init Mask (opt)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Overlay"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "FG Mask"
+          },
+          {
+            "id": "cutout",
+            "color": "image",
+            "label": "Cutout"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "FG Pixels"
+          }
+        ],
+        "params": [
+          {
+            "id": "init_mode",
+            "label": "Init Mode",
+            "type": "enum",
+            "options": [
+              "Rect from FG points",
+              "Center rect",
+              "Scribbles (points)",
+              "From input mask"
+            ],
+            "default": 0
+          },
+          {
+            "id": "rect_margin",
+            "label": "Rect Margin (%)",
+            "type": "number",
+            "min": 0,
+            "max": 40,
+            "default": 8
+          },
+          {
+            "id": "center_rect",
+            "label": "Center Rect (%)",
+            "type": "number",
+            "min": 10,
+            "max": 95,
+            "default": 70
+          },
+          {
+            "id": "brush",
+            "label": "Scribble Brush (px)",
+            "type": "number",
+            "min": 1,
+            "max": 80,
+            "default": 14
+          },
+          {
+            "id": "iterations",
+            "label": "Iterations",
+            "type": "int",
+            "min": 1,
+            "max": 15,
+            "default": 5
+          },
+          {
+            "id": "overlay_opacity",
+            "label": "Overlay Opacity (%)",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 50
+          },
+          {
+            "id": "fg_color",
+            "label": "FG Color",
+            "type": "color",
+            "default": "#22dd55"
+          },
+          {
+            "id": "show_contour",
+            "label": "Draw Contour",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "cutout_bg",
+            "label": "Cutout BG",
+            "type": "enum",
+            "options": [
+              "Black",
+              "White",
+              "Transparent (alpha)"
+            ],
+            "default": 0
+          },
+          {
+            "id": "live",
+            "label": "Live (auto-run)",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "run",
+            "label": "Run",
+            "type": "trigger",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "feat_active_contour",
+        "label": "Active Contour (Snake)",
+        "category": "segmentation",
+        "icon": "PenTool",
+        "description": "Deformable snake / Chan-Vese / geodesic active contour. Init from Manual Points, a mask, or a shape.",
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 220,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image"
+          },
+          {
+            "id": "points",
+            "color": "list",
+            "label": "Init Points"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Init Mask (opt)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Overlay"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Region Mask"
+          },
+          {
+            "id": "contour",
+            "color": "list",
+            "label": "Contour"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Area (px)"
+          }
+        ],
+        "params": [
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "Classic Snake",
+              "Morph. Chan-Vese",
+              "Morph. GAC (edges)"
+            ],
+            "default": 1
+          },
+          {
+            "id": "init_shape",
+            "label": "Init (no points/mask)",
+            "type": "enum",
+            "options": [
+              "Circle",
+              "Ellipse",
+              "Full frame"
+            ],
+            "default": 0
+          },
+          {
+            "id": "init_radius",
+            "label": "Init Size (%)",
+            "type": "number",
+            "min": 5,
+            "max": 98,
+            "default": 45
+          },
+          {
+            "id": "iterations",
+            "label": "Iterations",
+            "type": "int",
+            "min": 10,
+            "max": 600,
+            "default": 150
+          },
+          {
+            "id": "pre_blur",
+            "label": "Pre-blur (sigma)",
+            "type": "float",
+            "min": 0.0,
+            "max": 8.0,
+            "default": 2.0
+          },
+          {
+            "id": "_sec_forces",
+            "label": "Contour Forces",
+            "type": "section"
+          },
+          {
+            "id": "smoothing",
+            "label": "Smoothing",
+            "type": "int",
+            "min": 0,
+            "max": 4,
+            "default": 1
+          },
+          {
+            "id": "alpha",
+            "label": "Alpha (tension)",
+            "type": "float",
+            "min": 0.001,
+            "max": 0.5,
+            "default": 0.015
+          },
+          {
+            "id": "beta",
+            "label": "Beta (stiffness)",
+            "type": "float",
+            "min": 0.1,
+            "max": 50.0,
+            "default": 10.0
+          },
+          {
+            "id": "w_edge",
+            "label": "Edge Attraction",
+            "type": "float",
+            "max": 5.0,
+            "default": 1.0
+          },
+          {
+            "id": "cv_lambda",
+            "label": "CV In/Out Balance",
+            "type": "float",
+            "min": 0.25,
+            "max": 4.0,
+            "default": 1.0
+          },
+          {
+            "id": "balloon",
+            "label": "GAC Balloon",
+            "type": "float",
+            "max": 2.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
+            "id": "contour_color",
+            "label": "Contour Color",
+            "type": "color",
+            "default": "#ff3355"
+          },
+          {
+            "id": "thickness",
+            "label": "Thickness",
+            "type": "int",
+            "min": 1,
+            "max": 6,
+            "default": 2
+          },
+          {
+            "id": "fill_opacity",
+            "label": "Fill Opacity (%)",
+            "type": "number",
+            "min": 0,
+            "max": 100,
+            "default": 22
+          },
+          {
+            "id": "show_init",
+            "label": "Show Init",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
+          },
+          {
+            "id": "live",
+            "label": "Live (auto-run)",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "run",
+            "label": "Run",
+            "type": "trigger",
+            "default": false
           }
         ]
       },
@@ -7780,12 +9048,9 @@
         ],
         "params": [
           {
-            "id": "sensitivity",
-            "label": "Peak Sensitivity",
-            "type": "number",
-            "default": 30,
-            "min": 1,
-            "max": 90
+            "id": "_sec_preprocess",
+            "label": "Preprocessing",
+            "type": "section"
           },
           {
             "id": "contrast",
@@ -7810,6 +9075,19 @@
             "max": 20
           },
           {
+            "id": "_sec_detection",
+            "label": "Detection",
+            "type": "section"
+          },
+          {
+            "id": "sensitivity",
+            "label": "Peak Sensitivity",
+            "type": "number",
+            "default": 30,
+            "min": 1,
+            "max": 90
+          },
+          {
             "id": "min_size",
             "label": "Min Object Size",
             "type": "number",
@@ -7817,6 +9095,11 @@
             "min": 0,
             "max": 5000,
             "step": 10
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "mask_thick",
@@ -8000,29 +9283,27 @@
         ],
         "params": [
           {
-            "id": "use_aspect",
-            "label": "Aspect Ratio Filter",
-            "type": "bool",
-            "default": true
+            "id": "min_size",
+            "label": "Min Size (px²)",
+            "type": "int",
+            "default": 20,
+            "min": 1,
+            "max": 50000
           },
           {
-            "id": "min_aspect",
-            "label": "Min Aspect (W/H)",
-            "type": "float",
-            "default": 0.6,
-            "min": 0.0,
-            "max": 1.0,
-            "step": 0.05
+            "id": "_sec_bord",
+            "label": "Bord",
+            "type": "section"
           },
           {
             "id": "use_circularity",
-            "label": "Circularity Filter",
+            "label": "Circularity  C = 4πA/P²",
             "type": "bool",
             "default": true
           },
           {
             "id": "min_circularity",
-            "label": "Min Circularity",
+            "label": "Min C",
             "type": "float",
             "default": 0.35,
             "min": 0.0,
@@ -8030,12 +9311,89 @@
             "step": 0.05
           },
           {
-            "id": "min_size",
-            "label": "Min Size (px²)",
-            "type": "int",
-            "default": 20,
-            "min": 1,
-            "max": 50000
+            "id": "use_convexity",
+            "label": "Convexity  Cv = P_cvx/P",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "min_convexity",
+            "label": "Min Cv",
+            "type": "float",
+            "default": 0.8,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "_sec_forme",
+            "label": "Forme",
+            "type": "section"
+          },
+          {
+            "id": "use_roundness",
+            "label": "Roundness  Rd = 4A/πL²",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "min_roundness",
+            "label": "Min Rd",
+            "type": "float",
+            "default": 0.6,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "use_solidity",
+            "label": "Solidity  S = A/A_cvx",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "min_solidity",
+            "label": "Min S",
+            "type": "float",
+            "default": 0.8,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "_sec_elon",
+            "label": "Élongation",
+            "type": "section"
+          },
+          {
+            "id": "use_aspect",
+            "label": "Aspect Ratio  E = L/l",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "max_aspect",
+            "label": "Max E",
+            "type": "float",
+            "default": 3.0,
+            "min": 1.0,
+            "max": 50.0,
+            "step": 0.5
+          },
+          {
+            "id": "use_eccentricity",
+            "label": "Eccentricity  e = √(1−λ₂/λ₁)",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "max_eccentricity",
+            "label": "Max e",
+            "type": "float",
+            "default": 0.9,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
           }
         ]
       },
@@ -8459,6 +9817,11 @@
             "label": "Object Count"
           },
           {
+            "id": "boxes",
+            "color": "list",
+            "label": "Boxes List (YOLO)"
+          },
+          {
             "id": "areas",
             "color": "list",
             "label": "Areas (px²)"
@@ -8506,8 +9869,13 @@
             "default": 0
           },
           {
+            "id": "_sec_auto",
+            "label": "Auto Mode",
+            "type": "section"
+          },
+          {
             "id": "points_per_side",
-            "label": "Points per side (Auto)",
+            "label": "Points per side",
             "type": "int",
             "default": 32,
             "min": 8,
@@ -8516,7 +9884,7 @@
           },
           {
             "id": "pred_iou_thresh",
-            "label": "IOU Threshold (Auto)",
+            "label": "IOU Threshold",
             "type": "float",
             "default": 0.8,
             "min": 0.0,
@@ -8525,12 +9893,44 @@
           },
           {
             "id": "stability_score_thresh",
-            "label": "Stability Threshold (Auto)",
+            "label": "Stability Threshold",
             "type": "float",
             "default": 0.95,
             "min": 0.0,
             "max": 1.0,
             "step": 0.05
+          },
+          {
+            "id": "box_nms_thresh",
+            "label": "Box NMS Threshold",
+            "type": "float",
+            "default": 0.7,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "crop_n_layers",
+            "label": "Crop Layers",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 3,
+            "step": 1
+          },
+          {
+            "id": "min_mask_region_area",
+            "label": "Min Mask Area px",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 100000,
+            "step": 50
+          },
+          {
+            "id": "_sec_output",
+            "label": "Output",
+            "type": "section"
           },
           {
             "id": "multimask",
@@ -8558,6 +9958,24 @@
             "min": 0,
             "max": 100,
             "step": 5
+          },
+          {
+            "id": "_sec_save",
+            "label": "Save",
+            "type": "section"
+          },
+          {
+            "id": "save_path",
+            "label": "Save File (.seg.json)",
+            "type": "file_path",
+            "default": "~/VNStudio/exports/segmentation.seg.json",
+            "filters": []
+          },
+          {
+            "id": "save_seg",
+            "label": "Save Segmentation",
+            "type": "trigger",
+            "default": false
           }
         ],
         "colorable": true
@@ -8758,6 +10176,375 @@
             "default": 0,
             "min": 0,
             "max": 100000
+          }
+        ]
+      },
+      {
+        "type": "cv_mean_shift",
+        "label": "Mean Shift Segmentation",
+        "category": "segmentation",
+        "icon": "Layers",
+        "description": "Mean-shift segmentation (cv2.pyrMeanShiftFiltering). Edge-preserving smoothing that clusters pixels in spatial+color space into flat regions. Frames larger than 640px are downscaled before filtering then upscaled back (the filter is slow on big images).",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Input",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Segmented",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Data",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "spatial_radius",
+            "label": "Spatial Radius",
+            "type": "int",
+            "min": 1,
+            "max": 50,
+            "default": 10
+          },
+          {
+            "id": "color_radius",
+            "label": "Color Radius",
+            "type": "int",
+            "min": 1,
+            "max": 100,
+            "default": 30
+          },
+          {
+            "id": "max_level",
+            "label": "Max Level",
+            "type": "int",
+            "min": 0,
+            "max": 5,
+            "default": 1
+          }
+        ]
+      },
+      {
+        "type": "cv_adaptive_threshold",
+        "label": "Adaptive Threshold",
+        "category": "segmentation",
+        "icon": "Layers",
+        "description": "Local thresholding: computes a per-pixel threshold from the neighbourhood mean\nminus a constant C. Robust to uneven illumination (ch12 §12.2).\n\nBlock Size must be odd; pixels darker than (local_mean − C) are set to 255.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Mask",
+            "color": "mask"
+          }
+        ],
+        "params": [
+          {
+            "id": "block_size",
+            "label": "Block Size",
+            "type": "int",
+            "default": 11,
+            "min": 3,
+            "max": 201
+          },
+          {
+            "id": "c",
+            "label": "Constant (C)",
+            "type": "int",
+            "default": 5,
+            "max": 50
+          },
+          {
+            "id": "adaptive_method",
+            "label": "Adaptive Method",
+            "type": "enum",
+            "options": [
+              "Mean",
+              "Gaussian"
+            ],
+            "default": 1
+          },
+          {
+            "id": "invert",
+            "label": "Invert",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "cv_montecarlo_cluster",
+        "label": "Monte-Carlo Cluster",
+        "category": "segmentation",
+        "icon": "Dices",
+        "description": "Probabilistic clustering by Monte-Carlo voting. Draws N random sub-samples of pixels INSIDE the ROI mask (whole frame if none), fits a small KMeans on each draw, applies it to the whole frame and votes for one anchored target cluster. Outputs a 0..1 probability heatmap, expert on ambiguous zones. Generic: any feature image (RGB, spectral indices, filter banks) + any ROI. Target cluster anchored by reference channel + high/low rule.",
+        "resizable": true,
+        "min_width": 240,
+        "min_height": 200,
+        "colorable": true,
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Features",
+            "color": "image"
+          },
+          {
+            "id": "roi",
+            "label": "ROI Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Heatmap",
+            "color": "image"
+          },
+          {
+            "id": "probability",
+            "label": "Probability",
+            "color": "mask"
+          },
+          {
+            "id": "prob_raw",
+            "label": "Prob 0..1",
+            "color": "any"
+          },
+          {
+            "id": "stats",
+            "label": "Stats",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "_sec_sampling",
+            "label": "Sampling",
+            "type": "section"
+          },
+          {
+            "id": "n_iterations",
+            "label": "Iterations",
+            "type": "int",
+            "default": 40,
+            "min": 5,
+            "max": 300
+          },
+          {
+            "id": "subsample",
+            "label": "Subsample (%)",
+            "type": "float",
+            "default": 30.0,
+            "min": 1.0,
+            "max": 100.0,
+            "step": 1.0
+          },
+          {
+            "id": "_sec_clustering",
+            "label": "Clustering",
+            "type": "section"
+          },
+          {
+            "id": "n_clusters",
+            "label": "Clusters (K)",
+            "type": "int",
+            "default": 2,
+            "min": 2,
+            "max": 12
+          },
+          {
+            "id": "ref_channel",
+            "label": "Anchor Channel",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 31
+          },
+          {
+            "id": "anchor_rule",
+            "label": "Target Cluster",
+            "type": "enum",
+            "options": [
+              "Highest on channel",
+              "Lowest on channel"
+            ],
+            "default": 0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Inferno",
+              "Viridis",
+              "Jet",
+              "Ocean"
+            ],
+            "default": 0
+          },
+          {
+            "id": "seed",
+            "label": "Random Seed",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 9999
+          }
+        ]
+      },
+      {
+        "type": "seg_loader",
+        "label": "Segmentation Loader",
+        "category": "segmentation",
+        "icon": "Database",
+        "description": "Load a saved .seg.json file (boxes + precise contours) produced by the AI Segmenter (SAM) and replay it. Drop-in replacement for SAM once the segmentation work is done — feeds DINOv2 Classifier, Export Crops, etc. without rerunning the model.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image (for overlay)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Overlay"
+          },
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Combined Mask"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Object Count"
+          },
+          {
+            "id": "boxes",
+            "color": "list",
+            "label": "Boxes List (YOLO)"
+          },
+          {
+            "id": "areas",
+            "color": "list",
+            "label": "Areas (px²)"
+          },
+          {
+            "id": "centroids",
+            "color": "list",
+            "label": "Centroids"
+          },
+          {
+            "id": "contours",
+            "color": "list",
+            "label": "Contours List"
+          }
+        ],
+        "params": [
+          {
+            "id": "load_path",
+            "label": "File (.seg.json)",
+            "type": "file_open",
+            "default": "~/VNStudio/exports/segmentation.seg.json",
+            "filters": []
+          },
+          {
+            "id": "reload",
+            "label": "Reload",
+            "type": "trigger",
+            "default": false
+          },
+          {
+            "id": "overlay_opacity",
+            "label": "Overlay Opacity (%)",
+            "type": "number",
+            "default": 50,
+            "min": 0,
+            "max": 100,
+            "step": 5
+          }
+        ],
+        "colorable": true
+      },
+      {
+        "type": "cv_kmeans_segmentation",
+        "label": "K-Means Segmentation",
+        "category": "segmentation",
+        "icon": "Target",
+        "description": "Colour segmentation via K-Means clustering on pixel values (ch12 §12.4).\n\nEach pixel is replaced by the centroid colour of its cluster. Work in Lab\ncolour space (perceptually uniform) for better cluster quality.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Segmented",
+            "color": "image"
+          },
+          {
+            "id": "k_used",
+            "label": "K Used",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "k",
+            "label": "K Clusters",
+            "type": "int",
+            "default": 4,
+            "min": 2,
+            "max": 20
+          },
+          {
+            "id": "color_space",
+            "label": "Color Space",
+            "type": "enum",
+            "options": [
+              "RGB",
+              "Lab"
+            ],
+            "default": 1
+          },
+          {
+            "id": "attempts",
+            "label": "Attempts",
+            "type": "int",
+            "default": 3,
+            "min": 1,
+            "max": 10
+          },
+          {
+            "id": "max_iter",
+            "label": "Max Iterations",
+            "type": "int",
+            "default": 100,
+            "min": 10,
+            "max": 500
           }
         ]
       }
@@ -9143,6 +10930,11 @@
             "default": false
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "thickness",
             "min": 1,
             "max": 20,
@@ -9200,6 +10992,11 @@
         ],
         "params": [
           {
+            "id": "_sec_points",
+            "label": "Points",
+            "type": "section"
+          },
+          {
             "id": "pt_a",
             "min": 0,
             "max": 477,
@@ -9218,6 +11015,11 @@
             "label": "Absolute Coords",
             "type": "bool",
             "default": false
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "thickness",
@@ -9277,6 +11079,11 @@
         ],
         "params": [
           {
+            "id": "_sec_points",
+            "label": "Points",
+            "type": "section"
+          },
+          {
             "id": "pt_1",
             "max": 477,
             "step": 1,
@@ -9332,6 +11139,11 @@
             "step": 1
           },
           {
+            "id": "_sec_options",
+            "label": "Options",
+            "type": "section"
+          },
+          {
             "id": "absolute",
             "label": "Absolute Coords",
             "type": "bool",
@@ -9342,6 +11154,11 @@
             "label": "Fill",
             "type": "bool",
             "default": true
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "thickness",
@@ -9370,6 +11187,106 @@
             "max": 255,
             "step": 1,
             "default": 0
+          }
+        ]
+      },
+      {
+        "type": "optical_flow_lk",
+        "label": "Optical Flow (Lucas-Kanade)",
+        "category": "tracking",
+        "icon": "Move",
+        "description": "Sparse optical flow: Shi-Tomasi corner detection (goodFeaturesToTrack) tracked frame-to-frame with the pyramidal Lucas-Kanade method (calcOpticalFlowPyrLK). Stateful: keeps the previous frame and tracked points across frames in a 30fps stream.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Input Frame",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Overlay",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Stats",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "_sec_detection",
+            "label": "Detection",
+            "type": "section"
+          },
+          {
+            "id": "max_corners",
+            "label": "Max Corners",
+            "type": "int",
+            "min": 10,
+            "max": 1000,
+            "default": 200
+          },
+          {
+            "id": "quality",
+            "label": "Quality Level",
+            "type": "float",
+            "min": 0.01,
+            "max": 0.5,
+            "default": 0.3
+          },
+          {
+            "id": "min_distance",
+            "label": "Min Distance",
+            "type": "int",
+            "min": 1,
+            "max": 50,
+            "default": 7
+          },
+          {
+            "id": "win_size",
+            "label": "Window Size",
+            "type": "int",
+            "min": 5,
+            "max": 51,
+            "default": 15
+          },
+          {
+            "id": "redetect_every",
+            "label": "Redetect Every (frames)",
+            "type": "int",
+            "min": 1,
+            "max": 120,
+            "default": 20
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
+            "id": "draw",
+            "label": "Draw Mode",
+            "type": "enum",
+            "options": [
+              "Tracks",
+              "Arrows",
+              "Points"
+            ],
+            "default": "Tracks"
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
+          },
+          {
+            "id": "reset",
+            "label": "Reset Tracks",
+            "type": "trigger",
+            "default": false
           }
         ]
       }
@@ -9510,6 +11427,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Geometry",
+            "type": "section"
+          },
+          {
             "id": "x",
             "label": "X (%)",
             "type": "float",
@@ -9540,6 +11462,11 @@
             "default": 50.0,
             "min": 1.0,
             "max": 100.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "channel",
@@ -9932,6 +11859,11 @@
         ],
         "params": [
           {
+            "id": "_sec_calibration",
+            "label": "Calibration",
+            "type": "section"
+          },
+          {
             "id": "pixels_per_unit",
             "label": "Pixels / Unit",
             "type": "float",
@@ -9950,6 +11882,11 @@
             "label": "Unit Name",
             "type": "string",
             "default": "mm"
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "position",
@@ -10012,6 +11949,11 @@
         ],
         "params": [
           {
+            "id": "_sec_geometry",
+            "label": "Line Geometry",
+            "type": "section"
+          },
+          {
             "id": "x1",
             "label": "X1 (%)",
             "type": "float",
@@ -10042,6 +11984,11 @@
             "default": 50.0,
             "min": 0.0,
             "max": 100.0
+          },
+          {
+            "id": "_sec_sampling",
+            "label": "Sampling",
+            "type": "section"
           },
           {
             "id": "samples",
@@ -10165,6 +12112,962 @@
           {
             "id": "reset",
             "label": "Reset Buffer",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "feat_structure_tensor",
+        "label": "Structure Tensor",
+        "category": "measure",
+        "icon": "Grid",
+        "description": "Computes the structure tensor J in each pixel's neighbourhood (ch6 §6.4).\n\nJ = [Σ(Ix²)   Σ(IxIy)]\n    [Σ(IxIy)  Σ(Iy²) ]   (Gaussian-weighted sum over neighbourhood)\n\nEigenvalues λ₁ ≥ λ₂ of J reveal local geometry:\n  λ₁ ≈ λ₂ ≈ 0   → flat region\n  λ₁ ≫ λ₂ ≈ 0   → edge (one dominant direction)\n  λ₁ ≈ λ₂ ≫ 0   → corner / texture\n\nOverlay: blue=flat, green=edge, red=corner.\nHarris response R = λ₁λ₂ − k·(λ₁+λ₂)² also computed.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Classification",
+            "color": "image"
+          },
+          {
+            "id": "harris",
+            "label": "Harris Response",
+            "color": "image"
+          },
+          {
+            "id": "lambda1",
+            "label": "λ₁ map",
+            "color": "image"
+          },
+          {
+            "id": "lambda2",
+            "label": "λ₂ map",
+            "color": "image"
+          }
+        ],
+        "params": [
+          {
+            "id": "sigma_deriv",
+            "label": "Deriv Sigma",
+            "type": "float",
+            "default": 1.0,
+            "min": 0.5,
+            "max": 5.0,
+            "step": 0.5
+          },
+          {
+            "id": "sigma_int",
+            "label": "Integration Sigma",
+            "type": "float",
+            "default": 3.0,
+            "min": 1.0,
+            "max": 10.0,
+            "step": 0.5
+          },
+          {
+            "id": "k_harris",
+            "label": "Harris k",
+            "type": "float",
+            "default": 0.04,
+            "min": 0.01,
+            "max": 0.1,
+            "step": 0.01
+          },
+          {
+            "id": "_sec_classification",
+            "label": "Classification",
+            "type": "section"
+          },
+          {
+            "id": "flat_thresh",
+            "label": "Flat Threshold",
+            "type": "float",
+            "default": 0.001,
+            "min": 0.0,
+            "max": 0.1,
+            "step": 0.001
+          },
+          {
+            "id": "edge_ratio",
+            "label": "Edge Ratio (λ₁/λ₂)",
+            "type": "float",
+            "default": 4.0,
+            "min": 1.5,
+            "max": 20.0,
+            "step": 0.5
+          }
+        ]
+      },
+      {
+        "type": "sci_hausdorff",
+        "label": "Hausdorff Distance",
+        "category": "measure",
+        "icon": "ArrowLeftRight",
+        "description": "Hausdorff distance between two binary masks (ch3 §3.6).\n\nH(A,B) = max(h(A→B), h(B→A)) — worst-case mismatch.\nh(A→B) = max_{a∈A} min_{b∈B} d(a,b) — directed Hausdorff.\n\nPercentile < 100 gives Modified Hausdorff / HD95 (robust to outliers).\nUses distance transform (fast O(N)) instead of brute-force O(N²).\nOverlay: A=cyan, B=orange, worst-case pair connected by red line.",
+        "inputs": [
+          {
+            "id": "mask_a",
+            "label": "Mask A",
+            "color": "mask"
+          },
+          {
+            "id": "mask_b",
+            "label": "Mask B",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "label": "BG Image (opt)",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Overlay",
+            "color": "image"
+          },
+          {
+            "id": "h_ab",
+            "label": "H(A→B)",
+            "color": "scalar"
+          },
+          {
+            "id": "h_ba",
+            "label": "H(B→A)",
+            "color": "scalar"
+          },
+          {
+            "id": "h_max",
+            "label": "H max",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "percentile",
+            "label": "Percentile (100=classic, 95=HD95)",
+            "type": "float",
+            "default": 100.0,
+            "min": 50.0,
+            "max": 100.0,
+            "step": 1.0
+          },
+          {
+            "id": "draw_arrow",
+            "label": "Draw Worst-Case Arrow",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_mask_metrics",
+        "label": "Mask Metrics",
+        "category": "measure",
+        "icon": "Target",
+        "description": "Compares a predicted binary mask to a ground-truth mask (ch4).\n\nOutputs IoU (Jaccard), Dice (F1-pixel), Precision, Recall, F1, and raw VP / FP / FN counts.\n\nColored overlay: green=VP, red=FP, blue=FN — reveals immediately whether the error leans toward over- or under-segmentation.\nIoU = VP/(VP+FP+FN) — doubly penalises both over and under-segmentation.\nDice = 2·VP/(2·VP+FP+FN) — always ≥ IoU; same ranking, more forgiving.\nPrecision = VP/(VP+FP), Recall = VP/(VP+FN), F1 = harmonic mean.",
+        "inputs": [
+          {
+            "id": "pred",
+            "label": "Prediction",
+            "color": "mask"
+          },
+          {
+            "id": "truth",
+            "label": "Ground Truth",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "label": "BG Image (opt)",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Overlay",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Metrics",
+            "color": "dict"
+          },
+          {
+            "id": "iou",
+            "label": "IoU",
+            "color": "scalar"
+          },
+          {
+            "id": "dice",
+            "label": "Dice",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "show_overlay",
+            "label": "Show Overlay",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "alpha",
+            "label": "Overlay Alpha",
+            "type": "float",
+            "default": 0.45,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "iou_thresh",
+            "label": "IoU Threshold (VP)",
+            "type": "float",
+            "default": 0.5,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.05
+          }
+        ]
+      },
+      {
+        "type": "sci_first_order_stats",
+        "label": "First Order Statistics",
+        "category": "measure",
+        "icon": "BarChart2",
+        "description": "First-order texture statistics from the pixel histogram (ch13 §13.1).\n\nOutputs mean, variance, entropy and uniformity — purely statistical,\nblind to spatial arrangement. Demonstrates the angle mort of order-1 descriptors.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Stats Overlay",
+            "color": "image"
+          },
+          {
+            "id": "mean",
+            "label": "Mean",
+            "color": "scalar"
+          },
+          {
+            "id": "variance",
+            "label": "Variance",
+            "color": "scalar"
+          },
+          {
+            "id": "entropy",
+            "label": "Entropy",
+            "color": "scalar"
+          },
+          {
+            "id": "uniformity",
+            "label": "Uniformity",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "region_size",
+            "label": "Region Size (0=full)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 512
+          }
+        ]
+      },
+      {
+        "type": "cv_ssim",
+        "label": "SSIM / PSNR",
+        "category": "measure",
+        "icon": "GitCompare",
+        "description": "Compare a test image against a reference: computes SSIM (structural similarity) and PSNR (peak signal-to-noise ratio). Outputs an SSIM map, difference image, or the test image with metrics overlaid.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Test Image",
+            "color": "image"
+          },
+          {
+            "id": "reference",
+            "label": "Reference",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Result",
+            "color": "image"
+          },
+          {
+            "id": "ssim",
+            "label": "SSIM",
+            "color": "scalar"
+          },
+          {
+            "id": "psnr",
+            "label": "PSNR (dB)",
+            "color": "scalar"
+          },
+          {
+            "id": "data",
+            "label": "Metrics",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "output",
+            "label": "Output",
+            "type": "enum",
+            "options": [
+              "SSIM Map",
+              "Difference",
+              "Test Image"
+            ],
+            "default": "SSIM Map"
+          },
+          {
+            "id": "grayscale",
+            "label": "Grayscale (luminance)",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_hist_compare",
+        "label": "Histogram Compare",
+        "category": "measure",
+        "icon": "BarChart2",
+        "description": "Compares histograms of two images using classical similarity metrics (ch3 §3.4–3.5).\n\nχ² (Chi-squared): sensitive to bin differences, good for textures.\nBhattacharyya: geometric mean — 0=identical, 1=no overlap.\nWasserstein 1D: Earth Mover's Distance along the chosen channel.\nCorrelation: Pearson correlation between histograms (1=identical, -1=opposite).\n\nChannel: Luma (perceptual Y), R, G, B, or Hue (H from HSV).\nOptional masks restrict the region analysed.\nOutput: scalar distance + side-by-side histogram overlay.",
+        "inputs": [
+          {
+            "id": "image_a",
+            "label": "Image A",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "label": "Image B",
+            "color": "image"
+          },
+          {
+            "id": "mask_a",
+            "label": "Mask A",
+            "color": "mask"
+          },
+          {
+            "id": "mask_b",
+            "label": "Mask B",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Histogram Plot",
+            "color": "image"
+          },
+          {
+            "id": "distance",
+            "label": "Distance",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "metric",
+            "label": "Metric",
+            "type": "enum",
+            "options": [
+              "Bhattacharyya",
+              "Chi-squared",
+              "Wasserstein",
+              "Correlation"
+            ],
+            "default": "Bhattacharyya"
+          },
+          {
+            "id": "channel",
+            "label": "Channel",
+            "type": "enum",
+            "options": [
+              "Luma",
+              "R",
+              "G",
+              "B",
+              "Hue"
+            ],
+            "default": "Luma"
+          },
+          {
+            "id": "bins",
+            "label": "Bins",
+            "type": "int",
+            "default": 64,
+            "min": 8,
+            "max": 256
+          }
+        ]
+      },
+      {
+        "type": "sci_boundary_f1",
+        "label": "Boundary F1",
+        "category": "measure",
+        "icon": "Scan",
+        "description": "Boundary F1 score (BF) between two binary masks (ch4 §4.6).\n\nExtracts contour pixels from both masks and computes precision/recall with a pixel tolerance: a predicted boundary pixel counts as correct if a ground-truth boundary pixel exists within the tolerance radius.\n\nP_c = boundary pred pixels near truth  / total pred boundary\nR_c = boundary truth pixels near pred  / total truth boundary\nBF  = 2·P_c·R_c / (P_c + R_c)\n\nBF complements Hausdorff: BF is a bounded proportion, Hausdorff reports the single worst-case mismatch.\nOverlay: cyan=pred boundary, orange=truth boundary, green=matched.",
+        "inputs": [
+          {
+            "id": "pred",
+            "label": "Prediction",
+            "color": "mask"
+          },
+          {
+            "id": "truth",
+            "label": "Ground Truth",
+            "color": "mask"
+          },
+          {
+            "id": "image",
+            "label": "BG Image (opt)",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Overlay",
+            "color": "image"
+          },
+          {
+            "id": "boundary_f1",
+            "label": "BF",
+            "color": "scalar"
+          },
+          {
+            "id": "precision",
+            "label": "Boundary Precision",
+            "color": "scalar"
+          },
+          {
+            "id": "recall",
+            "label": "Boundary Recall",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "tolerance",
+            "label": "Tolerance (px)",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20
+          }
+        ]
+      },
+      {
+        "type": "feat_gabor_bank",
+        "label": "Gabor Bank",
+        "category": "measure",
+        "icon": "Waves",
+        "description": "Multi-scale, multi-orientation Gabor filter bank (ch13 §13.5).\n\nApplies N_theta × N_lambda Gabor filters (magnitude of complex response).\nFor each pixel, keeps the orientation of maximum energy response.\n\nOutputs: orientation map (colour-coded), energy map, and the energy\nvector (N_theta × N_lambda scalars) for the full image.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Orientation Map",
+            "color": "image"
+          },
+          {
+            "id": "energy_map",
+            "label": "Energy Map",
+            "color": "image"
+          },
+          {
+            "id": "n_orientations",
+            "label": "Orientations",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "n_theta",
+            "label": "Orientations",
+            "type": "int",
+            "default": 8,
+            "min": 2,
+            "max": 16
+          },
+          {
+            "id": "_sec_filter",
+            "label": "Filter",
+            "type": "section"
+          },
+          {
+            "id": "wavelength",
+            "label": "Wavelength (px)",
+            "type": "float",
+            "default": 8.0,
+            "min": 2.0,
+            "max": 64.0
+          },
+          {
+            "id": "sigma",
+            "label": "Sigma",
+            "type": "float",
+            "default": 4.0,
+            "min": 1.0,
+            "max": 32.0
+          },
+          {
+            "id": "gamma",
+            "label": "Aspect Ratio",
+            "type": "float",
+            "default": 0.5,
+            "min": 0.1,
+            "max": 1.0
+          },
+          {
+            "id": "ksize",
+            "label": "Kernel Size",
+            "type": "int",
+            "default": 31,
+            "min": 7,
+            "max": 63
+          }
+        ]
+      },
+      {
+        "type": "sci_delta_e",
+        "label": "Delta E",
+        "category": "measure",
+        "icon": "Diff",
+        "description": "Perceptual colour difference between two images (ch7 §7.3).\n\nConverts both images to CIE L*a*b* and computes ΔE per pixel.\n\nCIE76 : ΔE = √( (ΔL*)² + (Δa*)² + (Δb*)² )\nCIE2000 : weighted formula that fixes blue-saturation over-estimation.\n\nPerceptual thresholds:\n  ΔE < 1     : imperceptible\n  ΔE 1–2     : visible to trained eye\n  ΔE 2–10    : noticeable at first glance\n  ΔE > 10    : clearly different\n\nOutputs: false-colour map + scalar statistics.",
+        "inputs": [
+          {
+            "id": "image_a",
+            "label": "Image A",
+            "color": "image"
+          },
+          {
+            "id": "image_b",
+            "label": "Image B",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "ΔE map",
+            "color": "image"
+          },
+          {
+            "id": "delta_e",
+            "label": "ΔE mean",
+            "color": "scalar"
+          },
+          {
+            "id": "de_max",
+            "label": "ΔE max",
+            "color": "scalar"
+          },
+          {
+            "id": "de_p95",
+            "label": "ΔE 95th pct",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "formula",
+            "label": "Formula",
+            "type": "enum",
+            "options": [
+              "CIE76",
+              "CIE2000"
+            ],
+            "default": "CIE2000"
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Viridis",
+              "Plasma",
+              "Hot",
+              "Jet"
+            ],
+            "default": "Viridis"
+          },
+          {
+            "id": "de_max_disp",
+            "label": "Display Max ΔE",
+            "type": "float",
+            "default": 10.0,
+            "min": 1.0,
+            "max": 100.0,
+            "step": 1.0
+          }
+        ]
+      },
+      {
+        "type": "cv_lbp",
+        "label": "Local Binary Pattern",
+        "category": "measure",
+        "icon": "Grid3x3",
+        "description": "Local Binary Pattern texture descriptor. Encodes each pixel by thresholding its circular neighborhood, then outputs a colored map and histogram.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "LBP Map",
+            "color": "image"
+          },
+          {
+            "id": "hist_image",
+            "label": "Histogram",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Data",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "points",
+            "label": "Points (P)",
+            "type": "int",
+            "min": 4,
+            "max": 24,
+            "default": 8
+          },
+          {
+            "id": "radius",
+            "label": "Radius (R)",
+            "type": "float",
+            "min": 1.0,
+            "max": 10.0,
+            "default": 1.0
+          },
+          {
+            "id": "method",
+            "label": "Method",
+            "type": "enum",
+            "options": [
+              "uniform",
+              "default",
+              "ror",
+              "var"
+            ],
+            "default": "uniform"
+          },
+          {
+            "id": "show_histogram",
+            "label": "Show Histogram",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_glcm",
+        "label": "GLCM",
+        "category": "measure",
+        "icon": "Grid3x3",
+        "description": "Grey-Level Co-occurrence Matrix + Haralick features (ch13 §13.2–13.3).\n\nQuantises the image to `levels`, builds P(i,j | d, θ) averaged over selected\nangles (rotation-invariant), then computes Haralick scalars:\ncontrast, homogeneity, energy (ASM), entropy, correlation.\n\nOutputs a visualisation of the GLCM matrix and all five Haralick scalars.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "GLCM Heatmap",
+            "color": "image"
+          },
+          {
+            "id": "contrast",
+            "label": "Contrast",
+            "color": "scalar"
+          },
+          {
+            "id": "homogeneity",
+            "label": "Homogeneity",
+            "color": "scalar"
+          },
+          {
+            "id": "energy",
+            "label": "Energy (ASM)",
+            "color": "scalar"
+          },
+          {
+            "id": "entropy",
+            "label": "Entropy",
+            "color": "scalar"
+          },
+          {
+            "id": "correlation",
+            "label": "Correlation",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "distance",
+            "label": "Displacement Steps",
+            "type": "int",
+            "default": 1,
+            "min": 1,
+            "max": 32
+          },
+          {
+            "id": "levels",
+            "label": "Quantization Levels",
+            "type": "enum",
+            "options": [
+              "8",
+              "16",
+              "32",
+              "64"
+            ],
+            "default": 1
+          },
+          {
+            "id": "angles",
+            "label": "Directions (Angles)",
+            "type": "enum",
+            "options": [
+              "0° only",
+              "0°+90°",
+              "0°+45°+90°+135°"
+            ],
+            "default": 2
+          },
+          {
+            "id": "symmetric",
+            "label": "Symmetric",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "sci_color_distance",
+        "label": "Color Distance",
+        "category": "measure",
+        "icon": "Ruler",
+        "description": "Pixel-wise color distance map between image and a reference color (ch3).\n\nL1 = Σ|Δc|, L2 = √(Σ Δc²), L∞ = max|Δc| (§3.1 — Minkowski).\nCosine = 1 − (A·B)/(|A||B|) : shape similarity, ignores brightness (§3.3).\nMahalanobis: accounts for channel correlations and variance (§3.2).\n\nReference source: 'Ref Mask' region mean (if connected), else 'Ref Color' picker.\nOutputs a float32 distance map (normalized 0–1 for display), a threshold mask,\nand the scalar min distance.",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          },
+          {
+            "id": "ref_mask",
+            "label": "Ref Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "dist_map",
+            "label": "Distance Map",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "label": "Threshold Mask",
+            "color": "mask"
+          },
+          {
+            "id": "min_dist",
+            "label": "Min Dist",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "metric",
+            "label": "Metric",
+            "type": "enum",
+            "options": [
+              "L2",
+              "L1",
+              "L∞",
+              "Cosine",
+              "Mahalanobis"
+            ],
+            "default": "L2"
+          },
+          {
+            "id": "ref_color",
+            "label": "Ref Color",
+            "type": "color",
+            "default": "#ff0000"
+          },
+          {
+            "id": "threshold",
+            "label": "Threshold",
+            "type": "float",
+            "default": 0.2,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "options": [
+              "Viridis",
+              "Jet",
+              "Plasma",
+              "Grayscale"
+            ],
+            "default": "Viridis"
+          }
+        ]
+      },
+      {
+        "type": "feat_skeleton",
+        "label": "Skeleton",
+        "category": "measure",
+        "icon": "GitBranch",
+        "description": "Reduces a binary mask to its medial axis (skeleton) (ch11 §11.5).\n\nMethod: Distance Transform + local maxima (crêtes de la carte de distance,\nconsistent with ch10 §10.5). Each skeleton pixel is the centre of a maximal\ninscribed disc — the skeleton and the DT encode the same geometry.\n\nOutputs: skeleton overlay, branch count, max inscribed radius.",
+        "inputs": [
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Skeleton",
+            "color": "image"
+          },
+          {
+            "id": "branch_count",
+            "label": "Branch Count",
+            "color": "scalar"
+          },
+          {
+            "id": "max_radius",
+            "label": "Max Inscribed R",
+            "color": "scalar"
+          }
+        ],
+        "params": [
+          {
+            "id": "min_radius",
+            "label": "Min Local Radius (px)",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20
+          },
+          {
+            "id": "overlay",
+            "label": "Overlay on Mask",
+            "type": "bool",
+            "default": true
+          }
+        ]
+      },
+      {
+        "type": "image_moments",
+        "label": "Image Moments",
+        "category": "measure",
+        "icon": "Target",
+        "description": "Computes spatial moments and Hu invariants for a single connected shape (ch2). Outputs raw moments M_pq, central moments μ_pq, normalized moments η_pq, centroid, orientation θ, anisotropy, and the 7 log-scaled Hu invariants φ₁–φ₇. Binary Mode ON → pure geometry (mask). Binary Mode OFF → intensity-weighted centroid (barycentre lumineux, sub-pixel localisation).",
+        "inputs": [
+          {
+            "id": "image",
+            "label": "Image",
+            "color": "image"
+          },
+          {
+            "id": "mask",
+            "label": "Mask",
+            "color": "mask"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "label": "Overlay",
+            "color": "image"
+          },
+          {
+            "id": "data",
+            "label": "Moments",
+            "color": "dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "binary_mode",
+            "label": "Binary Mode (geometry)",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "source",
+            "label": "Source",
+            "type": "enum",
+            "options": [
+              "Largest Contour",
+              "Whole Mask"
+            ],
+            "default": "Largest Contour"
+          },
+          {
+            "id": "draw_overlay",
+            "label": "Draw Overlay",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "draw_ellipse",
+            "label": "Draw Principal Axis",
             "type": "bool",
             "default": false
           }
@@ -10516,6 +13419,11 @@
         ],
         "params": [
           {
+            "id": "_sec_gain",
+            "label": "Band Gain",
+            "type": "section"
+          },
+          {
             "id": "low_gain",
             "label": "Low Freq %",
             "type": "int",
@@ -10541,6 +13449,11 @@
             "max": 400,
             "step": 1,
             "default": 100
+          },
+          {
+            "id": "_sec_splits",
+            "label": "Band Splits",
+            "type": "section"
           },
           {
             "id": "low_mid_split",
@@ -10658,7 +13571,7 @@
           {
             "id": "stats",
             "color": "dict",
-            "label": "Group Counts"
+            "label": "Group Stats (count + center)"
           }
         ],
         "params": [
@@ -10674,7 +13587,8 @@
             "id": "key",
             "label": "Property Key",
             "type": "string",
-            "default": "radius"
+            "default": "radius",
+            "hints": "item_keys"
           }
         ]
       },
@@ -10712,8 +13626,14 @@
           {
             "id": "feature",
             "label": "Feature",
-            "type": "enum",
-            "default": 0
+            "type": "string",
+            "default": "area",
+            "hints": "item_keys"
+          },
+          {
+            "id": "_sec_visualization",
+            "label": "Visualization",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -10736,6 +13656,11 @@
             "default": 0.25,
             "min": 0.0,
             "max": 1.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "show_values",
@@ -10811,6 +13736,11 @@
             "label": "Show Stats",
             "type": "toggle",
             "default": true
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "bar_color",
@@ -10973,6 +13903,11 @@
             "default": 200
           },
           {
+            "id": "_sec_y_axis",
+            "label": "Y Axis",
+            "type": "section"
+          },
+          {
             "id": "min_y",
             "label": "Y-Axis Min",
             "type": "float",
@@ -10989,6 +13924,11 @@
             "label": "Auto-Scale",
             "type": "boolean",
             "default": true
+          },
+          {
+            "id": "_sec_image_size",
+            "label": "Image Size",
+            "type": "section"
           },
           {
             "id": "width",
@@ -11208,6 +14148,11 @@
             "default": 1.0
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "blur",
             "label": "Blur Radius",
             "type": "scalar",
@@ -11237,6 +14182,11 @@
             "max": 1.0,
             "step": 0.1,
             "default": 0.7
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "reset",
@@ -11347,6 +14297,11 @@
         ],
         "params": [
           {
+            "id": "_sec_labels",
+            "label": "Labels",
+            "type": "section"
+          },
+          {
             "id": "title",
             "label": "Title",
             "type": "string",
@@ -11365,6 +14320,11 @@
             "default": "Y"
           },
           {
+            "id": "_sec_trail",
+            "label": "Trail",
+            "type": "section"
+          },
+          {
             "id": "trail_color",
             "label": "Trail Color",
             "type": "color",
@@ -11377,6 +14337,11 @@
             "default": 300,
             "min": 10,
             "max": 2000
+          },
+          {
+            "id": "_sec_size",
+            "label": "Size",
+            "type": "section"
           },
           {
             "id": "width",
@@ -11474,6 +14439,11 @@
             "default": 10
           },
           {
+            "id": "_sec_point",
+            "label": "Point Overlay",
+            "type": "section"
+          },
+          {
             "id": "show_point",
             "label": "Show Point",
             "type": "bool",
@@ -11489,13 +14459,13 @@
           },
           {
             "id": "point_use_id_color",
-            "label": "Point: use ID color",
+            "label": "Use ID color",
             "type": "bool",
             "default": true
           },
           {
             "id": "point_r",
-            "label": "Point R",
+            "label": "R",
             "min": 0,
             "max": 255,
             "step": 1,
@@ -11503,7 +14473,7 @@
           },
           {
             "id": "point_g",
-            "label": "Point G",
+            "label": "G",
             "min": 0,
             "max": 255,
             "step": 1,
@@ -11511,7 +14481,7 @@
           },
           {
             "id": "point_b",
-            "label": "Point B",
+            "label": "B",
             "min": 0,
             "max": 255,
             "step": 1,
@@ -12448,6 +15418,11 @@
         "outputs": [],
         "params": [
           {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
+          },
+          {
             "id": "record",
             "label": "Recording",
             "type": "toggle",
@@ -12458,6 +15433,11 @@
             "label": "Snapshot",
             "type": "trigger",
             "default": 0
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           },
           {
             "id": "filename",
@@ -12830,11 +15810,9 @@
         ],
         "params": [
           {
-            "id": "alpha",
-            "min": 0,
-            "max": 250,
-            "step": 1,
-            "default": 50
+            "id": "_sec_bandpass",
+            "label": "Bandpass",
+            "type": "section"
           },
           {
             "id": "low_cutoff",
@@ -12856,6 +15834,18 @@
             "max": 120,
             "step": 1,
             "default": 30
+          },
+          {
+            "id": "_sec_amplification",
+            "label": "Amplification",
+            "type": "section"
+          },
+          {
+            "id": "alpha",
+            "min": 0,
+            "max": 250,
+            "step": 1,
+            "default": 50
           },
           {
             "id": "levels",
@@ -12905,6 +15895,11 @@
         ],
         "params": [
           {
+            "id": "_sec_bandpass",
+            "label": "Bandpass Filter",
+            "type": "section"
+          },
+          {
             "id": "alpha",
             "min": 0,
             "max": 200,
@@ -12931,6 +15926,11 @@
             "max": 120,
             "step": 1,
             "default": 30
+          },
+          {
+            "id": "_sec_pyramid",
+            "label": "Pyramid",
+            "type": "section"
           },
           {
             "id": "levels",
@@ -13290,6 +16290,11 @@
             "default": 1
           },
           {
+            "id": "_sec_reaction",
+            "label": "Reaction",
+            "type": "section"
+          },
+          {
             "id": "f",
             "label": "f  (feed)",
             "type": "float",
@@ -13343,6 +16348,11 @@
             "max": 50
           },
           {
+            "id": "_sec_init",
+            "label": "Init",
+            "type": "section"
+          },
+          {
             "id": "width",
             "label": "Width",
             "type": "int",
@@ -13384,6 +16394,11 @@
             "default": 42,
             "min": 0,
             "max": 9999
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -13515,6 +16530,11 @@
             "max": 60.0
           },
           {
+            "id": "_sec_fft",
+            "label": "FFT Config",
+            "type": "section"
+          },
+          {
             "id": "n_fft",
             "label": "N-FFT",
             "type": "int",
@@ -13537,6 +16557,11 @@
             "default": 128,
             "min": 32,
             "max": 256
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -13578,6 +16603,11 @@
         ],
         "params": [
           {
+            "id": "_sec_fft_cfg",
+            "label": "FFT Config",
+            "type": "section"
+          },
+          {
             "id": "sr",
             "label": "Sample Rate",
             "type": "int",
@@ -13602,6 +16632,11 @@
             "default": 32,
             "min": 4,
             "max": 128
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "run",
@@ -13968,6 +17003,11 @@
               "plasma"
             ],
             "default": 0
+          },
+          {
+            "id": "_sec_heatmap_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -13994,6 +17034,11 @@
             "label": "Save",
             "type": "trigger",
             "default": 0
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export Config",
+            "type": "section"
           },
           {
             "id": "path",
@@ -14151,6 +17196,11 @@
             "default": true
           },
           {
+            "id": "_sec_condition",
+            "label": "Filter Condition",
+            "type": "section"
+          },
+          {
             "id": "column",
             "label": "Column",
             "type": "string",
@@ -14167,6 +17217,11 @@
             "label": "Value",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_options",
+            "label": "Options",
+            "type": "section"
           },
           {
             "id": "dropna",
@@ -14547,6 +17602,11 @@
             "max": 100000
           },
           {
+            "id": "_sec_slice",
+            "label": "Slice",
+            "type": "section"
+          },
+          {
             "id": "start",
             "label": "Start index (slice)",
             "type": "int",
@@ -14561,6 +17621,11 @@
             "default": 10,
             "min": 1,
             "max": 100000
+          },
+          {
+            "id": "_sec_sampling",
+            "label": "Sampling",
+            "type": "section"
           },
           {
             "id": "seed",
@@ -14755,6 +17820,11 @@
             "default": 0
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "columns",
             "label": "Columns (blank = all)",
             "type": "string",
@@ -14765,6 +17835,11 @@
             "label": "Column (value_counts)",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           },
           {
             "id": "out_w",
@@ -14834,6 +17909,11 @@
             "max": 200
           },
           {
+            "id": "_sec_hist_options",
+            "label": "Options",
+            "type": "section"
+          },
+          {
             "id": "kde",
             "label": "KDE overlay",
             "type": "bool",
@@ -14856,6 +17936,11 @@
             "label": "Grid",
             "type": "bool",
             "default": true
+          },
+          {
+            "id": "_sec_hist_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -14907,6 +17992,11 @@
             "default": ""
           },
           {
+            "id": "_sec_appearance",
+            "label": "Appearance",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -14930,6 +18020,11 @@
             "max": 250
           },
           {
+            "id": "_sec_options",
+            "label": "Options",
+            "type": "section"
+          },
+          {
             "id": "regression",
             "label": "Regression Line",
             "type": "bool",
@@ -14948,6 +18043,11 @@
             "default": 2000,
             "min": 0,
             "max": 50000
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -14999,6 +18099,257 @@
         "resizable": true,
         "min_width": 260,
         "min_height": 180
+      },
+      {
+        "type": "df_column_list",
+        "label": "DF Column → List",
+        "category": "DataFrame",
+        "icon": "List",
+        "description": "Extract one DataFrame column as a list (array). Reusable everywhere a 'list' is accepted — wire it into DataFrame Plot X/Y, a Plotter, or stats. Optionally drop NaNs and coerce to numeric.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "list",
+            "color": "list",
+            "label": "Values"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Count"
+          }
+        ],
+        "params": [
+          {
+            "id": "column",
+            "label": "Column",
+            "type": "string",
+            "default": "",
+            "hints": "df_columns"
+          },
+          {
+            "id": "dropna",
+            "label": "Drop NaN",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "numeric",
+            "label": "Coerce to numeric",
+            "type": "bool",
+            "default": false
+          }
+        ]
+      },
+      {
+        "type": "df_plot",
+        "label": "DataFrame Plot",
+        "category": "DataFrame",
+        "icon": "ChartLine",
+        "description": "Generic DataFrame chart. One node, many chart types (line, bar, scatter, histogram, box, area, pie) with styling options. Renders in the node body and outputs an image. Either connect a DataFrame + pick X/Y column names, or wire raw X/Y arrays directly (e.g. CSV Reader columns). X/Y inputs win over the table.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame"
+          },
+          {
+            "id": "x",
+            "color": "list",
+            "label": "X values"
+          },
+          {
+            "id": "y",
+            "color": "list",
+            "label": "Y values"
+          },
+          {
+            "id": "img_size",
+            "color": "list",
+            "label": "Img Size"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Plot"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "Columns"
+          }
+        ],
+        "params": [
+          {
+            "id": "chart_type",
+            "label": "Chart type",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "x_col",
+            "label": "X column (category / axis / labels)",
+            "type": "string",
+            "default": "",
+            "hints": "df_columns"
+          },
+          {
+            "id": "y_cols",
+            "label": "Y columns (comma-separated)",
+            "type": "string",
+            "default": "",
+            "hints": "df_columns"
+          },
+          {
+            "id": "hue_col",
+            "label": "Color by (hue)",
+            "type": "string",
+            "default": "",
+            "hints": "df_columns"
+          },
+          {
+            "id": "bins",
+            "label": "Bins",
+            "type": "int",
+            "default": 30,
+            "min": 5,
+            "max": 200
+          },
+          {
+            "id": "horizontal",
+            "label": "Horizontal bars",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "stacked",
+            "label": "Stacked",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "sort_x",
+            "label": "Sort by X",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "max_points",
+            "label": "Max points (0=all)",
+            "type": "int",
+            "default": 5000,
+            "min": 0,
+            "max": 100000
+          },
+          {
+            "id": "_sec_appearance",
+            "label": "Appearance",
+            "type": "section"
+          },
+          {
+            "id": "colormap",
+            "label": "Colormap",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "alpha",
+            "label": "Opacity",
+            "type": "float",
+            "default": 0.85,
+            "min": 0.1,
+            "max": 1.0,
+            "step": 0.05
+          },
+          {
+            "id": "marker_size",
+            "label": "Marker / line size",
+            "type": "int",
+            "default": 40,
+            "min": 1,
+            "max": 250
+          },
+          {
+            "id": "title",
+            "label": "Title",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "grid",
+            "label": "Grid",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "legend",
+            "label": "Legend",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "x_log",
+            "label": "Log X",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "y_log",
+            "label": "Log Y",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
+          },
+          {
+            "id": "export_bg",
+            "label": "Background",
+            "type": "enum",
+            "options": [
+              "White",
+              "Transparent"
+            ],
+            "default": 0
+          },
+          {
+            "id": "out_dpi",
+            "label": "DPI (100=screen, 300=pub)",
+            "type": "int",
+            "default": 100,
+            "min": 72,
+            "max": 600
+          },
+          {
+            "id": "out_w",
+            "label": "Width px (0 = node size)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 5000
+          },
+          {
+            "id": "out_h",
+            "label": "Height px (0 = node size)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 5000
+          }
+        ],
+        "resizable": true,
+        "min_width": 320,
+        "min_height": 260
       }
     ]
   },
@@ -15214,6 +18565,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data_dt",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "features",
             "label": "Features (blank = all numeric)",
             "type": "string",
@@ -15224,6 +18580,11 @@
             "label": "Target column",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_model_dt",
+            "label": "Model Config",
+            "type": "section"
           },
           {
             "id": "max_depth",
@@ -15257,6 +18618,11 @@
             "label": "Colormap (tree)",
             "type": "enum",
             "default": 3
+          },
+          {
+            "id": "_sec_export_dt",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15293,6 +18659,11 @@
             "label": "Clusters"
           },
           {
+            "id": "elbow_plot",
+            "color": "image",
+            "label": "Elbow curve"
+          },
+          {
             "id": "inertia",
             "color": "scalar",
             "label": "Inertia (WCSS)"
@@ -15301,6 +18672,11 @@
             "id": "silhouette",
             "color": "scalar",
             "label": "Silhouette score"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "DF Columns"
           }
         ],
         "params": [
@@ -15308,7 +18684,8 @@
             "id": "features",
             "label": "Features (blank = all numeric)",
             "type": "string",
-            "default": ""
+            "default": "",
+            "hints": "df_columns"
           },
           {
             "id": "k",
@@ -15317,6 +18694,17 @@
             "default": 3,
             "min": 2,
             "max": 20
+          },
+          {
+            "id": "standardize",
+            "label": "Standardize features",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "_sec_model",
+            "label": "Model",
+            "type": "section"
           },
           {
             "id": "init",
@@ -15337,12 +18725,44 @@
             "max": 1000
           },
           {
+            "id": "n_init",
+            "label": "N restarts",
+            "type": "int",
+            "default": 10,
+            "min": 1,
+            "max": 50
+          },
+          {
             "id": "random_state",
             "label": "Random seed",
             "type": "int",
             "default": 42,
             "min": 0,
             "max": 9999
+          },
+          {
+            "id": "_sec_elbow",
+            "label": "Elbow Curve",
+            "type": "section"
+          },
+          {
+            "id": "show_elbow",
+            "label": "Show elbow plot",
+            "type": "bool",
+            "default": false
+          },
+          {
+            "id": "k_max",
+            "label": "Elbow k max",
+            "type": "int",
+            "default": 10,
+            "min": 2,
+            "max": 30
+          },
+          {
+            "id": "_sec_viz",
+            "label": "Visualization",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -15363,6 +18783,11 @@
             "default": 120,
             "min": 40,
             "max": 300
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15421,6 +18846,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "features",
             "label": "Feature columns (comma-separated)",
             "type": "string",
@@ -15431,6 +18861,11 @@
             "label": "Target column",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_model",
+            "label": "Model Config",
+            "type": "section"
           },
           {
             "id": "k",
@@ -15457,6 +18892,11 @@
             "default": 0
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -15475,6 +18915,11 @@
             "default": 150,
             "min": 50,
             "max": 400
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15533,6 +18978,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data_lr",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "features",
             "label": "Features (blank = all numeric)",
             "type": "string",
@@ -15555,6 +19005,11 @@
             "label": "Standardize features",
             "type": "bool",
             "default": false
+          },
+          {
+            "id": "_sec_export_lr",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15628,6 +19083,11 @@
             "default": true
           },
           {
+            "id": "_sec_viz",
+            "label": "Visualization",
+            "type": "section"
+          },
+          {
             "id": "hue_col",
             "label": "Color by column",
             "type": "string",
@@ -15661,6 +19121,11 @@
             "label": "Show loadings (biplot)",
             "type": "bool",
             "default": false
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15719,6 +19184,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data_svm",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "features",
             "label": "Features (blank = all numeric)",
             "type": "string",
@@ -15729,6 +19199,11 @@
             "label": "Target column",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_model_svm",
+            "label": "Model Config",
+            "type": "section"
           },
           {
             "id": "C",
@@ -15769,6 +19244,11 @@
             "default": true
           },
           {
+            "id": "_sec_display_svm",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap (tree)",
             "type": "enum",
@@ -15781,6 +19261,11 @@
             "default": 120,
             "min": 40,
             "max": 300
+          },
+          {
+            "id": "_sec_export_svm",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -15834,6 +19319,11 @@
         ],
         "params": [
           {
+            "id": "_sec_split",
+            "label": "Split Config",
+            "type": "section"
+          },
+          {
             "id": "test_size",
             "label": "Test size (%)",
             "type": "int",
@@ -15860,6 +19350,11 @@
             "label": "Shuffle",
             "type": "bool",
             "default": true
+          },
+          {
+            "id": "_sec_filter",
+            "label": "Filter",
+            "type": "section"
           },
           {
             "id": "filter_col",
@@ -15958,6 +19453,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "n_train",
             "type": "int",
             "default": 200,
@@ -15980,6 +19480,11 @@
             "min": 32,
             "max": 1024,
             "label": "Raster width (px)"
+          },
+          {
+            "id": "_sec_formula_cfg",
+            "label": "Formula Config",
+            "type": "section"
           },
           {
             "id": "formula",
@@ -16045,6 +19550,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data_gp",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "target_column",
             "type": "string",
             "default": "label",
@@ -16055,6 +19565,11 @@
             "type": "string",
             "default": "",
             "label": "Feature columns (comma, blank=auto)"
+          },
+          {
+            "id": "_sec_gp_config",
+            "label": "GP Config",
+            "type": "section"
           },
           {
             "id": "n_ensemble",
@@ -16097,6 +19612,11 @@
             "label": "Hold-out test fraction"
           },
           {
+            "id": "_sec_functions",
+            "label": "Functions",
+            "type": "section"
+          },
+          {
             "id": "use_log",
             "type": "bool",
             "default": true,
@@ -16119,6 +19639,11 @@
             "type": "bool",
             "default": true,
             "label": "Log-transform target (log1p/expm1) — recommended for turbidity"
+          },
+          {
+            "id": "_sec_control_gp",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "seed",
@@ -16247,6 +19772,11 @@
         ],
         "params": [
           {
+            "id": "_sec_targets",
+            "label": "Target Classes",
+            "type": "section"
+          },
+          {
             "id": "class_target_a",
             "type": "string",
             "default": "95",
@@ -16257,6 +19787,11 @@
             "type": "string",
             "default": "60",
             "label": "Class target B (e.g. 60 = Bare/orpaillage)"
+          },
+          {
+            "id": "_sec_thresholds",
+            "label": "F1 Thresholds",
+            "type": "section"
           },
           {
             "id": "f1_threshold_high",
@@ -16273,6 +19808,11 @@
             "min": 0.0,
             "max": 1.0,
             "label": "F1 threshold low (orange ≥ this, else red)"
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "class_labels",
@@ -16370,6 +19910,11 @@
         ],
         "params": [
           {
+            "id": "_sec_rf_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "features",
             "label": "Feature columns (comma-separated, blank=auto)",
             "type": "string",
@@ -16380,6 +19925,11 @@
             "label": "Target column",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_rf_training",
+            "label": "Training",
+            "type": "section"
           },
           {
             "id": "n_estimators",
@@ -16438,6 +19988,11 @@
             "max": 9999
           },
           {
+            "id": "_sec_rf_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -16456,6 +20011,11 @@
             "default": 20,
             "min": 1,
             "max": 100
+          },
+          {
+            "id": "_sec_rf_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -16509,6 +20069,11 @@
         ],
         "params": [
           {
+            "id": "_sec_model",
+            "label": "Model Config",
+            "type": "section"
+          },
+          {
             "id": "n_latent",
             "label": "Base channels (n_latent)",
             "type": "int",
@@ -16523,6 +20088,11 @@
             "default": 3,
             "min": 1,
             "max": 5
+          },
+          {
+            "id": "_sec_training",
+            "label": "Training",
+            "type": "section"
           },
           {
             "id": "n_epochs",
@@ -16553,6 +20123,11 @@
             "default": 0.2
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -16563,6 +20138,11 @@
               "Inferno"
             ],
             "default": 0
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "train",
@@ -16601,52 +20181,62 @@
         ],
         "params": [
           {
+            "id": "_sec_cols",
+            "type": "section",
+            "label": "Column Names"
+          },
+          {
             "id": "blue_col",
             "type": "string",
             "default": "Blue",
-            "label": "Blue column name"
+            "label": "Blue"
           },
           {
             "id": "green_col",
             "type": "string",
             "default": "Green",
-            "label": "Green column name"
+            "label": "Green"
           },
           {
             "id": "red_col",
             "type": "string",
             "default": "Red",
-            "label": "Red column name"
+            "label": "Red"
           },
           {
             "id": "nir_col",
             "type": "string",
             "default": "NIR",
-            "label": "NIR column name"
+            "label": "NIR"
           },
           {
             "id": "swir1_col",
             "type": "string",
             "default": "SWIR1",
-            "label": "SWIR1 column (optional)"
+            "label": "SWIR1 (optional)"
           },
           {
             "id": "swir2_col",
             "type": "string",
             "default": "SWIR2",
-            "label": "SWIR2 column (optional)"
+            "label": "SWIR2 (optional)"
+          },
+          {
+            "id": "_sec_ratios",
+            "type": "section",
+            "label": "Ratios & Logs"
           },
           {
             "id": "add_red_green",
             "type": "bool",
             "default": true,
-            "label": "Red/Green (turbidity proxy)"
+            "label": "Red/Green (turbidity)"
           },
           {
             "id": "add_red_nir",
             "type": "bool",
             "default": true,
-            "label": "Red/NIR (high turbidity marker)"
+            "label": "Red/NIR"
           },
           {
             "id": "add_blue_green",
@@ -16667,18 +20257,6 @@
             "label": "Blue/NIR"
           },
           {
-            "id": "add_ndti",
-            "type": "bool",
-            "default": true,
-            "label": "NDTI = (Red-Green)/(Red+Green)"
-          },
-          {
-            "id": "add_ndwi",
-            "type": "bool",
-            "default": false,
-            "label": "NDWI = (Green-NIR)/(Green+NIR)"
-          },
-          {
             "id": "add_log_red",
             "type": "bool",
             "default": true,
@@ -16691,28 +20269,45 @@
             "label": "log(Blue+1)"
           },
           {
+            "id": "_sec_indices",
+            "type": "section",
+            "label": "Spectral Indices"
+          },
+          {
+            "id": "add_ndti",
+            "type": "bool",
+            "default": true,
+            "label": "NDTI"
+          },
+          {
+            "id": "add_ndwi",
+            "type": "bool",
+            "default": false,
+            "label": "NDWI"
+          },
+          {
             "id": "add_nir_swir1",
             "type": "bool",
             "default": false,
-            "label": "NIR/SWIR1 (sediment)"
+            "label": "NIR/SWIR1"
           },
           {
             "id": "add_red_swir1",
             "type": "bool",
             "default": false,
-            "label": "Red/SWIR1 (SPM > 50)"
+            "label": "Red/SWIR1"
           },
           {
             "id": "add_mndwi",
             "type": "bool",
             "default": false,
-            "label": "MNDWI = (Green-SWIR1)/(Green+SWIR1)"
+            "label": "MNDWI"
           },
           {
             "id": "add_nbr",
             "type": "bool",
             "default": false,
-            "label": "NBR = (NIR-SWIR2)/(NIR+SWIR2)"
+            "label": "NBR"
           },
           {
             "id": "add_log_swir1",
@@ -16721,16 +20316,21 @@
             "label": "log(SWIR1+1)"
           },
           {
+            "id": "_sec_custom",
+            "type": "section",
+            "label": "Custom Expression"
+          },
+          {
             "id": "custom_expr",
             "type": "string",
             "default": "",
-            "label": "Custom expr (e.g. r/g, log1p(b/r)) — use b,g,r,n"
+            "label": "Expr (e.g. r/g, log1p(b/r)) — use b,g,r,n"
           },
           {
             "id": "custom_name",
             "type": "string",
             "default": "custom",
-            "label": "Custom feature name"
+            "label": "Feature name"
           }
         ],
         "resizable": true,
@@ -16774,6 +20374,11 @@
             "type": "code"
           },
           {
+            "id": "_sec_training",
+            "label": "Training",
+            "type": "section"
+          },
+          {
             "id": "n_epochs",
             "label": "Epochs",
             "type": "int",
@@ -16813,6 +20418,11 @@
               "auto"
             ],
             "default": 2
+          },
+          {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
           },
           {
             "id": "train",
@@ -16884,6 +20494,78 @@
         "resizable": true,
         "min_width": 300,
         "min_height": 200
+      },
+      {
+        "type": "ml_cluster_validity",
+        "label": "Cluster Validity",
+        "category": "Machine Learning",
+        "icon": "Gauge",
+        "description": "Score a clustering to choose k. Feed a DataFrame with a cluster-label column (e.g. ml_kmeans table output). Outputs Calinski-Harabasz (↑ better), Davies-Bouldin (↓ better) and Dunn (↑ better). Compare across k to pick the best.",
+        "inputs": [
+          {
+            "id": "table",
+            "color": "data",
+            "label": "DataFrame + cluster"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "calinski_harabasz",
+            "color": "scalar",
+            "label": "Calinski-Harabasz ↑"
+          },
+          {
+            "id": "davies_bouldin",
+            "color": "scalar",
+            "label": "Davies-Bouldin ↓"
+          },
+          {
+            "id": "dunn",
+            "color": "scalar",
+            "label": "Dunn ↑"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Scores"
+          },
+          {
+            "id": "df_meta",
+            "color": "dict",
+            "label": "Scores dict"
+          }
+        ],
+        "params": [
+          {
+            "id": "cluster_col",
+            "label": "Cluster column",
+            "type": "string",
+            "default": "cluster",
+            "hints": "df_columns"
+          },
+          {
+            "id": "features",
+            "label": "Features (blank = all numeric)",
+            "type": "string",
+            "default": "",
+            "hints": "df_columns"
+          },
+          {
+            "id": "standardize",
+            "label": "Standardize features",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "show_plot",
+            "label": "Show score bars",
+            "type": "bool",
+            "default": true
+          }
+        ],
+        "resizable": true,
+        "min_width": 300,
+        "min_height": 220
       },
       {
         "type": "ml_model_loader",
@@ -17007,6 +20689,11 @@
             "default": false
           },
           {
+            "id": "_sec_inference",
+            "label": "Inference",
+            "type": "section"
+          },
+          {
             "id": "k",
             "label": "k (neighbors)",
             "type": "int",
@@ -17049,6 +20736,11 @@
             "default": false
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "label_mode",
             "label": "Label Mode",
             "type": "enum",
@@ -17058,6 +20750,30 @@
               "None"
             ],
             "default": 0
+          },
+          {
+            "id": "classify",
+            "label": "Classify",
+            "type": "trigger",
+            "default": false
+          },
+          {
+            "id": "_sec_save",
+            "label": "Save",
+            "type": "section"
+          },
+          {
+            "id": "save_path",
+            "label": "Save File (.cls.json)",
+            "type": "file_path",
+            "default": "~/VNStudio/exports/classification.cls.json",
+            "filters": []
+          },
+          {
+            "id": "save_classif",
+            "label": "Save Classification",
+            "type": "trigger",
+            "default": false
           }
         ],
         "colorable": true
@@ -17090,13 +20806,13 @@
         "params": [
           {
             "id": "x_col",
-            "label": "Category column (DataFrame mode)",
+            "label": "Category column (DataFrame)",
             "type": "string",
             "default": ""
           },
           {
             "id": "y_col",
-            "label": "Value column (DataFrame mode)",
+            "label": "Value column (DataFrame)",
             "type": "string",
             "default": ""
           },
@@ -17117,6 +20833,11 @@
             "label": "Dict B label (legend)",
             "type": "string",
             "default": "Series B"
+          },
+          {
+            "id": "_sec_layout",
+            "label": "Layout",
+            "type": "section"
           },
           {
             "id": "orientation",
@@ -17159,6 +20880,11 @@
             "default": ""
           },
           {
+            "id": "_sec_style",
+            "label": "Style",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -17179,6 +20905,11 @@
             "default": 0.85,
             "min": 0.1,
             "max": 1.0
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           }
         ],
         "resizable": true,
@@ -17338,6 +21069,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "target_column",
             "type": "string",
             "default": "label",
@@ -17348,6 +21084,11 @@
             "type": "string",
             "default": "",
             "label": "Feature columns (comma, blank=auto)"
+          },
+          {
+            "id": "_sec_training",
+            "label": "Training",
+            "type": "section"
           },
           {
             "id": "n_estimators",
@@ -17407,6 +21148,11 @@
             "label": "Random seed"
           },
           {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
+          },
+          {
             "id": "run",
             "type": "trigger",
             "default": 0,
@@ -17454,6 +21200,11 @@
             "default": ""
           },
           {
+            "id": "_sec_render",
+            "label": "Render Size",
+            "type": "section"
+          },
+          {
             "id": "img_w",
             "label": "Width (px)",
             "type": "int",
@@ -17470,6 +21221,11 @@
             "max": 2048
           },
           {
+            "id": "_sec_camera",
+            "label": "Camera",
+            "type": "section"
+          },
+          {
             "id": "azimuth",
             "label": "Azimuth (°)",
             "type": "int",
@@ -17482,6 +21238,11 @@
             "type": "int",
             "default": 30,
             "max": 90
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -17962,6 +21723,11 @@
             "max": 500
           },
           {
+            "id": "_sec_coordinates",
+            "label": "Coordinates",
+            "type": "section"
+          },
+          {
             "id": "lat_range",
             "label": "Latitude Range (e.g., -40,-30)",
             "type": "string",
@@ -17998,6 +21764,11 @@
             "default": ""
           },
           {
+            "id": "_sec_processing",
+            "label": "Processing",
+            "type": "section"
+          },
+          {
             "id": "spatial_stride",
             "label": "Spatial Stride",
             "type": "int",
@@ -18016,6 +21787,11 @@
             "label": "Add Offset",
             "type": "float",
             "default": 0.0
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "colormap",
@@ -18148,6 +21924,11 @@
         ],
         "params": [
           {
+            "id": "_sec_band_mapping",
+            "label": "Band Mapping",
+            "type": "section"
+          },
+          {
             "id": "r_band",
             "type": "int",
             "default": 1,
@@ -18170,6 +21951,11 @@
             "min": 1,
             "max": 20,
             "label": "B Band"
+          },
+          {
+            "id": "_sec_stretch",
+            "label": "Stretch",
+            "type": "section"
           },
           {
             "id": "stretch",
@@ -18497,6 +22283,11 @@
         ],
         "params": [
           {
+            "id": "_sec_bands",
+            "label": "Band Config",
+            "type": "section"
+          },
+          {
             "id": "nir_band",
             "type": "int",
             "default": 3,
@@ -18509,6 +22300,11 @@
             "type": "string",
             "default": "1,2",
             "label": "Visible Bands (B3,B4) comma list"
+          },
+          {
+            "id": "_sec_correction",
+            "label": "Correction",
+            "type": "section"
           },
           {
             "id": "mode",
@@ -18586,6 +22382,11 @@
             "label": "Fetch"
           },
           {
+            "id": "_sec_source",
+            "label": "Source",
+            "type": "section"
+          },
+          {
             "id": "gcp_project",
             "type": "string",
             "default": "",
@@ -18596,6 +22397,11 @@
             "type": "enum",
             "default": "Sentinel-2 SR",
             "label": "Collection"
+          },
+          {
+            "id": "_sec_location",
+            "label": "Location & Date",
+            "type": "section"
           },
           {
             "id": "location",
@@ -18640,6 +22446,11 @@
             "label": "Resolution (m/px)"
           },
           {
+            "id": "_sec_bands",
+            "label": "Band Mapping",
+            "type": "section"
+          },
+          {
             "id": "band_preset",
             "type": "enum",
             "options": [
@@ -18655,6 +22466,11 @@
             "type": "string",
             "default": "",
             "label": "Bands (e.g. B8 — overrides preset)"
+          },
+          {
+            "id": "_sec_cache",
+            "label": "Cache",
+            "type": "section"
           },
           {
             "id": "cache_dir",
@@ -18718,6 +22534,11 @@
             "label": "Client Secret"
           },
           {
+            "id": "_sec_query",
+            "label": "Query",
+            "type": "section"
+          },
+          {
             "id": "collection",
             "type": "enum",
             "default": 0,
@@ -18774,6 +22595,11 @@
             "label": "Bounding Box (set via editor)"
           },
           {
+            "id": "_sec_download",
+            "label": "Download",
+            "type": "section"
+          },
+          {
             "id": "max_tile_px",
             "type": "int",
             "default": 2500,
@@ -18786,6 +22612,11 @@
             "type": "string",
             "default": "copernicus_cache",
             "label": "Cache Dir"
+          },
+          {
+            "id": "_sec_stac",
+            "label": "STAC Options",
+            "type": "section"
           },
           {
             "id": "stac_polarization",
@@ -18853,6 +22684,11 @@
             "label": "STAC: Min scenes OK to accept result (else retry)"
           },
           {
+            "id": "_sec_control",
+            "label": "Control",
+            "type": "section"
+          },
+          {
             "id": "fetch",
             "type": "trigger",
             "default": 0,
@@ -18905,6 +22741,11 @@
         ],
         "params": [
           {
+            "id": "_sec_credentials",
+            "label": "Credentials",
+            "type": "section"
+          },
+          {
             "id": "username",
             "label": "Username (Copernicus)",
             "type": "string",
@@ -18915,6 +22756,11 @@
             "label": "Password (Copernicus)",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_dataset",
+            "label": "Dataset",
+            "type": "section"
           },
           {
             "id": "dataset_id",
@@ -18980,6 +22826,11 @@
             "default": 0
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Palette Couleur",
             "type": "enum",
@@ -18990,6 +22841,11 @@
               "Inferno"
             ],
             "default": 0
+          },
+          {
+            "id": "_sec_control",
+            "label": "Cache & Control",
+            "type": "section"
           },
           {
             "id": "cache_dir",
@@ -19035,6 +22891,11 @@
             "type": "string",
             "default": "",
             "label": "📁 IMG_DATA (auto-detect)"
+          },
+          {
+            "id": "_sec_bands",
+            "label": "Band Overrides",
+            "type": "section"
           },
           {
             "id": "b3_path",
@@ -19296,6 +23157,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "band_names",
             "type": "string",
             "default": "",
@@ -19312,6 +23178,11 @@
             "type": "string",
             "default": "",
             "label": "Class labels (e.g. \"10=Trees,60=Bare,95=Mangroves\")"
+          },
+          {
+            "id": "_sec_sampling",
+            "label": "Sampling",
+            "type": "section"
           },
           {
             "id": "max_samples_per_class",
@@ -19400,6 +23271,11 @@
             "label": "Restrict download to reference bbox"
           },
           {
+            "id": "_sec_burn",
+            "label": "Burn Config",
+            "type": "section"
+          },
+          {
             "id": "burn_field",
             "type": "string",
             "default": "",
@@ -19424,6 +23300,11 @@
             "type": "bool",
             "default": false,
             "label": "All touched pixels"
+          },
+          {
+            "id": "_sec_cache",
+            "label": "Cache",
+            "type": "section"
           },
           {
             "id": "cache_dir",
@@ -19554,6 +23435,11 @@
         ],
         "params": [
           {
+            "id": "_sec_data",
+            "label": "Data",
+            "type": "section"
+          },
+          {
             "id": "csv_path",
             "type": "string",
             "default": "",
@@ -19584,6 +23470,11 @@
             "label": "Band names (comma, in raster order)"
           },
           {
+            "id": "_sec_date_filter",
+            "label": "Date Filter",
+            "type": "section"
+          },
+          {
             "id": "image_date",
             "type": "string",
             "default": "",
@@ -19602,6 +23493,11 @@
             "min": 1,
             "max": 365,
             "label": "Date window (± days around image date)"
+          },
+          {
+            "id": "_sec_sampling",
+            "label": "Sampling",
+            "type": "section"
           },
           {
             "id": "target_min",
@@ -19805,6 +23701,11 @@
         ],
         "params": [
           {
+            "id": "_sec_model",
+            "label": "Model",
+            "type": "section"
+          },
+          {
             "id": "preset",
             "type": "enum",
             "label": "Preset"
@@ -19816,6 +23717,11 @@
             "min": 1,
             "max": 20,
             "label": "Band index (B4=2 for S2 loader)"
+          },
+          {
+            "id": "_sec_custom",
+            "label": "Custom Constants",
+            "type": "section"
           },
           {
             "id": "A",
@@ -19840,6 +23746,11 @@
             "min": 0.001,
             "max": 1.0,
             "label": "C (Custom)"
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "max_ntu",
@@ -19930,6 +23841,109 @@
             "label": "Histogram X max (NTU)"
           }
         ]
+      },
+      {
+        "type": "geo_water_mask",
+        "label": "Water Mask",
+        "category": "geo_analysis",
+        "icon": "Waves",
+        "description": "Extracts a binary water mask using the NDWI or MNDWI index.",
+        "inputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "Multi-band raster"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Water mask (255=water)"
+          },
+          {
+            "id": "index_image",
+            "color": "image",
+            "label": "Index colormap"
+          },
+          {
+            "id": "water_pixels",
+            "color": "scalar",
+            "label": "Water pixel count"
+          },
+          {
+            "id": "water_pct",
+            "color": "scalar",
+            "label": "Water coverage %"
+          },
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF pass-through"
+          }
+        ],
+        "params": [
+          {
+            "id": "index",
+            "type": "enum",
+            "options": [
+              "NDWI",
+              "MNDWI"
+            ],
+            "default": 0,
+            "label": "Water index"
+          },
+          {
+            "id": "green_band",
+            "type": "int",
+            "default": 2,
+            "min": 1,
+            "max": 20,
+            "label": "Green band (1-based)"
+          },
+          {
+            "id": "nir_band",
+            "type": "int",
+            "default": 4,
+            "min": 1,
+            "max": 20,
+            "label": "NIR band (NDWI only)"
+          },
+          {
+            "id": "swir_band",
+            "type": "int",
+            "default": 4,
+            "min": 1,
+            "max": 20,
+            "label": "SWIR band (MNDWI only)"
+          },
+          {
+            "id": "scl_band",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 20,
+            "label": "SCL cloud band (0=off)"
+          },
+          {
+            "id": "threshold",
+            "type": "float",
+            "default": 0.05,
+            "max": 1.0,
+            "label": "Threshold (>N = water)"
+          },
+          {
+            "id": "erode_px",
+            "type": "int",
+            "default": 2,
+            "min": 0,
+            "max": 20,
+            "label": "Erode mask (px, 0=off)"
+          }
+        ],
+        "resizable": true,
+        "min_width": 280,
+        "min_height": 180
       },
       {
         "type": "feat_ndwi",
@@ -20190,6 +24204,11 @@
         ],
         "params": [
           {
+            "id": "_sec_bands",
+            "type": "section",
+            "label": "Band Mapping"
+          },
+          {
             "id": "sensor",
             "type": "enum",
             "default": 0,
@@ -20236,6 +24255,11 @@
             "label": "SWIR band"
           },
           {
+            "id": "_sec_indices",
+            "type": "section",
+            "label": "Indices"
+          },
+          {
             "id": "ndvi",
             "type": "bool",
             "default": true,
@@ -20272,40 +24296,50 @@
             "label": "BSI (Bare Soil)"
           },
           {
+            "id": "_sec_custom",
+            "type": "section",
+            "label": "Custom Expressions"
+          },
+          {
             "id": "expr1_enable",
             "type": "bool",
             "default": false,
-            "label": "Enable custom expr 1"
+            "label": "Enable expr 1"
           },
           {
             "id": "expr1_label",
             "type": "string",
             "default": "custom1",
-            "label": "Custom 1 name"
+            "label": "Name"
           },
           {
             "id": "expr1",
             "type": "code",
             "default": "(B4 - B3) / (B4 + B3 + 1e-8)",
-            "label": "Expression 1  (B1…Bn, np, sqrt, log)"
+            "label": "Expression (B1…Bn, np, sqrt, log)"
           },
           {
             "id": "expr2_enable",
             "type": "bool",
             "default": false,
-            "label": "Enable custom expr 2"
+            "label": "Enable expr 2"
           },
           {
             "id": "expr2_label",
             "type": "string",
             "default": "custom2",
-            "label": "Custom 2 name"
+            "label": "Name"
           },
           {
             "id": "expr2",
             "type": "code",
             "default": "",
-            "label": "Expression 2"
+            "label": "Expression"
+          },
+          {
+            "id": "_sec_display",
+            "type": "section",
+            "label": "Display"
           },
           {
             "id": "colormap",
@@ -20370,6 +24404,11 @@
         ],
         "params": [
           {
+            "id": "_sec_features",
+            "label": "Features",
+            "type": "section"
+          },
+          {
             "id": "rvi",
             "type": "bool",
             "default": true,
@@ -20410,6 +24449,11 @@
             "type": "bool",
             "default": false,
             "label": "DPSVI (canopy density)"
+          },
+          {
+            "id": "_sec_output",
+            "label": "Output",
+            "type": "section"
           },
           {
             "id": "output_db",
@@ -20522,6 +24566,11 @@
         ],
         "params": [
           {
+            "id": "_sec_columns",
+            "label": "Column Mapping",
+            "type": "section"
+          },
+          {
             "id": "lat_col",
             "label": "Latitude column",
             "type": "string",
@@ -20540,6 +24589,11 @@
             "default": ""
           },
           {
+            "id": "_sec_aggregation",
+            "label": "Aggregation",
+            "type": "section"
+          },
+          {
             "id": "aggregation",
             "label": "Aggregation per pixel",
             "type": "enum",
@@ -20553,109 +24607,6 @@
         ],
         "resizable": true,
         "min_width": 260,
-        "min_height": 180
-      },
-      {
-        "type": "geo_water_mask",
-        "label": "Water Mask",
-        "category": "geo_analysis",
-        "icon": "Waves",
-        "description": "Compute a spectral water index (NDWI or MNDWI) from a multi-band raster, threshold to a binary water mask, and optionally erode edges. NDWI uses Green+NIR (no SWIR needed). MNDWI uses Green+SWIR (better in urban areas).",
-        "inputs": [
-          {
-            "id": "geotiff",
-            "color": "geotiff",
-            "label": "Multi-band raster"
-          }
-        ],
-        "outputs": [
-          {
-            "id": "mask",
-            "color": "mask",
-            "label": "Water mask (255=water)"
-          },
-          {
-            "id": "index_image",
-            "color": "image",
-            "label": "Index colormap"
-          },
-          {
-            "id": "water_pixels",
-            "color": "scalar",
-            "label": "Water pixel count"
-          },
-          {
-            "id": "water_pct",
-            "color": "scalar",
-            "label": "Water coverage %"
-          },
-          {
-            "id": "geotiff",
-            "color": "geotiff",
-            "label": "GeoTIFF pass-through"
-          }
-        ],
-        "params": [
-          {
-            "id": "index",
-            "type": "enum",
-            "options": [
-              "NDWI",
-              "MNDWI"
-            ],
-            "default": 0,
-            "label": "Water index"
-          },
-          {
-            "id": "green_band",
-            "type": "int",
-            "default": 2,
-            "min": 1,
-            "max": 20,
-            "label": "Green band (1-based)"
-          },
-          {
-            "id": "nir_band",
-            "type": "int",
-            "default": 4,
-            "min": 1,
-            "max": 20,
-            "label": "NIR band (NDWI only)"
-          },
-          {
-            "id": "swir_band",
-            "type": "int",
-            "default": 4,
-            "min": 1,
-            "max": 20,
-            "label": "SWIR band (MNDWI only)"
-          },
-          {
-            "id": "scl_band",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 20,
-            "label": "SCL cloud band (0=off)"
-          },
-          {
-            "id": "threshold",
-            "type": "float",
-            "default": 0.05,
-            "max": 1.0,
-            "label": "Threshold (>N = water)"
-          },
-          {
-            "id": "erode_px",
-            "type": "int",
-            "default": 2,
-            "min": 0,
-            "max": 20,
-            "label": "Erode mask (px, 0=off)"
-          }
-        ],
-        "resizable": true,
-        "min_width": 280,
         "min_height": 180
       },
       {
@@ -21315,13 +25266,18 @@
             "id": "class_merge",
             "type": "string",
             "default": "",
-            "label": "Class merge before training (e.g. \"90=95\" merges Wetland into Mangroves)"
+            "label": "Class merge (e.g. \"90=95\" merges Wetland into Mangroves)"
           },
           {
             "id": "class_max_samples",
             "type": "string",
             "default": "",
-            "label": "Per-class sample override (e.g. \"95=15000,60=8000\"; falls back to max_samples_per_class)"
+            "label": "Per-class sample override (e.g. \"95=15000,60=8000\")"
+          },
+          {
+            "id": "_sec_model",
+            "type": "section",
+            "label": "Model"
           },
           {
             "id": "n_estimators",
@@ -21372,6 +25328,11 @@
             "min": 10,
             "max": 500,
             "label": "Spatial block size (pixels) — for spatial split only"
+          },
+          {
+            "id": "_sec_info",
+            "type": "section",
+            "label": "Info"
           },
           {
             "id": "node_note",
@@ -21867,6 +25828,11 @@
             "label": "Band index to process (0 = first band)"
           },
           {
+            "id": "_sec_glcm_config",
+            "label": "GLCM Config",
+            "type": "section"
+          },
+          {
             "id": "window_size",
             "type": "int",
             "default": 9,
@@ -21897,6 +25863,11 @@
             "label": "GLCM distances (comma-sep ints)"
           },
           {
+            "id": "_sec_features",
+            "label": "Features",
+            "type": "section"
+          },
+          {
             "id": "contrast",
             "type": "bool",
             "default": true,
@@ -21925,6 +25896,11 @@
             "type": "bool",
             "default": false,
             "label": "Dissimilarity"
+          },
+          {
+            "id": "_sec_output",
+            "label": "Output",
+            "type": "section"
           },
           {
             "id": "band_suffix",
@@ -22070,6 +26046,11 @@
             "default": "prediction"
           },
           {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
+          },
+          {
             "id": "colormap",
             "label": "Colormap",
             "type": "enum",
@@ -22091,6 +26072,11 @@
             "label": "Class 1 legend",
             "type": "string",
             "default": "Class 1"
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           },
           {
             "id": "file_path",
@@ -22141,10 +26127,20 @@
         ],
         "params": [
           {
+            "id": "_sec_scl",
+            "label": "SCL Filter",
+            "type": "section"
+          },
+          {
             "id": "scl_exclude",
             "type": "string",
             "default": "0,1,2,3,8,9,10,11",
             "label": "SCL classes to exclude (comma-sep)"
+          },
+          {
+            "id": "_sec_ndvi",
+            "label": "NDVI Filter",
+            "type": "section"
           },
           {
             "id": "ndvi_band",
@@ -22158,6 +26154,11 @@
             "default": 0.0,
             "max": 1.0,
             "label": "NDVI floor (pixels below = invalid, 0 = disabled)"
+          },
+          {
+            "id": "_sec_post",
+            "label": "Post Processing",
+            "type": "section"
           },
           {
             "id": "dilate_px",
@@ -22531,6 +26532,11 @@
         ],
         "params": [
           {
+            "id": "_sec_mapping",
+            "label": "Class Mapping",
+            "type": "section"
+          },
+          {
             "id": "pred_mapping",
             "type": "string",
             "label": "Predicted map class → common (e.g. 95=5,80=2,…)"
@@ -22544,6 +26550,11 @@
             "id": "common_labels",
             "type": "string",
             "label": "Common class labels (e.g. 5=Mangrove,2=Water,…)"
+          },
+          {
+            "id": "_sec_export",
+            "label": "Export",
+            "type": "section"
           },
           {
             "id": "dpi",
@@ -22772,6 +26783,11 @@
         ],
         "params": [
           {
+            "id": "_sec_source",
+            "label": "Source",
+            "type": "section"
+          },
+          {
             "id": "file_path",
             "type": "string",
             "default": "",
@@ -22782,6 +26798,11 @@
             "type": "string",
             "default": "",
             "label": "Layer name (GeoPackage, blank = first)"
+          },
+          {
+            "id": "_sec_rasterization",
+            "label": "Rasterization",
+            "type": "section"
           },
           {
             "id": "burn_field",
@@ -23141,6 +27162,11 @@
             "max": 15
           },
           {
+            "id": "_sec_boundary",
+            "label": "Boundary",
+            "type": "section"
+          },
+          {
             "id": "boundary_thresh",
             "label": "Boundary Threshold",
             "type": "int",
@@ -23157,6 +27183,11 @@
             "max": 21
           },
           {
+            "id": "_sec_opaques",
+            "label": "Opaques",
+            "type": "section"
+          },
+          {
             "id": "opaque_thresh",
             "label": "Opaque Darkness",
             "type": "int",
@@ -23171,6 +27202,11 @@
             "default": 300,
             "min": 50,
             "max": 20000
+          },
+          {
+            "id": "_sec_grains",
+            "label": "Grains",
+            "type": "section"
           },
           {
             "id": "min_grain_px",
@@ -23353,12 +27389,22 @@
         ],
         "params": [
           {
+            "id": "_sec_filter",
+            "label": "Filter",
+            "type": "section"
+          },
+          {
             "id": "min_area",
             "label": "Min Area (px)",
             "type": "int",
             "default": 100,
             "min": 1,
             "max": 100000
+          },
+          {
+            "id": "_sec_histogram",
+            "label": "Histogram",
+            "type": "section"
           },
           {
             "id": "hist_bins",
@@ -23373,6 +27419,11 @@
             "label": "Bar Color",
             "type": "color",
             "default": "#4FC3F7"
+          },
+          {
+            "id": "_sec_calibration",
+            "label": "Calibration",
+            "type": "section"
           },
           {
             "id": "um_per_px",
@@ -23510,104 +27561,124 @@
             "default": true
           },
           {
+            "id": "_sec_c1",
+            "label": "Phase 1",
+            "type": "section"
+          },
+          {
             "id": "c1_active",
-            "label": "Phase 1 Active",
+            "label": "Active",
             "type": "boolean",
             "default": true
           },
           {
             "id": "c1_label",
-            "label": "Phase 1 Label",
+            "label": "Label",
             "type": "string",
             "default": "Phase 1"
           },
           {
             "id": "c1_color",
-            "label": "Phase 1 Color",
+            "label": "Color",
             "type": "color",
             "default": "#FF00FF"
           },
           {
             "id": "c1_tol",
-            "label": "Phase 1 Tol.",
+            "label": "Tolerance",
             "type": "int",
             "default": 30,
             "min": 1,
             "max": 200
           },
           {
+            "id": "_sec_c2",
+            "label": "Phase 2",
+            "type": "section"
+          },
+          {
             "id": "c2_active",
-            "label": "Phase 2 Active",
+            "label": "Active",
             "type": "boolean",
             "default": true
           },
           {
             "id": "c2_label",
-            "label": "Phase 2 Label",
+            "label": "Label",
             "type": "string",
             "default": "Phase 2"
           },
           {
             "id": "c2_color",
-            "label": "Phase 2 Color",
+            "label": "Color",
             "type": "color",
             "default": "#00FFFF"
           },
           {
             "id": "c2_tol",
-            "label": "Phase 2 Tol.",
+            "label": "Tolerance",
             "type": "int",
             "default": 30,
             "min": 1,
             "max": 200
           },
           {
+            "id": "_sec_c3",
+            "label": "Phase 3",
+            "type": "section"
+          },
+          {
             "id": "c3_active",
-            "label": "Phase 3 Active",
+            "label": "Active",
             "type": "boolean",
             "default": false
           },
           {
             "id": "c3_label",
-            "label": "Phase 3 Label",
+            "label": "Label",
             "type": "string",
             "default": "Phase 3"
           },
           {
             "id": "c3_color",
-            "label": "Phase 3 Color",
+            "label": "Color",
             "type": "color",
             "default": "#FFFF00"
           },
           {
             "id": "c3_tol",
-            "label": "Phase 3 Tol.",
+            "label": "Tolerance",
             "type": "int",
             "default": 30,
             "min": 1,
             "max": 200
           },
           {
+            "id": "_sec_c4",
+            "label": "Phase 4",
+            "type": "section"
+          },
+          {
             "id": "c4_active",
-            "label": "Phase 4 Active",
+            "label": "Active",
             "type": "boolean",
             "default": false
           },
           {
             "id": "c4_label",
-            "label": "Phase 4 Label",
+            "label": "Label",
             "type": "string",
             "default": "Phase 4"
           },
           {
             "id": "c4_color",
-            "label": "Phase 4 Color",
+            "label": "Color",
             "type": "color",
             "default": "#00FF00"
           },
           {
             "id": "c4_tol",
-            "label": "Phase 4 Tol.",
+            "label": "Tolerance",
             "type": "int",
             "default": 30,
             "min": 1,
@@ -23687,6 +27758,11 @@
         ],
         "params": [
           {
+            "id": "_sec_detection",
+            "label": "Detection",
+            "type": "section"
+          },
+          {
             "id": "blur_radius",
             "label": "Blur Radius",
             "type": "int",
@@ -23717,6 +27793,11 @@
             "default": 300,
             "min": 50,
             "max": 50000
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "overlay_color",
@@ -23788,6 +27869,11 @@
         ],
         "params": [
           {
+            "id": "_sec_sample",
+            "label": "Sample Info",
+            "type": "section"
+          },
+          {
             "id": "sample_name",
             "label": "Sample Name",
             "type": "string",
@@ -23804,6 +27890,11 @@
             "label": "Formation",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_provenance",
+            "label": "Provenance",
+            "type": "section"
           },
           {
             "id": "analyst",
@@ -23897,6 +27988,11 @@
         ],
         "params": [
           {
+            "id": "_sec_metadata",
+            "label": "Sample Info",
+            "type": "section"
+          },
+          {
             "id": "sample_name",
             "label": "Sample Name",
             "type": "string",
@@ -23931,6 +28027,11 @@
             "label": "Age / Period",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "accent_color",
@@ -24410,70 +28511,6 @@
             "label": "Legend (type→count)"
           }
         ],
-        "params": [
-          {
-            "id": "opacity",
-            "label": "Overlay Opacity (%)",
-            "type": "number",
-            "default": 55,
-            "min": 0,
-            "max": 100,
-            "step": 5
-          },
-          {
-            "id": "outline",
-            "label": "Outline Thickness",
-            "type": "int",
-            "default": 2,
-            "min": 0,
-            "max": 8
-          },
-          {
-            "id": "show_ids",
-            "label": "Show Stone IDs",
-            "type": "bool",
-            "default": true
-          },
-          {
-            "id": "show_legend",
-            "label": "Show Legend",
-            "type": "bool",
-            "default": true
-          },
-          {
-            "id": "font_scale",
-            "label": "Font Scale",
-            "type": "float",
-            "default": 0.45,
-            "min": 0.2,
-            "max": 2.0,
-            "step": 0.05
-          },
-          {
-            "id": "bg_gray",
-            "label": "Diagram BG (gray 0-255)",
-            "type": "int",
-            "default": 245,
-            "min": 0,
-            "max": 255
-          },
-          {
-            "id": "class_filter",
-            "label": "Show Only Class (empty = all)",
-            "type": "string",
-            "default": ""
-          },
-          {
-            "id": "others_mode",
-            "label": "Other Classes",
-            "type": "enum",
-            "options": [
-              "Hide",
-              "Grey"
-            ],
-            "default": 1
-          }
-        ],
         "colorable": true,
         "resizable": true
       },
@@ -24525,6 +28562,11 @@
             "default": false
           },
           {
+            "id": "_sec_model",
+            "label": "Model Config",
+            "type": "section"
+          },
+          {
             "id": "class_names",
             "label": "Class Names (comma-sep, 5)",
             "type": "string"
@@ -24534,6 +28576,11 @@
             "label": "Weights Path (empty = auto-download)",
             "type": "string",
             "default": ""
+          },
+          {
+            "id": "_sec_detection",
+            "label": "Detection",
+            "type": "section"
           },
           {
             "id": "min_crop",
@@ -24550,6 +28597,11 @@
             "default": 4,
             "min": 0,
             "max": 64
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "show_labels",
@@ -25219,6 +29271,80 @@
     ]
   },
   {
+    "id": "analysis",
+    "label": "Analysis",
+    "nodes": [
+      {
+        "type": "classif_loader",
+        "label": "Classification Loader",
+        "category": "analysis",
+        "icon": "Database",
+        "description": "Load a saved .cls.json file produced by the DINOv2 Classifier and replay it. Drop-in replacement for DINOv2 once classification is done — feeds Stone Calepinage, reports, CSV export, etc. without rerunning the model.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image (for overlay)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Overlay"
+          },
+          {
+            "id": "labels_list",
+            "color": "list",
+            "label": "Labels List"
+          },
+          {
+            "id": "classes",
+            "color": "dict",
+            "label": "Classes {type:[ids]}"
+          },
+          {
+            "id": "summary",
+            "color": "dict",
+            "label": "Summary (per-class)"
+          },
+          {
+            "id": "count",
+            "color": "scalar",
+            "label": "Count"
+          }
+        ],
+        "params": [
+          {
+            "id": "load_path",
+            "label": "File (.cls.json)",
+            "type": "file_open",
+            "default": "~/VNStudio/exports/classification.cls.json",
+            "filters": []
+          },
+          {
+            "id": "reload",
+            "label": "Reload",
+            "type": "trigger",
+            "default": false
+          },
+          {
+            "id": "label_mode",
+            "label": "Label Mode",
+            "type": "enum",
+            "options": [
+              "Label + Score",
+              "Label",
+              "None"
+            ],
+            "default": 0
+          }
+        ],
+        "colorable": true
+      }
+    ]
+  },
+  {
     "id": "ai",
     "label": "AI & LLM",
     "nodes": [
@@ -25270,6 +29396,11 @@
             "default": false
           },
           {
+            "id": "_sec_model",
+            "label": "Model Config",
+            "type": "section"
+          },
+          {
             "id": "provider",
             "label": "Provider",
             "type": "enum",
@@ -25294,6 +29425,11 @@
             "default": ""
           },
           {
+            "id": "_sec_prompt",
+            "label": "Prompt",
+            "type": "section"
+          },
+          {
             "id": "system_prompt",
             "label": "System Prompt",
             "type": "string",
@@ -25316,6 +29452,11 @@
             "label": "Thinking (Ollama)",
             "type": "bool",
             "default": false
+          },
+          {
+            "id": "_sec_inference",
+            "label": "Inference",
+            "type": "section"
           },
           {
             "id": "temperature",
@@ -25379,6 +29520,11 @@
             "id": "count",
             "color": "scalar",
             "label": "Count"
+          },
+          {
+            "id": "scores",
+            "color": "list",
+            "label": "Confidence Scores"
           }
         ],
         "params": [
@@ -25389,10 +29535,10 @@
             "default": ""
           },
           {
-            "id": "detect",
-            "label": "Detect",
-            "type": "trigger",
-            "default": false
+            "id": "model",
+            "label": "Model",
+            "type": "enum",
+            "default": 0
           },
           {
             "id": "text_prompt",
@@ -25401,10 +29547,15 @@
             "default": "stone"
           },
           {
-            "id": "model",
-            "label": "Model",
-            "type": "enum",
-            "default": 0
+            "id": "detect",
+            "label": "Detect",
+            "type": "trigger",
+            "default": false
+          },
+          {
+            "id": "_sec_detection",
+            "label": "Detection",
+            "type": "section"
           },
           {
             "id": "tile_mode",
@@ -25450,7 +29601,7 @@
           },
           {
             "id": "min_area",
-            "label": "Min Area (% of image)",
+            "label": "Min Area (% image)",
             "type": "float",
             "default": 0.0,
             "min": 0.0,
@@ -25459,12 +29610,25 @@
           },
           {
             "id": "max_area",
-            "label": "Max Area (% of image)",
+            "label": "Max Area (% image)",
             "type": "float",
             "default": 50.0,
             "min": 1.0,
             "max": 100.0,
             "step": 1.0
+          },
+          {
+            "id": "max_boxes",
+            "label": "Max Boxes (0=all)",
+            "type": "int",
+            "default": 0,
+            "min": 0,
+            "max": 1000
+          },
+          {
+            "id": "_sec_display",
+            "label": "Display",
+            "type": "section"
           },
           {
             "id": "label_mode",
@@ -25487,14 +29651,6 @@
               "Center"
             ],
             "default": 0
-          },
-          {
-            "id": "max_boxes",
-            "label": "Max Boxes (0=all)",
-            "type": "int",
-            "default": 0,
-            "min": 0,
-            "max": 1000
           }
         ],
         "colorable": true
@@ -25711,6 +29867,118 @@
         ],
         "colorable": true,
         "resizable": true
+      }
+    ]
+  },
+  {
+    "id": "ml",
+    "label": "Ml",
+    "nodes": [
+      {
+        "type": "cv_clip",
+        "label": "CLIP Embeddings",
+        "category": "ml",
+        "icon": "Search",
+        "description": "OpenAI CLIP (ViT): encode images and text in a shared embedding space. Zero-shot classification: text labels port or comma-separated param → best label + score. Embedding output: use for semantic similarity, retrieval, or clustering with other nodes.",
+        "inputs": [
+          {
+            "id": "image",
+            "color": "image",
+            "label": "Image"
+          },
+          {
+            "id": "labels_list",
+            "color": "list",
+            "label": "Text labels (list)"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "label",
+            "color": "string",
+            "label": "Best label"
+          },
+          {
+            "id": "score",
+            "color": "scalar",
+            "label": "Confidence"
+          },
+          {
+            "id": "scores",
+            "color": "list",
+            "label": "All scores [{label, score}]"
+          },
+          {
+            "id": "embedding",
+            "color": "any",
+            "label": "Image embedding (vector)"
+          },
+          {
+            "id": "overlay",
+            "color": "image",
+            "label": "Image + top-K overlay"
+          }
+        ],
+        "params": [
+          {
+            "id": "_sec_model",
+            "label": "Model Config",
+            "type": "section"
+          },
+          {
+            "id": "hf_token",
+            "label": "HuggingFace Token",
+            "type": "string",
+            "default": ""
+          },
+          {
+            "id": "model",
+            "label": "Model",
+            "type": "enum",
+            "default": 0
+          },
+          {
+            "id": "download",
+            "label": "Download Model",
+            "type": "trigger",
+            "default": false
+          },
+          {
+            "id": "_sec_inference",
+            "label": "Inference",
+            "type": "section"
+          },
+          {
+            "id": "text_labels",
+            "label": "Labels (comma-separated)",
+            "type": "string",
+            "default": "cat, dog, bird, car, building, water, forest, road"
+          },
+          {
+            "id": "normalize",
+            "label": "Normalize embedding",
+            "type": "bool",
+            "default": true
+          },
+          {
+            "id": "top_k",
+            "label": "Top-K in overlay",
+            "type": "int",
+            "min": 1,
+            "max": 10,
+            "default": 3
+          },
+          {
+            "id": "temperature",
+            "label": "Softmax temperature",
+            "type": "float",
+            "min": 1.0,
+            "max": 200.0,
+            "step": 5.0,
+            "default": 100.0
+          }
+        ],
+        "colorable": true
       }
     ]
   }
