@@ -15,7 +15,8 @@
 
 $ErrorActionPreference = "Stop"
 
-$ROOT = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+# $PSScriptRoot is <repo>/scripts, so one parent reaches the repo root.
+$ROOT = Split-Path -Parent $PSScriptRoot
 $PYVER = "3.12"
 $RES = "$ROOT\src-tauri\resources"
 $PYDEST = "$RES\pyengine"
