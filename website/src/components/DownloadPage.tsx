@@ -2,14 +2,19 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Download, Github, ExternalLink, Apple, Monitor } from 'lucide-react';
 
+// Release version that the direct-download asset filenames are pinned to.
+// Bump this single constant when publishing a new release.
+const VERSION = '0.1.0';
+const ASSET_BASE = `https://github.com/Nikos-Unilasalle/VisionNodes/releases/download/v${VERSION}`;
+
 const PLATFORMS = [
   {
     id: 'mac',
     label: 'macOS',
-    sub: 'Apple Silicon & Intel',
+    sub: 'Apple Silicon (M1–M4)',
     icon: <Apple size={28} strokeWidth={1.5} />,
     accent: '#1a1917',
-    href: 'https://github.com/Nikos-Unilasalle/VisionNodes/releases/latest',
+    href: `${ASSET_BASE}/VNStudio_${VERSION}_aarch64.dmg`,
     badge: '',
   },
   {
@@ -18,13 +23,13 @@ const PLATFORMS = [
     sub: 'Windows 10 / 11',
     icon: <Monitor size={28} strokeWidth={1.5} />,
     accent: '#60a5fa',
-    href: 'https://github.com/Nikos-Unilasalle/VisionNodes/releases/latest',
+    href: `${ASSET_BASE}/VNStudio_${VERSION}_x64-setup.exe`,
     badge: '',
   },
   {
     id: 'linux',
     label: 'Linux',
-    sub: 'Ubuntu 22.04+, Debian',
+    sub: 'Ubuntu 22.04+, Debian (.deb)',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
@@ -32,7 +37,7 @@ const PLATFORMS = [
       </svg>
     ),
     accent: '#f87171',
-    href: 'https://github.com/Nikos-Unilasalle/VisionNodes/releases/latest',
+    href: `${ASSET_BASE}/VNStudio_${VERSION}_amd64.deb`,
     badge: '',
   },
 ];
