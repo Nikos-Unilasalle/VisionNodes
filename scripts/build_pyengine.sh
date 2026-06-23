@@ -58,8 +58,25 @@ if [ "$(uname -s)" = "Linux" ]; then
     torch torchvision --python "$PY"
 fi
 
-echo "▶ Installing dependencies (this is the slow part — sam2/rasterio…)…"
-uv pip install --break-system-packages -r "$ROOT/engine/requirements.txt" --python "$PY"
+# Build-backend deps for compiling sdists without isolation (sam2 below).
+uv pip install --break-system-packages setuptools wheel --python "$PY"
+
+# SAM-2 is a git sdist whose build imports torch. Under pip's default build
+# isolation the build env has no torch, so it re-downloads torch (~GBs) and
+# usually fails/times out. Install everything *except* sam2 first, then sam2
+# with --no-build-isolation so it reuses the torch we just installed.
+SAM2_REQ="$(grep -i '^SAM-2' "$ROOT/engine/requirements.txt" || true)"
+REQ_TMP="$(mktemp)"
+grep -v -i '^SAM-2' "$ROOT/engine/requirements.txt" > "$REQ_TMP"
+
+echo "▶ Installing dependencies (slow part — torch/rasterio/mediapipe…)…"
+uv pip install --break-system-packages -r "$REQ_TMP" --python "$PY"
+
+if [ -n "$SAM2_REQ" ]; then
+  echo "▶ Installing SAM-2 (--no-build-isolation, reuses installed torch)…"
+  uv pip install --break-system-packages --no-build-isolation "$SAM2_REQ" --python "$PY"
+fi
+rm -f "$REQ_TMP"
 
 # ── 3. Copy engine source into resources (self-contained, no caches/tests) ──
 echo "▶ Copying engine source → $ENGDEST"

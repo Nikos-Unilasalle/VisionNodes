@@ -54,10 +54,26 @@ if (-not (Test-Path $PY)) {
 }
 
 # ── 2. Install engine dependencies into the bundled interpreter ──
-Write-Host "▶ Installing dependencies (this is the slow part — torch/sam2/rasterio)…"
 & $PY -m ensurepip --upgrade 2> $null
-& $PY -m pip install --upgrade pip
-& $PY -m pip install -r "$ROOT\engine\requirements.txt"
+& $PY -m pip install --break-system-packages --upgrade pip setuptools wheel
+
+# SAM-2 is a git sdist whose build imports torch. Under pip's default build
+# isolation the build env has no torch, so it re-downloads torch (~GBs) and
+# usually fails. Install everything *except* sam2 first, then sam2 with
+# --no-build-isolation so it reuses the torch just installed.
+$reqLines = Get-Content "$ROOT\engine\requirements.txt"
+$sam2 = ($reqLines | Where-Object { $_ -match '^(?i)SAM-2' } | Select-Object -First 1)
+$reqNoSam2 = Join-Path $env:TEMP "vn_reqs_no_sam2.txt"
+$reqLines | Where-Object { $_ -notmatch '^(?i)SAM-2' } | Set-Content $reqNoSam2
+
+Write-Host "▶ Installing dependencies (slow part — torch/rasterio…)…"
+& $PY -m pip install --break-system-packages -r $reqNoSam2
+
+if ($sam2) {
+  Write-Host "▶ Installing SAM-2 (--no-build-isolation, reuses installed torch)…"
+  & $PY -m pip install --break-system-packages --no-build-isolation $sam2
+}
+Remove-Item $reqNoSam2 -ErrorAction SilentlyContinue
 
 # ── 3. Copy engine source into resources (self-contained, no caches/tests) ──
 Write-Host "▶ Copying engine source → $ENGDEST"
