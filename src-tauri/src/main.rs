@@ -13,6 +13,14 @@ enum ChildProcess {
 struct EngineProcess(Mutex<Option<ChildProcess>>);
 
 fn main() {
+    // On Linux/Wayland, WebKitGTK's DMABUF renderer often yields a blank white
+    // window. Disable it before the webview is created. (`npm run studio` sets
+    // the same flag for dev; this covers packaged AppImage/deb builds.)
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())

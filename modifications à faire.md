@@ -15,8 +15,8 @@ Le système actuel de `pip install` à la volée doit évoluer pour la productio
 - [ ] **Division Core / Plugins** : 
     - **Core** (à empaqueter d'office) : `numpy`, `opencv-python`, `pillow`, `scipy`.
     - **Dynamique** (à charger à la volée) : `mediapipe`, `librosa`, `torch`.
-- [ ] **Dossier de Librairies Utilisateur** : Modifier le système de vérification des dépendances pour qu'il installe les nouveaux modules dans un dossier autorisé en écriture (ex: `~/Library/Application Support/VisionNodes/libs` ou `%AppData%/VisionNodes/libs`) plutôt que dans le dossier d'installation de l'app.
-- [ ] **Isolation du sys.path** : Ajouter ce dossier utilisateur au `sys.path` au démarrage du moteur.
+- [x] **Dossier de Librairies Utilisateur** : `ensure_packages` détecte un site-packages read-only (build empaqueté) et installe via `pip --user --break-system-packages` dans `~/.vnstudio` (`PYTHONUSERBASE`). En dev (`.venv`), comportement inchangé. — *registry.py*
+- [x] **Isolation du sys.path** : `setup_user_overlay()` ajoute le user-site `~/.vnstudio/...` au `sys.path` au démarrage + `importlib.invalidate_caches()` après install → import sans redémarrage. — *registry.py*
 
 ## 3. Intégration Tauri
 - [ ] **Resource Bundling** : Configurer `tauri.conf.json` pour inclure le binaire Python et les dossiers de plugins dans les `resources`.
@@ -30,3 +30,5 @@ Le système actuel de `pip install` à la volée doit évoluer pour la productio
 - **Windows** : S'assurer que les runtimes Visual C++ sont inclus ou installés via le `.msi`.
 - **macOS** : Gérer les architectures Intel (x64) et Apple Silicon (arm64) séparément ou via un binaire "Universal".
 - **Linux** : Utiliser le format `AppImage` pour éviter les conflits de librairies système (`libstdc++`, etc.).
+    - [x] Release force `WEBKIT_DISABLE_DMABUF_RENDERER=1` (évite l'écran blanc Wayland). — *main.rs*
+    - [x] Mécanique bundler validée sous Linux : `uv` fournit un CPython relocatable, `pip` embarqué, round-trip overlay `--user` OK. — *BUILD.md*
