@@ -1,6 +1,0 @@
-seed 423:
-  log(log(add(add(X9, X4), div(mul(inv(div(X2, X9)), mul(mul(inv(X1), div(X9, X2)), inv(div(X2, X13)))), sqrt(div(pow2(log(X12)), inv(inv(X1))))))))
-
-seed 424:
-  sub(add(X3, X12), X13)
-
