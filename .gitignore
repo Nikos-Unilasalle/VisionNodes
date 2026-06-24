@@ -94,3 +94,20 @@ exports/
 
 # Book exercise archives (too large for GitHub)
 docs/Fondamentaux de la vision par ordinateur/Exercices/*.zip
+
+# Private or unnecessary files removed for public release
+agents/
+docs/
+litterature/
+paper/
+rules/
+skills/
+AGENTS.md
+CLAUDE.md
+ECC_CLAUDE.md
+ECC_README.md
+RULES.md
+article_blog.md
+article_blog_vnstudio.md
+ecc_dashboard.py
+modifications à faire.md
