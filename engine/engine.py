@@ -99,7 +99,10 @@ def load_plugins():
         ]
 
     for plugin_dir in plugin_dirs:
-        os.makedirs(plugin_dir, exist_ok=True)
+        # Read-only bundle dirs (e.g. /usr/lib/VNStudio installed by the .deb)
+        # are root-owned: never try to create them, just skip if absent.
+        if not os.path.isdir(plugin_dir):
+            continue
         for file in glob.glob(os.path.join(plugin_dir, "*.py")):
             if os.path.basename(file) == "__init__.py": continue
             module_name = f"plugins.{os.path.basename(file)[:-3]}"
