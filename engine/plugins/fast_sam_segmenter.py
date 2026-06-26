@@ -22,7 +22,7 @@ _IMGSZ_OPTIONS = [512, 640, 1024, 1280]
 
 @vision_node(
     type_id='fast_sam_segmenter',
-    label='AI Segmenter',
+    label='FastSAM Grain Segmentation',
     category='segmentation',
     icon='Zap',
     description=(
