@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Download, Github, ExternalLink, Apple, Monitor } from 'lucide-react';
+import { Download, Github, ExternalLink, Apple, Monitor, ImageIcon } from 'lucide-react';
 
 // Release version that the direct-download asset filenames are pinned to.
 // Bump this single constant when publishing a new release.
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const ASSET_BASE = `https://github.com/Nikos-Unilasalle/VisionNodes/releases/download/v${VERSION}`;
 
 const PLATFORMS = [
@@ -122,6 +122,30 @@ xattr -cr /Applications/VNStudio.app
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Sample images */}
+        <div className="vn-card-flat p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-5">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[var(--accent)]/10 text-[var(--accent)]">
+              <ImageIcon size={20} strokeWidth={1.5} />
+            </div>
+            <div>
+              <h3 className="text-[18px] text-[var(--text-main)] mb-1">Demo Images</h3>
+              <p className="text-[14px] text-[var(--text-dim)]">
+                Sample images used in the built-in templates — rocks, blood cells, roots, portraits and more.
+                Drop them in your <code className="text-[var(--text-main)] bg-[var(--bg-alt)] px-1.5 py-0.5 rounded text-[12px]">samples/</code> folder next to the app.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`${ASSET_BASE}/samples.zip`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary shrink-0"
+          >
+            <Download size={15} /> samples.zip
+          </a>
         </div>
 
         {/* Source */}
