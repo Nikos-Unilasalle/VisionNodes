@@ -1,5 +1,10 @@
 [
   {
+    "name": "Monte-Carlo Probabilistic Water Mask",
+    "description": "Per-pixel calibrated water probability by Monte-Carlo uncertainty propagation — built entirely from generic nodes. Sentinel-2 L2 surface reflectance → DN normalize → Raster Gaussian Noise (stochastic sensor perturbation, with a Start/Stop button) → four water indices (NDWI, MNDWI, AWEInsh, AWEIsh) → equal-weight k=2-of-4 consensus vote → repeated ticks accumulate into a probability map (Frame Accumulator mean) and an uncertainty map (std). Optional reference branch computes Precision/Recall/F1/IoU. Set the GeoTIFF path and band mapping in the inspector, let it run ~60 ticks, then press Stop to freeze the converged probability.",
+    "file": "mc_water_mask.vn"
+  },
+  {
     "name": "RANSAC Homography — Robust Geometric Alignment",
     "description": "Estimates a robust homography between two views of the same scene using SIFT keypoints + Brute-Force matching + RANSAC geometric verification. A Python node synthetically rotates the source image 20° to create a second view for self-contained testing. Outputs: inlier match overlay, warped image (img1 aligned to img2's frame), and the 3×3 H matrix. Replace sources with real scene photos for outlier filtering in action.",
     "file": "ransac_homography.vn"
