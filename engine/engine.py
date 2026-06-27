@@ -271,6 +271,9 @@ REALTIME_NODE_TYPES = {
     'logic_collect',
     # Stateful simulation nodes — must loop continuously
     'gen_gray_scott', 'gen_feedback',
+    # Stochastic nodes — must redraw every tick (never cached) so repeated ticks
+    # form a Monte-Carlo ensemble downstream (e.g. uncertainty propagation).
+    'geo_raster_noise',
 }
 
 
