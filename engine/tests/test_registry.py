@@ -88,3 +88,15 @@ def test_topo_ignores_invalid_edges():
     order = topological_sort(nodes, edges)
     assert set(order) == {'a', 'b'}
     assert order.index('a') < order.index('b')
+
+
+def test_ensure_packages_nested_package():
+    @vision_node(type_id='_test_ep', label='Test EP')
+    class _TestEPNode(NodeProcessor):
+        def process(self, inputs, params): return {}
+
+    node = _TestEPNode()
+    # It should not crash on nested module checks, and return False since it's not installed.
+    res = node.ensure_packages(['nonexistent_module.submodule'], pip_names=['nonexistent-module'])
+    assert res is False
+

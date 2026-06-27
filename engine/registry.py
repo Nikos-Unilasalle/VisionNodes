@@ -332,7 +332,10 @@ class NodeProcessor(ABC):
         # 1. Quick check if everything is already there
         missing_indices = []
         for i, pkg in enumerate(packages):
-            if importlib.util.find_spec(pkg) is None:
+            try:
+                if importlib.util.find_spec(pkg) is None:
+                    missing_indices.append(i)
+            except ModuleNotFoundError:
                 missing_indices.append(i)
         
         if not missing_indices:
