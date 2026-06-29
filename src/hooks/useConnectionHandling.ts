@@ -58,7 +58,7 @@ export function useConnectionHandling({
     // Check if node is dynamic via schema flags or known types
     const isDynamic = !!targetSchema?.dynamic_inputs ||
                      !!targetSchema?.dynamic_outputs ||
-                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python'].includes(targetNode?.type || '');
+                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python', 'plotter_pro', 'sci_plotter', 'ml_best_params'].includes(targetNode?.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
@@ -84,6 +84,12 @@ export function useConnectionHandling({
       if (isFactory || isOccupied) {
         const sh = params.sourceHandle;
         const color = sh.split('__')[0] || 'any';
+
+        // Cap dynamic ports at 5 for Plotter Pro
+        if (targetNode!.type === 'plotter_pro' && isFactory
+            && ((targetNode!.data as any)?.ports?.length ?? 0) >= 5) {
+          return;
+        }
 
         if (targetNode!.type === 'logic_python') {
           // Auto-typed, letter-named input ports (a, b, c…) → engine maps th=letter → script var.

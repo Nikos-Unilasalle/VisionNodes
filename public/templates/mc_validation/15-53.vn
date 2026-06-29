@@ -8,7 +8,7 @@
         "y": 0
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "Blue Band — 492 nm",
         "params": {
@@ -30,7 +30,7 @@
         "y": 180
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "Green Band — 559 nm",
         "params": {
@@ -51,7 +51,7 @@
         "y": 360
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "Red Band — 665 nm",
         "params": {
@@ -72,7 +72,7 @@
         "y": 540
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "NIR Band — 833 nm",
         "params": {
@@ -93,7 +93,7 @@
         "y": 720
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "SWIR1 Band — 1610 nm",
         "params": {
@@ -114,7 +114,7 @@
         "y": 900
       },
       "width": 208,
-      "height": 180,
+      "height": 184,
       "data": {
         "userLabel": "SWIR2 Band — 2186 nm",
         "params": {
@@ -229,7 +229,7 @@
           "clip_negative": false,
           "seed": 42,
           "node_note": "Stochastic — redraws each tick. Drives Monte-Carlo ensemble. ACOLITE Rrs may be slightly negative on dark water — keep clip_negative=false.",
-          "max_ticks": 100,
+          "max_ticks": 210,
           "reset": 0,
           "toggle_run": 0,
           "color_index": 0
@@ -417,7 +417,7 @@
           "window": 64,
           "reset": 0,
           "cumulative": true,
-          "target_n": 100,
+          "target_n": 200,
           "color_index": 1
         }
       },
@@ -492,7 +492,7 @@
         "y": 240
       },
       "style": {
-        "width": 200,
+        "width": 180,
         "height": 380
       },
       "data": {
@@ -501,7 +501,7 @@
           "color_index": 4
         }
       },
-      "width": 200,
+      "width": 180,
       "height": 380,
       "selected": false,
       "positionAbsolute": {
@@ -527,7 +527,7 @@
           "window": 64,
           "reset": 0,
           "cumulative": true,
-          "target_n": 100,
+          "target_n": 200,
           "color_index": 3
         }
       },
@@ -901,8 +901,8 @@
       "id": "node-1782709706825-skjz7dzln",
       "type": "data_inspector",
       "position": {
-        "x": 1060,
-        "y": 1520
+        "x": 2460,
+        "y": 1400
       },
       "style": {
         "width": 280,
@@ -920,8 +920,8 @@
       "height": 380,
       "selected": false,
       "positionAbsolute": {
-        "x": 1060,
-        "y": 1520
+        "x": 2460,
+        "y": 1400
       },
       "dragging": false,
       "resizing": false
@@ -1428,7 +1428,7 @@
           "title": "Scoring",
           "collapsed": true,
           "savedHeight": 640,
-          "color_index": 3
+          "color_index": 1
         }
       },
       "width": 1360,
@@ -1440,6 +1440,255 @@
       },
       "dragging": false,
       "resizing": false
+    },
+    {
+      "id": "node-1782758492166-xll1a6urc",
+      "type": "sci_plotter",
+      "position": {
+        "x": 4080,
+        "y": 60
+      },
+      "style": {
+        "width": 320,
+        "height": 220
+      },
+      "data": {
+        "label": "Plotter",
+        "params": {
+          "max_y": 1
+        }
+      },
+      "width": 320,
+      "height": 220,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4080,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782760280171-ixxx5t0n9",
+      "type": "plotter_pro",
+      "position": {
+        "x": 3820,
+        "y": 700
+      },
+      "style": {
+        "width": 880,
+        "height": 400
+      },
+      "data": {
+        "label": "Plotter Pro",
+        "params": {
+          "max_y": 1,
+          "palette": 2,
+          "fill_curve": true,
+          "min_y": 0.5,
+          "line_width": 1,
+          "auto_scale": false,
+          "normalize": 3,
+          "reset": 0
+        },
+        "ports": [
+          {
+            "id": "any__0_lmt9",
+            "color": "any",
+            "label": "data_out"
+          },
+          {
+            "id": "any__1_g25x",
+            "color": "any",
+            "label": "val_1"
+          },
+          {
+            "id": "any__2_ocg9",
+            "color": "any",
+            "label": "val_2"
+          },
+          {
+            "id": "scalar__3_w4r6",
+            "color": "scalar",
+            "label": "iou"
+          },
+          {
+            "id": "scalar__4_280v",
+            "color": "scalar",
+            "label": "frame_count"
+          }
+        ]
+      },
+      "width": 880,
+      "height": 400,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3820,
+        "y": 700
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782761848896-8cpfmdenx",
+      "type": "df_editor",
+      "position": {
+        "x": 5260,
+        "y": 680
+      },
+      "style": {},
+      "data": {
+        "label": "DF Editor",
+        "params": {}
+      },
+      "width": 208,
+      "height": 121
+    },
+    {
+      "id": "node-1782762157860-77jk4s9l8",
+      "type": "ml_df_stats",
+      "position": {
+        "x": 5180,
+        "y": 940
+      },
+      "style": {},
+      "data": {
+        "label": "DF Stats",
+        "params": {}
+      },
+      "width": 288,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 5180,
+        "y": 940
+      }
+    },
+    {
+      "id": "node-1782763172811-46q2hk7t7",
+      "type": "ml_best_params",
+      "position": {
+        "x": 4460,
+        "y": 1140
+      },
+      "style": {},
+      "data": {
+        "label": "Parameter Optimizer",
+        "params": {
+          "weight_3": 0.4,
+          "weight_2": 0.2,
+          "weight_1": 0.3,
+          "weight_0": -0.3,
+          "weight_4": 1,
+          "label_0": "IOU",
+          "label_1": "DICE",
+          "label_2": "KS",
+          "reset": 0,
+          "port_labels": "{\"scalar__0_i38h\":\"iou\",\"scalar__1_iz91\":\"dice\",\"any__2_70tj\":\"val_1\",\"any__3_iamr\":\"val_2\"}"
+        },
+        "ports": [
+          {
+            "id": "scalar__0_i38h",
+            "color": "scalar",
+            "label": "iou"
+          },
+          {
+            "id": "scalar__1_iz91",
+            "color": "scalar",
+            "label": "dice"
+          },
+          {
+            "id": "any__2_70tj",
+            "color": "any",
+            "label": "val_1"
+          },
+          {
+            "id": "any__3_iamr",
+            "color": "any",
+            "label": "val_2"
+          }
+        ]
+      },
+      "width": 280,
+      "height": 433,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4460,
+        "y": 1140
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782763379935-rr2jpkpbc",
+      "type": "data_inspector",
+      "position": {
+        "x": 4980,
+        "y": 1160
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 220,
+      "height": 200
+    },
+    {
+      "id": "node-1782764194027-gu32zpdqc",
+      "type": "ml_best_params",
+      "position": {
+        "x": 2940,
+        "y": 1420
+      },
+      "style": {},
+      "data": {
+        "label": "Parameter Optimizer",
+        "params": {
+          "label_0": "Auroc",
+          "label_1": "DELTA",
+          "label_2": "KS",
+          "port_labels": "{\"any__0_e4fh\":\"val_1\",\"any__1_c0ze\":\"val_2\",\"any__2_mvhz\":\"val_3\"}",
+          "weight_water_det@0.7": 0.8,
+          "weight_n_open": -1,
+          "active_n_open": false,
+          "active_water_det@0.7": true,
+          "active_bridge_rej@0.7": true,
+          "weight_auroc": 1,
+          "weight_delta": 0.5,
+          "weight_cohen_d": 0.5,
+          "weight_bridge_rej@0.7": 0.8,
+          "active_n_bridge": false,
+          "reset": 0
+        },
+        "ports": [
+          {
+            "id": "any__0_e4fh",
+            "color": "any",
+            "label": "val_1"
+          },
+          {
+            "id": "any__1_c0ze",
+            "color": "any",
+            "label": "val_2"
+          },
+          {
+            "id": "any__2_mvhz",
+            "color": "any",
+            "label": "val_3"
+          }
+        ]
+      },
+      "width": 280,
+      "height": 439,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 2940,
+        "y": 1420
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -1777,18 +2026,81 @@
       "targetHandle": "mask__c",
       "id": "oe-1782711990659-0.93868489125961",
       "selected": false
+    },
+    {
+      "source": "metrics",
+      "sourceHandle": "scalar__iou",
+      "target": "node-1782758492166-xll1a6urc",
+      "targetHandle": "any__DYNAMIC_NEW_HANDLE",
+      "id": "e-1782758571563"
+    },
+    {
+      "id": "e-1782761848984-wuxbtotb6",
+      "source": "node-1782760280171-ixxx5t0n9",
+      "target": "node-1782761848896-8cpfmdenx",
+      "sourceHandle": "data__table",
+      "targetHandle": "data__table"
+    },
+    {
+      "source": "node-1782760280171-ixxx5t0n9",
+      "sourceHandle": "data__table",
+      "target": "node-1782762157860-77jk4s9l8",
+      "targetHandle": "data__table",
+      "id": "e-1782762166767"
+    },
+    {
+      "id": "e-1782763380053-xm3mnj0iz",
+      "source": "node-1782763172811-46q2hk7t7",
+      "target": "node-1782763379935-rr2jpkpbc",
+      "sourceHandle": "dict__best_values",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "metrics",
+      "sourceHandle": "scalar__iou",
+      "target": "node-1782760280171-ixxx5t0n9",
+      "targetHandle": "any__0_lmt9",
+      "id": "e-1782763461344"
+    },
+    {
+      "source": "metrics",
+      "sourceHandle": "scalar__dice",
+      "target": "node-1782760280171-ixxx5t0n9",
+      "targetHandle": "any__1_g25x",
+      "id": "e-1782763464600"
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "scalar__frame_count",
+      "target": "node-1782763172811-46q2hk7t7",
+      "targetHandle": "scalar__counter",
+      "id": "e-1782763911849"
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "scalar__frame_count",
+      "target": "node-1782764194027-gu32zpdqc",
+      "targetHandle": "scalar__counter",
+      "id": "e-1782764202986"
+    },
+    {
+      "source": "node-1782710392200-fj2ugkk3u",
+      "sourceHandle": "any__out_a",
+      "target": "node-1782764194027-gu32zpdqc",
+      "targetHandle": "dict__metrics_dict",
+      "id": "e-1782764697565"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 544.78125,
-      "h": 433
+      "w": 400,
+      "h": 267
     },
     "previewPos": {
-      "x": 798.96875,
-      "y": -34.0625
+      "x": 0,
+      "y": 0
     },
     "activePaletteIndex": 6,
-    "visualizedNodeId": "metrics"
+    "visualizedNodeId": "node-1782764194027-gu32zpdqc"
   }
 }

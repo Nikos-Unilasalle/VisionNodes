@@ -452,6 +452,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
     'plugin_spectrogram_to_audio', 'plugin_audio_export', 'plugin_audio_info',
     'util_landmark_selector',
     'math_vec_to_screen',
+    'ml_best_params',
   ]);
 
   return (
@@ -568,6 +569,76 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
           })()}
         </div>
       )}
+
+      {/* ml_best_params (Parameter Optimizer) */}
+      {node.type === 'ml_best_params' && (() => {
+        const keys = new Set<string>();
+        const ports = (node.data as any).ports ?? [];
+        ports.forEach((pPort: any) => keys.add(pPort.label));
+
+        const currentVals = liveData?.current_values ?? {};
+        const bestStepVals = liveData?.best_step_values ?? {};
+        Object.keys(currentVals).forEach(k => {
+          if (currentVals[k] !== '__dict__') keys.add(k);
+        });
+        Object.keys(bestStepVals).forEach(k => {
+          if (bestStepVals[k] !== '__dict__') keys.add(k);
+        });
+
+        const metricKeys = Array.from(keys);
+
+        return (
+          <div className="space-y-4">
+            <button
+              onClick={() => up({ reset: 1 })}
+              className="w-full text-[8.5px] font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/20 hover:border-red-500/40 bg-red-500/[0.03] rounded-lg py-2 transition-all cursor-pointer"
+            >
+              Reset History
+            </button>
+
+            <div className="space-y-3">
+              <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">
+                Métrique(s) à Optimiser
+              </label>
+
+              {metricKeys.length === 0 ? (
+                <div className="text-[9px] text-gray-500 italic text-center py-4 bg-white/[0.01] rounded-lg border border-white/5">
+                  Aucune métrique détectée (connectez des entrées)
+                </div>
+              ) : (
+                <div className="space-y-4 bg-white/[0.01] rounded-xl border border-white/5 p-3">
+                  {metricKeys.map((key) => {
+                    const active = p[`active_${key}`] !== false;
+                    const weight = Number(p[`weight_${key}`] ?? 0.0);
+
+                    return (
+                      <div key={key} className="space-y-2 pb-3 border-b border-white/5 last:border-b-0 last:pb-0">
+                        <ToggleInput
+                          label={key}
+                          val={active}
+                          onChange={v => up({ [`active_${key}`]: v })}
+                        />
+                        {active && (
+                          <div className="pl-1">
+                            <Slider
+                              label="Poids (Weight)"
+                              val={weight}
+                              min={-1.0}
+                              max={1.0}
+                              step={0.1}
+                              onChange={v => up({ [`weight_${key}`]: v })}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* canvas_note / canvas_frame */}
       {(node.type === 'canvas_note' || node.type === 'canvas_frame') && (() => {

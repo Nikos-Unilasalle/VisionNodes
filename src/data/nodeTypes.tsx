@@ -160,6 +160,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   df_plot:                    withNodeResizer(N.DataFramePlotNode, 320, 260),
   geo_netcdf_reader:          N.GenericCustomNode,
   ml_grid_pca:                N.GenericCustomNode,
+  ml_best_params:             N.MLBestParamsNodeUI,
   viz_grid_compare:           N.GenericCustomNode,
   geo_copernicus_marine:      N.GenericCustomNode,
 };
