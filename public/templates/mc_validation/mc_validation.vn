@@ -1,0 +1,361 @@
+{
+  "nodes": [
+    {
+      "id": "note_main",
+      "type": "canvas_note",
+      "position": { "x": 0, "y": -175 },
+      "style": { "width": 1600, "height": 160 },
+      "width": 1600, "height": 160,
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 1,
+          "text": "**MC Water Mask Validation vs River Shapefiles**  ·  from `MC_mask_validation_NEW.py`\n\nValidates MC P(water) against two reference shapefiles: river extent *with* bridges (wider polygon) and *without* bridges (clean water only).\nBridge pixels = with_bridges ∩ ¬no_bridges. Open water = no_bridges polygon.\n\n**Setup**\n1. `water_prob_mc.tif` → **MC Probability** reader (defines the pixel grid).\n2. Pre-computed index TIFs (mndwi_base.tif etc.) → respective readers.\n3. Set shapefile paths in **with_bridges** and **no_bridges** rasterizers.\n4. `sci_mask_metrics` nodes compare MC mask vs each reference at P≥0.7.\n5. `py_cdf` renders CDF + threshold-sweep figure. `py_idx_compute` builds metrics DataFrames → **ml_bar_chart** nodes render F1/IoU bars per reference."
+        }
+      }
+    },
+
+    {
+      "id": "frame_inputs",
+      "type": "canvas_frame",
+      "position": { "x": -20, "y": -20 },
+      "style": { "width": 320, "height": 1440, "zIndex": -1 },
+      "width": 320, "height": 1440,
+      "data": { "label": "Frame", "params": { "title": "Input rasters & shapefiles", "color_index": 0 } }
+    },
+    {
+      "id": "frame_masks",
+      "type": "canvas_frame",
+      "position": { "x": 320, "y": -20 },
+      "style": { "width": 430, "height": 870, "zIndex": -1 },
+      "width": 430, "height": 870,
+      "data": { "label": "Frame", "params": { "title": "Index stack + MC threshold mask", "color_index": 2 } }
+    },
+    {
+      "id": "frame_metrics",
+      "type": "canvas_frame",
+      "position": { "x": 780, "y": -20 },
+      "style": { "width": 330, "height": 560, "zIndex": -1 },
+      "width": 330, "height": 560,
+      "data": { "label": "Frame", "params": { "title": "Pixel-level metrics at P≥0.7", "color_index": 4 } }
+    },
+    {
+      "id": "frame_analysis",
+      "type": "canvas_frame",
+      "position": { "x": 1140, "y": -20 },
+      "style": { "width": 860, "height": 1680, "zIndex": -1 },
+      "width": 860, "height": 1680,
+      "data": { "label": "Frame", "params": { "title": "Analysis figures", "color_index": 3 } }
+    },
+
+    {
+      "id": "prob_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 10, "y": 10 },
+      "width": 280, "height": 160,
+      "data": {
+        "label": "MC Probability Map",
+        "params": {
+          "file_path": "<<path/to/water_prob_mc.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "mndwi_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 10, "y": 220 },
+      "width": 280, "height": 160,
+      "data": {
+        "label": "MNDWI Index",
+        "params": {
+          "file_path": "<<path/to/mndwi_base.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "ndwi_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 10, "y": 430 },
+      "width": 280, "height": 160,
+      "data": {
+        "label": "NDWI Index",
+        "params": {
+          "file_path": "<<path/to/ndwi_base.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "awei_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 10, "y": 640 },
+      "width": 280, "height": 160,
+      "data": {
+        "label": "AWEI Index",
+        "params": {
+          "file_path": "<<path/to/awei_base.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "mbwi_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 10, "y": 850 },
+      "width": 280, "height": 160,
+      "data": {
+        "label": "MBWI Index",
+        "params": {
+          "file_path": "<<path/to/mbwi_base.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "with_bridges",
+      "type": "geo_shapefile_rasterizer",
+      "position": { "x": 10, "y": 1060 },
+      "width": 280, "height": 180,
+      "data": {
+        "label": "River Extent (with bridges)",
+        "params": {
+          "file_path": "<<path/to/Seine_river_MC_extent.shp>>",
+          "layer": "",
+          "burn_field": "",
+          "burn_value": 1.0,
+          "all_touched": false,
+          "background": 0.0,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Wider river polygon — includes bridge footprints. Defines river extent for all analysis."
+        }
+      }
+    },
+    {
+      "id": "no_bridges",
+      "type": "geo_shapefile_rasterizer",
+      "position": { "x": 10, "y": 1280 },
+      "width": 280, "height": 180,
+      "data": {
+        "label": "Clean River (no bridges)",
+        "params": {
+          "file_path": "<<path/to/Seine_river_clean_MC.shp>>",
+          "layer": "",
+          "burn_field": "",
+          "burn_value": 1.0,
+          "all_touched": false,
+          "background": 0.0,
+          "cache_dir": "copernicus_cache",
+          "node_note": "River polygon with bridge areas punched out — pure open water reference."
+        }
+      }
+    },
+
+    {
+      "id": "mc_threshold_mask",
+      "type": "geotiff_to_mask",
+      "position": { "x": 340, "y": 10 },
+      "width": 240, "height": 130,
+      "data": {
+        "label": "MC Water Mask (P≥0.7)",
+        "params": {
+          "band_index": 0,
+          "threshold": 0.699,
+          "node_note": "threshold=0.699 → values > 0.699 → 255, i.e. P ≥ 0.70"
+        }
+      }
+    },
+
+    {
+      "id": "stack1",
+      "type": "geo_band_stack",
+      "position": { "x": 340, "y": 220 },
+      "width": 240, "height": 160,
+      "data": {
+        "label": "Stack MNDWI + NDWI",
+        "params": {
+          "resampling": 0,
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      }
+    },
+    {
+      "id": "stack2",
+      "type": "geo_band_stack",
+      "position": { "x": 340, "y": 450 },
+      "width": 240, "height": 160,
+      "data": {
+        "label": "Add AWEI",
+        "params": {
+          "resampling": 0,
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      }
+    },
+    {
+      "id": "stack3",
+      "type": "geo_band_stack",
+      "position": { "x": 340, "y": 680 },
+      "width": 240, "height": 160,
+      "data": {
+        "label": "Add MBWI → 4-band stack",
+        "params": {
+          "resampling": 0,
+          "prefix_secondary": false,
+          "cache_dir": "copernicus_cache"
+        }
+      }
+    },
+
+    {
+      "id": "metrics_no",
+      "type": "sci_mask_metrics",
+      "position": { "x": 800, "y": 10 },
+      "width": 280, "height": 180,
+      "data": {
+        "label": "vs No-Bridges (open water)",
+        "params": {
+          "show_overlay": true,
+          "alpha": 0.45,
+          "iou_thresh": 0.5
+        }
+      }
+    },
+    {
+      "id": "metrics_with",
+      "type": "sci_mask_metrics",
+      "position": { "x": 800, "y": 270 },
+      "width": 280, "height": 180,
+      "data": {
+        "label": "vs With-Bridges (river extent)",
+        "params": {
+          "show_overlay": true,
+          "alpha": 0.45,
+          "iou_thresh": 0.5
+        }
+      }
+    },
+
+    {
+      "id": "py_cdf",
+      "type": "logic_python",
+      "position": { "x": 1160, "y": 10 },
+      "width": 340, "height": 220,
+      "data": {
+        "label": "CDF & Threshold Sweep",
+        "params": {
+          "code": "# CDF and threshold sweep: P(water) vs with/no-bridges references\n# a = MC probability geotiff\n# b = with_bridges mask (uint8 0/255, numpy array)\n# c = no_bridges mask   (uint8 0/255, numpy array)\nMC_THRESHOLD = 0.7\n\nif not (isinstance(a, dict) and 'bands' in a):\n    out_main = None\nelse:\n    import matplotlib\n    matplotlib.use('Agg')\n    import matplotlib.pyplot as plt\n\n    prob  = a['bands'][0].astype(np.float64)\n    valid = np.isfinite(prob)\n    with_m  = (b > 127) & valid if (b is not None and isinstance(b, np.ndarray)) else np.zeros_like(valid)\n    no_m    = (c > 127) & valid if (c is not None and isinstance(c, np.ndarray)) else np.zeros_like(valid)\n    bridge_m = with_m & ~no_m\n    p_w = prob[no_m];    n_w = len(p_w)\n    p_b = prob[bridge_m]; n_b = len(p_b)\n\n    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))\n    fig.patch.set_facecolor('#111111')\n    for ax in [ax1, ax2]:\n        ax.set_facecolor('#1a1a1a')\n        for sp in ax.spines.values(): sp.set_color('#444')\n        ax.tick_params(colors='#aaa')\n        ax.grid(True, color='#333', alpha=0.5)\n\n    # ── CDF ───────────────────────────────────────────────────────────────────\n    for arr, lbl, col in [(p_w, f'Open water (n={n_w:,})', '#0072B2'),\n                           (p_b, f'Bridge pixels (n={n_b:,})', '#D55E00')]:\n        if len(arr) >= 10:\n            xs = np.sort(arr)\n            ys = np.arange(1, len(xs)+1) / len(xs)\n            ax1.plot(xs, ys, color=col, lw=2.5, label=lbl)\n    ax1.axvline(MC_THRESHOLD, color='#aaaaaa', lw=1.4, ls='--', label=f'P = {MC_THRESHOLD}')\n    ax1.set_xlabel('P(water)', color='#ccc'); ax1.set_ylabel('CDF', color='#ccc')\n    sep = float(np.mean(p_w)) - float(np.mean(p_b)) if n_b > 0 else float('nan')\n    ax1.set_title(f'CDF  |  Δμ = {sep:.3f}', color='#eee', fontsize=12)\n    ax1.legend(facecolor='#222', edgecolor='#444', labelcolor='#ccc', fontsize=10)\n    ax1.set_xlim(-0.02, 1.02); ax1.set_ylim(-0.02, 1.02)\n\n    # ── Threshold sweep ────────────────────────────────────────────────────────\n    thresholds = np.round(np.arange(0.1, 1.0, 0.1), 2)\n    for ref, lbl, col, ls in [\n        (no_m,   'No bridges',   '#56B4E9', '-'),\n        (with_m, 'With bridges', '#CC79A7', '--')\n    ]:\n        f1s, ious = [], []\n        for t in thresholds:\n            pred = (prob >= t) & valid\n            tp  = int(np.sum(pred & ref))\n            fp  = int(np.sum(pred & ~ref))\n            fn  = int(np.sum(~pred & ref))\n            pr_ = tp/(tp+fp) if (tp+fp) > 0 else 0.0\n            rc_ = tp/(tp+fn) if (tp+fn) > 0 else 0.0\n            f1s.append(2*pr_*rc_/(pr_+rc_) if (pr_+rc_) > 0 else 0.0)\n            ious.append(tp/(tp+fp+fn) if (tp+fp+fn) > 0 else 0.0)\n        ax2.plot(thresholds, f1s,  color=col, ls=ls, lw=2,   marker='o', ms=4, label=f'F1 – {lbl}')\n        ax2.plot(thresholds, ious, color=col, ls=ls, lw=1.5, marker='s', ms=3, alpha=0.7, label=f'IoU – {lbl}')\n    ax2.axvline(MC_THRESHOLD, color='#aaaaaa', lw=1.2, ls='--')\n    ax2.set_xlabel('MC probability threshold', color='#ccc')\n    ax2.set_ylabel('Score', color='#ccc')\n    ax2.set_title('Threshold Sweep: F1 & IoU', color='#eee', fontsize=12)\n    ax2.legend(facecolor='#222', edgecolor='#444', labelcolor='#ccc', fontsize=8, ncol=2)\n    ax2.set_ylim(0, 1.05); ax2.set_xlim(0.08, 0.95)\n\n    fig.suptitle('MC Water Mask Validation', color='#eee', fontsize=14)\n    plt.tight_layout()\n    fig.canvas.draw()\n    buf = np.asarray(fig.canvas.buffer_rgba())\n    out_main = cv2.cvtColor(buf, cv2.COLOR_RGBA2BGR)\n    plt.close(fig)"
+        }
+      }
+    },
+
+    {
+      "id": "py_idx_compute",
+      "type": "logic_python",
+      "position": { "x": 1160, "y": 740 },
+      "width": 340, "height": 220,
+      "data": {
+        "label": "Index Metrics → DataFrames",
+        "params": {
+          "code": "# Compute F1 & IoU for MC and each spectral index vs both references.\n# Outputs long-format DataFrames for ml_bar_chart (one per reference).\n# a = MC probability geotiff (1-band float)\n# b = 4-band index stack geotiff (MNDWI, NDWI, AWEI, MBWI)\n# c = with_bridges mask (uint8 0/255)\n# d = no_bridges mask   (uint8 0/255)\nimport pandas as pd\nMC_THRESHOLD = 0.7\n\nif not (isinstance(a, dict) and 'bands' in a and isinstance(b, dict) and 'bands' in b):\n    out_a = None\n    out_b = None\nelse:\n    prob     = a['bands'][0].astype(np.float64)\n    valid    = np.isfinite(prob)\n    n_idx    = min(4, b['count'])\n    names    = (b.get('band_names') or ['MNDWI', 'NDWI', 'AWEI', 'MBWI'])[:n_idx]\n    idx_arrs = [b['bands'][i].astype(np.float64) for i in range(n_idx)]\n\n    with_m = (c > 127) & valid if (c is not None and isinstance(c, np.ndarray)) else np.zeros_like(valid)\n    no_m   = (d > 127) & valid if (d is not None and isinstance(d, np.ndarray)) else np.zeros_like(valid)\n\n    def get_f1_iou(pred, ref):\n        tp = int(np.sum(pred & ref))\n        fp = int(np.sum(pred & ~ref))\n        fn = int(np.sum(~pred & ref))\n        pr_ = tp / (tp + fp) if (tp + fp) > 0 else 0.0\n        rc_ = tp / (tp + fn) if (tp + fn) > 0 else 0.0\n        f1_ = 2 * pr_ * rc_ / (pr_ + rc_) if (pr_ + rc_) > 0 else 0.0\n        iou_ = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0.0\n        return f1_, iou_\n\n    mc_pred = (prob >= MC_THRESHOLD) & valid\n    methods = [('MC', mc_pred)] + [\n        (names[i], (idx_arrs[i] >= 0.0) & np.isfinite(idx_arrs[i]) & valid)\n        for i in range(n_idx)\n    ]\n\n    rows_no, rows_with = [], []\n    for name, pred in methods:\n        f1_no, iou_no = get_f1_iou(pred, no_m)\n        f1_w,  iou_w  = get_f1_iou(pred, with_m)\n        rows_no  += [{'method': name, 'metric': 'F1',  'value': round(f1_no, 4)},\n                     {'method': name, 'metric': 'IoU', 'value': round(iou_no, 4)}]\n        rows_with += [{'method': name, 'metric': 'F1',  'value': round(f1_w, 4)},\n                      {'method': name, 'metric': 'IoU', 'value': round(iou_w, 4)}]\n    out_a = pd.DataFrame(rows_no)\n    out_b = pd.DataFrame(rows_with)"
+        }
+      }
+    },
+
+    {
+      "id": "bar_no",
+      "type": "ml_bar_chart",
+      "position": { "x": 1530, "y": 740 },
+      "width": 420, "height": 360,
+      "data": {
+        "label": "F1 & IoU — No-Bridges Reference",
+        "params": {
+          "x_col": "method",
+          "y_col": "value",
+          "hue_col": "metric",
+          "title": "MC vs Spectral Indices — No-bridges reference",
+          "xlabel": "Method",
+          "ylabel": "Score",
+          "show_values": true,
+          "orientation": 0,
+          "colormap": 0,
+          "alpha": 0.85
+        }
+      }
+    },
+    {
+      "id": "bar_with",
+      "type": "ml_bar_chart",
+      "position": { "x": 1530, "y": 1160 },
+      "width": 420, "height": 360,
+      "data": {
+        "label": "F1 & IoU — With-Bridges Reference",
+        "params": {
+          "x_col": "method",
+          "y_col": "value",
+          "hue_col": "metric",
+          "title": "MC vs Spectral Indices — With-bridges reference",
+          "xlabel": "Method",
+          "ylabel": "Score",
+          "show_values": true,
+          "orientation": 0,
+          "colormap": 0,
+          "alpha": 0.85
+        }
+      }
+    },
+
+    {
+      "id": "disp_cdf",
+      "type": "output_display",
+      "position": { "x": 1530, "y": 10 },
+      "width": 420, "height": 320,
+      "data": { "label": "CDF & Threshold Sweep", "params": {} }
+    },
+    {
+      "id": "disp_metrics_no",
+      "type": "output_display",
+      "position": { "x": 1530, "y": 380 },
+      "width": 200, "height": 160,
+      "data": { "label": "Overlay vs No-Bridges", "params": {} }
+    },
+    {
+      "id": "disp_metrics_with",
+      "type": "output_display",
+      "position": { "x": 1750, "y": 380 },
+      "width": 200, "height": 160,
+      "data": { "label": "Overlay vs With-Bridges", "params": {} }
+    }
+  ],
+  "edges": [
+    { "id": "e_prob_mc_mask",   "source": "prob_reader",       "target": "mc_threshold_mask", "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_prob_with",      "source": "prob_reader",       "target": "with_bridges",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__reference" },
+    { "id": "e_prob_no",        "source": "prob_reader",       "target": "no_bridges",        "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__reference" },
+    { "id": "e_mndwi_s1_prim", "source": "mndwi_reader",      "target": "stack1",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_ndwi_s1_sec",   "source": "ndwi_reader",       "target": "stack1",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s1_s2_prim",    "source": "stack1",            "target": "stack2",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_awei_s2_sec",   "source": "awei_reader",       "target": "stack2",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s2_s3_prim",    "source": "stack2",            "target": "stack3",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_mbwi_s3_sec",   "source": "mbwi_reader",       "target": "stack3",            "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_mc_mask_mno",   "source": "mc_threshold_mask", "target": "metrics_no",        "sourceHandle": "mask__mask",       "targetHandle": "mask__pred" },
+    { "id": "e_mc_mask_mwith", "source": "mc_threshold_mask", "target": "metrics_with",      "sourceHandle": "mask__mask",       "targetHandle": "mask__pred" },
+    { "id": "e_no_mno",        "source": "no_bridges",        "target": "metrics_no",        "sourceHandle": "mask__mask",       "targetHandle": "mask__truth" },
+    { "id": "e_with_mwith",    "source": "with_bridges",      "target": "metrics_with",      "sourceHandle": "mask__mask",       "targetHandle": "mask__truth" },
+    { "id": "e_prob_py_cdf",   "source": "prob_reader",       "target": "py_cdf",            "sourceHandle": "geotiff__geotiff", "targetHandle": "any__a" },
+    { "id": "e_with_py_cdf",   "source": "with_bridges",      "target": "py_cdf",            "sourceHandle": "mask__mask",       "targetHandle": "any__b" },
+    { "id": "e_no_py_cdf",     "source": "no_bridges",        "target": "py_cdf",            "sourceHandle": "mask__mask",       "targetHandle": "any__c" },
+    { "id": "e_prob_py_idx",   "source": "prob_reader",       "target": "py_idx_compute",    "sourceHandle": "geotiff__geotiff", "targetHandle": "any__a" },
+    { "id": "e_s3_py_idx",     "source": "stack3",            "target": "py_idx_compute",    "sourceHandle": "geotiff__geotiff", "targetHandle": "any__b" },
+    { "id": "e_with_py_idx",   "source": "with_bridges",      "target": "py_idx_compute",    "sourceHandle": "mask__mask",       "targetHandle": "any__c" },
+    { "id": "e_no_py_idx",     "source": "no_bridges",        "target": "py_idx_compute",    "sourceHandle": "mask__mask",       "targetHandle": "any__d" },
+    { "id": "e_idx_no_bar",    "source": "py_idx_compute",    "target": "bar_no",            "sourceHandle": "any__out_a",       "targetHandle": "data__table" },
+    { "id": "e_idx_with_bar",  "source": "py_idx_compute",    "target": "bar_with",          "sourceHandle": "any__out_b",       "targetHandle": "data__table" },
+    { "id": "e_cdf_disp",      "source": "py_cdf",            "target": "disp_cdf",          "sourceHandle": "image__main",      "targetHandle": "image__main" },
+    { "id": "e_mno_disp",      "source": "metrics_no",        "target": "disp_metrics_no",   "sourceHandle": "image__main",      "targetHandle": "image__main" },
+    { "id": "e_mwith_disp",    "source": "metrics_with",      "target": "disp_metrics_with", "sourceHandle": "image__main",      "targetHandle": "image__main" }
+  ],
+  "ui": { "zoom": 0.45, "viewport": { "x": 20, "y": 200, "zoom": 0.45 } }
+}

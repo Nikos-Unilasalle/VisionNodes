@@ -1,8 +1,28 @@
 [
   {
+    "name": "MC Water Mask — Uncertainty & Confidence Analysis",
+    "description": "Post-hoc analysis of a Monte Carlo water mask run using only generic nodes. Loads water_prob_mc.tif and water_mask_mc.tif. geo_band_stats reports global P(water) stats (mean/median/std/count). geo_band_calc computes pixel-wise Bernoulli uncertainty P(1−P). geotiff_to_mask + feat_mask_stats give water extent (area_px, area_pct). geo_statistics gives mean P within the water mask. A second geotiff_to_mask at P>0.9 + feat_mask_stats computes high-confidence coverage relative to the water mask.",
+    "file": "mc_validation/mc_analysis.vn"
+  },
+  {
+    "name": "MC Water Mask — Shapefile Validation",
+    "description": "Validates MC P(water) against two river shapefiles (with/without bridges). Rasterizes both shapefiles, stacks four pre-computed index TIFs (MNDWI, NDWI, AWEI, MBWI) into a 4-band stack, thresholds the probability at P≥0.7 to build a predicted mask, then computes sci_mask_metrics (TP/FP/FN IoU) vs both references. Two Python nodes produce: CDF + threshold sweep figure, and an index comparison bar chart.",
+    "file": "mc_validation/mc_validation.vn"
+  },
+  {
+    "name": "MC Water Mask — Sensitivity vs Spectral Indices",
+    "description": "Quantifies MC P(water) sensitivity vs NDWI, MNDWI, AWEI, MBWI. Loads a Sentinel-2 L2A 6-band raster, normalises DN, computes the 4 indices via geo_spectral_indices, then plots quantile-binned mean P(water) ± P10–P90 vs each index value with Spearman r. Rendered as a 2×2 journal-quality figure.",
+    "file": "mc_validation/mc_sensitivity.vn"
+  },
+  {
     "name": "Monte-Carlo Probabilistic Water Mask",
-    "description": "Per-pixel calibrated water probability by Monte-Carlo uncertainty propagation — built entirely from generic nodes. Sentinel-2 L2 surface reflectance → DN normalize → Raster Gaussian Noise (stochastic sensor perturbation, with a Start/Stop button) → four water indices (NDWI, MNDWI, AWEInsh, AWEIsh) → equal-weight k=2-of-4 consensus vote → repeated ticks accumulate into a probability map (Frame Accumulator mean) and an uncertainty map (std). Optional reference branch computes Precision/Recall/F1/IoU. Set the GeoTIFF path and band mapping in the inspector, let it run ~60 ticks, then press Stop to freeze the converged probability.",
-    "file": "mc_water_mask.vn"
+    "description": "Per-pixel calibrated water probability by Monte-Carlo uncertainty propagation — built entirely from generic nodes. Accepts 6 individual ACOLITE L2W band TIFs (Blue 492 nm, Green 559 nm, Red 665 nm, NIR 833 nm, SWIR1 1610 nm, SWIR2 2186 nm) stacked via geo_band_stack. No DN normalization needed (already Rrs). Raster Gaussian Noise drives stochastic sensor perturbation → four water indices (NDWI, MNDWI, AWEInsh, AWEIsh) → k=2-of-4 consensus vote → Frame Accumulator (mean=probability, std=uncertainty). The probability map is then turned into a water mask WITHOUT any threshold: geo_persistence extracts water bodies by 0-D topological persistence (auto-detected significance cut), replacing the old P≥0.5 binarize + area filter. Optional reference shapefile branch computes Precision/Recall/F1/IoU. Let it run ~60 ticks, then press Stop.",
+    "file": "mc_validation/mc_water_mask.vn"
+  },
+  {
+    "name": "MC Water Mask — Threshold-Free Topology",
+    "description": "Extracts water bodies from the MC P(water) map WITHOUT any threshold, using 0-D persistent homology (geo_persistence). Each candidate blob is scored by its topological persistence (peak − merge saddle = how robustly it survives across all thresholds); the significance cut is auto-detected from the largest gap in the persistence spectrum, so real lakes separate from speckle with no hand-picked value. Outputs a persistence saliency map, the birth/death persistence diagram (scatter), and a threshold-free mask — contrasted against a naive fixed P≥0.5 cut to show what the threshold choice costs.",
+    "file": "mc_validation/mc_topology.vn"
   },
   {
     "name": "RANSAC Homography — Robust Geometric Alignment",
