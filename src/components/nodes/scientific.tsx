@@ -264,21 +264,24 @@ export const DataFramePlotNode = memo(({ selected, data }: any) => {
 
 
 const PRO_COLORS = ['#ff6464', '#64ff64', '#ffb43c', '#64ffff', '#ff64ff', '#ffff64', '#c896ff', '#64c8ff'];
+const PRO_MAX_SERIES = 5;
 
 
 export const PlotterProNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
   const nodeId = useNodeId()!;
   const updateNodeInternals = useUpdateNodeInternals();
+  // Palette from the global top-menu selector (5 colours per palette).
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const palette = PALETTES[palIdx].colors.map((c: any) => c.bg);
   const nd = useNodeData(nodeId);
   const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
 
   const bufSize = Number(data.params?.buffer_size ?? 300);
   const showGrid = data.params?.show_grid !== false;
   const lineWidth = Number(data.params?.line_width ?? 2);
-  const showThresholds = !!data.params?.show_thresholds;
-  const thMin = Number(data.params?.threshold_min ?? 0);
-  const thMax = Number(data.params?.threshold_max ?? 255);
+  const showAxes = !!data.params?.show_axes;
+  const fillCurve = !!data.params?.fill_curve;
   const minY = data.params?.min_y;
   const maxY = data.params?.max_y;
   const autoScale = !!(data.params?.auto_scale ?? true);
@@ -286,10 +289,23 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
 
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
+  // Python key (last segment after __) for each declared port.
   const portKeys = React.useMemo(() =>
     ports.map(p => p.id.split('__').pop() ?? p.id),
     [ports]
   );
+
+  // Series = union of declared ports AND any live numeric/array key the engine
+  // emits for this node (mirrors ScientificPlotterNode — robust to port/data drift).
+  // Capped at 5 series.
+  const seriesKeys = React.useMemo(() => {
+    const keys = new Set<string>(portKeys);
+    for (const k of Object.keys(nd || {})) {
+      const v = (nd as any)[k];
+      if (typeof v === 'number' || Array.isArray(v)) keys.add(k);
+    }
+    return Array.from(keys).slice(0, PRO_MAX_SERIES);
+  }, [nd, portKeys]);
 
   const [histories, setHistories] = React.useState<Record<string, number[]>>({});
   const prevReset = React.useRef(0);
@@ -304,7 +320,7 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
     setHistories(prev => {
       const next: Record<string, number[]> = {};
       let changed = false;
-      for (const k of portKeys) {
+      for (const k of seriesKeys) {
         const v = (nd as any)[k];
         const cur = prev[k] ?? [];
         if (v === undefined || v === null) { next[k] = cur; continue; }
@@ -319,19 +335,21 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
         } else { next[k] = cur; }
       }
       const prevKeys = Object.keys(prev);
-      return (changed || prevKeys.length !== portKeys.length || prevKeys.some(k => !portKeys.includes(k))) ? next : prev;
+      return (changed || prevKeys.length !== seriesKeys.length || prevKeys.some(k => !seriesKeys.includes(k))) ? next : prev;
     });
-  }, [nd, bufSize, portKeys]);
+  }, [nd, bufSize, seriesKeys]);
 
   const chartData = React.useMemo(() => {
-    const maxLen = Math.max(0, ...portKeys.map(k => histories[k]?.length ?? 0));
+    const maxLen = Math.max(0, ...seriesKeys.map(k => histories[k]?.length ?? 0));
     if (maxLen === 0) return [];
     return Array.from({ length: maxLen }, (_, i) => {
       const pt: any = { t: i };
-      for (const k of portKeys) { const arr = histories[k]; if (arr && i < arr.length) pt[k] = arr[i]; }
+      for (const k of seriesKeys) { const arr = histories[k]; if (arr && i < arr.length) pt[k] = arr[i]; }
       return pt;
     });
-  }, [histories, portKeys]);
+  }, [histories, seriesKeys]);
+
+  const activeSeries = seriesKeys.filter(k => (histories[k]?.length ?? 0) > 0);
 
   const HANDLE_TOP_START = 45;
   const HANDLE_SPACING = 32;
@@ -366,11 +384,17 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
           <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
         </div>
 
-        {/* Output main */}
+        {/* Output: main image */}
         <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
              style={{ top: '22px', transform: 'translateY(-50%)' }}>
           <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
           <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
+        </div>
+        {/* Output: DataFrame */}
+        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
+             style={{ top: '44px', transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">table</span>
+          <StyledHandle type="source" position={Position.Right} id="table" color="data" top="50%" />
         </div>
 
         {/* Header */}
@@ -379,9 +403,9 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
           <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#a78bfa' }} />
           <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
           <div className="ml-auto flex items-center gap-1.5">
-            {portKeys.map((k, i) => (
+            {activeSeries.map(k => (
               <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
-                   style={{ backgroundColor: PRO_COLORS[i % PRO_COLORS.length] }} />
+                   style={{ backgroundColor: palette[seriesKeys.indexOf(k) % palette.length] }} />
             ))}
           </div>
         </div>
@@ -391,21 +415,40 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
           {chartData.length === 0
             ? <div className="w-full h-full flex flex-col items-center justify-center gap-1">
                 <span className="text-[8px] text-gray-600 uppercase tracking-widest">
-                  {ports.length === 0 ? 'connect data' : `${ports.length} port${ports.length > 1 ? 's' : ''} — waiting`}
+                  {seriesKeys.length === 0 ? 'connect data' : `${seriesKeys.length} series — waiting`}
                 </span>
               </div>
             : <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 2, right: 35, bottom: 0, left: 0 }}>
-                  <YAxis hide domain={yDomain} />
+                <ComposedChart data={chartData}
+                  margin={showAxes ? { top: 4, right: 35, bottom: 4, left: 4 } : { top: 2, right: 35, bottom: 0, left: 0 }}>
+                  <defs>
+                    {activeSeries.map(k => {
+                      const ci = seriesKeys.indexOf(k);
+                      const c = palette[ci % palette.length];
+                      return (
+                        <linearGradient key={`grad-${k}`} id={`proFill-${nodeId}-${ci}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={c} stopOpacity={0.35} />
+                          <stop offset="100%" stopColor={c} stopOpacity={0.02} />
+                        </linearGradient>
+                      );
+                    })}
+                  </defs>
+                  <YAxis hide={!showAxes} domain={yDomain}
+                    tick={{ fill: '#94a3b8', fontSize: 7 }} width={showAxes ? 30 : 0} />
+                  <XAxis dataKey="t" hide={!showAxes}
+                    tick={{ fill: '#94a3b8', fontSize: 7 }} height={showAxes ? 14 : 0} />
                   {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
-                  {showThresholds && <ReferenceLine y={thMin} stroke="#facc15" strokeDasharray="6 3" strokeWidth={1.5} label={{ position: 'insideRight', value: `${thMin.toFixed(1)}`, fill: '#facc15', fontSize: 7 }} />}
-                  {showThresholds && <ReferenceLine y={thMax} stroke="#facc15" strokeDasharray="6 3" strokeWidth={1.5} label={{ position: 'insideRight', value: `${thMax.toFixed(1)}`, fill: '#facc15', fontSize: 7 }} />}
-                  {portKeys.map((k, i) => (
+                  {fillCurve && activeSeries.map(k => (
+                    <Area key={`a-${k}`} type="monotone" dataKey={k}
+                      stroke="none" fill={`url(#proFill-${nodeId}-${seriesKeys.indexOf(k)})`}
+                      isAnimationActive={false} connectNulls />
+                  ))}
+                  {activeSeries.map(k => (
                     <Line key={k} type="monotone" dataKey={k}
-                      stroke={PRO_COLORS[i % PRO_COLORS.length]} strokeWidth={lineWidth}
+                      stroke={palette[seriesKeys.indexOf(k) % palette.length]} strokeWidth={lineWidth}
                       dot={false} isAnimationActive={false} connectNulls />
                   ))}
-                </LineChart>
+                </ComposedChart>
               </ResponsiveContainer>
           }
         </div>

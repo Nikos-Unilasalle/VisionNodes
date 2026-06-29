@@ -343,6 +343,7 @@ export const CATEGORIES: Category[] = [
   ]},
   { id: 'Machine Learning', label: 'Machine Learning', icon: Activity, section: 'generic', nodes: [
     { type: 'ml_grid_pca',          label: 'Spatial PCA (EOF)', description: 'Spatial Principal Component Analysis / EOF on 2D grid series.' },
+    { type: 'ml_best_params',       label: 'Parameter Optimizer',description: 'Tracks multiple scalar training metrics and finds the best epoch based on user-defined weights.' },
     { type: 'viz_grid_compare',     label: 'Grid Compare Dashboard', description: 'Visual side-by-side comparison and metrics for grid reconstruction.' },
     { type: 'ml_decision_tree',     label: 'Decision Tree',     description: 'Decision Tree classifier/regressor.' },
     { type: 'ml_kmeans',            label: 'K-Means',           description: 'K-Means clustering.' },

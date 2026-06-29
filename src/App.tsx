@@ -549,7 +549,7 @@ function App() {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           },
           onExportPy: node.type === 'export_py' ? () => handleExportPy(node.id) : undefined,
-          onRemovePort: (node.type === 'sci_plotter' || node.type === 'plotter_pro') ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
+          onRemovePort: (node.type === 'sci_plotter' || node.type === 'plotter_pro' || node.type === 'ml_best_params') ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
           onToggleCollapse: node.type === 'canvas_frame' ? () => {
             pushSnapshot();
             setViewNodes(nds => nds.map(n => {

@@ -318,3 +318,244 @@ export const MLClassifierNodeUI = ({ data, selected }: { data: any; selected: bo
 };
 
 // ── Raster Colorizer ─────────────────────────────────────────────────────────
+
+export const MLBestParamsNodeUI = memo(({ selected, data }: any) => {
+  const { customBg } = useNodeColor();
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const nd = useNodeData(nodeId);
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const palette = PALETTES[palIdx]?.colors || PALETTES[6].colors;
+
+  // Sync port labels to parameter 'port_labels' so the Python backend has access to them
+  useEffect(() => {
+    const labelsMap: Record<string, string> = {};
+    ports.forEach(p => {
+      labelsMap[p.id] = p.label;
+    });
+    data.onChangeParams?.({ port_labels: JSON.stringify(labelsMap) });
+  }, [ports]);
+
+  useEffect(() => {
+    updateNodeInternals(nodeId);
+  }, [ports.length, nodeId, updateNodeInternals]);
+
+  const bestStep = nd?.best_step ?? 0;
+  const counter = nd?.counter ?? 0;
+  const currentValues = nd?.current_values ?? {};
+  const bestStepValues = nd?.best_step_values ?? {};
+
+  // Extract all metric keys (union of dynamic ports and dictionary keys)
+  const allMetricKeys = useMemo(() => {
+    const keys = new Set<string>();
+    // Render dynamic ports first in the list (if they aren't dict inputs)
+    ports.forEach(p => {
+      const val = currentValues[p.id] ?? currentValues[p.label];
+      if (val !== '__dict__') {
+        keys.add(p.label);
+      }
+    });
+    // Then add any other keys found in current or best values (e.g. from metrics_dict)
+    Object.keys(currentValues).forEach(k => {
+      if (currentValues[k] !== '__dict__') {
+        keys.add(k);
+      }
+    });
+    Object.keys(bestStepValues).forEach(k => {
+      if (bestStepValues[k] !== '__dict__') {
+        keys.add(k);
+      }
+    });
+    return Array.from(keys);
+  }, [ports, currentValues, bestStepValues]);
+
+  // Order dynamic port keys first to align them with their physical handles on the left
+  const orderedMetrics = useMemo(() => {
+    const dynamicKeys = ports
+      .filter(p => (currentValues[p.id] ?? currentValues[p.label]) !== '__dict__')
+      .map(p => p.label);
+    const otherKeys = allMetricKeys.filter(k => !dynamicKeys.includes(k));
+    return [...dynamicKeys, ...otherKeys];
+  }, [ports, allMetricKeys, currentValues]);
+
+  // Handle positioning
+  const HANDLE_SPACING = 32;
+
+  // Static Metrics Dict input is rendered below Counter input
+  const metricsDictTop = 88;
+
+  // First dynamic handle starts at 140px, aligned with Card 0 center (which starts at 114px)
+  const dynamicHandleStart = 140;
+  const dynamicHandleSpacing = 58;
+
+  const factoryTop = 130 + ports.length * dynamicHandleSpacing;
+
+  // Node height calculation based on total number of metrics (no scrollbar, grows dynamically)
+  const listHeight = orderedMetrics.length * 58;
+  const computedHeight = 114 + listHeight + 15;
+
+  return (
+    <BaseNode
+      title="Parameter Optimizer"
+      icon={Target}
+      selected={selected}
+      data={data}
+      color="orange"
+      inputs={[]}
+      outputs={[
+        { id: 'best_step', color: 'scalar', label: 'Best Step' },
+        { id: 'best_values', color: 'dict', label: 'Best Values' }
+      ]}
+      height={computedHeight}
+      width={280}
+    >
+      {/* Static Counter Input Handle */}
+      <div
+        className="absolute left-0 pointer-events-none flex items-center z-20"
+        style={{ top: '62px', transform: 'translateY(-50%)' }}
+      >
+        <StyledHandle type="target" position={Position.Left} id="counter" color="scalar" top="50%" />
+        <span className="ml-4 text-[7px] text-gray-500 uppercase font-black tracking-widest">Counter</span>
+      </div>
+
+      {/* Static Metrics Dict Input Handle */}
+      <div
+        className="absolute left-0 pointer-events-none flex items-center z-20"
+        style={{ top: `${metricsDictTop}px`, transform: 'translateY(-50%)' }}
+      >
+        <StyledHandle type="target" position={Position.Left} id="metrics_dict" color="dict" top="50%" />
+        <span className="ml-4 text-[7px] text-gray-500 uppercase font-black tracking-widest">Metrics</span>
+      </div>
+
+      {/* Manual Input Handles for Dynamic Ports (aligned with card centers) */}
+      {ports.map((p, i) => {
+        const idx = p.id.indexOf('__');
+        const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+        const color = idx >= 0 ? p.id.slice(0, idx) : 'scalar';
+        const top = `${dynamicHandleStart + i * dynamicHandleSpacing}px`;
+
+        return (
+          <div
+            key={`in-${p.id}`}
+            className="absolute left-0 pointer-events-none flex items-center z-20"
+            style={{ top, transform: 'translateY(-50%)' }}
+          >
+            <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
+            <button
+              className="nodrag pointer-events-auto ml-4 text-[9px] text-gray-500 hover:text-red-400 font-black transition-colors leading-none cursor-pointer select-none"
+              onClick={e => {
+                e.stopPropagation();
+                data.onRemovePort?.(p.id);
+              }}
+              title="Remove Input"
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+
+      {/* Dynamic New Handle Factory (aligned below last dynamic card) */}
+      <div
+        className="absolute left-0 pointer-events-none flex items-center z-20"
+        style={{
+          top: `${factoryTop}px`,
+          transform: 'translateY(-50%)'
+        }}
+      >
+        <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="scalar" top="50%" />
+        <span className="ml-4 text-[7px] text-gray-500 uppercase font-black tracking-widest">+ Add</span>
+      </div>
+
+      {/* Main UI Content */}
+      <div className="flex flex-col gap-2 pl-7 pr-2 py-2 mt-0.5 nodrag">
+        {/* Top metrics dashboard */}
+        <div className="grid grid-cols-2 gap-1.5">
+          {/* Counter Card */}
+          <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col gap-0.5 shadow-inner">
+            <span className="text-[6px] font-black text-gray-500 uppercase tracking-wider">Epoch / Counter</span>
+            <div className="flex items-center gap-1">
+              <Hash size={9} className="text-orange-400" />
+              <span className="text-[12px] font-black text-white/90 font-mono tabular-nums">
+                {counter}
+              </span>
+            </div>
+          </div>
+
+          {/* Best Step Card */}
+          <div className="bg-black/20 border border-white/5 rounded-xl p-2 flex flex-col gap-0.5 shadow-inner border-l-2 border-l-emerald-500/50">
+            <span className="text-[6px] font-black text-emerald-400/80 uppercase tracking-wider">Best Step</span>
+            <div className="flex items-center gap-1">
+              <Target size={9} className="text-emerald-400" />
+              <span className="text-[12px] font-black text-emerald-400 font-mono tabular-nums">
+                {bestStep > 0 ? bestStep : '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic/Dictionary metrics list */}
+        <div className="flex flex-col gap-1.5 mt-1">
+          {orderedMetrics.length === 0 ? (
+            <div className="text-[8px] text-gray-500 italic text-center py-4">
+              Connect inputs or metrics dict
+            </div>
+          ) : (
+            orderedMetrics.map((label, i) => {
+              // Find if this metric comes from a dynamic port
+              const port = ports.find(p => p.label === label);
+              const portId = port ? port.id : label;
+              const colorBg = palette[i % 5]?.bg || '#fff';
+              const curVal = currentValues[portId] ?? currentValues[label];
+              const bVal = bestStepValues[portId] ?? bestStepValues[label];
+
+              // Read active & weight parameters from params
+              const active = data.params?.[`active_${label}`] !== false;
+              const weight = data.params?.[`weight_${label}`] ?? 0.0;
+
+              return (
+                <div
+                  key={label}
+                  className="bg-black/15 border border-white/5 rounded-lg p-1.5 flex flex-col gap-1 shadow-inner relative overflow-hidden shrink-0"
+                  style={{ 
+                    borderLeft: `3px solid ${colorBg}`, 
+                    height: '52px',
+                    opacity: active ? 1 : 0.4,
+                    transition: 'opacity 0.2s ease-in-out'
+                  }}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="text-[7px] font-black text-gray-300 uppercase tracking-wider truncate max-w-[150px]" title={label}>
+                      {label}
+                    </span>
+                    <span className="text-[6px] font-mono text-gray-500">
+                      {active ? `w: ${weight >= 0 ? '+' : ''}${weight.toFixed(1)}` : 'Inactive'}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-[5px] text-gray-500 uppercase">Current</span>
+                      <span className="text-[10px] font-bold text-white/80 font-mono tabular-nums">
+                        {curVal !== undefined ? curVal.toFixed(4) : '—'}
+                      </span>
+                    </div>
+                    {bestStep > 0 && bVal !== undefined && (
+                      <div className="flex flex-col text-right">
+                        <span className="text-[5px] text-gray-500 uppercase">At Best</span>
+                        <span className="text-[9px] font-semibold font-mono text-emerald-400 tabular-nums">
+                          {bVal.toFixed(4)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
+
