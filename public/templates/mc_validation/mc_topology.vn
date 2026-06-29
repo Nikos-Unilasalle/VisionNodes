@@ -1,0 +1,150 @@
+{
+  "nodes": [
+    {
+      "id": "note_main",
+      "type": "canvas_note",
+      "position": { "x": 0, "y": -200 },
+      "style": { "width": 1180, "height": 175 },
+      "width": 1180, "height": 175,
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 5,
+          "text": "**MC Water Mask — Threshold-Free Extraction by Topological Persistence**\n\nThe whole challenge of this study is to *avoid arbitrary thresholds*. A binary cut at P≥0.5 is a guess. Here we replace it with **0-D persistent homology** of the probability map.\n\n1. `geo_persistence` sweeps the super-level sets of P. Each candidate water body is born at its peak P and dies when it merges into a more persistent neighbour at a saddle. Its **persistence** (peak − saddle) measures how robustly it survives across *all* thresholds.\n2. The significance cut is **auto-detected** from the largest gap in the persistence spectrum — no value chosen by hand. Real lakes (high persistence) separate cleanly from speckle (low persistence, near the diagram diagonal).\n3. **Bottom branch** contrasts the topological mask with a naive fixed P≥0.5 cut, so you can see what the threshold choice costs.\n\nOutputs: persistence saliency map (colormap in the node body), persistence diagram (scatter), threshold-free water mask, and stats."
+        }
+      }
+    },
+
+    {
+      "id": "prob_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 60 },
+      "width": 260, "height": 160,
+      "data": {
+        "userLabel": "MC Probability Map",
+        "params": {
+          "file_path": "<<path/to/water_prob_mc.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+
+    {
+      "id": "topo",
+      "type": "geo_persistence",
+      "position": { "x": 360, "y": 60 },
+      "width": 300, "height": 260,
+      "data": {
+        "userLabel": "Topological Persistence (no threshold)",
+        "params": {
+          "band": 1,
+          "feature": "maxima (bright)",
+          "connectivity": "8",
+          "min_persistence": 0.0,
+          "max_pixels": 500000,
+          "colormap": "magma"
+        }
+      }
+    },
+
+    {
+      "id": "diagram_plot",
+      "type": "df_plot",
+      "position": { "x": 740, "y": 40 },
+      "style": { "width": 360, "height": 320 },
+      "width": 360, "height": 320,
+      "data": {
+        "userLabel": "Persistence Diagram",
+        "params": {
+          "chart_type": 2,
+          "x_col": "saddle",
+          "y_cols": "peak",
+          "hue_col": "significant",
+          "sort_x": false,
+          "marker_size": 30,
+          "alpha": 0.8,
+          "title": "Persistence diagram (above diagonal = water bodies)",
+          "grid": true,
+          "legend": true
+        }
+      }
+    },
+
+    {
+      "id": "stats_insp",
+      "type": "data_inspector",
+      "position": { "x": 740, "y": 400 },
+      "width": 300, "height": 240,
+      "data": {
+        "userLabel": "Persistence Stats",
+        "params": {}
+      }
+    },
+
+    {
+      "id": "topo_area",
+      "type": "feat_mask_stats",
+      "position": { "x": 360, "y": 400 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "Topological Coverage",
+        "params": { "weighted_centroid": false }
+      }
+    },
+    {
+      "id": "topo_area_insp",
+      "type": "data_inspector",
+      "position": { "x": 360, "y": 580 },
+      "width": 260, "height": 180,
+      "data": {
+        "userLabel": "Topological Water Extent",
+        "params": {}
+      }
+    },
+
+    {
+      "id": "naive_mask",
+      "type": "geotiff_to_mask",
+      "position": { "x": 360, "y": 820 },
+      "width": 240, "height": 120,
+      "data": {
+        "userLabel": "Naive Fixed Cut (P>0.5)",
+        "params": { "band_index": 0, "threshold": 0.5 }
+      }
+    },
+    {
+      "id": "naive_area",
+      "type": "feat_mask_stats",
+      "position": { "x": 700, "y": 820 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "Naive Coverage",
+        "params": { "weighted_centroid": false }
+      }
+    },
+    {
+      "id": "naive_area_insp",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 820 },
+      "width": 260, "height": 180,
+      "data": {
+        "userLabel": "Naive Water Extent (for contrast)",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e_prob_topo",    "source": "prob_reader", "target": "topo",          "sourceHandle": "geotiff__geotiff",         "targetHandle": "geotiff__geotiff" },
+
+    { "id": "e_topo_diag",    "source": "topo",        "target": "diagram_plot",  "sourceHandle": "data__diagram",            "targetHandle": "data__table" },
+    { "id": "e_topo_stats",   "source": "topo",        "target": "stats_insp",    "sourceHandle": "dict__stats",              "targetHandle": "any__data" },
+
+    { "id": "e_topo_area",    "source": "topo",        "target": "topo_area",     "sourceHandle": "mask__mask",               "targetHandle": "mask__mask" },
+    { "id": "e_tarea_insp",   "source": "topo_area",   "target": "topo_area_insp","sourceHandle": "dict__stats",              "targetHandle": "any__data" },
+
+    { "id": "e_prob_naive",   "source": "prob_reader", "target": "naive_mask",    "sourceHandle": "geotiff__geotiff",         "targetHandle": "geotiff__geotiff" },
+    { "id": "e_naive_area",   "source": "naive_mask",  "target": "naive_area",    "sourceHandle": "mask__mask",               "targetHandle": "mask__mask" },
+    { "id": "e_narea_insp",   "source": "naive_area",  "target": "naive_area_insp","sourceHandle": "dict__stats",             "targetHandle": "any__data" }
+  ],
+  "ui": { "zoom": 0.65, "viewport": { "x": 60, "y": 230, "zoom": 0.65 } }
+}

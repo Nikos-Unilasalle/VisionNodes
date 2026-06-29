@@ -1,0 +1,631 @@
+{
+  "nodes": [
+    {
+      "id": "blue_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "Blue Band — 492 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_492.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "green_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 180
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "Green Band — 559 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_559.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "red_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 360
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "Red Band — 665 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_665.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "nir_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 540
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "NIR Band — 833 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_833.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "swir1_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 720
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "SWIR1 Band — 1610 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_1610.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "swir2_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 900
+      },
+      "width": 260,
+      "height": 160,
+      "data": {
+        "userLabel": "SWIR2 Band — 2186 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_2186.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "stack1",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 80
+      },
+      "width": 230,
+      "height": 120,
+      "data": {
+        "userLabel": "Stack B1+B2 (Blue+Green)",
+        "params": {}
+      }
+    },
+    {
+      "id": "stack2",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 280
+      },
+      "width": 230,
+      "height": 120,
+      "data": {
+        "userLabel": "Stack B1-3 (+Red)",
+        "params": {}
+      }
+    },
+    {
+      "id": "stack3",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 480
+      },
+      "width": 230,
+      "height": 120,
+      "data": {
+        "userLabel": "Stack B1-4 (+NIR)",
+        "params": {}
+      }
+    },
+    {
+      "id": "stack4",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 660
+      },
+      "width": 230,
+      "height": 120,
+      "data": {
+        "userLabel": "Stack B1-5 (+SWIR1)",
+        "params": {}
+      }
+    },
+    {
+      "id": "stack5",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 840
+      },
+      "width": 230,
+      "height": 120,
+      "data": {
+        "userLabel": "Stack B1-6 (+SWIR2) — final",
+        "params": {}
+      }
+    },
+    {
+      "id": "noise",
+      "type": "geo_raster_noise",
+      "position": {
+        "x": 690,
+        "y": 450
+      },
+      "width": 240,
+      "height": 140,
+      "data": {
+        "userLabel": "MC Sensor Perturbation",
+        "params": {
+          "sigma_abs": 0.001,
+          "sigma_rel": 0.015,
+          "clip_negative": false,
+          "seed": 42,
+          "node_note": "Stochastic — redraws each tick. Drives Monte-Carlo ensemble. ACOLITE Rrs may be slightly negative on dark water — keep clip_negative=false.",
+          "max_ticks": 100,
+          "reset": 0,
+          "toggle_run": 0
+        }
+      }
+    },
+    {
+      "id": "idx",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": 1030,
+        "y": 360
+      },
+      "width": 260,
+      "height": 200,
+      "data": {
+        "userLabel": "4 Water Indices",
+        "params": {
+          "sensor": 0,
+          "nir_band": 4,
+          "red_band": 3,
+          "green_band": 2,
+          "blue_band": 1,
+          "swir_band": 5,
+          "ndvi": false,
+          "ndwi": true,
+          "evi": false,
+          "mndwi": true,
+          "nbr": false,
+          "bsi": false,
+          "expr1_enable": true,
+          "expr1_label": "AWEIsh",
+          "expr1": "BLUE + 2.5*GREEN - 1.5*(NIR + SWIR) - 0.25*B6",
+          "expr2_enable": true,
+          "expr2_label": "MBWI",
+          "expr2": "2*GREEN - RED - NIR - SWIR - B6",
+          "colormap": 0,
+          "clamp_min": -5.0,
+          "clamp_max": 5.0,
+          "node_note": "ACOLITE Rrs. B1=Blue(492) B2=Green(559) B3=Red(665) B4=NIR(833) B5=SWIR1(1610) B6=SWIR2(2186). SWIR=SWIR1(B5). Stack output = [NDWI, MNDWI, AWEIsh, MBWI] — 4 max-independent water indices (paper set)."
+        }
+      }
+    },
+    {
+      "id": "vote",
+      "type": "geo_band_calc",
+      "position": {
+        "x": 1390,
+        "y": 450
+      },
+      "width": 250,
+      "height": 130,
+      "data": {
+        "userLabel": "Consensus Vote k=2 of 4",
+        "params": {
+          "expression": "(1*(B1>0)+1*(B2>0)+1*(B3>0)+1*(B4>0)) >= 2",
+          "clamp_min": 0.0,
+          "clamp_max": 1.0,
+          "colormap": "gray"
+        }
+      }
+    },
+    {
+      "id": "tomask",
+      "type": "geotiff_to_mask",
+      "position": {
+        "x": 1740,
+        "y": 450
+      },
+      "width": 240,
+      "height": 120,
+      "data": {
+        "userLabel": "Vote → Binary Mask",
+        "params": {
+          "band_index": 0,
+          "threshold": 0.5
+        }
+      }
+    },
+    {
+      "id": "nir_gate",
+      "type": "geo_band_calc",
+      "position": {
+        "x": 1390,
+        "y": 720
+      },
+      "width": 250,
+      "height": 130,
+      "data": {
+        "userLabel": "NIR+GREEN Gate",
+        "params": {
+          "expression": "(B4 < 0.025) & (B5 < 0.018) & (B6 < 0.014) & (B2 > 0.002)",
+          "clamp_min": 0.0,
+          "clamp_max": 1.0,
+          "colormap": "gray",
+          "node_note": "Turbid-aware constraint. NIR<0.025 tolerates sediment-laden water; SWIR1<0.018 & SWIR2<0.014 are the real water discriminators (sediment does not lift SWIR, bright land does). Green>0.002 = low-signal floor (rejects shadow/noise)."
+        }
+      }
+    },
+    {
+      "id": "nir_tomask",
+      "type": "geotiff_to_mask",
+      "position": {
+        "x": 1740,
+        "y": 720
+      },
+      "width": 240,
+      "height": 120,
+      "data": {
+        "userLabel": "NIR Gate → Mask",
+        "params": {
+          "band_index": 0,
+          "threshold": 0.5
+        }
+      }
+    },
+    {
+      "id": "mask_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 2080,
+        "y": 560
+      },
+      "width": 240,
+      "height": 120,
+      "data": {
+        "userLabel": "Vote AND NIR Gate",
+        "params": {
+          "operation": 2
+        }
+      }
+    },
+    {
+      "id": "acc_mean",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2430,
+        "y": 280
+      },
+      "width": 250,
+      "height": 140,
+      "data": {
+        "userLabel": "MC Probability (mean)",
+        "params": {
+          "mode": 0,
+          "window": 64,
+          "reset": 0,
+          "cumulative": true,
+          "target_n": 0
+        }
+      }
+    },
+    {
+      "id": "acc_std",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2430,
+        "y": 600
+      },
+      "width": 250,
+      "height": 140,
+      "data": {
+        "userLabel": "MC Uncertainty (std)",
+        "params": {
+          "mode": 3,
+          "window": 64,
+          "reset": 0,
+          "cumulative": true,
+          "target_n": 0
+        }
+      }
+    },
+    {
+      "id": "topo",
+      "type": "geo_persistence",
+      "position": {
+        "x": 2790,
+        "y": 220
+      },
+      "width": 300,
+      "height": 260,
+      "data": {
+        "userLabel": "Topological Persistence (no threshold)",
+        "params": {
+          "band": 1,
+          "feature": "maxima (bright)",
+          "connectivity": "8",
+          "min_persistence": 0.0,
+          "max_pixels": 1000000,
+          "colormap": "magma",
+          "node_note": "Replaces the arbitrary P≥0.5 binarize + min-area filter. Each water body is scored by its topological persistence (peak − merge saddle); the significance cut is auto-detected from the largest gap in the persistence spectrum. No threshold, no area filter."
+        }
+      }
+    },
+    {
+      "id": "ref",
+      "type": "geo_shapefile_rasterizer",
+      "position": {
+        "x": 2790,
+        "y": 660
+      },
+      "width": 260,
+      "height": 180,
+      "data": {
+        "userLabel": "Reference Mask (optional)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/Seine_river_MC_extent/Seine_river_MC_extent.shp",
+          "layer": "",
+          "burn_field": "",
+          "burn_value": 1.0,
+          "all_touched": false,
+          "background": 0.0,
+          "cache_dir": "copernicus_cache"
+        }
+      }
+    },
+    {
+      "id": "metrics",
+      "type": "sci_mask_metrics",
+      "position": {
+        "x": 3470,
+        "y": 450
+      },
+      "width": 260,
+      "height": 130,
+      "data": {
+        "userLabel": "Precision / Recall / F1 / IoU",
+        "params": {
+          "show_overlay": true,
+          "alpha": 0.45,
+          "iou_thresh": 0.5
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_blue_s1p",
+      "source": "blue_reader",
+      "target": "stack1",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e_green_s1s",
+      "source": "green_reader",
+      "target": "stack1",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e_s1_s2p",
+      "source": "stack1",
+      "target": "stack2",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e_red_s2s",
+      "source": "red_reader",
+      "target": "stack2",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e_s2_s3p",
+      "source": "stack2",
+      "target": "stack3",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e_nir_s3s",
+      "source": "nir_reader",
+      "target": "stack3",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e_s3_s4p",
+      "source": "stack3",
+      "target": "stack4",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e_sw1_s4s",
+      "source": "swir1_reader",
+      "target": "stack4",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e_s4_s5p",
+      "source": "stack4",
+      "target": "stack5",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary"
+    },
+    {
+      "id": "e_sw2_s5s",
+      "source": "swir2_reader",
+      "target": "stack5",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary"
+    },
+    {
+      "id": "e_s5_noise",
+      "source": "stack5",
+      "target": "noise",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_noise_idx",
+      "source": "noise",
+      "target": "idx",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_idx_vote",
+      "source": "idx",
+      "target": "vote",
+      "sourceHandle": "geotiff__stack",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_vote_tomask",
+      "source": "vote",
+      "target": "tomask",
+      "sourceHandle": "geotiff__raw",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_noise_nir",
+      "source": "noise",
+      "target": "nir_gate",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_nir_thr",
+      "source": "nir_gate",
+      "target": "nir_tomask",
+      "sourceHandle": "geotiff__raw",
+      "targetHandle": "geotiff__geotiff"
+    },
+    {
+      "id": "e_vote_and",
+      "source": "tomask",
+      "target": "mask_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e_nir_and",
+      "source": "nir_tomask",
+      "target": "mask_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e_and_mean",
+      "source": "mask_and",
+      "target": "acc_mean",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e_and_std",
+      "source": "mask_and",
+      "target": "acc_std",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e_mean_topo",
+      "source": "acc_mean",
+      "target": "topo",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e_blue_ref",
+      "source": "blue_reader",
+      "target": "ref",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__reference"
+    },
+    {
+      "id": "e_topo_mtr",
+      "source": "topo",
+      "target": "metrics",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__pred"
+    },
+    {
+      "id": "e_ref_mtr",
+      "source": "ref",
+      "target": "metrics",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__truth"
+    },
+    {
+      "id": "e_tick_acc_mean",
+      "source": "noise",
+      "target": "acc_mean",
+      "sourceHandle": "scalar__tick",
+      "targetHandle": "scalar__tick"
+    },
+    {
+      "id": "e_tick_acc_std",
+      "source": "noise",
+      "target": "acc_std",
+      "sourceHandle": "scalar__tick",
+      "targetHandle": "scalar__tick"
+    }
+  ],
+  "ui": {
+    "zoom": 0.4,
+    "viewport": {
+      "x": 40,
+      "y": 320,
+      "zoom": 0.4
+    }
+  }
+}

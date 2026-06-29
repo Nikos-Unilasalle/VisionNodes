@@ -1207,8 +1207,9 @@ function App() {
     setSelectedNodeId(null);
     setGroupStack([]);
     groupStackRef.current = [];
-    if (isConnected) updateGraph(canvasNodesRef.current, canvasEdgesRef.current.filter((e: any) => !inactiveEdgeIds.has(e.id)));
-  }, [activeCanvasId, isConnected, updateGraph, inactiveEdgeIds]);
+    // graph update handled by the effect above (inactiveEdgeIds / isConnected)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCanvasId]);
 
   const alignNodes = useCallback((direction: 'horizontal' | 'vertical') => {
     setViewNodes(nds => {

@@ -1,0 +1,242 @@
+{
+  "nodes": [
+    {
+      "id": "note_main",
+      "type": "canvas_note",
+      "position": { "x": 0, "y": -180 },
+      "style": { "width": 1420, "height": 165 },
+      "width": 1420, "height": 165,
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 2,
+          "text": "**MC P(water) Sensitivity vs Spectral Water Indices**  ·  from `sensitivity_option_c.py`\n\nQuantile-binned mean ± P10–P90 of P(water) as a function of NDWI / MNDWI / AWEI / MBWI. Spearman r measures monotone correlation.\n\n**Setup (ACOLITE L2W individual-band TIFs)**\n1. `water_prob_mc.tif` → **MC Probability** reader.\n2. Six Rrs_*.tif files → individual band readers (Blue=492 nm, Green=559, Red=665, NIR=833, SWIR1=1610, SWIR2=2186).\n3. Five `geo_band_stack` nodes merge them into [B1=Blue, B2=Green, B3=Red, B4=NIR, B5=SWIR1, B6=SWIR2].\n4. Files are already Rrs (sr⁻¹) — **no DN normalization needed**. Negative values on dark water pixels are normal.\n5. The **Spectral Indices** node computes NDWI + MNDWI + AWEI + MBWI.  Run — the Python node renders the 4-panel sensitivity figure."
+        }
+      }
+    },
+
+    {
+      "id": "frame_readers",
+      "type": "canvas_frame",
+      "position": { "x": -20, "y": -20 },
+      "style": { "width": 290, "height": 1460, "zIndex": -1 },
+      "width": 290, "height": 1460,
+      "data": { "label": "Frame", "params": { "title": "ACOLITE L2W band readers (Rrs sr⁻¹)", "color_index": 0 } }
+    },
+    {
+      "id": "frame_stack",
+      "type": "canvas_frame",
+      "position": { "x": 305, "y": 200 },
+      "style": { "width": 280, "height": 1240, "zIndex": -1 },
+      "width": 280, "height": 1240,
+      "data": { "label": "Frame", "params": { "title": "Band stacking → 6-band", "color_index": 2 } }
+    },
+
+    {
+      "id": "prob_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 10 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "MC Probability Map",
+        "params": {
+          "file_path": "<<path/to/water_prob_mc.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+
+    {
+      "id": "blue_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 225 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "Blue — Rrs 492 nm (B02)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_492.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "green_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 430 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "Green — Rrs 559 nm (B03)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_559.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "red_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 635 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "Red — Rrs 665 nm (B04)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_665.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "nir_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 840 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "NIR — Rrs 833 nm (B08)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_833.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "swir1_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 1045 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "SWIR1 — Rrs 1610 nm (B11)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_1610.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "swir2_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 1250 },
+      "width": 250, "height": 160,
+      "data": {
+        "label": "SWIR2 — Rrs 2186 nm (B12)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_2186.tif",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+
+    {
+      "id": "stack1",
+      "type": "geo_band_stack",
+      "position": { "x": 320, "y": 310 },
+      "width": 250, "height": 140,
+      "data": {
+        "label": "Blue + Green",
+        "params": { "resampling": 0, "prefix_secondary": false, "cache_dir": "copernicus_cache" }
+      }
+    },
+    {
+      "id": "stack2",
+      "type": "geo_band_stack",
+      "position": { "x": 320, "y": 510 },
+      "width": 250, "height": 140,
+      "data": {
+        "label": "+ Red",
+        "params": { "resampling": 0, "prefix_secondary": false, "cache_dir": "copernicus_cache" }
+      }
+    },
+    {
+      "id": "stack3",
+      "type": "geo_band_stack",
+      "position": { "x": 320, "y": 710 },
+      "width": 250, "height": 140,
+      "data": {
+        "label": "+ NIR",
+        "params": { "resampling": 0, "prefix_secondary": false, "cache_dir": "copernicus_cache" }
+      }
+    },
+    {
+      "id": "stack4",
+      "type": "geo_band_stack",
+      "position": { "x": 320, "y": 910 },
+      "width": 250, "height": 140,
+      "data": {
+        "label": "+ SWIR1",
+        "params": { "resampling": 0, "prefix_secondary": false, "cache_dir": "copernicus_cache" }
+      }
+    },
+    {
+      "id": "stack5",
+      "type": "geo_band_stack",
+      "position": { "x": 320, "y": 1110 },
+      "width": 250, "height": 140,
+      "data": {
+        "label": "+ SWIR2 → 6-band [B,G,R,NIR,S1,S2]",
+        "params": { "resampling": 0, "prefix_secondary": false, "cache_dir": "copernicus_cache" }
+      }
+    },
+
+    {
+      "id": "spectral_idx",
+      "type": "geo_spectral_indices",
+      "position": { "x": 620, "y": 1000 },
+      "width": 280, "height": 240,
+      "data": {
+        "label": "NDWI + MNDWI + AWEI + MBWI",
+        "params": {
+          "sensor": 0,
+          "nir_band": 4, "red_band": 3, "green_band": 2, "blue_band": 1, "swir_band": 5,
+          "ndvi": false, "ndwi": true, "evi": false, "mndwi": true, "nbr": false, "bsi": false,
+          "expr1_enable": true,
+          "expr1_label": "AWEI",
+          "expr1": "BLUE + 2.5*GREEN - 1.5*(NIR + SWIR) - 0.25*B6",
+          "expr2_enable": true,
+          "expr2_label": "MBWI",
+          "expr2": "3.0*GREEN - (RED + NIR + SWIR + B6)",
+          "colormap": 0,
+          "clamp_min": -5.0,
+          "clamp_max": 5.0,
+          "node_note": "6-band stack order: B1=Blue(492) B2=Green(559) B3=Red(665) B4=NIR(833) B5=SWIR1(1610) B6=SWIR2(2186). Output stack: [NDWI, MNDWI, AWEI, MBWI]."
+        }
+      }
+    },
+
+    {
+      "id": "sensitivity",
+      "type": "logic_python",
+      "position": { "x": 980, "y": 200 },
+      "width": 340, "height": 220,
+      "data": {
+        "label": "Sensitivity Analysis (4-panel figure)",
+        "params": {
+          "code": "# MC P(water) sensitivity vs spectral water indices\n# a = MC probability geotiff (1-band float [0,1])\n# b = spectral indices stack geotiff (4 bands: NDWI, MNDWI, AWEI, MBWI)\nN_BINS = 30\n\nif not (isinstance(a, dict) and 'bands' in a and isinstance(b, dict) and 'bands' in b):\n    out_main = None\nelse:\n    import matplotlib\n    matplotlib.use('Agg')\n    import matplotlib.pyplot as plt\n\n    prob = a['bands'][0].astype(np.float64)\n    valid_base = np.isfinite(prob)\n    n_idx = min(4, b['count'])\n    names = (b.get('band_names') or ['NDWI', 'MNDWI', 'AWEI', 'MBWI'])[:n_idx]\n    COLORS = {'NDWI': '#0072B2', 'MNDWI': '#009E73', 'AWEI': '#D55E00', 'MBWI': '#CC79A7'}\n\n    def spearman_r(x, y):\n        m = np.isfinite(x) & np.isfinite(y)\n        if m.sum() < 30: return float('nan')\n        xa, ya = x[m].astype(np.float64), y[m].astype(np.float64)\n        ra = np.argsort(np.argsort(xa)).astype(np.float64)\n        rb = np.argsort(np.argsort(ya)).astype(np.float64)\n        return float(np.corrcoef(ra, rb)[0, 1])\n\n    def binned_stats(x_all, y_all, n_bins):\n        m = np.isfinite(x_all) & np.isfinite(y_all)\n        x, y = x_all[m], y_all[m]\n        if x.size < 500: return None\n        edges = np.unique(np.quantile(x, np.linspace(0, 1, n_bins + 1)))\n        if edges.size < 5: return None\n        bidx = np.digitize(x, edges[1:-1], right=True)\n        rows = []\n        for i in range(edges.size - 1):\n            sel = bidx == i\n            if sel.sum() < 50: continue\n            yi = y[sel]\n            rows.append({'mid': (edges[i] + edges[i+1]) / 2,\n                         'mean': float(np.mean(yi)),\n                         'p10':  float(np.quantile(yi, 0.10)),\n                         'p90':  float(np.quantile(yi, 0.90))})\n        return rows\n\n    plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 11,\n                         'axes.spines.top': False, 'axes.spines.right': False,\n                         'grid.linewidth': 0.35, 'grid.alpha': 0.45})\n    fig, axes = plt.subplots(2, 2, figsize=(11, 9))\n    fig.patch.set_facecolor('white')\n    axes = axes.flatten()\n\n    for i in range(n_idx):\n        ax = axes[i]\n        name = names[i]\n        arr  = b['bands'][i].astype(np.float64)\n        valid = valid_base & np.isfinite(arr)\n        pf   = prob[valid]\n        xi   = arr[valid]\n        sr   = spearman_r(xi, pf)\n        stats = binned_stats(xi, pf, N_BINS)\n        c    = COLORS.get(name, '#888888')\n\n        ax.set_facecolor('#f8f9fa')\n        ax.axhspan(0.3, 0.7, color='#f5a623', alpha=0.06, zorder=0)\n        for hy in [0.3, 0.7]:\n            ax.axhline(hy, color='#f5a623', lw=0.5, ls=':', alpha=0.5, zorder=1)\n        ax.axhline(0.5, color='#444', lw=1.0, ls='--', alpha=0.7, zorder=2)\n\n        if stats:\n            xs  = np.array([r['mid']  for r in stats])\n            ys  = np.array([r['mean'] for r in stats])\n            ylo = np.array([r['p10']  for r in stats])\n            yhi = np.array([r['p90']  for r in stats])\n            ax.fill_between(xs, ylo, yhi, color=c, alpha=0.15, zorder=3, label='P10–P90')\n            ax.plot(xs, ys, color=c, lw=2.2, zorder=5)\n            ax.scatter(xs, ys, color='white', s=52, zorder=6, linewidths=0)\n            ax.scatter(xs, ys, color=c,      s=30, zorder=7, linewidths=0)\n\n        ax.set_ylim(-0.04, 1.06)\n        ax.set_xlabel(name, fontsize=11, fontweight='bold')\n        ax.set_ylabel('Mean P(water)', fontsize=10)\n        ax.set_title(f'P(water) vs {name}', fontsize=11)\n        ax.text(0.04, 0.96, f'Spearman  r = {sr:.3f}', transform=ax.transAxes,\n                fontsize=9.5, va='top',\n                bbox={'boxstyle': 'round,pad=0.35', 'facecolor': 'white', 'edgecolor': c, 'lw': 1.0, 'alpha': 0.92})\n        ax.spines['left'].set_color(c)\n        ax.spines['left'].set_linewidth(2.0)\n        ax.grid(True, which='major', axis='both', zorder=0)\n\n    fig.suptitle('MC P(water) sensitivity vs spectral water indices',\n                 fontsize=13, fontweight='normal', y=1.005)\n    plt.tight_layout(rect=[0, 0.05, 1, 0.98])\n    fig.canvas.draw()\n    buf = np.asarray(fig.canvas.buffer_rgba())\n    out_main = cv2.cvtColor(buf, cv2.COLOR_RGBA2BGR)\n    plt.close(fig)"
+        }
+      }
+    },
+
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": { "x": 1360, "y": 270 },
+      "width": 340, "height": 270,
+      "data": { "label": "Sensitivity Figure", "params": {} }
+    }
+  ],
+  "edges": [
+    { "id": "e_blue_s1_p",    "source": "blue_reader",  "target": "stack1",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_green_s1_s",   "source": "green_reader", "target": "stack1",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s1_s2_p",      "source": "stack1",       "target": "stack2",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_red_s2_s",     "source": "red_reader",   "target": "stack2",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s2_s3_p",      "source": "stack2",       "target": "stack3",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_nir_s3_s",     "source": "nir_reader",   "target": "stack3",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s3_s4_p",      "source": "stack3",       "target": "stack4",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_swir1_s4_s",   "source": "swir1_reader", "target": "stack4",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s4_s5_p",      "source": "stack4",       "target": "stack5",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__primary" },
+    { "id": "e_swir2_s5_s",   "source": "swir2_reader", "target": "stack5",      "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__secondary" },
+    { "id": "e_s5_idx",       "source": "stack5",       "target": "spectral_idx","sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_prob_py",      "source": "prob_reader",  "target": "sensitivity", "sourceHandle": "geotiff__geotiff", "targetHandle": "any__a" },
+    { "id": "e_stack_py",     "source": "spectral_idx", "target": "sensitivity", "sourceHandle": "geotiff__stack",   "targetHandle": "any__b" },
+    { "id": "e_py_disp",      "source": "sensitivity",  "target": "display",     "sourceHandle": "image__main",      "targetHandle": "image__main" }
+  ],
+  "ui": { "zoom": 0.55, "viewport": { "x": 20, "y": 200, "zoom": 0.55 } }
+}

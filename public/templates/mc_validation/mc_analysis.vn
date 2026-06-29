@@ -1,0 +1,206 @@
+{
+  "nodes": [
+    {
+      "id": "note_main",
+      "type": "canvas_note",
+      "position": { "x": 0, "y": -170 },
+      "style": { "width": 1100, "height": 150 },
+      "width": 1100, "height": 150,
+      "data": {
+        "label": "Note",
+        "params": {
+          "color_index": 3,
+          "text": "**MC Water Mask — Uncertainty & Confidence Analysis**\n\n1. Set file paths in **MC Probability Map** and **MC Water Mask** readers.\n2. `geo_band_stats` → mean / median / std / count of the full probability raster.\n3. `geo_band_calc` → Bernoulli uncertainty P(1−P) per pixel → stats via second `geo_band_stats`.\n4. `geotiff_to_mask (>0.5)` converts the water mask TIF → binary mask → `feat_mask_stats` (water extent).\n5. `geo_statistics` (prob + water mask) → mean P(water) inside the detected water extent.\n6. `geotiff_to_mask (>0.9)` from prob → high-confidence pixels → `feat_mask_stats` vs water mask → high-conf coverage %."
+        }
+      }
+    },
+
+    {
+      "id": "prob_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 60 },
+      "width": 260, "height": 160,
+      "data": {
+        "userLabel": "MC Probability Map",
+        "params": {
+          "file_path": "<<path/to/water_prob_mc.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+    {
+      "id": "mask_reader",
+      "type": "geo_geotiff_reader",
+      "position": { "x": 0, "y": 500 },
+      "width": 260, "height": 160,
+      "data": {
+        "userLabel": "MC Water Mask",
+        "params": {
+          "file_path": "<<path/to/water_mask_mc.tif>>",
+          "r_band": 1, "g_band": 1, "b_band": 1
+        }
+      }
+    },
+
+    {
+      "id": "prob_stats",
+      "type": "geo_band_stats",
+      "position": { "x": 360, "y": 60 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "P(water) Global Stats",
+        "params": { "band": 1, "ignore_zeros": false }
+      }
+    },
+    {
+      "id": "insp_prob",
+      "type": "data_inspector",
+      "position": { "x": 700, "y": 60 },
+      "width": 280, "height": 220,
+      "data": {
+        "userLabel": "P(water) Stats",
+        "params": {}
+      }
+    },
+
+    {
+      "id": "uncertainty",
+      "type": "geo_band_calc",
+      "position": { "x": 360, "y": 260 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "Bernoulli Uncertainty P(1−P)",
+        "params": {
+          "expression": "B1 * (1.0 - B1)",
+          "clamp_min": 0.0,
+          "clamp_max": 0.25,
+          "colormap": "viridis"
+        }
+      }
+    },
+    {
+      "id": "uncert_stats",
+      "type": "geo_band_stats",
+      "position": { "x": 700, "y": 260 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "Uncertainty Stats",
+        "params": { "band": 1, "ignore_zeros": false }
+      }
+    },
+    {
+      "id": "insp_uncert",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 260 },
+      "width": 280, "height": 200,
+      "data": {
+        "userLabel": "Mean Uncertainty P(1−P)",
+        "params": {}
+      }
+    },
+
+    {
+      "id": "mask_tomask",
+      "type": "geotiff_to_mask",
+      "position": { "x": 360, "y": 500 },
+      "width": 240, "height": 120,
+      "data": {
+        "userLabel": "Mask → Binary (>0.5)",
+        "params": { "band_index": 0, "threshold": 0.5 }
+      }
+    },
+    {
+      "id": "water_area",
+      "type": "feat_mask_stats",
+      "position": { "x": 700, "y": 450 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "Water Coverage",
+        "params": { "weighted_centroid": false }
+      }
+    },
+    {
+      "id": "insp_area",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 450 },
+      "width": 280, "height": 180,
+      "data": {
+        "userLabel": "Water Coverage Stats",
+        "params": {}
+      }
+    },
+    {
+      "id": "geo_stat_mean",
+      "type": "geo_statistics",
+      "position": { "x": 700, "y": 630 },
+      "width": 240, "height": 110,
+      "data": {
+        "userLabel": "Mean P within Water",
+        "params": {}
+      }
+    },
+    {
+      "id": "insp_mean",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 630 },
+      "width": 280, "height": 160,
+      "data": {
+        "userLabel": "Masked P(water) Mean",
+        "params": {}
+      }
+    },
+
+    {
+      "id": "high_conf_mask",
+      "type": "geotiff_to_mask",
+      "position": { "x": 360, "y": 710 },
+      "width": 240, "height": 120,
+      "data": {
+        "userLabel": "High-Conf Mask (P>0.9)",
+        "params": { "band_index": 0, "threshold": 0.899 }
+      }
+    },
+    {
+      "id": "high_conf_pct",
+      "type": "feat_mask_stats",
+      "position": { "x": 700, "y": 810 },
+      "width": 240, "height": 130,
+      "data": {
+        "userLabel": "High-Conf vs Water Coverage",
+        "params": { "weighted_centroid": false }
+      }
+    },
+    {
+      "id": "insp_hconf",
+      "type": "data_inspector",
+      "position": { "x": 1040, "y": 810 },
+      "width": 280, "height": 180,
+      "data": {
+        "userLabel": "High-Conf Coverage %",
+        "params": {}
+      }
+    }
+  ],
+  "edges": [
+    { "id": "e_prob_pstats",   "source": "prob_reader",   "target": "prob_stats",    "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_pstats_insp",   "source": "prob_stats",    "target": "insp_prob",     "sourceHandle": "dict__stats",      "targetHandle": "any__data" },
+
+    { "id": "e_prob_uncert",   "source": "prob_reader",   "target": "uncertainty",   "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_uncert_ustats", "source": "uncertainty",   "target": "uncert_stats",  "sourceHandle": "geotiff__raw",     "targetHandle": "geotiff__geotiff" },
+    { "id": "e_ustats_insp",   "source": "uncert_stats",  "target": "insp_uncert",   "sourceHandle": "dict__stats",      "targetHandle": "any__data" },
+
+    { "id": "e_mask_tomask",   "source": "mask_reader",   "target": "mask_tomask",   "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_tomask_area",   "source": "mask_tomask",   "target": "water_area",    "sourceHandle": "mask__mask",       "targetHandle": "mask__mask" },
+    { "id": "e_area_insp",     "source": "water_area",    "target": "insp_area",     "sourceHandle": "dict__stats",      "targetHandle": "any__data" },
+
+    { "id": "e_prob_geostat",  "source": "prob_reader",   "target": "geo_stat_mean", "sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_mask_geostat",  "source": "mask_tomask",   "target": "geo_stat_mean", "sourceHandle": "mask__mask",       "targetHandle": "mask__mask" },
+    { "id": "e_geostat_insp",  "source": "geo_stat_mean", "target": "insp_mean",     "sourceHandle": "text__meta",       "targetHandle": "any__data" },
+
+    { "id": "e_prob_hconf",    "source": "prob_reader",   "target": "high_conf_mask","sourceHandle": "geotiff__geotiff", "targetHandle": "geotiff__geotiff" },
+    { "id": "e_hconf_pct",     "source": "high_conf_mask","target": "high_conf_pct", "sourceHandle": "mask__mask",       "targetHandle": "mask__mask" },
+    { "id": "e_tomask_ref",    "source": "mask_tomask",   "target": "high_conf_pct", "sourceHandle": "mask__mask",       "targetHandle": "mask__ref_mask" },
+    { "id": "e_hpct_insp",     "source": "high_conf_pct", "target": "insp_hconf",    "sourceHandle": "dict__stats",      "targetHandle": "any__data" }
+  ],
+  "ui": { "zoom": 0.65, "viewport": { "x": 60, "y": 200, "zoom": 0.65 } }
+}
