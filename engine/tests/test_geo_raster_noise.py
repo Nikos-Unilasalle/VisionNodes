@@ -124,3 +124,41 @@ def test_entropy_seed_varies():
     r1 = _mod.RasterNoiseNode().process({'geotiff': _geo(bands)}, p)['geotiff']['bands']
     r2 = _mod.RasterNoiseNode().process({'geotiff': _geo(bands)}, p)['geotiff']['bands']
     assert not np.allclose(r1, r2)
+
+
+def test_max_ticks_auto_stops():
+    """Target N: after N realisations the node pauses and freezes its output."""
+    bands = np.full((1, 8, 8), 0.4, dtype=np.float32)
+    geo = _geo(bands)
+    node = _mod.RasterNoiseNode()
+    P = {'sigma_abs': 0.02, 'sigma_rel': 0.0, 'seed': 5, 'clip_negative': False, 'max_ticks': 3}
+
+    o1 = node.process({'geotiff': geo}, P); assert o1['tick'] == 1
+    o2 = node.process({'geotiff': geo}, P); assert o2['tick'] == 2
+    o3 = node.process({'geotiff': geo}, P); assert o3['tick'] == 3
+    assert node._paused is False  # still drawing on the 3rd
+
+    # 4th call: tick already == max → paused, output frozen at the 3rd realisation
+    o4 = node.process({'geotiff': geo}, P)
+    assert node._paused is True
+    assert o4['tick'] == 3
+    assert np.array_equal(o4['geotiff']['bands'], o3['geotiff']['bands'])
+
+
+def test_reset_button_rewinds_tick_and_resumes():
+    bands = np.full((1, 8, 8), 0.4, dtype=np.float32)
+    geo = _geo(bands)
+    node = _mod.RasterNoiseNode()
+    P = {'sigma_abs': 0.02, 'sigma_rel': 0.0, 'seed': 5, 'clip_negative': False, 'max_ticks': 2}
+
+    first = node.process({'geotiff': geo}, P)        # tick → 1
+    node.process({'geotiff': geo}, P)                # tick → 2, then auto-stop arms
+    node.process({'geotiff': geo}, P)                # paused
+    assert node._paused is True
+
+    # Reset (rising edge): tick → 0, resume, redraw the seed-0 realisation
+    after = node.process({'geotiff': geo}, {**P, 'reset': 1})
+    assert node._paused is False
+    assert after['tick'] == 1
+    # Same seed+tick sequence ⇒ identical to the very first realisation (reproducible)
+    assert np.array_equal(after['geotiff']['bands'], first['geotiff']['bands'])
