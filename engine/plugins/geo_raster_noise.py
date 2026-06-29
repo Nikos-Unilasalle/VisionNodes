@@ -45,10 +45,15 @@ from registry import vision_node, NodeProcessor
     outputs=[
         {'id': 'geotiff', 'color': 'geotiff', 'label': 'Perturbed raster'},
         {'id': 'preview', 'color': 'image',   'label': 'Noise preview (band 1)'},
+        {'id': 'tick',    'color': 'scalar',  'label': 'Realisation # (0-based)'},
     ],
     params=[
         {'id': 'toggle_run', 'type': 'trigger', 'default': 0,
          'label': '▶ Start / ⏸ Stop (Monte-Carlo)'},
+        {'id': 'max_ticks', 'type': 'int', 'default': 0, 'min': 0, 'max': 1_000_000, 'step': 1,
+         'label': 'Target N (0 = run forever)'},
+        {'id': 'reset', 'type': 'trigger', 'default': 0,
+         'label': '↺ Reset run (tick → 0, resume)'},
         {'id': 'sigma_abs', 'type': 'float', 'default': 0.01, 'min': 0.0, 'max': 1e6, 'step': 0.001,
          'label': 'σ absolute (additive floor)'},
         {'id': 'sigma_rel', 'type': 'float', 'default': 0.02, 'min': 0.0, 'max': 10.0, 'step': 0.01,
@@ -68,13 +73,24 @@ class RasterNoiseNode(NodeProcessor):
         self._tick = 0
         self._running = True          # Monte-Carlo runs by default on load
         self._prev_trigger = 0.0
+        self._prev_reset = 0.0
         self._paused = False
         self._last_output = None
 
     def process(self, inputs, params):
         geo = inputs.get('geotiff')
         if not isinstance(geo, dict) or 'bands' not in geo:
-            return {'geotiff': None, 'preview': None}
+            return {'geotiff': None, 'preview': None, 'tick': self._tick}
+
+        # Reset button (trigger): rising edge zeroes the realisation counter and
+        # resumes the run. Emitting `tick` downstream lets the accumulator auto-clear
+        # when it sees tick == 0, so a single Reset press re-runs the whole MC chain.
+        reset_trig = float(params.get('reset', 0) or 0)
+        if reset_trig > 0.5 and self._prev_reset <= 0.5:
+            self._tick = 0
+            self._running = True
+            self._last_output = None
+        self._prev_reset = reset_trig
 
         # Start/Stop button (trigger): each press is a 0→1 pulse. Flip the running
         # state on the rising edge. When stopped, mark the node paused so the engine
@@ -84,6 +100,12 @@ class RasterNoiseNode(NodeProcessor):
         if trig > 0.5 and self._prev_trigger <= 0.5:
             self._running = not self._running
         self._prev_trigger = trig
+
+        # Auto-stop: once Target N realisations are drawn, pause. The downstream
+        # accumulator has by then aggregated exactly N frames into P(water).
+        max_ticks = int(params.get('max_ticks', 0) or 0)
+        if max_ticks > 0 and self._tick >= max_ticks:
+            self._running = False
 
         self._paused = not self._running
         if self._paused and self._last_output is not None:
@@ -123,5 +145,5 @@ class RasterNoiseNode(NodeProcessor):
         prev = np.clip((b0 - lo) / span * 255.0, 0, 255).astype(np.uint8)
         preview = cv2.applyColorMap(prev, cv2.COLORMAP_BONE)
 
-        self._last_output = {'geotiff': out_geo, 'preview': preview}
+        self._last_output = {'geotiff': out_geo, 'preview': preview, 'tick': self._tick}
         return self._last_output
