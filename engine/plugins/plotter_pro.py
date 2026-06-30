@@ -25,7 +25,8 @@ _PALETTES: dict[str, list[tuple[int, int, int]]] = {
 MAX_SERIES = 5
 
 # Keys injected by the engine as compatibility shims — not real series.
-_SKIP_KEYS = frozenset({'raw_frame', 'image', 'data', 'in', 'value', 'main'})
+# Also skip the static dict port so it's not treated as a dynamic series.
+_SKIP_KEYS = frozenset({'raw_frame', 'image', 'data', 'in', 'value', 'main', 'dict_in'})
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -33,25 +34,28 @@ _SKIP_KEYS = frozenset({'raw_frame', 'image', 'data', 'in', 'value', 'main'})
 def _to_float(v) -> float | None:
     if v is None:
         return None
+    if isinstance(v, bool):
+        return None  # never coerce booleans into a series value
     if isinstance(v, (int, float, np.number)):
-        return float(v)
+        f = float(v)
+        return f if np.isfinite(f) else None
     if isinstance(v, (list, np.ndarray)):
         if len(v) == 0:
-            return 0.0
+            return None
         if isinstance(v[0], dict):
             for key in ('area', 'scalar', 'value', 'confidence'):
                 if key in v[0]:
                     return float(np.mean([it.get(key, 0) for it in v]))
-            return float(len(v))
+            return None  # list of opaque dicts → no meaningful scalar
         try:
             return float(np.mean(v))
         except Exception:
-            return 0.0
+            return None
     if isinstance(v, dict):
         for key in ('area', 'scalar', 'value', 'confidence'):
             if key in v:
                 return float(v[key])
-        return 1.0
+        return None  # opaque dict → skip (do NOT inject a constant 1.0)
     return 0.0
 
 
@@ -60,17 +64,22 @@ def _apply_normalize(data: list[float], norm_type: int) -> list[float]:
     if norm_type == 0 or len(data) < 2:
         return list(data)
     arr = np.array(data, dtype=np.float64)
+    # Relative epsilon: a near-constant series has negligible spread compared
+    # to its magnitude. Dividing by that tiny spread amplifies rounding noise
+    # into huge spurious spikes, so treat such a series as flat (zeros).
+    scale = max(abs(float(arr.mean())), 1.0)
+    eps = 1e-6 * scale
     if norm_type == 1:
         lo, hi = arr.min(), arr.max()
-        return ((arr - lo) / (hi - lo)).tolist() if hi > lo else arr.tolist()
+        return ((arr - lo) / (hi - lo)).tolist() if (hi - lo) > eps else np.zeros_like(arr).tolist()
     if norm_type == 2:
         mu, sd = arr.mean(), arr.std()
-        return ((arr - mu) / sd).tolist() if sd > 0 else arr.tolist()
+        return ((arr - mu) / sd).tolist() if sd > eps else np.zeros_like(arr).tolist()
     if norm_type == 3:
         med = np.median(arr)
         q1, q3 = np.percentile(arr, [25, 75])
         iqr = q3 - q1
-        return ((arr - med) / iqr).tolist() if iqr > 0 else arr.tolist()
+        return ((arr - med) / iqr).tolist() if iqr > eps else np.zeros_like(arr).tolist()
     return list(data)
 
 
@@ -81,8 +90,11 @@ def _apply_filter(data: list[float], filter_type: int, window: int) -> list[floa
     w = min(window, len(arr))
     if w < 2:
         return list(data)
-    if filter_type == 1:  # moving average
-        return np.convolve(arr, np.ones(w) / w, mode='same').tolist()
+    if filter_type == 1:  # moving average (edge-padded to avoid boundary dips)
+        half = w // 2
+        padded = np.pad(arr, half, mode='edge')
+        sm = np.convolve(padded, np.ones(w) / w, mode='valid')
+        return sm[:len(arr)].tolist()
     if filter_type == 2:  # median
         half = w // 2
         out = np.empty_like(arr)
@@ -95,12 +107,14 @@ def _apply_filter(data: list[float], filter_type: int, window: int) -> list[floa
         for v in arr[1:]:
             out.append(alpha * v + (1 - alpha) * out[-1])
         return out
-    if filter_type == 4:  # Gaussian
+    if filter_type == 4:  # Gaussian (edge-padded)
         half = w // 2
         sigma = w / 3.0
         k = np.exp(-np.arange(-half, half + 1) ** 2 / (2 * sigma ** 2))
         k /= k.sum()
-        return np.convolve(arr, k, mode='same').tolist()
+        padded = np.pad(arr, half, mode='edge')
+        sm = np.convolve(padded, k, mode='valid')
+        return sm[:len(arr)].tolist()
     return list(data)
 
 
@@ -209,7 +223,9 @@ def _fill_under(
     description='Multi-series live plotter: up to 5 curves, palette selector, axes, DataFrame output, fill option.',
     resizable=True,
     dynamic_inputs=True,
-    inputs=[],
+    inputs=[
+        {'id': 'dict_in', 'color': 'dict', 'label': 'Dict'},
+    ],
     outputs=[
         {'id': 'main',  'color': 'image', 'label': 'Plot'},
         {'id': 'table', 'color': 'data',  'label': 'DataFrame'},
@@ -263,24 +279,78 @@ class PlotterProNode(NodeProcessor):
         normalize     = int(params.get('normalize', 0))
         buffer_size   = int(params.get('buffer_size', 300))
 
-        # ── Collect dynamic inputs (max 5) ────────────────────────────────
-        raw_series = {k: v for k, v in inputs.items()
-                      if v is not None and k not in _SKIP_KEYS}
-        # Keep insertion order, cap at MAX_SERIES
-        keys = list(raw_series.keys())[:MAX_SERIES]
+        def _is_active(key: str) -> bool:
+            v = params.get(f'active_{key}', True)
+            if isinstance(v, str):
+                return v.lower() != 'false'
+            return bool(v)
 
-        # Drop history for disconnected series
+        def _numeric(x):
+            """Return a finite float, or None if x isn't a plain scalar number."""
+            if isinstance(x, bool) or isinstance(x, (dict, list, tuple, np.ndarray)):
+                return None
+            try:
+                f = float(x)
+            except (TypeError, ValueError):
+                return None
+            return f if np.isfinite(f) else None
+
+        # ── Separate scalar inputs from dict inputs ───────────────────────
+        # A dict on ANY port (the static dict_in OR a dynamic port) is unpacked
+        # into one sub-series per numeric key. Scalars become one series each.
+        scalar_inputs: dict[str, float] = {}   # series_key -> value
+        all_dict_keys: list[str] = []          # dict sub-keys (for inspector toggles)
+        dict_vals: dict[str, float] = {}       # active dict sub-key -> value
+
+        for k, v in inputs.items():
+            if k in _SKIP_KEYS or v is None:
+                continue
+            if isinstance(v, dict):
+                for dk, dv in v.items():
+                    nv = _numeric(dv)
+                    if nv is None:
+                        continue
+                    skey = str(dk)
+                    all_dict_keys.append(skey)
+                    if _is_active(skey):
+                        dict_vals[skey] = nv
+            else:
+                nv = _to_float(v)
+                if nv is not None:
+                    scalar_inputs[k] = nv
+
+        # Cap at MAX_SERIES: scalars first, then dict sub-series fill the rest.
+        scalar_keys = list(scalar_inputs.keys())[:MAX_SERIES]
+        remaining = max(0, MAX_SERIES - len(scalar_keys))
+        dict_keys_capped = list(dict_vals.keys())[:remaining]
+        active_keys = scalar_keys + dict_keys_capped
+
+        # ── Build unified raw values dict (this frame) ────────────────────
+        raw_vals: dict[str, float] = {}
+        for k in scalar_keys:
+            raw_vals[k] = scalar_inputs[k]
+        for k in dict_keys_capped:
+            raw_vals[k] = dict_vals[k]
+
+        # Drop history for series no longer active (disconnected / toggled off)
         for k in list(self.history.keys()):
-            if k not in keys:
+            if k not in active_keys:
                 del self.history[k]
 
-        for k in keys:
-            val = _to_float(raw_series[k])
-            if val is not None:
-                buf = self.history.setdefault(k, [])
-                buf.append(val)
-                if len(buf) > buffer_size:
-                    self.history[k] = buf[-buffer_size:]
+        # CRITICAL: every active series advances by exactly one sample per call,
+        # so all histories stay the same length and share a common x-axis.
+        # A series missing a value this frame carries forward its last value
+        # (hold) instead of falling behind → prevents horizontal desync.
+        for k in active_keys:
+            buf = self.history.setdefault(k, [])
+            if k in raw_vals:
+                buf.append(raw_vals[k])
+            elif buf:
+                buf.append(buf[-1])
+            else:
+                continue  # no value yet for a brand-new series
+            if len(buf) > buffer_size:
+                self.history[k] = buf[-buffer_size:]
 
         # ── Filter + normalize (per series) ───────────────────────────────
         processed: dict[str, list[float]] = {}
@@ -353,11 +423,14 @@ class PlotterProNode(NodeProcessor):
                 df_data[k] = [float('nan')] * pad + list(data)
             table = pd.DataFrame(df_data)
 
-        out = {'main': img, 'table': table}
+        # Deduplicated, order-preserving list of dict sub-keys for the inspector.
+        unique_dict_keys = list(dict.fromkeys(all_dict_keys))
+        out: dict = {'main': img, 'table': table, 'dict_keys': unique_dict_keys}
 
-        # Echo latest value per series so the in-node Recharts chart can plot
-        # (frontend reads nd[seriesKey]); also feeds downstream scalar consumers.
+        # Echo full processed series as lists so param changes (filter, normalize…)
+        # immediately redraw the in-node chart history. Frontend handles arrays
+        # by replacing histories[k] directly (see scientific.tsx lines 354-356).
         for k, data in processed.items():
             if data:
-                out[k] = float(data[-1])
+                out[k] = list(data)
         return out
