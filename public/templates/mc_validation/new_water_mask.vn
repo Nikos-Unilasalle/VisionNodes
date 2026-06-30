@@ -1,0 +1,1886 @@
+{
+  "nodes": [
+    {
+      "id": "blue_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "Blue Band — 492 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_492.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "green_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 180
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "Green Band — 559 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_559.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "red_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 360
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "Red Band — 665 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_665.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "nir_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 540
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "NIR Band — 833 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_833.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "swir1_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 720
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "SWIR1 Band — 1610 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_1610.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "swir2_reader",
+      "type": "geo_geotiff_reader",
+      "position": {
+        "x": 0,
+        "y": 900
+      },
+      "width": 208,
+      "height": 180,
+      "data": {
+        "userLabel": "SWIR2 Band — 2186 nm",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/input_tiffs/S2B_MSI_2024_10_24_11_07_25_T31UDQ_L2W_Rrs_2186.tif",
+          "r_band": 1,
+          "g_band": 1,
+          "b_band": 1,
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "stack1",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 80
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "Stack B1+B2 (Blue+Green)",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "stack2",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 280
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "Stack B1-3 (+Red)",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "stack3",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 480
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "Stack B1-4 (+NIR)",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "stack4",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 660
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "Stack B1-5 (+SWIR1)",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "stack5",
+      "type": "geo_band_stack",
+      "position": {
+        "x": 360,
+        "y": 840
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "Stack B1-6 (+SWIR2) — final",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "selected": false
+    },
+    {
+      "id": "noise",
+      "type": "geo_raster_noise",
+      "position": {
+        "x": 700,
+        "y": 440
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Sensor Perturbation",
+        "params": {
+          "sigma_abs": 0,
+          "sigma_rel": 0.015,
+          "clip_negative": false,
+          "clip_min": -0.01,
+          "clip_max": 0.5,
+          "seed": 42,
+          "node_note": "Stochastic — redraws each tick. Drives Monte-Carlo ensemble. ACOLITE Rrs preset: clip perturbed reflectance to [-0.01, 0.5] (clip_negative kept false; range clip supersedes it).",
+          "max_ticks": 210,
+          "reset": 0,
+          "toggle_run": 0,
+          "color_index": 0
+        }
+      },
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 440
+      }
+    },
+    {
+      "id": "idx",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": 1040,
+        "y": 360
+      },
+      "width": 208,
+      "height": 345,
+      "data": {
+        "userLabel": "4 Water Indices",
+        "params": {
+          "sensor": 0,
+          "nir_band": 4,
+          "red_band": 3,
+          "green_band": 2,
+          "blue_band": 1,
+          "swir_band": 5,
+          "ndvi": false,
+          "ndwi": true,
+          "evi": false,
+          "mndwi": true,
+          "nbr": false,
+          "bsi": false,
+          "guard_invalid": true,
+          "valid_min": -0.002,
+          "expr1_enable": true,
+          "expr1_label": "AWEIsh",
+          "expr1": "BLUE + 2.5*GREEN - 1.5*(NIR + SWIR) - 0.25*B6",
+          "expr2_enable": true,
+          "expr2_label": "MBWI",
+          "expr2": "3*GREEN - RED - NIR - SWIR - B6",
+          "colormap": 0,
+          "clamp_min": -5,
+          "clamp_max": 5,
+          "node_note": "ACOLITE Rrs. B1=Blue B2=Green B3=Red B4=NIR B5=SWIR1 B6=SWIR2. SWIR=SWIR1(B5). Stack = [NDWI, MNDWI, AWEIsh, MBWI] — 4 max-independent water indices (paper set).",
+          "color_index": 0
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1040,
+        "y": 360
+      },
+      "dragging": false
+    },
+    {
+      "id": "vote",
+      "type": "geo_band_calc",
+      "position": {
+        "x": 1400,
+        "y": 440
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Consensus Vote k=2 of 4",
+        "params": {
+          "expression": "(1*(B1>0)+1*(B2>0)+1*(B3>0)+1*(B4>0)) >= 2",
+          "clamp_min": 0,
+          "clamp_max": 1,
+          "colormap": "gray",
+          "color_index": 1
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1400,
+        "y": 440
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "tomask",
+      "type": "geotiff_to_mask",
+      "position": {
+        "x": 1740,
+        "y": 450
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Vote → Binary Mask",
+        "params": {
+          "band_index": 0,
+          "threshold": 0.5,
+          "color_index": 1
+        }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "adaptive_caps",
+      "type": "logic_python",
+      "position": {
+        "x": 700,
+        "y": 700
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "label": "Python Node",
+        "userLabel": "Adaptive Reflectance Caps (p99 consensus)",
+        "params": {
+          "code": "# a = base geotiff (UNPERTURBED, from stack5). Bands: blue,green,red,nir,swir1,swir2\n# Self-calibrating NIR/SWIR caps = p99 of the reflectance of consensus water pixels\n# (vote>=2). Tuning-free transfer (script design principle #2). Computed ONCE on the\n# deterministic base -> same caps every MC tick, applied to perturbed bands downstream.\nimport numpy as np\nbands = np.asarray(a['bands'], np.float32)\nblue, green, red, nir, swir1, swir2 = bands[0], bands[1], bands[2], bands[3], bands[4], bands[5]\nden = 1e-6\nndwi  = np.where(np.abs(green + nir)   > den, (green - nir)   / (green + nir),   np.nan)\nmndwi = np.where(np.abs(green + swir1) > den, (green - swir1) / (green + swir1), np.nan)\nawei  = blue + 2.5 * green - 1.5 * (nir + swir1) - 0.25 * swir2\nmbwi  = 3.0 * green - (red + nir + swir1 + swir2)\nvote  = ((np.nan_to_num(ndwi)  > 0).astype(np.uint8) +\n         (np.nan_to_num(mndwi) > 0).astype(np.uint8) +\n         (awei > 0).astype(np.uint8) +\n         (mbwi > 0).astype(np.uint8))\nvalid = np.all(np.isfinite(bands), axis=0)\ncons  = valid & (vote >= 2)\nn = int(cons.sum())\nNIR_F, S1_F, S2_F, FLOOR, PCT = 0.030, 0.018, 0.014, 2.0, 99.0\nif n >= 500:\n    nir_cap   = max(float(np.nanpercentile(nir[cons],   PCT)), NIR_F * FLOOR)\n    swir1_cap = max(float(np.nanpercentile(swir1[cons], PCT)), S1_F  * FLOOR)\n    swir2_cap = max(float(np.nanpercentile(swir2[cons], PCT)), S2_F  * FLOOR)\nelse:\n    nir_cap, swir1_cap, swir2_cap = NIR_F, S1_F, S2_F\nprint(f'Adaptive caps (p{PCT:.0f}, {n} consensus px): NIR<{nir_cap:.4f} SWIR1<{swir1_cap:.4f} SWIR2<{swir2_cap:.4f}')\nout_a = float(nir_cap)\nout_b = float(swir1_cap)\nout_c = float(swir2_cap)",
+          "color_index": 1
+        },
+        "ports": [
+          {
+            "id": "geotiff__a",
+            "color": "geotiff",
+            "label": "base"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "scalar__out_a",
+            "color": "scalar",
+            "label": "nir_cap"
+          },
+          {
+            "id": "scalar__out_b",
+            "color": "scalar",
+            "label": "swir1_cap"
+          },
+          {
+            "id": "scalar__out_c",
+            "color": "scalar",
+            "label": "swir2_cap"
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 700
+      }
+    },
+    {
+      "id": "gate_node",
+      "type": "logic_python",
+      "position": {
+        "x": 1740,
+        "y": 700
+      },
+      "width": 208,
+      "height": 185,
+      "data": {
+        "label": "Python Node",
+        "userLabel": "Reflectance Gate (adaptive caps)",
+        "params": {
+          "code": "# a = PERTURBED geotiff (from noise). b,c,d = nir/swir1/swir2 caps (adaptive_caps).\n# Equal-weight reflectance gate: dark in NIR & both SWIR + low-signal floor on (green+nir).\nimport numpy as np\nbands = np.asarray(a['bands'], np.float32)\ngreen, nir, swir1, swir2 = bands[1], bands[3], bands[4], bands[5]\nnir_cap   = float(b) if b is not None else 0.030\nswir1_cap = float(c) if c is not None else 0.018\nswir2_cap = float(d) if d is not None else 0.014\ngate = ((nir < nir_cap) & (swir1 < swir1_cap) & (swir2 < swir2_cap) &\n        ((green + nir) > 0.003))\nout_mask = (gate.astype(np.uint8) * 255)",
+          "color_index": 1
+        },
+        "ports": [
+          {
+            "id": "geotiff__a",
+            "color": "geotiff",
+            "label": "perturbed"
+          },
+          {
+            "id": "scalar__b",
+            "color": "scalar",
+            "label": "nir_cap"
+          },
+          {
+            "id": "scalar__c",
+            "color": "scalar",
+            "label": "swir1_cap"
+          },
+          {
+            "id": "scalar__d",
+            "color": "scalar",
+            "label": "swir2_cap"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "mask__out_mask",
+            "color": "mask",
+            "label": "gate"
+          }
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1740,
+        "y": 700
+      }
+    },
+    {
+      "id": "mask_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 2080,
+        "y": 560
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Vote AND NIR Gate",
+        "params": {
+          "operation": 2,
+          "color_index": 1
+        }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "acc_mean",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2400,
+        "y": 80
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Probability (mean)",
+        "params": {
+          "mode": 0,
+          "window": 64,
+          "reset": 0,
+          "cumulative": true,
+          "target_n": 200,
+          "color_index": 1
+        }
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2400,
+        "y": 80
+      }
+    },
+    {
+      "id": "ref",
+      "type": "geo_shapefile_rasterizer",
+      "position": {
+        "x": 2740,
+        "y": 380
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "userLabel": "Reference Mask (optional)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/Seine_river_clean/Seine_river_clean.shp",
+          "layer": "",
+          "burn_field": "",
+          "burn_value": 1,
+          "all_touched": false,
+          "background": 0,
+          "cache_dir": "copernicus_cache",
+          "color_index": 2
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2740,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "metrics",
+      "type": "sci_mask_metrics",
+      "position": {
+        "x": 3540,
+        "y": 320
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "userLabel": "Precision / Recall / F1 / IoU",
+        "params": {
+          "show_overlay": true,
+          "alpha": 0.45,
+          "iou_thresh": 0.5,
+          "color_index": 4
+        },
+        "minified": false
+      },
+      "selected": false,
+      "dragging": false,
+      "style": {},
+      "positionAbsolute": {
+        "x": 3540,
+        "y": 320
+      }
+    },
+    {
+      "id": "node-1782635620315-zybi95hdx",
+      "type": "data_inspector",
+      "position": {
+        "x": 3860,
+        "y": 240
+      },
+      "style": {
+        "width": 180,
+        "height": 380
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 180,
+      "height": 380,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3860,
+        "y": 240
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "acc_std",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2400,
+        "y": 640
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Uncertainty (std)",
+        "params": {
+          "mode": 3,
+          "window": 64,
+          "reset": 0,
+          "cumulative": true,
+          "target_n": 200,
+          "color_index": 3
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2400,
+        "y": 640
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782665441231-b961p8cmy",
+      "type": "data_inspector",
+      "position": {
+        "x": 2400,
+        "y": 780
+      },
+      "style": {
+        "width": 220,
+        "height": 24
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 3
+        },
+        "minified": true,
+        "savedHeight": 200
+      },
+      "width": 220,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2400,
+        "y": 780
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782665754321-0.3774373977644757",
+      "type": "data_inspector",
+      "position": {
+        "x": 2400,
+        "y": 220
+      },
+      "style": {
+        "width": 200,
+        "height": 24
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 1
+        },
+        "minified": true,
+        "savedHeight": 120
+      },
+      "width": 200,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2400,
+        "y": 220
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782675499323-9y6u5svxd",
+      "type": "filter_threshold",
+      "position": {
+        "x": 2400,
+        "y": 260
+      },
+      "style": {},
+      "data": {
+        "label": "Threshold P≥0.50 (127)",
+        "userLabel": "Headline mask: P ≥ 0.50",
+        "params": {
+          "threshold": 127,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2400,
+        "y": 260
+      }
+    },
+    {
+      "id": "node-1782675980546-gaurme404",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 3020,
+        "y": 440
+      },
+      "style": {},
+      "data": {
+        "label": "Advanced Morphology",
+        "params": {
+          "iterations": 2,
+          "operation": 2,
+          "size": 15,
+          "shape": 0,
+          "color_index": 2
+        },
+        "paramPorts": [
+          {
+            "id": "iterations",
+            "color": "scalar",
+            "label": "Iterations"
+          }
+        ],
+        "externalizedParams": [
+          "iterations"
+        ]
+      },
+      "width": 208,
+      "height": 98,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 3020,
+        "y": 440
+      }
+    },
+    {
+      "id": "node-1782676200591-2gdc65he7",
+      "type": "mask_operations",
+      "position": {
+        "x": 3280,
+        "y": 280
+      },
+      "style": {},
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3280,
+        "y": 280
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782677298300-1rjc6wsd2",
+      "type": "scalar_input",
+      "position": {
+        "x": 3020,
+        "y": 540
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Number",
+        "params": {
+          "value": 1
+        },
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3020,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782709443620-0.4640249094993013",
+      "type": "geo_shapefile_rasterizer",
+      "position": {
+        "x": 320,
+        "y": 1500
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "userLabel": "Reference Mask (optional)",
+        "params": {
+          "file_path": "/Users/nikos/Desktop/VNStudio/docs/water_mask/Seine_river_MC_extent/Seine_river_MC_extent.shp",
+          "layer": "",
+          "burn_field": "",
+          "burn_value": 1,
+          "all_touched": false,
+          "background": 0,
+          "cache_dir": "copernicus_cache",
+          "color_index": 2
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 320,
+        "y": 1500
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1782709555674_xp1t",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 40,
+        "y": 1700
+      },
+      "data": {
+        "label": "Shapefile Rasterizer",
+        "params": {
+          "source_id": "ref",
+          "source_type": "geo_shapefile_rasterizer",
+          "color_index": 2
+        },
+        "source_outputs": [
+          {
+            "id": "mask",
+            "color": "mask",
+            "label": "Binary mask (features=255)"
+          },
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "Burned attribute geo dict"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "n_feat",
+            "color": "scalar",
+            "label": "Features burned"
+          }
+        ]
+      },
+      "width": 165,
+      "selected": false,
+      "height": 154,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 1700
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1782709581838_izkl",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 40,
+        "y": 1540
+      },
+      "data": {
+        "label": "GeoTIFF Reader",
+        "params": {
+          "source_id": "blue_reader",
+          "source_type": "geo_geotiff_reader",
+          "color_index": 0
+        },
+        "source_outputs": [
+          {
+            "id": "geotiff",
+            "color": "geotiff",
+            "label": "GeoTIFF"
+          },
+          {
+            "id": "preview",
+            "color": "image",
+            "label": "Preview"
+          },
+          {
+            "id": "meta",
+            "color": "dict",
+            "label": "Meta"
+          }
+        ]
+      },
+      "width": 160,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 1540
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1782709669605_b8q4",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 360,
+        "y": 1340
+      },
+      "data": {
+        "label": "Frame Accumulator",
+        "params": {
+          "source_id": "acc_mean",
+          "source_type": "sci_frame_accumulator",
+          "color_index": 1
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image",
+            "label": "Result"
+          },
+          {
+            "id": "frame_count",
+            "color": "scalar",
+            "label": "Frames accumulated"
+          },
+          {
+            "id": "done",
+            "color": "scalar",
+            "label": "Reached Target N (0/1)"
+          }
+        ]
+      },
+      "width": 162,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 1340
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782709706825-skjz7dzln",
+      "type": "data_inspector",
+      "position": {
+        "x": 1420,
+        "y": 1660
+      },
+      "style": {
+        "width": 280,
+        "height": 380
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 4
+        },
+        "minified": false,
+        "savedHeight": 160
+      },
+      "width": 280,
+      "height": 380,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1420,
+        "y": 1660
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782710392200-fj2ugkk3u",
+      "type": "logic_python",
+      "position": {
+        "x": 740,
+        "y": 1540
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# a = acc_mean (carte P, image 0-255)\n# b = masque \"no_bridges\"  (eau libre = référence)\n# c = masque \"with_bridges\" (eau + tabliers)\nimport numpy as np\nfrom scipy.stats import rankdata, ks_2samp\n\ndef _gray(m):                       # image/mask -> 2D bool au seuil 0.5\n    if m is None: return None\n    g = m[..., 0] if m.ndim == 3 else m\n    return g > 127\n\nP  = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\nopen_w = _gray(b)                                   # eau libre\nbridge = _gray(c) & ~open_w                         # ponts = with - no_bridges\n\npo, pb = P[open_w], P[bridge]                        # scores P continus par classe\nn1, n0 = po.size, pb.size\nassert n1 and n0, f\"classe vide (eau={n1}, ponts={n0}) — verifie les masques\"\n\n# --- AUROC (rang de Mann-Whitney) : positif = eau libre ---\nr = rankdata(np.concatenate([po, pb]))\nauroc = (r[:n1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0)\n\n# --- options de separation supplementaires ---\ndelta   = po.mean() - pb.mean()                     # ecart des moyennes\npooled  = np.sqrt(((n1-1)*po.var(ddof=1) + (n0-1)*pb.var(ddof=1)) / (n1+n0-2))\ncohen_d = delta / (pooled + 1e-12)                  # taille d'effet\nks      = float(ks_2samp(po, pb).statistic)         # ecart max des CDF\nt = 0.7\nrej = float((pb <  t).mean())                       # rejet ponts  @t\ndet = float((po >= t).mean())                       # detection eau @t\n\ndiag = np.zeros((*P.shape, 3), np.uint8)\ndiag[open_w] = (0,120,0)        # eau libre = vert sombre\ndiag[bridge] = (0,0,255)        # ponts = rouge\n\n\n'''\nout_a = float(auroc)        # AUROC  (sans seuil — la mesure forte)\nout_b = float(delta)        # Delta separation\nout_c = float(cohen_d)      # Cohen's d\nout_d = ks                  # KS statistic\nout_rej = rej                 # taux rejet ponts @0.7\nout_f = det                 # taux detection eau @0.7\n'''\nout_a = {'auroc': round(auroc,4), 'delta': round(delta,4),\n         'cohen_d': round(cohen_d,3), 'ks': round(ks,4),\n         'bridge_rej@0.7': round(rej,4), 'water_det@0.7': round(det,4),\n         'n_open': int(n1), 'n_bridge': int(n0)}\nout_img = diag                  # branche sur un display\nprint('P_bridge mean/median:', round(float(pb.mean()),3), round(float(np.median(pb)),3))",
+          "color_index": 4
+        },
+        "ports": [
+          {
+            "id": "image__a",
+            "color": "image",
+            "label": "a"
+          },
+          {
+            "id": "mask__b",
+            "color": "mask",
+            "label": "b"
+          },
+          {
+            "id": "mask__c",
+            "color": "mask",
+            "label": "c"
+          },
+          {
+            "id": "mask__d",
+            "color": "mask",
+            "label": "d"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "any__out_a",
+            "color": "any",
+            "label": "out_a"
+          }
+        ],
+        "userLabel": "AUROC"
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 740,
+        "y": 1540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782710945711-7tl20iulq",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 1280
+      },
+      "style": {
+        "width": 1360,
+        "height": 640,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "AUROC - Class separation",
+          "collapsed": false,
+          "savedHeight": 640,
+          "color_index": 0
+        }
+      },
+      "width": 1360,
+      "height": 640,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 0,
+        "y": 1280
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "group-1782711990661",
+      "type": "group_node",
+      "position": {
+        "x": 320,
+        "y": 1680
+      },
+      "data": {
+        "label": "Group",
+        "params": {
+          "color_index": 0,
+          "node_note": "Differences de masques entre bridges et no-bridges"
+        },
+        "inputs": [
+          {
+            "id": "mask__mask",
+            "color": "mask",
+            "label": "in0"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "mask__mask",
+            "color": "mask",
+            "label": "out0"
+          }
+        ],
+        "subGraph": {
+          "nodes": [
+            {
+              "id": "node-1782710593682-bx4y875jj",
+              "type": "util_roi_polygon",
+              "position": {
+                "x": 1620,
+                "y": 2060
+              },
+              "style": {},
+              "data": {
+                "label": "Mask Polygon",
+                "params": {
+                  "points": "[{\"x\":0.10508420440674487,\"y\":0.22824872957993136},{\"x\":0.10500766649742121,\"y\":0.23836130154218604},{\"x\":0.10439536322283198,\"y\":0.24096167718962294},{\"x\":0.10516074231606853,\"y\":0.2450067059745248},{\"x\":0.10485459067877391,\"y\":0.25983847818583167},{\"x\":0.11212569206452117,\"y\":0.260223719022489},{\"x\":0.11579951171205662,\"y\":0.2576233433750521},{\"x\":0.12023871045282862,\"y\":0.25107424915187765},{\"x\":0.12023871045282862,\"y\":0.23990226488881533},{\"x\":0.11878449017567917,\"y\":0.2308491052273683},{\"x\":0.11541682216543833,\"y\":0.22497418246834414},{\"x\":0.1077630312330728,\"y\":0.22526311309583713}]"
+                },
+                "minified": false
+              },
+              "width": 208,
+              "height": 226,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1620,
+                "y": 2060
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1782710676008-xjv6w4tif",
+              "type": "plugin_mask_to_image",
+              "position": {
+                "x": 1360,
+                "y": 2080
+              },
+              "style": {},
+              "data": {
+                "label": "Mask to Image",
+                "params": {}
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1360,
+                "y": 2080
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1782710746339-0.9109050038208584",
+              "type": "util_roi_polygon",
+              "position": {
+                "x": 1840,
+                "y": 2060
+              },
+              "style": {},
+              "data": {
+                "label": "Mask Polygon",
+                "params": {
+                  "points": "[{\"x\":0.0000178592922145668,\"y\":0.0627413628299961},{\"x\":0.003407648954441889,\"y\":0.06308260164017901},{\"x\":0.006797438616669212,\"y\":0.06325322104527047},{\"x\":0.011543144143787463,\"y\":0.06717746736237395},{\"x\":0.02076337202504578,\"y\":0.07161357189475182},{\"x\":0.024831119619718567,\"y\":0.07297852713548347},{\"x\":0.030932741011727747,\"y\":0.07860896750350153},{\"x\":0.03676317923075874,\"y\":0.08321569144097085},{\"x\":0.04205125110383336,\"y\":0.08918737061917183},{\"x\":0.04774609773637526,\"y\":0.09447657217700697},{\"x\":0.050593521052646216,\"y\":0.09840081849411046},{\"x\":0.054796860233808094,\"y\":0.10249568421630542},{\"x\":0.06266117225017548,\"y\":0.11307408733197571},{\"x\":0.07635592248557387,\"y\":0.1267236397392922},{\"x\":0.09154218017235227,\"y\":0.14497991608407804},{\"x\":0.09330487079671047,\"y\":0.15760575206084582},{\"x\":0.085304967193854,\"y\":0.16767229696124172},{\"x\":0.05669514244465539,\"y\":0.16135937897285785},{\"x\":0.006390663857201932,\"y\":0.10693178874868328},{\"x\":0.0002890424651927526,\"y\":0.1009601095704823}]"
+                },
+                "minified": false
+              },
+              "width": 208,
+              "height": 226,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 1840,
+                "y": 2060
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1782710803699-0rxsyo9ei",
+              "type": "plugin_image_to_mask",
+              "position": {
+                "x": 2500,
+                "y": 2060
+              },
+              "style": {},
+              "data": {
+                "label": "Image to Mask",
+                "params": {},
+                "minified": false
+              },
+              "width": 208,
+              "height": 90,
+              "selected": false,
+              "dragging": false,
+              "positionAbsolute": {
+                "x": 2500,
+                "y": 2060
+              }
+            },
+            {
+              "id": "node-1782711792391-0.5357681209842377",
+              "type": "util_roi_polygon",
+              "position": {
+                "x": 2060,
+                "y": 2060
+              },
+              "style": {},
+              "data": {
+                "label": "Mask Polygon",
+                "params": {
+                  "points": "[{\"x\":0.9998693077275348,\"y\":0.7683290061986163},{\"x\":0.9913270383442785,\"y\":0.7666228121477018},{\"x\":0.9707171185624539,\"y\":0.7529732597403852},{\"x\":0.9636663565318296,\"y\":0.7321576923192276},{\"x\":0.9643443144193896,\"y\":0.7111715054929785},{\"x\":0.9697679775198699,\"y\":0.6988869083263936},{\"x\":0.9827847689610223,\"y\":0.6889909828310892},{\"x\":0.9998693077275348,\"y\":0.6860904529445344}]"
+                },
+                "minified": false
+              },
+              "width": 208,
+              "height": 226,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2060,
+                "y": 2060
+              },
+              "dragging": false
+            },
+            {
+              "id": "node-1782711894544-0.426951821301088",
+              "type": "util_roi_polygon",
+              "position": {
+                "x": 2280,
+                "y": 2060
+              },
+              "style": {},
+              "data": {
+                "label": "Mask Polygon",
+                "params": {
+                  "points": "[{\"x\":0.19340968009094628,\"y\":0.23430084432119183},{\"x\":0.19266212721472087,\"y\":0.2313341136924045},{\"x\":0.1926046231473189,\"y\":0.22771614951095653},{\"x\":0.19283463941692672,\"y\":0.22518357458394295},{\"x\":0.1930071516191326,\"y\":0.2236640296277348},{\"x\":0.19346718415834824,\"y\":0.22199976610426875},{\"x\":0.19358219229315216,\"y\":0.22026314329717372},{\"x\":0.19444475330418146,\"y\":0.21881595762459452},{\"x\":0.19881506242673005,\"y\":0.2158492269958072},{\"x\":0.2015752576620239,\"y\":0.21505327487588863},{\"x\":0.20462297323432752,\"y\":0.2183094426391918},{\"x\":0.2023228105382493,\"y\":0.2259795267038615},{\"x\":0.19628488346104403,\"y\":0.23241950294683889}]"
+                },
+                "minified": false
+              },
+              "width": 208,
+              "height": 226,
+              "selected": false,
+              "positionAbsolute": {
+                "x": 2280,
+                "y": 2060
+              },
+              "dragging": false
+            },
+            {
+              "id": "gin-1782711990659",
+              "type": "group_input",
+              "position": {
+                "x": 1120,
+                "y": 2060
+              },
+              "data": {
+                "label": "Group IN",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "mask__mask",
+                    "color": "mask",
+                    "label": "in0"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "gout-1782711990660",
+              "type": "group_output",
+              "position": {
+                "x": 2760,
+                "y": 2060
+              },
+              "data": {
+                "label": "Group OUT",
+                "params": {},
+                "ports": [
+                  {
+                    "id": "mask__mask",
+                    "color": "mask",
+                    "label": "out0"
+                  }
+                ]
+              }
+            }
+          ],
+          "edges": [
+            {
+              "source": "node-1782710676008-xjv6w4tif",
+              "sourceHandle": "image__main",
+              "target": "node-1782710593682-bx4y875jj",
+              "targetHandle": "image__image",
+              "id": "e-1782710680046",
+              "selected": true
+            },
+            {
+              "source": "node-1782710593682-bx4y875jj",
+              "sourceHandle": "image__masked_inv",
+              "target": "node-1782710746339-0.9109050038208584",
+              "targetHandle": "image__image",
+              "id": "e-1782710755147",
+              "selected": true
+            },
+            {
+              "source": "node-1782710746339-0.9109050038208584",
+              "sourceHandle": "image__masked_inv",
+              "target": "node-1782711792391-0.5357681209842377",
+              "targetHandle": "image__image",
+              "id": "e-1782711798274",
+              "selected": true
+            },
+            {
+              "source": "node-1782711792391-0.5357681209842377",
+              "sourceHandle": "image__masked_inv",
+              "target": "node-1782711894544-0.426951821301088",
+              "targetHandle": "image__image",
+              "id": "e-1782711901855",
+              "selected": true
+            },
+            {
+              "source": "node-1782711894544-0.426951821301088",
+              "sourceHandle": "image__masked_inv",
+              "target": "node-1782710803699-0rxsyo9ei",
+              "targetHandle": "image__image",
+              "id": "e-1782711954829",
+              "selected": true
+            },
+            {
+              "id": "sg-1782711990659-0.9300443540598535",
+              "source": "gin-1782711990659",
+              "sourceHandle": "mask__mask",
+              "target": "node-1782710676008-xjv6w4tif",
+              "targetHandle": "mask__mask"
+            },
+            {
+              "id": "sg-1782711990659-0.08196155891525558",
+              "source": "node-1782710803699-0rxsyo9ei",
+              "sourceHandle": "mask__mask",
+              "target": "gout-1782711990660",
+              "targetHandle": "mask__mask"
+            }
+          ]
+        },
+        "userLabel": "Masquage"
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 320,
+        "y": 1680
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782714735083-s4aezuch1",
+      "type": "canvas_note",
+      "position": {
+        "x": 3280,
+        "y": 200
+      },
+      "style": {
+        "width": 48,
+        "height": 40
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Bande élargie de la Seine pour le scoring (morpho)",
+          "color_index": 3
+        },
+        "minified": true,
+        "savedHeight": 60,
+        "savedWidth": 360
+      },
+      "width": 48,
+      "height": 40,
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "positionAbsolute": {
+        "x": 3280,
+        "y": 200
+      }
+    },
+    {
+      "id": "node-1782714864518-0.5776343794772578",
+      "type": "canvas_frame",
+      "position": {
+        "x": -20,
+        "y": -100
+      },
+      "style": {
+        "width": 1360,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Indices",
+          "collapsed": true,
+          "savedHeight": 640,
+          "color_index": 0
+        }
+      },
+      "width": 1360,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -20,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782714961073-0.25481293318634246",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1380,
+        "y": -100
+      },
+      "style": {
+        "width": 1360,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Monte Carlo P (Mean)",
+          "collapsed": true,
+          "savedHeight": 640,
+          "color_index": 1
+        }
+      },
+      "width": 1360,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1380,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782715099481-0.8026258134418645",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2380,
+        "y": 580
+      },
+      "style": {
+        "width": 260,
+        "height": 260,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "(Std) - uncertainty map",
+          "collapsed": false,
+          "savedHeight": 260,
+          "color_index": 4
+        }
+      },
+      "width": 260,
+      "height": 260,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2380,
+        "y": 560
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782715167174-0.10356488106141004",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2760,
+        "y": -100
+      },
+      "style": {
+        "width": 1360,
+        "height": 34,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Scoring",
+          "collapsed": true,
+          "savedHeight": 640,
+          "color_index": 1
+        }
+      },
+      "width": 1360,
+      "height": 34,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2760,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782764194027-gu32zpdqc",
+      "type": "ml_best_params",
+      "position": {
+        "x": 1760,
+        "y": 1260
+      },
+      "style": {},
+      "data": {
+        "label": "Parameter Optimizer",
+        "params": {
+          "label_0": "Auroc",
+          "label_1": "DELTA",
+          "label_2": "KS",
+          "port_labels": "{\"any__0_e4fh\":\"val_1\",\"any__1_c0ze\":\"val_2\",\"any__2_mvhz\":\"val_3\"}",
+          "weight_water_det@0.7": 0.8,
+          "weight_n_open": -1,
+          "active_n_open": false,
+          "active_water_det@0.7": true,
+          "active_bridge_rej@0.7": true,
+          "weight_auroc": 1,
+          "weight_delta": 0.5,
+          "weight_cohen_d": 0.5,
+          "weight_bridge_rej@0.7": 0.8,
+          "active_n_bridge": false,
+          "reset": 0,
+          "active_val_1": false,
+          "active_val_2": false,
+          "active_val_3": false
+        },
+        "ports": [
+          {
+            "id": "any__0_e4fh",
+            "color": "any",
+            "label": "val_1"
+          },
+          {
+            "id": "any__1_c0ze",
+            "color": "any",
+            "label": "val_2"
+          },
+          {
+            "id": "any__2_mvhz",
+            "color": "any",
+            "label": "val_3"
+          }
+        ]
+      },
+      "width": 280,
+      "height": 303,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1760,
+        "y": 1260
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782801485057-0mghszvbo",
+      "type": "plotter_pro",
+      "position": {
+        "x": 4220,
+        "y": 340
+      },
+      "style": {
+        "width": 720,
+        "height": 320
+      },
+      "data": {
+        "label": "Plotter Pro",
+        "params": {
+          "active_fn": false,
+          "active_fp": false,
+          "active_vp": false,
+          "max_y": 1,
+          "auto_scale": false,
+          "normalize": 3,
+          "reset": 0,
+          "min_y": 0.7,
+          "show_axes": true,
+          "fill_curve": true
+        }
+      },
+      "width": 720,
+      "height": 320,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4220,
+        "y": 340
+      },
+      "dragging": false,
+      "resizing": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_blue_s1p",
+      "source": "blue_reader",
+      "target": "stack1",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e_green_s1s",
+      "source": "green_reader",
+      "target": "stack1",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e_s1_s2p",
+      "source": "stack1",
+      "target": "stack2",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e_red_s2s",
+      "source": "red_reader",
+      "target": "stack2",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e_s2_s3p",
+      "source": "stack2",
+      "target": "stack3",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e_nir_s3s",
+      "source": "nir_reader",
+      "target": "stack3",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e_s3_s4p",
+      "source": "stack3",
+      "target": "stack4",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e_sw1_s4s",
+      "source": "swir1_reader",
+      "target": "stack4",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e_s4_s5p",
+      "source": "stack4",
+      "target": "stack5",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__primary",
+      "selected": false
+    },
+    {
+      "id": "e_sw2_s5s",
+      "source": "swir2_reader",
+      "target": "stack5",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__secondary",
+      "selected": false
+    },
+    {
+      "id": "e_s5_noise",
+      "source": "stack5",
+      "target": "noise",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_noise_idx",
+      "source": "noise",
+      "target": "idx",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_idx_vote",
+      "source": "idx",
+      "target": "vote",
+      "sourceHandle": "geotiff__stack",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_vote_tomask",
+      "source": "vote",
+      "target": "tomask",
+      "sourceHandle": "geotiff__raw",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_stack5_caps",
+      "source": "stack5",
+      "target": "adaptive_caps",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__a",
+      "selected": false
+    },
+    {
+      "id": "e_noise_gate",
+      "source": "noise",
+      "target": "gate_node",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__a",
+      "selected": false
+    },
+    {
+      "id": "e_capa_gate",
+      "source": "adaptive_caps",
+      "target": "gate_node",
+      "sourceHandle": "scalar__out_a",
+      "targetHandle": "scalar__b",
+      "selected": false
+    },
+    {
+      "id": "e_capb_gate",
+      "source": "adaptive_caps",
+      "target": "gate_node",
+      "sourceHandle": "scalar__out_b",
+      "targetHandle": "scalar__c",
+      "selected": false
+    },
+    {
+      "id": "e_capc_gate",
+      "source": "adaptive_caps",
+      "target": "gate_node",
+      "sourceHandle": "scalar__out_c",
+      "targetHandle": "scalar__d",
+      "selected": false
+    },
+    {
+      "id": "e_vote_and",
+      "source": "tomask",
+      "target": "mask_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a",
+      "selected": false
+    },
+    {
+      "id": "e_gate_and",
+      "source": "gate_node",
+      "target": "mask_and",
+      "sourceHandle": "mask__out_mask",
+      "targetHandle": "mask__mask_b",
+      "selected": false
+    },
+    {
+      "id": "e_and_mean",
+      "source": "mask_and",
+      "target": "acc_mean",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e_blue_ref",
+      "source": "blue_reader",
+      "target": "ref",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__reference",
+      "selected": false
+    },
+    {
+      "id": "e_ref_mtr",
+      "source": "ref",
+      "target": "metrics",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__truth",
+      "selected": false
+    },
+    {
+      "id": "e-1782635620366-eft5rxlj8",
+      "source": "metrics",
+      "target": "node-1782635620315-zybi95hdx",
+      "sourceHandle": "dict__data",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e_tick_accmean",
+      "source": "noise",
+      "target": "acc_mean",
+      "sourceHandle": "scalar__tick",
+      "targetHandle": "scalar__tick",
+      "selected": false
+    },
+    {
+      "id": "e_maskand_accstd",
+      "source": "mask_and",
+      "target": "acc_std",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e_tick_accstd",
+      "source": "noise",
+      "target": "acc_std",
+      "sourceHandle": "scalar__tick",
+      "targetHandle": "scalar__tick",
+      "selected": false
+    },
+    {
+      "source": "mask_and",
+      "sourceHandle": "mask__mask",
+      "target": "acc_mean",
+      "targetHandle": "any__image",
+      "id": "e-1782664834814",
+      "selected": false
+    },
+    {
+      "id": "e-1782665441282-wrfkyys3q",
+      "source": "acc_std",
+      "target": "node-1782665441231-b961p8cmy",
+      "sourceHandle": "scalar__frame_count",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "scalar__frame_count",
+      "target": "node-1782665754321-0.3774373977644757",
+      "targetHandle": "any__data",
+      "id": "e-1782665760072",
+      "selected": false
+    },
+    {
+      "id": "e-1782675980603-cqhno2n4j",
+      "source": "ref",
+      "target": "node-1782675980546-gaurme404",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask",
+      "selected": false
+    },
+    {
+      "source": "node-1782675980546-gaurme404",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782676200591-2gdc65he7",
+      "targetHandle": "mask__mask_b",
+      "id": "e-1782676209962",
+      "selected": false
+    },
+    {
+      "source": "node-1782675499323-9y6u5svxd",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782676200591-2gdc65he7",
+      "targetHandle": "mask__mask_a",
+      "id": "e-1782676214886",
+      "selected": false
+    },
+    {
+      "source": "node-1782676200591-2gdc65he7",
+      "sourceHandle": "mask__mask",
+      "target": "metrics",
+      "targetHandle": "mask__pred",
+      "id": "e-1782676271777",
+      "selected": false
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "image__main",
+      "target": "node-1782675499323-9y6u5svxd",
+      "targetHandle": "image__image",
+      "id": "e-1782676845451",
+      "selected": false
+    },
+    {
+      "id": "e-1782677298361-iecel2bwm",
+      "source": "node-1782677298300-1rjc6wsd2",
+      "target": "node-1782675980546-gaurme404",
+      "sourceHandle": "scalar__value",
+      "targetHandle": "scalar__iterations",
+      "selected": false
+    },
+    {
+      "source": "mask_and",
+      "sourceHandle": "mask__mask",
+      "target": "acc_std",
+      "targetHandle": "any__image",
+      "id": "e-1782677745363"
+    },
+    {
+      "source": "metrics",
+      "sourceHandle": "dict__data",
+      "target": "node-1782801485057-0mghszvbo",
+      "targetHandle": "dict__dict_in",
+      "id": "e-1782801613542"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 318
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": null
+  }
+}
