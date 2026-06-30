@@ -640,6 +640,32 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         );
       })()}
 
+      {/* plotter_pro — Dict channel toggles */}
+      {node.type === 'plotter_pro' && (() => {
+        const dictKeys: string[] = Array.isArray(liveData?.dict_keys) ? liveData.dict_keys : [];
+        if (dictKeys.length === 0) return null;
+        return (
+          <div className="space-y-3">
+            <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">
+              Dict Channels
+            </label>
+            <div className="space-y-2 bg-white/[0.01] rounded-xl border border-white/5 p-3">
+              {dictKeys.map((key: string) => {
+                const active = p[`active_${key}`] !== false;
+                return (
+                  <ToggleInput
+                    key={key}
+                    label={key}
+                    val={active}
+                    onChange={(v: boolean) => up({ [`active_${key}`]: v })}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* canvas_note / canvas_frame */}
       {(node.type === 'canvas_note' || node.type === 'canvas_frame') && (() => {
         const currentPalette = PALETTES[activePaletteIndex].colors;

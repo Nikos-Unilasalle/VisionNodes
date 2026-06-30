@@ -266,6 +266,28 @@ export const DataFramePlotNode = memo(({ selected, data }: any) => {
 const PRO_COLORS = ['#ff6464', '#64ff64', '#ffb43c', '#64ffff', '#ff64ff', '#ffff64', '#c896ff', '#64c8ff'];
 const PRO_MAX_SERIES = 5;
 
+const _fmtNum = (v: number): string =>
+  Number.isInteger(v) ? String(v) : Math.abs(v) >= 1000 || Math.abs(v) < 0.01 ? v.toExponential(2) : v.toFixed(3);
+
+// Hover marker for Plotter Pro: small dot + x/y label to the bottom-right.
+function ProActiveDot({ cx, cy, value, payload, color }: any) {
+  if (cx == null || cy == null || typeof value !== 'number') return null;
+  const label = `x:${payload?.t ?? ''} y:${_fmtNum(value)}`;
+  const charW = 4.3;
+  const padX = 3, padY = 2;
+  const w = label.length * charW + padX * 2;
+  const h = 9 + padY * 2;
+  const lx = cx + 5;
+  const ly = cy + 2;
+  return (
+    <g pointerEvents="none">
+      <circle cx={cx} cy={cy} r={2} fill={color} stroke="#fff" strokeWidth={0.5} />
+      <rect x={lx} y={ly} width={w} height={h} rx={1} fill="#fff" />
+      <text x={lx + padX} y={ly + h - padY - 1} fontSize={7} fontFamily="monospace" fill="#111">{label}</text>
+    </g>
+  );
+}
+
 
 export const PlotterProNode = memo(({ selected, data }: any) => {
   const { customBg } = useNodeColor();
@@ -282,10 +304,10 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
   const lineWidth = Number(data.params?.line_width ?? 2);
   const showAxes = !!data.params?.show_axes;
   const fillCurve = !!data.params?.fill_curve;
-  const minY = data.params?.min_y;
-  const maxY = data.params?.max_y;
+  const minY = Number(data.params?.min_y ?? 0);
+  const maxY = Number(data.params?.max_y ?? 100);
   const autoScale = !!(data.params?.auto_scale ?? true);
-  const yDomain: [any, any] = autoScale ? ['auto', 'auto'] : ((minY !== undefined && maxY !== undefined && minY !== maxY) ? [minY, maxY] : [0, 100]);
+  const yDomain: [number | string, number | string] = autoScale ? ['auto', 'auto'] : [minY, maxY];
 
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
@@ -302,12 +324,17 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
     const keys = new Set<string>(portKeys);
     for (const k of Object.keys(nd || {})) {
       const v = (nd as any)[k];
-      if (typeof v === 'number' || Array.isArray(v)) keys.add(k);
+      // Only accept scalars or arrays of finite numbers. Excludes engine meta
+      // keys like dict_keys (string array), table (records) and image payloads.
+      if (typeof v === 'number') { keys.add(k); continue; }
+      if (Array.isArray(v) && v.length > 0 && v.every((x: any) => typeof x === 'number')) {
+        keys.add(k);
+      }
     }
     return Array.from(keys).slice(0, PRO_MAX_SERIES);
   }, [nd, portKeys]);
 
-  const [histories, setHistories] = React.useState<Record<string, number[]>>({});
+  const [histories, setHistories] = React.useState<Record<string, (number | null)[]>>({});
   const prevReset = React.useRef(0);
 
   useEffect(() => {
@@ -318,7 +345,7 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
 
   useEffect(() => {
     setHistories(prev => {
-      const next: Record<string, number[]> = {};
+      const next: Record<string, (number | null)[]> = {};
       let changed = false;
       for (const k of seriesKeys) {
         const v = (nd as any)[k];
@@ -330,7 +357,12 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
             changed = true;
           } else { next[k] = cur; }
         } else if (Array.isArray(v)) {
-          next[k] = (v as any[]).map(Number).filter((n: number) => !isNaN(n)).slice(-bufSize);
+          // Full replace. Preserve index alignment: non-finite → null (gap),
+          // never dropped (dropping would shift every later sample left).
+          next[k] = (v as any[]).slice(-bufSize).map((x: any) => {
+            const n = Number(x);
+            return Number.isFinite(n) ? n : null;
+          });
           changed = true;
         } else { next[k] = cur; }
       }
@@ -344,7 +376,10 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
     if (maxLen === 0) return [];
     return Array.from({ length: maxLen }, (_, i) => {
       const pt: any = { t: i };
-      for (const k of seriesKeys) { const arr = histories[k]; if (arr && i < arr.length) pt[k] = arr[i]; }
+      for (const k of seriesKeys) {
+        const arr = histories[k];
+        if (arr && i < arr.length && arr[i] != null) pt[k] = arr[i];
+      }
       return pt;
     });
   }, [histories, seriesKeys]);
@@ -353,7 +388,8 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
 
   const HANDLE_TOP_START = 45;
   const HANDLE_SPACING = 32;
-  const portsHeight = HANDLE_TOP_START + ports.length * HANDLE_SPACING + 35;
+  // +1 static dict_in port above the dynamic ports.
+  const portsHeight = HANDLE_TOP_START + (ports.length + 1) * HANDLE_SPACING + 35;
 
   return (
     <div className="relative w-full h-full" style={{ minHeight: Math.max(portsHeight, 180) }}>
@@ -361,6 +397,12 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
         className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
         style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
       >
+        {/* Static dict input port */}
+        <div className="absolute left-0 pointer-events-none flex items-center z-10"
+             style={{ top: `${HANDLE_TOP_START}px`, transform: 'translateY(-50%)' }}>
+          <StyledHandle type="target" position={Position.Left} id="dict_in" color="dict" top="50%" />
+          <span className="ml-4 text-[7px] font-black text-white/40 uppercase tracking-widest">dict</span>
+        </div>
         {/* Dynamic input ports */}
         {ports.map((p, i) => {
           const idx = p.id.indexOf('__');
@@ -368,7 +410,7 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
           const color = idx >= 0 ? p.id.slice(0, idx) : 'any';
           return (
             <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center z-10"
-                 style={{ top: `${HANDLE_TOP_START + i * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
+                 style={{ top: `${HANDLE_TOP_START + (i + 1) * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
               <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
               <button
                 className="nodrag pointer-events-auto ml-4 text-[8px] text-gray-600 hover:text-red-400 transition-colors leading-none"
@@ -380,7 +422,7 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
         })}
         {/* Factory handle */}
         <div className="absolute left-0 pointer-events-none flex items-center z-10"
-             style={{ top: `${HANDLE_TOP_START + ports.length * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
+             style={{ top: `${HANDLE_TOP_START + (ports.length + 1) * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
           <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
         </div>
 
@@ -433,21 +475,27 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
                       );
                     })}
                   </defs>
-                  <YAxis hide={!showAxes} domain={yDomain}
+                  <YAxis hide={!showAxes} domain={yDomain} allowDataOverflow={!autoScale}
                     tick={{ fill: '#94a3b8', fontSize: 7 }} width={showAxes ? 30 : 0} />
                   <XAxis dataKey="t" hide={!showAxes}
                     tick={{ fill: '#94a3b8', fontSize: 7 }} height={showAxes ? 14 : 0} />
                   {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
+                  {/* Invisible tooltip: drives hover state so activeDot renders, no floating box */}
+                  <Tooltip content={() => null} cursor={false} isAnimationActive={false} />
                   {fillCurve && activeSeries.map(k => (
                     <Area key={`a-${k}`} type="monotone" dataKey={k}
                       stroke="none" fill={`url(#proFill-${nodeId}-${seriesKeys.indexOf(k)})`}
                       isAnimationActive={false} connectNulls />
                   ))}
-                  {activeSeries.map(k => (
-                    <Line key={k} type="monotone" dataKey={k}
-                      stroke={palette[seriesKeys.indexOf(k) % palette.length]} strokeWidth={lineWidth}
-                      dot={false} isAnimationActive={false} connectNulls />
-                  ))}
+                  {activeSeries.map(k => {
+                    const c = palette[seriesKeys.indexOf(k) % palette.length];
+                    return (
+                      <Line key={k} type="monotone" dataKey={k}
+                        stroke={c} strokeWidth={lineWidth}
+                        dot={false} isAnimationActive={false} connectNulls
+                        activeDot={(props: any) => <ProActiveDot {...props} color={c} />} />
+                    );
+                  })}
                 </ComposedChart>
               </ResponsiveContainer>
           }
