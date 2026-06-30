@@ -267,7 +267,7 @@ const PRO_COLORS = ['#ff6464', '#64ff64', '#ffb43c', '#64ffff', '#ff64ff', '#fff
 const PRO_MAX_SERIES = 5;
 
 const _fmtNum = (v: number): string =>
-  Number.isInteger(v) ? String(v) : Math.abs(v) >= 1000 || Math.abs(v) < 0.01 ? v.toExponential(2) : v.toFixed(3);
+  Number.isInteger(v) ? String(v) : Math.abs(v) >= 1000 || Math.abs(v) < 0.0001 ? v.toExponential(2) : v.toFixed(4);
 
 // Hover marker for Plotter Pro: small dot + x/y label to the bottom-right.
 function ProActiveDot({ cx, cy, value, payload, color }: any) {
@@ -307,7 +307,6 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
   const minY = Number(data.params?.min_y ?? 0);
   const maxY = Number(data.params?.max_y ?? 100);
   const autoScale = !!(data.params?.auto_scale ?? true);
-  const yDomain: [number | string, number | string] = autoScale ? ['auto', 'auto'] : [minY, maxY];
 
   useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
 
@@ -385,6 +384,24 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
   }, [histories, seriesKeys]);
 
   const activeSeries = seriesKeys.filter(k => (histories[k]?.length ?? 0) > 0);
+
+  // Robust auto-scale domain: 2nd–98th percentile across all plotted values,
+  // so a single outlier doesn't blow up the range (Recharts 'auto' uses min/max).
+  const yDomain = React.useMemo<[number | string, number | string]>(() => {
+    if (!autoScale) return [minY, maxY];
+    const vals: number[] = [];
+    for (const k of seriesKeys) {
+      const arr = histories[k];
+      if (arr) for (const v of arr) if (v != null && Number.isFinite(v)) vals.push(v);
+    }
+    if (vals.length < 2) return ['auto', 'auto'];
+    vals.sort((a, b) => a - b);
+    const pct = (p: number) => vals[Math.min(vals.length - 1, Math.floor((p / 100) * (vals.length - 1)))];
+    let lo = pct(2), hi = pct(98);
+    if (hi <= lo) { lo = vals[0]; hi = vals[vals.length - 1]; }
+    const pad = hi > lo ? (hi - lo) * 0.1 : (Math.abs(hi) * 0.05 || 1);
+    return [lo - pad, hi + pad];
+  }, [autoScale, minY, maxY, histories, seriesKeys]);
 
   const HANDLE_TOP_START = 45;
   const HANDLE_SPACING = 32;

@@ -25,8 +25,9 @@ _PALETTES: dict[str, list[tuple[int, int, int]]] = {
 MAX_SERIES = 5
 
 # Keys injected by the engine as compatibility shims — not real series.
-# Also skip the static dict port so it's not treated as a dynamic series.
-_SKIP_KEYS = frozenset({'raw_frame', 'image', 'data', 'in', 'value', 'main', 'dict_in'})
+# NOTE: 'dict_in' is NOT skipped — it's a real port whose dict is unpacked
+# into per-key sub-series (see the collection loop in process()).
+_SKIP_KEYS = frozenset({'raw_frame', 'image', 'data', 'in', 'value', 'main'})
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -213,6 +214,28 @@ def _fill_under(
     cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
 
 
+def _describe(v) -> str:
+    """Compact, safe description of an input value for debug logging."""
+    if isinstance(v, np.ndarray):
+        return f"ndarray{v.shape}:{v.dtype}"
+    if isinstance(v, dict):
+        items = list(v.items())[:8]
+        body = ', '.join(f"{k}={_describe(vv)}" for k, vv in items)
+        more = '…' if len(v) > 8 else ''
+        return f"dict({len(v)}){{{body}{more}}}"
+    if isinstance(v, (list, tuple)):
+        head = ', '.join(_describe(x) for x in list(v)[:4])
+        more = '…' if len(v) > 4 else ''
+        return f"{type(v).__name__}({len(v)})[{head}{more}]"
+    if isinstance(v, bool):
+        return f"bool:{v}"
+    if isinstance(v, (int, float, np.number)):
+        return f"{type(v).__name__}:{v}"
+    if isinstance(v, str):
+        return f"str:'{v[:20]}'"
+    return type(v).__name__
+
+
 # ── Node ─────────────────────────────────────────────────────────────────────
 
 @vision_node(
@@ -249,16 +272,21 @@ def _fill_under(
         {'id': '_sec_history', 'label': 'History',       'type': 'section'},
         {'id': 'buffer_size',  'label': 'History Size',  'type': 'scalar', 'min': 10, 'max': 2000, 'default': 300},
         {'id': 'reset',        'label': 'Reset History', 'type': 'trigger', 'default': 0},
+        {'id': '_sec_debug',   'label': 'Debug',         'type': 'section'},
+        {'id': 'debug_dump',   'label': 'Debug Dump (~/plotter_debug.log)', 'type': 'boolean', 'default': False},
     ],
 )
 class PlotterProNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         self.history: dict[str, list[float]] = {}
+        self._dbg_n = 0
 
     def process(self, inputs: dict, params: dict) -> dict:
         if not hasattr(self, 'history') or self.history is None:
             self.history = {}
+        if not hasattr(self, '_dbg_n'):
+            self._dbg_n = 0
 
         if int(params.get('reset', 0)) == 1:
             self.history = {}
@@ -362,13 +390,16 @@ class PlotterProNode(NodeProcessor):
                 data = list(hist)
             processed[k] = data
 
-        # ── Auto-scale ────────────────────────────────────────────────────
+        # ── Auto-scale (robust: 2nd–98th percentile, outlier-resistant) ────
         if auto_scale:
             all_vals = [v for d in processed.values() for v in d]
             if all_vals:
-                mn, mx = min(all_vals), max(all_vals)
-                pad = (mx - mn) * 0.1 if mx != mn else 1.0
-                min_y, max_y = mn - pad, mx + pad
+                arr = np.asarray(all_vals, dtype=np.float64)
+                lo, hi = np.percentile(arr, [2, 98])
+                if hi <= lo:  # too few / near-constant points → fall back to min/max
+                    lo, hi = float(arr.min()), float(arr.max())
+                pad = (hi - lo) * 0.1 if hi > lo else (abs(hi) * 0.05 or 1.0)
+                min_y, max_y = lo - pad, hi + pad
                 if max_y == min_y:
                     max_y += 1.0
 
@@ -408,7 +439,7 @@ class PlotterProNode(NodeProcessor):
             # Legend chip
             lx, ly = 8, 20 + i * 22
             cv2.rectangle(img, (lx, ly - 10), (lx + 10, ly), color, -1)
-            label = f'{key}: {data[-1]:.3g}'
+            label = f'{key}: {data[-1]:.4f}'
             cv2.putText(img, label, (lx + 14, ly - 1),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.42, color, 1, cv2.LINE_AA)
 
@@ -433,4 +464,31 @@ class PlotterProNode(NodeProcessor):
         for k, data in processed.items():
             if data:
                 out[k] = list(data)
+
+        # ── Debug dump (gated) ────────────────────────────────────────────
+        # Captures ground-truth input shapes for the first 60 frames after the
+        # toggle is enabled, so we can see exactly what reaches the node.
+        if bool(params.get('debug_dump', False)):
+            if self._dbg_n < 60:
+                try:
+                    import os
+                    lines = [f"=== frame {self._dbg_n} ==="]
+                    for ik, iv in inputs.items():
+                        if ik == 'raw_frame':
+                            continue
+                        lines.append(f"  in[{ik}] = {_describe(iv)}")
+                    lines.append(f"  active_keys = {active_keys}")
+                    lines.append(f"  raw_vals = { {k: round(v, 5) for k, v in raw_vals.items()} }")
+                    lines.append(f"  hist_len = { {k: len(v) for k, v in self.history.items()} }")
+                    lines.append(f"  last = { {k: (round(v[-1], 5) if v else None) for k, v in self.history.items()} }")
+                    lines.append(f"  params: filter={filter_type} window={filter_window} "
+                                 f"norm={normalize} auto={auto_scale} buf={buffer_size}")
+                    with open(os.path.expanduser('~/plotter_debug.log'), 'a') as fh:
+                        fh.write('\n'.join(lines) + '\n')
+                    self._dbg_n += 1
+                except Exception:
+                    pass
+        else:
+            self._dbg_n = 0
+
         return out
