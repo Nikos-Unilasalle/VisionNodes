@@ -52,16 +52,39 @@ def _band(bands: np.ndarray, idx: int) -> np.ndarray:
     return np.zeros(bands.shape[1:], dtype=np.float32)
 
 
-def _norm_index(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """(a - b) / (a + b + ε)"""
-    return (a - b) / (a + b + 1e-8)
+_DEN_MIN = np.float32(1e-6)
+
+
+def _norm_index(a: np.ndarray, b: np.ndarray,
+                valid_min: float | None = None) -> np.ndarray:
+    """Normalised-difference index (a - b) / (a + b).
+
+    Default (valid_min=None): legacy fast path (a - b) / (a + b + ε).
+
+    With valid_min set, reproduces the reference water-mask guard: a pixel is
+    NaN (cast no vote downstream) wherever either input band ≤ valid_min, the
+    denominator |a + b| is below _DEN_MIN, or an input is non-finite. This stops
+    the ratio from exploding or flipping sign on near-zero / slightly-negative
+    reflectance (e.g. ACOLITE Rrs over dark water). Result clipped to [-1, 1].
+    """
+    if valid_min is None:
+        return (a - b) / (a + b + 1e-8)
+    den = a + b
+    out = np.full(a.shape, np.nan, dtype=np.float32)
+    ok = (np.isfinite(a) & np.isfinite(b) &
+          (np.abs(den) > _DEN_MIN) &
+          (a > np.float32(valid_min)) & (b > np.float32(valid_min)))
+    out[ok] = ((a[ok] - b[ok]) / den[ok]).astype(np.float32, copy=False)
+    np.clip(out, -1.0, 1.0, out=out)
+    return out
 
 
 def _colorize(arr: np.ndarray, cmap: int,
                vmin: float, vmax: float) -> np.ndarray:
     """Float array → BGR uint8 via colormap."""
     span = vmax - vmin if vmax != vmin else 1.0
-    norm = np.clip((arr - vmin) / span * 255.0, 0, 255).astype(np.uint8)
+    scaled = np.nan_to_num((arr - vmin) / span * 255.0, nan=0.0, posinf=255.0, neginf=0.0)
+    norm = np.clip(scaled, 0, 255).astype(np.uint8)
     return cv2.applyColorMap(norm, cmap)
 
 
@@ -74,7 +97,8 @@ def _rgb_preview(bands_list: list[np.ndarray],
 
     def _norm(b: np.ndarray) -> np.ndarray:
         span = vmax - vmin if vmax != vmin else 1.0
-        return np.clip((b - vmin) / span * 255.0, 0, 255).astype(np.uint8)
+        scaled = np.nan_to_num((b - vmin) / span * 255.0, nan=0.0, posinf=255.0, neginf=0.0)
+        return np.clip(scaled, 0, 255).astype(np.uint8)
 
     if n == 1:
         return cv2.applyColorMap(_norm(bands_list[0]), cmap)
@@ -126,6 +150,10 @@ def _rgb_preview(bands_list: list[np.ndarray],
         {'id': 'mndwi', 'type': 'bool', 'default': False, 'label': 'MNDWI (Modified Water)'},
         {'id': 'nbr',   'type': 'bool', 'default': False, 'label': 'NBR (Burn Ratio)'},
         {'id': 'bsi',   'type': 'bool', 'default': False, 'label': 'BSI (Bare Soil)'},
+        {'id': 'guard_invalid', 'type': 'bool', 'default': False,
+         'label': 'Guard invalid pixels (ND indices → NaN below floor)'},
+        {'id': 'valid_min', 'type': 'float', 'default': -0.002, 'min': -1.0, 'max': 1.0, 'step': 0.001,
+         'label': 'Valid band floor', 'show_if': {'param': 'guard_invalid', 'value': True}},
         {'id': '_sec_custom', 'type': 'section', 'label': 'Custom Expressions'},
         {'id': 'expr1_enable', 'type': 'bool',   'default': False, 'label': 'Enable expr 1'},
         {'id': 'expr1_label',  'type': 'string', 'default': 'custom1', 'label': 'Name'},
@@ -185,6 +213,12 @@ class SpectralIndicesNode(NodeProcessor):
         vmin    = float(params.get('clamp_min', -1.0))
         vmax    = float(params.get('clamp_max',  1.0))
 
+        # Reference-script validity guard for normalised-difference indices: drop
+        # near-zero / slightly-negative reflectance so the ratio cannot blow up or
+        # flip sign (matters for ACOLITE Rrs). Disabled by default (legacy path).
+        guard = bool(params.get('guard_invalid', False))
+        valid_min = float(params.get('valid_min', -0.002)) if guard else None
+
         # ── Compute enabled preset indices ────────────────────────────────────
         enabled_arrays: list[np.ndarray] = []
         enabled_labels: list[str]        = []
@@ -196,20 +230,20 @@ class SpectralIndicesNode(NodeProcessor):
             result[key] = _colorize(arr, cmap, vmin, vmax)
 
         if params.get('ndvi', True):
-            _add('ndvi', _norm_index(NIR, RED))
+            _add('ndvi', _norm_index(NIR, RED, valid_min))
 
         if params.get('ndwi', False):
-            _add('ndwi', _norm_index(GRN, NIR))
+            _add('ndwi', _norm_index(GRN, NIR, valid_min))
 
         if params.get('evi', False):
             evi = 2.5 * (NIR - RED) / (NIR + 6.0 * RED - 7.5 * BLU + 1.0 + 1e-8)
             _add('evi', np.clip(evi, vmin, vmax))
 
         if params.get('mndwi', False):
-            _add('mndwi', _norm_index(GRN, SWIR))
+            _add('mndwi', _norm_index(GRN, SWIR, valid_min))
 
         if params.get('nbr', False):
-            _add('nbr', _norm_index(NIR, SWIR))
+            _add('nbr', _norm_index(NIR, SWIR, valid_min))
 
         if params.get('bsi', False):
             # Bare Soil Index: (SWIR+RED - NIR+BLUE) / (SWIR+RED + NIR+BLUE)

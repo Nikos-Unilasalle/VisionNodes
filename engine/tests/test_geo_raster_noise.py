@@ -58,6 +58,42 @@ def test_clip_negative():
     assert float(res['geotiff']['bands'].min()) >= 0.0
 
 
+def test_clip_range_bounds_and_supersedes_clip_negative():
+    # Arrange: heavy noise so draws blow past both bounds; range = [-0.01, 0.5]
+    bands = np.full((1, 16, 16), 0.25, dtype=np.float32)
+    node = _mod.RasterNoiseNode()
+
+    # Act
+    res = node.process(
+        {'geotiff': _geo(bands)},
+        {'sigma_abs': 1.0, 'sigma_rel': 0.0, 'seed': 5,
+         'clip_negative': True, 'clip_min': -0.01, 'clip_max': 0.5},
+    )
+    out = res['geotiff']['bands']
+
+    # Assert: clamped to [-0.01, 0.5]; range clip lets values go negative even
+    # though clip_negative=True (range supersedes the legacy floor)
+    assert float(out.min()) >= -0.01
+    assert float(out.max()) <= 0.5
+    assert float(out.min()) < 0.0
+
+
+def test_clip_range_disabled_when_max_le_min():
+    # Arrange: defaults 0/0 → range off → legacy clip_negative path stays active
+    bands = np.full((1, 8, 8), 0.001, dtype=np.float32)
+    node = _mod.RasterNoiseNode()
+
+    # Act
+    res = node.process(
+        {'geotiff': _geo(bands)},
+        {'sigma_abs': 0.5, 'sigma_rel': 0.0, 'seed': 3,
+         'clip_negative': True, 'clip_min': 0.0, 'clip_max': 0.0},
+    )
+
+    # Assert: still floored at 0 by clip_negative
+    assert float(res['geotiff']['bands'].min()) >= 0.0
+
+
 def test_relative_noise_scales_with_signal():
     """σ_rel should produce larger spread on larger values."""
     low  = np.full((1, 32, 32), 0.1, dtype=np.float32)
