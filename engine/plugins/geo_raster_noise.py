@@ -14,6 +14,10 @@ Noise model (per band, per pixel):
 uncertainty). Both are in the band's own units (reflectance in [0,1] if the
 raster has been normalised).
 
+The perturbed raster is optionally clipped: set `clip_min`/`clip_max` for an
+explicit range (e.g. ACOLITE Rrs to [-0.01, 0.5]) — active only when
+`clip_max > clip_min`, and it supersedes the legacy `clip_negative` floor.
+
 This node is *stochastic and realtime*: it redraws fresh noise on every engine
 tick (its type is in REALTIME_NODE_TYPES, so the engine never caches it). Placed
 upstream of an index → vote → frame-accumulator chain, repeated ticks form a
@@ -60,6 +64,10 @@ from registry import vision_node, NodeProcessor
          'label': 'σ relative (× |value|)'},
         {'id': 'clip_negative', 'type': 'bool', 'default': True,
          'label': 'Clip negatives to 0'},
+        {'id': 'clip_min', 'type': 'float', 'default': 0.0, 'min': -1e6, 'max': 1e6, 'step': 0.01,
+         'label': 'Clip min (range; off if ≥ max)'},
+        {'id': 'clip_max', 'type': 'float', 'default': 0.0, 'min': -1e6, 'max': 1e6, 'step': 0.01,
+         'label': 'Clip max (range; off if ≤ min)'},
         {'id': 'seed', 'type': 'int', 'default': -1, 'min': -1, 'max': 2_000_000_000,
          'label': 'Base seed (-1 = entropy)'},
         {'id': 'node_note', 'type': 'string', 'default': '', 'label': 'Note'},
@@ -118,6 +126,8 @@ class RasterNoiseNode(NodeProcessor):
         sigma_abs = float(params.get('sigma_abs', 0.01))
         sigma_rel = float(params.get('sigma_rel', 0.02))
         clip_neg  = bool(params.get('clip_negative', True))
+        clip_min  = float(params.get('clip_min', 0.0))
+        clip_max  = float(params.get('clip_max', 0.0))
         base_seed = int(params.get('seed', -1))
 
         # Deterministic per-tick sequence when seeded; OS entropy otherwise.
@@ -129,7 +139,13 @@ class RasterNoiseNode(NodeProcessor):
 
         sigma = sigma_abs + sigma_rel * np.abs(bands)
         noisy = bands + rng.standard_normal(bands.shape).astype(np.float32) * sigma
-        if clip_neg:
+        # Explicit [min, max] range clip (reference-script presets, e.g. rrs
+        # [-0.01, 0.5]) takes precedence; it supersedes the legacy clip-negatives
+        # floor. Range is active only when clip_max > clip_min, so existing
+        # templates (defaults 0/0) keep the clip_negative behaviour unchanged.
+        if clip_max > clip_min:
+            np.clip(noisy, clip_min, clip_max, out=noisy)
+        elif clip_neg:
             np.clip(noisy, 0.0, None, out=noisy)
 
         out_geo = {**geo, 'bands': noisy, 'count': int(noisy.shape[0]), 'dtype': 'float32'}
