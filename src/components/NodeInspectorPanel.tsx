@@ -640,27 +640,26 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         );
       })()}
 
-      {/* plotter_pro — Dict channel toggles */}
+      {/* plotter_pro — per-series enable/disable toggles (dynamic, from live keys) */}
       {node.type === 'plotter_pro' && (() => {
-        const dictKeys: string[] = Array.isArray(liveData?.dict_keys) ? liveData.dict_keys : [];
-        if (dictKeys.length === 0) return null;
+        const keys: string[] = Array.isArray(liveData?.series_keys) ? liveData.series_keys : [];
+        if (keys.length === 0) {
+          return (
+            <p className="text-[9px] text-gray-500 italic px-1">Connect scalar or dict inputs to list series here.</p>
+          );
+        }
         return (
-          <div className="space-y-3">
-            <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">
-              Dict Channels
-            </label>
+          <div className="space-y-2">
+            <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Input Series</label>
             <div className="space-y-2 bg-white/[0.01] rounded-xl border border-white/5 p-3">
-              {dictKeys.map((key: string) => {
-                const active = p[`active_${key}`] !== false;
-                return (
-                  <ToggleInput
-                    key={key}
-                    label={key}
-                    val={active}
-                    onChange={(v: boolean) => up({ [`active_${key}`]: v })}
-                  />
-                );
-              })}
+              {keys.map((key: string) => (
+                <ToggleInput
+                  key={key}
+                  label={key}
+                  val={p[`active_${key}`] !== false}
+                  onChange={(v: boolean) => up({ [`active_${key}`]: v })}
+                />
+              ))}
             </div>
           </div>
         );

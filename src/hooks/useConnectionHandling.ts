@@ -85,12 +85,6 @@ export function useConnectionHandling({
         const sh = params.sourceHandle;
         const color = sh.split('__')[0] || 'any';
 
-        // Cap dynamic ports at 5 for Plotter Pro
-        if (targetNode!.type === 'plotter_pro' && isFactory
-            && ((targetNode!.data as any)?.ports?.length ?? 0) >= 5) {
-          return;
-        }
-
         if (targetNode!.type === 'logic_python') {
           // Auto-typed, letter-named input ports (a, b, c…) → engine maps th=letter → script var.
           const idx = (targetNode!.data as any)?.ports?.length ?? 0;

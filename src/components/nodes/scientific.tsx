@@ -189,6 +189,254 @@ export const ScientificPlotterNode = memo(({ selected, data }: any) => {
   );
 });
 
+// Reserved result keys emitted by the plotter_pro engine node that are NOT data series.
+const PLOTTER_PRO_META = new Set(['main', 'dict', 'table', 'series_keys', '_available_keys', '_tick', 'preview']);
+
+export const PlotterProNode = memo(({ selected, data }: any) => {
+  const { customBg } = useNodeColor();
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const palIdx = data?.activePaletteIndex ?? 6;
+  const SERIES_COLORS = PALETTES[palIdx].colors.map((c: any) => c.bg);
+  const nd = useNodeData(nodeId);
+  const params = data.params ?? {};
+  const bufSize = Number(params.buffer_size ?? 200);
+  const normalize = !!params.normalize;
+  const showGrid = params.show_grid !== false;
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  // Series keys: engine-declared list (dict-expanded) unioned with any live numeric
+  // values, minus reserved meta keys and the disabled ones.
+  const seriesKeys = React.useMemo(() => {
+    const keys = new Set<string>();
+    const declared = (nd as any)?.series_keys;
+    if (Array.isArray(declared)) declared.forEach((k: string) => keys.add(k));
+    for (const k of Object.keys(nd || {})) {
+      if (PLOTTER_PRO_META.has(k)) continue;
+      if (typeof (nd as any)[k] === 'number') keys.add(k);
+    }
+    return Array.from(keys);
+  }, [nd]);
+
+  const isActive = React.useCallback(
+    (k: string) => params[`active_${k}`] !== false,
+    [params]
+  );
+
+  // Each frame is one synchronized sample across all series, tagged with the
+  // engine's shared x (tick). Frames fill left→right and FREEZE once the buffer
+  // is full — the chart stops updating, mirroring the engine.
+  // NOTE: the updater must stay PURE (no ref mutation) — React StrictMode invokes
+  // it twice per commit and a mutated ref would discard every frame after the first.
+  const [frames, setFrames] = React.useState<any[]>([]);
+
+  useEffect(() => {
+    if (params.reset) setFrames([]);
+  }, [params.reset]);
+
+  React.useEffect(() => {
+    const tick = (nd as any)?._tick;
+    if (typeof tick !== 'number') return;
+    setFrames(prev => {
+      if (prev.length >= bufSize) return prev;                       // frozen when full
+      const pt: any = { x: tick };
+      for (const k of seriesKeys) {
+        const v = (nd as any)[k];
+        if (typeof v === 'number' && !isNaN(v)) pt[k] = v;
+      }
+      // Skip only if nothing changed since the last recorded frame (tick + values).
+      const last = prev[prev.length - 1];
+      if (last) {
+        let same = last.x === pt.x;
+        if (same) {
+          for (const k of seriesKeys) { if (last[k] !== pt[k]) { same = false; break; } }
+        }
+        if (same) return prev;
+      }
+      return [...prev, pt];
+    });
+  }, [nd, bufSize, seriesKeys]);
+
+  const activeSeries = React.useMemo(
+    () => seriesKeys.filter(k => isActive(k) && frames.some(f => typeof f[k] === 'number')),
+    [seriesKeys, isActive, frames]
+  );
+
+  // Per-series min/max used for optional normalization to 0..1.
+  const ranges = React.useMemo(() => {
+    const r: Record<string, { lo: number; hi: number }> = {};
+    for (const k of activeSeries) {
+      let lo = Infinity, hi = -Infinity;
+      for (const f of frames) {
+        const v = f[k];
+        if (typeof v === 'number') { if (v < lo) lo = v; if (v > hi) hi = v; }
+      }
+      if (lo === Infinity) { lo = 0; hi = 1; }
+      r[k] = { lo, hi: hi === lo ? lo + 1 : hi };
+    }
+    return r;
+  }, [activeSeries, frames]);
+
+  const chartData = React.useMemo(() => {
+    if (!activeSeries.length) return [];
+    return frames.map(f => {
+      const pt: any = { x: f.x };
+      for (const k of activeSeries) {
+        const raw = f[k];
+        if (typeof raw === 'number') {
+          pt[k] = raw;                               // exact value for the tooltip
+          if (normalize) {
+            const { lo, hi } = ranges[k];
+            pt[`__n_${k}`] = (raw - lo) / (hi - lo);  // 0..1 for drawing
+          }
+        }
+      }
+      return pt;
+    });
+  }, [frames, activeSeries, normalize, ranges]);
+
+  // Fixed x-axis window so points fill from the left with empty space on the
+  // right until the buffer is full.
+  const xDomain = React.useMemo<[number, number]>(() => {
+    const x0 = frames[0]?.x ?? 0;
+    const step = frames.length > 1 ? (frames[1].x - frames[0].x) : 1;
+    return [x0, x0 + (bufSize - 1) * (step || 1)];
+  }, [frames, bufSize]);
+
+  const colorOf = (k: string) => SERIES_COLORS[seriesKeys.indexOf(k) % SERIES_COLORS.length];
+
+  // Custom tooltip — white label boxes showing the exact (non-rounded) y value.
+  const renderTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div className="flex flex-col gap-0.5">
+        {payload.map((entry: any) => {
+          const key = String(entry.dataKey).replace(/^__n_/, '');
+          const val = entry.payload?.[key];
+          if (val === undefined) return null;
+          return (
+            <div key={key} className="bg-white rounded px-1.5 py-0.5 shadow text-[9px] font-mono leading-tight flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorOf(key) }} />
+              <span className="text-gray-700">{key}</span>
+              <span className="text-black font-bold">{String(val)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Pixel-based handle layout: fixed 'ticks' input first, then dynamic ports, then factory.
+  const HANDLE_TOP_START = 45;
+  const HANDLE_SPACING = 32;
+  const getHandleTop = (i: number) => `${HANDLE_TOP_START + i * HANDLE_SPACING}px`;
+  const totalHandles = ports.length + 2; // ticks + factory
+  const portsHeight = HANDLE_TOP_START + (totalHandles - 1) * HANDLE_SPACING + 35;
+
+  return (
+    <div className="relative w-full h-full" style={{ minHeight: Math.max(portsHeight, 160) }}>
+    <div
+      className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
+      style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
+    >
+      {/* Fixed 'ticks' input (time sync) */}
+      <div className="absolute left-0 pointer-events-none flex items-center z-10"
+           style={{ top: getHandleTop(0), transform: 'translateY(-50%)' }}>
+        <StyledHandle type="target" position={Position.Left} id="ticks" color="scalar" top="50%" />
+        <span className="ml-4 text-[7px] text-gray-500 uppercase tracking-widest">ticks</span>
+      </div>
+
+      {/* Dynamic input ports (scalar / dict) */}
+      {ports.map((p, i) => {
+        const idx = p.id.indexOf('__');
+        const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+        const color = idx >= 0 ? p.id.slice(0, idx) : 'scalar';
+        const disabled = params[`active_${shortId}`] === false;
+        return (
+          <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center z-10"
+               style={{ top: getHandleTop(i + 1), transform: 'translateY(-50%)' }}>
+            <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
+            <span className={`ml-4 text-[7px] uppercase tracking-widest ${disabled ? 'text-gray-700 line-through' : 'text-gray-500'}`}>{p.label || shortId}</span>
+            <button
+              className="nodrag pointer-events-auto ml-1.5 text-[8px] text-gray-600 hover:text-red-400 transition-colors leading-none"
+              onClick={e => { e.stopPropagation(); data.onRemovePort?.(p.id); }}
+              title="Remove"
+            >×</button>
+          </div>
+        );
+      })}
+      {/* factory "new" slot */}
+      <div className="absolute left-0 pointer-events-none flex items-center z-10"
+           style={{ top: getHandleTop(ports.length + 1), transform: 'translateY(-50%)' }}>
+        <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
+      </div>
+
+      {/* Outputs: main image, grouped dict, dataframe */}
+      {[
+        { id: 'main', color: 'image', top: 22 },
+        { id: 'dict', color: 'any', top: 44 },
+        { id: 'table', color: 'dataframe', top: 66 },
+      ].map(o => (
+        <div key={o.id} className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
+             style={{ top: `${o.top}px`, transform: 'translateY(-50%)' }}>
+          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">{o.id}</span>
+          <StyledHandle type="source" position={Position.Right} id={o.id} color={o.color} top="50%" />
+        </div>
+      ))}
+
+      {/* Header */}
+      <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
+           style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
+        <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
+      </div>
+
+      {/* Colored series legend (name + color) */}
+      {activeSeries.length > 0 && (
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5 px-3 pt-1 shrink-0">
+          {activeSeries.map(k => (
+            <div key={k} className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colorOf(k) }} />
+              <span className="text-[7px] text-gray-400 font-mono">{k}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Chart */}
+      <div className="flex-1 min-h-0 w-full px-1 py-1 overflow-hidden">
+        {chartData.length === 0
+          ? <div className="w-full h-full flex items-center justify-center">
+              <span className="text-[8px] text-gray-700 uppercase tracking-widest">connect data</span>
+            </div>
+          : <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 4, right: 18, bottom: 2, left: 0 }}>
+                {showGrid && <CartesianGrid stroke="#ffffff12" strokeDasharray="2 2" />}
+                <XAxis type="number" dataKey="x" domain={xDomain} allowDataOverflow
+                  tick={{ fontSize: 7, fill: '#ffffff55' }} height={14}
+                  axisLine={{ stroke: '#ffffff22' }} tickLine={false}
+                  tickFormatter={(v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2))} />
+                <YAxis width={26} tick={{ fontSize: 7, fill: '#ffffff55' }} domain={normalize ? [0, 1] : ['dataMin', 'dataMax']}
+                  allowDataOverflow tickFormatter={(v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2))}
+                  axisLine={{ stroke: '#ffffff22' }} tickLine={false} />
+                <Tooltip content={renderTooltip} cursor={{ stroke: '#ffffff44', strokeWidth: 1 }} isAnimationActive={false} />
+                {activeSeries.map(k => (
+                  <Line key={k} type="monotone" dataKey={normalize ? `__n_${k}` : k}
+                    stroke={colorOf(k)} strokeWidth={1.5}
+                    dot={false} activeDot={{ r: 3, fill: colorOf(k), stroke: '#fff', strokeWidth: 1 }}
+                    isAnimationActive={false} />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+        }
+      </div>
+    </div>
+    </div>
+  );
+});
+
 // Generic DataFrame chart node: renders the engine-produced matplotlib image
 // (base64 `preview`) directly in a resizable node body, plus image + dict outputs.
 
@@ -287,240 +535,6 @@ function ProActiveDot({ cx, cy, value, payload, color }: any) {
     </g>
   );
 }
-
-
-export const PlotterProNode = memo(({ selected, data }: any) => {
-  const { customBg } = useNodeColor();
-  const nodeId = useNodeId()!;
-  const updateNodeInternals = useUpdateNodeInternals();
-  // Palette from the global top-menu selector (5 colours per palette).
-  const palIdx = data?.activePaletteIndex ?? 6;
-  const palette = PALETTES[palIdx].colors.map((c: any) => c.bg);
-  const nd = useNodeData(nodeId);
-  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
-
-  const bufSize = Number(data.params?.buffer_size ?? 300);
-  const showGrid = data.params?.show_grid !== false;
-  const lineWidth = Number(data.params?.line_width ?? 2);
-  const showAxes = !!data.params?.show_axes;
-  const fillCurve = !!data.params?.fill_curve;
-  const minY = Number(data.params?.min_y ?? 0);
-  const maxY = Number(data.params?.max_y ?? 100);
-  const autoScale = !!(data.params?.auto_scale ?? true);
-
-  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
-
-  // Python key (last segment after __) for each declared port.
-  const portKeys = React.useMemo(() =>
-    ports.map(p => p.id.split('__').pop() ?? p.id),
-    [ports]
-  );
-
-  // Series = union of declared ports AND any live numeric/array key the engine
-  // emits for this node (mirrors ScientificPlotterNode — robust to port/data drift).
-  // Capped at 5 series.
-  const seriesKeys = React.useMemo(() => {
-    const keys = new Set<string>(portKeys);
-    for (const k of Object.keys(nd || {})) {
-      const v = (nd as any)[k];
-      // Only accept scalars or arrays of finite numbers. Excludes engine meta
-      // keys like dict_keys (string array), table (records) and image payloads.
-      if (typeof v === 'number') { keys.add(k); continue; }
-      if (Array.isArray(v) && v.length > 0 && v.every((x: any) => typeof x === 'number')) {
-        keys.add(k);
-      }
-    }
-    return Array.from(keys).slice(0, PRO_MAX_SERIES);
-  }, [nd, portKeys]);
-
-  const [histories, setHistories] = React.useState<Record<string, (number | null)[]>>({});
-  const prevReset = React.useRef(0);
-
-  useEffect(() => {
-    const r = data.params?.reset ?? 0;
-    if (r === 1 && prevReset.current === 0) setHistories({});
-    prevReset.current = r;
-  }, [data.params?.reset]);
-
-  useEffect(() => {
-    setHistories(prev => {
-      const next: Record<string, (number | null)[]> = {};
-      let changed = false;
-      for (const k of seriesKeys) {
-        const v = (nd as any)[k];
-        const cur = prev[k] ?? [];
-        if (v === undefined || v === null) { next[k] = cur; continue; }
-        if (typeof v === 'number') {
-          if (cur.length === 0 || cur[cur.length - 1] !== v) {
-            next[k] = [...cur, v].slice(-bufSize);
-            changed = true;
-          } else { next[k] = cur; }
-        } else if (Array.isArray(v)) {
-          // Full replace. Preserve index alignment: non-finite → null (gap),
-          // never dropped (dropping would shift every later sample left).
-          next[k] = (v as any[]).slice(-bufSize).map((x: any) => {
-            const n = Number(x);
-            return Number.isFinite(n) ? n : null;
-          });
-          changed = true;
-        } else { next[k] = cur; }
-      }
-      const prevKeys = Object.keys(prev);
-      return (changed || prevKeys.length !== seriesKeys.length || prevKeys.some(k => !seriesKeys.includes(k))) ? next : prev;
-    });
-  }, [nd, bufSize, seriesKeys]);
-
-  const chartData = React.useMemo(() => {
-    const maxLen = Math.max(0, ...seriesKeys.map(k => histories[k]?.length ?? 0));
-    if (maxLen === 0) return [];
-    return Array.from({ length: maxLen }, (_, i) => {
-      const pt: any = { t: i };
-      for (const k of seriesKeys) {
-        const arr = histories[k];
-        if (arr && i < arr.length && arr[i] != null) pt[k] = arr[i];
-      }
-      return pt;
-    });
-  }, [histories, seriesKeys]);
-
-  const activeSeries = seriesKeys.filter(k => (histories[k]?.length ?? 0) > 0);
-
-  // Robust auto-scale domain: 2nd–98th percentile across all plotted values,
-  // so a single outlier doesn't blow up the range (Recharts 'auto' uses min/max).
-  const yDomain = React.useMemo<[number | string, number | string]>(() => {
-    if (!autoScale) return [minY, maxY];
-    const vals: number[] = [];
-    for (const k of seriesKeys) {
-      const arr = histories[k];
-      if (arr) for (const v of arr) if (v != null && Number.isFinite(v)) vals.push(v);
-    }
-    if (vals.length < 2) return ['auto', 'auto'];
-    vals.sort((a, b) => a - b);
-    const pct = (p: number) => vals[Math.min(vals.length - 1, Math.floor((p / 100) * (vals.length - 1)))];
-    let lo = pct(2), hi = pct(98);
-    if (hi <= lo) { lo = vals[0]; hi = vals[vals.length - 1]; }
-    const pad = hi > lo ? (hi - lo) * 0.1 : (Math.abs(hi) * 0.05 || 1);
-    return [lo - pad, hi + pad];
-  }, [autoScale, minY, maxY, histories, seriesKeys]);
-
-  const HANDLE_TOP_START = 45;
-  const HANDLE_SPACING = 32;
-  // +1 static dict_in port above the dynamic ports.
-  const portsHeight = HANDLE_TOP_START + (ports.length + 1) * HANDLE_SPACING + 35;
-
-  return (
-    <div className="relative w-full h-full" style={{ minHeight: Math.max(portsHeight, 180) }}>
-      <div
-        className={`rounded-xl bg-[#3d4452] border-2 shadow-2xl flex flex-col transition-all duration-300 relative w-full h-full ${customBg ? '' : (selected ? 'border-accent shadow-accent/20 shadow-lg' : 'border-[#4f5b6b]')}`}
-        style={customBg ? { borderColor: customBg, boxShadow: selected ? `0 10px 15px -3px ${customBg}40` : `0 0 10px ${customBg}10` } : {}}
-      >
-        {/* Static dict input port */}
-        <div className="absolute left-0 pointer-events-none flex items-center z-10"
-             style={{ top: `${HANDLE_TOP_START}px`, transform: 'translateY(-50%)' }}>
-          <StyledHandle type="target" position={Position.Left} id="dict_in" color="dict" top="50%" />
-          <span className="ml-4 text-[7px] font-black text-white/40 uppercase tracking-widest">dict</span>
-        </div>
-        {/* Dynamic input ports */}
-        {ports.map((p, i) => {
-          const idx = p.id.indexOf('__');
-          const shortId = idx >= 0 ? p.id.slice(idx + 2) : p.id;
-          const color = idx >= 0 ? p.id.slice(0, idx) : 'any';
-          return (
-            <div key={`in-${p.id}`} className="absolute left-0 pointer-events-none flex items-center z-10"
-                 style={{ top: `${HANDLE_TOP_START + (i + 1) * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
-              <StyledHandle type="target" position={Position.Left} id={shortId} color={color} top="50%" />
-              <button
-                className="nodrag pointer-events-auto ml-4 text-[8px] text-gray-600 hover:text-red-400 transition-colors leading-none"
-                onClick={e => { e.stopPropagation(); data.onRemovePort?.(p.id); }}
-                title="Remove"
-              >×</button>
-            </div>
-          );
-        })}
-        {/* Factory handle */}
-        <div className="absolute left-0 pointer-events-none flex items-center z-10"
-             style={{ top: `${HANDLE_TOP_START + (ports.length + 1) * HANDLE_SPACING}px`, transform: 'translateY(-50%)' }}>
-          <StyledHandle type="target" position={Position.Left} id="DYNAMIC_NEW_HANDLE" color="any" top="50%" />
-        </div>
-
-        {/* Output: main image */}
-        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
-             style={{ top: '22px', transform: 'translateY(-50%)' }}>
-          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">main</span>
-          <StyledHandle type="source" position={Position.Right} id="main" color="image" top="50%" />
-        </div>
-        {/* Output: DataFrame */}
-        <div className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
-             style={{ top: '44px', transform: 'translateY(-50%)' }}>
-          <span className="mr-[12px] text-[7px] font-black text-white/40 uppercase tracking-widest">table</span>
-          <StyledHandle type="source" position={Position.Right} id="table" color="data" top="50%" />
-        </div>
-
-        {/* Header */}
-        <div className="bg-[#3d4452] px-3 py-1.5 flex items-center gap-2 border-b border-[#4f5b6b] rounded-t-xl shrink-0"
-             style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
-          <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#a78bfa' }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
-          <div className="ml-auto flex items-center gap-1.5">
-            {activeSeries.map(k => (
-              <div key={k} className="w-1.5 h-1.5 rounded-full opacity-80"
-                   style={{ backgroundColor: palette[seriesKeys.indexOf(k) % palette.length] }} />
-            ))}
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="flex-1 min-h-0 w-full px-1 py-1 overflow-hidden">
-          {chartData.length === 0
-            ? <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-                <span className="text-[8px] text-gray-600 uppercase tracking-widest">
-                  {seriesKeys.length === 0 ? 'connect data' : `${seriesKeys.length} series — waiting`}
-                </span>
-              </div>
-            : <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData}
-                  margin={showAxes ? { top: 4, right: 35, bottom: 4, left: 4 } : { top: 2, right: 35, bottom: 0, left: 0 }}>
-                  <defs>
-                    {activeSeries.map(k => {
-                      const ci = seriesKeys.indexOf(k);
-                      const c = palette[ci % palette.length];
-                      return (
-                        <linearGradient key={`grad-${k}`} id={`proFill-${nodeId}-${ci}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={c} stopOpacity={0.35} />
-                          <stop offset="100%" stopColor={c} stopOpacity={0.02} />
-                        </linearGradient>
-                      );
-                    })}
-                  </defs>
-                  <YAxis hide={!showAxes} domain={yDomain} allowDataOverflow={!autoScale}
-                    tick={{ fill: '#94a3b8', fontSize: 7 }} width={showAxes ? 30 : 0} />
-                  <XAxis dataKey="t" hide={!showAxes}
-                    tick={{ fill: '#94a3b8', fontSize: 7 }} height={showAxes ? 14 : 0} />
-                  {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />}
-                  {/* Invisible tooltip: drives hover state so activeDot renders, no floating box */}
-                  <Tooltip content={() => null} cursor={false} isAnimationActive={false} />
-                  {fillCurve && activeSeries.map(k => (
-                    <Area key={`a-${k}`} type="monotone" dataKey={k}
-                      stroke="none" fill={`url(#proFill-${nodeId}-${seriesKeys.indexOf(k)})`}
-                      isAnimationActive={false} connectNulls />
-                  ))}
-                  {activeSeries.map(k => {
-                    const c = palette[seriesKeys.indexOf(k) % palette.length];
-                    return (
-                      <Line key={k} type="monotone" dataKey={k}
-                        stroke={c} strokeWidth={lineWidth}
-                        dot={false} isAnimationActive={false} connectNulls
-                        activeDot={(props: any) => <ProActiveDot {...props} color={c} />} />
-                    );
-                  })}
-                </ComposedChart>
-              </ResponsiveContainer>
-          }
-        </div>
-      </div>
-    </div>
-  );
-});
 
 
 export const ScientificCalibrationNode = memo(({ selected, data }: any) => {
