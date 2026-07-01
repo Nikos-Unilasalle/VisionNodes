@@ -99,6 +99,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   data_coord_splitter: N.DataCoordSplitterNode,
   data_coord_combine: N.DataCoordCombineNode,
   util_dict_merge: N.DictMergeNode,
+  dict_builder: N.DictBuilderNode,
   data_inspector: withNodeResizer(N.DataInspectorNode, 180, 120),
   output_display: N.OutputDisplayNode,
   logic_python: N.PythonNode,

@@ -296,7 +296,42 @@ export const DictMergeNode = memo(({ selected, data }: any) => {
         data={data} 
         color="indigo" 
         inputs={inputs} 
-        outputs={[{id: 'main', color: 'dict'}]} 
+        outputs={[{id: 'main', color: 'dict'}]}
+    />
+  );
+});
+
+export const DictBuilderNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId()!;
+  const updateNodeInternals = useUpdateNodeInternals();
+  const ports: { id: string; color: string; label: string }[] = data?.ports ?? [];
+  const params = data?.params ?? {};
+
+  useEffect(() => { updateNodeInternals(nodeId); }, [ports.length, nodeId, updateNodeInternals]);
+
+  const inputs = [
+    ...ports.map(p => {
+      const idx = p.id.indexOf('__');
+      const short = idx >= 0 ? p.id.slice(idx + 2) : p.id;
+      return {
+        id: short,
+        color: idx >= 0 ? p.id.slice(0, idx) : 'scalar',
+        // Show the renamed key if set, else the auto source-derived name.
+        label: params[`name_${short}`] || p.label || short,
+      };
+    }),
+    { id: 'DYNAMIC_NEW_HANDLE', color: 'scalar', label: 'Add Value' },
+  ];
+
+  return (
+    <BaseNode
+        title="Build Dict"
+        icon={Package}
+        selected={selected}
+        data={data}
+        color="green"
+        inputs={inputs}
+        outputs={[{ id: 'dict', color: 'dict' }]}
     />
   );
 });

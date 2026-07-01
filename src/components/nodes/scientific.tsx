@@ -376,8 +376,8 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
       {/* Outputs: main image, grouped dict, dataframe */}
       {[
         { id: 'main', color: 'image', top: 22 },
-        { id: 'dict', color: 'any', top: 44 },
-        { id: 'table', color: 'dataframe', top: 66 },
+        { id: 'dict', color: 'dict', top: 44 },
+        { id: 'table', color: 'data', top: 66 },
       ].map(o => (
         <div key={o.id} className="absolute right-0 flex items-center justify-end pointer-events-none z-10"
              style={{ top: `${o.top}px`, transform: 'translateY(-50%)' }}>
@@ -391,6 +391,7 @@ export const PlotterProNode = memo(({ selected, data }: any) => {
            style={customBg ? { backgroundColor: `${customBg}20`, borderBottomColor: `${customBg}40` } : {}}>
         <Activity size={12} className="shrink-0" style={customBg ? { color: customBg } : { color: '#22d3ee' }} />
         <span className="text-[10px] font-bold uppercase tracking-widest" style={customBg ? { color: customBg } : { color: '#ffffff' }}>Plotter Pro</span>
+        {data?.isVisualized && <Eye size={11} className="text-yellow-400 animate-pulse ml-auto" />}
       </div>
 
       {/* Colored series legend (name + color) */}

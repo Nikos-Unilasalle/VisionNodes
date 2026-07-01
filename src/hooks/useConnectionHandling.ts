@@ -58,7 +58,7 @@ export function useConnectionHandling({
     // Check if node is dynamic via schema flags or known types
     const isDynamic = !!targetSchema?.dynamic_inputs ||
                      !!targetSchema?.dynamic_outputs ||
-                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python', 'plotter_pro', 'sci_plotter', 'ml_best_params'].includes(targetNode?.type || '');
+                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python', 'plotter_pro', 'sci_plotter', 'ml_best_params', 'dict_builder'].includes(targetNode?.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
@@ -85,7 +85,20 @@ export function useConnectionHandling({
         const sh = params.sourceHandle;
         const color = sh.split('__')[0] || 'any';
 
-        if (targetNode!.type === 'logic_python') {
+        if (targetNode!.type === 'dict_builder') {
+          // Auto-label the key from the source handle name (deduped), so the dict
+          // key is meaningful out of the box and still renameable in the inspector.
+          const existing = new Set(((targetNode!.data as any)?.ports ?? []).map((pt: any) => pt.id.split('__').pop()));
+          const raw = (sh.split('__').pop() || 'val').replace(/[^a-zA-Z0-9_]/g, '_');
+          let name = raw, i = 1;
+          while (existing.has(name)) name = `${raw}_${i++}`;
+          const portId = `${color}__${name}`;
+          const newPort = { id: portId, color, label: name };
+          setViewNodes((nds: Node[]) => nds.map((n: Node) => n.id === params.target
+            ? { ...n, data: { ...n.data, ports: [...((n.data as any)?.ports ?? []), newPort] } }
+            : n));
+          setViewEdges((eds: Edge[]) => addEdge({ ...params, id: `e-${Date.now()}`, targetHandle: portId }, eds));
+        } else if (targetNode!.type === 'logic_python') {
           // Auto-typed, letter-named input ports (a, b, c…) → engine maps th=letter → script var.
           const idx = (targetNode!.data as any)?.ports?.length ?? 0;
           const letter = String.fromCharCode(97 + Math.min(idx, 25));

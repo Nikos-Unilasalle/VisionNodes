@@ -255,6 +255,12 @@ function App() {
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6);
+  // Global execution toggle: when false the engine receives an empty graph, so
+  // node processing stops while the tree can still be edited freely. Defaults to
+  // stopped — any canvas you land on starts paused until you press Start.
+  const [isRunning, setIsRunning] = useState(false);
+  const isRunningRef = useRef(true);
+  isRunningRef.current = isRunning;
   const [isPaletteSelectOpen, setIsPaletteSelectOpen] = useState(false);
   const [previewSize, setPreviewSize] = useState({ w: 400, h: 225 });
   const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 });
@@ -549,7 +555,7 @@ function App() {
             setViewNodes(nds => nds.map(n => n.id === node.id ? { ...n, data: { ...n.data, params: { ...n.data.params, ...p } } } : n));
           },
           onExportPy: node.type === 'export_py' ? () => handleExportPy(node.id) : undefined,
-          onRemovePort: (node.type === 'sci_plotter' || node.type === 'plotter_pro' || node.type === 'ml_best_params') ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
+          onRemovePort: (node.type === 'sci_plotter' || node.type === 'plotter_pro' || node.type === 'ml_best_params' || node.type === 'dict_builder') ? (portId: string) => handleRemovePlotterPort(node.id, portId) : undefined,
           onToggleCollapse: node.type === 'canvas_frame' ? () => {
             pushSnapshot();
             setViewNodes(nds => nds.map(n => {
@@ -769,10 +775,12 @@ function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isConnected) updateGraph(canvasNodes, canvasEdges.filter(e => !inactiveEdgeIds.has(e.id)));
+      if (!isConnected) return;
+      if (isRunning) updateGraph(canvasNodes, canvasEdges.filter(e => !inactiveEdgeIds.has(e.id)));
+      else updateGraph([], []);
     }, 100);
     return () => clearTimeout(timer);
-  }, [canvasNodes, canvasEdges, isConnected, updateGraph, inactiveEdgeIds]);
+  }, [canvasNodes, canvasEdges, isConnected, updateGraph, inactiveEdgeIds, isRunning]);
 
   // Sync mainConnected flag on Display nodes from actual edges
   useEffect(() => {
@@ -1005,7 +1013,7 @@ function App() {
     if (!prev) return;
     setGroupStack([]); groupStackRef.current = [];
     setNodes(prev.nodes); setEdges(prev.edges);
-    if (isConnected) updateGraph(prev.nodes, prev.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
+    if (isConnected && isRunningRef.current) updateGraph(prev.nodes, prev.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
   }, [histUndo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph, inactiveEdgeIds]);
 
   const handleRedo = useCallback(() => {
@@ -1013,7 +1021,7 @@ function App() {
     if (!next) return;
     setGroupStack([]); groupStackRef.current = [];
     setNodes(next.nodes); setEdges(next.edges);
-    if (isConnected) updateGraph(next.nodes, next.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
+    if (isConnected && isRunningRef.current) updateGraph(next.nodes, next.edges.filter((e: any) => !inactiveEdgeIds.has(e.id)));
   }, [histRedo, activeCanvasId, setNodes, setEdges, isConnected, updateGraph, inactiveEdgeIds]);
 
   const copyNodes = useCallback(() => {
@@ -1031,13 +1039,17 @@ function App() {
     if (!raw) return;
     pushSnapshot();
     const { nodes: copiedNodes, edges: copiedEdges } = JSON.parse(raw);
+    // Land the pasted group centered on the insertion cursor (the little cross).
+    const pos = mousePos ?? cursorFlowPosRef.current;
+    const cx = copiedNodes.reduce((s: number, n: any) => s + n.position.x, 0) / copiedNodes.length;
+    const cy = copiedNodes.reduce((s: number, n: any) => s + n.position.y, 0) / copiedNodes.length;
     const idMap: Record<string, string> = {};
     const newNodes = copiedNodes.map((n: any) => {
       const newId = `node-${Date.now()}-${Math.random()}`;
       idMap[n.id] = newId;
-      return { 
+      return {
         ...n, id: newId, selected: true,
-        position: mousePos ? { x: mousePos.x + (n.position.x - copiedNodes[0].position.x), y: mousePos.y + (n.position.y - copiedNodes[0].position.y) } : { x: n.position.x + 50, y: n.position.y + 50 }
+        position: { x: pos.x + (n.position.x - cx), y: pos.y + (n.position.y - cy) }
       };
     });
     const newEdges = copiedEdges.map((e: any) => ({
@@ -1738,7 +1750,9 @@ function App() {
         workDir={workDir}
         workDirFiles={workDirFiles}
         templates={templates}
-        setActiveCanvasId={setActiveCanvasId}
+        isRunning={isRunning}
+        onToggleRunning={() => setIsRunning(r => !r)}
+        setActiveCanvasId={(id: string) => { setActiveCanvasId(id); setIsRunning(false); }}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         alignNodes={alignNodes}

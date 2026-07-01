@@ -3,7 +3,7 @@ import {
   FilePlus, FolderOpen, Save, SaveAll, Undo2, Redo2,
   AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, Grid3x3,
   Image, Film, Camera, Type, Layout, GitCommit, FileCode,
-  Palette, FolderSearch, BookOpen, RefreshCw, HelpCircle, Share2
+  Palette, FolderSearch, BookOpen, RefreshCw, HelpCircle, Share2, Play, Square
 } from 'lucide-react';
 import ApiKeysPanel from './ApiKeysPanel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,6 +26,8 @@ interface HeaderProps {
   workDir: string | null;
   workDirFiles: string[];
   templates: { name: string; description: string; file: string }[];
+  isRunning: boolean;
+  onToggleRunning: () => void;
   setActiveCanvasId: (id: string) => void;
   handleUndo: () => void;
   handleRedo: () => void;
@@ -56,6 +58,7 @@ const Header: React.FC<HeaderProps> = ({
   canUndo: canU, canRedo: canR, snapEnabled, activePaletteIndex,
   isPaletteSelectOpen, isProjectsOpen, isTemplatesOpen,
   workDir, workDirFiles, templates,
+  isRunning, onToggleRunning,
   setActiveCanvasId, handleUndo, handleRedo, alignNodes, snapToggle,
   addNode, addHelpAssistant, saveProject, saveProjectAs, saveProjectIncremental,
   loadProject, newProject,
@@ -181,6 +184,18 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleRunning}
+          title={isRunning ? 'Stop node execution (edit freely)' : 'Start node execution'}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all ${
+            isRunning
+              ? 'bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400'
+              : 'bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-green-400'
+          }`}
+        >
+          {isRunning ? <><Square size={13} /> Stop</> : <><Play size={13} /> Start</>}
+        </button>
+
         <button
           onClick={addHelpAssistant}
           title="Drop a Help assistant (question → LLM → answer)"
