@@ -40,6 +40,23 @@ from registry import vision_node, NodeProcessor
 )
 class HistCompareNode(NodeProcessor):
 
+    # Enum options — must match the `params` order above. The UI stores an enum
+    # value as either its string label (default) or its integer index (once the
+    # dropdown is touched), so _resolve() accepts both.
+    _METRICS  = ['Bhattacharyya', 'Chi-squared', 'Wasserstein', 'Correlation']
+    _CHANNELS = ['Luma', 'R', 'G', 'B', 'Hue']
+
+    @staticmethod
+    def _resolve(val, options, default):
+        if isinstance(val, bool):
+            return default
+        if isinstance(val, (int, float)):
+            i = int(val)
+            return options[i] if 0 <= i < len(options) else default
+        if isinstance(val, str) and val in options:
+            return val
+        return default
+
     @staticmethod
     def _extract_channel(image: np.ndarray, channel: str) -> np.ndarray:
         if image.ndim == 2:
@@ -114,8 +131,8 @@ class HistCompareNode(NodeProcessor):
         if img_a is None or img_b is None:
             return {'main': None, 'distance': 0.0}
 
-        metric  = params.get('metric',  'Bhattacharyya')
-        channel = params.get('channel', 'Luma')
+        metric  = self._resolve(params.get('metric'),  self._METRICS,  'Bhattacharyya')
+        channel = self._resolve(params.get('channel'), self._CHANNELS, 'Luma')
         bins    = int(params.get('bins', 64))
 
         is_hue = (channel == 'Hue')
