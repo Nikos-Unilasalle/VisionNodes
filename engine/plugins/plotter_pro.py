@@ -38,8 +38,8 @@ DEFAULT_BUFFER = 200
     ],
     outputs=[
         {"id": "main", "color": "image"},
-        {"id": "dict", "color": "any"},
-        {"id": "table", "color": "dataframe"},
+        {"id": "dict", "color": "dict"},
+        {"id": "table", "color": "data"},
     ],
     params=[
         {"id": "buffer_size", "label": "History Size", "type": "scalar",

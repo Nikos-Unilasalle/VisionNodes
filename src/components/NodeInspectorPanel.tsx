@@ -665,6 +665,33 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         );
       })()}
 
+      {/* dict_builder — rename each input's dict key */}
+      {node.type === 'dict_builder' && (() => {
+        const ports: any[] = (node.data as any).ports ?? [];
+        if (ports.length === 0) {
+          return <p className="text-[9px] text-gray-500 italic px-1">Connect scalar inputs to define dict keys here.</p>;
+        }
+        return (
+          <div className="space-y-2">
+            <label className="text-[8.5px] text-gray-400 uppercase tracking-widest font-black">Dict Keys</label>
+            <div className="space-y-2 bg-white/[0.01] rounded-xl border border-white/5 p-3">
+              {ports.map((pt: any) => {
+                const cut = pt.id.indexOf('__');
+                const short = cut >= 0 ? pt.id.slice(cut + 2) : pt.id;
+                return (
+                  <TextInput
+                    key={pt.id}
+                    label={pt.label || short}
+                    val={String(p[`name_${short}`] ?? pt.label ?? short)}
+                    onChange={(v: string) => up({ [`name_${short}`]: v })}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* canvas_note / canvas_frame */}
       {(node.type === 'canvas_note' || node.type === 'canvas_frame') && (() => {
         const currentPalette = PALETTES[activePaletteIndex].colors;

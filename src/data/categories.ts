@@ -280,6 +280,7 @@ export const CATEGORIES: Category[] = [
     { type: 'plugin_dict_get',       label: 'Dict Get',         description: 'Extracts a value from a dictionary by key.' },
     { type: 'data_group_dicts',      label: 'Group Dicts',      description: 'Groups a list of dicts by a shared key.' },
     { type: 'util_dict_merge',       label: 'Dict Merge',       description: 'Merges two dictionaries into one.' },
+    { type: 'dict_builder',          label: 'Build Dict',       description: 'Assembles a dict from multiple scalar inputs, keys renameable.' },
     { type: 'util_on_each',          label: 'On Each',          description: 'Applies a node operation to every element of a list.' },
     { type: 'data_list_ops',         label: 'List Ops',         description: 'List operations: sort, reverse, unique, slice, flatten, append, length, contains.' },
   ]},
