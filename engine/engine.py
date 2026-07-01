@@ -523,6 +523,20 @@ class VisionEngine:
                                          if ps.get('id') in inputs and inputs[ps['id']] is not None}
                             if overrides:
                                 params = {**params, **overrides}
+                            # Enum index -> label. The UI stores a string-enum as its
+                            # integer index once the dropdown is touched, but such nodes
+                            # read the param as a label. Resolve here (only for enums whose
+                            # default is a string) so plugins never see a bare index.
+                            enum_fix = {}
+                            for ps in param_specs:
+                                if ps.get('type') != 'enum' or not isinstance(ps.get('default'), str):
+                                    continue
+                                opts = ps.get('options') or []
+                                v = params.get(ps['id'])
+                                if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < len(opts):
+                                    enum_fix[ps['id']] = opts[v]
+                            if enum_fix:
+                                params = {**params, **enum_fix}
                         is_cacheable = ntype not in REALTIME_NODE_TYPES or getattr(proc, '_paused', False)
                         cache = self._node_cache.get(nid)
                         params_sig = str(sorted(params.items()))
