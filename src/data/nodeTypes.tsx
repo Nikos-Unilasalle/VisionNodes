@@ -144,7 +144,7 @@ const _baseNodeTypes: Record<string, React.ComponentType<any>> = {
   canvas_frame: withNodeResizer(N.CanvasFrameNode, 200, 150, getFrameColor),
   canvas_teleport: N.TeleportNode,
   sci_plotter: withNodeResizer(N.ScientificPlotterNode, 240, 180),
-  plotter_pro: withNodeResizer(N.PlotterProNode, 240, 180),
+  plotter_pro: withNodeResizer(N.PlotterProNode, 260, 200),
   sci_histogram: withNodeResizer(N.ScientificHistogramNode, 250, 180),
   sci_calibration: N.ScientificCalibrationNode,
   group_node: N.GroupNode,

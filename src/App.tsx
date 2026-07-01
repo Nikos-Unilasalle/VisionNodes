@@ -1241,7 +1241,7 @@ function App() {
       canvas_frame: { width: 500, height: 400, zIndex: -1 },
       util_csv_export: { width: 240 },
       sci_plotter: { width: 320, height: 220 },
-      plotter_pro: { width: 320, height: 220 },
+      plotter_pro: { width: 340, height: 260 },
     };
     const nodeStyle = defaultStyle[type] || {};
     const nw = (nodeStyle.width ?? 160) as number;

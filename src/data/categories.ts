@@ -264,7 +264,7 @@ export const CATEGORIES: Category[] = [
     { type: 'analysis_monitor', label: 'Monitor',         description: 'Polyvalent measurement display (flux, area, brightness, count).' },
     { type: 'analysis_flow_viz',label: 'Flow Visualizer', description: 'Colorized visualization of motion direction and strength.' },
     { type: 'sci_plotter',      label: 'Plotter',         description: 'Multi-series real-time graph.' },
-    { type: 'plotter_pro',      label: 'Plotter Pro',     description: 'Dual-series graph with filtering, thresholding, and peak detection.' },
+    { type: 'plotter_pro',      label: 'Plotter Pro',     description: 'Dynamic scalar/dict inputs, per-series toggles, normalize, dict + dataframe outputs.' },
     { type: 'sci_heatmap',      label: 'Density Heatmap',  description: 'Accumulates point detections into a density heatmap.' },
     { type: 'imu_phase_dashboard', label: 'Phase Dashboard', description: 'Visualizes phase-space / IMU signal dynamics.' },
     { type: 'phase_space',      label: 'Phase Space',      description: 'Plots signal derivative vs. signal (phase-space portrait).' },
