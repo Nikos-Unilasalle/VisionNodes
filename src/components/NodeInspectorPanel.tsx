@@ -1269,7 +1269,8 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             inner = <Slider label={sp.label || sp.id} val={Number(p[sp.id] ?? sp.default ?? 0)} min={sp.min || 0} max={sp.max || 100} step={sp.step || 1} onChange={(v) => up({ [sp.id]: v })} />;
           }
 
-          const showExternalize = !!(onExternalizeParam && (isNumber || isString) && !isEnum && sp.type !== 'trigger' && sp.type !== 'code');
+          const externalizeKind = isColor ? 'Color' : isString ? 'String' : 'Number';
+          const showExternalize = !!(onExternalizeParam && (isNumber || isString || isColor) && !isEnum && sp.type !== 'trigger' && sp.type !== 'code');
           const hasOverlay = showEye || showExternalize;
 
           return (
@@ -1284,11 +1285,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isExternalized) {
-                        const val = isString ? (p[sp.id] ?? sp.default ?? '') : Number(p[sp.id] ?? sp.default ?? 0);
+                        const val = (isColor || isString) ? (p[sp.id] ?? sp.default ?? '') : Number(p[sp.id] ?? sp.default ?? 0);
                         onExternalizeParam!(node.id, sp, val);
                       }
                     }}
-                    title={isExternalized ? `Paramètre externalisé (${isString ? 'String' : 'Number'} connecté)` : `Externaliser → créer une entrée + node ${isString ? 'String' : 'Number'}`}
+                    title={isExternalized ? `Paramètre externalisé (${externalizeKind} connecté)` : `Externaliser → créer une entrée + node ${externalizeKind}`}
                   >
                     <PlugZap size={10} />
                   </button>

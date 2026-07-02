@@ -148,7 +148,7 @@ class ThresholdFilter(NodeProcessor):
     icon="Layers",
     description="Creates a mask by isolating a range of colors (HSV or RGB distance).",
     inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "mask", "color": "mask"}],
+    outputs=[{"id": "mask", "color": "mask"}, {"id": "masked", "label": "Masked Image", "color": "image"}],
     params=[
         {"id": "mode", "label": "Mode", "type": "enum", "options": ["HSV Range", "RGB Distance"], "default": 0},
         {"id": "color", "label": "Target Color", "type": "color", "default": "#FF0000"},
@@ -161,7 +161,7 @@ class ThresholdFilter(NodeProcessor):
 class ColorMaskNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"mask": None}
+        if image is None: return {"mask": None, "masked": None}
         if len(image.shape) == 2 or image.shape[2] == 1:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
@@ -197,7 +197,8 @@ class ColorMaskNode(NodeProcessor):
                 mask2 = cv2.inRange(hsv, np.array([0, s_min, v_min], dtype=np.uint8), 
                                    np.array([h_max, s_max, v_max], dtype=np.uint8))
                 mask = cv2.bitwise_or(mask1, mask2)
-        return {"mask": mask}
+        masked = cv2.bitwise_and(image, image, mask=mask)
+        return {"mask": mask, "masked": masked}
 
 @vision_node(
     type_id="filter_morphology",

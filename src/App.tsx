@@ -909,12 +909,26 @@ function App() {
 
     pushSnapshot();
 
+    const isColor = sp.type === 'color';
     const isString = sp.type === 'string';
     let spawnedNode: Node;
     let targetPortColor: string;
     let sourceHandleId: string;
 
-    if (isString) {
+    if (isColor) {
+      const colorParams = {
+        value: String(value ?? sp.default ?? '#ffffff'),
+      };
+      const colorSchema = pluginSchemas?.find((s: any) => s.type === 'color_input');
+      const colorId = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const colorPos = { x: (target.position?.x ?? 0) - 240, y: (target.position?.y ?? 0) };
+      spawnedNode = {
+        id: colorId, type: 'color_input', position: colorPos, style: {},
+        data: { label: sp.label || sp.id, params: colorParams, schema: colorSchema },
+      };
+      targetPortColor = 'string';
+      sourceHandleId = 'string__result';
+    } else if (isString) {
       const stringParams = {
         value: String(value ?? sp.default ?? ''),
       };

@@ -78,6 +78,7 @@ export const CATEGORIES: Category[] = [
     { type: 'util_image_math',   label: 'Image Math',    description: 'Per-pixel arithmetic between two images.' },
   ]},
   { id: 'color', label: 'Color', icon: Palette, section: 'generic', nodes: [
+    { type: 'color_input',    label: 'Color Value',   description: 'Standalone color source. Spawned automatically when externalizing a color param.' },
     { type: 'plugin_brightness_contrast', label: 'Brightness & Contrast', description: 'Adjusts image brightness and contrast.' },
     { type: 'cv_levels',      label: 'Image Levels',  description: 'Adjusts black point, white point and gamma.' },
     { type: 'cv_colorspace',  label: 'Color Space',   description: 'Converts between BGR, RGB, HSV, LAB, and other color spaces.' },
@@ -243,6 +244,7 @@ export const CATEGORIES: Category[] = [
     { type: 'sci_visual_measure',     label: 'Ruler',               description: 'Interactive visual ruler with real-world calibration.' },
     { type: 'sci_scale_bar',          label: 'Scale Bar',           description: 'Renders a calibrated scale bar on the image.' },
     { type: 'sci_line_profile',       label: 'Line Profile',        description: 'Extracts pixel intensity along a drawn line.' },
+    { type: 'sci_curve_trace',        label: 'Curve Trace',         description: 'Reduces a binary mask to an ordered point list by aggregating foreground pixels per column/row. Pair with Color Mask to trace a colored line.' },
     { type: 'sci_focus_metric',       label: 'Focus Metric',        description: 'Computes a sharpness / focus score for the image.' },
     { type: 'sci_frame_accumulator',  label: 'Frame Accumulator',   description: 'Accumulates frames over time (mean, max, or sum).' },
   ]},
@@ -325,6 +327,7 @@ export const CATEGORIES: Category[] = [
   ]},
   { id: 'DataFrame', label: 'DataFrame', icon: Database, section: 'generic', nodes: [
     { type: 'ml_csv_reader', label: 'CSV Reader', description: 'Load a CSV file as a DataFrame.' },
+    { type: 'sci_axis_calibration', label: 'Axis Calibration', description: 'Converts a pixel-coordinate point list into real values via 2-point linear calibration per axis. Outputs a DataFrame.' },
     { type: 'ml_corr_heatmap', label: 'Correlation Heatmap', description: 'Pearson correlation matrix of numeric columns.' },
     { type: 'df_export', label: 'DF Export', description: 'Save a DataFrame to CSV, Excel, JSON or Parquet.' },
     { type: 'df_fillna', label: 'DF Fill NA', description: 'Handle missing values.' },
