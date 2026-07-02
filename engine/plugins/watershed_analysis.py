@@ -61,7 +61,7 @@ class AdvancedThresholdNode(NodeProcessor):
     inputs=[{"id": "mask", "color": "any"}],
     outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}],
     params=[
-        {"id": "operation", "label": "Operation", "type": "enum", "options": ["Opening", "Closing", "Gradient", "Top Hat", "Black Hat"], "default": 0},
+        {"id": "operation", "label": "Operation", "type": "enum", "options": ["Opening", "Closing", "Gradient", "Top Hat", "Black Hat", "Dilate", "Erode"], "default": 0},
         {"id": "shape", "label": "Kernel Shape", "type": "enum", "options": ["Rect", "Cross", "Ellipse"], "default": 0},
         {"id": "size", "label": "Kernel Size", "type": "scalar", "min": 1, "max": 31, "step": 2, "default": 5},
         {"id": "iterations", "label": "Iterations", "type": "scalar", "min": 1, "max": 10, "default": 1}
@@ -78,7 +78,7 @@ class AdvancedMorphologyNode(NodeProcessor):
         mask = mask.astype(np.uint8)
             
         op_idx = int(params.get('operation', 0))
-        ops = [cv2.MORPH_OPEN, cv2.MORPH_CLOSE, cv2.MORPH_GRADIENT, cv2.MORPH_TOPHAT, cv2.MORPH_BLACKHAT]
+        ops = [cv2.MORPH_OPEN, cv2.MORPH_CLOSE, cv2.MORPH_GRADIENT, cv2.MORPH_TOPHAT, cv2.MORPH_BLACKHAT, cv2.MORPH_DILATE, cv2.MORPH_ERODE]
         op = ops[min(op_idx, len(ops)-1)]
         
         sh_idx = int(params.get('shape', 0))
