@@ -157,12 +157,16 @@ class MathDistanceNode(NodeProcessor):
              ])
 class ScalarInputNode(NodeProcessor):
     def process(self, inputs, params):
-        fmt = params.get('format', 1)
-        val = params.get('value', 0.0)
-        
+        fmt = params.get('format')
+        fmt = 1 if fmt is None else fmt
+        val = params.get('value')
+        val = 0.0 if val is None else val
+
         # Clamp value if min/max are defined in params
-        min_val = params.get('min', 0.0)
-        max_val = params.get('max', 100.0)
+        min_val = params.get('min')
+        min_val = 0.0 if min_val is None else min_val
+        max_val = params.get('max')
+        max_val = 100.0 if max_val is None else max_val
         if min_val > max_val:
             min_val, max_val = max_val, min_val
             
