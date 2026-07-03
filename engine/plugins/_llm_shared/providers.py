@@ -164,10 +164,19 @@ def build_messages_anthropic(history: list, img_b64: str = None) -> list:
 def call_llm(provider: str, model: str, api_key: str, base_url: str,
              history: list, img_b64: str = None, *,
              json_mode: bool = False, temperature: float = 0.7,
-             max_tokens: int = 512, timeout: int = 30, thinking: bool = False) -> tuple:
+             max_tokens: int = 512, timeout: int = 30, thinking: bool = False,
+             num_ctx: int = 0, keep_alive: str = '') -> tuple:
     """Run one completion against any provider.
 
     history: list of {'role': 'system'|'user'|'assistant', 'content': str}.
+    num_ctx: Ollama context-window size (tokens). 0 = leave the model default.
+        MUST be set large enough when the prompt is big (e.g. an injected node
+        catalog) — Ollama silently truncates the prompt to num_ctx otherwise,
+        dropping the oldest tokens (the system prompt) with no error.
+    keep_alive: Ollama only. How long to keep the model resident after the call
+        ('5m', '30m', '1h', '-1' = forever, '0' = unload now). '' = server
+        default (~5m). Keeping it loaded preserves the KV cache so a stable
+        prompt prefix isn't re-processed on the next Run.
     Returns (text, tokens). Raises RuntimeError with a clear message on failure.
     """
     system = ''
@@ -186,7 +195,12 @@ def call_llm(provider: str, model: str, api_key: str, base_url: str,
             'messages': build_messages_anthropic(history, img_b64),
         }
         if system:
-            payload['system'] = system
+            # Cache the system prompt as a stable prefix. When it carries the
+            # node catalog (~17k tokens, memoised so it's byte-identical across
+            # Runs) repeat calls read it at ~0.1x instead of full input price.
+            # Below the model's min cacheable size this is a silent no-op.
+            payload['system'] = [{'type': 'text', 'text': system,
+                                  'cache_control': {'type': 'ephemeral'}}]
         data = post_json(url, headers, payload, timeout)
         text = data['content'][0]['text']
         tokens = float(data.get('usage', {}).get('input_tokens', 0) +
@@ -205,11 +219,15 @@ def call_llm(provider: str, model: str, api_key: str, base_url: str,
                 if m.get('role') == 'user':
                     m['images'] = [img_b64]
                     break
+        options = {'temperature': temperature, 'num_predict': max_tokens}
+        if num_ctx > 0:
+            options['num_ctx'] = int(num_ctx)   # else Ollama truncates a big prompt to its default (~4k)
         payload = {
             'model': model, 'messages': messages, 'stream': False,
-            'think': bool(thinking),
-            'options': {'temperature': temperature, 'num_predict': max_tokens},
+            'think': bool(thinking), 'options': options,
         }
+        if keep_alive:
+            payload['keep_alive'] = keep_alive   # keep model + KV cache resident between Runs
         if json_mode:
             payload['format'] = 'json'
         data = post_json(url, headers, payload, timeout)

@@ -7,6 +7,7 @@ process(), not as a graph cycle). Uses _llm_shared/providers.py for all
 provider logic. API keys are persisted in ~/.vnstudio/secrets.json.
 """
 from registry import vision_node, NodeProcessor, send_notification
+import registry
 import os
 import importlib.util
 
@@ -16,6 +17,55 @@ P = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(P)
 
 _NOTIF_ID = 'llm_conversation'
+
+# Ollama keep_alive values, indexed by the 'keep_alive' enum (UI stores the
+# integer index, not the label — read by position, never by string).
+_KEEP_ALIVE = ['5m', '30m', '1h', '-1', '0']
+
+_LIB_PREAMBLE = (
+    "You are assisting inside VNStudio, a node-based computer-vision studio. "
+    "Below is the catalog of ALL available nodes (type_id, label, inputs and "
+    "outputs as id:color, and a short description). When suggesting a pipeline, "
+    "compose these existing nodes, refer to them by their type_id, and wire an "
+    "output color to an input of the same color. Do NOT invent nodes that are "
+    "not in this list.\n\n=== NODE CATALOG ===\n"
+)
+
+
+_LIB_CACHE: dict = {'n': -1, 'text': ''}
+
+
+def _build_node_library() -> str:
+    """Compact catalog of every registered node from the live registry
+    (NODE_SCHEMAS), grouped by category:
+        `- type_id (label): in[id:color, …] out[…] — description`
+
+    Memoised on the node count: built once per session (~1 ms for ~450 nodes),
+    reused on every Run, and only rebuilt if the registry size changes. There is
+    no hot-reload, so within a session the count is stable; a restart that adds a
+    plugin invalidates the cache automatically without touching this code."""
+    n = len(registry.NODE_SCHEMAS)
+    if n == _LIB_CACHE['n']:
+        return _LIB_CACHE['text']
+
+    def _io(lst) -> str:
+        return ', '.join(f"{p.get('id')}:{p.get('color')}" for p in (lst or [])) or '—'
+    by_cat: dict = {}
+    for s in registry.NODE_SCHEMAS:
+        by_cat.setdefault(s.get('category') or 'other', []).append(s)
+    lines: list = []
+    for cat in sorted(by_cat):
+        lines.append(f"\n## {cat}")
+        for s in sorted(by_cat[cat], key=lambda x: x.get('type', '')):
+            desc = ' '.join((s.get('description') or '').split())
+            line = (f"- {s.get('type')} ({s.get('label')}): "
+                    f"in[{_io(s.get('inputs'))}] out[{_io(s.get('outputs'))}]")
+            if desc:
+                line += f" — {desc}"
+            lines.append(line)
+    text = '\n'.join(lines)
+    _LIB_CACHE['n'], _LIB_CACHE['text'] = n, text
+    return text
 
 
 def _build_history(transcript: list, speaker: str, system_prompt: str, opening: str) -> list:
@@ -60,6 +110,7 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
         {'id': 'keep_context',  'label': 'Keep Context',  'type': 'bool', 'default': False},
         {'id': 'auto_context',  'label': 'Auto Node Context', 'type': 'bool', 'default': False},
+        {'id': 'inject_library', 'label': 'Node Library (pipeline help)', 'type': 'bool', 'default': False},
         {'id': 'opening',       'label': 'Message / Opening', 'type': 'string',
          'default': 'What do you think about this?'},
         {'id': 'num_turns',     'label': 'Turns (dialogue only)', 'type': 'int',
@@ -74,6 +125,11 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
          'default': 200, 'min': 32, 'max': 2048, 'step': 32},
         {'id': 'timeout',     'label': 'Timeout (s)', 'type': 'int',
          'default': 60, 'min': 5, 'max': 180},
+        {'id': 'num_ctx',     'label': 'Context window (Ollama, 0 = model default)',
+         'type': 'int', 'default': 0, 'min': 0, 'max': 131072, 'step': 1024},
+        {'id': 'keep_alive',  'label': 'Keep model loaded (Ollama)', 'type': 'enum',
+         'options': ['5 min (default)', '30 min', '1 hour', 'Until unloaded', 'Unload after run'],
+         'default': 0},
         {'id': 'thinking',    'label': 'Thinking mode (Ollama)', 'type': 'bool', 'default': False},
 
         # ── Persona A ──
@@ -176,6 +232,27 @@ class LLMConversationNode(NodeProcessor):
 
         A = self._persona(params, 'a')
 
+        # Node Library: prepend the full node catalog (built live from the
+        # registry) to A's system prompt so the assistant can suggest pipelines
+        # made of real, existing nodes. Toggled from this node's params.
+        inject_library = bool(params.get('inject_library', False))
+        if inject_library:
+            A['system'] = (
+                (A['system'] + '\n\n' if A['system'] else '')
+                + _LIB_PREAMBLE + _build_node_library()
+            )
+
+        # Ollama context window: honour the user value, but auto-raise a floor
+        # when the (large) node catalog is injected, so Ollama doesn't silently
+        # truncate the prompt to its ~4k default and drop the catalog.
+        num_ctx = int(params.get('num_ctx', 0))
+        if inject_library:
+            est = len(A['system']) // 4 + max_tokens + 2048   # ~chars/4 + output + headroom
+            num_ctx = max(num_ctx, ((est // 1024) + 1) * 1024)
+
+        ka_idx = int(params.get('keep_alive', 0))
+        keep_alive = _KEEP_ALIVE[min(ka_idx, len(_KEEP_ALIVE) - 1)]
+
         if A['provider'] in P.REQUIRES_KEY and not A['api_key']:
             return self._empty(f"Persona A ({A['provider']}): no API key")
 
@@ -212,6 +289,7 @@ class LLMConversationNode(NodeProcessor):
                     history, img_b64,
                     json_mode=False, temperature=temperature,
                     max_tokens=max_tokens, timeout=timeout, thinking=thinking,
+                    num_ctx=num_ctx, keep_alive=keep_alive,
                 )
                 text = (text or '').strip()
 
@@ -264,6 +342,7 @@ class LLMConversationNode(NodeProcessor):
                     history, use_img,
                     json_mode=False, temperature=temperature,
                     max_tokens=max_tokens, timeout=timeout, thinking=thinking,
+                    num_ctx=num_ctx, keep_alive=keep_alive,
                 )
                 transcript.append({'speaker': who['name'], 'text': (text or '').strip()})
 
