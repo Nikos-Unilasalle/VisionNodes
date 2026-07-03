@@ -197,8 +197,42 @@ export const DataInspectorNode = memo(({ selected, data }: any) => {
 
 
 export const DataListSelectorNode = memo(({ selected, data }: any) => (
-  <BaseNode title="List Selector" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'dict'}]} />
+  <BaseNode title="List Selector" icon={Database} selected={selected} data={data} color="green" inputs={[{id: 'list_in', color: 'list'}]} outputs={[{id: 'item_out', color: 'any'}]} />
 ));
+
+
+export const DFCollectNode = memo(({ selected, data }: any) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const captured = Number(nd?.captured ?? 0);
+  const rows = Number(nd?.rows ?? 0);
+  return (
+    <BaseNode
+      title={data?.label || 'DF Collect'}
+      icon={Layers}
+      selected={selected}
+      data={data}
+      color="orange"
+      inputs={[{ id: 'table', color: 'data', label: 'DataFrame' }, { id: 'seq', color: 'scalar', label: 'Sequence' }]}
+      outputs={[{ id: 'data', color: 'data' }]}
+    >
+      {/* pt clears the two absolutely-positioned input port rows (~45px / 77px from node top) */}
+      <div className="px-3 pb-3 pt-8 flex items-center justify-center gap-4">
+        <div className="flex flex-col items-center leading-none">
+          <span className="font-mono font-black tabular-nums text-[30px] text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.4)]">
+            {captured}
+          </span>
+          <span className="mt-1.5 text-[7px] font-black uppercase tracking-[0.2em] text-gray-500">Captured</span>
+        </div>
+        <div className="w-px h-9 bg-white/10" />
+        <div className="flex flex-col items-center leading-none">
+          <span className="font-mono font-black tabular-nums text-[20px] text-gray-200">{rows}</span>
+          <span className="mt-1.5 text-[7px] font-black uppercase tracking-[0.2em] text-gray-500">Rows</span>
+        </div>
+      </div>
+    </BaseNode>
+  );
+});
 
 
 export const RegionSelectorNode = memo(({ selected, data }: any) => (

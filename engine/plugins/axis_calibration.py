@@ -5,6 +5,7 @@ Generic 2-point linear calibration per axis (like a ruler with two known ticks).
 Works on any point list, not just digitized charts: pixel trajectories, plots, scans…
 """
 from datetime import datetime
+import numpy as np
 from registry import vision_node, NodeProcessor, send_notification
 
 _NOTIF = 'axis_calibration'
@@ -39,24 +40,32 @@ def _format_value(value: float, is_date: bool, date_format: str):
     category='DataFrame',
     icon='Ruler',
     description="Converts a pixel-coordinate point list into real values via linear calibration. "
-                "Both axes are calibrated against the point set's own pixel extremes — just give the real "
-                "value/date at each end, no pixel coordinates to read off. Outputs a DataFrame — connect to DF Export for CSV.",
-    inputs=[{'id': 'points', 'color': 'points'}],
+                "Connect the plot area (cropped chart image/mask) to Reference so both axes are calibrated on the "
+                "FRAME edges — top/bottom for Y, left/right for X — not the curve's own extent. Without Reference, "
+                "falls back to the point set's pixel extremes. Outputs a DataFrame — connect to DF Export for CSV.",
+    inputs=[
+        {'id': 'points',    'color': 'points'},
+        {'id': 'reference', 'color': 'image',  'label': 'Reference (plot frame)'},
+        {'id': 'x_value_1', 'color': 'string', 'label': 'X Value @ Left Edge'},
+        {'id': 'x_value_2', 'color': 'string', 'label': 'X Value @ Right Edge'},
+        {'id': 'label',     'color': 'string', 'label': 'Source Label'},
+    ],
     outputs=[{'id': 'data', 'color': 'data'}],
     params=[
         {'id': '_sec_x',      'label': 'X Calibration', 'type': 'section'},
         {'id': 'x_type',      'label': 'X Type',        'type': 'enum',   'options': ['Number', 'Date'], 'default': 0},
         {'id': 'date_format', 'label': 'Date Format',   'type': 'string', 'default': '%Y%m%d'},
-        {'id': 'x_value_1',   'label': 'X Value @ First Point', 'type': 'string', 'default': '0'},
-        {'id': 'x_value_2',   'label': 'X Value @ Last Point',  'type': 'string', 'default': '100'},
+        {'id': 'x_value_1',   'label': 'X Value @ Left Edge',  'type': 'string', 'default': '0'},
+        {'id': 'x_value_2',   'label': 'X Value @ Right Edge', 'type': 'string', 'default': '100'},
 
         {'id': '_sec_y',      'label': 'Y Calibration', 'type': 'section'},
-        {'id': 'y_value_1',   'label': 'Y Value @ Min Pixel (top)',    'type': 'float', 'default': 1.0},
-        {'id': 'y_value_2',   'label': 'Y Value @ Max Pixel (bottom)', 'type': 'float', 'default': 0.0},
+        {'id': 'y_value_1',   'label': 'Y Value @ Top Edge',    'type': 'float', 'default': 1.0},
+        {'id': 'y_value_2',   'label': 'Y Value @ Bottom Edge', 'type': 'float', 'default': 0.0},
 
         {'id': '_sec_out',    'label': 'Output',        'type': 'section'},
         {'id': 'x_col',       'label': 'X Column Name', 'type': 'string', 'default': 'x'},
         {'id': 'y_col',       'label': 'Y Column Name', 'type': 'string', 'default': 'y'},
+        {'id': 'label_col',   'label': 'Label Column Name', 'type': 'string', 'default': 'source'},
     ]
 )
 class AxisCalibrationNode(NodeProcessor):
@@ -75,22 +84,44 @@ class AxisCalibrationNode(NodeProcessor):
         if not xs or not ys:
             send_notification("Axis Calibration: points missing 'x'/'y' pixel fields", level='warning', notif_id=_NOTIF)
             return {}
-        x_px1, x_px2 = min(xs), max(xs)
-        y_px1, y_px2 = min(ys), max(ys)
+
+        # Reference frame (the cropped plot area): calibrate on the frame edges so Y maps
+        # the top/bottom of the axis box to the given values — not the curve's own extent,
+        # which rarely touches both axis limits. X likewise maps left/right edges.
+        ref = inputs.get('reference')
+        if isinstance(ref, np.ndarray) and ref.ndim >= 2:
+            h, w = ref.shape[:2]
+            x_px1, x_px2 = 0.0, float(w - 1)   # left edge, right edge
+            y_px1, y_px2 = 0.0, float(h - 1)   # top edge, bottom edge
+        else:
+            # Fallback: point-set extent (top pixel = min y, bottom pixel = max y).
+            x_px1, x_px2 = min(xs), max(xs)
+            y_px1, y_px2 = min(ys), max(ys)
 
         x_is_date   = int(params.get('x_type', 0)) == 1
         date_format = str(params.get('date_format', '%Y%m%d'))
-        try:
-            x_v1  = _parse_anchor(params.get('x_value_1', '0'), x_is_date, date_format)
-            x_v2  = _parse_anchor(params.get('x_value_2', '100'), x_is_date, date_format)
-            y_v1  = float(params.get('y_value_1', 1.0))
-            y_v2  = float(params.get('y_value_2', 0.0))
-        except ValueError as e:
-            send_notification(f"Axis Calibration: bad calibration value ({e})", level='error', notif_id=_NOTIF)
+
+        def _anchor_or_fail(field: str, default: str):
+            raw = params.get(field, default)
+            try:
+                return _parse_anchor(raw, x_is_date, date_format)
+            except ValueError as e:
+                send_notification(
+                    f"Axis Calibration: '{field}' = {raw!r} doesn't match format {date_format!r} ({e})",
+                    level='error', notif_id=_NOTIF)
+                return None
+
+        x_v1 = _anchor_or_fail('x_value_1', '0')
+        x_v2 = _anchor_or_fail('x_value_2', '100')
+        if x_v1 is None or x_v2 is None:
             return {}
+        y_v1 = float(params.get('y_value_1', 1.0))
+        y_v2 = float(params.get('y_value_2', 0.0))
 
         x_col = str(params.get('x_col', 'x'))
         y_col = str(params.get('y_col', 'y'))
+        label = inputs.get('label')
+        label_col = str(params.get('label_col', 'source'))
 
         records = []
         for p in points:
@@ -98,7 +129,10 @@ class AxisCalibrationNode(NodeProcessor):
                 continue
             x_val = _pixel_to_value(float(p['x']), x_px1, x_v1, x_px2, x_v2)
             y_val = _pixel_to_value(float(p['y']), y_px1, y_v1, y_px2, y_v2)
-            records.append({x_col: _format_value(x_val, x_is_date, date_format), y_col: round(y_val, 6)})
+            row = {x_col: _format_value(x_val, x_is_date, date_format), y_col: round(y_val, 6)}
+            if label:
+                row[label_col] = str(label)
+            records.append(row)
 
         df = pd.DataFrame.from_records(records)
         send_notification(f"Axis Calibration: {len(df)} rows calibrated", level='info', notif_id=_NOTIF)
