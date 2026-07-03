@@ -116,6 +116,7 @@ def _build_history(transcript: list, speaker: str, system_prompt: str, opening: 
         {'id': '_v',           'label': '',              'type': 'int',     'default': 0},
         {'id': '_ctx',         'label': '',              'type': 'string',  'default': ''},
         {'id': '_ctx_label',   'label': '',              'type': 'string',  'default': ''},
+        {'id': '_graph',       'label': '',              'type': 'string',  'default': ''},
         {'id': 'num_personas',  'label': 'Mode',          'type': 'enum',
          'options': ['1 Persona (Q&A)', '2 Personas (Dialogue)'], 'default': 0},
         {'id': 'keep_context',  'label': 'Keep Context',  'type': 'bool', 'default': False},
@@ -184,12 +185,13 @@ class LLMConversationNode(NodeProcessor):
         return {'transcript': msg, 'turns': [], 'last': ''}
 
     def _bump_v(self, params: dict, result: dict) -> dict:
-        """Increment _v (breaks engine params_sig cache) and reset both
-        trigger params so neither re-fires on the next engine tick."""
+        """Increment _v (breaks engine params_sig cache), reset both trigger
+        params so neither re-fires on the next engine tick, and wipe _graph so
+        the canvas snapshot stays fresh-per-Run and isn't persisted to the .vn."""
         new_v = int(params.get('_v', 0)) + 1
         return {**result, '_command': {
             'type': 'set_param', 'node_id': '__self__',
-            'params': {'_v': new_v, 'run': False, 'clear': False},
+            'params': {'_v': new_v, 'run': False, 'clear': False, '_graph': ''},
         }}
 
     def _persona(self, params: dict, prefix: str) -> dict:
@@ -219,26 +221,42 @@ class LLMConversationNode(NodeProcessor):
             # receive a placeholder string before the user presses Run.
             return {'transcript': '', 'turns': [], 'last': ''}
 
-        opening     = (inputs.get('seed') or params.get('opening', '')).strip()
+        opening = (inputs.get('seed') or params.get('opening', '')).strip()
 
-        # Auto node context: prepend a snapshot of the node the user selected on
-        # the canvas (captured by the frontend into _ctx) so the LLM can give
-        # parameter advice without the user pasting anything.
-        if bool(params.get('auto_context', False)):
-            ctx = (params.get('_ctx', '') or '').strip()
-            if ctx:
-                # _ctx is a persisted snapshot of the last-selected node and is
-                # intentionally never wiped on deselect (frontend), so it may be
-                # stale or irrelevant. Frame it as optional background — the user
-                # may be asking a general question or wanting a pipeline instead,
-                # so the LLM must not be forced to answer about this node.
+        # Help-mode context (auto_context or library). Assemble optional
+        # background blocks into the USER turn — never the system prompt — so the
+        # stable, cacheable library prefix isn't invalidated by volatile context:
+        #   • _graph : a fresh snapshot of the whole canvas topology, captured by
+        #     the frontend at Run and wiped afterwards (see _bump_v). Lets the LLM
+        #     advise on the actual pipeline / what to add next, even with nothing
+        #     selected.
+        #   • _ctx   : the last-selected node (persisted, never wiped → may be
+        #     stale), framed as optional so it can't force a node-specific answer.
+        help_mode = (bool(params.get('auto_context', False))
+                     or bool(params.get('inject_library', False)))
+        if help_mode:
+            blocks = []
+            graph = (params.get('_graph', '') or '').strip()
+            if graph:
+                blocks.append(
+                    "[Current canvas] The user's pipeline right now — nodes are "
+                    "numbered [n]; connections read output.port -> input.port:\n"
+                    + graph
+                )
+            if bool(params.get('auto_context', False)):
+                ctx = (params.get('_ctx', '') or '').strip()
+                if ctx:
+                    blocks.append(
+                        "[Selected node] A node may be selected; snapshot below. "
+                        "Use it only if the question is about that node.\n" + ctx
+                    )
+            if blocks:
                 opening = (
                     "The user is working in VNStudio, a node-based computer-vision "
-                    "studio. A node may be selected on the canvas; a snapshot of it "
-                    "is given below as optional context. Use it only if the question "
-                    "is clearly about that node — otherwise ignore it and answer the "
-                    "general question or suggest a pipeline directly.\n\n"
-                    f"[Selected node]\n{ctx}\n\n---\n\nUser: {opening}"
+                    "studio. Optional context follows — answer the actual question "
+                    "or suggest a pipeline directly if it isn't relevant.\n\n"
+                    + "\n\n".join(blocks)
+                    + f"\n\n---\n\nUser: {opening}"
                 )
 
         num_personas = int(params.get('num_personas', 0))
@@ -269,9 +287,12 @@ class LLMConversationNode(NodeProcessor):
         # when the (large) node catalog is injected, so Ollama doesn't silently
         # truncate the prompt to its ~4k default and drop the catalog.
         num_ctx = int(params.get('num_ctx', 0))
-        if inject_library:
-            est = len(A['system']) // 4 + max_tokens + 2048   # ~chars/4 + output + headroom
-            num_ctx = max(num_ctx, ((est // 1024) + 1) * 1024)
+        if help_mode:
+            # ~chars/4 across system (library) + user turn (canvas/node ctx) +
+            # output + headroom. Only bump above ~3k, else the model default fits.
+            est = (len(A['system']) + len(opening)) // 4 + max_tokens + 2048
+            if est > 3072:
+                num_ctx = max(num_ctx, ((est // 1024) + 1) * 1024)
 
         ka_idx = int(params.get('keep_alive', 0))
         keep_alive = _KEEP_ALIVE[min(ka_idx, len(_KEEP_ALIVE) - 1)]

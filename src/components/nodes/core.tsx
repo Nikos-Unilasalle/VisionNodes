@@ -1,5 +1,5 @@
 import React, { memo, useState, useMemo, useEffect } from 'react';
-import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals, NodeResizer, useStore } from 'reactflow';
+import { Handle, Position, useNodeId, useEdges, useUpdateNodeInternals, NodeResizer, useStore, useStoreApi } from 'reactflow';
 import { useNodeData } from '../../context/NodesDataContext';
 import { useComputingNodeId } from '../../context/ComputingNodeContext';
 import { open, save } from '@tauri-apps/plugin-dialog';
@@ -308,9 +308,44 @@ const _buildNodeContext = (n: any): string => {
   return lines.join('\n');
 };
 
+// Pure-decoration node types that add no topology and only clutter the graph.
+const _LLM_CANVAS_SKIP = new Set([
+  'canvas_note', 'canvas_frame', 'canvas_ribbon', 'note',
+]);
+
+/** Compact topology snapshot of the whole canvas for the LLM help node.
+ *  Nodes numbered [n] as `label (type)`; edges as `[src].port -> [dst].port`.
+ *  Excludes the LLM node itself and decoration nodes. '' if nothing useful. */
+const _buildCanvasContext = (
+  nodeInternals: Map<string, any>, edges: any[], selfId: string,
+): string => {
+  const nodes = [...nodeInternals.values()]
+    .filter((n) => n.id !== selfId && !_LLM_CANVAS_SKIP.has(n.type));
+  if (!nodes.length) return '';
+  const idx = new Map<string, number>();
+  nodes.forEach((n, i) => idx.set(n.id, i + 1));
+
+  const nodeLines = nodes.map((n) => {
+    const label = n.data?.label || n.data?.schema?.label || n.type;
+    return `  [${idx.get(n.id)}] ${label} (${n.type})`;
+  });
+  const edgeLines = (edges || [])
+    .filter((e) => idx.has(e.source) && idx.has(e.target))
+    .map((e) => {
+      const sp = e.sourceHandle ? `.${e.sourceHandle}` : '';
+      const tp = e.targetHandle ? `.${e.targetHandle}` : '';
+      return `  [${idx.get(e.source)}]${sp} -> [${idx.get(e.target)}]${tp}`;
+    });
+
+  const out = [`Nodes on canvas (${nodeLines.length}):`, ...nodeLines];
+  if (edgeLines.length) out.push(`Connections (${edgeLines.length}):`, ...edgeLines);
+  return out.join('\n');
+};
+
 
 export const LLMConversationNode = memo(({ selected, data }: any) => {
   const selfId = useNodeId();
+  const storeApi = useStoreApi();
   const MessagesSquare = getIcon('MessagesSquare', Box);
   const keepCtx  = !!(data.params?.keep_context);
   const autoCtx  = !!(data.params?.auto_context);
@@ -365,7 +400,18 @@ export const LLMConversationNode = memo(({ selected, data }: any) => {
     } catch {}
   }, [a_provider, a_model, b_provider, b_model]);
 
-  const handleRun    = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ run: true }); };
+  const handleRun    = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Capture the current canvas topology fresh at Run (wiped after use by the
+    // engine). The Python side sends it as optional context so the assistant can
+    // advise on the actual pipeline even when no node is selected.
+    let graph = '';
+    try {
+      const { nodeInternals, edges } = storeApi.getState() as any;
+      graph = _buildCanvasContext(nodeInternals, edges, selfId || '');
+    } catch { /* store unavailable — fall back to no graph */ }
+    data.onChangeParams?.({ _graph: graph, run: true });
+  };
   const handleClear  = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ clear: true }); };
   const toggleAuto   = (e: React.MouseEvent) => { e.stopPropagation(); data.onChangeParams?.({ auto_context: !autoCtx }); };
 
