@@ -132,8 +132,13 @@ _FMT_LABELS = ['CSV', 'Excel (.xlsx)', 'JSON', 'Parquet']
     label='DF Export',
     category='DataFrame',
     icon='Save',
-    description="Save a DataFrame to CSV, Excel, JSON or Parquet. Trigger the Save button once to write the file.",
-    inputs=[{'id': 'table', 'color': 'data', 'label': 'DataFrame'}],
+    description="Save a DataFrame to CSV, Excel, JSON or Parquet. Trigger the Save button once to write the file. "
+                "Connect the Filename input to override the base name (e.g. from a Folder Images filename) — "
+                "the folder and extension from File Path are kept.",
+    inputs=[
+        {'id': 'table',    'color': 'data',   'label': 'DataFrame'},
+        {'id': 'filename', 'color': 'string', 'label': 'Filename'},
+    ],
     outputs=[],
     params=[
         {'id': 'save',      'label': 'Save',            'type': 'trigger', 'default': 0},
@@ -155,6 +160,12 @@ class DfExportNode(NodeProcessor):
             send_notification("DF Export: no DataFrame connected", level='warning', notif_id=_NOTIF)
             return {}
         path   = str(params.get('path', 'output.csv')).strip()
+        # Filename input overrides the base name, keeping the folder + extension from path.
+        fname_override = inputs.get('filename')
+        if fname_override:
+            base = os.path.splitext(os.path.basename(str(fname_override).strip()))[0]
+            ext  = os.path.splitext(path)[1] or '.csv'
+            path = os.path.join(os.path.dirname(path), base + ext)
         fmt    = int(params.get('format', 0))
         sep    = str(params.get('separator', ','))
         index  = bool(params.get('index', False))

@@ -24,7 +24,7 @@ import { MarkdownToolbar } from '../MarkdownToolbar';
 import { getIcon, StyledHandle, BaseNode, HANDLE_COLORS, NodeColorContext, useNodeColor, NodeColorProvider, PALETTES } from './_shared';
 import { ScientificPlotterNode, PlotterProNode, ScientificHistogramNode, ScientificStatsNode, RootAnatomyReportNodeUI, TurbidityStatsNodeUI } from './scientific';
 import { DrawTextNode } from './tools';
-import { UtilCSVExportNode } from './data';
+import { UtilCSVExportNode, DFCollectNode } from './data';
 import { GeoTIFFReaderNode, GeoEarthEngineNode, GeoBandInfoNode, GeoLandCoverNode, GeoSedimentLoaderNode, GeoIndexNode, RasterColorizerNode } from './geo';
 import { MatrixDistNode } from './analysis';
 import { MLClassifierNodeUI, MLDfStatsNodeUI } from './ml';
@@ -239,6 +239,7 @@ export const GenericCustomNode = memo((props: any) => {
   if (t === 'sci_stats') return <ScientificStatsNode {...props} />;
   if (t === 'draw_text') return <DrawTextNode {...props} />;
   if (t === 'util_csv_export') return <UtilCSVExportNode {...props} />;
+  if (t === 'df_collect') return <DFCollectNode {...props} />;
   if (t === 'geo_geotiff_reader') return <GeoTIFFReaderNode {...props} />;
   if (t === 'geo_earth_engine') return <GeoEarthEngineNode {...props} />;
   if (t === 'geo_band_info') return <GeoBandInfoNode {...props} />;
