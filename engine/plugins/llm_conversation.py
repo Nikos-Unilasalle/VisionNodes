@@ -22,6 +22,16 @@ _NOTIF_ID = 'llm_conversation'
 # integer index, not the label — read by position, never by string).
 _KEEP_ALIVE = ['5m', '30m', '1h', '-1', '0']
 
+# Note nodes render plain text / simple markdown, not LaTeX — some models
+# (Opus family especially) default to `$\rightarrow$`, `$\frac{}{}` etc., which
+# show up as raw code. Steer help-mode output to plain Unicode.
+_PLAINTEXT_HINT = (
+    "\n\nFormatting: your answer is shown in a plain notes panel that does NOT "
+    "render LaTeX. Never use math delimiters or LaTeX macros ($...$, \\(...\\), "
+    "\\rightarrow, \\to, \\frac, etc.). Write Unicode directly: → for data flow "
+    "between nodes, × ÷ for math, ^ for exponents."
+)
+
 _LIB_PREAMBLE = (
     "You are assisting inside VNStudio, a node-based computer-vision studio. "
     "Below is the catalog of ALL available nodes (type_id, label, inputs and "
@@ -249,6 +259,11 @@ class LLMConversationNode(NodeProcessor):
                 (A['system'] + '\n\n' if A['system'] else '')
                 + _LIB_PREAMBLE + _build_node_library()
             )
+
+        # Help mode (auto-context or library) feeds Note nodes — force plain text
+        # so LaTeX math like $\rightarrow$ doesn't leak through as raw code.
+        if inject_library or bool(params.get('auto_context', False)):
+            A['system'] = (A['system'] or '') + _PLAINTEXT_HINT
 
         # Ollama context window: honour the user value, but auto-raise a floor
         # when the (large) node catalog is injected, so Ollama doesn't silently
