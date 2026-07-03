@@ -217,10 +217,18 @@ class LLMConversationNode(NodeProcessor):
         if bool(params.get('auto_context', False)):
             ctx = (params.get('_ctx', '') or '').strip()
             if ctx:
+                # _ctx is a persisted snapshot of the last-selected node and is
+                # intentionally never wiped on deselect (frontend), so it may be
+                # stale or irrelevant. Frame it as optional background — the user
+                # may be asking a general question or wanting a pipeline instead,
+                # so the LLM must not be forced to answer about this node.
                 opening = (
-                    "The user is working in a node-based computer-vision studio "
-                    "and is asking about this node:\n\n"
-                    f"{ctx}\n\n---\n\n{opening}"
+                    "The user is working in VNStudio, a node-based computer-vision "
+                    "studio. A node may be selected on the canvas; a snapshot of it "
+                    "is given below as optional context. Use it only if the question "
+                    "is clearly about that node — otherwise ignore it and answer the "
+                    "general question or suggest a pipeline directly.\n\n"
+                    f"[Selected node]\n{ctx}\n\n---\n\nUser: {opening}"
                 )
 
         num_personas = int(params.get('num_personas', 0))
