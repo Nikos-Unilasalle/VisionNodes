@@ -328,6 +328,7 @@ export const CATEGORIES: Category[] = [
   ]},
   { id: 'DataFrame', label: 'DataFrame', icon: Database, section: 'generic', nodes: [
     { type: 'ml_csv_reader', label: 'CSV Reader', description: 'Load a CSV file as a DataFrame.' },
+    { type: 'df_to_dataframe', label: 'Dict to DataFrame', description: 'Builds a DataFrame from a dict of metrics — one column per key, or a Key/Value table. Connect to DF Collect or DF Export.' },
     { type: 'sci_axis_calibration', label: 'Axis Calibration', description: 'Converts a pixel-coordinate point list into real values via 2-point linear calibration per axis. Outputs a DataFrame.' },
     { type: 'ml_corr_heatmap', label: 'Correlation Heatmap', description: 'Pearson correlation matrix of numeric columns.' },
     { type: 'df_export', label: 'DF Export', description: 'Save a DataFrame to CSV, Excel, JSON or Parquet.' },

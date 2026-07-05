@@ -1,0 +1,196 @@
+{
+  "nodes": [
+    {
+      "id": "node-1782889546901-s9uo0kshy",
+      "type": "signal_generator",
+      "position": {
+        "x": 3460,
+        "y": 540
+      },
+      "style": {},
+      "data": {
+        "label": "Signal Generator",
+        "params": {
+          "waveform": 5
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3460,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782889551582-0.8294177072592276",
+      "type": "signal_generator",
+      "position": {
+        "x": 3460,
+        "y": 660
+      },
+      "style": {},
+      "data": {
+        "label": "Signal Generator",
+        "params": {
+          "waveform": 5
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3460,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782889556601-065ppwu21",
+      "type": "dict_builder",
+      "position": {
+        "x": 3780,
+        "y": 660
+      },
+      "style": {},
+      "data": {
+        "label": "Build Dict",
+        "params": {
+          "name_value": "S1",
+          "name_value_1": "S2"
+        },
+        "ports": [
+          {
+            "id": "scalar__t",
+            "color": "scalar",
+            "label": "t"
+          },
+          {
+            "id": "scalar__value",
+            "color": "scalar",
+            "label": "value"
+          },
+          {
+            "id": "scalar__value_1",
+            "color": "scalar",
+            "label": "value_1"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3780,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782889562115-6b2cyxyi3",
+      "type": "plotter_pro",
+      "position": {
+        "x": 4080,
+        "y": 600
+      },
+      "style": {
+        "width": 560,
+        "height": 280
+      },
+      "data": {
+        "label": "Plotter Pro",
+        "params": {},
+        "ports": [
+          {
+            "id": "dict__0_rayo",
+            "color": "dict",
+            "label": "dict"
+          }
+        ]
+      },
+      "width": 560,
+      "height": 280,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4080,
+        "y": 600
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782889716185-rkp305vbs",
+      "type": "data_inspector",
+      "position": {
+        "x": 4080,
+        "y": 920
+      },
+      "style": {
+        "width": 220,
+        "height": 200
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 220,
+      "height": 200,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 4080,
+        "y": 920
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "node-1782889546901-s9uo0kshy",
+      "sourceHandle": "scalar__t",
+      "target": "node-1782889556601-065ppwu21",
+      "targetHandle": "scalar__t",
+      "id": "e-1782889572904"
+    },
+    {
+      "source": "node-1782889546901-s9uo0kshy",
+      "sourceHandle": "scalar__value",
+      "target": "node-1782889556601-065ppwu21",
+      "targetHandle": "scalar__value",
+      "id": "e-1782889574417"
+    },
+    {
+      "source": "node-1782889551582-0.8294177072592276",
+      "sourceHandle": "scalar__value",
+      "target": "node-1782889556601-065ppwu21",
+      "targetHandle": "scalar__value_1",
+      "id": "e-1782889576096"
+    },
+    {
+      "source": "node-1782889546901-s9uo0kshy",
+      "sourceHandle": "scalar__t",
+      "target": "node-1782889562115-6b2cyxyi3",
+      "targetHandle": "scalar__ticks",
+      "id": "e-1782889596624"
+    },
+    {
+      "id": "e-1782889716236-gd13swaby",
+      "source": "node-1782889556601-065ppwu21",
+      "target": "node-1782889716185-rkp305vbs",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "any__data"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 400,
+      "h": 267
+    },
+    "previewPos": {
+      "x": 0,
+      "y": 0
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": null
+  }
+}

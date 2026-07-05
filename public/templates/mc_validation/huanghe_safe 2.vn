@@ -1,0 +1,2299 @@
+{
+  "nodes": [
+    {
+      "id": "noise",
+      "type": "geo_raster_noise",
+      "position": {
+        "x": 520,
+        "y": 40
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Sensor Perturbation",
+        "params": {
+          "sigma_abs": 0.005,
+          "sigma_rel": 0.015,
+          "clip_negative": false,
+          "seed": 42,
+          "node_note": "Copernicus L2A Surface Reflectance (SR). sigma_abs=0.005 (plancher de bruit, point de depart raisonne — pas de norme officielle pour ce plancher specifique) + sigma_rel=0.015 (bruit proportionnel). Sans plancher, le bruit tend vers 0 sur l'eau en NIR/SWIR (reflectance quasi-nulle) alors que l'incertitude REELLE y explose (SNR capteur faible sur signal faible, documente >1000% relatif sur eau sombre) — cause plausible du P quasi-binaire observe. spatial_corr_px=3: bruit spatialement correle (plus realiste que iid).",
+          "max_ticks": 200,
+          "reset": 0,
+          "toggle_run": 0,
+          "color_index": 0,
+          "spatial_corr_px": 3
+        },
+        "minified": false,
+        "paramPorts": [
+          {
+            "id": "max_ticks",
+            "color": "scalar",
+            "label": "Target N (0 = run forever)"
+          }
+        ],
+        "externalizedParams": [
+          "max_ticks"
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 40
+      },
+      "style": {}
+    },
+    {
+      "id": "idx",
+      "type": "geo_spectral_indices",
+      "position": {
+        "x": 780,
+        "y": 20
+      },
+      "width": 208,
+      "height": 345,
+      "data": {
+        "userLabel": "4 Water Indices",
+        "params": {
+          "sensor": 0,
+          "nir_band": 4,
+          "red_band": 1,
+          "green_band": 2,
+          "blue_band": 3,
+          "swir_band": 5,
+          "ndvi": false,
+          "ndwi": true,
+          "evi": false,
+          "mndwi": true,
+          "nbr": false,
+          "bsi": false,
+          "expr1_enable": true,
+          "expr1_label": "AWEIsh",
+          "expr1": "BLUE + 2.5*GREEN - 1.5*(NIR + SWIR) - 0.25*B6",
+          "expr2_enable": true,
+          "expr2_label": "MBWI",
+          "expr2": "3*GREEN - RED - NIR - SWIR - B6",
+          "colormap": 0,
+          "clamp_min": -5,
+          "clamp_max": 5,
+          "node_note": "Copernicus CDSE L2A SR stack B04,B03,B02,B08,B11,B12. B1=Red B2=Green B3=Blue B4=NIR B5=SWIR1 B6=SWIR2. SWIR=SWIR1(B5), B6=SWIR2. Stack = [NDWI, MNDWI, AWEIsh, MBWI].",
+          "color_index": 3,
+          "guard_invalid": true,
+          "valid_min": -0.002
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 780,
+        "y": 20
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "vote",
+      "type": "geo_band_calc",
+      "position": {
+        "x": 1240,
+        "y": 80
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Consensus Vote k=2 of 4",
+        "params": {
+          "expression": "(1*(B1>0)+1*(B2>0)+1*(B3>0)+1*(B4>0)) >= 2",
+          "clamp_min": 0,
+          "clamp_max": 1,
+          "colormap": "gray",
+          "color_index": 1
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1240,
+        "y": 80
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "tomask",
+      "type": "geotiff_to_mask",
+      "position": {
+        "x": 1480,
+        "y": 80
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Vote → Binary Mask",
+        "params": {
+          "band_index": 0,
+          "threshold": 0.5,
+          "color_index": 1
+        }
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1480,
+        "y": 80
+      }
+    },
+    {
+      "id": "mask_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1880,
+        "y": 80
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Vote AND NIR Gate",
+        "params": {
+          "operation": 2,
+          "color_index": 1
+        }
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1880,
+        "y": 80
+      }
+    },
+    {
+      "id": "acc_mean",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2240,
+        "y": 80
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Probability (mean)",
+        "params": {
+          "mode": 0,
+          "window": 64,
+          "reset": 0,
+          "cumulative": true,
+          "target_n": 200,
+          "color_index": 1
+        },
+        "paramPorts": [
+          {
+            "id": "target_n",
+            "color": "scalar",
+            "label": "Target N (0 = unlimited)"
+          }
+        ],
+        "externalizedParams": [
+          "target_n"
+        ]
+      },
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 2240,
+        "y": 80
+      }
+    },
+    {
+      "id": "node-1782665754321-0.3774373977644757",
+      "type": "data_inspector",
+      "position": {
+        "x": 2240,
+        "y": 220
+      },
+      "style": {
+        "width": 200,
+        "height": 24
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 1
+        },
+        "minified": true,
+        "savedHeight": 120
+      },
+      "width": 200,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2240,
+        "y": 220
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782709706825-skjz7dzln",
+      "type": "data_inspector",
+      "position": {
+        "x": 3480,
+        "y": -260
+      },
+      "style": {
+        "width": 500,
+        "height": 720
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 0
+        },
+        "minified": false,
+        "savedHeight": 160
+      },
+      "width": 500,
+      "height": 720,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3480,
+        "y": -260
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782710392200-fj2ugkk3u",
+      "type": "logic_python",
+      "position": {
+        "x": 2680,
+        "y": 200
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "params": {
+          "code": "# Index Correlation (threshold-independent validation)\n# Entrees positionnelles logic_python :\n#   a = MC P(water)  (image 0-255, acc_mean)\n#   b = idx.stack    (geotiff, N bandes = indices)\n#   c = open-water reference (mask, optionnel)\n#   d = river-extent reference (mask, optionnel)\n# Sorties : out_fig (image), out_stats (dict)\nimport numpy as np\nfrom scipy.stats import spearmanr\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\ntry:\n    a; b\nexcept Exception:\n    raise RuntimeError(\"entrees requises: a = P (acc_mean), b = idx.stack\")\ntry: _c = c\nexcept Exception: _c = None\ntry: _d = d\nexcept Exception: _d = None\ntry: _e = e\nexcept Exception: _e = None\n\ndef _g(m):\n    if m is None: return None\n    x = m[..., 0] if m.ndim == 3 else m\n    return x > 127\n\nPw = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\nprint(f'P stats: min={Pw.min():.3f} max={Pw.max():.3f} std={Pw.std():.4f}')\nif Pw.std() < 1e-9:\n    print('WARN: P constant (variance nulle) -> Spearman indefini. Lance le MC (noise run) pour accumuler P.')\n\nbands = np.asarray(b['bands'], dtype=np.float64)                  # (N,H,W)\nnames = list(b.get('band_names') or [f'idx{i}' for i in range(bands.shape[0])])\nassert bands.shape[1:] == Pw.shape, f\"grille P{Pw.shape} != indices{bands.shape[1:]}\"\n\nOCC_OW, OCC_EXT = 75.0, 10.0        # seuils occurrence JRC GSW (%) : open-water / river-extent\n\ndef _fit(m):                        # fallback: aligne un masque simple par ratio de dimensions\n    if m is None or m.shape == Pw.shape: return m\n    H, W = Pw.shape\n    yi = (np.arange(H) * m.shape[0] / H).astype(np.intp)\n    xi = (np.arange(W) * m.shape[1] / W).astype(np.intp)\n    return m[np.ix_(yi, xi)]\n\ndef _reproj(gj):                    # rechantillonne un geotiff sur la grille P via les transforms (georef exact, nearest)\n    occ = np.asarray(gj['bands'], dtype=np.float64)\n    occ = occ[0] if occ.ndim == 3 else occ\n    Ba, _, Bc_, _, Be, Bf = [float(v) for v in tuple(b['transform'])[:6]]\n    Ja, _, Jc_, _, Je, Jf = [float(v) for v in tuple(gj['transform'])[:6]]\n    H, W = Pw.shape\n    Xc = Bc_ + (np.arange(W) + 0.5) * Ba          # X monde des centres colonnes (grille P)\n    Yr = Bf + (np.arange(H) + 0.5) * Be           # Y monde des centres lignes (grille P)\n    jc = np.clip(np.round((Xc - Jc_) / Ja - 0.5).astype(np.intp), 0, occ.shape[1] - 1)\n    jr = np.clip(np.round((Yr - Jf) / Je - 0.5).astype(np.intp), 0, occ.shape[0] - 1)\n    return occ[np.ix_(jr, jc)]\n\nOCC_GT = 50.0                       # seuil \"verite terrain fiable\" pour les metrics\nif isinstance(_c, dict) and 'bands' in _c and _c.get('transform') is not None:\n    occ = _reproj(_c)               # occurrence JRC recalee sur la grille P (georef exact)\n    ext = occ >= OCC_EXT            # river extent : eau vue >= 10 %\n    ow  = occ >= OCC_OW             # open water   : eau quasi-permanente >= 75 %\n    gt  = occ >= OCC_GT             # GT fiable    : eau >= 50 % (pour metrics)\nelse:                               # GT deja alignee sur la grille S2 (ex. geo_land_cover -> mask)\n    mc = _fit(_g(_c)); md = _fit(_g(_d))\n    ow  = mc if mc is not None else md\n    ext = md if md is not None else mc     # une seule GT-mask -> reference unique (ext=ow)\n    gt  = ext\n\nif ext is None: ext = np.ones(Pw.shape, bool)\nif ow  is None: ow  = ext\nif gt  is None: gt  = ext\nprint(f'classes px: ext={int(ext.sum())} ow={int(ow.sum())} gt={int(gt.sum())}')\nif not ext.any():\n    print('WARN: extent vide (JRC non fetch ? occ=nan ?) -> fallback scene entiere pour \"All river\".')\n    ext = np.ones(Pw.shape, bool)\n    if not ow.any(): ow = ext\n    if not gt.any(): gt = ext\nbridge = ext & ~ow\n\n# Domaine d'analyse = GT dilatee, fournie en entree e (node feat_morphology_adv Dilate).\n# \"All river\" = TOUS les pixels du domaine (eau + berges) -> teste P~0 berge / P~1 eau.\n# Sans e -> domaine = ext (pas de marge).\ndom_in = _fit(_g(_e))\ndomain = dom_in if dom_in is not None else ext\nprint(f'domain (All river) px={int(domain.sum())}  ext px={int(ext.sum())}')\n\n# masques recales sur la grille P -> a brancher sur sci_mask_metrics.truth\nout_ow     = (ow.astype(np.uint8) * 255)\nout_ext    = (ext.astype(np.uint8) * 255)\nout_gt     = (gt.astype(np.uint8) * 255)\nout_domain = (domain.astype(np.uint8) * 255)\n\nclasses = [('All river', domain, 'gray'),\n           ('Open water', ow, 'tab:blue'),\n           ('Bridge', bridge, 'tab:orange')]\n\ndef _rho(iv, m):\n    mm = m & np.isfinite(iv) & np.isfinite(Pw)\n    if mm.sum() < 10: return np.nan\n    r = spearmanr(Pw[mm], iv[mm]).correlation\n    return float(r) if r == r else np.nan\n\nN = bands.shape[0]\nR = {cn: [_rho(bands[i], cm) for i in range(N)] for cn, cm, _ in classes}\n\nfig = plt.figure(figsize=(13, 9), dpi=110)\ngs = fig.add_gridspec(2, N, height_ratios=[1.1, 1.0], hspace=0.4, wspace=0.3)\n\naxb = fig.add_subplot(gs[0, :])\nx = np.arange(N); w = 0.26\nfor k, (cn, cm, cc) in enumerate(classes):\n    vals = R[cn]\n    bars = axb.bar(x + (k - 1) * w, [0 if v != v else v for v in vals], w, label=cn, color=cc)\n    for bar, v in zip(bars, vals):\n        if v == v:\n            axb.text(bar.get_x() + bar.get_width() / 2, v + 0.01, f'{v:.3f}',\n                     ha='center', va='bottom', fontsize=8)\naxb.set_xticks(x); axb.set_xticklabels(names)\naxb.set_ylabel('Spearman r'); axb.set_ylim(0, 1.05)\naxb.set_title('Spearman: MC P(water) vs spectral index by pixel class — threshold independent')\naxb.legend(loc='upper right'); axb.grid(axis='y', alpha=0.3)\n\nrng = np.random.default_rng(0)\nfor i in range(N):\n    ax = fig.add_subplot(gs[1, i])\n    for cn, cm, cc in classes[::-1]:\n        m = cm & np.isfinite(bands[i])\n        idxp = np.flatnonzero(m.ravel())\n        if idxp.size > 4000:\n            idxp = rng.choice(idxp, 4000, replace=False)\n        ax.scatter(bands[i].ravel()[idxp], Pw.ravel()[idxp], s=2, c=cc, alpha=0.35, linewidths=0)\n    ax.axhline(0.7, ls='--', c='k', lw=0.8, alpha=0.6)\n    ax.set_title(f'P(water) vs {names[i]}'); ax.set_xlabel(names[i])\n    if i == 0: ax.set_ylabel('MC P(water)')\n    ax.set_ylim(-0.02, 1.02)\n    r_all = R['All river'][i]\n    ax.text(0.03, 0.95, f'Spearman r = {r_all:.3f}', transform=ax.transAxes, va='top',\n            bbox=dict(boxstyle='round', fc='white', ec='0.7'), fontsize=8)\n\nfig.suptitle('MC P(water) — Correlation with Spectral Indices', fontsize=13)\nfig.canvas.draw()\nw_, h_ = fig.canvas.get_width_height()\nout_fig = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(h_, w_, 4)[..., :3].copy()\nplt.close(fig)\n\nout_stats = {names[i]: {cn: (None if R[cn][i] != R[cn][i] else round(R[cn][i], 4))\n                        for cn, _, _ in classes} for i in range(N)}\nprint('Spearman r:', out_stats)\n\n# ── Value distributions: Open Water vs Bridge per feature (Δμ / Cohen's d / Mann-Whitney U) ──\nfrom scipy.stats import mannwhitneyu as _mwu\n_MWU_MAX_N = 20000   # subsample cap per group — U-statistic ranking cost grows with n\n\ndef _subsample(v, cap, rng):\n    return v if v.size <= cap else v[rng.choice(v.size, cap, replace=False)]\n\n_rng_mwu = np.random.default_rng(0)\n_feats = [('MC prob', Pw)] + [(names[i], bands[i]) for i in range(N)]\n_dmu = {}; _cohen = {}; _mw = {}\nfigd = plt.figure(figsize=(4.0 * len(_feats), 3.4), dpi=110)\nfor j, (fn, fv) in enumerate(_feats):\n    axd = figd.add_subplot(1, len(_feats), j + 1)\n    vo = fv[ow & np.isfinite(fv)]\n    vb = fv[bridge & np.isfinite(fv)]\n    if vo.size >= 2 and vb.size >= 2:\n        lo = float(min(vo.min(), vb.min())); hi = float(max(vo.max(), vb.max()))\n        if hi <= lo: hi = lo + 1e-6\n        edges = np.linspace(lo, hi, 40)\n        axd.hist(vb, bins=edges, density=True, color='tab:orange', alpha=0.75, label='Bridge pixels')\n        axd.hist(vo, bins=edges, density=True, color='tab:blue', alpha=0.75, label='Open water')\n        dmu = float(vo.mean() - vb.mean()); _dmu[fn] = round(dmu, 4)\n        n1, n0 = vo.size, vb.size\n        pooled = np.sqrt(((n1 - 1) * vo.var(ddof=1) + (n0 - 1) * vb.var(ddof=1)) / max(n1 + n0 - 2, 1))\n        dcoh = float(dmu / (pooled + 1e-12)); _cohen[fn] = round(dcoh, 3)\n\n        # Mann-Whitney U (nonparametric, no normality assumption) + rank-biserial effect size\n        vo_s = _subsample(vo, _MWU_MAX_N, _rng_mwu); vb_s = _subsample(vb, _MWU_MAX_N, _rng_mwu)\n        try:\n            u_stat, u_p = _mwu(vo_s, vb_s, alternative='two-sided')\n            r_rb = float(1.0 - 2.0 * u_stat / (vo_s.size * vb_s.size))  # rank-biserial correlation\n        except Exception:\n            u_p, r_rb = float('nan'), float('nan')\n        _mw[fn] = {'p': (None if u_p != u_p else round(float(u_p), 6)),\n                   'rank_biserial': (None if r_rb != r_rb else round(r_rb, 3)),\n                   'n_open_water': int(vo_s.size), 'n_bridge': int(vb_s.size)}\n\n        axd.set_title(f'Δμ = {dmu:.3f}   d = {dcoh:.2f}\\nMWU p{\"<0.001\" if u_p < 0.001 else f\"={u_p:.3f}\"}  r={r_rb:.2f}',\n                      fontsize=8.5)\n    else:\n        _dmu[fn] = None; _cohen[fn] = None; _mw[fn] = None\n        axd.set_title('Δμ = n/a')\n    if fn == 'MC prob':\n        axd.axvline(0.7, ls='--', c='k', lw=0.9, label='t = 0.7')\n        axd.legend(loc='upper left', fontsize=7)\n        axd.set_ylabel('Density')\n    axd.set_xlabel(fn)\nfigd.suptitle('Value Distributions — Open Water vs Bridge Pixels\\n'\n              \"Δμ = mean gap (raw) · d = Cohen's d (σ-normalized) · MWU = Mann-Whitney U test \"\n              \"(p, rank-biserial r — nonparametric, no normality assumption)\", fontsize=10)\nfigd.tight_layout(rect=[0, 0, 1, 0.88])\nfigd.canvas.draw()\n_wd, _hd = figd.canvas.get_width_height()\nout_dist = np.frombuffer(figd.canvas.buffer_rgba(), dtype=np.uint8).reshape(_hd, _wd, 4)[..., :3].copy()\nplt.close(figd)\nout_stats['delta_mu'] = _dmu\nout_stats['cohen_d'] = _cohen\nout_stats['mann_whitney'] = _mw\nprint('delta_mu:', _dmu)\nprint('cohen_d :', _cohen)\nprint('mann_whitney:', _mw)\n\n# ── Independent discriminability: index vs GT water (AUROC, P-free) ────────────\n# Cible = GT (ow = WorldCover water) vs non-eau du corridor (domaine & ~ow).\n# N'utilise PAS P -> classement des indices non circulaire.\nfrom scipy.stats import rankdata as _rankdata\n\ndef _auroc(iv, pos, neg):\n    va = iv[pos & np.isfinite(iv)]; vb = iv[neg & np.isfinite(iv)]\n    na, nb = va.size, vb.size\n    if na < 1 or nb < 1:\n        return np.nan\n    r = _rankdata(np.concatenate([va, vb]))\n    return float((r[:na].sum() - na * (na + 1) / 2.0) / (na * nb))\n\n_neg_dom = domain & ~ow                      # non-eau dans le corridor (terre + ponts)\n_auc = {}\nfor i in range(N):\n    a = _auroc(bands[i], ow, _neg_dom)\n    _auc[names[i]] = None if a != a else round(max(a, 1.0 - a), 4)   # oriente >= 0.5\n\n_lab = list(_auc.keys())\n_val = [(_auc[k] if _auc[k] is not None else 0.5) for k in _lab]\n_ordr = np.argsort(_val)[::-1]\n_lab = [_lab[j] for j in _ordr]; _val = [_val[j] for j in _ordr]\n\nfiga = plt.figure(figsize=(6.5, 4.0), dpi=110)\naxa = figa.add_subplot(111)\n_bars = axa.bar(_lab, _val, color='tab:green')\nfor _b, _v in zip(_bars, _val):\n    axa.text(_b.get_x() + _b.get_width() / 2, _v + 0.005, f'{_v:.3f}', ha='center', va='bottom', fontsize=9)\naxa.axhline(0.5, ls='--', c='k', lw=0.8)\naxa.set_ylim(0.5, 1.02); axa.set_ylabel('AUROC (water vs non-water GT)')\naxa.set_title('Independent index discriminability vs ground truth (P-free)\\n'\n              'Higher = better water / non-water separation')\nfiga.tight_layout()\nfiga.canvas.draw()\n_wa, _ha = figa.canvas.get_width_height()\nout_auroc = np.frombuffer(figa.canvas.buffer_rgba(), dtype=np.uint8).reshape(_ha, _wa, 4)[..., :3].copy()\nplt.close(figa)\nout_stats['auroc_vs_gt'] = _auc\nprint('auroc_vs_gt:', _auc)\n",
+          "color_index": 0,
+          "node_note": "Validation. a=P, b=idx.stack, c=ow(WorldCover water), d=ext(water∪bridge). All river = ext DILATEE (ROI_DILATE_PX dans le code). Open water=c, Bridge=d&~c. Plans d'eau conserves."
+        },
+        "ports": [
+          {
+            "id": "image__a",
+            "color": "image",
+            "label": "a = P"
+          },
+          {
+            "id": "geotiff__b",
+            "color": "geotiff",
+            "label": "b = idx.stack"
+          },
+          {
+            "id": "mask__c",
+            "color": "mask",
+            "label": "c = GT water mask"
+          },
+          {
+            "id": "geotiff__d",
+            "color": "geotiff",
+            "label": "d"
+          },
+          {
+            "id": "mask__d",
+            "color": "mask",
+            "label": "d = river extent"
+          },
+          {
+            "id": "mask__e",
+            "color": "mask",
+            "label": "e = domain (All river)"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "image__out_fig",
+            "color": "image",
+            "label": "fig"
+          },
+          {
+            "id": "any__out_stats",
+            "color": "any",
+            "label": "stats"
+          },
+          {
+            "id": "mask__out_gt",
+            "color": "mask",
+            "label": "GT (occ>=50, aligne)"
+          },
+          {
+            "id": "mask__out_ow",
+            "color": "mask",
+            "label": "open water (occ>=75)"
+          },
+          {
+            "id": "mask__out_ext",
+            "color": "mask",
+            "label": "extent (occ>=10)"
+          },
+          {
+            "id": "mask__out_domain",
+            "color": "mask",
+            "label": "domain (All river)"
+          },
+          {
+            "id": "image__out_dist",
+            "color": "image",
+            "label": "distributions"
+          },
+          {
+            "id": "image__out_auroc",
+            "color": "image",
+            "label": "AUROC vs GT"
+          }
+        ],
+        "userLabel": "Index Correlation (Spearman)"
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2680,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782714864518-0.5776343794772578",
+      "type": "canvas_frame",
+      "position": {
+        "x": -240,
+        "y": -100
+      },
+      "style": {
+        "width": 1400,
+        "height": 900,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Indices",
+          "collapsed": false,
+          "savedHeight": 640,
+          "color_index": 3
+        }
+      },
+      "width": 1400,
+      "height": 900,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -200,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782714961073-0.25481293318634246",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1220,
+        "y": -100
+      },
+      "style": {
+        "width": 1280,
+        "height": 640,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Monte Carlo P (Mean)",
+          "collapsed": false,
+          "savedHeight": 640,
+          "color_index": 1
+        }
+      },
+      "width": 1280,
+      "height": 640,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1380,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782715167174-0.10356488106141004",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2540,
+        "y": -100
+      },
+      "style": {
+        "width": 1880,
+        "height": 840,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Scoring",
+          "collapsed": false,
+          "savedHeight": 640,
+          "color_index": 0
+        }
+      },
+      "width": 1880,
+      "height": 840,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2540,
+        "y": -100
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "adaptive_gate",
+      "type": "logic_python",
+      "position": {
+        "x": 1480,
+        "y": 200
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "userLabel": "Adaptive Gate (p99 consensus)",
+        "params": {
+          "code": "# Adaptive reflectance gate — fidele a compute_adaptive_constraints + le gate de\n# decision_water. base = stack NON bruite, pert = stack bruite.\n#   Ordre CDSE B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2.\n# Caps p99 derives des pixels consensus de la scene de BASE (figes sur tout le run,\n# plancher 2x cap fixe, repli caps fixes si < 500 px). Gate compare sur le BRUITE.\nimport numpy as np\n\nVOTE_K, PCT, MIN_PIX = 2, 99.0, 500\nNIR_MAX, SWIR1_MAX, SWIR2_MAX = 0.12, 0.06, 0.05   # SR L2A ; adaptatif p99 prend le relais si consensus>=500\nFLOOR_MULT, SIGNAL_MIN = 2.0, 0.003\nBAND_MIN, DEN_MIN = -0.002, 1e-6\n\ndef _b6(g):\n    a = np.asarray(g['bands'], dtype=np.float32)\n    # CDSE order B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2\n    return a[2], a[1], a[0], a[3], a[4], a[5]   # blue green red nir swir1 swir2\n\ndef _nd(x, y):\n    den, num = x + y, x - y\n    o = np.full(x.shape, np.nan, np.float32)\n    v = (np.isfinite(x) & np.isfinite(y) & (np.abs(den) > DEN_MIN)\n         & (x > BAND_MIN) & (y > BAND_MIN))\n    o[v] = num[v] / den[v]\n    return np.clip(o, -1.0, 1.0)\n\ndef _votesum(bl, gr, rd, ni, s1, s2):\n    ndwi  = _nd(gr, ni)\n    mndwi = _nd(gr, s1)\n    awei  = bl + 2.5*gr - 1.5*(ni + s1) - 0.25*s2          # AWEIsh\n    mbwi  = 3.0*gr - (rd + ni + s1 + s2)                   # MBWI factor 3\n    return ((np.isfinite(ndwi)  & (ndwi  > 0)).astype(np.uint8)\n          + (np.isfinite(mndwi) & (mndwi > 0)).astype(np.uint8)\n          + (np.isfinite(awei)  & (awei  > 0)).astype(np.uint8)\n          + (np.isfinite(mbwi)  & (mbwi  > 0)).astype(np.uint8))\n\n# --- caps figes sur la scene de base (calcules une seule fois par run) ---\nbl, gr, rd, ni, s1, s2 = _b6(base)\nsig = (ni.shape, round(float(np.nansum(ni)), 3))\nif state.get('gate_sig') != sig or len(state.get('caps', ())) != 5:\n    valid = (np.isfinite(bl) & np.isfinite(gr) & np.isfinite(rd)\n             & np.isfinite(ni) & np.isfinite(s1) & np.isfinite(s2))\n    cons = valid & (_votesum(bl, gr, rd, ni, s1, s2) >= VOTE_K)\n    n = int(cons.sum())\n    if n >= MIN_PIX:\n        nc = max(float(np.nanpercentile(ni[cons], PCT)), NIR_MAX   * FLOOR_MULT)\n        c1 = max(float(np.nanpercentile(s1[cons], PCT)), SWIR1_MAX * FLOOR_MULT)\n        c2 = max(float(np.nanpercentile(s2[cons], PCT)), SWIR2_MAX * FLOOR_MULT)\n        adaptive = True\n    else:\n        nc, c1, c2, adaptive = NIR_MAX, SWIR1_MAX, SWIR2_MAX, False\n    state['gate_sig'] = sig\n    state['caps'] = (nc, c1, c2, adaptive, n)\nnc, c1, c2, adaptive, n = state['caps']\n\n# --- gate applique sur les bandes BRUITEES (caps figes) ---\npbl, pgr, prd, pni, ps1, ps2 = _b6(pert)\ngate = (np.isfinite(pbl) & np.isfinite(pgr) & np.isfinite(prd)\n        & np.isfinite(pni) & np.isfinite(ps1) & np.isfinite(ps2))\ngate &= pni < np.float32(nc)\ngate &= ps1 < np.float32(c1)\ngate &= ps2 < np.float32(c2)\ngate &= (pgr + pni) > np.float32(SIGNAL_MIN)      # signal_min ; green_min desactive\n\nout_mask = (gate.astype(np.uint8) * 255)\nout_caps = {'adaptive': bool(adaptive), 'n_consensus': int(n),\n            'nir_cap': round(float(nc), 4), 'swir1_cap': round(float(c1), 4),\n            'swir2_cap': round(float(c2), 4)}\nprint('gate caps', out_caps)\n",
+          "node_note": "Gate de reflectance scene-adaptatif. base=CDSE L2A SR (non bruite), pert=noise (bruite). _b6 ordre CDSE B04,B03,B02,B08,B11,B12 -> blue,green,red,nir,swir1,swir2. Caps p99 auto-cales sur pixels consensus (repli fixe SR NIR<0.12 SWIR1<0.06 SWIR2<0.05 si <500 px).",
+          "color_index": 1
+        },
+        "ports": [
+          {
+            "id": "geotiff__base",
+            "color": "geotiff",
+            "label": "base"
+          },
+          {
+            "id": "geotiff__pert",
+            "color": "geotiff",
+            "label": "pert"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "mask__out_mask",
+            "color": "mask",
+            "label": "gate"
+          },
+          {
+            "id": "any__out_caps",
+            "color": "any",
+            "label": "caps"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1480,
+        "y": 200
+      }
+    },
+    {
+      "id": "node-1782919954938-1km6n7fkh",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 2680,
+        "y": 60
+      },
+      "style": {},
+      "data": {
+        "label": "Advanced Threshold",
+        "params": {
+          "mode": 0,
+          "threshold": 179,
+          "color_index": 0,
+          "node_note": "Seuil P auto-calibre par Threshold Sweep (median-of-plateau F1). Plus de valeur figee."
+        },
+        "paramPorts": [
+          {
+            "id": "threshold",
+            "color": "scalar",
+            "label": "Threshold Value"
+          }
+        ],
+        "externalizedParams": [
+          "threshold"
+        ],
+        "userLabel": "Advanced Threshold"
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2680,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782920492331-zy195o6bo",
+      "type": "geo_copernicus",
+      "position": {
+        "x": 160,
+        "y": 40
+      },
+      "style": {},
+      "data": {
+        "label": "Copernicus CDSE",
+        "params": {
+          "bbox": "118.834111,37.313089,119.029868,37.416217",
+          "bands": "B04,B03,B02,B08,B11,B12",
+          "collection": "0",
+          "date_start": "2024-01-01",
+          "date_end": "2024-06-01",
+          "cloud_max": "20",
+          "mosaic_mode": "0",
+          "resolution": "10",
+          "fetch": 0,
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 297,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 160,
+        "y": 40
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782924866569-lebb5olq0",
+      "type": "geo_bbox",
+      "position": {
+        "x": -160,
+        "y": 40
+      },
+      "style": {},
+      "data": {
+        "label": "Bounding Box",
+        "params": {
+          "lon_min": 1.875070422181608,
+          "lat_min": 48.88692044347539,
+          "lon_max": 2.2088779287464604,
+          "lat_max": 49.02475094292094,
+          "color_index": 3
+        },
+        "schema": {
+          "type": "geo_bbox",
+          "label": "Bounding Box",
+          "category": "geography",
+          "icon": "Square",
+          "description": "Defines a Region of Interest (ROI) bounding box to share across geography nodes.",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "bbox",
+              "color": "string",
+              "label": "BBox (str)"
+            }
+          ],
+          "params": [
+            {
+              "id": "lon_min",
+              "label": "West (Lon Min)",
+              "type": "float",
+              "default": -5.5
+            },
+            {
+              "id": "lat_min",
+              "label": "South (Lat Min)",
+              "type": "float",
+              "default": 41
+            },
+            {
+              "id": "lon_max",
+              "label": "East (Lon Max)",
+              "type": "float",
+              "default": 9.5
+            },
+            {
+              "id": "lat_max",
+              "label": "North (Lat Max)",
+              "type": "float",
+              "default": 51.5
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 136,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -160,
+        "y": 40
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782935904874-0.4708570372279324",
+      "type": "sci_mask_metrics",
+      "position": {
+        "x": 3000,
+        "y": 160
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "userLabel": "Precision / Recall / F1 / IoU",
+        "params": {
+          "show_overlay": true,
+          "alpha": 0.45,
+          "iou_thresh": 0.5,
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "selected": false,
+      "dragging": false,
+      "style": {},
+      "positionAbsolute": {
+        "x": 3000,
+        "y": 160
+      }
+    },
+    {
+      "id": "node-1782935904874-0.3982183414001329",
+      "type": "data_inspector",
+      "position": {
+        "x": 3260,
+        "y": 80
+      },
+      "style": {
+        "width": 180,
+        "height": 380
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 180,
+      "height": 380,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3260,
+        "y": 80
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "landcover_gt",
+      "type": "geo_land_cover",
+      "position": {
+        "x": 520,
+        "y": 200
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "WorldCover Water (GT)",
+        "params": {
+          "land_class": 80,
+          "gcp_project": "linux-lasalle",
+          "opacity": 0.5,
+          "node_note": "ESA WorldCover 10m, classe 80=Water. Entree=S2 -> mask fetche SUR la grille S2 => aligne pixel sur P. Sert de ground truth.",
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 200
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "node-1782965132733-6rbur98mr",
+      "type": "output_display",
+      "position": {
+        "x": 3000,
+        "y": 340
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 0
+        },
+        "mainConnected": true
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 3000,
+        "y": 340
+      }
+    },
+    {
+      "id": "osm_bridges",
+      "type": "geo_osm_overpass",
+      "position": {
+        "x": 520,
+        "y": 380
+      },
+      "width": 208,
+      "height": 153,
+      "data": {
+        "userLabel": "OSM Bridges",
+        "params": {
+          "selector": "[\"bridge\"]",
+          "element_types": "nwr",
+          "buffer_m": 12,
+          "all_touched": true,
+          "overpass_url": "https://overpass-api.de/api/interpreter",
+          "timeout_s": 60,
+          "fetch": 0,
+          "cache_dir": "copernicus_cache",
+          "node_note": "Ponts OSM a la volee, rasterises sur la grille S2 (aligne). selector generique: changer pour water/highway/building...",
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 520,
+        "y": 380
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "ext_union",
+      "type": "mask_operations",
+      "position": {
+        "x": 780,
+        "y": 400
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "Extent = water OR bridge",
+        "params": {
+          "operation": 0,
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 780,
+        "y": 400
+      },
+      "dragging": false,
+      "style": {}
+    },
+    {
+      "id": "node-1782966859833-6omzfmatk",
+      "type": "output_display",
+      "position": {
+        "x": 780,
+        "y": 520
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 3
+        },
+        "mainConnected": true,
+        "ports": [
+          {
+            "id": "mask__0_zoqb",
+            "color": "mask",
+            "label": "mask"
+          }
+        ],
+        "minified": false
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 780,
+        "y": 520
+      }
+    },
+    {
+      "id": "node-1782969673739-7vzpqrwhf",
+      "type": "scalar_input",
+      "position": {
+        "x": 160,
+        "y": 360
+      },
+      "style": {},
+      "data": {
+        "label": "Target N (0 = run forever)",
+        "params": {
+          "format": 0,
+          "value": 118,
+          "min": 0,
+          "max": 1000000,
+          "step": 1,
+          "color_index": 3
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "Integer",
+                "Float"
+              ],
+              "default": 1
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "_sec_range",
+              "label": "Range",
+              "type": "section"
+            },
+            {
+              "id": "min",
+              "label": "Min",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "max",
+              "label": "Max",
+              "type": "float",
+              "default": 100
+            },
+            {
+              "id": "step",
+              "label": "Step",
+              "type": "float",
+              "default": 1
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        }
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 160,
+        "y": 360
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1782969721247_4b70",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1880,
+        "y": 240
+      },
+      "data": {
+        "label": "Target N (0 = run forever)",
+        "params": {
+          "source_id": "node-1782969673739-7vzpqrwhf",
+          "source_type": "scalar_input"
+        },
+        "source_outputs": [
+          {
+            "id": "value",
+            "color": "scalar"
+          }
+        ]
+      },
+      "width": 193,
+      "selected": false,
+      "height": 70,
+      "positionAbsolute": {
+        "x": 1880,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "corr_dilate",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1920,
+        "y": 660
+      },
+      "width": 208,
+      "height": 98,
+      "data": {
+        "userLabel": "Domain = Dilate(ext)",
+        "params": {
+          "operation": 5,
+          "shape": 2,
+          "size": 15,
+          "iterations": 2,
+          "color_index": 4,
+          "node_note": "Dilate isotrope: marge de corridor ~5%. All river = ce domaine. size/iterations = largeur marge."
+        },
+        "paramPorts": [
+          {
+            "id": "size",
+            "color": "scalar",
+            "label": "Kernel Size"
+          }
+        ],
+        "externalizedParams": [
+          "size"
+        ]
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782972741979-9tx4ye91z",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 1640,
+        "y": 660
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 258,
+          "color_index": 4
+        },
+        "paramPorts": [
+          {
+            "id": "min_area",
+            "color": "scalar",
+            "label": "Min Area (px²)"
+          }
+        ],
+        "externalizedParams": [
+          "min_area"
+        ]
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1640,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782972774702-cl7d9x8kc",
+      "type": "filter_threshold",
+      "position": {
+        "x": 1380,
+        "y": 660
+      },
+      "style": {},
+      "data": {
+        "label": "Threshold",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1380,
+        "y": 660
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782973187204-65mgsen8r",
+      "type": "scalar_input",
+      "position": {
+        "x": 1640,
+        "y": 800
+      },
+      "style": {},
+      "data": {
+        "label": "Min Area (px²)",
+        "params": {
+          "format": 0,
+          "value": 258,
+          "min": 1,
+          "max": 1000000,
+          "step": 1,
+          "color_index": 4
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "Integer",
+                "Float"
+              ],
+              "default": 1
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "_sec_range",
+              "label": "Range",
+              "type": "section"
+            },
+            {
+              "id": "min",
+              "label": "Min",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "max",
+              "label": "Max",
+              "type": "float",
+              "default": 100
+            },
+            {
+              "id": "step",
+              "label": "Step",
+              "type": "float",
+              "default": 1
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        },
+        "userLabel": "Blob min size"
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1640,
+        "y": 800
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782973228563-2w5zaft8l",
+      "type": "scalar_input",
+      "position": {
+        "x": 1920,
+        "y": 800
+      },
+      "style": {},
+      "data": {
+        "label": "Kernel Size",
+        "params": {
+          "format": 1,
+          "value": 15,
+          "min": 1,
+          "max": 31,
+          "step": 2,
+          "color_index": 4
+        },
+        "schema": {
+          "type": "scalar_input",
+          "label": "Number",
+          "category": "math",
+          "icon": "Hash",
+          "description": "",
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "value",
+              "color": "scalar"
+            }
+          ],
+          "params": [
+            {
+              "id": "format",
+              "label": "Format",
+              "type": "enum",
+              "options": [
+                "Integer",
+                "Float"
+              ],
+              "default": 1
+            },
+            {
+              "id": "value",
+              "label": "Value",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "_sec_range",
+              "label": "Range",
+              "type": "section"
+            },
+            {
+              "id": "min",
+              "label": "Min",
+              "type": "float",
+              "default": 0
+            },
+            {
+              "id": "max",
+              "label": "Max",
+              "type": "float",
+              "default": 100
+            },
+            {
+              "id": "step",
+              "label": "Step",
+              "type": "float",
+              "default": 1
+            }
+          ],
+          "resizable": false,
+          "min_width": 200,
+          "min_height": 150,
+          "colorable": true,
+          "dynamic_inputs": false,
+          "dynamic_outputs": false,
+          "variable_inputs": false,
+          "hf_model": "",
+          "hf_filename": ""
+        },
+        "userLabel": "Extend dilatation"
+      },
+      "width": 208,
+      "height": 111,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1920,
+        "y": 800
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1782973294888-r6wpt7v52",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1320,
+        "y": 580
+      },
+      "style": {
+        "width": 940,
+        "height": 440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "color_index": 4,
+          "title": "Water extension mask"
+        }
+      },
+      "width": 940,
+      "height": 440,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1320,
+        "y": 580
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "acc_std",
+      "type": "sci_frame_accumulator",
+      "position": {
+        "x": 2400,
+        "y": 760
+      },
+      "width": 208,
+      "height": 121,
+      "data": {
+        "userLabel": "MC Uncertainty (std)",
+        "params": {
+          "mode": 3,
+          "cumulative": true,
+          "target_n": 0,
+          "window": 16,
+          "node_note": "Ecart-type MC par pixel = incertitude. SE de la moyenne = std/sqrt(N). Pic a P=0.5."
+        }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "boundary_f1",
+      "type": "sci_boundary_f1",
+      "position": {
+        "x": 3900,
+        "y": 560
+      },
+      "width": 208,
+      "height": 140,
+      "data": {
+        "userLabel": "Boundary-F1 (tol 3px)",
+        "params": {
+          "tolerance": 3
+        }
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "insp_bf1",
+      "type": "data_inspector",
+      "position": {
+        "x": 4180,
+        "y": 560
+      },
+      "style": {
+        "width": 220,
+        "height": 140
+      },
+      "width": 220,
+      "height": 140,
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      }
+    },
+    {
+      "id": "mc_conv",
+      "type": "logic_python",
+      "position": {
+        "x": 2680,
+        "y": 1000
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "userLabel": "MC Convergence",
+        "params": {
+          "code": "# MC Convergence monitor — scene-mean standard error of P vs number of MC steps.\n#   a = MC std map (acc_std 'main', 0-255)   b = frame_count N (scalar)\n#   c = domain mask (opt)   d = SE tolerance (opt, default 0.01)   e = min N before eval (opt, default 5)\n# SE(N) = mean_pixels(σ_P) / sqrt(N), σ_P = per-pixel ensemble std in P units.\n# Optimal N = first N (>= min_n) where SE < tolerance. Curve accumulates in `state` across ticks.\nimport numpy as np\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\ntry: TOL = float(d)\nexcept Exception: TOL = 0.01        # SE target in P units (P stable to ~TOL)\ntry: MIN_N = int(round(float(e)))\nexcept Exception: MIN_N = 5         # ignore the noisy first ticks when picking optimal N\n\nsig = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\ntry:\n    N = int(round(float(b)))\nexcept Exception:\n    N = 0\ntry:\n    dom = (c[..., 0] if c.ndim == 3 else c) > 127\nexcept Exception:\n    dom = np.ones(sig.shape, bool)\nm = dom & np.isfinite(sig)\nsd = float(sig[m].mean()) if m.any() else float('nan')\nse = sd / np.sqrt(max(N, 1))\n\nhist = state.get('conv_hist')\nif hist is None or N < int(state.get('conv_lastN', 0)):   # new run → reset history\n    hist = []\nstate['conv_lastN'] = N\nif N >= 2 and np.isfinite(se):\n    if not hist or hist[-1][0] != N:                      # one point per distinct N\n        hist.append((N, se))\nstate['conv_hist'] = hist\n\nNs = [h[0] for h in hist]; SEs = [h[1] for h in hist]\nopt_N = -1\nfor nn, ss in hist:\n    if nn >= MIN_N and ss < TOL:\n        opt_N = nn; break\n\nfig = plt.figure(figsize=(7.0, 4.5), dpi=110)\nax = fig.add_subplot(111)\nif Ns:\n    ax.plot(Ns, SEs, '-o', ms=3, color='tab:blue', label='SE of P = σ/√N')\nax.axhline(TOL, ls='--', c='k', lw=0.8, label=f'tolerance = {TOL}')\nif opt_N > 0:\n    ax.axvline(opt_N, ls=':', c='tab:green', lw=1.6, label=f'optimal N ≈ {opt_N}')\nax.set_xlabel('MC steps (N)'); ax.set_ylabel('Scene-mean SE of P')\nax.set_title('Monte-Carlo convergence'); ax.grid(alpha=0.3)\nif len(SEs) >= 2 and min([s for s in SEs if s > 0] or [1]) > 0:\n    try: ax.set_yscale('log')\n    except Exception: pass\nax.legend(fontsize=8, loc='upper right')\nfig.tight_layout(); fig.canvas.draw()\n_w, _h = fig.canvas.get_width_height()\nout_curve = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(_h, _w, 4)[..., :3].copy()\nplt.close(fig)\n\nout_optimal_N = float(opt_N)\nout_se = float(se)\nprint(f'N={N}  SE={se:.4f}  optimal_N={opt_N}  (points={len(hist)})')\n",
+          "color_index": 3,
+          "node_note": "Courbe SE=σ/√N vs N. N optimal = 1er N (>=5) sous TOL (0.01, editable dans le code). a=acc_std, b=frame_count, c=domaine."
+        },
+        "ports": [
+          {
+            "id": "image__a",
+            "color": "image",
+            "label": "a = σ map (acc_std)"
+          },
+          {
+            "id": "scalar__b",
+            "color": "scalar",
+            "label": "b = N (frame_count)"
+          },
+          {
+            "id": "mask__c",
+            "color": "mask",
+            "label": "c = domain (opt)"
+          },
+          {
+            "id": "scalar__d",
+            "color": "scalar",
+            "label": "d = SE tolerance"
+          },
+          {
+            "id": "scalar__e",
+            "color": "scalar",
+            "label": "e = min N before eval"
+          },
+          {
+            "id": "scalar__f",
+            "color": "scalar",
+            "label": "f"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "image__out_curve",
+            "color": "image",
+            "label": "convergence curve"
+          },
+          {
+            "id": "scalar__out_optimal_N",
+            "color": "scalar",
+            "label": "optimal N"
+          },
+          {
+            "id": "scalar__out_se",
+            "color": "scalar",
+            "label": "SE"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2680,
+        "y": 1000
+      },
+      "dragging": false
+    },
+    {
+      "id": "insp_conv",
+      "type": "data_inspector",
+      "position": {
+        "x": 2960,
+        "y": 900
+      },
+      "style": {
+        "width": 200,
+        "height": 80
+      },
+      "width": 200,
+      "height": 80,
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      }
+    },
+    {
+      "id": "conv_tol",
+      "type": "scalar_input",
+      "position": {
+        "x": 2280,
+        "y": 1060
+      },
+      "width": 180,
+      "height": 90,
+      "data": {
+        "label": "Number",
+        "userLabel": "SE Tolerance",
+        "params": {
+          "value": 0.005
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2280,
+        "y": 1060
+      },
+      "dragging": false
+    },
+    {
+      "id": "conv_minn",
+      "type": "scalar_input",
+      "position": {
+        "x": 2280,
+        "y": 1200
+      },
+      "width": 180,
+      "height": 90,
+      "data": {
+        "label": "Number",
+        "userLabel": "Min N (before eval)",
+        "params": {
+          "value": 5
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2280,
+        "y": 1200
+      },
+      "dragging": false
+    },
+    {
+      "id": "thr_sweep",
+      "type": "logic_python",
+      "position": {
+        "x": 3220,
+        "y": 900
+      },
+      "style": {},
+      "data": {
+        "label": "Python Node",
+        "userLabel": "Threshold Sweep (F1/IoU/Youden)",
+        "params": {
+          "code": "# Threshold sweep — find the P(water) cutoff that maximizes a chosen metric.\n#   a = P (acc_mean image, 0-255)   b = truth mask (aligned GT)\n#   c = domain mask (opt, restricts the evaluation universe)\n#   d = metric selector (opt, default 0): 0=F1  1=IoU  2=Youden's J  3=MCC\n#   e = threshold step (opt, default 0.02)\n#   f = bootstrap replicates for 95% CI band (opt, default 0 = off)\n#   g = semantic anchor threshold (opt, default 0.5 = MC majority vote)\n# Replaces an eyeballed cutoff (e.g. \"0.7\") with the value that actually\n# maximizes precision/recall trade-off against the ground truth. The optional\n# bootstrap band quantifies whether the \"best\" threshold is statistically\n# distinguishable from the rest of the curve, or the plateau is flat within noise.\nimport numpy as np\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\nPw = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\ntruth = (b[..., 0] if b.ndim == 3 else b) > 127\ntry:\n    domain = (c[..., 0] if c.ndim == 3 else c) > 127\nexcept Exception:\n    domain = np.ones(Pw.shape, bool)\ntry:\n    metric_sel = int(round(float(d)))\nexcept Exception:\n    metric_sel = 0\nmetric_sel = metric_sel if 0 <= metric_sel <= 3 else 0\ntry:\n    step = float(e)\nexcept Exception:\n    step = 0.02\nstep = min(max(step, 0.002), 0.5)\ntry:\n    anchor = float(g)\nexcept Exception:\n    anchor = 0.5                       # MC majority vote: P >= 0.5 = most realisations agree\nanchor = min(max(anchor, 0.0), 1.0)\n\nmetric_names = ['F1', 'IoU', \"Youden's J\", 'MCC']\n\ndef _metric_curve(tp, fp, fn, tn, sel):\n    \"\"\"Vectorized metric over an array of per-threshold confusion counts.\"\"\"\n    with np.errstate(divide='ignore', invalid='ignore'):\n        if sel == 1:                                   # IoU\n            den = tp + fp + fn\n            return np.where(den > 0, tp / den, 0.0)\n        if sel == 2:                                   # Youden's J = recall + specificity - 1\n            r = np.where((tp + fn) > 0, tp / (tp + fn), 0.0)\n            spec = np.where((tn + fp) > 0, tn / (tn + fp), 0.0)\n            return r + spec - 1.0\n        if sel == 3:                                   # Matthews correlation coefficient\n            den = np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))\n            return np.where(den > 0, (tp * tn - fp * fn) / den, 0.0)\n        p = np.where((tp + fp) > 0, tp / (tp + fp), 0.0)   # F1 (default)\n        r = np.where((tp + fn) > 0, tp / (tp + fn), 0.0)\n        return np.where((p + r) > 0, 2 * p * r / (p + r), 0.0)\n\ntruth_d = truth & domain\nthresholds = np.arange(0.0, 1.0 + step / 2, step)\nthresholds = thresholds[thresholds <= 1.0]\n\nprec, rec, f1, iou, youden, mcc = [], [], [], [], [], []\nfor t in thresholds:\n    pred = domain & (Pw >= t)\n    tp = float((pred & truth_d).sum())\n    fp = float((pred & ~truth_d).sum())\n    fn = float((~pred & truth_d).sum())\n    tn = float((domain & ~truth_d & ~pred).sum())\n    p = tp / (tp + fp) if (tp + fp) > 0 else 0.0\n    r = tp / (tp + fn) if (tp + fn) > 0 else 0.0\n    spec = tn / (tn + fp) if (tn + fp) > 0 else 0.0\n    prec.append(p); rec.append(r)\n    f1.append(2 * p * r / (p + r) if (p + r) > 0 else 0.0)\n    iou.append(tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0.0)\n    youden.append(r + spec - 1.0)\n    # Matthews Correlation Coefficient: unlike F1/IoU, uses all 4 confusion-matrix\n    # cells (incl. true negatives) — balanced measure, robust to class imbalance.\n    mcc_den = np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))\n    mcc.append((tp * tn - fp * fn) / mcc_den if mcc_den > 0 else 0.0)\n\nmetric_arrs = [f1, iou, youden, mcc]\ntarget = np.asarray(metric_arrs[metric_sel])\nraw_best_i = int(np.argmax(target))\n\n# Robust pick: on a near-flat curve, raw argmax lands on the first point right after a\n# sharp initial cliff (P is quasi-binary — almost the whole [eps, 1] range scores nearly\n# the same) — an artifact, not a meaningful cutoff. Picking the highest-t candidate\n# within tolerance is just as bad in the opposite direction: if the WHOLE range is\n# within tolerance (curve genuinely flat end-to-end), that degenerates to t≈1.0 (the\n# array boundary), an equally arbitrary and overly conservative extreme. The MEDIAN of\n# the tolerance-satisfying thresholds avoids both edges and centers the pick in\n# whatever plateau actually exists.\nTOL_FRAC = 0.99\nif target[raw_best_i] > 0:\n    cutoff = target[raw_best_i] * TOL_FRAC\n    candidates = np.flatnonzero(target >= cutoff)\nelse:\n    candidates = np.array([raw_best_i])\nplateau_frac = float(candidates.size) / max(len(thresholds), 1)\n\n# Pick rule. When the metric is broadly flat (wide plateau), a run-to-run-stable,\n# probabilistically meaningful cutoff (the semantic anchor = MC majority vote, 0.5) is\n# preferable to a GT-fitted argmax — PROVIDED the PRACTICAL cost of snapping to it is\n# small. Bootstrap \"distinguishability\" is NOT the criterion: with large pixel counts a\n# <1-point difference is statistically significant yet practically negligible. We snap\n# on absolute score cost and always report that cost, so the trade-off is explicit.\nANCHOR_COST_MAX = 0.03    # max metric drop (absolute) accepted to gain semantics/transferability\nanchor_i = int(np.argmin(np.abs(thresholds - anchor)))\nanchor_cost = float(target[raw_best_i] - target[anchor_i])\nanchor_used = False\nif plateau_frac > 0.3 and anchor_cost <= ANCHOR_COST_MAX:\n    best_i = anchor_i; anchor_used = True\nelif candidates.size:\n    best_i = int(np.median(candidates).round())\nelse:\n    best_i = raw_best_i\nt_opt = float(thresholds[best_i])\nif plateau_frac > 0.3:\n    if anchor_used:\n        _msg = (f'snapped to semantic anchor t={anchor:g} (majority vote); '\n                f'cost vs data-optimum = {anchor_cost:.3f} {metric_names[metric_sel]} pts')\n    else:\n        _msg = (f'anchor t={anchor:g} costs {anchor_cost:.3f} pts (> {ANCHOR_COST_MAX}) '\n                f'— kept plateau median instead')\n    print(f'WARN: {metric_names[metric_sel]} within {TOL_FRAC:.0%} of max over '\n          f'{plateau_frac:.0%} of range — metric barely discriminates; {_msg}.')\n\n# ── Optional bootstrap 95% CI band on the selected metric ─────────────────────\n# Resamples domain pixels with replacement to put an uncertainty band around the\n# metric-vs-threshold curve. If the best threshold's CI overlaps most of the curve,\n# the \"optimal\" threshold is not statistically distinguishable (the plateau is flat\n# within sampling noise) — the honest answer to \"does this metric justify a cutoff?\".\ntry:\n    n_boot = int(round(float(f)))\nexcept Exception:\n    n_boot = 0\n_BOOT_MAX_PX = 40000   # subsample cap (perf only); CI width is set by class sizes, not this\nci_lo = ci_hi = None\nout_ci = None\nif n_boot > 0:\n    _dom_idx = np.flatnonzero(domain.ravel())\n    _Pv = Pw.ravel()[_dom_idx]\n    _Tv = truth.ravel()[_dom_idx]\n    _ok = np.isfinite(_Pv)\n    _Pv = _Pv[_ok]; _Tv = _Tv[_ok]\n    _n = _Pv.size\n    if _n > _BOOT_MAX_PX:\n        _sub = np.random.default_rng(0).choice(_n, _BOOT_MAX_PX, replace=False)\n        _Pv = _Pv[_sub]; _Tv = _Tv[_sub]; _n = _BOOT_MAX_PX\n    if _n >= 30:\n        _predmat = _Pv[:, None] >= thresholds[None, :]     # (n, T) computed once\n        _boot = np.empty((n_boot, thresholds.size), np.float64)\n        _rng_b = np.random.default_rng(12345)\n        for _bi in range(n_boot):\n            _s = _rng_b.integers(0, _n, _n)\n            _pm = _predmat[_s]; _tc = _Tv[_s][:, None]\n            _tp = (_pm & _tc).sum(0).astype(np.float64)\n            _fp = (_pm & ~_tc).sum(0).astype(np.float64)\n            _fn = (~_pm & _tc).sum(0).astype(np.float64)\n            _tn = (~_pm & ~_tc).sum(0).astype(np.float64)\n            _boot[_bi] = _metric_curve(_tp, _fp, _fn, _tn, metric_sel)\n        ci_lo = np.nanpercentile(_boot, 2.5, axis=0)\n        ci_hi = np.nanpercentile(_boot, 97.5, axis=0)\n        _blo, _bhi = float(ci_lo[best_i]), float(ci_hi[best_i])\n        # fraction of thresholds whose point estimate falls inside the best CI\n        _within = float(((target >= _blo) & (target <= _bhi)).mean())\n        out_ci = {'metric': metric_names[metric_sel], 'n_boot': n_boot,\n                  'ci95_at_topt': [round(_blo, 4), round(_bhi, 4)],\n                  'ci_width_at_topt': round(_bhi - _blo, 4),\n                  'frac_thresholds_within_best_CI': round(_within, 3),\n                  'threshold_statistically_distinguishable': bool(_within < 0.5)}\n        print('bootstrap CI:', out_ci)\n\n# Plot: skip the near-0 cliff (t < PLOT_MIN) so the flat trade-off is readable instead\n# of being visually crushed by the vertical transition.\nPLOT_MIN = 0.05\nvis = thresholds >= PLOT_MIN\nfig = plt.figure(figsize=(7.5, 4.8), dpi=110)\nax = fig.add_subplot(111)\nax.plot(thresholds[vis], np.asarray(prec)[vis], label='Precision', color='tab:blue', lw=1.3)\nax.plot(thresholds[vis], np.asarray(rec)[vis], label='Recall', color='tab:orange', lw=1.3)\nax.plot(thresholds[vis], np.asarray(f1)[vis], label='F1', color='tab:green', lw=1.8)\nax.plot(thresholds[vis], np.asarray(iou)[vis], label='IoU', color='tab:purple', lw=1.3, ls='--')\nax.plot(thresholds[vis], np.asarray(mcc)[vis], label='MCC (uses TN too)', color='tab:red', lw=1.3, ls='-.')\nif ci_lo is not None:\n    ax.fill_between(thresholds[vis], ci_lo[vis], ci_hi[vis], color='tab:gray', alpha=0.25,\n                    label=f'{metric_names[metric_sel]} 95% CI (bootstrap, n={n_boot})')\nax.axhline(0, c='gray', lw=0.6)\n_pick_tag = f'anchor {anchor:g}' if anchor_used else 'plateau median'\nax.axvline(t_opt, ls=':', c='k', lw=1.6,\n           label=f'chosen t = {t_opt:.3f} ({_pick_tag})  {metric_names[metric_sel]}={target[best_i]:.3f}, '\n                 f'plateau={plateau_frac:.0%}')\nax.set_xlabel(f'P(water) threshold  (t < {PLOT_MIN} clipped — near-0 cliff)'); ax.set_ylabel('Score')\n_flag = '  ⚠ flat metric' if plateau_frac > 0.3 else ''\n_pick_desc = f'semantic anchor {anchor:g}' if anchor_used else 'plateau median'\nax.set_title(f'Threshold sweep — optimizing {metric_names[metric_sel]} ({_pick_desc} pick){_flag}')\n_ymin = min(-0.05, float(np.min(mcc)) - 0.05)\nax.set_ylim(_ymin, 1.02); ax.grid(alpha=0.3); ax.legend(fontsize=8, loc='lower left')\nfig.tight_layout(); fig.canvas.draw()\n_w, _h = fig.canvas.get_width_height()\nout_curve = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(_h, _w, 4)[..., :3].copy()\nplt.close(fig)\n\nout_optimal_threshold = float(t_opt)\nout_optimal_threshold_255 = float(round(t_opt * 255))\nout_best = {'threshold': round(t_opt, 4), 'precision': round(prec[best_i], 4),\n            'recall': round(rec[best_i], 4), 'f1': round(f1[best_i], 4),\n            'iou': round(iou[best_i], 4), 'mcc': round(float(mcc[best_i]), 4),\n            'metric_used': metric_names[metric_sel],\n            'raw_argmax_threshold': round(float(thresholds[raw_best_i]), 4),\n            'plateau_fraction': round(plateau_frac, 3),\n            'semantic_anchor': anchor, 'anchor_used': bool(anchor_used),\n            'anchor_cost': round(anchor_cost, 4)}\nif out_ci is not None:\n    out_best['bootstrap_ci'] = out_ci\nprint('threshold sweep best:', out_best)\n",
+          "color_index": 3,
+          "node_note": "Balaie P(water) 0->1, trouve le seuil optimal (metrique choisie via d). a=P(acc_mean), b=GT aligne (out_gt), c=domaine(opt), d=metrique(0=F1 1=IoU 2=Youden), e=step."
+        },
+        "ports": [
+          {
+            "id": "image__a",
+            "color": "image",
+            "label": "a = P"
+          },
+          {
+            "id": "mask__b",
+            "color": "mask",
+            "label": "b = truth (GT)"
+          },
+          {
+            "id": "mask__c",
+            "color": "mask",
+            "label": "c = domain (opt)"
+          },
+          {
+            "id": "scalar__d",
+            "color": "scalar",
+            "label": "d = metric (0=F1 1=IoU 2=Youden)"
+          },
+          {
+            "id": "scalar__e",
+            "color": "scalar",
+            "label": "e = step"
+          },
+          {
+            "id": "scalar__f",
+            "color": "scalar",
+            "label": "f = bootstrap replicates (0=off)"
+          },
+          {
+            "id": "scalar__g",
+            "color": "scalar",
+            "label": "g = semantic anchor (0.5=majority)"
+          }
+        ],
+        "outPorts": [
+          {
+            "id": "image__out_curve",
+            "color": "image",
+            "label": "sweep curve"
+          },
+          {
+            "id": "scalar__out_optimal_threshold",
+            "color": "scalar",
+            "label": "optimal t (0-1)"
+          },
+          {
+            "id": "scalar__out_optimal_threshold_255",
+            "color": "scalar",
+            "label": "optimal t (0-255)"
+          },
+          {
+            "id": "any__out_best",
+            "color": "any",
+            "label": "best metrics"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 249,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3220,
+        "y": 900
+      },
+      "dragging": false
+    },
+    {
+      "id": "sweep_metric",
+      "type": "scalar_input",
+      "position": {
+        "x": 2920,
+        "y": 1100
+      },
+      "width": 180,
+      "height": 90,
+      "data": {
+        "label": "Number",
+        "userLabel": "Metric (0=F1 1=IoU 2=Youden 3=MCC)",
+        "params": {
+          "value": 3
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2920,
+        "y": 1100
+      },
+      "dragging": false
+    },
+    {
+      "id": "sweep_step",
+      "type": "scalar_input",
+      "position": {
+        "x": 2920,
+        "y": 1220
+      },
+      "width": 180,
+      "height": 90,
+      "data": {
+        "label": "Number",
+        "userLabel": "Threshold Step",
+        "params": {
+          "value": 0.02
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2920,
+        "y": 1220
+      },
+      "dragging": false
+    },
+    {
+      "id": "insp_sweep",
+      "type": "data_inspector",
+      "position": {
+        "x": 3580,
+        "y": 900
+      },
+      "style": {
+        "width": 280,
+        "height": 660
+      },
+      "width": 280,
+      "height": 660,
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3580,
+        "y": 900
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "pred_domain",
+      "type": "mask_operations",
+      "position": {
+        "x": 3540,
+        "y": 740
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "pred ∩ domain",
+        "params": {
+          "operation": 2,
+          "color_index": 2
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3540,
+        "y": 740
+      },
+      "dragging": false
+    },
+    {
+      "id": "truth_domain",
+      "type": "mask_operations",
+      "position": {
+        "x": 3540,
+        "y": 840
+      },
+      "width": 208,
+      "height": 90,
+      "data": {
+        "userLabel": "truth ∩ domain",
+        "params": {
+          "operation": 2,
+          "color_index": 2
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3540,
+        "y": 840
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1783153860983-ijuxkbsfc",
+      "type": "output_display",
+      "position": {
+        "x": 3020,
+        "y": 580
+      },
+      "style": {},
+      "data": {
+        "label": "Display",
+        "params": {},
+        "mainConnected": false,
+        "ports": [
+          {
+            "id": "image__0_8zxe",
+            "color": "image",
+            "label": "img0"
+          },
+          {
+            "id": "image__1_3htw",
+            "color": "image",
+            "label": "img1"
+          }
+        ]
+      },
+      "width": 208,
+      "height": 217,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "sweep_boot",
+      "type": "scalar_input",
+      "position": {
+        "x": 3200,
+        "y": 1300
+      },
+      "width": 208,
+      "height": 111,
+      "data": {
+        "label": "Number",
+        "userLabel": "Bootstrap replicates (0=off)",
+        "params": {
+          "value": 202.74,
+          "max": 500
+        }
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3200,
+        "y": 1300
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1783169166496-49dy80cko",
+      "type": "data_inspector",
+      "position": {
+        "x": 2940,
+        "y": 1360
+      },
+      "style": {
+        "width": 180,
+        "height": 120
+      },
+      "data": {
+        "label": "Inspector",
+        "params": {}
+      },
+      "width": 180,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2940,
+        "y": 1360
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "sweep_anchor",
+      "type": "scalar_input",
+      "position": {
+        "x": 4080,
+        "y": 1020
+      },
+      "width": 180,
+      "height": 90,
+      "data": {
+        "label": "Number",
+        "userLabel": "Semantic anchor (0.5=majority)",
+        "params": {
+          "value": 0.5
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_noise_idx",
+      "source": "noise",
+      "target": "idx",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_idx_vote",
+      "source": "idx",
+      "target": "vote",
+      "sourceHandle": "geotiff__stack",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_vote_tomask",
+      "source": "vote",
+      "target": "tomask",
+      "sourceHandle": "geotiff__raw",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "id": "e_vote_and",
+      "source": "tomask",
+      "target": "mask_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a",
+      "selected": false
+    },
+    {
+      "id": "e_and_mean",
+      "source": "mask_and",
+      "target": "acc_mean",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e_tick_accmean",
+      "source": "noise",
+      "target": "acc_mean",
+      "sourceHandle": "scalar__tick",
+      "targetHandle": "scalar__tick",
+      "selected": false
+    },
+    {
+      "source": "mask_and",
+      "sourceHandle": "mask__mask",
+      "target": "acc_mean",
+      "targetHandle": "any__image",
+      "id": "e-1782664834814",
+      "selected": false
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "scalar__frame_count",
+      "target": "node-1782665754321-0.3774373977644757",
+      "targetHandle": "any__data",
+      "id": "e-1782665760072",
+      "selected": false
+    },
+    {
+      "id": "e_noise_gate",
+      "source": "noise",
+      "target": "adaptive_gate",
+      "sourceHandle": "geotiff__geotiff",
+      "targetHandle": "geotiff__pert",
+      "selected": false
+    },
+    {
+      "id": "e_gate_and",
+      "source": "adaptive_gate",
+      "target": "mask_and",
+      "sourceHandle": "mask__out_mask",
+      "targetHandle": "mask__mask_b",
+      "selected": false
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "image__main",
+      "target": "node-1782919954938-1km6n7fkh",
+      "targetHandle": "image__image",
+      "id": "e-1782919958718",
+      "selected": false
+    },
+    {
+      "source": "node-1782920492331-zy195o6bo",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "noise",
+      "targetHandle": "geotiff__geotiff",
+      "id": "e-1782920634174",
+      "selected": false
+    },
+    {
+      "source": "node-1782920492331-zy195o6bo",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "adaptive_gate",
+      "targetHandle": "geotiff__base",
+      "id": "e-1782920662848",
+      "selected": false
+    },
+    {
+      "source": "node-1782924866569-lebb5olq0",
+      "sourceHandle": "string__bbox",
+      "target": "node-1782920492331-zy195o6bo",
+      "targetHandle": "string__bbox",
+      "id": "e-1782924933932",
+      "selected": false
+    },
+    {
+      "id": "e_corr_1",
+      "source": "acc_mean",
+      "sourceHandle": "image__main",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "image__a",
+      "selected": false
+    },
+    {
+      "id": "e_corr_2",
+      "source": "idx",
+      "sourceHandle": "geotiff__stack",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "geotiff__b",
+      "selected": false
+    },
+    {
+      "id": "e_corr_4",
+      "source": "node-1782710392200-fj2ugkk3u",
+      "sourceHandle": "any__out_stats",
+      "target": "node-1782709706825-skjz7dzln",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e_lc_1",
+      "source": "node-1782920492331-zy195o6bo",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "landcover_gt",
+      "targetHandle": "geotiff__geotiff",
+      "selected": false
+    },
+    {
+      "source": "node-1782935904874-0.4708570372279324",
+      "sourceHandle": "dict__data",
+      "target": "node-1782935904874-0.3982183414001329",
+      "targetHandle": "any__data",
+      "id": "e-1782964707748",
+      "selected": false
+    },
+    {
+      "id": "e-1782965132808-zs8s7h9uq",
+      "source": "node-1782710392200-fj2ugkk3u",
+      "target": "node-1782965132733-6rbur98mr",
+      "sourceHandle": "image__out_fig",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e_osm_1",
+      "source": "node-1782920492331-zy195o6bo",
+      "sourceHandle": "geotiff__geotiff",
+      "target": "osm_bridges",
+      "targetHandle": "geotiff__reference",
+      "selected": false
+    },
+    {
+      "id": "e_osm_2",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "ext_union",
+      "targetHandle": "mask__mask_a",
+      "selected": false
+    },
+    {
+      "id": "e_osm_3",
+      "source": "osm_bridges",
+      "sourceHandle": "mask__mask",
+      "target": "ext_union",
+      "targetHandle": "mask__mask_b",
+      "selected": false
+    },
+    {
+      "id": "e-1782966859885-ma77uqzbl",
+      "source": "osm_bridges",
+      "target": "node-1782966859833-6omzfmatk",
+      "sourceHandle": "image__preview",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-1782969673740-6ertyffzp",
+      "source": "node-1782969673739-7vzpqrwhf",
+      "sourceHandle": "scalar__value",
+      "target": "noise",
+      "targetHandle": "scalar__max_ticks"
+    },
+    {
+      "source": "teleport_1782969721247_4b70",
+      "sourceHandle": "scalar__value",
+      "target": "acc_mean",
+      "targetHandle": "scalar__target_n",
+      "id": "e-1782969735131"
+    },
+    {
+      "id": "e_rf_1",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "mask__c",
+      "selected": false
+    },
+    {
+      "id": "e_rf_2",
+      "source": "ext_union",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "mask__d",
+      "selected": false
+    },
+    {
+      "id": "e_dom_2",
+      "source": "corr_dilate",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "mask__e",
+      "selected": false
+    },
+    {
+      "id": "e-1782972749087-2",
+      "source": "node-1782972741979-9tx4ye91z",
+      "target": "corr_dilate",
+      "sourceHandle": "main",
+      "targetHandle": "any__mask",
+      "selected": false
+    },
+    {
+      "id": "e-1782972779122-1",
+      "source": "ext_union",
+      "target": "node-1782972774702-cl7d9x8kc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1782972779122-2",
+      "source": "node-1782972774702-cl7d9x8kc",
+      "target": "node-1782972741979-9tx4ye91z",
+      "sourceHandle": "main",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "source": "node-1782972774702-cl7d9x8kc",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782972741979-9tx4ye91z",
+      "targetHandle": "mask__mask",
+      "id": "e-1782972781262",
+      "selected": false
+    },
+    {
+      "source": "node-1782972741979-9tx4ye91z",
+      "sourceHandle": "mask__main",
+      "target": "corr_dilate",
+      "targetHandle": "any__mask",
+      "id": "e-1782972835114",
+      "selected": false
+    },
+    {
+      "id": "e-1782973187205-4yaxi11bb",
+      "source": "node-1782973187204-65mgsen8r",
+      "sourceHandle": "scalar__value",
+      "target": "node-1782972741979-9tx4ye91z",
+      "targetHandle": "scalar__min_area",
+      "selected": false
+    },
+    {
+      "id": "e-1782973228564-26lw1m8g4",
+      "source": "node-1782973228563-2w5zaft8l",
+      "sourceHandle": "scalar__value",
+      "target": "corr_dilate",
+      "targetHandle": "scalar__size",
+      "selected": false
+    },
+    {
+      "id": "e_imp_1",
+      "source": "mask_and",
+      "sourceHandle": "mask__mask",
+      "target": "acc_std",
+      "targetHandle": "any__image",
+      "selected": false
+    },
+    {
+      "id": "e_imp_2",
+      "source": "noise",
+      "sourceHandle": "scalar__tick",
+      "target": "acc_std",
+      "targetHandle": "scalar__tick",
+      "selected": false
+    },
+    {
+      "id": "e_imp_6",
+      "source": "boundary_f1",
+      "sourceHandle": "scalar__boundary_f1",
+      "target": "insp_bf1",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e_cv_1",
+      "source": "acc_std",
+      "sourceHandle": "image__main",
+      "target": "mc_conv",
+      "targetHandle": "image__a",
+      "selected": false
+    },
+    {
+      "id": "e_cv_2",
+      "source": "acc_std",
+      "sourceHandle": "scalar__frame_count",
+      "target": "mc_conv",
+      "targetHandle": "scalar__b",
+      "selected": false
+    },
+    {
+      "id": "e_cv_3",
+      "source": "corr_dilate",
+      "sourceHandle": "mask__mask",
+      "target": "mc_conv",
+      "targetHandle": "mask__c",
+      "selected": false
+    },
+    {
+      "id": "e_cv_4",
+      "source": "mc_conv",
+      "sourceHandle": "scalar__out_optimal_N",
+      "target": "insp_conv",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e_convp_1",
+      "source": "conv_tol",
+      "sourceHandle": "scalar__value",
+      "target": "mc_conv",
+      "targetHandle": "scalar__d",
+      "selected": false
+    },
+    {
+      "id": "e_convp_2",
+      "source": "conv_minn",
+      "sourceHandle": "scalar__value",
+      "target": "mc_conv",
+      "targetHandle": "scalar__e",
+      "selected": false
+    },
+    {
+      "id": "e_sw_1",
+      "source": "acc_mean",
+      "sourceHandle": "image__main",
+      "target": "thr_sweep",
+      "targetHandle": "image__a",
+      "selected": false
+    },
+    {
+      "id": "e_sw_2",
+      "source": "node-1782710392200-fj2ugkk3u",
+      "sourceHandle": "mask__out_gt",
+      "target": "thr_sweep",
+      "targetHandle": "mask__b",
+      "selected": false
+    },
+    {
+      "id": "e_sw_3",
+      "source": "corr_dilate",
+      "sourceHandle": "mask__mask",
+      "target": "thr_sweep",
+      "targetHandle": "mask__c",
+      "selected": false
+    },
+    {
+      "id": "e_sw_4",
+      "source": "sweep_metric",
+      "sourceHandle": "scalar__value",
+      "target": "thr_sweep",
+      "targetHandle": "scalar__d",
+      "selected": false
+    },
+    {
+      "id": "e_sw_5",
+      "source": "sweep_step",
+      "sourceHandle": "scalar__value",
+      "target": "thr_sweep",
+      "targetHandle": "scalar__e",
+      "selected": false
+    },
+    {
+      "id": "e_sw_6",
+      "source": "thr_sweep",
+      "sourceHandle": "any__out_best",
+      "target": "insp_sweep",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "id": "e_domc_1",
+      "source": "node-1782919954938-1km6n7fkh",
+      "sourceHandle": "mask__mask",
+      "target": "pred_domain",
+      "targetHandle": "mask__mask_a",
+      "selected": false
+    },
+    {
+      "id": "e_domc_2",
+      "source": "corr_dilate",
+      "sourceHandle": "mask__mask",
+      "target": "pred_domain",
+      "targetHandle": "mask__mask_b",
+      "selected": false
+    },
+    {
+      "id": "e_domc_3",
+      "source": "node-1782710392200-fj2ugkk3u",
+      "sourceHandle": "mask__out_gt",
+      "target": "truth_domain",
+      "targetHandle": "mask__mask_a",
+      "selected": false
+    },
+    {
+      "id": "e_domc_4",
+      "source": "corr_dilate",
+      "sourceHandle": "mask__mask",
+      "target": "truth_domain",
+      "targetHandle": "mask__mask_b",
+      "selected": false
+    },
+    {
+      "id": "e_domc_5",
+      "source": "pred_domain",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782935904874-0.4708570372279324",
+      "targetHandle": "mask__pred",
+      "selected": false
+    },
+    {
+      "id": "e_domc_6",
+      "source": "truth_domain",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782935904874-0.4708570372279324",
+      "targetHandle": "mask__truth",
+      "selected": false
+    },
+    {
+      "id": "e_domc_7",
+      "source": "pred_domain",
+      "sourceHandle": "mask__mask",
+      "target": "boundary_f1",
+      "targetHandle": "mask__pred",
+      "selected": false
+    },
+    {
+      "id": "e_domc_8",
+      "source": "truth_domain",
+      "sourceHandle": "mask__mask",
+      "target": "boundary_f1",
+      "targetHandle": "mask__truth",
+      "selected": false
+    },
+    {
+      "id": "e_autocal_thr",
+      "source": "thr_sweep",
+      "sourceHandle": "scalar__out_optimal_threshold_255",
+      "target": "node-1782919954938-1km6n7fkh",
+      "targetHandle": "scalar__threshold",
+      "selected": false
+    },
+    {
+      "id": "e_sw_boot",
+      "source": "sweep_boot",
+      "sourceHandle": "scalar__value",
+      "target": "thr_sweep",
+      "targetHandle": "scalar__f",
+      "selected": false
+    },
+    {
+      "id": "e-1783169166576-n21b3aivh",
+      "source": "mc_conv",
+      "target": "node-1783169166496-49dy80cko",
+      "sourceHandle": "scalar__out_se",
+      "targetHandle": "any__data"
+    },
+    {
+      "source": "node-1782710392200-fj2ugkk3u",
+      "sourceHandle": "image__out_dist",
+      "target": "node-1783153860983-ijuxkbsfc",
+      "targetHandle": "image__1_3htw",
+      "id": "e-1783169944272"
+    },
+    {
+      "id": "e_sw_anchor",
+      "source": "sweep_anchor",
+      "sourceHandle": "scalar__value",
+      "target": "thr_sweep",
+      "targetHandle": "scalar__g",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 324.58984375,
+      "h": 209
+    },
+    "previewPos": {
+      "x": 1256.72265625,
+      "y": -542.59765625
+    },
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "mc_conv"
+  }
+}

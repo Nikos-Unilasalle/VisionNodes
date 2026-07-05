@@ -4,12 +4,12 @@ rasterize them onto a reference geo grid.
 
 Generic vector-from-OSM loader. The tag selector is free-form Overpass syntax, so
 one node covers many use cases:
-    ["bridge"]                 → all bridges (spans over water/roads/rail)
     ["natural"="water"]        → lakes, rivers, reservoirs
     ["waterway"]               → river/stream centerlines
     ["highway"]                → road network
     ["building"]               → building footprints
     ["landuse"="forest"]       → forest polygons
+    ["bridge"]                 → all bridges (spans over water/roads/rail)
 
 Nodes → points, ways → lines/polygons (closed rings), relations → best-effort
 multipolygon members. Points and lines are buffered by `buffer_m` (meters, in the
@@ -85,8 +85,8 @@ def _elements_to_geoms(elements: list):
     description=(
         "Fetch OpenStreetMap features via the Overpass API using a free-form tag "
         "selector and rasterize them onto a reference geo grid. Points/lines are "
-        "buffered to areas. Examples: [\"bridge\"], [\"natural\"=\"water\"], "
-        "[\"highway\"], [\"building\"]. Outputs a binary mask on the reference grid."
+        "buffered to areas. Examples: [\"natural\"=\"water\"], [\"highway\"], "
+        "[\"building\"], [\"bridge\"]. Outputs a binary mask on the reference grid."
     ),
     inputs=[
         {'id': 'reference', 'color': 'geotiff', 'label': 'Reference raster (defines grid + bbox)'},
@@ -99,7 +99,7 @@ def _elements_to_geoms(elements: list):
     ],
     params=[
         {'id': '_sec_query', 'label': 'Query', 'type': 'section'},
-        {'id': 'selector',     'type': 'string', 'default': '["bridge"]',
+        {'id': 'selector',     'type': 'string', 'default': '["natural"="water"]',
          'label': 'Overpass tag selector (raw)'},
         {'id': 'element_types', 'type': 'enum', 'default': 0,
          'options': [{'label': 'node+way+relation', 'value': 'nwr'},
@@ -139,7 +139,7 @@ class OSMOverpassNode(NodeProcessor):
             send_notification('OSM Overpass: reference has no CRS/transform', level='error', notif_id=_NOTIF)
             return {}
 
-        selector = str(params.get('selector', '["bridge"]')).strip()
+        selector = str(params.get('selector', '["natural"="water"]')).strip()
         el_type  = str(params.get('element_types', 'nwr') or 'nwr')
         buffer_m = float(params.get('buffer_m', 15.0))
         all_touched = bool(params.get('all_touched', True))

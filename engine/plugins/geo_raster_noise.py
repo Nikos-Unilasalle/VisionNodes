@@ -70,6 +70,8 @@ from registry import vision_node, NodeProcessor
          'label': 'Clip max (range; off if ≤ min)'},
         {'id': 'seed', 'type': 'int', 'default': -1, 'min': -1, 'max': 2_000_000_000,
          'label': 'Base seed (-1 = entropy)'},
+        {'id': 'spatial_corr_px', 'type': 'float', 'default': 0.0, 'min': 0.0, 'max': 50.0, 'step': 0.5,
+         'label': 'Spatial correlation (px, 0 = iid)'},
         {'id': 'node_note', 'type': 'string', 'default': '', 'label': 'Note'},
     ],
     resizable=True, min_width=240, min_height=150,
@@ -138,7 +140,19 @@ class RasterNoiseNode(NodeProcessor):
         self._tick += 1
 
         sigma = sigma_abs + sigma_rel * np.abs(bands)
-        noisy = bands + rng.standard_normal(bands.shape).astype(np.float32) * sigma
+        noise = rng.standard_normal(bands.shape).astype(np.float32)
+        # Spatially-correlated noise: blur the white-noise field, then renormalize each
+        # band to unit variance so the marginal per-pixel σ is preserved while neighbours
+        # co-vary. Models sensor/atmospheric/ACOLITE residual error (NOT iid); iid noise
+        # underestimates ensemble spread → over-confident P. 0 = classic iid.
+        scorr = float(params.get('spatial_corr_px', 0.0))
+        if scorr > 0:
+            for _i in range(noise.shape[0]):
+                noise[_i] = cv2.GaussianBlur(noise[_i], (0, 0), scorr)
+                _s = float(noise[_i].std())
+                if _s > 1e-8:
+                    noise[_i] /= _s
+        noisy = bands + noise * sigma
         # Explicit [min, max] range clip (reference-script presets, e.g. rrs
         # [-0.01, 0.5]) takes precedence; it supersedes the legacy clip-negatives
         # floor. Range is active only when clip_max > clip_min, so existing

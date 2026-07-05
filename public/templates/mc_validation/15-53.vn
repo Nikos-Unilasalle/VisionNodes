@@ -432,8 +432,8 @@
       "id": "ref",
       "type": "geo_shapefile_rasterizer",
       "position": {
-        "x": 2740,
-        "y": 380
+        "x": 2820,
+        "y": 500
       },
       "width": 208,
       "height": 153,
@@ -448,21 +448,23 @@
           "background": 0,
           "cache_dir": "copernicus_cache",
           "color_index": 2
-        }
+        },
+        "minified": false
       },
       "selected": false,
       "positionAbsolute": {
-        "x": 2740,
-        "y": 380
+        "x": 2820,
+        "y": 500
       },
-      "dragging": false
+      "dragging": false,
+      "style": {}
     },
     {
       "id": "metrics",
       "type": "sci_mask_metrics",
       "position": {
-        "x": 3540,
-        "y": 320
+        "x": 3740,
+        "y": 400
       },
       "width": 208,
       "height": 153,
@@ -480,16 +482,16 @@
       "dragging": false,
       "style": {},
       "positionAbsolute": {
-        "x": 3540,
-        "y": 320
+        "x": 3740,
+        "y": 400
       }
     },
     {
       "id": "node-1782635620315-zybi95hdx",
       "type": "data_inspector",
       "position": {
-        "x": 3860,
-        "y": 240
+        "x": 4240,
+        "y": 380
       },
       "style": {
         "width": 180,
@@ -499,14 +501,16 @@
         "label": "Inspector",
         "params": {
           "color_index": 4
-        }
+        },
+        "minified": false,
+        "savedHeight": 380
       },
       "width": 180,
       "height": 380,
       "selected": false,
       "positionAbsolute": {
-        "x": 3860,
-        "y": 240
+        "x": 4240,
+        "y": 380
       },
       "dragging": false,
       "resizing": false
@@ -633,8 +637,8 @@
       "id": "node-1782675980546-gaurme404",
       "type": "feat_morphology_adv",
       "position": {
-        "x": 3020,
-        "y": 440
+        "x": 3220,
+        "y": 500
       },
       "style": {},
       "data": {
@@ -655,23 +659,24 @@
         ],
         "externalizedParams": [
           "iterations"
-        ]
+        ],
+        "minified": false
       },
       "width": 208,
       "height": 98,
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 3020,
-        "y": 440
+        "x": 3220,
+        "y": 500
       }
     },
     {
       "id": "node-1782676200591-2gdc65he7",
       "type": "mask_operations",
       "position": {
-        "x": 3280,
-        "y": 280
+        "x": 3400,
+        "y": 400
       },
       "style": {},
       "data": {
@@ -679,14 +684,15 @@
         "params": {
           "operation": 2,
           "color_index": 2
-        }
+        },
+        "minified": false
       },
       "width": 208,
       "height": 90,
       "selected": false,
       "positionAbsolute": {
-        "x": 3280,
-        "y": 280
+        "x": 3400,
+        "y": 400
       },
       "dragging": false
     },
@@ -718,25 +724,23 @@
       "id": "node-1782677298300-1rjc6wsd2",
       "type": "scalar_input",
       "position": {
-        "x": 3020,
-        "y": 540
+        "x": 3200,
+        "y": 640
       },
-      "style": {
-        "height": 24
-      },
+      "style": {},
       "data": {
         "label": "Number",
         "params": {
           "value": 1
         },
-        "minified": true
+        "minified": false
       },
       "width": 208,
-      "height": 24,
+      "height": 111,
       "selected": false,
       "positionAbsolute": {
-        "x": 3020,
-        "y": 540
+        "x": 3200,
+        "y": 640
       },
       "dragging": false
     },
@@ -973,7 +977,7 @@
       },
       "width": 208,
       "height": 185,
-      "selected": false,
+      "selected": true,
       "positionAbsolute": {
         "x": 740,
         "y": 1540
@@ -1290,8 +1294,8 @@
       "id": "node-1782714735083-s4aezuch1",
       "type": "canvas_note",
       "position": {
-        "x": 3280,
-        "y": 200
+        "x": 3480,
+        "y": 280
       },
       "style": {
         "width": 48,
@@ -1313,8 +1317,8 @@
       "dragging": false,
       "resizing": false,
       "positionAbsolute": {
-        "x": 3280,
-        "y": 200
+        "x": 3480,
+        "y": 280
       }
     },
     {
@@ -1445,11 +1449,11 @@
       "id": "node-1782758492166-xll1a6urc",
       "type": "sci_plotter",
       "position": {
-        "x": 4080,
-        "y": 60
+        "x": 4260,
+        "y": 80
       },
       "style": {
-        "width": 320,
+        "width": 880,
         "height": 220
       },
       "data": {
@@ -1458,183 +1462,15 @@
           "max_y": 1
         }
       },
-      "width": 320,
+      "width": 880,
       "height": 220,
       "selected": false,
       "positionAbsolute": {
-        "x": 4080,
-        "y": 60
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1782760280171-ixxx5t0n9",
-      "type": "plotter_pro",
-      "position": {
-        "x": 3820,
-        "y": 700
-      },
-      "style": {
-        "width": 880,
-        "height": 400
-      },
-      "data": {
-        "label": "Plotter Pro",
-        "params": {
-          "max_y": 1,
-          "palette": 2,
-          "fill_curve": true,
-          "min_y": 0.5,
-          "line_width": 1,
-          "auto_scale": false,
-          "normalize": 3,
-          "reset": 0
-        },
-        "ports": [
-          {
-            "id": "any__0_lmt9",
-            "color": "any",
-            "label": "data_out"
-          },
-          {
-            "id": "any__1_g25x",
-            "color": "any",
-            "label": "val_1"
-          },
-          {
-            "id": "any__2_ocg9",
-            "color": "any",
-            "label": "val_2"
-          },
-          {
-            "id": "scalar__3_w4r6",
-            "color": "scalar",
-            "label": "iou"
-          },
-          {
-            "id": "scalar__4_280v",
-            "color": "scalar",
-            "label": "frame_count"
-          }
-        ]
-      },
-      "width": 880,
-      "height": 400,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 3820,
-        "y": 700
+        "x": 4260,
+        "y": 80
       },
       "dragging": false,
       "resizing": false
-    },
-    {
-      "id": "node-1782761848896-8cpfmdenx",
-      "type": "df_editor",
-      "position": {
-        "x": 5260,
-        "y": 680
-      },
-      "style": {},
-      "data": {
-        "label": "DF Editor",
-        "params": {}
-      },
-      "width": 208,
-      "height": 121
-    },
-    {
-      "id": "node-1782762157860-77jk4s9l8",
-      "type": "ml_df_stats",
-      "position": {
-        "x": 5180,
-        "y": 940
-      },
-      "style": {},
-      "data": {
-        "label": "DF Stats",
-        "params": {}
-      },
-      "width": 288,
-      "height": 203,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 5180,
-        "y": 940
-      }
-    },
-    {
-      "id": "node-1782763172811-46q2hk7t7",
-      "type": "ml_best_params",
-      "position": {
-        "x": 4460,
-        "y": 1140
-      },
-      "style": {},
-      "data": {
-        "label": "Parameter Optimizer",
-        "params": {
-          "weight_3": 0.4,
-          "weight_2": 0.2,
-          "weight_1": 0.3,
-          "weight_0": -0.3,
-          "weight_4": 1,
-          "label_0": "IOU",
-          "label_1": "DICE",
-          "label_2": "KS",
-          "reset": 0,
-          "port_labels": "{\"scalar__0_i38h\":\"iou\",\"scalar__1_iz91\":\"dice\",\"any__2_70tj\":\"val_1\",\"any__3_iamr\":\"val_2\"}"
-        },
-        "ports": [
-          {
-            "id": "scalar__0_i38h",
-            "color": "scalar",
-            "label": "iou"
-          },
-          {
-            "id": "scalar__1_iz91",
-            "color": "scalar",
-            "label": "dice"
-          },
-          {
-            "id": "any__2_70tj",
-            "color": "any",
-            "label": "val_1"
-          },
-          {
-            "id": "any__3_iamr",
-            "color": "any",
-            "label": "val_2"
-          }
-        ]
-      },
-      "width": 280,
-      "height": 433,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 4460,
-        "y": 1140
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1782763379935-rr2jpkpbc",
-      "type": "data_inspector",
-      "position": {
-        "x": 4980,
-        "y": 1160
-      },
-      "style": {
-        "width": 220,
-        "height": 200
-      },
-      "data": {
-        "label": "Inspector",
-        "params": {}
-      },
-      "width": 220,
-      "height": 200
     },
     {
       "id": "node-1782764194027-gu32zpdqc",
@@ -1682,13 +1518,70 @@
         ]
       },
       "width": 280,
-      "height": 439,
-      "selected": true,
+      "height": 767,
+      "selected": false,
       "positionAbsolute": {
         "x": 2940,
         "y": 1420
       },
       "dragging": false
+    },
+    {
+      "id": "node-1782884302900-f2j5hys4n",
+      "type": "plotter_pro",
+      "position": {
+        "x": 4240,
+        "y": 500
+      },
+      "style": {
+        "width": 1100,
+        "height": 460
+      },
+      "data": {
+        "label": "Plotter Pro",
+        "params": {
+          "active_0_alys:fn": false,
+          "active_0_alys:fp": false,
+          "active_0_alys:f1": false,
+          "active_0_alys:vp": false,
+          "active_0_alys:recall": false,
+          "active_0_alys:precision": false
+        },
+        "ports": [
+          {
+            "id": "dict__0_alys",
+            "color": "dict",
+            "label": "data"
+          }
+        ]
+      },
+      "width": 1100,
+      "height": 460,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4240,
+        "y": 500
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "node-1782885449645-l3ojd8r56",
+      "type": "plotter_pro",
+      "position": {
+        "x": 230,
+        "y": 170
+      },
+      "style": {
+        "width": 340,
+        "height": 260
+      },
+      "data": {
+        "label": "Plotter Pro",
+        "params": {}
+      },
+      "width": 340,
+      "height": 260
     }
   ],
   "edges": [
@@ -2032,49 +1925,8 @@
       "sourceHandle": "scalar__iou",
       "target": "node-1782758492166-xll1a6urc",
       "targetHandle": "any__DYNAMIC_NEW_HANDLE",
-      "id": "e-1782758571563"
-    },
-    {
-      "id": "e-1782761848984-wuxbtotb6",
-      "source": "node-1782760280171-ixxx5t0n9",
-      "target": "node-1782761848896-8cpfmdenx",
-      "sourceHandle": "data__table",
-      "targetHandle": "data__table"
-    },
-    {
-      "source": "node-1782760280171-ixxx5t0n9",
-      "sourceHandle": "data__table",
-      "target": "node-1782762157860-77jk4s9l8",
-      "targetHandle": "data__table",
-      "id": "e-1782762166767"
-    },
-    {
-      "id": "e-1782763380053-xm3mnj0iz",
-      "source": "node-1782763172811-46q2hk7t7",
-      "target": "node-1782763379935-rr2jpkpbc",
-      "sourceHandle": "dict__best_values",
-      "targetHandle": "any__data"
-    },
-    {
-      "source": "metrics",
-      "sourceHandle": "scalar__iou",
-      "target": "node-1782760280171-ixxx5t0n9",
-      "targetHandle": "any__0_lmt9",
-      "id": "e-1782763461344"
-    },
-    {
-      "source": "metrics",
-      "sourceHandle": "scalar__dice",
-      "target": "node-1782760280171-ixxx5t0n9",
-      "targetHandle": "any__1_g25x",
-      "id": "e-1782763464600"
-    },
-    {
-      "source": "acc_mean",
-      "sourceHandle": "scalar__frame_count",
-      "target": "node-1782763172811-46q2hk7t7",
-      "targetHandle": "scalar__counter",
-      "id": "e-1782763911849"
+      "id": "e-1782758571563",
+      "selected": false
     },
     {
       "source": "acc_mean",
@@ -2089,18 +1941,33 @@
       "target": "node-1782764194027-gu32zpdqc",
       "targetHandle": "dict__metrics_dict",
       "id": "e-1782764697565"
+    },
+    {
+      "source": "acc_mean",
+      "sourceHandle": "scalar__frame_count",
+      "target": "node-1782884302900-f2j5hys4n",
+      "targetHandle": "scalar__ticks",
+      "id": "e-1782885457265"
+    },
+    {
+      "source": "metrics",
+      "sourceHandle": "dict__data",
+      "target": "node-1782884302900-f2j5hys4n",
+      "targetHandle": "dict__0_alys",
+      "id": "e-1782885461079",
+      "selected": false
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 400,
-      "h": 267
+      "w": 917.63671875,
+      "h": 612
     },
     "previewPos": {
-      "x": 0,
-      "y": 0
+      "x": -648.8046875,
+      "y": 60.734375
     },
-    "activePaletteIndex": 6,
-    "visualizedNodeId": "node-1782764194027-gu32zpdqc"
+    "activePaletteIndex": 5,
+    "visualizedNodeId": "node-1782974006351-goyr7fo7l"
   }
 }
