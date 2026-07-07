@@ -35,12 +35,14 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
 
 @vision_node(
     type_id='viz_grid_compare',
-    label='Grid Compare Dashboard',
+    label='Reconstruction Compare',
     category='Machine Learning',
     icon='Eye',
     description=(
-        "Visually compares two spatial grids (Real vs Reconstructed). "
-        "Displays side-by-side maps and the absolute error difference map."
+        "Compares two spatiotemporal grids (Original vs Reconstructed), shape "
+        "(T, H, W), at a chosen frame/time. Shows side-by-side maps, the "
+        "absolute error map, and reports MSE / PSNR. For model reconstruction "
+        "quality — not a multi-filter texture comparison."
     ),
     inputs=[
         {'id': 'original',      'color': 'any',    'label': 'Original'},

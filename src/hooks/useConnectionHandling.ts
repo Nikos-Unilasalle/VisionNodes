@@ -58,7 +58,7 @@ export function useConnectionHandling({
     // Check if node is dynamic via schema flags or known types
     const isDynamic = !!targetSchema?.dynamic_inputs ||
                      !!targetSchema?.dynamic_outputs ||
-                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python', 'plotter_pro', 'sci_plotter', 'ml_best_params', 'dict_builder'].includes(targetNode?.type || '');
+                     ['output_display', 'draw_overlay', 'util_csv_export', 'group_output', 'group_input', 'util_dict_merge', 'export_py', 'raster_colorizer', 'logic_python', 'plotter_pro', 'sci_plotter', 'ml_best_params', 'dict_builder', 'math_expr', 'viz_compare_grid'].includes(targetNode?.type || '');
 
     const createDynamicPort = (color: string, labelPrefix: string) => {
       const idx = (targetNode!.data as any)?.ports?.length ?? 0;
