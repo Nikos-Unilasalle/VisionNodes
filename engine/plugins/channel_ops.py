@@ -13,7 +13,14 @@ from registry import vision_node, NodeProcessor
     label='Channel Split',
     category='color',
     icon='Layers',
-    description="Splits an image into individual R, G, B (and A) channel grayscale images.",
+    description=(
+        "Splits an image into its 3 (or 4) channels as grayscale images. Purely "
+        "positional: works on whatever 3-channel image is connected, whether it's "
+        "BGR, HSV or Lab. Set 'Input Color Space' to relabel the ports correctly "
+        "(e.g. after a Color Space node's HSV output, port R actually carries "
+        "Value, G carries Saturation, and B carries Hue) — this is cosmetic only, "
+        "the split itself never changes."
+    ),
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'r', 'color': 'image'},
@@ -21,7 +28,10 @@ from registry import vision_node, NodeProcessor
         {'id': 'b', 'color': 'image'},
         {'id': 'a', 'color': 'image'},
     ],
-    params=[]
+    params=[
+        {'id': 'space', 'label': 'Input Color Space (label only)', 'type': 'enum',
+         'options': ['RGB / BGR', 'HSV', 'Lab'], 'default': 0},
+    ]
 )
 class ChannelSplitNode(NodeProcessor):
     def process(self, inputs, params):

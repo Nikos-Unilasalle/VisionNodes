@@ -515,9 +515,23 @@ const GenericCustomNodeInternal = ({ selected, data, schema }: any) => {
     if (nodeId) updateNodeInternals(nodeId);
   }, [dynPorts.length, nodeId, updateNodeInternals]);
 
-  const outputs = data.dynamicColor
+  let outputs = data.dynamicColor
     ? schema.outputs.map((out: any) => ({ ...out, color: data.dynamicColor }))
     : schema.outputs;
+
+  // Channel Split is purely positional (r/g/b ports = channel index 2/1/0 of
+  // whatever 3-ch image is connected) — relabel cosmetically so the ports read
+  // correctly when fed HSV or Lab instead of RGB/BGR. See channel_ops.py.
+  if (schema.type === 'plugin_channel_split') {
+    const space = data.params?.space ?? 0;
+    const LABELS_BY_SPACE: Record<number, Record<string, string>> = {
+      0: { r: 'R', g: 'G', b: 'B' },
+      1: { r: 'V', g: 'S', b: 'H' },
+      2: { r: 'b*', g: 'a*', b: 'L' },
+    };
+    const labels = LABELS_BY_SPACE[space] || LABELS_BY_SPACE[0];
+    outputs = outputs.map((out: any) => labels[out.id] ? { ...out, label: labels[out.id] } : out);
+  }
 
   // Build input list: static schema inputs + dynamic ports + factory handle (if dynamic_inputs).
   // Fallback: if data.ports is non-empty but schema is not loaded yet, still show saved ports.
