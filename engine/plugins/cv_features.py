@@ -14,7 +14,8 @@ from registry import NodeProcessor, vision_node
         {"id": "mode", "label": "Mode", "type": "enum", "options": ["External", "List", "CComp", "Tree"], "default": 0},
         {"id": "method", "label": "Method", "type": "enum", "options": ["None", "Simple", "TC89_L1", "TC89_KCOS"], "default": 1},
         {"id": "min_area", "label": "Min Area",        "type": "scalar", "min": 0, "max": 100000, "default": 100},
-        {"id": "max_area", "label": "Max Area (0=off)", "type": "scalar", "min": 0, "max": 100000, "default": 0}
+        {"id": "max_area", "label": "Max Area (0=off)", "type": "scalar", "min": 0, "max": 100000, "default": 0},
+        {"id": "epsilon",  "label": "Simplification (Epsilon px)", "type": "float", "min": 0.0, "max": 50.0, "step": 0.5, "default": 0.0}
     ]
 )
 class FindContoursNode(NodeProcessor):
@@ -38,6 +39,7 @@ class FindContoursNode(NodeProcessor):
         method = methods[int(params.get('method', 1))]
         min_area = float(params.get('min_area', 100))
         max_area = float(params.get('max_area', 0))
+        epsilon = float(params.get('epsilon', 0.0))
 
         contours, _ = cv2.findContours(mask, mode, method)
 
@@ -45,6 +47,12 @@ class FindContoursNode(NodeProcessor):
         results = []
         rank = 0
         for i, cnt in enumerate(contours):
+            # Polygonal simplification (Douglas–Peucker): smooths jagged edges,
+            # which lifts perimeter-based circularity while leaving overall
+            # roundness (max-diameter based) largely untouched (ch1 §1.9).
+            if epsilon > 0:
+                cnt = cv2.approxPolyDP(cnt, epsilon, True)
+
             area = cv2.contourArea(cnt)
             if area < min_area: continue
             if max_area > 0 and area > max_area: continue
