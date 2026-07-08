@@ -28,8 +28,10 @@ _COLORMAPS = {
         {'id': 'right', 'label': 'Right', 'color': 'image'},
     ],
     outputs=[
-        {'id': 'main', 'label': 'Disparity', 'color': 'image'},
-        {'id': 'data', 'label': 'Params', 'color': 'dict'},
+        {'id': 'main',      'label': 'Disparity', 'color': 'image'},
+        {'id': 'disp_min',  'label': 'Disparity Min (px)', 'color': 'scalar'},
+        {'id': 'disp_max',  'label': 'Disparity Max (px)', 'color': 'scalar'},
+        {'id': 'data',      'label': 'Params', 'color': 'dict'},
     ],
     params=[
         {'id': 'num_disparities', 'label': 'Num Disparities', 'type': 'int', 'min': 16, 'max': 256, 'default': 64},
@@ -85,6 +87,10 @@ class StereoDisparityNode(NodeProcessor):
 
         disp = matcher.compute(gray_l, gray_r).astype(np.float32) / 16.0
 
+        valid = disp[disp > min_disp]  # negative/zero = unmatched pixels, exclude from range
+        disp_min = float(valid.min()) if valid.size else 0.0
+        disp_max = float(valid.max()) if valid.size else 0.0
+
         disp_vis = cv2.normalize(disp, None, 0, 255, cv2.NORM_MINMAX)
         disp_vis = disp_vis.astype(np.uint8)
 
@@ -97,6 +103,8 @@ class StereoDisparityNode(NodeProcessor):
 
         return {
             'main': result,
+            'disp_min': round(disp_min, 2),
+            'disp_max': round(disp_max, 2),
             'data': {
                 'num_disparities': num_disp,
                 'block_size': block_size,
