@@ -13,6 +13,7 @@ import json
     inputs=[{'id': 'image', 'color': 'image'}],
     outputs=[
         {'id': 'main',   'color': 'image', 'label': 'Cropped Image'},
+        {'id': 'mask',   'color': 'mask', 'label': 'Region Mask'},
         {'id': 'width',  'color': 'scalar'},
         {'id': 'height', 'color': 'scalar'},
         {'id': 'box',    'color': 'dict', 'label': 'Box Dict (YOLO)'},
@@ -42,7 +43,7 @@ class CropRectNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
         if img is None:
-            return {'main': None, 'main_preview': self._last_preview, 'width': 0, 'height': 0}
+            return {'main': None, 'mask': None, 'main_preview': self._last_preview, 'width': 0, 'height': 0}
 
         try:
             rect = json.loads(params.get('rect', '{"x":0.1,"y":0.1,"w":0.8,"h":0.8}'))
@@ -64,14 +65,19 @@ class CropRectNode(NodeProcessor):
         if self._frame_count % 3 == 1:
             self._encode_preview(img)
 
-        if x2 <= x1 or y2 <= y1:
-            return {'main': img, 'main_preview': self._last_preview, 'width': w, 'height': h}
+        mask = np.zeros((h, w), dtype=np.uint8)
 
+        if x2 <= x1 or y2 <= y1:
+            mask[:] = 255
+            return {'main': img, 'mask': mask, 'main_preview': self._last_preview, 'width': w, 'height': h}
+
+        mask[y1:y2, x1:x2] = 255
         cropped = img[y1:y2, x1:x2]
         ch, cw = cropped.shape[:2]
 
         return {
             'main': cropped,
+            'mask': mask,
             'main_preview': self._last_preview,
             'width': cw,
             'height': ch,
