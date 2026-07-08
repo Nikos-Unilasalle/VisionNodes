@@ -62,8 +62,10 @@ def _warp_geotiff(geo: dict, H: np.ndarray, dst_wh: tuple) -> dict:
     category='keypoints',
     icon='GitMerge',
     description=(
-        "Robust homography / affine estimation with RANSAC geometric verification. "
-        "Matches SIFT/ORB descriptors, rejects outliers, estimates H. "
+        "Homography / affine estimation between two matched, feature-detected images. "
+        "Matches SIFT/ORB descriptors, then estimates H either robustly (RANSAC, "
+        "rejects outlier matches) or with the Ordinary method (no outlier rejection "
+        "— a single bad match can wreck the fit, ch8 §8.7). "
         "Warp Image 1 into Image 2's reference frame. "
         "Optional GeoTIFF input: warps all bands with H (attach ref GeoTIFF's transform separately)."
     ),
@@ -94,6 +96,8 @@ def _warp_geotiff(geo: dict, H: np.ndarray, dst_wh: tuple) -> dict:
          'min': 4, 'max': 500, 'default': 10},
         {'id': 'model',         'label': 'Model',            'type': 'enum',
          'options': ['Homography (8-DOF)', 'Partial Affine (4-DOF)'], 'default': 0},
+        {'id': 'method',        'label': 'Estimation Method', 'type': 'enum',
+         'options': ['RANSAC (robust)', 'Ordinary (Least Squares)'], 'default': 0},
         {'id': 'max_display',   'label': 'Max drawn matches','type': 'int',
          'min': 1, 'max': 300, 'default': 60},
     ],
@@ -124,6 +128,7 @@ class RansacHomographyNode(NodeProcessor):
         thresh   = float(params.get('ransac_thresh', 5.0))
         min_in   = int(params.get('min_inliers', 10))
         model    = int(params.get('model', 0))
+        ordinary = int(params.get('method', 0)) == 1
         max_disp = int(params.get('max_display', 60))
 
         # Match descriptors with BF + Lowe ratio test
@@ -144,12 +149,19 @@ class RansacHomographyNode(NodeProcessor):
         src_pts = np.float32([px1[m.queryIdx] for m in good]).reshape(-1, 1, 2)
         dst_pts = np.float32([px2[m.trainIdx] for m in good]).reshape(-1, 1, 2)
 
-        # Estimate geometric model
+        # Estimate geometric model. "Ordinary" skips outlier rejection entirely —
+        # every matched point (including any bad one) is used, demonstrating how
+        # a single wrong correspondence can wreck a non-robust fit (ch8 §8.7).
         if model == 0:  # Homography
-            H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, thresh)
+            if ordinary:
+                H = cv2.findHomography(src_pts, dst_pts, 0)[0]
+                mask = np.ones((len(good), 1), dtype=np.uint8)
+            else:
+                H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, thresh)
         else:           # Partial Affine (rotation + scale + translation)
+            aff_method = cv2.LMEDS if ordinary else cv2.RANSAC
             H_aff, mask = cv2.estimateAffinePartial2D(
-                src_pts, dst_pts, method=cv2.RANSAC, ransacReprojThreshold=thresh,
+                src_pts, dst_pts, method=aff_method, ransacReprojThreshold=thresh,
             )
             H = np.vstack([H_aff, [0, 0, 1]]) if H_aff is not None else None
 
