@@ -308,15 +308,16 @@ export const CodeInput = ({ label, val, onChange, liveError }: CodeInputProps) =
   );
 };
 
-interface ColorInputProps { 
-  label: string; 
-  val: string; 
-  onChange: (v: string) => void; 
+interface ColorInputProps {
+  label: string;
+  val: string;
+  onChange: (v: string) => void;
   nodeId?: string;
-  onPickColorToggle?: (id: string | null) => void;
+  paramKey?: string;
+  onPickColorToggle?: (id: string | null, paramKey?: string) => void;
   isPicking?: boolean;
 }
-export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, isPicking }: ColorInputProps) => {
+export const ColorInput = ({ label, val, onChange, nodeId, paramKey, onPickColorToggle, isPicking }: ColorInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -352,7 +353,7 @@ export const ColorInput = ({ label, val, onChange, nodeId, onPickColorToggle, is
         <div className="text-[9px] font-mono text-gray-500">{currentVal}</div>
         {onPickColorToggle && nodeId && (
           <button
-            onClick={() => onPickColorToggle(isPicking ? null : nodeId)}
+            onClick={() => onPickColorToggle(isPicking ? null : nodeId, paramKey)}
             className={`p-1 rounded-md transition-all ${isPicking ? 'bg-accent text-white shadow-[0_0_10px_rgba(var(--color-accent),0.5)]' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
             title="Pick color from preview"
           >
@@ -406,7 +407,7 @@ interface NodeInspectorPanelProps {
   activePaletteIndex: number;
   pickColorNodeId: string | null;
   onUpdateParams: (id: string, params: Record<string, unknown>) => void;
-  onPickColorToggle: (id: string | null) => void;
+  onPickColorToggle: (id: string | null, paramKey?: string) => void;
   onRequestCapture: (id: string) => void;
   isInsideGroup?: boolean;
   onToggleExposed?: (nodeId: string, paramId: string) => void;
@@ -513,7 +514,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
                   let control: React.ReactNode;
                   if (isE2) control = <SelectInput label={lbl} val={Number(val ?? sp.default ?? 0)} options={sp.options || []} onChange={up2} />;
-                  else if (isColor2) control = <ColorInput label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
+                  else if (isColor2) control = <ColorInput label={lbl} val={String(val ?? sp.default ?? '#ffffff')} onChange={up2} nodeId={ep.nodeId} paramKey={sp.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === ep.nodeId} />;
                   else if (sp.type === 'file_path' || sp.type === 'file_open') control = <FilePathInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={up2} filters={(sp as any).filters} mode={sp.type === 'file_open' ? 'open' : 'save'} />;
                   else if (isS2) control = <TextInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   else if (isN2) {
@@ -1012,7 +1013,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
         <>
           <Slider label="Width"  val={p.width  ?? 640} min={128} max={2048} step={32} onChange={v => up({ width: v })} />
           <Slider label="Height" val={p.height ?? 200} min={64}  max={1024} step={16} onChange={v => up({ height: v })} />
-          <ColorInput label="Color" val={p.color ?? '#6366f1'} onChange={v => up({ color: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />
+          <ColorInput label="Color" val={p.color ?? '#6366f1'} onChange={v => up({ color: v })} nodeId={node.id} paramKey="color" onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />
         </>
       )}
 
@@ -1207,7 +1208,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
               else { up({ [sp.id]: v }); }
             }} />;
           } else if (isColor) {
-            inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
+            inner = <ColorInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '#ffffff')} onChange={(v) => up({ [sp.id]: v })} nodeId={node.id} paramKey={sp.id} onPickColorToggle={onPickColorToggle} isPicking={pickColorNodeId === node.id} />;
           } else if (sp.type === 'file_path' || sp.type === 'file_open') {
             inner = <FilePathInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} filters={(sp as any).filters} mode={sp.type === 'file_open' ? 'open' : 'save'} />;
           } else if (isDate) {

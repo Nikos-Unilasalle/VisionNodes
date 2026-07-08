@@ -13,7 +13,7 @@ interface RightPanelProps {
   isInsideGroup: boolean;
   isResizing: React.MutableRefObject<boolean>;
   onUpdateParams: (id: string, params: any) => void;
-  onPickColorToggle: (id: string | null) => void;
+  onPickColorToggle: (id: string | null, paramKey?: string) => void;
   onRequestCapture: (id: string) => void;
   onToggleExposed: (nodeId: string, paramId: string) => void;
   onExternalizeParam?: (nodeId: string, sp: any, value: number) => void;

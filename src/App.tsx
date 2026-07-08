@@ -254,6 +254,11 @@ function App() {
   const [lineEditingId, setLineEditingId] = useState<string | null>(null);
   const [visualizedNodeId, setVisualizedNodeId] = useState<string | null>(null);
   const [pickColorNodeId, setPickColorNodeId] = useState<string | null>(null);
+  const [pickColorParamKey, setPickColorParamKey] = useState<string>('color');
+  const onPickColorToggle = useCallback((id: string | null, paramKey?: string) => {
+    setPickColorNodeId(id);
+    if (id) setPickColorParamKey(paramKey ?? 'color');
+  }, []);
   const [activePaletteIndex, setActivePaletteIndex] = useState(6);
   // Global execution toggle: when false the engine receives an empty graph, so
   // node processing stops while the tree can still be edited freely. Defaults to
@@ -2093,6 +2098,7 @@ function App() {
             previewPan={previewPan}
             previewPopped={previewPopped}
             pickColorNodeId={pickColorNodeId}
+            pickColorParamKey={pickColorParamKey}
             setPreviewPos={setPreviewPos}
             setPreviewZoom={setPreviewZoom}
             setPreviewPan={setPreviewPan}
@@ -2119,7 +2125,7 @@ function App() {
           isInsideGroup={groupStack.length > 0}
           isResizing={isResizing}
           onUpdateParams={updateNodeParams}
-          onPickColorToggle={setPickColorNodeId}
+          onPickColorToggle={onPickColorToggle}
           onRequestCapture={requestCapture}
           onToggleExposed={toggleExposedParam}
           onExternalizeParam={onExternalizeParam}

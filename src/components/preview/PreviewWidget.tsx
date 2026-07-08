@@ -10,6 +10,7 @@ interface PreviewWidgetProps {
   previewPan: { x: number; y: number };
   previewPopped: boolean;
   pickColorNodeId: string | null;
+  pickColorParamKey: string;
   setPreviewPos: (p: { x: number; y: number }) => void;
   setPreviewZoom: (z: number) => void;
   setPreviewPan: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
@@ -27,7 +28,7 @@ interface PreviewWidgetProps {
 
 const PreviewWidget: React.FC<PreviewWidgetProps> = ({
   frame, previewSize, previewPos, previewZoom, previewPan, previewPopped,
-  pickColorNodeId, setPreviewPos, setPreviewZoom, setPreviewPan, setPreviewSize,
+  pickColorNodeId, pickColorParamKey, setPreviewPos, setPreviewZoom, setPreviewPan, setPreviewSize,
   previewZoomRef, previewAspect, previewResizeRef, handlePopout, handleBringBack,
   updateNodeParams, setPickColorNodeId, isPanning, panStart,
 }) => {
@@ -142,7 +143,7 @@ const PreviewWidget: React.FC<PreviewWidgetProps> = ({
             const scaleY = imgEl.naturalHeight / rect.height;
             const [r, g, b] = ctx.getImageData(Math.floor(px * scaleX), Math.floor(py * scaleY), 1, 1).data;
             const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
-            updateNodeParams(pickColorNodeId, { color: hex, r, g, b });
+            updateNodeParams(pickColorNodeId, { [pickColorParamKey]: hex });
             setPickColorNodeId(null);
           }}
         />
