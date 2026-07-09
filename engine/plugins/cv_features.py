@@ -541,37 +541,47 @@ class FillContoursNode(NodeProcessor):
     label="Hough Lines",
     category='segmentation',
     icon="Maximize",
-    description="Detects straight line segments in the image (walls, joints, etc.).",
+    description="Detects straight line segments in the image (walls, joints, etc.). "
+                "Outputs the detected segments as a list AND an overlay image with "
+                "the lines drawn (ch10 §10.4).",
     inputs=[{"id": "image", "color": "any"}],
-    outputs=[{"id": "lines_list", "color": "list"}],
+    outputs=[
+        {"id": "main",       "color": "image", "label": "Overlay"},
+        {"id": "lines_list", "color": "list"},
+        {"id": "count",      "color": "scalar"},
+    ],
     params=[
         {"id": "rho", "label": "Rho", "type": "scalar", "min": 1, "max": 10, "default": 1},
         {"id": "theta_deg", "label": "Theta (deg)", "type": "scalar", "min": 1, "max": 180, "default": 1},
         {"id": "threshold", "label": "Threshold", "type": "scalar", "min": 1, "max": 500, "default": 50},
         {"id": "min_len", "label": "Min Length", "type": "scalar", "min": 0, "max": 500, "default": 50},
-        {"id": "max_gap", "label": "Max Gap", "type": "scalar", "min": 0, "max": 100, "default": 10}
+        {"id": "max_gap", "label": "Max Gap", "type": "scalar", "min": 0, "max": 100, "default": 10},
+        {"id": "thickness", "label": "Line Thickness", "type": "int", "min": 1, "max": 10, "default": 2},
     ]
 )
 class HoughLinesNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"lines_list": []}
-        
+        if image is None: return {"main": None, "lines_list": [], "count": 0.0}
+
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
-        
+
         rho = float(params.get('rho', 1))
         theta = float(params.get('theta_deg', 1)) * np.pi / 180
         thresh = int(params.get('threshold', 50))
         min_len = float(params.get('min_len', 50))
         max_gap = float(params.get('max_gap', 10))
-        
+        thick = int(params.get('thickness', 2))
+
         lines = cv2.HoughLinesP(gray, rho, theta, thresh, minLineLength=min_len, maxLineGap=max_gap)
-        
+
+        overlay = image.copy() if len(image.shape) == 3 else cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
         results = []
         if lines is not None:
             h, w = gray.shape[:2]
             for i, line in enumerate(lines):
                 x1, y1, x2, y2 = line[0]
+                cv2.line(overlay, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), thick, cv2.LINE_AA)
                 results.append({
                     "id": i,
                     "_type": "graphics",
@@ -580,4 +590,4 @@ class HoughLinesNode(NodeProcessor):
                     "relative": True,
                     "color": "#00ff00"
                 })
-        return {"lines_list": results}
+        return {"main": overlay, "lines_list": results, "count": float(len(results))}
