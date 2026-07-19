@@ -87,10 +87,15 @@ class FlowVizNode(NodeProcessor):
     def process(self, inputs, params):
         flow = inputs.get('data')
         if flow is None: return {"main": None}
+        flow = np.asarray(flow)
+        if flow.ndim != 3 or flow.shape[2] < 2:
+            return {"main": None}
         h, w = flow.shape[:2]
         hsv = np.zeros((h, w, 3), dtype=np.uint8)
         hsv[..., 1] = 255
-        mag, ang = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+        fx = np.ascontiguousarray(flow[..., 0], dtype=np.float32)
+        fy = np.ascontiguousarray(flow[..., 1], dtype=np.float32)
+        mag, ang = cv2.cartToPolar(fx, fy)
         hsv[..., 0] = ang * 180 / np.pi / 2
         hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
         return {"main": cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)}
