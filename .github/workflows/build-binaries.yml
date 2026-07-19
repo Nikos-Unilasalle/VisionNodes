@@ -137,35 +137,18 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" samples.zip \
             --repo "$GITHUB_REPOSITORY" --clobber
 
-  # The two book PDFs ("Le monde vu par les nombres" FR + EN) are final and never
-  # rebuilt. They live as assets on the first release; this job carries them
-  # forward onto every new release draft so they no longer have to be uploaded
-  # by hand. Runs once (not per-platform) after the build matrix succeeds.
-  attach-books:
-    name: Attach book PDFs to release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Canonical source of the (immutable) book PDFs. Change only if these
-      # assets are ever moved to a different release tag.
-      BOOK_SOURCE_TAG: v0.1.0
-    steps:
-      - name: Carry book PDFs forward from ${{ env.BOOK_SOURCE_TAG }}
-        run: |
-          gh release download "$BOOK_SOURCE_TAG" \
-            --repo "$GITHUB_REPOSITORY" --pattern '*.pdf' --dir books
-          echo "Fetched:" && ls -1 books
-          gh release upload "$GITHUB_REF_NAME" books/*.pdf \
-            --repo "$GITHUB_REPOSITORY" --clobber
+  # NOTE: the book PDFs are NOT attached here. They live on their own `books`
+  # release, decoupled from any app version, and the website links straight to
+  # it — a new edition is one `gh release upload books <file> --clobber`.
+  # Copying them onto every app release only ever served stale PDFs (they were
+  # carried forward from v0.1.0 long after the book had been rewritten).
 
   # The release is built as a draft so a half-uploaded set of assets is never
   # public. Once every platform, samples.zip and the book PDFs are attached, flip
   # it live — a tag push now publishes on its own, no manual step.
   publish:
     name: Publish the release
-    needs: [build, attach-samples, attach-books]
+    needs: [build, attach-samples]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     env:
