@@ -35,7 +35,7 @@
           "max_ticks"
         ]
       },
-      "selected": true,
+      "selected": false,
       "dragging": false,
       "positionAbsolute": {
         "x": 520,
@@ -79,7 +79,7 @@
           "node_note": "Copernicus CDSE L2A SR stack B04,B03,B02,B08,B11,B12. B1=Red B2=Green B3=Blue B4=NIR B5=SWIR1 B6=SWIR2. SWIR=SWIR1(B5), B6=SWIR2. Stack = [NDWI, MNDWI, AWEIsh, MBWI].",
           "color_index": 3,
           "guard_invalid": true,
-          "valid_min": -0.002
+          "valid_min": -0.05
         },
         "minified": false
       },
@@ -272,9 +272,9 @@
       "data": {
         "label": "Python Node",
         "params": {
-          "code": "# Index Correlation (threshold-independent validation)\n# Entrees positionnelles logic_python :\n#   a = MC P(water)  (image 0-255, acc_mean)\n#   b = idx.stack    (geotiff, N bandes = indices)\n#   c = open-water reference (mask, optionnel)\n#   d = river-extent reference (mask, optionnel)\n# Sorties : out_fig (image), out_stats (dict)\nimport numpy as np\nfrom scipy.stats import spearmanr\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\ntry:\n    a; b\nexcept Exception:\n    raise RuntimeError(\"entrees requises: a = P (acc_mean), b = idx.stack\")\ntry: _c = c\nexcept Exception: _c = None\ntry: _d = d\nexcept Exception: _d = None\ntry: _e = e\nexcept Exception: _e = None\n\ndef _g(m):\n    if m is None: return None\n    x = m[..., 0] if m.ndim == 3 else m\n    return x > 127\n\nPw = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\nprint(f'P stats: min={Pw.min():.3f} max={Pw.max():.3f} std={Pw.std():.4f}')\nif Pw.std() < 1e-9:\n    print('WARN: P constant (variance nulle) -> Spearman indefini. Lance le MC (noise run) pour accumuler P.')\n\nbands = np.asarray(b['bands'], dtype=np.float64)                  # (N,H,W)\nnames = list(b.get('band_names') or [f'idx{i}' for i in range(bands.shape[0])])\nassert bands.shape[1:] == Pw.shape, f\"grille P{Pw.shape} != indices{bands.shape[1:]}\"\n\nOCC_OW, OCC_EXT = 75.0, 10.0        # seuils occurrence JRC GSW (%) : open-water / river-extent\n\ndef _fit(m):                        # fallback: aligne un masque simple par ratio de dimensions\n    if m is None or m.shape == Pw.shape: return m\n    H, W = Pw.shape\n    yi = (np.arange(H) * m.shape[0] / H).astype(np.intp)\n    xi = (np.arange(W) * m.shape[1] / W).astype(np.intp)\n    return m[np.ix_(yi, xi)]\n\ndef _reproj(gj):                    # rechantillonne un geotiff sur la grille P via les transforms (georef exact, nearest)\n    occ = np.asarray(gj['bands'], dtype=np.float64)\n    occ = occ[0] if occ.ndim == 3 else occ\n    Ba, _, Bc_, _, Be, Bf = [float(v) for v in tuple(b['transform'])[:6]]\n    Ja, _, Jc_, _, Je, Jf = [float(v) for v in tuple(gj['transform'])[:6]]\n    H, W = Pw.shape\n    Xc = Bc_ + (np.arange(W) + 0.5) * Ba          # X monde des centres colonnes (grille P)\n    Yr = Bf + (np.arange(H) + 0.5) * Be           # Y monde des centres lignes (grille P)\n    jc = np.clip(np.round((Xc - Jc_) / Ja - 0.5).astype(np.intp), 0, occ.shape[1] - 1)\n    jr = np.clip(np.round((Yr - Jf) / Je - 0.5).astype(np.intp), 0, occ.shape[0] - 1)\n    return occ[np.ix_(jr, jc)]\n\nOCC_GT = 50.0                       # seuil \"verite terrain fiable\" pour les metrics\nif isinstance(_c, dict) and 'bands' in _c and _c.get('transform') is not None:\n    occ = _reproj(_c)               # occurrence JRC recalee sur la grille P (georef exact)\n    ext = occ >= OCC_EXT            # river extent : eau vue >= 10 %\n    ow  = occ >= OCC_OW             # open water   : eau quasi-permanente >= 75 %\n    gt  = occ >= OCC_GT             # GT fiable    : eau >= 50 % (pour metrics)\nelse:                               # GT deja alignee sur la grille S2 (ex. geo_land_cover -> mask)\n    mc = _fit(_g(_c)); md = _fit(_g(_d))\n    ow  = mc if mc is not None else md\n    ext = md if md is not None else mc     # une seule GT-mask -> reference unique (ext=ow)\n    gt  = ext\n\nif ext is None: ext = np.ones(Pw.shape, bool)\nif ow  is None: ow  = ext\nif gt  is None: gt  = ext\nprint(f'classes px: ext={int(ext.sum())} ow={int(ow.sum())} gt={int(gt.sum())}')\nif not ext.any():\n    print('WARN: extent vide (JRC non fetch ? occ=nan ?) -> fallback scene entiere pour \"All river\".')\n    ext = np.ones(Pw.shape, bool)\n    if not ow.any(): ow = ext\n    if not gt.any(): gt = ext\nbridge = ext & ~ow\n\n# Domaine d'analyse = GT dilatee, fournie en entree e (node feat_morphology_adv Dilate).\n# \"All river\" = TOUS les pixels du domaine (eau + berges) -> teste P~0 berge / P~1 eau.\n# Sans e -> domaine = ext (pas de marge).\ndom_in = _fit(_g(_e))\ndomain = dom_in if dom_in is not None else ext\nprint(f'domain (All river) px={int(domain.sum())}  ext px={int(ext.sum())}')\n\n# masques recales sur la grille P -> a brancher sur sci_mask_metrics.truth\nout_ow     = (ow.astype(np.uint8) * 255)\nout_ext    = (ext.astype(np.uint8) * 255)\nout_gt     = (gt.astype(np.uint8) * 255)\nout_domain = (domain.astype(np.uint8) * 255)\n\nclasses = [('All river', domain, 'gray'),\n           ('Open water', ow, 'tab:blue'),\n           ('Bridge', bridge, 'tab:orange')]\n\ndef _rho(iv, m):\n    mm = m & np.isfinite(iv) & np.isfinite(Pw)\n    if mm.sum() < 10: return np.nan\n    r = spearmanr(Pw[mm], iv[mm]).correlation\n    return float(r) if r == r else np.nan\n\nN = bands.shape[0]\nR = {cn: [_rho(bands[i], cm) for i in range(N)] for cn, cm, _ in classes}\n\nfig = plt.figure(figsize=(13, 9), dpi=110)\ngs = fig.add_gridspec(2, N, height_ratios=[1.1, 1.0], hspace=0.4, wspace=0.3)\n\naxb = fig.add_subplot(gs[0, :])\nx = np.arange(N); w = 0.26\nfor k, (cn, cm, cc) in enumerate(classes):\n    vals = R[cn]\n    bars = axb.bar(x + (k - 1) * w, [0 if v != v else v for v in vals], w, label=cn, color=cc)\n    for bar, v in zip(bars, vals):\n        if v == v:\n            axb.text(bar.get_x() + bar.get_width() / 2, v + 0.01, f'{v:.3f}',\n                     ha='center', va='bottom', fontsize=8)\naxb.set_xticks(x); axb.set_xticklabels(names)\naxb.set_ylabel('Spearman r'); axb.set_ylim(0, 1.05)\naxb.set_title('Spearman: MC P(water) vs spectral index by pixel class — threshold independent')\naxb.legend(loc='upper right'); axb.grid(axis='y', alpha=0.3)\n\nrng = np.random.default_rng(0)\nfor i in range(N):\n    ax = fig.add_subplot(gs[1, i])\n    for cn, cm, cc in classes[::-1]:\n        m = cm & np.isfinite(bands[i])\n        idxp = np.flatnonzero(m.ravel())\n        if idxp.size > 4000:\n            idxp = rng.choice(idxp, 4000, replace=False)\n        ax.scatter(bands[i].ravel()[idxp], Pw.ravel()[idxp], s=2, c=cc, alpha=0.35, linewidths=0)\n    ax.axhline(0.7, ls='--', c='k', lw=0.8, alpha=0.6)\n    ax.set_title(f'P(water) vs {names[i]}'); ax.set_xlabel(names[i])\n    if i == 0: ax.set_ylabel('MC P(water)')\n    ax.set_ylim(-0.02, 1.02)\n    r_all = R['All river'][i]\n    ax.text(0.03, 0.95, f'Spearman r = {r_all:.3f}', transform=ax.transAxes, va='top',\n            bbox=dict(boxstyle='round', fc='white', ec='0.7'), fontsize=8)\n\nfig.suptitle('MC P(water) — Correlation with Spectral Indices', fontsize=13)\nfig.canvas.draw()\nw_, h_ = fig.canvas.get_width_height()\nout_fig = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(h_, w_, 4)[..., :3].copy()\nplt.close(fig)\n\nout_stats = {names[i]: {cn: (None if R[cn][i] != R[cn][i] else round(R[cn][i], 4))\n                        for cn, _, _ in classes} for i in range(N)}\nprint('Spearman r:', out_stats)\n\n# ── Value distributions: Open Water vs Bridge per feature (Δμ / Cohen's d / Mann-Whitney U) ──\nfrom scipy.stats import mannwhitneyu as _mwu\n_MWU_MAX_N = 20000   # subsample cap per group — U-statistic ranking cost grows with n\n\ndef _subsample(v, cap, rng):\n    return v if v.size <= cap else v[rng.choice(v.size, cap, replace=False)]\n\n_rng_mwu = np.random.default_rng(0)\n_feats = [('MC prob', Pw)] + [(names[i], bands[i]) for i in range(N)]\n_dmu = {}; _cohen = {}; _mw = {}\nfigd = plt.figure(figsize=(4.0 * len(_feats), 3.4), dpi=110)\nfor j, (fn, fv) in enumerate(_feats):\n    axd = figd.add_subplot(1, len(_feats), j + 1)\n    vo = fv[ow & np.isfinite(fv)]\n    vb = fv[bridge & np.isfinite(fv)]\n    if vo.size >= 2 and vb.size >= 2:\n        lo = float(min(vo.min(), vb.min())); hi = float(max(vo.max(), vb.max()))\n        if hi <= lo: hi = lo + 1e-6\n        edges = np.linspace(lo, hi, 40)\n        axd.hist(vb, bins=edges, density=True, color='tab:orange', alpha=0.75, label='Bridge pixels')\n        axd.hist(vo, bins=edges, density=True, color='tab:blue', alpha=0.75, label='Open water')\n        dmu = float(vo.mean() - vb.mean()); _dmu[fn] = round(dmu, 4)\n        n1, n0 = vo.size, vb.size\n        pooled = np.sqrt(((n1 - 1) * vo.var(ddof=1) + (n0 - 1) * vb.var(ddof=1)) / max(n1 + n0 - 2, 1))\n        dcoh = float(dmu / (pooled + 1e-12)); _cohen[fn] = round(dcoh, 3)\n\n        # Mann-Whitney U (nonparametric, no normality assumption) + rank-biserial effect size\n        vo_s = _subsample(vo, _MWU_MAX_N, _rng_mwu); vb_s = _subsample(vb, _MWU_MAX_N, _rng_mwu)\n        try:\n            u_stat, u_p = _mwu(vo_s, vb_s, alternative='two-sided')\n            r_rb = float(1.0 - 2.0 * u_stat / (vo_s.size * vb_s.size))  # rank-biserial correlation\n        except Exception:\n            u_p, r_rb = float('nan'), float('nan')\n        _mw[fn] = {'p': (None if u_p != u_p else round(float(u_p), 6)),\n                   'rank_biserial': (None if r_rb != r_rb else round(r_rb, 3)),\n                   'n_open_water': int(vo_s.size), 'n_bridge': int(vb_s.size)}\n\n        axd.set_title(f'Δμ = {dmu:.3f}   d = {dcoh:.2f}\\nMWU p{\"<0.001\" if u_p < 0.001 else f\"={u_p:.3f}\"}  r={r_rb:.2f}',\n                      fontsize=8.5)\n    else:\n        _dmu[fn] = None; _cohen[fn] = None; _mw[fn] = None\n        axd.set_title('Δμ = n/a')\n    if fn == 'MC prob':\n        axd.axvline(0.7, ls='--', c='k', lw=0.9, label='t = 0.7')\n        axd.legend(loc='upper left', fontsize=7)\n        axd.set_ylabel('Density')\n    axd.set_xlabel(fn)\nfigd.suptitle('Value Distributions — Open Water vs Bridge Pixels\\n'\n              \"Δμ = mean gap (raw) · d = Cohen's d (σ-normalized) · MWU = Mann-Whitney U test \"\n              \"(p, rank-biserial r — nonparametric, no normality assumption)\", fontsize=10)\nfigd.tight_layout(rect=[0, 0, 1, 0.88])\nfigd.canvas.draw()\n_wd, _hd = figd.canvas.get_width_height()\nout_dist = np.frombuffer(figd.canvas.buffer_rgba(), dtype=np.uint8).reshape(_hd, _wd, 4)[..., :3].copy()\nplt.close(figd)\nout_stats['delta_mu'] = _dmu\nout_stats['cohen_d'] = _cohen\nout_stats['mann_whitney'] = _mw\nprint('delta_mu:', _dmu)\nprint('cohen_d :', _cohen)\nprint('mann_whitney:', _mw)\n\n# ── Independent discriminability: index vs GT water (AUROC, P-free) ────────────\n# Cible = GT (ow = WorldCover water) vs non-eau du corridor (domaine & ~ow).\n# N'utilise PAS P -> classement des indices non circulaire.\nfrom scipy.stats import rankdata as _rankdata\n\ndef _auroc(iv, pos, neg):\n    va = iv[pos & np.isfinite(iv)]; vb = iv[neg & np.isfinite(iv)]\n    na, nb = va.size, vb.size\n    if na < 1 or nb < 1:\n        return np.nan\n    r = _rankdata(np.concatenate([va, vb]))\n    return float((r[:na].sum() - na * (na + 1) / 2.0) / (na * nb))\n\n_neg_dom = domain & ~ow                      # non-eau dans le corridor (terre + ponts)\n_auc = {}\nfor i in range(N):\n    a = _auroc(bands[i], ow, _neg_dom)\n    _auc[names[i]] = None if a != a else round(max(a, 1.0 - a), 4)   # oriente >= 0.5\n\n_lab = list(_auc.keys())\n_val = [(_auc[k] if _auc[k] is not None else 0.5) for k in _lab]\n_ordr = np.argsort(_val)[::-1]\n_lab = [_lab[j] for j in _ordr]; _val = [_val[j] for j in _ordr]\n\nfiga = plt.figure(figsize=(6.5, 4.0), dpi=110)\naxa = figa.add_subplot(111)\n_bars = axa.bar(_lab, _val, color='tab:green')\nfor _b, _v in zip(_bars, _val):\n    axa.text(_b.get_x() + _b.get_width() / 2, _v + 0.005, f'{_v:.3f}', ha='center', va='bottom', fontsize=9)\naxa.axhline(0.5, ls='--', c='k', lw=0.8)\naxa.set_ylim(0.5, 1.02); axa.set_ylabel('AUROC (water vs non-water GT)')\naxa.set_title('Independent index discriminability vs ground truth (P-free)\\n'\n              'Higher = better water / non-water separation')\nfiga.tight_layout()\nfiga.canvas.draw()\n_wa, _ha = figa.canvas.get_width_height()\nout_auroc = np.frombuffer(figa.canvas.buffer_rgba(), dtype=np.uint8).reshape(_ha, _wa, 4)[..., :3].copy()\nplt.close(figa)\nout_stats['auroc_vs_gt'] = _auc\nprint('auroc_vs_gt:', _auc)\n",
+          "code": "# Index Correlation (threshold-independent validation)\n# Entrees positionnelles logic_python :\n#   a = MC P(water)  (image 0-255, acc_mean)\n#   b = idx.stack    (geotiff, N bandes = indices)\n#   c = open-water reference (mask, optionnel)\n#   d = river-extent reference (mask, optionnel)\n# Sorties : out_fig (image), out_stats (dict)\nimport numpy as np\nfrom scipy.stats import spearmanr\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\ntry:\n    a; b\nexcept Exception:\n    raise RuntimeError(\"entrees requises: a = P (acc_mean), b = idx.stack\")\ntry: _c = c\nexcept Exception: _c = None\ntry: _d = d\nexcept Exception: _d = None\ntry: _e = e\nexcept Exception: _e = None\n\ndef _g(m):\n    if m is None: return None\n    x = m[..., 0] if m.ndim == 3 else m\n    return x > 127\n\nPw = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\nprint(f'P stats: min={Pw.min():.3f} max={Pw.max():.3f} std={Pw.std():.4f}')\nif Pw.std() < 1e-9:\n    print('WARN: P constant (variance nulle) -> Spearman indefini. Lance le MC (noise run) pour accumuler P.')\n\nbands = np.asarray(b['bands'], dtype=np.float64)                  # (N,H,W)\nnames = list(b.get('band_names') or [f'idx{i}' for i in range(bands.shape[0])])\nassert bands.shape[1:] == Pw.shape, f\"grille P{Pw.shape} != indices{bands.shape[1:]}\"\n\nOCC_OW, OCC_EXT = 75.0, 10.0        # seuils occurrence JRC GSW (%) : open-water / river-extent\n\ndef _fit(m):                        # fallback: aligne un masque simple par ratio de dimensions\n    if m is None or m.shape == Pw.shape: return m\n    H, W = Pw.shape\n    yi = (np.arange(H) * m.shape[0] / H).astype(np.intp)\n    xi = (np.arange(W) * m.shape[1] / W).astype(np.intp)\n    return m[np.ix_(yi, xi)]\n\ndef _reproj(gj):                    # rechantillonne un geotiff sur la grille P via les transforms (georef exact, nearest)\n    occ = np.asarray(gj['bands'], dtype=np.float64)\n    occ = occ[0] if occ.ndim == 3 else occ\n    Ba, _, Bc_, _, Be, Bf = [float(v) for v in tuple(b['transform'])[:6]]\n    Ja, _, Jc_, _, Je, Jf = [float(v) for v in tuple(gj['transform'])[:6]]\n    H, W = Pw.shape\n    Xc = Bc_ + (np.arange(W) + 0.5) * Ba          # X monde des centres colonnes (grille P)\n    Yr = Bf + (np.arange(H) + 0.5) * Be           # Y monde des centres lignes (grille P)\n    jc = np.clip(np.round((Xc - Jc_) / Ja - 0.5).astype(np.intp), 0, occ.shape[1] - 1)\n    jr = np.clip(np.round((Yr - Jf) / Je - 0.5).astype(np.intp), 0, occ.shape[0] - 1)\n    return occ[np.ix_(jr, jc)]\n\nOCC_GT = 50.0                       # seuil \"verite terrain fiable\" pour les metrics\nif isinstance(_c, dict) and 'bands' in _c and _c.get('transform') is not None:\n    occ = _reproj(_c)               # occurrence JRC recalee sur la grille P (georef exact)\n    ext = occ >= OCC_EXT            # river extent : eau vue >= 10 %\n    ow  = occ >= OCC_OW             # open water   : eau quasi-permanente >= 75 %\n    gt  = occ >= OCC_GT             # GT fiable    : eau >= 50 % (pour metrics)\nelse:                               # GT deja alignee sur la grille S2 (ex. geo_land_cover -> mask)\n    mc = _fit(_g(_c)); md = _fit(_g(_d))\n    ow  = mc if mc is not None else md\n    ext = md if md is not None else mc     # une seule GT-mask -> reference unique (ext=ow)\n    gt  = ext\n\nif ext is None: ext = np.ones(Pw.shape, bool)\nif ow  is None: ow  = ext\nif gt  is None: gt  = ext\nprint(f'classes px: ext={int(ext.sum())} ow={int(ow.sum())} gt={int(gt.sum())}')\nif not ext.any():\n    print('WARN: extent vide (JRC non fetch ? occ=nan ?) -> fallback scene entiere pour \"All river\".')\n    ext = np.ones(Pw.shape, bool)\n    if not ow.any(): ow = ext\n    if not gt.any(): gt = ext\n\n# Domaine d'analyse = GT dilatee, fournie en entree e (node feat_morphology_adv Dilate).\n# \"All river\" = TOUS les pixels du domaine (eau + berges) -> teste P~0 berge / P~1 eau.\n# Sans e -> domaine = ext (pas de marge).\ndom_in = _fit(_g(_e))\ndomain = dom_in if dom_in is not None else np.ones(Pw.shape, bool)  # whole-image when e unconnected\nbridge = domain & ~ow   # no OSM: negative class = non-water land/sediment\nprint(f'domain (All river) px={int(domain.sum())}  ext px={int(ext.sum())}')\n\n# masques recales sur la grille P -> a brancher sur sci_mask_metrics.truth\nout_ow     = (ow.astype(np.uint8) * 255)\nout_ext    = (ext.astype(np.uint8) * 255)\nout_gt     = (gt.astype(np.uint8) * 255)\nout_domain = (domain.astype(np.uint8) * 255)\n\nclasses = [('All river', domain, 'gray'),\n           ('Open water', ow, 'tab:blue'),\n           ('Land', bridge, 'tab:orange')]\n\ndef _rho(iv, m):\n    mm = m & np.isfinite(iv) & np.isfinite(Pw)\n    if mm.sum() < 10: return np.nan\n    r = spearmanr(Pw[mm], iv[mm]).correlation\n    return float(r) if r == r else np.nan\n\nN = bands.shape[0]\nR = {cn: [_rho(bands[i], cm) for i in range(N)] for cn, cm, _ in classes}\n\nfig = plt.figure(figsize=(13, 9), dpi=110)\ngs = fig.add_gridspec(2, N, height_ratios=[1.1, 1.0], hspace=0.4, wspace=0.3)\n\naxb = fig.add_subplot(gs[0, :])\nx = np.arange(N); w = 0.26\nfor k, (cn, cm, cc) in enumerate(classes):\n    vals = R[cn]\n    bars = axb.bar(x + (k - 1) * w, [0 if v != v else v for v in vals], w, label=cn, color=cc)\n    for bar, v in zip(bars, vals):\n        if v == v:\n            axb.text(bar.get_x() + bar.get_width() / 2, v + 0.01, f'{v:.3f}',\n                     ha='center', va='bottom', fontsize=8)\naxb.set_xticks(x); axb.set_xticklabels(names)\naxb.set_ylabel('Spearman r'); axb.set_ylim(0, 1.05)\naxb.set_title('Spearman: MC P(water) vs spectral index by pixel class — threshold independent')\naxb.legend(loc='upper right'); axb.grid(axis='y', alpha=0.3)\n\nrng = np.random.default_rng(0)\nfor i in range(N):\n    ax = fig.add_subplot(gs[1, i])\n    for cn, cm, cc in classes[::-1]:\n        m = cm & np.isfinite(bands[i])\n        idxp = np.flatnonzero(m.ravel())\n        if idxp.size > 4000:\n            idxp = rng.choice(idxp, 4000, replace=False)\n        ax.scatter(bands[i].ravel()[idxp], Pw.ravel()[idxp], s=2, c=cc, alpha=0.35, linewidths=0)\n    ax.axhline(0.7, ls='--', c='k', lw=0.8, alpha=0.6)\n    ax.set_title(f'P(water) vs {names[i]}'); ax.set_xlabel(names[i])\n    if i == 0: ax.set_ylabel('MC P(water)')\n    ax.set_ylim(-0.02, 1.02)\n    r_all = R['All river'][i]\n    ax.text(0.03, 0.95, f'Spearman r = {r_all:.3f}', transform=ax.transAxes, va='top',\n            bbox=dict(boxstyle='round', fc='white', ec='0.7'), fontsize=8)\n\nfig.suptitle('MC P(water) — Correlation with Spectral Indices', fontsize=13)\nfig.canvas.draw()\nw_, h_ = fig.canvas.get_width_height()\nout_fig = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(h_, w_, 4)[..., :3].copy()\nplt.close(fig)\n\nout_stats = {names[i]: {cn: (None if R[cn][i] != R[cn][i] else round(R[cn][i], 4))\n                        for cn, _, _ in classes} for i in range(N)}\nprint('Spearman r:', out_stats)\n\n# ── Value distributions: Open Water vs Land per feature (Δμ / Cohen's d / Mann-Whitney U) ──\nfrom scipy.stats import mannwhitneyu as _mwu\n_MWU_MAX_N = 20000   # subsample cap per group — U-statistic ranking cost grows with n\n\ndef _subsample(v, cap, rng):\n    return v if v.size <= cap else v[rng.choice(v.size, cap, replace=False)]\n\n_rng_mwu = np.random.default_rng(0)\n_feats = [('MC prob', Pw)] + [(names[i], bands[i]) for i in range(N)]\n_dmu = {}; _cohen = {}; _mw = {}\nfigd = plt.figure(figsize=(4.0 * len(_feats), 3.4), dpi=110)\nfor j, (fn, fv) in enumerate(_feats):\n    axd = figd.add_subplot(1, len(_feats), j + 1)\n    vo = fv[ow & np.isfinite(fv)]\n    vb = fv[bridge & np.isfinite(fv)]\n    if vo.size >= 2 and vb.size >= 2:\n        lo = float(min(vo.min(), vb.min())); hi = float(max(vo.max(), vb.max()))\n        if hi <= lo: hi = lo + 1e-6\n        edges = np.linspace(lo, hi, 40)\n        axd.hist(vb, bins=edges, density=True, color='tab:orange', alpha=0.75, label='Land (non-water)')\n        axd.hist(vo, bins=edges, density=True, color='tab:blue', alpha=0.75, label='Open water')\n        dmu = float(vo.mean() - vb.mean()); _dmu[fn] = round(dmu, 4)\n        n1, n0 = vo.size, vb.size\n        pooled = np.sqrt(((n1 - 1) * vo.var(ddof=1) + (n0 - 1) * vb.var(ddof=1)) / max(n1 + n0 - 2, 1))\n        dcoh = float(dmu / (pooled + 1e-12)); _cohen[fn] = round(dcoh, 3)\n\n        # Mann-Whitney U (nonparametric, no normality assumption) + rank-biserial effect size\n        vo_s = _subsample(vo, _MWU_MAX_N, _rng_mwu); vb_s = _subsample(vb, _MWU_MAX_N, _rng_mwu)\n        try:\n            u_stat, u_p = _mwu(vo_s, vb_s, alternative='two-sided')\n            r_rb = float(1.0 - 2.0 * u_stat / (vo_s.size * vb_s.size))  # rank-biserial correlation\n        except Exception:\n            u_p, r_rb = float('nan'), float('nan')\n        _mw[fn] = {'p': (None if u_p != u_p else round(float(u_p), 6)),\n                   'rank_biserial': (None if r_rb != r_rb else round(r_rb, 3)),\n                   'n_open_water': int(vo_s.size), 'n_bridge': int(vb_s.size)}\n\n        axd.set_title(f'Δμ = {dmu:.3f}   d = {dcoh:.2f}\\nMWU p{\"<0.001\" if u_p < 0.001 else f\"={u_p:.3f}\"}  r={r_rb:.2f}',\n                      fontsize=8.5)\n    else:\n        _dmu[fn] = None; _cohen[fn] = None; _mw[fn] = None\n        axd.set_title('Δμ = n/a')\n    if fn == 'MC prob':\n        axd.axvline(0.7, ls='--', c='k', lw=0.9, label='t = 0.7')\n        axd.legend(loc='upper left', fontsize=7)\n        axd.set_ylabel('Density')\n    axd.set_xlabel(fn)\nfigd.suptitle('Value Distributions — Open Water vs Land Pixels\\n'\n              \"Δμ = mean gap (raw) · d = Cohen's d (σ-normalized) · MWU = Mann-Whitney U test \"\n              \"(p, rank-biserial r — nonparametric, no normality assumption)\", fontsize=10)\nfigd.tight_layout(rect=[0, 0, 1, 0.88])\nfigd.canvas.draw()\n_wd, _hd = figd.canvas.get_width_height()\nout_dist = np.frombuffer(figd.canvas.buffer_rgba(), dtype=np.uint8).reshape(_hd, _wd, 4)[..., :3].copy()\nplt.close(figd)\nout_stats['delta_mu'] = _dmu\nout_stats['cohen_d'] = _cohen\nout_stats['mann_whitney'] = _mw\nprint('delta_mu:', _dmu)\nprint('cohen_d :', _cohen)\nprint('mann_whitney:', _mw)\n\n# ── Independent discriminability: index vs GT water (AUROC, P-free) ────────────\n# Cible = GT (ow = WorldCover water) vs non-eau du corridor (domaine & ~ow).\n# N'utilise PAS P -> classement des indices non circulaire.\nfrom scipy.stats import rankdata as _rankdata\n\ndef _auroc(iv, pos, neg):\n    va = iv[pos & np.isfinite(iv)]; vb = iv[neg & np.isfinite(iv)]\n    na, nb = va.size, vb.size\n    if na < 1 or nb < 1:\n        return np.nan\n    r = _rankdata(np.concatenate([va, vb]))\n    return float((r[:na].sum() - na * (na + 1) / 2.0) / (na * nb))\n\n_neg_dom = domain & ~ow                      # non-eau dans le corridor (terre + ponts)\n_auc = {}\nfor i in range(N):\n    a = _auroc(bands[i], ow, _neg_dom)\n    _auc[names[i]] = None if a != a else round(max(a, 1.0 - a), 4)   # oriente >= 0.5\n\n_lab = list(_auc.keys())\n_val = [(_auc[k] if _auc[k] is not None else 0.5) for k in _lab]\n_ordr = np.argsort(_val)[::-1]\n_lab = [_lab[j] for j in _ordr]; _val = [_val[j] for j in _ordr]\n\nfiga = plt.figure(figsize=(6.5, 4.0), dpi=110)\naxa = figa.add_subplot(111)\n_bars = axa.bar(_lab, _val, color='tab:green')\nfor _b, _v in zip(_bars, _val):\n    axa.text(_b.get_x() + _b.get_width() / 2, _v + 0.005, f'{_v:.3f}', ha='center', va='bottom', fontsize=9)\naxa.axhline(0.5, ls='--', c='k', lw=0.8)\naxa.set_ylim(0.5, 1.02); axa.set_ylabel('AUROC (water vs non-water GT)')\naxa.set_title('Independent index discriminability vs ground truth (P-free)\\n'\n              'Higher = better water / non-water separation')\nfiga.tight_layout()\nfiga.canvas.draw()\n_wa, _ha = figa.canvas.get_width_height()\nout_auroc = np.frombuffer(figa.canvas.buffer_rgba(), dtype=np.uint8).reshape(_ha, _wa, 4)[..., :3].copy()\nplt.close(figa)\nout_stats['auroc_vs_gt'] = _auc\nprint('auroc_vs_gt:', _auc)\n",
           "color_index": 0,
-          "node_note": "Validation. a=P, b=idx.stack, c=ow(WorldCover water), d=ext(water∪bridge). All river = ext DILATEE (ROI_DILATE_PX dans le code). Open water=c, Bridge=d&~c. Plans d'eau conserves."
+          "node_note": "Validation. a=P, b=idx.stack, c=ow(WorldCover water), d=ext(water∪bridge). All river = ext DILATEE (ROI_DILATE_PX dans le code). Open water=c, Land=domain&~c (no OSM). Plans d'eau conserves."
         },
         "ports": [
           {
@@ -466,7 +466,7 @@
         "label": "Python Node",
         "userLabel": "Adaptive Gate (p99 consensus)",
         "params": {
-          "code": "# Adaptive reflectance gate — fidele a compute_adaptive_constraints + le gate de\n# decision_water. base = stack NON bruite, pert = stack bruite.\n#   Ordre CDSE B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2.\n# Caps p99 derives des pixels consensus de la scene de BASE (figes sur tout le run,\n# plancher 2x cap fixe, repli caps fixes si < 500 px). Gate compare sur le BRUITE.\nimport numpy as np\n\nVOTE_K, PCT, MIN_PIX = 2, 99.0, 500\nNIR_MAX, SWIR1_MAX, SWIR2_MAX = 0.12, 0.06, 0.05   # SR L2A ; adaptatif p99 prend le relais si consensus>=500\nFLOOR_MULT, SIGNAL_MIN = 2.0, 0.003\nBAND_MIN, DEN_MIN = -0.002, 1e-6\n\ndef _b6(g):\n    a = np.asarray(g['bands'], dtype=np.float32)\n    # CDSE order B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2\n    return a[2], a[1], a[0], a[3], a[4], a[5]   # blue green red nir swir1 swir2\n\ndef _nd(x, y):\n    den, num = x + y, x - y\n    o = np.full(x.shape, np.nan, np.float32)\n    v = (np.isfinite(x) & np.isfinite(y) & (np.abs(den) > DEN_MIN)\n         & (x > BAND_MIN) & (y > BAND_MIN))\n    o[v] = num[v] / den[v]\n    return np.clip(o, -1.0, 1.0)\n\ndef _votesum(bl, gr, rd, ni, s1, s2):\n    ndwi  = _nd(gr, ni)\n    mndwi = _nd(gr, s1)\n    awei  = bl + 2.5*gr - 1.5*(ni + s1) - 0.25*s2          # AWEIsh\n    mbwi  = 3.0*gr - (rd + ni + s1 + s2)                   # MBWI factor 3\n    return ((np.isfinite(ndwi)  & (ndwi  > 0)).astype(np.uint8)\n          + (np.isfinite(mndwi) & (mndwi > 0)).astype(np.uint8)\n          + (np.isfinite(awei)  & (awei  > 0)).astype(np.uint8)\n          + (np.isfinite(mbwi)  & (mbwi  > 0)).astype(np.uint8))\n\n# --- caps figes sur la scene de base (calcules une seule fois par run) ---\nbl, gr, rd, ni, s1, s2 = _b6(base)\nsig = (ni.shape, round(float(np.nansum(ni)), 3))\nif state.get('gate_sig') != sig or len(state.get('caps', ())) != 5:\n    valid = (np.isfinite(bl) & np.isfinite(gr) & np.isfinite(rd)\n             & np.isfinite(ni) & np.isfinite(s1) & np.isfinite(s2))\n    cons = valid & (_votesum(bl, gr, rd, ni, s1, s2) >= VOTE_K)\n    n = int(cons.sum())\n    if n >= MIN_PIX:\n        nc = max(float(np.nanpercentile(ni[cons], PCT)), NIR_MAX   * FLOOR_MULT)\n        c1 = max(float(np.nanpercentile(s1[cons], PCT)), SWIR1_MAX * FLOOR_MULT)\n        c2 = max(float(np.nanpercentile(s2[cons], PCT)), SWIR2_MAX * FLOOR_MULT)\n        adaptive = True\n    else:\n        nc, c1, c2, adaptive = NIR_MAX, SWIR1_MAX, SWIR2_MAX, False\n    state['gate_sig'] = sig\n    state['caps'] = (nc, c1, c2, adaptive, n)\nnc, c1, c2, adaptive, n = state['caps']\n\n# --- gate applique sur les bandes BRUITEES (caps figes) ---\npbl, pgr, prd, pni, ps1, ps2 = _b6(pert)\ngate = (np.isfinite(pbl) & np.isfinite(pgr) & np.isfinite(prd)\n        & np.isfinite(pni) & np.isfinite(ps1) & np.isfinite(ps2))\ngate &= pni < np.float32(nc)\ngate &= ps1 < np.float32(c1)\ngate &= ps2 < np.float32(c2)\ngate &= (pgr + pni) > np.float32(SIGNAL_MIN)      # signal_min ; green_min desactive\n\nout_mask = (gate.astype(np.uint8) * 255)\nout_caps = {'adaptive': bool(adaptive), 'n_consensus': int(n),\n            'nir_cap': round(float(nc), 4), 'swir1_cap': round(float(c1), 4),\n            'swir2_cap': round(float(c2), 4)}\nprint('gate caps', out_caps)\n",
+          "code": "# Adaptive reflectance gate — fidele a compute_adaptive_constraints + le gate de\n# decision_water. base = stack NON bruite, pert = stack bruite.\n#   Ordre CDSE B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2.\n# Caps p99 derives des pixels consensus de la scene de BASE (figes sur tout le run,\n# plancher 2x cap fixe, repli caps fixes si < 500 px). Gate compare sur le BRUITE.\nimport numpy as np\n\nVOTE_K, PCT, MIN_PIX = 2, 99.0, 500\nNIR_MAX, SWIR1_MAX, SWIR2_MAX = 0.12, 0.06, 0.05   # SR L2A ; adaptatif p99 prend le relais si consensus>=500\nFLOOR_MULT, SIGNAL_MIN = 2.0, 0.003\nBAND_MIN, DEN_MIN = -0.002, 1e-6\n\ndef _b6(g):\n    a = np.asarray(g['bands'], dtype=np.float32)\n    # CDSE order B04,B03,B02,B08,B11,B12 = red,green,blue,nir,swir1,swir2\n    return a[2], a[1], a[0], a[3], a[4], a[5]   # blue green red nir swir1 swir2\n\ndef _nd(x, y):\n    den, num = x + y, x - y\n    o = np.full(x.shape, np.nan, np.float32)\n    v = (np.isfinite(x) & np.isfinite(y) & (np.abs(den) > DEN_MIN)\n         & (x > BAND_MIN) & (y > BAND_MIN))\n    o[v] = num[v] / den[v]\n    return np.clip(o, -1.0, 1.0)\n\ndef _votesum(bl, gr, rd, ni, s1, s2):\n    ndwi  = _nd(gr, ni)\n    mndwi = _nd(gr, s1)\n    awei  = bl + 2.5*gr - 1.5*(ni + s1) - 0.25*s2          # AWEIsh\n    mbwi  = 3.0*gr - (rd + ni + s1 + s2)                   # MBWI factor 3\n    return ((np.isfinite(ndwi)  & (ndwi  > 0)).astype(np.uint8)\n          + (np.isfinite(mndwi) & (mndwi > 0)).astype(np.uint8)\n          + (np.isfinite(awei)  & (awei  > 0)).astype(np.uint8)\n          + (np.isfinite(mbwi)  & (mbwi  > 0)).astype(np.uint8))\n\n# --- caps figes sur la scene de base (calcules une seule fois par run) ---\nbl, gr, rd, ni, s1, s2 = _b6(base)\nsig = (ni.shape, round(float(np.nansum(ni)), 3))\nif state.get('gate_sig') != sig or len(state.get('caps', ())) != 5:\n    valid = (np.isfinite(bl) & np.isfinite(gr) & np.isfinite(rd)\n             & np.isfinite(ni) & np.isfinite(s1) & np.isfinite(s2))\n    cons = valid & (_votesum(bl, gr, rd, ni, s1, s2) >= VOTE_K)\n    n = int(cons.sum())\n    if n >= MIN_PIX:\n        nc = max(float(np.nanpercentile(ni[cons], PCT)), NIR_MAX   * FLOOR_MULT)\n        c1 = max(float(np.nanpercentile(s1[cons], PCT)), SWIR1_MAX * FLOOR_MULT)\n        c2 = max(float(np.nanpercentile(s2[cons], PCT)), SWIR2_MAX * FLOOR_MULT)\n        adaptive = True\n    else:\n        nc, c1, c2, adaptive = NIR_MAX, SWIR1_MAX, SWIR2_MAX, False\n    state['gate_sig'] = sig\n    state['caps'] = (nc, c1, c2, adaptive, n)\nnc, c1, c2, adaptive, n = state['caps']\n\n# --- gate applique sur les bandes BRUITEES (caps figes) ---\npbl, pgr, prd, pni, ps1, ps2 = _b6(pert)\ngate = (np.isfinite(pbl) & np.isfinite(pgr) & np.isfinite(prd)\n        & np.isfinite(pni) & np.isfinite(ps1) & np.isfinite(ps2))\ngate &= pni < np.float32(nc)\ngate &= ps1 < np.float32(c1)\ngate &= ps2 < np.float32(c2)\n# SIGNAL_MIN floor removed: a brightness floor also deletes dark/pure open water\n# (NIR/SWIR ~ 0) which is the darkest target. Rely on NIR/SWIR upper caps + k-of-4 vote.\n\nout_mask = (gate.astype(np.uint8) * 255)\nout_caps = {'adaptive': bool(adaptive), 'n_consensus': int(n),\n            'nir_cap': round(float(nc), 4), 'swir1_cap': round(float(c1), 4),\n            'swir2_cap': round(float(c2), 4)}\nprint('gate caps', out_caps)\n",
           "node_note": "Gate de reflectance scene-adaptatif. base=CDSE L2A SR (non bruite), pert=noise (bruite). _b6 ordre CDSE B04,B03,B02,B08,B11,B12 -> blue,green,red,nir,swir1,swir2. Caps p99 auto-cales sur pixels consensus (repli fixe SR NIR<0.12 SWIR1<0.06 SWIR2<0.05 si <500 px).",
           "color_index": 1
         },
@@ -566,7 +566,7 @@
         "minified": false
       },
       "width": 208,
-      "height": 285,
+      "height": 297,
       "selected": false,
       "positionAbsolute": {
         "x": 160,
@@ -759,96 +759,6 @@
       "positionAbsolute": {
         "x": 3380,
         "y": 540
-      }
-    },
-    {
-      "id": "osm_bridges",
-      "type": "geo_osm_overpass",
-      "position": {
-        "x": 520,
-        "y": 380
-      },
-      "width": 208,
-      "height": 153,
-      "data": {
-        "userLabel": "OSM Bridges",
-        "params": {
-          "selector": "[\"bridge\"]",
-          "element_types": "nwr",
-          "buffer_m": 12,
-          "all_touched": true,
-          "overpass_url": "https://overpass-api.de/api/interpreter",
-          "timeout_s": 60,
-          "fetch": 0,
-          "cache_dir": "copernicus_cache",
-          "node_note": "Ponts OSM a la volee, rasterises sur la grille S2 (aligne). selector generique: changer pour water/highway/building...",
-          "color_index": 3
-        },
-        "minified": false
-      },
-      "selected": false,
-      "positionAbsolute": {
-        "x": 520,
-        "y": 380
-      },
-      "dragging": false,
-      "style": {}
-    },
-    {
-      "id": "ext_union",
-      "type": "mask_operations",
-      "position": {
-        "x": 780,
-        "y": 400
-      },
-      "width": 208,
-      "height": 90,
-      "data": {
-        "userLabel": "Extent = water OR bridge",
-        "params": {
-          "operation": 0,
-          "color_index": 3
-        },
-        "minified": false
-      },
-      "selected": false,
-      "positionAbsolute": {
-        "x": 780,
-        "y": 400
-      },
-      "dragging": false,
-      "style": {}
-    },
-    {
-      "id": "node-1782966859833-6omzfmatk",
-      "type": "output_display",
-      "position": {
-        "x": 780,
-        "y": 520
-      },
-      "style": {},
-      "data": {
-        "label": "Display",
-        "params": {
-          "color_index": 3
-        },
-        "mainConnected": true,
-        "ports": [
-          {
-            "id": "mask__0_zoqb",
-            "color": "mask",
-            "label": "mask"
-          }
-        ],
-        "minified": false
-      },
-      "width": 208,
-      "height": 185,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 780,
-        "y": 520
       }
     },
     {
@@ -1667,52 +1577,6 @@
       "resizing": false
     },
     {
-      "id": "pred_domain",
-      "type": "mask_operations",
-      "position": {
-        "x": 3380,
-        "y": 60
-      },
-      "width": 208,
-      "height": 90,
-      "data": {
-        "userLabel": "pred ∩ domain",
-        "params": {
-          "operation": 2,
-          "color_index": 0
-        }
-      },
-      "selected": false,
-      "positionAbsolute": {
-        "x": 3380,
-        "y": 60
-      },
-      "dragging": false
-    },
-    {
-      "id": "truth_domain",
-      "type": "mask_operations",
-      "position": {
-        "x": 3380,
-        "y": 160
-      },
-      "width": 208,
-      "height": 90,
-      "data": {
-        "userLabel": "truth ∩ domain",
-        "params": {
-          "operation": 2,
-          "color_index": 0
-        }
-      },
-      "selected": false,
-      "positionAbsolute": {
-        "x": 3380,
-        "y": 160
-      },
-      "dragging": false
-    },
-    {
       "id": "node-1783153860983-ijuxkbsfc",
       "type": "output_display",
       "position": {
@@ -1839,9 +1703,9 @@
         "label": "Python Node",
         "userLabel": "MC Calibration (Brier/ECE/⟨U⟩)",
         "params": {
-          "code": "# MC Calibration — Brier score, Expected/Maximum Calibration Error, mean uncertainty.\n#   a = P (acc_mean image, 0-255) = predicted water probability\n#   b = truth mask (aligned GT, water=1)\n#   c = domain mask (opt, restricts evaluation to the river corridor)\n#   d = MC uncertainty map σ_P (opt, from the std accumulator) — for ⟨U⟩ = ⟨σ_P⟩\n#   e = number of reliability bins (opt, default 12)\n# Checks whether P behaves as a calibrated probability (pixels at P≈q are water ~q of\n# the time), not merely a rank score. Reliability diagram + Brier + ECE/MCE + ⟨U⟩.\nimport numpy as np\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\nP = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\ny = ((b[..., 0] if b.ndim == 3 else b) > 127).astype(np.float64)\ntry:\n    dom = (c[..., 0] if c.ndim == 3 else c) > 127\nexcept Exception:\n    dom = np.ones(P.shape, bool)\ntry:\n    nb = int(round(float(e)))\nexcept Exception:\n    nb = 12\nnb = min(max(nb, 3), 50)\n\nm = dom & np.isfinite(P) & np.isfinite(y)\nPv = P[m]; yv = y[m]\nn = Pv.size\nassert n >= 30, f\"too few pixels in domain ({n})\"\n\n# Brier score = mean squared error between probability and binary outcome\nbrier = float(np.mean((Pv - yv) ** 2))\n\n# Reliability: bin by predicted probability, compare mean confidence vs empirical accuracy\nedges = np.linspace(0.0, 1.0, nb + 1)\nidx = np.clip(np.digitize(Pv, edges) - 1, 0, nb - 1)\nconf = np.full(nb, np.nan); acc = np.full(nb, np.nan); cnt = np.zeros(nb)\nfor k in range(nb):\n    s = idx == k\n    cnt[k] = s.sum()\n    if cnt[k] > 0:\n        conf[k] = Pv[s].mean()\n        acc[k] = yv[s].mean()\nw = cnt / n\nok = cnt > 0\nece = float(np.sum(w[ok] * np.abs(acc[ok] - conf[ok])))          # expected calibration error\nmce = float(np.max(np.abs(acc[ok] - conf[ok]))) if ok.any() else float('nan')  # maximum\n\n# Mean uncertainty ⟨U⟩: prefer the MC ensemble std map if provided, else Bernoulli\n# predictive variance P(1-P) (peaks at P=0.5 = maximal indecision).\ntry:\n    sig = (d[..., 0] if d.ndim == 3 else d).astype(np.float64)\n    if sig.max() > 1.5:\n        sig = sig / 255.0\n    U = float(np.mean(sig[m])); U_src = 'ensemble_std'\nexcept Exception:\n    U = float(np.mean(Pv * (1.0 - Pv))); U_src = 'bernoulli_var'\n\n# ── Reliability diagram (+ bin-count histogram) ───────────────────────────────\nfig = plt.figure(figsize=(6.2, 6.6), dpi=110)\ngs = fig.add_gridspec(3, 1, height_ratios=[3, 1, 0.05], hspace=0.08)\naxr = fig.add_subplot(gs[0]); axh = fig.add_subplot(gs[1], sharex=axr)\naxr.plot([0, 1], [0, 1], ls='--', c='k', lw=1.0, label='perfect calibration')\naxr.plot(conf[ok], acc[ok], 'o-', color='tab:blue', lw=1.6, ms=5, label='observed')\naxr.set_ylabel('Empirical accuracy (fraction water)')\naxr.set_xlim(0, 1); axr.set_ylim(0, 1); axr.grid(alpha=0.3)\naxr.set_title('Reliability diagram — MC P(water)')\naxr.text(0.03, 0.97,\n         f'Brier = {brier:.4f}\\nECE = {ece:.4f}\\nMCE = {mce:.4f}\\n⟨U⟩ = {U:.4f} ({U_src})',\n         transform=axr.transAxes, va='top', fontsize=9,\n         bbox=dict(boxstyle='round,pad=0.35', fc='white', ec='0.7'))\naxr.legend(loc='lower right', fontsize=9)\naxh.bar((edges[:-1] + edges[1:]) / 2, w, width=(1.0 / nb) * 0.9,\n        color='tab:gray', alpha=0.6)\naxh.set_ylabel('frac.'); axh.set_xlabel('Predicted P(water)'); axh.grid(alpha=0.3)\nfig.subplots_adjust(left=0.13, right=0.97, top=0.93, bottom=0.09)\nfig.canvas.draw()\n_w, _h = fig.canvas.get_width_height()\nout_reliability = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(_h, _w, 4)[..., :3].copy()\nplt.close(fig)\n\nout_cal = {'brier': round(brier, 4), 'ece': round(ece, 4), 'mce': round(mce, 4),\n           'mean_uncertainty': round(U, 4), 'uncertainty_source': U_src,\n           'n_bins': nb, 'n_pixels': int(n)}\nprint('calibration:', out_cal)\n",
+          "code": "# MC Calibration — boundary-stratified. Brier / ECE / MCE + <sigma_P>, split into\n# CORE (far from the water/land boundary) vs BOUNDARY band, plus OVERALL.\n#   a = P (acc_mean image, 0-255)   b = truth GT (water=1)\n#   c = domain mask (opt; default whole scene)   d = sigma_P map (opt)   e = n_bins (opt, 12)\n# Rationale: on the whole scene, mass-weighted Brier/ECE are dominated by trivial\n# confident land (P~0, y=0) and look artificially perfect. Stratifying by distance to\n# the GT boundary separates the confident bulk (should be near-diagonal) from the\n# sub-pixel-mixed edge (soft P meets a hard binary label) -- the honest test of whether\n# residual miscalibration is a model defect or a reference-granularity artefact (draft 3.5).\nimport numpy as np\nfrom scipy import ndimage\nimport matplotlib; matplotlib.use('Agg')\nimport matplotlib.pyplot as plt\n\nBOUND_TOL = 3          # px band each side of the GT water/land boundary (matches Boundary-F1 tol)\n\nP = (a[..., 0] if a.ndim == 3 else a).astype(np.float64) / 255.0\ny = ((b[..., 0] if b.ndim == 3 else b) > 127)\ntry:\n    dom = (c[..., 0] if c.ndim == 3 else c) > 127\nexcept Exception:\n    dom = np.ones(P.shape, bool)\ntry:\n    nb = int(round(float(e)))\nexcept Exception:\n    nb = 12\nnb = min(max(nb, 3), 50)\ntry:\n    sig = (d[..., 0] if d.ndim == 3 else d).astype(np.float64)\n    if sig.max() > 1.5: sig = sig / 255.0\n    U_src = 'ensemble_std'\nexcept Exception:\n    sig = P * (1.0 - P); U_src = 'bernoulli_var'\n\n# distance (px) to the nearest GT water/land boundary\nedt_in  = ndimage.distance_transform_edt(y)\nedt_out = ndimage.distance_transform_edt(~y)\ndist = np.where(y, edt_in, edt_out)\nboundary_zone = dist <= BOUND_TOL\ncore_zone = ~boundary_zone\n\nfinite = dom & np.isfinite(P)\nedges = np.linspace(0.0, 1.0, nb + 1)\ncenters = (edges[:-1] + edges[1:]) / 2\n\ndef _cal(sel):\n    mm = finite & sel\n    Pv = P[mm]; yv = y[mm].astype(np.float64)\n    nn = Pv.size\n    if nn < 30:\n        return None\n    brier = float(np.mean((Pv - yv) ** 2))\n    idx = np.clip(np.digitize(Pv, edges) - 1, 0, nb - 1)\n    conf = np.full(nb, np.nan); acc = np.full(nb, np.nan); cnt = np.zeros(nb)\n    for k in range(nb):\n        s = idx == k\n        cnt[k] = s.sum()\n        if cnt[k] > 0:\n            conf[k] = Pv[s].mean(); acc[k] = yv[s].mean()\n    ok = cnt > 0\n    ece = float(np.sum((cnt[ok] / nn) * np.abs(acc[ok] - conf[ok])))\n    mce = float(np.max(np.abs(acc[ok] - conf[ok]))) if ok.any() else float('nan')\n    Um = float(np.mean(sig[mm]))\n    return {'brier': round(brier, 4), 'ece': round(ece, 4), 'mce': round(mce, 4),\n            'mean_uncertainty': round(Um, 4), 'n_pixels': int(nn),\n            '_conf': conf, '_acc': acc, '_cnt': cnt, '_ok': ok}\n\nstrata = {'overall':  _cal(np.ones(P.shape, bool)),\n          'core':     _cal(core_zone),\n          'boundary': _cal(boundary_zone)}\n\ncolr = {'overall': 'tab:gray', 'core': 'tab:green', 'boundary': 'tab:red'}\nfig = plt.figure(figsize=(6.6, 6.8), dpi=110)\ngs = fig.add_gridspec(3, 1, height_ratios=[3, 1, 0.05], hspace=0.3)\naxr = fig.add_subplot(gs[0]); axh = fig.add_subplot(gs[1], sharex=axr)\naxr.plot([0, 1], [0, 1], ls='--', c='k', lw=1.0, label='perfect')\nfor name in ('overall', 'core', 'boundary'):\n    st = strata[name]\n    if st is None: continue\n    ok = st['_ok']\n    axr.plot(st['_conf'][ok], st['_acc'][ok], 'o-', color=colr[name], lw=1.6, ms=4,\n             label=f\"{name} (Brier {st['brier']:.3f}, ECE {st['ece']:.3f}, MCE {st['mce']:.3f})\")\naxr.set_ylabel('Empirical accuracy (fraction water)')\naxr.set_xlim(0, 1); axr.set_ylim(0, 1); axr.grid(alpha=0.3)\naxr.set_title(f'Boundary-stratified reliability -- MC P(water)  (tol {BOUND_TOL}px)')\naxr.legend(loc='lower right', fontsize=8)\nfor name in ('core', 'boundary'):\n    st = strata[name]\n    if st is None: continue\n    frac = st['_cnt'] / max(st['_cnt'].sum(), 1)\n    axh.plot(centers, frac, drawstyle='steps-mid', color=colr[name], lw=1.3, label=name)\naxh.set_ylabel('frac.'); axh.set_xlabel('Predicted P(water)'); axh.grid(alpha=0.3)\naxh.legend(fontsize=7, loc='upper center')\nfig.subplots_adjust(left=0.13, right=0.97, top=0.93, bottom=0.09)\nfig.canvas.draw()\n_w, _h = fig.canvas.get_width_height()\nout_reliability = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8).reshape(_h, _w, 4)[..., :3].copy()\nplt.close(fig)\n\nbfrac = float(boundary_zone[finite].mean())\nout_cal = {'tolerance_px': BOUND_TOL, 'uncertainty_source': U_src, 'n_bins': nb,\n           'boundary_fraction': round(bfrac, 4)}\nfor name, st in strata.items():\n    out_cal[name] = None if st is None else {k: st[k] for k in\n        ('brier', 'ece', 'mce', 'mean_uncertainty', 'n_pixels')}\nprint('calibration (stratified):', out_cal)\n",
           "color_index": 3,
-          "node_note": "Calibration de P: Brier, ECE/MCE, reliability diagram, ⟨U⟩. a=P(acc_mean), b=GT aligne(out_gt), c=domaine, d=σ_P(acc_std,opt), e=n_bins."
+          "node_note": "Calibration boundary-stratifiee: core (>3px du bord GT) vs boundary band vs overall. Separe le bulk confiant du bord sous-pixel (soft P vs label binaire). tol=BOUND_TOL editable. a=P b=GT c=domaine(opt, def whole) d=sigma_P e=n_bins."
         },
         "ports": [
           {
@@ -1900,11 +1764,11 @@
         "y": 2340
       },
       "style": {
-        "width": 240,
-        "height": 200
+        "width": 300,
+        "height": 840
       },
-      "width": 240,
-      "height": 200,
+      "width": 300,
+      "height": 840,
       "data": {
         "label": "Inspector",
         "params": {
@@ -1913,12 +1777,13 @@
         "minified": false,
         "savedHeight": 200
       },
-      "selected": false,
+      "selected": true,
       "positionAbsolute": {
         "x": 3560,
         "y": 2340
       },
-      "dragging": false
+      "dragging": false,
+      "resizing": false
     },
     {
       "id": "cal_bins",
@@ -2273,6 +2138,72 @@
       },
       "dragging": false,
       "resizing": false
+    },
+    {
+      "id": "node-1783317447253-di2qqze0m",
+      "type": "df_to_dataframe",
+      "position": {
+        "x": 3840,
+        "y": 2340
+      },
+      "style": {},
+      "data": {
+        "label": "Dict to DataFrame",
+        "params": {}
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 3840,
+        "y": 2340
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1783317456980-lpgjjicef",
+      "type": "df_export",
+      "position": {
+        "x": 4080,
+        "y": 2320
+      },
+      "style": {},
+      "data": {
+        "label": "DF Export",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/public/templates/mc_validation/output.csv",
+          "save": 0
+        }
+      },
+      "width": 208,
+      "height": 118,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4080,
+        "y": 2320
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1783317465628-wny222o0p",
+      "type": "df_editor",
+      "position": {
+        "x": 4080,
+        "y": 2180
+      },
+      "style": {},
+      "data": {
+        "label": "DF Editor",
+        "params": {}
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 4080,
+        "y": 2180
+      },
+      "dragging": false
     }
   ],
   "edges": [
@@ -2437,38 +2368,6 @@
       "selected": false
     },
     {
-      "id": "e_osm_1",
-      "source": "node-1782920492331-zy195o6bo",
-      "sourceHandle": "geotiff__geotiff",
-      "target": "osm_bridges",
-      "targetHandle": "geotiff__reference",
-      "selected": false
-    },
-    {
-      "id": "e_osm_2",
-      "source": "landcover_gt",
-      "sourceHandle": "mask__mask",
-      "target": "ext_union",
-      "targetHandle": "mask__mask_a",
-      "selected": false
-    },
-    {
-      "id": "e_osm_3",
-      "source": "osm_bridges",
-      "sourceHandle": "mask__mask",
-      "target": "ext_union",
-      "targetHandle": "mask__mask_b",
-      "selected": false
-    },
-    {
-      "id": "e-1782966859885-ma77uqzbl",
-      "source": "osm_bridges",
-      "target": "node-1782966859833-6omzfmatk",
-      "sourceHandle": "image__preview",
-      "targetHandle": "image__main",
-      "selected": false
-    },
-    {
       "id": "e-1782969673740-6ertyffzp",
       "source": "node-1782969673739-7vzpqrwhf",
       "sourceHandle": "scalar__value",
@@ -2491,35 +2390,11 @@
       "selected": false
     },
     {
-      "id": "e_rf_2",
-      "source": "ext_union",
-      "sourceHandle": "mask__mask",
-      "target": "node-1782710392200-fj2ugkk3u",
-      "targetHandle": "mask__d",
-      "selected": false
-    },
-    {
-      "id": "e_dom_2",
-      "source": "corr_dilate",
-      "sourceHandle": "mask__mask",
-      "target": "node-1782710392200-fj2ugkk3u",
-      "targetHandle": "mask__e",
-      "selected": false
-    },
-    {
       "id": "e-1782972749087-2",
       "source": "node-1782972741979-9tx4ye91z",
       "target": "corr_dilate",
       "sourceHandle": "main",
       "targetHandle": "any__mask",
-      "selected": false
-    },
-    {
-      "id": "e-1782972779122-1",
-      "source": "ext_union",
-      "target": "node-1782972774702-cl7d9x8kc",
-      "sourceHandle": "mask__mask",
-      "targetHandle": "main",
       "selected": false
     },
     {
@@ -2643,22 +2518,6 @@
       "selected": false
     },
     {
-      "id": "e_sw_2",
-      "source": "node-1782710392200-fj2ugkk3u",
-      "sourceHandle": "mask__out_gt",
-      "target": "thr_sweep",
-      "targetHandle": "mask__b",
-      "selected": false
-    },
-    {
-      "id": "e_sw_3",
-      "source": "corr_dilate",
-      "sourceHandle": "mask__mask",
-      "target": "thr_sweep",
-      "targetHandle": "mask__c",
-      "selected": false
-    },
-    {
       "id": "e_sw_4",
       "source": "sweep_metric",
       "sourceHandle": "scalar__value",
@@ -2680,70 +2539,6 @@
       "sourceHandle": "any__out_best",
       "target": "insp_sweep",
       "targetHandle": "any__data",
-      "selected": false
-    },
-    {
-      "id": "e_domc_1",
-      "source": "node-1782919954938-1km6n7fkh",
-      "sourceHandle": "mask__mask",
-      "target": "pred_domain",
-      "targetHandle": "mask__mask_a",
-      "selected": false
-    },
-    {
-      "id": "e_domc_2",
-      "source": "corr_dilate",
-      "sourceHandle": "mask__mask",
-      "target": "pred_domain",
-      "targetHandle": "mask__mask_b",
-      "selected": false
-    },
-    {
-      "id": "e_domc_3",
-      "source": "node-1782710392200-fj2ugkk3u",
-      "sourceHandle": "mask__out_gt",
-      "target": "truth_domain",
-      "targetHandle": "mask__mask_a",
-      "selected": false
-    },
-    {
-      "id": "e_domc_4",
-      "source": "corr_dilate",
-      "sourceHandle": "mask__mask",
-      "target": "truth_domain",
-      "targetHandle": "mask__mask_b",
-      "selected": false
-    },
-    {
-      "id": "e_domc_5",
-      "source": "pred_domain",
-      "sourceHandle": "mask__mask",
-      "target": "node-1782935904874-0.4708570372279324",
-      "targetHandle": "mask__pred",
-      "selected": false
-    },
-    {
-      "id": "e_domc_6",
-      "source": "truth_domain",
-      "sourceHandle": "mask__mask",
-      "target": "node-1782935904874-0.4708570372279324",
-      "targetHandle": "mask__truth",
-      "selected": false
-    },
-    {
-      "id": "e_domc_7",
-      "source": "pred_domain",
-      "sourceHandle": "mask__mask",
-      "target": "boundary_f1",
-      "targetHandle": "mask__pred",
-      "selected": false
-    },
-    {
-      "id": "e_domc_8",
-      "source": "truth_domain",
-      "sourceHandle": "mask__mask",
-      "target": "boundary_f1",
-      "targetHandle": "mask__truth",
       "selected": false
     },
     {
@@ -2792,22 +2587,6 @@
       "sourceHandle": "image__main",
       "target": "mc_cal",
       "targetHandle": "image__a",
-      "selected": false
-    },
-    {
-      "id": "e_cal_2",
-      "source": "node-1782710392200-fj2ugkk3u",
-      "sourceHandle": "mask__out_gt",
-      "target": "mc_cal",
-      "targetHandle": "mask__b",
-      "selected": false
-    },
-    {
-      "id": "e_cal_3",
-      "source": "corr_dilate",
-      "sourceHandle": "mask__mask",
-      "target": "mc_cal",
-      "targetHandle": "mask__c",
       "selected": false
     },
     {
@@ -2880,18 +2659,103 @@
       "target": "node-1783230768251-s8p8obduh",
       "sourceHandle": "image__out_curve",
       "targetHandle": "image__main"
+    },
+    {
+      "id": "e_pred_smm",
+      "source": "node-1782919954938-1km6n7fkh",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782935904874-0.4708570372279324",
+      "targetHandle": "mask__pred",
+      "selected": false
+    },
+    {
+      "id": "e_truth_smm",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782935904874-0.4708570372279324",
+      "targetHandle": "mask__truth",
+      "selected": false
+    },
+    {
+      "id": "e_pred_bf1",
+      "source": "node-1782919954938-1km6n7fkh",
+      "sourceHandle": "mask__mask",
+      "target": "boundary_f1",
+      "targetHandle": "mask__pred",
+      "selected": false
+    },
+    {
+      "id": "e_truth_bf1",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "boundary_f1",
+      "targetHandle": "mask__truth",
+      "selected": false
+    },
+    {
+      "id": "e_gt_sweep",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "thr_sweep",
+      "targetHandle": "mask__b",
+      "selected": false
+    },
+    {
+      "id": "e_gt_cal",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "mc_cal",
+      "targetHandle": "mask__b",
+      "selected": false
+    },
+    {
+      "id": "e_water_cor_d",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782710392200-fj2ugkk3u",
+      "targetHandle": "mask__d",
+      "selected": false
+    },
+    {
+      "id": "e_water_corr",
+      "source": "landcover_gt",
+      "sourceHandle": "mask__mask",
+      "target": "node-1782972774702-cl7d9x8kc",
+      "targetHandle": "main",
+      "selected": false
+    },
+    {
+      "id": "e-1783317447384-rowzz126q",
+      "source": "mc_cal",
+      "target": "node-1783317447253-di2qqze0m",
+      "sourceHandle": "any__out_cal",
+      "targetHandle": "dict__dict_in"
+    },
+    {
+      "id": "e-1783317457085-ezljsnp97",
+      "source": "node-1783317447253-di2qqze0m",
+      "target": "node-1783317456980-lpgjjicef",
+      "sourceHandle": "data__data",
+      "targetHandle": "data__table"
+    },
+    {
+      "id": "e-1783317465746-3zdzr5i8d",
+      "source": "node-1783317447253-di2qqze0m",
+      "target": "node-1783317465628-wny222o0p",
+      "sourceHandle": "data__data",
+      "targetHandle": "data__table"
     }
   ],
   "ui": {
     "previewSize": {
       "w": 585.359375,
-      "h": 368
+      "h": 603
     },
     "previewPos": {
       "x": 58.14453125,
       "y": -45.8828125
     },
     "activePaletteIndex": 5,
-    "visualizedNodeId": "node-1782935904874-0.4708570372279324"
+    "visualizedNodeId": "node-1783229747549-z0wnkf3bz"
   }
 }
