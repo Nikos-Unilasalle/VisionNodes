@@ -5,13 +5,14 @@ import { Download, BookOpen, X, ChevronLeft, ChevronRight, GraduationCap, Sparkl
 const BASE = import.meta.env.BASE_URL;
 
 // ─── Config ────────────────────────────────────────────────────────────────
-// TODO(Nicolas): upload the two PDFs as GitHub release assets and paste the
-// direct links below. The book PDFs (~74 MB each) are too large to bundle in
-// the gh-pages site, so we link to release downloads instead.
-const BOOK_PDF_FR =
-  'https://github.com/Nikos-Unilasalle/VisionNodes/releases/latest/download/Le-monde-vu-par-les-nombres-FR.pdf';
-const BOOK_PDF_EN =
-  'https://github.com/Nikos-Unilasalle/VisionNodes/releases/latest/download/The-world-seen-through-numbers-EN.pdf';
+// The book PDFs (~75 MB each) are too large for the gh-pages site, so they live
+// on a dedicated `books` release that is never tied to an app version — the
+// book evolves on its own cadence. Publishing a new edition is a single
+// `gh release upload books <file> --clobber`; these URLs never move.
+const BOOKS_TAG = 'books';
+const BOOKS_BASE = `https://github.com/Nikos-Unilasalle/VisionNodes/releases/download/${BOOKS_TAG}`;
+const BOOK_PDF_FR = `${BOOKS_BASE}/Le-monde-vu-par-les-nombres-FR.pdf`;
+const BOOK_PDF_EN = `${BOOKS_BASE}/The-world-seen-through-numbers-EN.pdf`;
 
 // ─── Content ───────────────────────────────────────────────────────────────
 
