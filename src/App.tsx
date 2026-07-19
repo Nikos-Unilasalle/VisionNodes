@@ -1783,7 +1783,9 @@ function App() {
         const conflictInfo = edgeConflictMap.get(edge.id);
         return {
           ...edge,
-          type: (waypoints.length > 0 || conflictInfo) ? 'ribbon' : edge.type,
+          // Every edge goes through RibbonEdge (identical bezier when there is no
+          // waypoint) so the zoom-compensated right-click hit area applies everywhere.
+          type: 'ribbon',
           data: {
             ...edge.data,
             ribbon: waypoints.length > 0 ? waypoints : undefined,
@@ -1923,6 +1925,7 @@ function App() {
             }}
             panOnDrag={[1, 2]} panOnScroll={false} zoomOnScroll={true} selectionOnDrag={true}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
+            minZoom={0.05} maxZoom={2.5}
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
             fitView
           >

@@ -1,6 +1,12 @@
 import { memo } from 'react';
 import type { EdgeProps, NodeProps } from 'reactflow';
-import { getBezierPath, Position } from 'reactflow';
+import { getBezierPath, Position, useStore } from 'reactflow';
+
+// Right-click hit area of a link, in screen pixels. The stroke lives in flow
+// coordinates, so it is divided by the zoom to stay constant on screen — deleting a
+// link on a zoomed-out graph no longer requires zooming in to aim.
+const EDGE_HIT_WIDTH_PX = 34;
+const EDGE_HIT_WIDTH_MIN = 20;
 
 interface RibbonWaypoint {
   x: number;
@@ -58,6 +64,8 @@ export const RibbonEdge = memo(({
   sourcePosition = Position.Right, targetPosition = Position.Left,
   style, markerEnd, data,
 }: EdgeProps) => {
+  const zoom = useStore(s => s.transform[2]);
+  const hitWidth = Math.max(EDGE_HIT_WIDTH_MIN, EDGE_HIT_WIDTH_PX / (zoom || 1));
   const raw = data?.ribbon;
   const waypoints: RibbonWaypoint[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
   const d = buildRibbonPath(sourceX, sourceY, targetX, targetY, waypoints, sourcePosition, targetPosition);
@@ -88,7 +96,7 @@ export const RibbonEdge = memo(({
         className="react-flow__edge-path"
         markerEnd={markerEnd}
       />
-      <path d={d} stroke="transparent" strokeWidth={20} fill="none" className="react-flow__edge-interaction" />
+      <path d={d} stroke="transparent" strokeWidth={hitWidth} fill="none" strokeLinecap="round" className="react-flow__edge-interaction" />
       {conflictStatus && (
         <g
           transform={`translate(${dotX},${dotY})`}
