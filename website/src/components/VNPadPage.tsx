@@ -5,6 +5,8 @@ import {
   LayoutGrid, Maximize2, Sparkles, ShieldCheck, MoveHorizontal,
 } from 'lucide-react';
 
+const BASE = import.meta.env.BASE_URL;
+
 // Release tag the direct-download asset is pinned to. `VNPad.apk` is published
 // under a stable filename by the release workflow, so only this constant moves.
 const VERSION = '0.1.0';
@@ -85,27 +87,59 @@ const VNPadPage = () => (
           Android 8.0+ · free and open source · v{VERSION}
         </p>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.15 }}
+        className="container-lg mt-12"
+      >
+        <div className="rounded-2xl overflow-hidden shadow-xl">
+          <img
+            src={`${BASE}vnpad/VNpad.jpeg`}
+            alt="VNStudio open on a desktop with VNPad running on a phone beside it"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </motion.div>
     </section>
 
     {/* Features */}
     <section className="section-full" style={{ paddingTop: '3rem' }}>
       <div className="container-lg">
-        <div className="grid md:grid-cols-2 gap-5">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className="vn-card p-8"
-            >
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-[var(--accent)]/10 text-[var(--accent)]">
-                {f.icon}
-              </div>
-              <h3 className="text-[19px] text-[var(--text-main)] mb-2">{f.title}</h3>
-              <p className="text-[14px] text-[var(--text-dim)] leading-relaxed">{f.body}</p>
-            </motion.div>
-          ))}
+        <div className="grid md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-8 items-start">
+          {/* Portrait shot of a live board — sticks alongside the feature list on desktop. */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="rounded-2xl overflow-hidden shadow-xl md:sticky md:top-24"
+          >
+            <img
+              src={`${BASE}vnpad/VNpad-phone.jpeg`}
+              alt="A VNPad board of coloured keys — Image, Compose, Note, Help, Threshold, Blob"
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
+
+          <div className="grid gap-5">
+            {FEATURES.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="vn-card p-8"
+              >
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 bg-[var(--accent)]/10 text-[var(--accent)]">
+                  {f.icon}
+                </div>
+                <h3 className="text-[19px] text-[var(--text-main)] mb-2">{f.title}</h3>
+                <p className="text-[14px] text-[var(--text-dim)] leading-relaxed">{f.body}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
