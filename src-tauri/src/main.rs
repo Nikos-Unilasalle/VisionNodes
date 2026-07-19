@@ -4,6 +4,8 @@
 use std::sync::Mutex;
 use tauri::Manager;
 
+mod vnpad;
+
 #[allow(dead_code)]
 enum ChildProcess {
     Std(std::process::Child),
@@ -112,6 +114,10 @@ fn main() {
                 }
             }
 
+            // VNPad: LAN remote-control server + pairing state.
+            app.manage(vnpad::VNPadState::new());
+            vnpad::start_server(app.handle().clone());
+
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -135,7 +141,10 @@ fn main() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![
+            vnpad::vnpad_pairing,
+            vnpad::vnpad_set_schemas
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
