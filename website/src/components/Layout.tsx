@@ -15,7 +15,7 @@ import nodesData from '../data/nodes.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace' | 'agro-root-anatomy' | 'learn';
+type Tab = 'home' | 'about' | 'wiki' | 'tutorials' | 'community' | 'gallery' | 'admin' | 'download' | 'privacy' | 'marketplace' | 'agro-root-anatomy' | 'learn' | 'vnpad';
 
 interface Port {
   id: string;
@@ -167,6 +167,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'tutorials', label: 'Tutorials' },
   { id: 'learn',     label: 'Learn CV'  },
   { id: 'community', label: 'Share'     },
+  { id: 'vnpad',     label: 'VNPad'     },
   { id: 'download',  label: 'Download'  },
   // { id: 'marketplace', label: 'Marketplace' },
 ];
