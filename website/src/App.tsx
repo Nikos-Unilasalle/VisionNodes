@@ -6,6 +6,7 @@ import WikiPage from './components/WikiPage';
 import TutorialsPage from './components/TutorialsPage';
 import CommunityPage from './components/CommunityPage';
 import DownloadPage from './components/DownloadPage';
+import VNPadPage from './components/VNPadPage';
 import LearnPage from './components/LearnPage';
 import PrivacyPage from './components/PrivacyPage';
 import AboutPage from './components/AboutPage';
@@ -30,6 +31,7 @@ const Footer = ({ setActiveTab }: { setActiveTab: (t: Tab) => void }) => (
             { label: 'Node Wiki',   tab: 'wiki'        as Tab },
             { label: 'Tutorials',   tab: 'tutorials'   as Tab },
             { label: 'Learn CV',    tab: 'learn'       as Tab },
+            { label: 'VNPad',       tab: 'vnpad'       as Tab },
             { label: 'Download',    tab: 'download'    as Tab },
             // { label: 'Marketplace', tab: 'marketplace' as Tab },
           ].map(l => (
@@ -127,6 +129,7 @@ export default function App() {
           {activeTab === 'marketplace' && <MarketplacePage key="marketplace" onProductClick={(link) => goTo(link.replace('/marketplace/', '') as any)} />}
           {activeTab === 'agro-root-anatomy' && <RootAnatomyInfoPage key="anatomy" onBack={() => goTo('marketplace')} />}
           {activeTab === 'admin'     && <AdminPage     key="admin"     />}
+          {activeTab === 'vnpad'     && <VNPadPage     key="vnpad"     />}
           {activeTab === 'download'  && <DownloadPage  key="download"  />}
           {activeTab === 'privacy'   && <PrivacyPage   key="privacy"   />}
         </AnimatePresence>
