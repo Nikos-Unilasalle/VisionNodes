@@ -632,20 +632,24 @@ class VisionEngine:
                 try:
                     img_to_encode = final_img
                     def _encode(img):
-                        if img.dtype != np.uint8:
+                        # 2-channel data = optical flow → colorize BEFORE any uint8 cast
+                        # (cartToPolar needs float32, and casting to uint8 would destroy the flow)
+                        if len(img.shape) == 3 and img.shape[2] == 2:
+                            hsv = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+                            hsv[..., 1] = 255
+                            fx = np.ascontiguousarray(img[..., 0], dtype=np.float32)
+                            fy = np.ascontiguousarray(img[..., 1], dtype=np.float32)
+                            mag, ang = cv2.cartToPolar(fx, fy)
+                            hsv[..., 0] = ang * 180 / np.pi / 2
+                            hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+                            img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+                        elif img.dtype != np.uint8:
                             if img.dtype in (np.float32, np.float64):
                                 img = (np.clip(img, 0.0, 1.0) * 255).astype(np.uint8) if float(img.max()) <= 1.0 else np.clip(img, 0, 255).astype(np.uint8)
                             else:
                                 img = np.clip(img, 0, 255).astype(np.uint8)
                         if len(img.shape) == 2:
                             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-                        elif len(img.shape) == 3 and img.shape[2] == 2:
-                            hsv = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-                            hsv[..., 1] = 255
-                            mag, ang = cv2.cartToPolar(img[..., 0], img[..., 1])
-                            hsv[..., 0] = ang * 180 / np.pi / 2
-                            hsv[..., 2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-                            img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
                         # Cap to 1920px wide to keep transfer sizes reasonable
                         h, w = img.shape[:2]
                         if w > 1920:
