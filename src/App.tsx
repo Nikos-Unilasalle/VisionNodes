@@ -21,6 +21,8 @@ import { writeTextFile, writeFile, readDir, readTextFile } from '@tauri-apps/plu
 import { ask } from '@tauri-apps/plugin-dialog';
 
 import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
+import { VNPadPairing } from './components/vnpad/VNPadPairing';
 import { nodeTypes, ColoredGenericCustomNode } from './data/nodeTypes';
 import { CATEGORIES } from './data/categories';
 import { getNestedSubGraph, updateNestedSubGraph } from './utils/groups';
@@ -1384,26 +1386,72 @@ function App() {
     setViewEdges(eds => [...eds, e1, e2]);
   }, [pushSnapshot, setViewNodes, setViewEdges]);
 
-  useEffect(() => {
-    if (lastCommands && lastCommands.length > 0) {
-      console.log("[Engine Commands] Processing:", lastCommands);
-      lastCommands.forEach(cmd => {
-        if (cmd.type === 'add_node') {
-          let label = "New Node";
-          if (cmd.node_type === 'input_image') label = "Captured Frame";
-          if (cmd.node_type === 'input_movie') label = "Recorded Video";
-          console.log("[Engine Commands] addNode call:", cmd.node_type, label, cmd.params);
-          addNode(cmd.node_type, label, null, cmd.params);
-        } else if (cmd.type === 'set_param') {
-          setViewNodes(nds => nds.map(n =>
-            n.id === cmd.node_id
-              ? { ...n, data: { ...n.data, params: { ...n.data.params, ...cmd.params } } }
-              : n
-          ));
-        }
+  // Map every menu node type to its generic display name, so remotely-added
+  // nodes keep their real name (never "New Node").
+  const nodeLabelByType = useMemo(() => {
+    const map = new Map<string, string>();
+    dynamicCategories.forEach((cat: any) => {
+      (cat.nodes || []).forEach((n: any) => {
+        if (n.type && !map.has(n.type)) map.set(n.type, n.label || n.type);
       });
+    });
+    return map;
+  }, [dynamicCategories]);
+
+  // Apply a single remote command (from the engine command channel or a VNPad
+  // mobile pad). Same shape both ways: { type:'add_node'|'set_param', ... }.
+  const applyRemoteCommand = useCallback((cmd: any) => {
+    if (!cmd || typeof cmd !== 'object') return;
+    if (cmd.type === 'add_node') {
+      // Never rename nodes: use the node's own generic name from the menu.
+      // An explicit cmd.label (e.g. engine capture context) still wins.
+      const label = cmd.label || nodeLabelByType.get(cmd.node_type) || cmd.node_type;
+      addNode(cmd.node_type, label, null, cmd.params);
+    } else if (cmd.type === 'set_param') {
+      setViewNodes(nds => nds.map(n =>
+        n.id === cmd.node_id
+          ? { ...n, data: { ...n.data, params: { ...n.data.params, ...cmd.params } } }
+          : n
+      ));
     }
-  }, [lastCommands, addNode]);
+  }, [addNode, setViewNodes, nodeLabelByType]);
+
+  useEffect(() => {
+    if (!lastCommands || lastCommands.length === 0) return;
+    lastCommands.forEach(cmd => {
+      // Engine capture/record flows keep their contextual names.
+      let c = cmd;
+      if (cmd.type === 'add_node') {
+        if (cmd.node_type === 'input_image') c = { ...cmd, label: cmd.label || 'Captured Frame' };
+        else if (cmd.node_type === 'input_movie') c = { ...cmd, label: cmd.label || 'Recorded Video' };
+      }
+      applyRemoteCommand(c);
+    });
+  }, [lastCommands, applyRemoteCommand]);
+
+  // VNPad: apply commands relayed from the Android/tablet pad via the Rust
+  // LAN server (emitted as a `vnpad-command` Tauri event).
+  useEffect(() => {
+    const unlisten = listen<any>('vnpad-command', (e) => applyRemoteCommand(e.payload));
+    return () => { unlisten.then(fn => fn()); };
+  }, [applyRemoteCommand]);
+
+  // VNPad: push the same node list the Add-Node menu shows (friendly labels +
+  // category, core + plugins) so the pad editor offers a name-based picker.
+  useEffect(() => {
+    const seen = new Set<string>();
+    const nodes: { type: string; label: string; category: string }[] = [];
+    dynamicCategories.forEach((cat: any) => {
+      (cat.nodes || []).forEach((n: any) => {
+        if (!n.type || seen.has(n.type)) return;
+        seen.add(n.type);
+        nodes.push({ type: n.type, label: n.label || n.type, category: cat.label || '' });
+      });
+    });
+    if (nodes.length > 0) {
+      invoke('vnpad_set_schemas', { schemas: nodes }).catch(() => { /* server not ready */ });
+    }
+  }, [dynamicCategories]);
 
   // Listen for snapshot-to-node events from the inspector panel
   useEffect(() => {
@@ -1924,6 +1972,7 @@ function App() {
                 >
                   <Plus size={14} /> Add Node
                 </button>
+                <VNPadPairing />
                 {groupStack.length > 0 && (
                   <div className="flex items-center gap-1 bg-[#1e2530]/90 backdrop-blur border border-accent/30 rounded-full px-3 py-1.5 text-[10px] font-bold shadow-lg">
                     <button onClick={() => { setGroupStack([]); groupStackRef.current = []; instance?.fitView({ duration: 300 }); }} className="text-gray-400 hover:text-white transition-colors">
