@@ -4,7 +4,7 @@ import { Download, Github, ExternalLink, Apple, Monitor, ImageIcon } from 'lucid
 
 // Release version that the direct-download asset filenames are pinned to.
 // Bump this single constant when publishing a new release.
-const VERSION = '0.1.1';
+const VERSION = '0.1.3';
 const ASSET_BASE = `https://github.com/Nikos-Unilasalle/VisionNodes/releases/download/v${VERSION}`;
 
 const PLATFORMS = [
