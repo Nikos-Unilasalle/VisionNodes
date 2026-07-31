@@ -56,6 +56,32 @@ class ForensicFootprintNode(NodeProcessor):
         self._frame_count = 0
         self._last_preview = None
 
+    @classmethod
+    def _stand_upright(cls, vis, gray, binary):
+        """Rotate the crop so the foot stands upright with the toes at the top.
+
+        Returns the three arrays rotated consistently. Uses two invariants of a foot:
+        it is longer than it is wide, and its widest line — the ball, at the metatarsal
+        heads — lies in the toe half, never in the heel half. Comparing the two ends
+        instead would be unreliable: with the toes attached, the toe end is the wider one.
+        """
+        def extents(b):
+            ys, xs = np.where(b > 0)
+            return (int(ys.min()), int(ys.max()), int(xs.min()), int(xs.max()))
+
+        def rot(k):
+            return (cv2.rotate(vis, k), cv2.rotate(gray, k), cv2.rotate(binary, k))
+
+        ymi, yma, xmi, xma = extents(binary)
+        if (xma - xmi) > (yma - ymi):
+            vis, gray, binary = rot(cv2.ROTATE_90_CLOCKWISE)
+            ymi, yma, xmi, xma = extents(binary)
+
+        counts = np.count_nonzero(binary[ymi:yma + 1], axis=1)
+        if counts.any() and int(np.argmax(counts)) > len(counts) / 2:
+            vis, gray, binary = rot(cv2.ROTATE_180)
+        return vis, gray, binary
+
     def _encode_preview(self, img):
         try:
             h, w = img.shape[:2]
@@ -108,6 +134,18 @@ class ForensicFootprintNode(NodeProcessor):
             return {'main': vis_src, 'report': {}, 'staheli': 0.0, 'asymmetry': 0.0,
                     'main_preview': self._last_preview}
 
+        ymi, yma = int(np.min(ysp)), int(np.max(ysp))
+        xmi, xma = int(np.min(xsp)), int(np.max(xsp))
+        fh = max(1, yma - ymi)
+        fw = max(1, xma - xmi)
+
+        # Every zone split below runs along Y, so the foot has to stand upright in the
+        # crop, toes at the top. geom_obb only guarantees the print is deskewed — a
+        # diagonal print comes back lying on its side, and a print can arrive heel-first.
+        # Two facts make this recoverable without asking the user: a foot is longer than
+        # it is wide, and its heel end is wider than its toe end.
+        vis_src, gray_img, binary = self._stand_upright(vis_src, gray_img, binary)
+        ysp, xsp = np.where(binary > 0)
         ymi, yma = int(np.min(ysp)), int(np.max(ysp))
         xmi, xma = int(np.min(xsp)), int(np.max(xsp))
         fh = max(1, yma - ymi)
@@ -187,29 +225,41 @@ class ForensicFootprintNode(NodeProcessor):
             metrics['foot_length_mm'] = round(fh / px_per_mm, 1)
             metrics['foot_width_mm']  = round(fw / px_per_mm, 1)
 
-        # Width measurement lines at forefoot and heel levels
-        if show_meas:
-            fore_y = (bounds[0] + bounds[1]) // 2
-            heel_y = (bounds[-2] + bounds[-1]) // 2
-            widths = {}
-            for key, meas_y in [('forefoot', fore_y), ('heel', heel_y)]:
-                row  = binary[meas_y, xmi:xma]
-                cols = np.where(row > 0)[0]
-                if len(cols) > 1:
-                    lx, rx = xmi + cols[0], xmi + cols[-1]
-                    cv2.line(ov, (lx, meas_y), (rx, meas_y), (255, 165, 0), max(1, fw // 200))
-                    w_px = int(rx - lx)
-                    fs2  = max(0.25, 0.38 * fw / 200)
-                    if has_calib:
-                        label = f'{w_px / px_per_mm:.1f}mm'
-                        metrics[key + '_width_mm'] = round(w_px / px_per_mm, 1)
-                    else:
-                        label = f'{w_px}px'
-                    cv2.putText(ov, label, (rx + 4, meas_y),
-                                cv2.FONT_HERSHEY_SIMPLEX, fs2, (255, 165, 0), 1, cv2.LINE_AA)
-                    widths[key] = w_px
-            if widths.get('forefoot', 0) > 0:
-                metrics['heel_forefoot_ratio'] = round(widths.get('heel', 0) / widths['forefoot'], 3)
+        # Ball width and heel width — the CBW and HBW of forensic podiatry, alongside
+        # total foot length. They are computed unconditionally: Show Measurements only
+        # decides whether the measuring lines are DRAWN. Gating the numbers on a display
+        # option silently removed two of the four anthropometric variables.
+        # CBW is the breadth at the metatarsal heads and HBW the breadth of the heel:
+        # both are MAXIMUM breadths within their zone, so locate the zone by name and
+        # scan it. Indexing zones by position measured across the toes in 4-zone mode.
+        zone_names = [z[0] for z in zone_defs]
+        widths = {}
+        for key, zone_name in (('forefoot', 'Forefoot'), ('heel', 'Heel')):
+            zi = zone_names.index(zone_name)
+            y0, y1 = bounds[zi], bounds[zi + 1]
+            band = binary[y0:y1, xmi:xma]
+            if band.size == 0:
+                continue
+            counts = np.count_nonzero(band, axis=1)
+            if not counts.any():
+                continue
+            best = int(np.argmax(counts))
+            cols = np.where(band[best] > 0)[0]
+            meas_y = y0 + best
+            lx, rx = xmi + int(cols[0]), xmi + int(cols[-1])
+            w_px = int(rx - lx)
+            widths[key] = w_px
+            metrics[key + '_width_px'] = w_px
+            if has_calib:
+                metrics[key + '_width_mm'] = round(w_px / px_per_mm, 1)
+            if show_meas:
+                cv2.line(ov, (lx, meas_y), (rx, meas_y), (255, 165, 0), max(1, fw // 200))
+                fs2   = max(0.25, 0.38 * fw / 200)
+                label = f'{w_px / px_per_mm:.1f}mm' if has_calib else f'{w_px}px'
+                cv2.putText(ov, label, (rx + 4, meas_y),
+                            cv2.FONT_HERSHEY_SIMPLEX, fs2, (255, 165, 0), 1, cv2.LINE_AA)
+        if widths.get('forefoot', 0) > 0:
+            metrics['heel_forefoot_ratio'] = round(widths.get('heel', 0) / widths['forefoot'], 3)
 
         # Axis of symmetry
         cv2.line(ov, (mid_x, ymi), (mid_x, yma), (0, 220, 220), max(1, fw // 120))
