@@ -25,7 +25,7 @@ def _id_color(track_id: int) -> tuple[int, int, int]:
     label='Track Visualizer',
     category='tracking',
     icon='Tv2',
-    description="Rendu visuel des tracks SORT/DeepSORT : boîtes colorées par ID, labels et trails de trajectoire.",
+    description="Renders SORT/DeepSORT tracks: boxes coloured per ID, labels and trajectory trails.",
     inputs=[
         {'id': 'image',  'color': 'image'},
         {'id': 'tracks', 'color': 'list'},

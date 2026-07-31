@@ -35,33 +35,33 @@ def _feret_diameters(cnt):
     category='geology',
     icon='BarChart2',
     description=(
-        "Métriques morphométriques depuis la segmentation automatique SAM ou FastSAM.\n\n"
-        "Connecter 'Contours' depuis SAM Segmenter (mode Auto) ou FastSAM Segmenter.\n"
-        "Connecter optionnellement le facteur de calibration (px/µm).\n\n"
-        "Métriques : count, diamètre équivalent, Feret max/min, circularité, rapport de forme,\n"
-        "fraction de grain — plus histogramme et courbe cumulative de taille."
+        "Morphometric metrics from SAM or FastSAM automatic segmentation.\n\n"
+        "Connect 'Contours' from SAM Segmenter (Auto mode) or FastSAM Segmenter.\n"
+        "Optionally connect a calibration factor (px/µm).\n\n"
+        "Metrics: count, equivalent diameter, Feret max/min, circularity, aspect ratio,\n"
+        "grain fraction — plus a size histogram and cumulative curve."
     ),
     inputs=[
         {'id': 'contours',  'color': 'contours', 'label': 'Contours (SAM / FastSAM Auto)'},
-        {'id': 'image',     'color': 'image',  'label': 'Image source (pour fraction)'},
+        {'id': 'image',     'color': 'image',  'label': 'Source Image (for fraction)'},
         {'id': 'um_per_px', 'color': 'scalar', 'label': 'Px/µm (Calibration)'},
     ],
     outputs=[
-        {'id': 'histogram',         'color': 'image',  'label': 'Histogramme + Courbe cumulative'},
-        {'id': 'count',             'color': 'scalar', 'label': 'Nombre de grains'},
-        {'id': 'mean_dia_um',       'color': 'scalar', 'label': 'Diamètre moyen (µm)'},
-        {'id': 'median_dia_um',     'color': 'scalar', 'label': 'Diamètre médian (µm)'},
-        {'id': 'mean_feret_max',    'color': 'scalar', 'label': 'Feret max moyen (µm)'},
-        {'id': 'mean_feret_min',    'color': 'scalar', 'label': 'Feret min moyen (µm)'},
-        {'id': 'mean_circularity',  'color': 'scalar', 'label': 'Circularité moyenne'},
-        {'id': 'mean_aspect_ratio', 'color': 'scalar', 'label': 'Rapport de forme moyen'},
-        {'id': 'grain_fraction',    'color': 'scalar', 'label': 'Fraction de grain (%)'},
-        {'id': 'regions',           'color': 'regions', 'label': 'Régions (par grain)'},
+        {'id': 'histogram',         'color': 'image',  'label': 'Histogram + Cumulative Curve'},
+        {'id': 'count',             'color': 'scalar', 'label': 'Grain Count'},
+        {'id': 'mean_dia_um',       'color': 'scalar', 'label': 'Mean Diameter (µm)'},
+        {'id': 'median_dia_um',     'color': 'scalar', 'label': 'Median Diameter (µm)'},
+        {'id': 'mean_feret_max',    'color': 'scalar', 'label': 'Mean Feret Max (µm)'},
+        {'id': 'mean_feret_min',    'color': 'scalar', 'label': 'Mean Feret Min (µm)'},
+        {'id': 'mean_circularity',  'color': 'scalar', 'label': 'Mean Circularity'},
+        {'id': 'mean_aspect_ratio', 'color': 'scalar', 'label': 'Mean Aspect Ratio'},
+        {'id': 'grain_fraction',    'color': 'scalar', 'label': 'Grain Fraction (%)'},
+        {'id': 'regions',           'color': 'regions', 'label': 'Regions (per grain)'},
     ],
     params=[
-        {'id': 'min_area',   'label': 'Aire min (px²)',   'type': 'int',   'default': 200,      'min': 1,    'max': 500000},
-        {'id': 'hist_bins',  'label': 'Bins histogramme', 'type': 'int',   'default': 30,       'min': 5,    'max': 100},
-        {'id': 'hist_color', 'label': 'Couleur barres',   'type': 'color', 'default': '#4FC3F7'},
+        {'id': 'min_area',   'label': 'Min Area (px²)',   'type': 'int',   'default': 200,      'min': 1,    'max': 500000},
+        {'id': 'hist_bins',  'label': 'Histogram Bins', 'type': 'int',   'default': 30,       'min': 5,    'max': 100},
+        {'id': 'hist_color', 'label': 'Bar Colour',   'type': 'color', 'default': '#4FC3F7'},
         {'id': 'um_per_px',  'label': 'Px/µm (fallback)', 'type': 'float', 'default': 1.0,    'min': 0.001, 'max': 10000.0},
     ]
 )
