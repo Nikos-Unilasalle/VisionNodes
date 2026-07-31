@@ -1,13 +1,47 @@
 """
 Grain Size Histogram — interactive histogram + cumulative curve rendered directly in-node.
-Takes 'regions' list from sam_grain_stats. All outputs are serializable (no image array).
+Accepts a 'regions' list from SAM Grain Stats (diameter_um / area_cal schema) or from
+Region Properties (equivalent_diameter / area schema). All outputs are serializable.
 """
 from registry import vision_node, NodeProcessor
 import numpy as np
 
-_METRICS = ['diameter_um', 'feret_max', 'feret_min', 'area_cal']
-_LABELS  = ['Equiv. Diameter', 'Feret Max', 'Feret Min', 'Area']
-_UNITS   = ['µm', 'µm', 'µm', 'µm²']
+# Each metric lists the region keys it accepts, most specific first, so the node
+# works with either producer without the graph author having to care.
+_METRICS = (
+    {'label': 'Equiv. Diameter', 'keys': ('diameter_um', 'equivalent_diameter'), 'dim': 'length'},
+    {'label': 'Feret Max',       'keys': ('feret_max',),                         'dim': 'length'},
+    {'label': 'Feret Min',       'keys': ('feret_min',),                         'dim': 'length'},
+    {'label': 'Area',            'keys': ('area_cal', 'area'),                   'dim': 'area'},
+)
+
+_DEFAULT_UNITS = {'length': 'µm', 'area': 'µm²'}
+_UNIT_KEYS = {'length': 'length_unit', 'area': 'area_unit'}
+
+
+def _resolve_key(regions, candidates):
+    """First candidate key that carries a usable value in at least one region."""
+    for key in candidates:
+        for r in regions:
+            value = r.get(key)
+            if value is None:
+                continue
+            try:
+                if float(value) > 0:
+                    return key
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def _resolve_unit(regions, dim):
+    """Unit advertised by the producer (Region Properties), else the µm default."""
+    unit_key = _UNIT_KEYS[dim]
+    for r in regions:
+        unit = r.get(unit_key)
+        if isinstance(unit, str) and unit.strip():
+            return unit.strip()
+    return _DEFAULT_UNITS[dim]
 
 
 @vision_node(
@@ -17,11 +51,12 @@ _UNITS   = ['µm', 'µm', 'µm', 'µm²']
     icon='BarChart2',
     description=(
         "Interactive grain size histogram + cumulative frequency curve rendered inside the node.\n"
-        "Connect 'Regions' from SAM Grain Stats.\n\n"
-        "Shows D10 / D50 / D90 percentiles, count, mean, and std directly in the chart."
+        "Connect 'Regions' from SAM Grain Stats or from Region Properties.\n\n"
+        "Shows D10 / D50 / D90 percentiles, count, mean, and std directly in the chart.\n"
+        "Units follow the upstream calibration (px when uncalibrated, µm otherwise)."
     ),
     inputs=[
-        {'id': 'regions', 'color': 'list', 'label': 'Regions (SAM Grain Stats)'},
+        {'id': 'regions', 'color': 'list', 'label': 'Regions (Grain Stats / Region Props)'},
     ],
     outputs=[],
     params=[
@@ -40,20 +75,39 @@ class GeoGrainHistogramNode(NodeProcessor):
             return empty
 
         metric_idx = int(params.get('metric', 0))
-        n_bins     = int(params.get('bins', 30))
-        metric_key = _METRICS[metric_idx]
-        label      = _LABELS[metric_idx]
-        unit       = _UNITS[metric_idx]
+        if not 0 <= metric_idx < len(_METRICS):
+            metric_idx = 0
+        metric = _METRICS[metric_idx]
+        n_bins = int(params.get('bins', 30))
 
-        values = [float(r[metric_key]) for r in regions
-                  if r.get(metric_key) is not None and float(r[metric_key]) > 0]
+        metric_key = _resolve_key(regions, metric['keys'])
+        if metric_key is None:
+            # Upstream node does not expose this measurement — say so instead of
+            # rendering an empty chart the user cannot explain.
+            return {**empty,
+                    'label': metric['label'],
+                    'unit':  _DEFAULT_UNITS[metric['dim']],
+                    'error': f"'{metric['label']}' not available on these regions"}
+
+        values = []
+        for r in regions:
+            raw = r.get(metric_key)
+            if raw is None:
+                continue
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if value > 0:
+                values.append(value)
         if not values:
             return empty
 
         arr = np.array(values, dtype=np.float32)
         counts, edges = np.histogram(arr, bins=n_bins)
         bin_centers   = ((edges[:-1] + edges[1:]) / 2).tolist()
-        cumulative    = (np.cumsum(counts) / counts.sum() * 100).tolist()
+        total         = counts.sum()
+        cumulative    = (np.cumsum(counts) / total * 100).tolist() if total > 0 else []
 
         return {
             'bins':       [round(b, 2) for b in bin_centers],
@@ -65,6 +119,6 @@ class GeoGrainHistogramNode(NodeProcessor):
             'count': len(values),
             'mean':  round(float(np.mean(arr)), 2),
             'std':   round(float(np.std(arr)), 2),
-            'unit':  unit,
-            'label': label,
+            'unit':  _resolve_unit(regions, metric['dim']),
+            'label': metric['label'],
         }

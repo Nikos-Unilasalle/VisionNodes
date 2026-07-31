@@ -160,6 +160,10 @@ const ROIEditorOverlay = ({ node, nodesData, onClose }: any) => {
                 src={`data:image/jpeg;base64,${frame}`}
                 className="block w-auto h-auto max-w-[90vw] max-h-[75vh]"
                 draggable={false}
+                // Past 1:1 the browser's smoothing blurs the very edge the user is
+                // aiming at. Show the real pixel grid instead — crisp blocks are far
+                // easier to target than a smooth gradient.
+                style={{ imageRendering: zoom > 1.2 ? 'pixelated' : 'auto' }}
               />
             ) : (
               <div className="w-[800px] h-[450px] flex flex-col items-center justify-center text-gray-700">

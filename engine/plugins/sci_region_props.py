@@ -104,9 +104,11 @@ class RegionPropsNode(NodeProcessor):
                     rect_area = rect[1][0] * rect[1][1]
                     rectangularity = round(area_px / rect_area, 4) if rect_area > 0 else 0.0
                     lmax_px = float(max(rect[1]))
+                    lmin_px = float(min(rect[1]))
                 else:
                     convexity = extent = rectangularity = 0.0
                     lmax_px = maj
+                    lmin_px = mino
 
                 # Roundness: Rd = 4A / (π · L_max²) — shape overall, blind to edge (ch1 §1.9)
                 try:
@@ -138,6 +140,8 @@ class RegionPropsNode(NodeProcessor):
                     'eccentricity':         round(float(p.eccentricity), 4),
                     'anisotropy':           anisotropy,
                     'equivalent_diameter':  eqdiam_cal,
+                    'feret_max':            round(lmax_px * um_per_px, 4),
+                    'feret_min':            round(lmin_px * um_per_px, 4),
                     'orientation':          round(float(p.orientation), 4),
                     'centroid_x':           round(float(cx), 1),
                     'centroid_y':           round(float(cy), 1),
@@ -216,6 +220,8 @@ class RegionPropsNode(NodeProcessor):
                     'eccentricity':        0.0,
                     'anisotropy':          anisotropy,
                     'equivalent_diameter': round(eq_diam_px * um_per_px, 4),
+                    'feret_max':           round(lmax * um_per_px, 4),
+                    'feret_min':           round(float(min(ww, hh)) * um_per_px, 4),
                     'orientation':         0.0,
                     'centroid_x':          round(float(cx_), 1),
                     'centroid_y':          round(float(cy_), 1),

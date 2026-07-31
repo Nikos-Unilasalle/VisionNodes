@@ -109,7 +109,7 @@ export const CATEGORIES: Category[] = [
     { type: 'filter_morphology',  label: 'Morphology',   description: 'Dilation or erosion operations to clean up masks.' },
     { type: 'util_mask_blend',    label: 'Mask Blend',   description: 'Blends two images using a mask as an alpha layer.' },
     { type: 'util_coord_to_mask', label: 'Coord To Mask',description: 'Transforms detection coordinates into a white mask.' },
-    { type: 'mask_circle',         label: 'Circle Mask',    description: 'Generates a circular binary mask, parametric or interactive.' },
+    { type: 'mask_circle',         label: 'Circle Mask',    description: 'Generates a circular or elliptical binary mask from centre and radii, in % of the image.' },
     { type: 'plugin_invert_mask',  label: 'Invert Mask',    description: 'Flips foreground and background in a binary mask.' },
     { type: 'plugin_image_to_mask',label: 'Image to Mask',  description: 'Converts a grayscale image to a binary mask.' },
     { type: 'plugin_mask_to_image',label: 'Mask to Image',  description: 'Converts a binary mask to a grayscale image.' },
@@ -202,7 +202,7 @@ export const CATEGORIES: Category[] = [
     { type: 'feat_find_contours',   label: 'Find Contours',       description: 'Detects and extracts isolated shapes from a binary mask.' },
     { type: 'feat_fill_contours',   label: 'Fill Contours',       description: 'Fills all contours from a list into a binary mask.' },
     { type: 'feat_filter_contours', label: 'Filter Contours',     description: 'Filters contours by elongation ratio and/or area range.' },
-    { type: 'feat_watershed',       label: 'Watershed',           description: 'Marker-based watershed segmentation.' },
+    { type: 'feat_watershed',       label: 'Watershed',           description: 'Marker-based watershed segmentation. Enable Rescue Unseeded Regions so masked objects without a marker are kept instead of absorbed by the background.' },
     { type: 'feat_grabcut',         label: 'GrabCut (Graph Cut)', description: 'Interactive foreground extraction via graph-cut (min-cut/max-flow). Drive with Manual Points: green=keep, red=remove.' },
     { type: 'feat_active_contour',  label: 'Active Contour (Snake)', description: 'Deformable snake / Chan-Vese / geodesic active contour. Init from Manual Points, a mask, or a shape.' },
     { type: 'sci_connected_components',  label: 'Connected Components', description: 'Labels connected regions in a binary mask.' },
@@ -436,7 +436,7 @@ export const CATEGORIES: Category[] = [
     { type: 'root_quality_score',    label: 'Quality Score',    description: 'Scores image and segmentation quality for QC.' },
   ]},
   { id: 'forensics', label: 'Forensics', icon: Search, section: 'domain', nodes: [
-    { type: 'forensic_footprint', label: 'Footprint Forensics', description: 'Full footwear analysis: pressure zones, asymmetry score, and Staheli arch index. Connect geom_obb rotated outputs.' },
+    { type: 'forensic_footprint', label: 'Barefoot Print Forensics', description: 'Bare foot print analysis: foot length and width in mm, pressure zones, asymmetry score, and Staheli arch index (Cavus / Normal / Flat). Not for shoe soles. Connect geom_obb rotated outputs.' },
   ]},
   { id: 'hematology', label: 'Hematology', icon: Activity, section: 'domain', nodes: []},
 ];
