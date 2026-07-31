@@ -18,13 +18,17 @@ _ZONES_3 = [
 
 @vision_node(
     type_id='forensic_footprint',
-    label='Footprint Forensics',
+    label='Barefoot Print Forensics',
     category='analysis',
     icon='Activity',
     description=(
-        'Forensic footwear analysis on a deskewed crop. '
-        'Computes pressure zones, Staheli Arch Index, medial/lateral asymmetry, '
-        'and pressure centroid. Connect geom_obb rotated + rotated_mask outputs.'
+        'Forensic analysis of a BARE FOOT print on a deskewed crop. '
+        'Computes pressure zones, foot length and width in mm, per-zone widths, '
+        'Staheli Arch Index with its Cavus / Normal / Flat classification, '
+        'medial-lateral asymmetry and pressure centroid.\n\n'
+        'The Staheli index is the arch area divided by the non-heel area: it describes '
+        'a plantar arch and is meaningless on a shoe sole. Use this on bare prints only.\n\n'
+        'Connect geom_obb rotated + rotated_mask outputs, and px_per_mm from a calibration.'
     ),
     inputs=[
         {'id': 'image',      'color': 'image'},

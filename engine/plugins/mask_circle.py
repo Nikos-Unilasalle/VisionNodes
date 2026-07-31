@@ -10,11 +10,13 @@ from registry import vision_node, NodeProcessor
     icon='Circle',
     description=(
         'Generates a circular (or elliptical) binary mask.\n\n'
-        'Center and radius are expressed as % of image dimensions. '
+        'Center is expressed as % of image width/height. Radii are expressed as % of the '
+        'SHORTER image side, so equal X and Y radii always give a true circle, whatever '
+        'the aspect ratio. Set them differently to get an ellipse.\n\n'
         'Connect an image to inherit its size; otherwise set Width/Height manually.\n\n'
-        'Feather > 0 produces a soft gradient edge (useful for vignette blending). '
+        'Feather > 0 softens the edge inwards over that many pixels. '
         'Feather = 0 gives a hard binary circle.\n\n'
-        'Use AND (Morphology / bitwise) with any mask to clip to a circular FOV.'
+        'Combine with Mask Operations to cut a disc out of another mask.'
     ),
     resizable=True,
     min_width=220,
@@ -25,14 +27,17 @@ from registry import vision_node, NodeProcessor
     ],
     outputs=[
         {'id': 'mask',   'label': 'Circle Mask',  'color': 'mask'},
-        {'id': 'masked', 'label': 'Masked Image', 'color': 'mask'},
+        # 'masked' carries the source image with the mask applied — a colour image,
+        # not a mask. It was declared 'mask', which made every downstream connection
+        # from it wrong. No template used it, so this is safe to correct.
+        {'id': 'masked', 'label': 'Masked Image', 'color': 'image'},
     ],
     params=[
         {'id': '_sec_geometry', 'label': 'Geometry', 'type': 'section'},
         {'id': 'center_x', 'label': 'Center X (%)', 'type': 'float', 'default': 50.0, 'min': 0.0,  'max': 100.0},
         {'id': 'center_y', 'label': 'Center Y (%)', 'type': 'float', 'default': 50.0, 'min': 0.0,  'max': 100.0},
-        {'id': 'radius_x', 'label': 'Radius X (%)', 'type': 'float', 'default': 45.0, 'min': 1.0,  'max': 100.0},
-        {'id': 'radius_y', 'label': 'Radius Y (%)', 'type': 'float', 'default': 45.0, 'min': 1.0,  'max': 100.0},
+        {'id': 'radius_x', 'label': 'Radius X (% short side)', 'type': 'float', 'default': 45.0, 'min': 1.0,  'max': 100.0},
+        {'id': 'radius_y', 'label': 'Radius Y (% short side)', 'type': 'float', 'default': 45.0, 'min': 1.0,  'max': 100.0},
         {'id': 'feather',  'label': 'Feather (px)',  'type': 'int',   'default': 0,    'min': 0,    'max': 200},
         {'id': 'invert',   'label': 'Invert',        'type': 'bool',  'default': False},
         {'id': '_sec_fallback', 'label': 'Fallback Size', 'type': 'section'},
@@ -52,35 +57,43 @@ class CircleMaskNode(NodeProcessor):
 
         cx = float(params.get('center_x', 50.0)) / 100.0 * w
         cy = float(params.get('center_y', 50.0)) / 100.0 * h
-        rx = max(1.0, float(params.get('radius_x', 45.0)) / 100.0 * w)
-        ry = max(1.0, float(params.get('radius_y', 45.0)) / 100.0 * h)
+        # Both radii reference the SHORTER side. Referencing width for X and height
+        # for Y turned every circle into an ellipse on any non-square image.
+        ref = float(min(w, h))
+        rx = max(1.0, float(params.get('radius_x', 45.0)) / 100.0 * ref)
+        ry = max(1.0, float(params.get('radius_y', 45.0)) / 100.0 * ref)
         feather = int(params.get('feather', 0))
         invert  = bool(params.get('invert', False))
 
-        # Normalised ellipse distance: 1.0 on boundary, <1 inside, >1 outside
-        ys, xs = np.mgrid[0:h, 0:w]
-        dist = np.sqrt(((xs - cx) / rx) ** 2 + ((ys - cy) / ry) ** 2).astype(np.float32)
+        # Rasterise with cv2.ellipse rather than evaluating a distance field over a
+        # full-image np.mgrid: the grid allocated two int64 arrays the size of the
+        # image on every engine cycle (~140 MB and 50 ms on a 4 MP frame), which is
+        # what made the whole canvas crawl.
+        mask_u8 = np.zeros((h, w), dtype=np.uint8)
+        cv2.ellipse(mask_u8, (int(round(cx)), int(round(cy))),
+                    (int(round(rx)), int(round(ry))), 0, 0, 360, 255, -1)
 
         if feather > 0:
-            # Feather band: [1 - f, 1] → alpha 1→0, outside → 0
-            f = feather / min(rx, ry)  # feather width in normalised units
-            alpha = np.clip((1.0 - dist) / f, 0.0, 1.0)
-            mask_f32 = alpha * 255.0
-        else:
-            mask_f32 = np.where(dist <= 1.0, 255.0, 0.0)
-
-        mask_u8 = mask_f32.astype(np.uint8)
+            # Distance to the outside, in pixels: 0 on the boundary, growing inwards.
+            # Normalising by the feather width reproduces the old soft band, and does
+            # it uniformly along both axes instead of favouring the minor one.
+            dist_in = cv2.distanceTransform(mask_u8, cv2.DIST_L2, 3)
+            mask_u8 = np.clip(dist_in * (255.0 / feather), 0.0, 255.0).astype(np.uint8)
 
         if invert:
             mask_u8 = cv2.bitwise_not(mask_u8)
 
-        # Preview: overlay circle on source image or on gray canvas
+        # Preview: source image (or a dark canvas) seen through the mask
         if img is not None:
-            base = img.copy() if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+            base = img if len(img.shape) == 3 else cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         else:
             base = np.full((h, w, 3), 30, dtype=np.uint8)
 
-        alpha3 = cv2.cvtColor(mask_u8, cv2.COLOR_GRAY2BGR).astype(np.float32) / 255.0
-        preview = (base.astype(np.float32) * alpha3).astype(np.uint8)
+        if feather > 0:
+            alpha3 = cv2.cvtColor(mask_u8, cv2.COLOR_GRAY2BGR).astype(np.float32) / 255.0
+            preview = (base.astype(np.float32) * alpha3).astype(np.uint8)
+        else:
+            # Binary mask: bitwise_and is exact here and avoids two float32 copies.
+            preview = cv2.bitwise_and(base, base, mask=mask_u8)
 
         return {'mask': mask_u8, 'masked': preview}

@@ -46,7 +46,11 @@ export const InteractiveCalibrationNode = memo(({ selected, data }: any) => {
       data={data}
       color="indigo"
       inputs={[{id: 'image', color: 'image'}]}
-      outputs={[{id: 'factor', color: 'scalar', label: 'Px/Unit'}, {id: 'unit', color: 'scalar', label: 'Unit Name'}]}
+      outputs={[
+        {id: 'factor', color: 'scalar', label: 'Px/Unit'},
+        {id: 'um_per_px', color: 'scalar', label: 'µm/px'},
+        {id: 'unit', color: 'scalar', label: 'Unit Name'},
+      ]}
     >
       <div className="flex flex-col gap-3 nodrag">
         <div className="relative bg-black rounded-xl overflow-hidden border border-white/5 group/calib shadow-inner">
@@ -396,7 +400,7 @@ export const ForensicFootprintNode = memo(({ selected, data }: any) => {
   const asymmetry = nd?.asymmetry != null ? Number(nd.asymmetry).toFixed(3) : '—';
 
   return (
-    <BaseNode title="Footprint Forensics" icon={Activity} selected={selected} data={data} color="accent"
+    <BaseNode title="Barefoot Print Forensics" icon={Activity} selected={selected} data={data} color="accent"
       inputs={[{ id: 'image', color: 'image' }, { id: 'mask', color: 'mask' }, { id: 'px_per_mm', color: 'scalar', label: 'Px/mm' }]}
       outputs={[
         { id: 'main',      color: 'image'  },

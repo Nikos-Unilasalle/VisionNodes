@@ -163,17 +163,66 @@ class ConnectedComponentsNode(NodeProcessor):
     label="Watershed",
     category='segmentation',
     icon="Target",
-    description="Separates overlapping objects using marker-controlled watershed algorithm.",
+    description=(
+        "Separates overlapping objects using marker-controlled watershed algorithm.\n\n"
+        "Rescue Unseeded Regions: when a Cell Mask is connected, any region of that mask "
+        "containing no marker is normally claimed by the background basin and disappears "
+        "from the result — a silent loss that hits small objects first, because a seed "
+        "threshold set as a percentage of the distance map's global maximum never reaches "
+        "them. Turn this on to give every unseeded region its own marker (placed at its "
+        "distance-transform peak) before flooding, so nothing is dropped."
+    ),
     inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "markers"}, {"id": "mask", "color": "mask", "label": "Cell Mask (opt)"}],
     outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[
         {"id": "visualization", "label": "Visualization", "type": "enum", "options": ["Original + Boundaries", "Colorized Regions", "Regions + Boundaries", "Original"], "default": 0},
+        {"id": "rescue_unseeded", "label": "Rescue Unseeded Regions", "type": "enum", "options": ["No", "Yes"], "default": 0},
+        {"id": "rescue_min_area", "label": "Rescue Min Area (px)", "type": "scalar", "min": 0, "max": 100000, "default": 200},
         {"id": "boundary_color", "label": "Boundary Color", "type": "color", "default": "#FF0000"},
         {"id": "boundary_thickness", "label": "Boundary Thickness", "type": "scalar", "min": 1, "max": 5, "default": 1},
         {"id": "region_alpha", "label": "Region Alpha", "type": "scalar", "min": 0.0, "max": 1.0, "default": 0.5}
     ]
 )
 class WatershedNode(NodeProcessor):
+    # Radius of a rescue marker, in pixels. Big enough to survive the flooding as a
+    # distinct basin, small enough not to reach a neighbouring object.
+    RESCUE_SEED_RADIUS = 3
+
+    @classmethod
+    def _rescue_unseeded(cls, mask, markers, min_area):
+        """Give every mask region with no marker its own, placed at its distance peak.
+
+        Without this, cv2.watershed floods such a region from the surrounding
+        background basin and the object vanishes from the output.
+        """
+        binary = (mask > 0).astype(np.uint8)
+        n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(binary, 8)
+        if n_labels <= 1:
+            return markers
+
+        seeded = set(np.unique(labels[markers > 0]).tolist()) - {0}
+        orphans = [i for i in range(1, n_labels)
+                   if i not in seeded and stats[i, cv2.CC_STAT_AREA] >= min_area]
+        if not orphans:
+            return markers
+
+        # One distance transform for the whole mask, then argmax restricted to each
+        # orphan — the peak is the point furthest from the object's own border, i.e.
+        # the same criterion the seeding branch uses upstream.
+        dist = cv2.distanceTransform(binary, cv2.DIST_L2, 5)
+        out = markers.copy()
+        next_label = int(out.max()) + 1
+        for i in orphans:
+            x, y, bw, bh = (stats[i, cv2.CC_STAT_LEFT], stats[i, cv2.CC_STAT_TOP],
+                            stats[i, cv2.CC_STAT_WIDTH], stats[i, cv2.CC_STAT_HEIGHT])
+            sub_lab = labels[y:y + bh, x:x + bw]
+            sub_dist = np.where(sub_lab == i, dist[y:y + bh, x:x + bw], 0.0)
+            py, px = np.unravel_index(int(np.argmax(sub_dist)), sub_dist.shape)
+            cv2.circle(out, (x + int(px), y + int(py)), cls.RESCUE_SEED_RADIUS,
+                       int(next_label), -1)
+            next_label += 1
+        return out
+
     def process(self, inputs, params):
         img = inputs.get('image')
         markers = inputs.get('markers')
@@ -195,6 +244,11 @@ class WatershedNode(NodeProcessor):
             m = mask_in if len(mask_in.shape) == 2 else cv2.cvtColor(mask_in, cv2.COLOR_BGR2GRAY)
             if m.shape[:2] != (h, w):
                 m = cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST)
+
+            if int(params.get('rescue_unseeded', 0)) == 1:
+                markers_copy = self._rescue_unseeded(
+                    m, markers_copy, int(params.get('rescue_min_area', 200)))
+
             # Pixels outside cell region = sure background → label 1, won't be flooded
             markers_copy[m == 0] = 1
 

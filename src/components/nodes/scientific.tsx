@@ -957,6 +957,7 @@ const GrainHistogramNodeUI = ({ data, selected }: { data: any; selected: boolean
   const std   = nd?.std   as number | undefined;
   const unit  = (nd?.unit  as string | undefined) ?? 'µm';
   const label = (nd?.label as string | undefined) ?? 'Size';
+  const error = nd?.error as string | undefined;
 
   const hasData = chartData.length > 0;
 
@@ -968,8 +969,8 @@ const GrainHistogramNodeUI = ({ data, selected }: { data: any; selected: boolean
       width="100%" height="100%" className="w-full h-full">
       <div className="flex flex-col gap-1 mt-1 w-full h-full min-h-0">
         {!hasData ? (
-          <div className="flex-1 flex items-center justify-center text-[10px] text-gray-500 uppercase tracking-widest">
-            Awaiting data…
+          <div className={`flex-1 flex items-center justify-center text-center px-2 text-[10px] tracking-widest ${error ? 'text-amber-400' : 'text-gray-500 uppercase'}`}>
+            {error ?? 'Awaiting data…'}
           </div>
         ) : (
           <>
