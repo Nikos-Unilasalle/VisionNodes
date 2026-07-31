@@ -15,9 +15,9 @@ _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
     category='geography',
     icon='CloudDownload',
     description=(
-        "Télécharge des grilles spatio-temporelles depuis Copernicus Marine Service (CMEMS). "
-        "Utilise l'API de sous-ensemble (subset) pour récupérer les données directement au format NetCDF. "
-        "Requiert les identifiants Copernicus Marine (username / password)."
+        "Downloads spatio-temporal grids from the Copernicus Marine Service (CMEMS). "
+        "Uses the subset API to fetch the data directly as NetCDF. "
+        "Requires Copernicus Marine credentials (username / password)."
     ),
     inputs=[
         {'id': 'bbox',       'color': 'string', 'label': 'BBox (str)'},

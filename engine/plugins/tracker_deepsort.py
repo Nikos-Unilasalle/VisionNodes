@@ -29,7 +29,7 @@ _EMBEDDER_NAMES = {
     label='Object Tracker (DeepSORT)',
     category='tracking',
     icon='ScanSearch',
-    description="Suivi multi-objets avec DeepSORT : Kalman Filter + embeddings CNN pour une ré-identification robuste et moins de changements d'ID.",
+    description="Multi-object tracking with DeepSORT: Kalman filter plus CNN embeddings, for robust re-identification and fewer ID switches.",
     inputs=[
         {'id': 'detections', 'color': 'list'},
         {'id': 'image',      'color': 'image'}

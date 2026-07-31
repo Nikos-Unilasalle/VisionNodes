@@ -8,7 +8,7 @@ from registry import vision_node, NodeProcessor
     label='Collect',
     category='logic',
     icon='ListPlus',
-    description="Accumule des valeurs dans une liste quand la condition est vraie. Exporte en CSV à la demande.",
+    description="Appends values to a list while the condition is true. Exports to CSV on demand.",
     inputs=[
         {'id': 'condition', 'label': 'Condition', 'color': 'boolean'},
         {'id': 'value',     'label': 'Value',     'color': 'any'},
