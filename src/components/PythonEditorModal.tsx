@@ -27,7 +27,7 @@ const VNSTUDIO_COMPLETIONS = [
   { label: 'out_dict',   detail: '→ dict output',   doc: 'dict' },
   { label: 'out_any',    detail: '→ any output',    doc: 'any type' },
   { label: 'out_data',   detail: '→ DataFrame output', doc: 'pd.DataFrame' },
-  { label: 'out_e',      detail: '→ error string',  doc: 'Set automatically on exception' },
+  { label: 'out_e',      detail: '→ any output',    doc: 'any type — out_e is a normal output like the others' },
 ];
 
 const SNIPPETS = [

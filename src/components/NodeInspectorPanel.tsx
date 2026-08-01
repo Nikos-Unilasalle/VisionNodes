@@ -1215,7 +1215,7 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
             inner = <DateInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} />;
           } else if (isString) {
             if (sp.id === 'code') {
-              inner = <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} liveError={liveData?.out_e || undefined} />;
+              inner = <CodeInput label={sp.label || sp.id} val={String(p[sp.id] ?? sp.default ?? '')} onChange={(v) => up({ [sp.id]: v })} liveError={liveData?.__error__ || undefined} />;
             } else {
               const colHints: string[] | undefined =
                 sp.hints === 'df_columns' ? (liveData?.df_meta?.columns as string[] | undefined) :

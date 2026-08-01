@@ -64,7 +64,9 @@ _builtins_src = __builtins__ if isinstance(__builtins__, dict) else vars(__built
 _SAFE_BUILTINS = {k: v for k, v in _builtins_src.items() if k in _ALLOWED}
 _SAFE_BUILTINS['__import__'] = _safe_import
 
-_RESERVED_VARS = frozenset(['np', 'cv2', 'pd', 'state'])
+# Key carrying the traceback back to the editor. Deliberately not an out_* name, so
+# it can never collide with a user output port.
+ERROR_CHANNEL = '__error__'
 
 _DEFAULT_SCRIPT = """\
 # ── Inputs ────────────────────────────────────────────────────────────────────
@@ -74,6 +76,7 @@ _DEFAULT_SCRIPT = """\
 #
 # ── Outputs ───────────────────────────────────────────────────────────────────
 #   out_a, out_b … : assign any variable named out_* to expose it on an output port.
+#                    Every out_* name is yours — out_e included.
 #                    Output ports are auto-typed by whatever you connect them to.
 #       out_a = a if isinstance(a, np.ndarray) else None
 #       out_b = float(np.mean(a)) if isinstance(a, np.ndarray) else 0.0
@@ -155,11 +158,14 @@ class PythonNode(NodeProcessor):
         # Collect every out_* variable the script defined → auto-typed output ports.
         result: dict = {}
         for key, val in ctx.items():
-            if key.startswith('out_') and key not in _RESERVED_VARS:
+            if key.startswith('out_'):
                 result[key] = val
 
-        # Always expose the error string (inspector reads liveData.out_e for the editor).
-        result['out_e'] = error
+        # The error goes on its own reserved channel, NOT on an out_* name. It used to
+        # be written to 'out_e', which silently overwrote the fifth output of any script
+        # that named its outputs out_a..out_e after inputs a..e — an empty error string
+        # replacing a valid result, with nothing to show for it.
+        result[ERROR_CHANNEL] = error
 
         if _PANDAS_AVAILABLE and _pd_module is not None:
             for key, val in list(result.items()):
