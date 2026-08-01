@@ -2069,7 +2069,7 @@ function App() {
                 <PythonEditorModal
                   label={nodesWithData.find(n => n.id === pythonEditingId)?.data?.label || "Python Script"}
                   value={nodesWithData.find(n => n.id === pythonEditingId)?.data?.params?.code ?? nodesWithData.find(n => n.id === pythonEditingId)?.data?.schema?.params?.find((p: any) => p.id === 'code')?.default ?? ''}
-                  liveError={pythonNodeLiveData?.out_e || undefined}
+                  liveError={pythonNodeLiveData?.__error__ || undefined}
                   onChange={(v) => {
                     setViewNodes(nds => nds.map(n => n.id === pythonEditingId ? { ...n, data: { ...n.data, params: { ...n.data.params, code: v } } } : n));
                   }}
