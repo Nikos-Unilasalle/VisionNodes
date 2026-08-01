@@ -594,7 +594,12 @@ export const ScientificHistogramNode = memo(({ selected, data }: any) => {
         data={data} 
         color="blue" 
         inputs={[{id: 'image', color: 'any', label: 'Image'}]} 
-        outputs={[{id: 'main', color: 'image', label: 'Main'}]}
+        outputs={[
+          {id: 'main', color: 'image', label: 'Main'},
+          {id: 'mean', color: 'scalar', label: 'Mean (luma)'},
+          {id: 'std', color: 'scalar', label: 'Std Dev (luma)'},
+          {id: 'data', color: 'dict', label: 'Stats'},
+        ]}
         width="100%"
         height="100%"
         className="w-full h-full"

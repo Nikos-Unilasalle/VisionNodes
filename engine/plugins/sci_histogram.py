@@ -3,6 +3,25 @@ import numpy as np
 import base64
 from registry import NodeProcessor, vision_node
 
+def _channel_stats(chan):
+    """Statistiques d'un canal uint8, sur les valeurs brutes.
+
+    Le median passe par la distribution cumulee : sur une image de plusieurs
+    millions de pixels, np.median trie et coute bien plus cher que 256 sommes.
+    """
+    counts = np.bincount(chan.ravel(), minlength=256).astype(np.float64)
+    total = counts.sum()
+    cumulative = np.cumsum(counts)
+    nonzero = np.flatnonzero(counts)
+    return {
+        'mean': float(np.mean(chan)),
+        'std': float(np.std(chan)),
+        'min': float(nonzero[0]) if nonzero.size else 0.0,
+        'max': float(nonzero[-1]) if nonzero.size else 0.0,
+        'median': float(np.searchsorted(cumulative, total / 2.0)),
+    }
+
+
 @vision_node(
     type_id='sci_histogram',
     label='Histogram',
@@ -10,7 +29,12 @@ from registry import NodeProcessor, vision_node
     icon='BarChart2',
     description="Statistical distribution of pixel intensities. Performs radiometric analysis of input data across spectral channels for scientific validation.",
     inputs=[{'id': 'image', 'color': 'any'}],
-    outputs=[{'id': 'main', 'color': 'image'}],
+    outputs=[
+        {'id': 'main', 'color': 'image',  'label': 'Main'},
+        {'id': 'mean', 'color': 'scalar', 'label': 'Mean (luma)'},
+        {'id': 'std',  'color': 'scalar', 'label': 'Std Dev (luma)'},
+        {'id': 'data', 'color': 'dict',   'label': 'Stats'},
+    ],
     params=[
         {'id': 'mode',      'label': 'Spectral Mode',       'type': 'enum', 'options': ['Overlay (RGB)', 'Monochrome (Luma)'], 'default': 0},
         {'id': 'bins',      'label': 'Quantization (Bins)', 'type': 'scalar', 'min': 16, 'max': 256, 'default': 256},
@@ -24,7 +48,8 @@ from registry import NodeProcessor, vision_node
 class HistogramNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
-        if img is None: return {'main': None}
+        if img is None:
+            return {'main': None, 'mean': None, 'std': None, 'data': None}
         
         mode = int(params.get('mode', 0))
         bins = int(params.get('bins', 256))
@@ -77,17 +102,19 @@ class HistogramNode(NodeProcessor):
             hist_data.append(hist)
             
         hist_output = {}
+        per_channel = []
         for i, h_data in enumerate(hist_data):
             # Convert numpy array to flat list for JSON serialization
             key = f"hist_{i}"
             hist_output[key] = h_data.flatten().tolist()
-            
-            if show_stats:
-                try:
-                    chan_data = img_proc[:,:,i] if len(img_proc.shape)==3 else img_proc
-                    hist_output[f"avg_{i}"] = float(np.mean(chan_data))
-                    hist_output[f"std_{i}"] = float(np.std(chan_data))
-                except: pass
+
+            # Les statistiques sont calculees dans tous les cas : show_stats ne
+            # commande que l'affichage, jamais la donnee produite en sortie.
+            chan_data = img_proc[:, :, i] if len(img_proc.shape) == 3 else img_proc
+            stats = _channel_stats(chan_data)
+            per_channel.append(stats)
+            hist_output[f"avg_{i}"] = stats['mean']
+            hist_output[f"std_{i}"] = stats['std']
 
         # Drawing
         max_val = 0
@@ -126,8 +153,31 @@ class HistogramNode(NodeProcessor):
                     cv2.putText(out, stat_txt, (10, 25 + i * 20), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
 
+        # La luminance donne un chiffre unique quel que soit le mode, la ou les
+        # statistiques par canal en donnent un par canal.
+        luma = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if is_color else img
+        luma_stats = _channel_stats(luma)
+
+        data = {
+            'channels': chan_names,
+            'mean':   [s['mean']   for s in per_channel],
+            'std':    [s['std']    for s in per_channel],
+            'min':    [s['min']    for s in per_channel],
+            'max':    [s['max']    for s in per_channel],
+            'median': [s['median'] for s in per_channel],
+            'hist': [hist_output[f"hist_{i}"] for i in range(len(per_channel))],
+            'bins': bins,
+            'pixels': int(luma.size),
+            'log_scale': log_scale,
+            'luma_mean': luma_stats['mean'],
+            'luma_std': luma_stats['std'],
+        }
+
         return {
-            'main': out, 
+            'main': out,
+            'mean': luma_stats['mean'],
+            'std': luma_stats['std'],
+            'data': data,
             **hist_output,
             'is_color': is_color,
             'mode': mode
