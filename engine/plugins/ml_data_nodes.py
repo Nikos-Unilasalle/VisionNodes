@@ -277,8 +277,9 @@ def _apply_op(df, col, op, val):
     icon='Filter',
     description="Filter rows of a DataFrame by a column condition. Chain multiple filters for complex queries.",
     inputs=[
-        {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
-        {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
+        {'id': 'table',    'color': 'data',   'label': 'DataFrame'},
+        {'id': 'value',    'color': 'scalar', 'label': 'Value'},
+        {'id': 'img_size', 'color': 'list',   'label': 'Img Size'},
     ],
     outputs=[
         {'id': 'table',     'color': 'data',   'label': 'Filtered DataFrame'},
@@ -292,7 +293,8 @@ def _apply_op(df, col, op, val):
         {'id': '_sec_condition', 'label': 'Filter Condition', 'type': 'section'},
         {'id': 'column',   'label': 'Column',        'type': 'string', 'default': ''},
         {'id': 'operator', 'label': 'Operator',      'type': 'enum',   'options': _OPS_LABELS, 'default': 0},
-        {'id': 'value',    'label': 'Value',         'type': 'string', 'default': ''},
+        {'id': 'value',    'label': 'Value (ignored if the input is connected)',
+         'type': 'string', 'default': ''},
         {'id': '_sec_options', 'label': 'Options', 'type': 'section'},
         {'id': 'dropna',   'label': 'Drop NaN rows', 'type': 'bool',   'default': False},
     ],
@@ -316,7 +318,17 @@ class MLDfFilterNode(NodeProcessor):
             col    = str(params.get('column', '')).strip()
             op_idx = int(params.get('operator', 0))
             op     = _OPS[op_idx]
-            val    = str(params.get('value', '')).strip()
+            # Un seuil calcule dans le graphe — une mediane plus deux ecarts-types,
+            # par exemple — n'a pas a etre recopie a la main dans le parametre :
+            # branche sur l'entree, il prend le dessus et suit les donnees.
+            val_in = inputs.get('value')
+            if val_in is None:
+                val = str(params.get('value', '')).strip()
+            else:
+                try:
+                    val = repr(float(val_in))
+                except (TypeError, ValueError):
+                    val = str(val_in).strip()
             if col and col in df.columns:
                 try:
                     df = _apply_op(df, col, op, val)

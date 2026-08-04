@@ -131,6 +131,12 @@ class ImageInput(NodeProcessor):
     params=[
         {"id": "path", "label": "File Path", "type": "string", "default": "samples/face.mp4"},
         {"id": "playing", "label": "Playing", "type": "bool", "default": False},
+        {"id": "loop", "label": "Loop", "type": "bool", "default": False},
+        # Plage de lecture. end_frame = 0 signifie « jusqu'a la fin » : sans cette
+        # convention, la valeur par defaut d'un parametre entier interdirait de lire
+        # le fichier entier tant qu'on n'a pas ouvert l'inspecteur.
+        {"id": "start_frame", "label": "Start Frame", "type": "int", "default": 0},
+        {"id": "end_frame", "label": "End Frame (0 = fin)", "type": "int", "default": 0},
         {"id": "scrub_index", "label": "Frame", "type": "int", "default": 0}
     ]
 )
@@ -151,16 +157,52 @@ class MovieInput(NodeProcessor):
                 self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if not self.cap or not self.cap.isOpened(): return {"main": None}
         playing = params.get('playing', False)
+        command = None
+
+        # Plage utile, ramenee dans les bornes du fichier.
+        debut = max(0, min(int(params.get('start_frame', 0)), max(0, self.total_frames - 1)))
+        fin_param = int(params.get('end_frame', 0))
+        fin = (self.total_frames - 1) if fin_param <= 0 else min(fin_param, self.total_frames - 1)
+        if fin < debut:
+            fin = self.total_frames - 1
+
         if playing:
-            ret, frame = self.cap.read()
-            if not ret:
-                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            # Avant de lire : si la tete est AVANT la plage — au demarrage, ou parce
+            # que l'utilisateur vient de deplacer Start — on la ramene au debut.
+            # Surtout ne pas traiter de la meme facon le depassement de la fin : ce
+            # cas doit tomber dans la logique de fin ci-dessous, sinon la lecture
+            # reboucle en silence et l'option Loop ne sert plus a rien.
+            pos = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+            if pos < debut:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, debut)
+                pos = debut
+            if pos > fin:
+                ret, frame = False, None
+            else:
                 ret, frame = self.cap.read()
+            if not ret:
+                # Fin du fichier. Reboucler sans le dire est dangereux pour tout ce qui
+                # accumule en aval — un Collect ou un Plotter Pro repartirait pour un
+                # second passage et melangerait les deux dans ses statistiques, sans
+                # qu'aucun signal ne l'indique. Par defaut on s'arrete donc sur la
+                # derniere image, en decochant Playing.
+                if bool(int(params.get('loop', 0))):
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, debut)
+                    ret, frame = self.cap.read()
+                else:
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, fin)
+                    ret, frame = self.cap.read()
+                    command = {"type": "set_param", "node_id": "__self__",
+                               "params": {"playing": False, "scrub_index": fin}}
         else:
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, int(params.get('scrub_index', 0)))
+            cible = max(debut, min(int(params.get('scrub_index', 0)), fin))
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, cible)
             ret, frame = self.cap.read()
         cur = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-        return {"main": frame if ret else None, "frame": cur, "total_frames": self.total_frames}
+        out = {"main": frame if ret else None, "frame": cur, "total_frames": self.total_frames}
+        if command:
+            out["_command"] = command
+        return out
 
 @vision_node(
     type_id="input_solid_color",
