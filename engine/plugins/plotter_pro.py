@@ -42,8 +42,10 @@ DEFAULT_BUFFER = 200
         {"id": "table", "color": "data"},
     ],
     params=[
+        # 2000 points ne couvrent que 80 s de video a 25 images/s : trop court pour
+        # tenir un enregistrement entier, qui est le cas d'usage le plus frequent.
         {"id": "buffer_size", "label": "History Size", "type": "scalar",
-         "min": 10, "max": 2000, "default": DEFAULT_BUFFER},
+         "min": 10, "max": 20000, "default": DEFAULT_BUFFER},
         {"id": "normalize", "label": "Normalize Curves", "type": "boolean", "default": False},
         {"id": "show_grid", "label": "Show Axes / Grid", "type": "boolean", "default": True},
         {"id": "reset", "label": "Reset History", "type": "trigger"},

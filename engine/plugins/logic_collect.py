@@ -19,6 +19,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'count', 'label': 'Count', 'color': 'scalar'},
     ],
     params=[
+        {'id': 'always',     'label': 'Collect Always (ignore condition)', 'type': 'bool', 'default': False},
         {'id': 'mode',       'label': 'Mode',      'type': 'enum',    'options': ['Every True frame', 'Rising edge only', 'Check every N frames'], 'default': 0},
         {'id': 'interval',   'label': 'Check every N',   'type': 'int',     'default': 30, 'min': 1, 'max': 500},
         {'id': 'reset',      'label': 'Reset List', 'type': 'trigger', 'default': 0},
@@ -37,7 +38,13 @@ class LogicCollectNode(NodeProcessor):
         self._cooldown = 0
 
     def process(self, inputs, params):
-        condition = bool(inputs.get('condition', False))
+        # The condition input defaults to False, so an unconnected node collects
+        # nothing and looks broken. 'Collect Always' covers the common case where
+        # every frame is wanted, without forcing the user to wire a constant True.
+        if bool(int(params.get('always', 0))):
+            condition = True
+        else:
+            condition = bool(inputs.get('condition', False))
         value = inputs.get('value')
         mode = int(params.get('mode', 0))
         interval = int(params.get('interval', 30))

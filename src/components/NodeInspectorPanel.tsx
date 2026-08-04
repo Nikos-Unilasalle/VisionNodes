@@ -519,8 +519,11 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                   else if (isS2) control = <TextInput label={lbl} val={String(val ?? sp.default ?? '')} onChange={v => up2(v)} />;
                   else if (isN2) {
                     const v2 = Number(val ?? sp.default ?? 0);
-                    const min2 = sp.min ?? -10;
-                    const max2 = sp.max ?? (v2 > 100 ? v2 * 2 : 100);
+                    const min2 = Math.min(sp.min ?? -10, v2);
+                    // A value set in the .vn or by a command can exceed the schema max.
+                    // Clamping the slider to sp.max would silently rewrite that value the
+                    // first time the user touches the control, so the range widens instead.
+                    const max2 = Math.max(sp.max ?? (v2 > 100 ? v2 * 2 : 100), v2);
                     control = <Slider label={lbl} val={v2} min={min2} max={max2} step={sp.step || (sp.type === 'float' ? 0.01 : 1)} onChange={up2} />;
                   } else if (isB2) {
                     control = <ToggleInput label={lbl} val={!!(val ?? sp.default)} onChange={up2} />;
@@ -829,17 +832,27 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
                 {p.playing ? <><Pause size={12} /> Stop</> : <><Play size={12} /> Start</>}
               </button>
               <div className="text-[9px] font-mono text-gray-400">
-                Frame: {liveData?.current_frame || 0} / {liveData?.total_frames || 0}
+                Frame: {liveData?.frame ?? 0} / {liveData?.total_frames ?? 0}
               </div>
             </div>
+            {/* input_movie is in MANUAL_TYPES, so schema params are not rendered
+                automatically — every control has to be listed here by hand. */}
+            <ToggleInput
+              label="Loop"
+              val={!!p.loop}
+              onChange={(v: boolean) => up({ loop: v })}
+            />
             <div className="grid grid-cols-2 gap-3">
-              <Slider label="Start" val={p.start_frame || 0} min={0} max={(liveData?.total_frames || 1) - 1} onChange={v => up({ start_frame: v })} />
-              <Slider label="End"   val={p.end_frame ?? (liveData?.total_frames ? liveData.total_frames - 1 : 0)} min={0} max={(liveData?.total_frames || 1) - 1} onChange={v => up({ end_frame: v })} />
+              {/* end_frame = 0 means "to the end" engine-side; show the real last
+                  frame instead, otherwise the slider reads 0 on a full-length clip. */}
+              <Slider label="Start" val={p.start_frame || 0} min={0} max={Math.max(1, (liveData?.total_frames || 1) - 1)} onChange={v => up({ start_frame: v })} />
+              <Slider label="End"   val={p.end_frame || Math.max(0, (liveData?.total_frames || 1) - 1)} min={0} max={Math.max(1, (liveData?.total_frames || 1) - 1)} onChange={v => up({ end_frame: v })} />
             </div>
             <Slider
               label="Scrub"
-              val={p.playing ? (liveData?.current_frame || 0) : (p.scrub_index || 0)}
-              min={0} max={(liveData?.total_frames || 1) - 1}
+              val={p.playing ? (liveData?.frame ?? 0) : (p.scrub_index || 0)}
+              min={p.start_frame || 0}
+              max={p.end_frame || Math.max(1, (liveData?.total_frames || 1) - 1)}
               onChange={v => up({ scrub_index: v, playing: false })}
             />
           </div>
@@ -1425,11 +1438,19 @@ export const NodeInspectorPanel: React.FC<NodeInspectorPanelProps> = ({
 
 const DataFramePanel = ({ meta }: { meta: any }) => {
   const [showHead, setShowHead] = React.useState(false);
+
+  // DF Editor ships dtypes/nulls/rows JSON-encoded (the engine drops oversized
+  // lists and dicts from node data), so unpack that form too.
+  const packed = React.useMemo<any>(() => {
+    if (!meta.table_json) return null;
+    try { return JSON.parse(meta.table_json); } catch { return null; }
+  }, [meta.table_json]);
+
   const shape: [number, number] = meta.shape || [0, 0];
-  const columns: string[] = meta.columns || [];
-  const dtypes: Record<string, string> = meta.dtypes || {};
-  const nulls: Record<string, number>  = meta.nulls  || {};
-  const head: Record<string, any>[]    = meta.head   || [];
+  const columns: string[] = meta.columns || packed?.columns || [];
+  const dtypes: Record<string, string> = meta.dtypes || packed?.dtypes || {};
+  const nulls: Record<string, number>  = meta.nulls  || packed?.nulls  || {};
+  const head: Record<string, any>[]    = meta.head   || packed?.rows?.slice(0, 8) || [];
 
   const dtypeColor = (t: string) =>
     t.startsWith('int') || t.startsWith('float') || t.startsWith('complex') ? 'text-blue-400' :

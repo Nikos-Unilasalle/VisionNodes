@@ -182,7 +182,7 @@ export const InputMovieNode = memo(({ selected, data }: any) => {
             </span>
           </div>
             <div className="text-[10px] font-mono text-accent font-bold">
-              {nd?.current_frame || 0} / {nd?.total_frames || 0}
+              {nd?.frame ?? 0} / {nd?.total_frames ?? 0}
             </div>
           </div>
         </div>
