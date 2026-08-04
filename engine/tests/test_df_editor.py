@@ -43,10 +43,41 @@ def test_df_editor_no_edits():
     meta = res['df_meta']
     assert meta['shape'] == [3, 2]
     assert meta['columns'] == ['A', 'B']
-    assert len(meta['rows']) == 3
-    assert meta['rows'][0]['A'] == 1
-    assert meta['rows'][0]['B'] == 'a'
-    assert meta['rows'][0]['__row_index__'] == 0
+    assert meta['truncated'] is False
+
+    rows = json.loads(meta['table_json'])['rows']
+    assert len(rows) == 3
+    assert rows[0]['A'] == 1
+    assert rows[0]['B'] == 'a'
+    assert rows[0]['__row_index__'] == 0
+
+
+def test_df_editor_meta_survives_the_engine_payload_filter():
+    """Large frames must still reach the UI: the engine drops any node output
+    holding a >2000-item list or a >64-key dict, so rows travel JSON-encoded."""
+    from engine import _is_serializable
+
+    wide_long = pd.DataFrame({f'c{i}': np.arange(5000) for i in range(80)})
+    res = DataFrameEditorNode().process({'table': wide_long}, {'edits': '[]'})
+    meta = res['df_meta']
+
+    assert _is_serializable(meta)
+    assert meta['shape'] == [5000, 80]
+    assert meta['truncated'] is True
+    assert len(json.loads(meta['table_json'])['rows']) == 500  # default window
+
+
+def test_df_editor_row_window_follows_offset():
+    df = pd.DataFrame({'A': range(1000)})
+    res = DataFrameEditorNode().process({'table': df},
+                                        {'edits': '[]', 'row_offset': 900, 'max_rows': 50})
+    meta = res['df_meta']
+    rows = json.loads(meta['table_json'])['rows']
+
+    assert meta['offset'] == 900
+    assert len(rows) == 50
+    assert rows[0]['__row_index__'] == 900
+    assert rows[-1]['__row_index__'] == 949
 
 def test_df_editor_apply_edits():
     df = pd.DataFrame({

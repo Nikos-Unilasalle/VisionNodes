@@ -8,11 +8,16 @@ const sampleMeta = {
   columns: ['colA', 'colB'],
   dtypes: { colA: 'int64', colB: 'object' },
   nulls: { colA: 0, colB: 0 },
-  rows: [
-    { __row_index__: 0, colA: 10, colB: 'hello' },
-    { __row_index__: 1, colA: 20, colB: 'world' },
-    { __row_index__: 2, colA: 30, colB: 'vitest' },
-  ]
+  table_json: JSON.stringify({
+    columns: ['colA', 'colB'],
+    dtypes: { colA: 'int64', colB: 'object' },
+    nulls: { colA: 0, colB: 0 },
+    rows: [
+      { __row_index__: 0, colA: 10, colB: 'hello' },
+      { __row_index__: 1, colA: 20, colB: 'world' },
+      { __row_index__: 2, colA: 30, colB: 'vitest' },
+    ],
+  }),
 };
 
 describe('DataFrameEditorModal', () => {
@@ -46,7 +51,7 @@ describe('DataFrameEditorModal', () => {
       />
     );
 
-    const searchInput = screen.getByPlaceholderText('Rechercher dans les données...');
+    const searchInput = screen.getByPlaceholderText('Search the data...');
     fireEvent.change(searchInput, { target: { value: 'world' } });
 
     expect(screen.getByText('world')).toBeInTheDocument();
@@ -66,7 +71,7 @@ describe('DataFrameEditorModal', () => {
       />
     );
 
-    const closeBtn = screen.getByRole('button', { name: 'Fermer' });
+    const closeBtn = screen.getByRole('button', { name: 'Close' });
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalled();
   });

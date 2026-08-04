@@ -46,6 +46,40 @@ def _fig_to_bgr(fig, dpi=100) -> np.ndarray:
     return img if img is not None else np.zeros((200, 420, 3), dtype=np.uint8)
 
 
+# Above this many distinct values a numeric hue column is treated as continuous
+# (colorbar) instead of one scatter call + legend entry per class.
+_MAX_HUE_CLASSES = 20
+
+
+def _resolve_col(df, name: str):
+    """Match a user-typed column name: exact first, then trimmed/case-insensitive.
+    Returns the real column name, or None when nothing matches."""
+    name = str(name or '').strip()
+    if not name:
+        return None
+    if name in df.columns:
+        return name
+    lowered = {str(c).strip().lower(): c for c in df.columns}
+    return lowered.get(name.lower())
+
+
+def _is_continuous(series) -> bool:
+    """True for numeric hue columns with too many distinct values to enumerate."""
+    return series.dtype.kind in 'ifc' and series.nunique(dropna=True) > _MAX_HUE_CLASSES
+
+
+def _class_colors(plt, cmap_name: str, n: int) -> list:
+    """n distinct colors from a colormap.
+
+    Qualitative maps (tab10, Set1, Set2) are indexed slot by slot so neighbouring
+    classes stay far apart; continuous maps are sampled evenly.
+    """
+    cmap = plt.get_cmap(cmap_name)
+    if getattr(cmap, 'colors', None) is not None:
+        return [cmap(i % cmap.N) for i in range(n)]
+    return [cmap(t) for t in np.linspace(0.0, 1.0, max(n, 2))][:n]
+
+
 def _out_size(params, default_w=540, default_h=400, inputs=None):
     """Return (fig_w_inches, fig_h_inches, dpi) for matplotlib subplots."""
     dpi   = max(72, int(params.get('out_dpi', 100)))
@@ -79,11 +113,14 @@ def _get_mpl():
         {'id': 'table',    'color': 'data', 'label': 'DataFrame'},
         {'id': 'img_size', 'color': 'list', 'label': 'Img Size'},
     ],
-    outputs=[{'id': 'main', 'color': 'image', 'label': 'Plot'}],
+    outputs=[
+        {'id': 'main',    'color': 'image', 'label': 'Plot'},
+        {'id': 'df_meta', 'color': 'dict',  'label': 'Columns'},
+    ],
     params=[
-        {'id': 'x_col',      'label': 'X Column',           'type': 'string', 'default': ''},
-        {'id': 'y_col',      'label': 'Y Column',           'type': 'string', 'default': ''},
-        {'id': 'hue_col',    'label': 'Color by (hue)',     'type': 'string', 'default': ''},
+        {'id': 'x_col',      'label': 'X Column',           'type': 'string', 'default': '', 'hints': 'df_columns'},
+        {'id': 'y_col',      'label': 'Y Column',           'type': 'string', 'default': '', 'hints': 'df_columns'},
+        {'id': 'hue_col',    'label': 'Color by (hue)',     'type': 'string', 'default': '', 'hints': 'df_columns'},
         {'id': '_sec_appearance', 'label': 'Appearance', 'type': 'section'},
         {'id': 'colormap',   'label': 'Colormap',           'type': 'enum',   'options': _CLABELS, 'default': 0},
         {'id': 'alpha',      'label': 'Opacity',            'type': 'float',  'default': 0.75, 'min': 0.1, 'max': 1.0, 'step': 0.05},
@@ -105,8 +142,15 @@ class MLScatterPlotNode(NodeProcessor):
         if df is None:
             return {}
 
+        # Emitted even when the plot cannot be drawn: the inspector uses it to
+        # offer the column-name shortcuts for X / Y / hue.
+        meta = {
+            'shape':   list(df.shape),
+            'columns': [str(c) for c in df.columns],
+        }
+
         if not self.ensure_packages(['matplotlib'], notif_id=_NOTIF_ID):
-            return {}
+            return {'df_meta': meta}
 
         _, plt = _get_mpl()
 
@@ -125,15 +169,24 @@ class MLScatterPlotNode(NodeProcessor):
         cols = list(df.columns)
         num_cols = [c for c in cols if df[c].dtype.kind in 'biufc']  # numeric
 
+        x_col = _resolve_col(df, x_col)
+        y_col = _resolve_col(df, y_col)
+
         # Auto-pick columns if not set
-        if not x_col or x_col not in cols:
+        if x_col is None:
             x_col = num_cols[0] if num_cols else (cols[0] if cols else None)
-        if not y_col or y_col not in cols:
+        if y_col is None:
             y_col = num_cols[1] if len(num_cols) > 1 else x_col
 
         if x_col is None or y_col is None:
             send_notification("Scatter Plot: no numeric columns found", level='warning', notif_id=_NOTIF_ID)
-            return {}
+            return {'df_meta': meta}
+
+        hue_req = hue_col
+        hue_col = _resolve_col(df, hue_col)
+        if hue_req and hue_col is None:
+            send_notification(f"Scatter Plot: hue column '{hue_req}' not in the DataFrame",
+                              level='warning', notif_id=_NOTIF_ID)
 
         # Subsample for performance
         plot_df = df
@@ -146,15 +199,30 @@ class MLScatterPlotNode(NodeProcessor):
             x_data = plot_df[x_col]
             y_data = plot_df[y_col]
 
-            if hue_col and hue_col in plot_df.columns:
-                classes = plot_df[hue_col].unique()[:20]  # cap legend at 20 classes
-                color_cycle = plt.cm.get_cmap(cmap)(np.linspace(0, 1, len(classes)))
-                for cls, color in zip(classes, color_cycle):
-                    mask = plot_df[hue_col] == cls
+            hue_data = plot_df[hue_col] if hue_col else None
+            legend_title = None
+
+            if hue_data is not None and _is_continuous(hue_data):
+                # Many distinct numeric values: colormap + colorbar, one class per
+                # value would drop most of the points and blow up the legend.
+                sc = ax.scatter(x_data, y_data, alpha=alpha, s=s,
+                                c=hue_data.astype(float), cmap=cmap, edgecolors='none')
+                cbar = fig.colorbar(sc, ax=ax, pad=0.01, fraction=0.03)
+                cbar.set_label(hue_col, fontsize=8)
+            elif hue_data is not None:
+                classes = list(hue_data.dropna().unique())
+                colors = _class_colors(plt, cmap, len(classes))
+                for cls, color in zip(classes, colors):
+                    mask = hue_data == cls
                     ax.scatter(x_data[mask], y_data[mask],
                                label=str(cls), color=color, alpha=alpha, s=s, edgecolors='none')
-                ax.legend(fontsize=8, labelcolor='#cccccc', title=hue_col,
-                          title_fontsize=8, loc='best')
+                # Every class is drawn; only the legend is capped.
+                if len(classes) <= _MAX_HUE_CLASSES:
+                    legend_title = hue_col
+                else:
+                    send_notification(
+                        f"Scatter Plot: '{hue_col}' has {len(classes)} classes — legend hidden",
+                        level='info', notif_id=_NOTIF_ID)
             else:
                 sc = ax.scatter(x_data, y_data, alpha=alpha, s=s,
                                 c=np.arange(len(x_data)), cmap=cmap, edgecolors='none')
@@ -169,9 +237,13 @@ class MLScatterPlotNode(NodeProcessor):
                     xline = np.linspace(xv.min(), xv.max(), 200)
                     ax.plot(xline, m * xline + b, '--', color='#ff7f50',
                             linewidth=1.5, label=f'y = {m:.2f}x + {b:.2f}')
-                    ax.legend(fontsize=8, labelcolor='#cccccc', loc='best')
                 except Exception as e:
                     send_notification(f"Scatter: regression failed ({e})", level='warning', notif_id=_NOTIF_ID)
+
+            # One legend call for hue classes + regression line together.
+            if ax.get_legend_handles_labels()[0]:
+                ax.legend(fontsize=8, labelcolor='#cccccc', loc='best',
+                          title=legend_title, title_fontsize=8)
 
             ax.set_xlabel(x_col)
             ax.set_ylabel(y_col)
@@ -186,7 +258,7 @@ class MLScatterPlotNode(NodeProcessor):
             img = _fig_to_bgr(fig, dpi)
             plt.close(fig)
 
-        return {'main': img}
+        return {'main': img, 'df_meta': meta}
 
 
 # ─── Histogram (DataFrame column) ─────────────────────────────────────────────

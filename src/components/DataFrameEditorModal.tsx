@@ -2,14 +2,27 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { X, Search, ChevronLeft, ChevronRight, RotateCcw, Edit2, AlertCircle } from 'lucide-react';
 
+interface DataFrameTablePayload {
+  columns: string[];
+  dtypes: Record<string, string>;
+  nulls: Record<string, number>;
+  rows: Record<string, any>[];
+}
+
 interface DataFrameEditorModalProps {
   label: string;
   dfMeta?: {
     shape: [number, number];
     columns: string[];
-    dtypes: Record<string, string>;
-    nulls: Record<string, number>;
-    rows: Record<string, any>[];
+    /** Row window + dtypes, JSON-encoded: the engine drops large lists/dicts from node data. */
+    table_json?: string;
+    row_count?: number;
+    offset?: number;
+    window?: number;
+    /** Legacy inline form, still used by tests and older engine builds. */
+    dtypes?: Record<string, string>;
+    nulls?: Record<string, number>;
+    rows?: Record<string, any>[];
     truncated?: boolean;
   };
   edits: any[];
@@ -63,15 +76,25 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
   };
 
   const handleResetAll = () => {
-    if (confirm("Voulez-vous vraiment réinitialiser toutes les modifications sur ce DataFrame ?")) {
+    if (confirm("Discard every cell edit on this DataFrame?")) {
       onChange([]);
     }
   };
 
-  const columns = dfMeta?.columns || [];
-  const rows = dfMeta?.rows || [];
-  const dtypes = dfMeta?.dtypes || {};
+  const { payload, parseError } = useMemo<{ payload: DataFrameTablePayload | null; parseError: string | null }>(() => {
+    if (!dfMeta?.table_json) return { payload: null, parseError: null };
+    try {
+      return { payload: JSON.parse(dfMeta.table_json) as DataFrameTablePayload, parseError: null };
+    } catch (error: unknown) {
+      return { payload: null, parseError: error instanceof Error ? error.message : 'Unreadable table payload' };
+    }
+  }, [dfMeta?.table_json]);
+
+  const columns = payload?.columns ?? dfMeta?.columns ?? [];
+  const rows = payload?.rows ?? dfMeta?.rows ?? [];
+  const dtypes = payload?.dtypes ?? dfMeta?.dtypes ?? {};
   const shape = dfMeta?.shape || [0, 0];
+  const offset = dfMeta?.offset ?? 0;
 
   // Client-side search filtering
   const filteredRows = useMemo(() => {
@@ -128,14 +151,25 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
             </span>
             {dfMeta?.truncated && (
               <span className="text-[10px] text-amber-400 flex items-center gap-1 bg-amber-950/20 px-2 py-0.5 rounded border border-amber-500/20">
-                <AlertCircle size={10} /> Visualisation limitée aux 5 000 premières lignes
+                <AlertCircle size={10} />
+                Rows {offset} – {offset + rows.length - 1} of {shape[0].toLocaleString()} — move the window with “First row shown” / “Rows in editor”
+              </span>
+            )}
+            {parseError && (
+              <span className="text-[10px] text-red-400 flex items-center gap-1 bg-red-950/20 px-2 py-0.5 rounded border border-red-500/20">
+                <AlertCircle size={10} /> Table data unreadable: {parseError}
+              </span>
+            )}
+            {!parseError && !rows.length && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                <AlertCircle size={10} /> No rows received — connect a DataFrame and run the graph
               </span>
             )}
           </div>
           
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label="Close"
             className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-all"
           >
             <X size={18} />
@@ -148,7 +182,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Rechercher dans les données..."
+              placeholder="Search the data..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-[#161b22] text-xs text-gray-200 pl-9 pr-4 py-2 rounded-xl border border-white/10 focus:border-orange-500/50 focus:outline-none placeholder-gray-500 transition-colors"
@@ -158,7 +192,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
           <div className="flex items-center gap-3">
             {edits.length > 0 && (
               <span className="text-[10px] font-mono text-orange-400 bg-orange-950/30 border border-orange-500/20 px-2 py-1 rounded-xl">
-                {edits.length} cellule(s) modifiée(s)
+                {edits.length} edited cell(s)
               </span>
             )}
             
@@ -167,7 +201,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
               disabled={edits.length === 0}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-[#161b22] text-xs text-gray-400 hover:text-orange-400 disabled:text-gray-600 hover:border-orange-500/20 disabled:hover:border-white/10 hover:bg-orange-950/10 disabled:hover:bg-[#161b22] disabled:opacity-40 transition-all font-semibold"
             >
-              <RotateCcw size={12} /> Réinitialiser
+              <RotateCcw size={12} /> Reset
             </button>
           </div>
         </div>
@@ -262,7 +296,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
               ) : (
                 <tr>
                   <td colSpan={columns.length + 1} className="text-center py-12 text-xs text-gray-500 select-none">
-                    Aucun résultat correspondant à votre recherche
+                    No row matches your search
                   </td>
                 </tr>
               )}
@@ -273,7 +307,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
         {/* Footer Pagination Controls */}
         <div className="flex items-center justify-between px-6 h-12 bg-[#161b22] border-t border-white/10 shrink-0 select-none">
           <span className="text-[10px] text-gray-500">
-            Lignes {Math.min(filteredRows.length, (currentPage - 1) * itemsPerPage + 1)} à {Math.min(filteredRows.length, currentPage * itemsPerPage)} sur {filteredRows.length}
+            Rows {Math.min(filteredRows.length, (currentPage - 1) * itemsPerPage + 1)}–{Math.min(filteredRows.length, currentPage * itemsPerPage)} of {filteredRows.length}
           </span>
 
           <div className="flex items-center gap-2">
@@ -297,7 +331,7 @@ export function DataFrameEditorModal({ label, dfMeta, edits, onChange, onClose }
           </div>
 
           <span className="text-[10px] text-gray-500">
-            Double-cliquer pour modifier · Enter pour valider
+            Double-click to edit · Enter to confirm
           </span>
         </div>
 
