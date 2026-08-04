@@ -5,34 +5,52 @@ from registry import vision_node, NodeProcessor, send_notification
 
 _NOTIF_ID = 'df_editor'
 
-def _df_meta_with_rows(df, max_rows=5000) -> dict:
+
+def _serialize(v):
+    if isinstance(v, float) and v != v:  # NaN
+        return None
+    if isinstance(v, np.integer):
+        return int(v)
+    if isinstance(v, (int,)):
+        return v
+    if isinstance(v, (float, np.floating)):
+        return float(v)
+    return str(v)
+
+
+def _df_meta_with_rows(df, offset: int = 0, max_rows: int = 500) -> dict:
+    """Metadata for the editor modal.
+
+    The row window travels as a JSON *string* (`table_json`): the engine drops any
+    node output holding a list of more than 2000 items or a dict of more than 64
+    keys, which silently emptied the editor for every real-world DataFrame.
+    """
     r, c = df.shape
-    slice_df = df.head(max_rows)
-    
-    def _serialize(v):
-        if isinstance(v, float) and v != v:  # NaN
-            return None
-        if isinstance(v, np.integer):
-            return int(v)
-        if isinstance(v, (int,)):
-            return v
-        if isinstance(v, (float, np.floating)):
-            return float(v)
-        return str(v)
-        
+    offset = max(0, min(int(offset), max(0, r - 1)))
+    max_rows = max(1, int(max_rows))
+    window = df.iloc[offset:offset + max_rows]
+
     rows = []
-    for idx, row in slice_df.iterrows():
+    for idx, row in window.iterrows():
         row_dict = {str(k): _serialize(v) for k, v in row.items()}
         row_dict['__row_index__'] = int(idx) if isinstance(idx, (int, np.integer)) else str(idx)
         rows.append(row_dict)
-        
-    return {
-        'shape':   [r, c],
+
+    payload = {
         'columns': [str(col) for col in df.columns],
         'dtypes':  {str(col): str(df[col].dtype) for col in df.columns},
         'nulls':   {str(col): int(df[col].isna().sum()) for col in df.columns},
         'rows':    rows,
-        'truncated': r > max_rows
+    }
+
+    return {
+        'shape':      [r, c],
+        'columns':    [str(col) for col in df.columns],
+        'row_count':  r,
+        'offset':     offset,
+        'window':     len(rows),
+        'truncated':  len(rows) < r,
+        'table_json': json.dumps(payload),
     }
 
 def _cast_val(val, dtype_str):
@@ -70,7 +88,9 @@ def _cast_val(val, dtype_str):
         {'id': 'preview', 'color': 'image', 'label': 'Preview'}
     ],
     params=[
-        {'id': 'edits', 'label': 'Edits JSON', 'type': 'string', 'default': '[]'}
+        {'id': 'edits',      'label': 'Edits JSON',       'type': 'string', 'default': '[]'},
+        {'id': 'row_offset', 'label': 'First row shown',  'type': 'int', 'default': 0,   'min': 0, 'max': 10_000_000},
+        {'id': 'max_rows',   'label': 'Rows in editor',   'type': 'int', 'default': 500, 'min': 10, 'max': 5000},
     ],
     resizable=True,
     min_width=260,
@@ -129,6 +149,8 @@ class DataFrameEditorNode(NodeProcessor):
         
         return {
             'table':   df_mod,
-            'df_meta': _df_meta_with_rows(df_mod),
+            'df_meta': _df_meta_with_rows(df_mod,
+                                          offset=params.get('row_offset', 0),
+                                          max_rows=params.get('max_rows', 500)),
             'preview': preview
         }

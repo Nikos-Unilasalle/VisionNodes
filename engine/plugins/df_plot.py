@@ -22,6 +22,10 @@ _CLABELS = ['Tab10', 'Set1', 'Set2', 'Viridis', 'Plasma', 'Coolwarm', 'RdYlGn']
 
 _CHART_TYPES = ['Line', 'Bar', 'Scatter', 'Histogram', 'Box', 'Area', 'Pie']
 
+# Above this many distinct values a numeric hue column is drawn with a colorbar
+# instead of one scatter call + legend entry per class.
+_MAX_HUE_CLASSES = 20
+
 # Node body colour (BaseNode bg). The in-node preview is rendered on this so the
 # chart blends into the node, giving a transparent look.
 _NODE_BG = '#2c333f'
@@ -353,14 +357,23 @@ class DataFramePlotNode(NodeProcessor):
         if not x_col or x_col not in work.columns or not y_cols:
             raise ValueError('Scatter needs X column + ≥1 Y column')
         y_col = y_cols[0]
-        if hue_col and hue_col in work.columns:
-            classes = list(work[hue_col].unique())[:20]
+        hue = work[hue_col] if (hue_col and hue_col in work.columns) else None
+        if hue is not None and hue.dtype.kind in 'ifc' and hue.nunique(dropna=True) > _MAX_HUE_CLASSES:
+            # Continuous hue: colormap + colorbar. Enumerating one class per value
+            # would cap the plot at 20 of them and hide the rest of the points.
+            sc = ax.scatter(work[x_col], work[y_col], c=hue.astype(float), cmap=cmap,
+                            alpha=alpha, s=msize, edgecolors='none')
+            cb = ax.figure.colorbar(sc, ax=ax, pad=0.01, fraction=0.03)
+            cb.set_label(hue_col, fontsize=7)
+        elif hue is not None:
+            classes = list(hue.dropna().unique())
             colors = self._colors(cmap_obj, len(classes))
             for cls, color in zip(classes, colors):
-                m = work[hue_col] == cls
+                m = hue == cls
                 ax.scatter(work[x_col][m], work[y_col][m], color=color, alpha=alpha,
                            s=msize, edgecolors='none', label=str(cls))
-            ax.legend(fontsize=7, framealpha=0.4, title=hue_col, title_fontsize=7)
+            if len(classes) <= _MAX_HUE_CLASSES:
+                ax.legend(fontsize=7, framealpha=0.4, title=hue_col, title_fontsize=7)
         else:
             ax.scatter(work[x_col], work[y_col], c=np.arange(len(work)), cmap=cmap,
                        alpha=alpha, s=msize, edgecolors='none')
