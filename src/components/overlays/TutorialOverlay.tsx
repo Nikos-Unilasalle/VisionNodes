@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 
 interface KeyEvent {
   id: number;
@@ -18,7 +17,23 @@ const KEY_LABELS: Record<string, string> = {
   ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→',
 };
 
-function formatKey(e: KeyboardEvent): string {
+const KEY_TTL_MS = 2000;
+const MOUSE_TTL_MS = 700;
+
+/** How long the pointer must rest on a node before its description shows. */
+export const HOVER_DWELL_MS = 450;
+
+export interface TutorialNodeInfo {
+  label: string;
+  description?: string;
+}
+
+interface TutorialOverlayProps {
+  /** Resolves a React Flow node id to what should be explained about it. */
+  getNodeInfo?: (nodeId: string) => TutorialNodeInfo | null;
+}
+
+export function formatKey(e: KeyboardEvent): string {
   const parts: string[] = [];
   if (e.metaKey)  parts.push('⌘');
   if (e.ctrlKey)  parts.push('⌃');
@@ -28,7 +43,12 @@ function formatKey(e: KeyboardEvent): string {
   const key = e.key;
   if (['Meta', 'Control', 'Alt', 'Shift'].includes(key)) return '';
 
-  const label = KEY_LABELS[key] ?? (key.length === 1 ? key.toUpperCase() : key);
+  // Option+letter yields a symbol on macOS (†, ∂…): fall back to the physical
+  // key so the badge shows ⌥T rather than ⌥†.
+  const physical = /^Key([A-Z])$/.exec(e.code)?.[1] ?? /^Digit(\d)$/.exec(e.code)?.[1];
+  const label = KEY_LABELS[key]
+    ?? (e.altKey && physical ? physical : undefined)
+    ?? (key.length === 1 ? key.toUpperCase() : key);
   parts.push(label);
   return parts.join('');
 }
@@ -42,9 +62,17 @@ const MOUSE_COLORS = {
 let _uid = 0;
 const uid = () => ++_uid;
 
-export default function TutorialOverlay() {
+/**
+ * Screencast helper: shows the keys and mouse buttons being pressed.
+ *
+ * Deliberately plain DOM — no animation library. Badges are short-lived, and an
+ * animation that fails to start would leave them stuck at opacity 0, i.e. an
+ * overlay that looks dead while working perfectly.
+ */
+export default function TutorialOverlay({ getNodeInfo }: TutorialOverlayProps = {}) {
   const [keyEvents, setKeyEvents]     = useState<KeyEvent[]>([]);
   const [mouseEvents, setMouseEvents] = useState<MouseEvent_[]>([]);
+  const [hovered, setHovered]         = useState<TutorialNodeInfo | null>(null);
   const keyTimers   = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
   const mouseTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
@@ -58,7 +86,7 @@ export default function TutorialOverlay() {
       const t = setTimeout(() => {
         setKeyEvents(prev => prev.filter(k => k.id !== id));
         keyTimers.current.delete(id);
-      }, 2000);
+      }, KEY_TTL_MS);
       keyTimers.current.set(id, t);
     };
 
@@ -72,56 +100,107 @@ export default function TutorialOverlay() {
       const t = setTimeout(() => {
         setMouseEvents(prev => prev.filter(m => m.id !== id));
         mouseTimers.current.delete(id);
-      }, 700);
+      }, MOUSE_TTL_MS);
       mouseTimers.current.set(id, t);
     };
 
+    const keys = keyTimers.current;
+    const mice = mouseTimers.current;
+
+    // Window capture fires before anything else on the page; adding the same
+    // handler on document too would count every event twice.
     window.addEventListener('keydown', onKeyDown, true);
     window.addEventListener('mousedown', onMouseDown, true);
     return () => {
       window.removeEventListener('keydown', onKeyDown, true);
       window.removeEventListener('mousedown', onMouseDown, true);
-      keyTimers.current.forEach(t => clearTimeout(t));
-      mouseTimers.current.forEach(t => clearTimeout(t));
+      keys.forEach(t => clearTimeout(t));
+      mice.forEach(t => clearTimeout(t));
     };
   }, []);
+
+  // Resting the pointer on a node explains it. A dwell delay keeps the panel
+  // from flickering while the pointer merely crosses the canvas.
+  const hoveredIdRef = useRef<string | null>(null);
+  const dwellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!getNodeInfo) return;
+
+    const cancelDwell = () => {
+      if (dwellTimer.current) clearTimeout(dwellTimer.current);
+      dwellTimer.current = null;
+    };
+
+    const onMouseMove = (e: globalThis.MouseEvent) => {
+      const el = e.target as HTMLElement | null;
+      const nodeEl = el?.closest?.('.react-flow__node') as HTMLElement | null;
+      const nodeId = nodeEl?.getAttribute('data-id') ?? null;
+      if (nodeId === hoveredIdRef.current) return;
+
+      hoveredIdRef.current = nodeId;
+      cancelDwell();
+      if (!nodeId) {
+        setHovered(null);
+        return;
+      }
+      dwellTimer.current = setTimeout(() => {
+        // The pointer may have moved on while the timer was pending.
+        if (hoveredIdRef.current !== nodeId) return;
+        setHovered(getNodeInfo(nodeId));
+      }, HOVER_DWELL_MS);
+    };
+
+    window.addEventListener('mousemove', onMouseMove, true);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove, true);
+      cancelDwell();
+      hoveredIdRef.current = null;
+    };
+  }, [getNodeInfo]);
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-[9999]">
       {/* Mouse indicators */}
-      <div className="flex gap-2">
-        <AnimatePresence>
-          {mouseEvents.map(ev => (
-            <motion.div
-              key={ev.id}
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              transition={{ duration: 0.12 }}
-              className={`${MOUSE_COLORS[ev.button]} text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg`}
-            >
-              {ev.button}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="flex gap-2 h-8 items-center">
+        {mouseEvents.map(ev => (
+          <div
+            key={ev.id}
+            className={`${MOUSE_COLORS[ev.button]} vn-tutorial-pop text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-lg`}
+          >
+            {ev.button}
+          </div>
+        ))}
       </div>
 
+      {/* Hovered node: label + description */}
+      {hovered && (
+        <div className="vn-tutorial-pop max-w-xl bg-gray-900/92 border border-emerald-400/25 rounded-xl px-4 py-2.5 shadow-2xl text-center">
+          <div className="text-emerald-300 text-[10px] font-black uppercase tracking-[0.15em]">
+            {hovered.label}
+          </div>
+          {hovered.description && (
+            <div className="text-gray-300 text-[11px] leading-snug mt-1">
+              {hovered.description}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Key indicators */}
-      <div className="flex flex-wrap justify-center gap-2 max-w-sm">
-        <AnimatePresence>
-          {keyEvents.map(ev => (
-            <motion.div
-              key={ev.id}
-              initial={{ opacity: 0, y: 8, scale: 0.85 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -4, scale: 0.9 }}
-              transition={{ duration: 0.15 }}
-              className="bg-gray-900/90 border border-gray-600 text-white text-sm font-mono px-3 py-1.5 rounded-lg shadow-xl backdrop-blur-sm"
-            >
-              {ev.label}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="flex flex-wrap justify-center gap-2 max-w-sm items-center">
+        {/* Always on screen: without it, an idle tutorial mode looks broken. */}
+        <span className="bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-[9px] font-black uppercase tracking-[0.18em] px-2 py-1 rounded-lg">
+          Tutorial
+        </span>
+        {keyEvents.map(ev => (
+          <div
+            key={ev.id}
+            className="bg-gray-900/90 vn-tutorial-pop border border-gray-600 text-white text-sm font-mono px-3 py-1.5 rounded-lg shadow-xl"
+          >
+            {ev.label}
+          </div>
+        ))}
       </div>
     </div>
   );

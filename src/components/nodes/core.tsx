@@ -311,7 +311,7 @@ const _buildNodeContext = (n: any): string => {
 
 // Pure-decoration node types that add no topology and only clutter the graph.
 const _LLM_CANVAS_SKIP = new Set([
-  'canvas_note', 'canvas_frame', 'canvas_ribbon', 'note',
+  'canvas_note', 'canvas_frame', 'canvas_ribbon', 'canvas_ink', 'note',
 ]);
 
 /** Compact topology snapshot of the whole canvas for the LLM help node.

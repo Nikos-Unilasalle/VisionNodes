@@ -6,7 +6,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
-  Plus, ChevronRight, Layers, Heart, MousePointer2
+  Plus, ChevronRight, Layers, Heart, MousePointer2, Pencil
 } from 'lucide-react';
 import * as N from './components/Nodes';
 import { useVisionEngine } from './hooks/useVisionEngine';
@@ -33,6 +33,8 @@ import { useAutosave } from './hooks/useAutosave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useConnectionHandling } from './hooks/useConnectionHandling';
 import { useGroupOperations } from './hooks/useGroupOperations';
+import { useCanvasDrawing } from './hooks/useCanvasDrawing';
+import { InkToolbar, InkPreview } from './components/ui/InkToolbar';
 import NotificationBar from './components/ui/NotificationBar';
 import AboutModal from './components/ui/AboutModal';
 import RerouteOverlay from './components/overlays/RerouteOverlay';
@@ -195,6 +197,11 @@ function App() {
   const [copernicusEditingId,   setCopernicusEditingId]   = useState<string | null>(null);
   const [pythonEditingId,       setPythonEditingId]       = useState<string | null>(null);
   const [dfEditingId,           setDfEditingId]           = useState<string | null>(null);
+  // Freehand ink on the canvas (Cmd+Space). Strokes drawn without leaving the mode
+  // accumulate in a single canvas_ink node.
+  const [isInkDrawing,          setIsInkDrawing]          = useState(false);
+  const [inkColor,              setInkColor]              = useState('');
+  const [inkSize,               setInkSize]               = useState(4);
   // Per-conflict-group user choice of which edge is active. Key = `${target}::${handle}`.
   const [activeEdgeOverrides, setActiveEdgeOverrides] = useState<Map<string, string>>(new Map());
 
@@ -580,6 +587,21 @@ function App() {
     });
     return mapped;
   }, [nodes, edges, pluginSchemas, visualizedNodeId, activePaletteIndex, handleExportPy, handleRemovePlotterPort]);
+
+  // Label + description of a node, for the tutorial overlay's hover panel.
+  // Reads the enriched list so the schema/static-category lookup isn't duplicated.
+  const nodesWithDataRef = useRef<any[]>([]);
+  nodesWithDataRef.current = nodesWithData;
+  const getTutorialNodeInfo = useCallback((nodeId: string) => {
+    const node = nodesWithDataRef.current.find((n: any) => n.id === nodeId);
+    // Ink is a drawing, not a node to explain — and its bounding box spans
+    // whatever it was drawn over, so it would shadow the nodes underneath.
+    if (!node || node.type === 'canvas_ink') return null;
+    return {
+      label: node.data?.label || node.data?.schema?.label || node.type || 'Node',
+      description: node.data?.description,
+    };
+  }, []);
 
   const canVisualize = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -1507,12 +1529,16 @@ function App() {
     groupSelectedNodes, exitGroup, groupStackRef, canBypass,
     setIsAddMenuOpen, saveProject, loadProject, setPendingConnection, handleRotate,
     handleVisualize, handleTeleport, handleExportSvg,
+    toggleInkDrawing: () => setIsInkDrawing(p => !p),
   });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Use Alt+T for Tutorial mode to avoid conflicts with browser's Ctrl+Shift+T
-      if (e.altKey && e.key.toLowerCase() === 't') {
+      // Use Alt+T for Tutorial mode to avoid conflicts with browser's Ctrl+Shift+T.
+      // Match on e.code: on macOS, Option+T yields e.key === '†', never 't'.
+      // Ignore auto-repeat: holding the combo would otherwise toggle the mode
+      // several times per press and leave it off as often as on.
+      if (e.altKey && e.code === 'KeyT' && !e.repeat) {
         e.preventDefault();
         setIsTutorialMode(prev => !prev);
       }
@@ -1745,6 +1771,29 @@ function App() {
     return () => { document.body.style.cursor = ''; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [isRibbonDrawing, instance, nodesRef, edgesRef, pushSnapshot, setViewNodes, setViewEdges]);
 
+  const exitInkDrawing = useCallback(() => setIsInkDrawing(false), []);
+  const { previewPoints: inkPreviewPoints, isPreviewStraight: isInkPreviewStraight } = useCanvasDrawing({
+    isDrawing: isInkDrawing,
+    instance,
+    color: inkColor,
+    size: inkSize,
+    pushSnapshot,
+    setViewNodes,
+    nodesRef,
+    onExit: exitInkDrawing,
+  });
+
+  // Ink draws from the palette the user picked in the top menu. Keep the current
+  // pen colour when it survives a palette switch, otherwise fall back to the first.
+  const inkPaletteColors = useMemo(
+    () => (N.PALETTES[activePaletteIndex % N.PALETTES.length]?.colors ?? []).map((c: any) => c.bg),
+    [activePaletteIndex],
+  );
+  useEffect(() => {
+    if (inkPaletteColors.length === 0) return;
+    setInkColor(prev => (inkPaletteColors.includes(prev) ? prev : inkPaletteColors[0]));
+  }, [inkPaletteColors]);
+
   const coloredEdges = useMemo(() => {
     const resolveColor = (edge: any, visited = new Set()): string => {
       if (!edge || visited.has(edge.id)) return '#555';
@@ -1865,6 +1914,7 @@ function App() {
               }} />
             </>
           )}
+          <InkPreview points={inkPreviewPoints} color={inkColor} size={inkSize} straight={isInkPreviewStraight} />
           <NodesDataContext.Provider value={nodesDataStore}>
           <ComputingNodeContext.Provider value={computingNodeId}>
           <ReactFlow
@@ -1923,7 +1973,8 @@ function App() {
               if (selectedCount > 1) { setPaneMenu({ x: (e as any).clientX, y: (e as any).clientY }); }
               else { setIsAddMenuOpen(true); }
             }}
-            panOnDrag={[1, 2]} panOnScroll={false} zoomOnScroll={true} selectionOnDrag={true}
+            panOnDrag={[1, 2]} panOnScroll={false} zoomOnScroll={true} selectionOnDrag={!isInkDrawing}
+            nodesDraggable={!isInkDrawing} nodesConnectable={!isInkDrawing} elementsSelectable={!isInkDrawing}
             snapToGrid={snapEnabled} snapGrid={[20, 20]}
             minZoom={0.05} maxZoom={2.5}
             defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
@@ -1952,6 +2003,18 @@ function App() {
                       />
                     </ControlButton>
                     <ControlButton
+                      onClick={() => setIsInkDrawing(p => !p)}
+                      title={isInkDrawing ? 'Stop drawing (Cmd+Space / Esc)' : 'Draw on the canvas (Cmd+Space)'}
+                    >
+                      <Pencil
+                        size={12}
+                        style={{
+                          color: isInkDrawing ? '#fbbf24' : '#9ca3af',
+                          transition: 'color 0.2s',
+                        }}
+                      />
+                    </ControlButton>
+                    <ControlButton
                       onClick={() => setIsTutorialMode(p => !p)}
                       title={isTutorialMode ? 'Disable Tutorial Mode (Alt+T)' : 'Enable Tutorial Mode (Alt+T)'}
                     >
@@ -1967,6 +2030,18 @@ function App() {
                 );
               })()}
             </Controls>
+            {isInkDrawing && (
+              <Panel position="top-center">
+                <InkToolbar
+                  colors={inkPaletteColors}
+                  color={inkColor}
+                  size={inkSize}
+                  onChangeColor={setInkColor}
+                  onChangeSize={setInkSize}
+                  onDone={exitInkDrawing}
+                />
+              </Panel>
+            )}
             <Panel position="top-left">
               <div className="flex flex-col gap-2">
                 <button
@@ -2190,7 +2265,7 @@ function App() {
       </div>
 
       <AboutModal showAbout={showAbout} setShowAbout={setShowAbout} />
-      {isTutorialMode && <TutorialOverlay />}
+      {isTutorialMode && <TutorialOverlay getNodeInfo={getTutorialNodeInfo} />}
     </div>
   );
 }
