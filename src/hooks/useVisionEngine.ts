@@ -134,9 +134,14 @@ export function useVisionEngine(onCapture?: (nodeId: string, base64: string) => 
 
   const updateGraph = useCallback((nodes: any[], edges: any[]) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
+      // Ink is pure canvas decoration with no ports: keep its stroke payload
+      // out of every graph update.
+      const graphNodes = nodes
+        .filter(n => n.type !== 'canvas_ink')
+        .map(n => ({ id: n.id, type: n.type, data: n.data }));
       ws.current.send(JSON.stringify({
         type: 'update_graph',
-        graph: { nodes: nodes.map(n => ({ id: n.id, type: n.type, data: n.data })), edges }
+        graph: { nodes: graphNodes, edges }
       }));
     }
   }, []);

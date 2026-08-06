@@ -23,6 +23,7 @@ export function useKeyboardShortcuts({
   handleVisualize,
   handleTeleport,
   handleExportSvg,
+  toggleInkDrawing,
 }: any) {
 
   useEffect(() => {
@@ -44,6 +45,12 @@ export function useKeyboardShortcuts({
       const isOverPanel = !!document.querySelector('[data-no-shortcuts]:hover');
       if (isOverPanel && !cmdKey && !e.altKey) return;
 
+      // Match on e.code: modifier combinations rewrite e.key on some layouts.
+      // Skip auto-repeat, which would flip the mode on and off while held.
+      if (cmdKey && e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        toggleInkDrawing?.();
+      }
       if (cmdKey && e.key === 'c') copyNodes();
       if (cmdKey && e.key === 'v') pasteNodes();
       if (cmdKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); handleUndo(); }
@@ -89,7 +96,7 @@ export function useKeyboardShortcuts({
             pushSnapshot();
             setViewNodes((nds: any) => nds.map((n: any) => {
               if (!n.selected) return n;
-              const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute', 'canvas_ribbon'].includes(n.type || '');
+              const isUiNode = ['canvas_frame', 'canvas_note', 'canvas_reroute', 'canvas_ribbon', 'canvas_ink'].includes(n.type || '');
               if (isUiNode) return n;
               const isLocked = !!(n.data as any)?.lockedOut;
               return { ...n, data: { ...n.data, lockedOut: !isLocked } };
@@ -98,6 +105,8 @@ export function useKeyboardShortcuts({
             pushSnapshot();
             setViewNodes((nds: any) => nds.map((n: any) => {
               if (!n.selected) return n;
+              // Ink has no chrome to collapse — minifying it would just clip strokes.
+              if (n.type === 'canvas_ink') return n;
               if (n.type === 'canvas_frame') {
                 const collapsed = !!(n.data?.params?.collapsed);
                 if (!collapsed) {
@@ -167,5 +176,5 @@ export function useKeyboardShortcuts({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize, handleTeleport, handleExportSvg]);
+  }, [copyNodes, pasteNodes, duplicateNodes, handleUndo, handleRedo, instance, groupSelectedNodes, exitGroup, pushSnapshot, setViewNodes, canBypass, saveProject, loadProject, setIsAddMenuOpen, setPendingConnection, nodesRef, groupStackRef, handleRotate, handleVisualize, handleTeleport, handleExportSvg, toggleInkDrawing]);
 }

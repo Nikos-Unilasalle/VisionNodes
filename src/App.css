@@ -114,3 +114,29 @@ button {
     background-color: #0f0f0f69;
   }
 }
+
+/* Draw mode: nodes, handles and edges all set their own cursor, which would
+   flicker back to grab/pointer while the pen is still active. */
+body.vn-drawing .react-flow,
+body.vn-drawing .react-flow * {
+  cursor: crosshair !important;
+}
+
+/* …but the floating panels stay clickable UI, not drawing surface. */
+body.vn-drawing .react-flow__panel,
+body.vn-drawing .react-flow__panel *,
+body.vn-drawing .react-flow__controls,
+body.vn-drawing .react-flow__controls * {
+  cursor: pointer !important;
+}
+
+/* Tutorial overlay badges: plain CSS, no animation library. They must be
+   visible even if the animation never runs, so the resting state is opaque. */
+@keyframes vn-tutorial-pop {
+  from { opacity: 0.4; transform: scale(0.85); }
+  to   { opacity: 1;   transform: scale(1); }
+}
+
+.vn-tutorial-pop {
+  animation: vn-tutorial-pop 0.14s ease-out;
+}
