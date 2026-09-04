@@ -32,22 +32,22 @@ def test_state_persists_across_frames():
 
 def test_error_does_not_crash():
     out = _run("raise ValueError('test error')")
-    assert 'error' in out.get('out_e', '').lower()
+    assert 'error' in out.get('__error__', '').lower()
 
 
 def test_blocked_open():
     out = _run("open('/tmp/pwned', 'w')")
-    assert 'not defined' in out.get('out_e', '')
+    assert 'not defined' in out.get('__error__', '')
 
 
 def test_blocked_import():
     out = _run("import os; out_any = os.getcwd()")
-    assert 'blocked' in out.get('out_e', '').lower()
+    assert 'blocked' in out.get('__error__', '').lower()
 
 
 def test_blocked_dunder_import():
     out = _run("__import__('os').system('echo pwned')")
-    assert 'blocked' in out.get('out_e', '').lower()
+    assert 'blocked' in out.get('__error__', '').lower()
 
 
 def test_numpy_available():
@@ -87,4 +87,4 @@ def test_reserved_vars_not_emitted_as_outputs():
 def test_raw_frame_input_not_injected():
     # engine always passes raw_frame; it must not be referenceable as a script var.
     out = _run("out_a = raw_frame", inputs={'raw_frame': object(), 'a': 5})
-    assert "'raw_frame' is not defined" in out['out_e']
+    assert "'raw_frame' is not defined" in out['__error__']
