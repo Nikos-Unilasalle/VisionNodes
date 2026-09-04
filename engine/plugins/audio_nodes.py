@@ -31,7 +31,7 @@ except ImportError:
 try:
     import sounddevice as sd
     SD_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     SD_AVAILABLE = False
     if AUDIO_AVAILABLE:
         try:
