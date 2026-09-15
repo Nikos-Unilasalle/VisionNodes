@@ -278,8 +278,16 @@ class SpectralIndicesNode(NodeProcessor):
                 enabled_labels.append(label)
                 result[out_key] = _colorize(arr, cmap, vmin, vmax)
             except Exception as e:
+                # A NameError here almost always means the upstream raster carries fewer
+                # bands than the expression assumes — e.g. B6 (SWIR2) missing because the
+                # fetch delivered 5 bands. Naming the band count and the available symbols
+                # points at the real culprit instead of at this node.
+                _avail = ', '.join(f'B{i+1}' for i in range(count))
                 send_notification(
-                    f'Spectral Indices: {out_key} expression error: {e}',
+                    f'Spectral Indices: {out_key} ({label}) expression error: {e} — '
+                    f'the input raster has {count} band(s); available: {_avail}, '
+                    f'NIR, RED, GREEN, BLUE, SWIR. Check the Bands field of the '
+                    f'fetch node upstream.',
                     level='error', notif_id=_NOTIF,
                 )
 
