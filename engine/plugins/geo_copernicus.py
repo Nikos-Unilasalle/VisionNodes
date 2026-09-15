@@ -134,6 +134,10 @@ COLLECTIONS: dict[str, dict] = {
         # MBWI need SWIR2 (B12), and omitting it used to silently truncate the stack.
         'asset_keys':   ['B04','B03','B02','B08','B11','B12'],
         'categorical':  False,
+        # Planetary Computer serves L2A as uint16 DN; surface reflectance = DN * 1e-4.
+        # Without this the whole downstream (index thresholds, reflectance-unit gate
+        # caps, an additive noise sigma in reflectance units) is off by 1e4.
+        'value_scale':  1e-4,
     },
     'Copernicus DEM GLO-30 (Planetary)': {
         'backend':      'stac',
@@ -359,21 +363,60 @@ class GeoCopernicusNode(NodeProcessor):
     @staticmethod
     def _stac_cache_sig(col_name: str, bounds: list, date_start: str, date_end: str,
                         resolution, polariz, orbit, composite, to_db, max_scenes,
-                        assets: list) -> str:
+                        assets: list, col_cfg: dict | None = None) -> str:
         """Cache key for a STAC fetch.
 
-        `assets` must be the RESOLVED band list, not the collection default: the key has
-        to change when the user edits the Bands field, otherwise a stale raster with the
-        wrong band count is served silently.
+        Two things the key must track beyond the query itself:
+
+        * `assets` — the RESOLVED band list, not the collection default, so editing the
+          Bands field cannot serve a raster with the wrong band count.
+        * the EFFECTIVE band transform (dB actually applied, value scale) rather than
+          the raw `to_db` request. Recording the request meant that changing the
+          post-processing left the key untouched, and a cache hit kept serving the old,
+          wrongly-transformed product as if the fix had not happened.
         """
+        cfg = col_cfg or {}
         sig = json.dumps({
             'col': col_name, 'bbox': list(bounds),
             'd0': date_start, 'd1': date_end,
             'res': resolution, 'pol': polariz, 'orb': orbit,
-            'comp': composite, 'db': to_db, 'maxs': max_scenes,
+            'comp': composite, 'maxs': max_scenes,
+            'db': bool(to_db) and GeoCopernicusNode._is_sar(cfg),
+            'scale': cfg.get('value_scale'),
             'assets': list(assets),
         }, sort_keys=True)
         return hashlib.md5(sig.encode()).hexdigest()[:14]
+
+    @staticmethod
+    def _is_sar(col_cfg: dict) -> bool:
+        return (col_cfg.get('units') == 'LINEAR_POWER'
+                or str(col_cfg.get('stac_id', '')).startswith('sentinel-1'))
+
+    @staticmethod
+    def _postprocess_band(band: np.ndarray, col_cfg: dict, to_db: bool,
+                          is_cat: bool) -> np.ndarray:
+        """Turn a raw composited asset into the value the rest of the app expects.
+
+        `to_db` is a SAR operation — the parameter is even labelled "SAR → dB" — but it
+        used to be applied to every non-categorical STAC collection. Sentinel-2
+        reflectance then arrived as 10*log10(DN), which silently invalidates every
+        spectral index, every reflectance-unit threshold, and any additive noise model
+        expressed in reflectance units. Apply it only to SAR.
+
+        `value_scale` converts a collection's native storage (e.g. uint16 DN) into
+        physical units, so the STAC path matches the SentinelHub path's contract.
+        """
+        if is_cat:
+            return band.astype('uint8')
+
+        band = np.where(band <= 0, np.nan, band)      # 0 is nodata for S1 and S2 alike
+        if to_db and GeoCopernicusNode._is_sar(col_cfg):
+            with np.errstate(divide='ignore', invalid='ignore'):
+                band = 10.0 * np.log10(band)
+        scale = col_cfg.get('value_scale')
+        if scale:
+            band = band * float(scale)
+        return band.astype('float32')
 
     def __init__(self):
         super().__init__()
@@ -1000,7 +1043,7 @@ class GeoCopernicusNode(NodeProcessor):
         sig_key = self._stac_cache_sig(
             col_name, [west, south, east, north], date_start, date_end,
             resolution, polariz, orbit, composite, to_db, max_scenes,
-            _resolved_assets)
+            _resolved_assets, col_cfg)
         final_path = os.path.join(cache_dir, f'stac_{sig_key}.tif')
 
         if auto and not os.path.exists(final_path):
@@ -1181,6 +1224,9 @@ class GeoCopernicusNode(NodeProcessor):
                 )
                 _log(f'UNAVAILABLE bands requested: {_unavailable}')
         _log(f'asset_keys={asset_keys} (requested bands={_bands_str!r})')
+        if to_db and not self._is_sar(col_cfg):
+            _log(f'to_db requested but {col_name} is not SAR — ignoring (dB on optical '
+                 f'reflectance would invalidate every spectral index)')
 
         # ── Target CRS: pick UTM zone from bbox centroid (so resolution=m is honoured) ──
         lon_c   = 0.5 * (west + east)
@@ -1264,16 +1310,7 @@ class GeoCopernicusNode(NodeProcessor):
         out_bands: dict[str, np.ndarray] = {}
         for ak in asset_keys:
             band = compose_fn(ds[ak]).values  # → numpy
-            # Treat zeros as nodata for SAR (S1-RTC fills out-of-swath with 0)
-            if not is_cat:
-                band = np.where(band <= 0, np.nan, band)
-                if to_db:
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        band = 10.0 * np.log10(band)
-                band = band.astype('float32')
-            else:
-                band = band.astype('uint8')
-            out_bands[ak] = band
+            out_bands[ak] = self._postprocess_band(band, col_cfg, to_db, is_cat)
 
         # Sanity check: did we get any non-NaN data?
         valid_fraction = float(np.isfinite(next(iter(out_bands.values()))).mean()) if out_bands else 0.0
