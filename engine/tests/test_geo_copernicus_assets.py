@@ -13,6 +13,7 @@ import os
 import sys
 import importlib.util
 
+import numpy as np
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -145,7 +146,7 @@ def test_spectral_index_error_names_the_available_bands(monkeypatch):
 def _sig(assets):
     return _mod.GeoCopernicusNode._stac_cache_sig(
         'Sentinel-2 L2A (Planetary)', [1.87, 48.88, 2.20, 49.02],
-        '2021-09-02', '2021-09-03', 10, '', '', 'median', False, 8, assets)
+        '2021-09-02', '2021-09-03', 10, '', '', 'median', False, 8, assets, S2)
 
 
 def test_cache_key_changes_with_the_requested_bands():
@@ -227,3 +228,90 @@ def test_crash_notification_carries_the_location(monkeypatch):
     assert 'Broken pipe' in msg
     assert 'BrokenPipeError' in msg, f'exception type must be named: {msg}'
     assert '_boom' in msg or 'line' in msg.lower(), f'origin must be named: {msg}'
+
+
+# ── band post-processing: dB is a SAR operation, not a universal one ──────────
+
+_post = lambda *a, **k: _mod.GeoCopernicusNode._postprocess_band(*a, **k)   # noqa: E731
+SAR = _mod.COLLECTIONS['Sentinel-1 RTC (Planetary)']
+
+
+def test_optical_bands_are_not_log_transformed():
+    """`stac_to_db` is labelled "SAR → dB" but used to apply to every collection.
+
+    Sentinel-2 reflectance came back as 10*log10(DN): every spectral index was then
+    computed on log-transformed data, the reflectance-unit gate caps were meaningless
+    against a 20-42 dB range, and an additive noise sigma specified in reflectance units
+    perturbed the signal by ~0.02 % — so a Monte-Carlo ensemble injected essentially no
+    noise at all.
+    """
+    dn = np.array([[2897.0, 110.0]], dtype='float32')     # land NIR, water NIR
+    out = _post(dn.copy(), S2, to_db=True, is_cat=False)
+
+    # reflectance, not decibels
+    assert np.allclose(out, [[0.2897, 0.0110]], atol=1e-4), out
+
+
+def test_optical_bands_are_scaled_to_reflectance():
+    dn = np.array([[10000.0]], dtype='float32')
+    out = _post(dn.copy(), S2, to_db=False, is_cat=False)
+    assert np.isclose(out[0, 0], 1.0), 'DN 10000 must map to reflectance 1.0'
+
+
+def test_sar_bands_still_get_db_when_requested():
+    lin = np.array([[100.0]], dtype='float32')
+    out = _post(lin.copy(), SAR, to_db=True, is_cat=False)
+    assert np.isclose(out[0, 0], 20.0), '10*log10(100) = 20 dB'
+
+
+def test_sar_bands_stay_linear_when_db_is_off():
+    lin = np.array([[100.0]], dtype='float32')
+    out = _post(lin.copy(), SAR, to_db=False, is_cat=False)
+    assert np.isclose(out[0, 0], 100.0)
+
+
+def test_zeros_become_nodata_for_continuous_bands():
+    a = np.array([[0.0, 5000.0]], dtype='float32')
+    out = _post(a.copy(), S2, to_db=False, is_cat=False)
+    assert np.isnan(out[0, 0]) and not np.isnan(out[0, 1])
+
+
+def test_categorical_bands_are_left_alone():
+    a = np.array([[0, 80]], dtype='float32')
+    lulc = _mod.COLLECTIONS['ESA WorldCover (Planetary)'] \
+        if 'ESA WorldCover (Planetary)' in _mod.COLLECTIONS else S2
+    out = _post(a.copy(), lulc, to_db=True, is_cat=True)
+    assert out.dtype == np.uint8
+    assert out.tolist() == [[0, 80]], 'class codes must survive untouched'
+
+
+def test_reflectance_round_trip_is_physically_plausible():
+    # p50 values actually observed on the Seine scene, as raw DN
+    dn = np.array([[650.1, 712.9, 484.2, 2897.3, 1940.9, 1270.6]], dtype='float32')
+    out = _post(dn.copy(), S2, to_db=True, is_cat=False)
+    assert out.min() > 0.0 and out.max() < 1.0, f'reflectance out of range: {out}'
+
+
+def test_cache_key_tracks_the_effective_band_transform():
+    """Changing how bands are post-processed must invalidate the cache.
+
+    The signature recorded the raw `to_db` request, not the transform actually applied.
+    When dB stopped being applied to optical collections the key did not move, so a
+    cache hit kept serving log-transformed reflectance and the fix appeared to do
+    nothing.
+    """
+    sig = _mod.GeoCopernicusNode._stac_cache_sig
+    args = ('Sentinel-2 L2A (Planetary)', [1.87, 48.88, 2.20, 49.02],
+            '2021-09-02', '2021-09-03', 10, '', '', 'median')
+    assets = ['B04', 'B08']
+    optical = sig(*args, to_db=True, max_scenes=8, assets=assets, col_cfg=S2)
+    sar_like = sig(*args, to_db=True, max_scenes=8, assets=assets, col_cfg=SAR)
+    assert optical != sar_like, 'a dB-transformed product must not share a key'
+
+
+def test_cache_key_tracks_the_value_scale():
+    sig = _mod.GeoCopernicusNode._stac_cache_sig
+    args = ('c', [0, 0, 1, 1], 'a', 'b', 10, '', '', 'median')
+    unscaled = dict(S2); unscaled.pop('value_scale', None)
+    assert sig(*args, to_db=False, max_scenes=8, assets=['B04'], col_cfg=S2) != \
+           sig(*args, to_db=False, max_scenes=8, assets=['B04'], col_cfg=unscaled)
