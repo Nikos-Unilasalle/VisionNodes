@@ -315,3 +315,29 @@ def test_cache_key_tracks_the_value_scale():
     unscaled = dict(S2); unscaled.pop('value_scale', None)
     assert sig(*args, to_db=False, max_scenes=8, assets=['B04'], col_cfg=S2) != \
            sig(*args, to_db=False, max_scenes=8, assets=['B04'], col_cfg=unscaled)
+
+
+# ── zero is not always nodata ─────────────────────────────────────────────────
+
+def test_zero_is_kept_where_it_is_a_real_value():
+    """`0` means nodata for S1/S2, but a real measurement for some products.
+
+    JRC occurrence 0 means "never observed as water" and DEM 0 is sea level. Mapping
+    them to NaN deletes exactly the pixels a water study cares about — and silently,
+    because a NaN-heavy reference simply looks sparse.
+    """
+    jrc = _mod.COLLECTIONS['JRC Global Surface Water']
+    a = np.array([[0.0, 75.0]], dtype='float32')
+    out = _post(a.copy(), jrc, to_db=False, is_cat=False)
+    assert not np.isnan(out[0, 0]), 'occurrence 0 is "never water", not missing data'
+    assert out.tolist() == [[0.0, 75.0]]
+
+
+def test_zero_is_still_nodata_for_reflectance():
+    out = _post(np.array([[0.0, 5000.0]], dtype='float32'), S2, to_db=False, is_cat=False)
+    assert np.isnan(out[0, 0]), 'S2 fills gaps with 0; that must stay nodata'
+
+
+def test_zero_is_still_nodata_for_sar():
+    out = _post(np.array([[0.0, 100.0]], dtype='float32'), SAR, to_db=False, is_cat=False)
+    assert np.isnan(out[0, 0]), 'S1-RTC fills out-of-swath with 0'

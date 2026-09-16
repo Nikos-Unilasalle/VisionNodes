@@ -234,13 +234,57 @@ whose `> 0` criterion is least standard (Wang et al. threshold MBWI dynamically 
 at zero). A further caveat: invalid data votes *against* water — `NaN > 0` evaluates to
 false — so a guarded pixel is treated as evidence of land rather than as an abstention.
 
-The claim that the four indices span complementary physics (NIR absorption, SWIR
-absorption, a multi-band tuned linear discriminant, a green-dominance contrast) is
-therefore **stated as a hypothesis, not a result**. Three of the four use NIR and all four
-use GREEN, so they are strongly correlated and a *k*-of-4 vote over correlated tests is
-closer to one test with jitter than to an independent consensus. The index correlation
-matrix, an effective number of independent votes, and a leave-one-out ablation over the
-four indices are required before the consensus framing can be defended.
+The claim that the four indices span complementary physics was **tested, and it does not
+hold.** Spearman correlation between the four, measured in the corridor on the unperturbed
+scene:
+
+| | NDWI | MNDWI | AWEIsh | MBWI |
+|---|---|---|---|---|
+| **NDWI** | 1.000 | 0.867 | 0.894 | 0.758 |
+| **MNDWI** | 0.867 | 1.000 | 0.881 | 0.828 |
+| **AWEIsh** | 0.894 | 0.881 | 1.000 | **0.947** |
+| **MBWI** | 0.758 | 0.828 | 0.947 | 1.000 |
+
+The correlation matrix has eigenvalues **3.73, 0.16, 0.09, 0.02** — 93 % of the variance in
+a single component. The effective number of independent indices is **2.0** (Li & Ji) or
+**1.51** (Cheverud–Nyholt), against a nominal four.
+
+The vote is dominated by one index. **AWEIsh agrees with the final *k*-of-2 verdict
+99.92 % of the time**, and in 94.0 % of detected water AWEIsh and MBWI alone already reach
+`k = 2`. The vote-sum histogram in the corridor is almost perfectly bimodal — 246 794
+pixels with no index voting water, 84 685 with all four, and only 11 062 in the contested
+2–3 band.
+
+Leave-one-out and single-index ablation, deterministic on the unperturbed scene:
+
+| rule | IoU | MCC | precision | recall |
+|---|---|---|---|---|
+| **all four, k = 2 (as wired)** | **0.7911** | **0.8412** | 0.9763 | 0.8066 |
+| all four, k = 1 | 0.8152 | 0.8558 | 0.9581 | 0.8453 |
+| all four, k = 3 | 0.7678 | 0.8266 | 0.9876 | 0.7752 |
+| all four, k = 4 | 0.7207 | 0.7931 | 0.9914 | 0.7252 |
+| drop NDWI (k = 2 of 3) | 0.7760 | 0.8304 | 0.9782 | 0.7896 |
+| drop MNDWI (k = 2 of 3) | 0.7830 | 0.8372 | 0.9855 | 0.7921 |
+| drop AWEIsh (k = 2 of 3) | 0.7678 | 0.8266 | 0.9876 | 0.7753 |
+| drop MBWI (k = 2 of 3) | 0.7910 | 0.8411 | 0.9763 | 0.8065 |
+| **AWEIsh alone** | **0.7917** | **0.8414** | 0.9753 | 0.8078 |
+| MNDWI alone | 0.7806 | 0.8305 | 0.9637 | 0.8043 |
+| MBWI alone | 0.7633 | 0.8238 | 0.9895 | 0.7695 |
+| NDWI alone | 0.7603 | 0.8198 | 0.9826 | 0.7706 |
+
+**A single index matches the four-index consensus** — AWEIsh alone scores 0.7917 IoU
+against the vote's 0.7911. Removing MBWI changes the result by 0.0001. The consensus is
+not adding information; it is re-measuring the same quantity four times.
+
+Two consequences the paper must carry rather than bury:
+
+1. **The decision rule should be described as "a multi-index vote dominated by AWEIsh",
+   not as independent corroboration.** The physics-complementarity argument is falsified
+   on this scene.
+2. **`k = 2` is not the best operating point.** `k = 1` scores higher on both IoU (0.8152)
+   and MCC (0.8558). The wired `k = 2` buys precision (0.976 vs 0.958) at a larger cost in
+   recall. That is a defensible trade-off for a water product, but it is a choice, and it
+   should be reported as one rather than presented as consensus logic.
 
 ### 3.3 Decision rule — multi-index vote ∧ adaptive reflectance gate
 
@@ -457,6 +501,54 @@ Once a threshold is chosen (§5.6), the binary mask is scored against ground tru
   acknowledges that ground truth (WorldCover, itself a classified product) is not
   sub-pixel accurate.
 
+#### Domain sensitivity — measured, not assumed
+
+The evaluation domain is the ground truth dilated by a chosen radius, so every mask
+metric is a function of that radius. Measured on the primary acquisition (N = 118, 3 px
+noise correlation, threshold fixed at the value selected on the wired 15 px corridor):
+
+| domain | pixels | IoU | F1 | precision | recall | MCC | own t* |
+|---|---|---|---|---|---|---|---|
+| GT only | 113 827 | 0.8606 | 0.9251 | 1.0000 | 0.8606 | n/a | 0.02 |
+| + 5 px | 207 230 | 0.8353 | 0.9102 | 0.9667 | 0.8600 | 0.8197 | 0.02 |
+| **+ 15 px (wired)** | 349 074 | **0.8249** | **0.9041** | 0.9574 | 0.8564 | **0.8631** | 0.02 |
+| + 31 px | 552 694 | 0.8135 | 0.8971 | 0.9462 | 0.8529 | 0.8731 | 0.02 |
+| whole scene | 3 853 696 | 0.7333 | 0.8461 | 0.8436 | 0.8487 | 0.8412 | **0.30** |
+
+Three things this settles:
+
+1. **IoU spans 13 points** (0.861 → 0.733) purely as a function of the evaluation window.
+   A reported IoU is meaningless without its domain, which is why the table is published
+   rather than a single figure.
+2. **Recall is essentially constant** (0.853–0.861) while precision falls from 1.000 to
+   0.844. Widening the domain adds only false positives — the corridor is not hiding
+   missed water, it is hiding spurious water.
+3. **The selected threshold is itself domain-dependent**: 0.02 inside any corridor, 0.30
+   on the whole scene. Threshold selection and domain choice are not independent, and
+   reporting one without the other is incomplete.
+
+MCC is **undefined on the GT-only domain**: with the domain equal to the truth there are
+no true negatives and the denominator vanishes. That is a property of the metric, not a
+result, and it is why the corridor cannot be tightened to zero.
+
+#### False positives beyond the corridor
+
+Restricting to a corridor makes distant false positives invisible, so they are audited
+separately. Predicted water lying **outside the widest (31 px) corridor**:
+
+| | |
+|---|---|
+| pixels | 13 715 — **11.5 % of all predicted water** |
+| connected components | 3 099 |
+| largest component | 305 px |
+| components above 100 px | 6 |
+
+The share is not negligible, but its shape is: 3 099 components averaging 4 px each, with
+nothing resembling a spurious lake. This is speckle, not systematic misclassification, and
+a minimum-area filter would remove most of it at a known cost in recall. Reporting the
+component-size distribution rather than the bare percentage is what separates those two
+diagnoses.
+
 The same scoring is intended to be run with the Monte-Carlo stage bypassed
 (single deterministic evaluation), so the comparison "MC vs no MC" is measured on
 identical metrics and the same domain.
@@ -475,8 +567,31 @@ is tested, not asserted:
   back to the Bernoulli predictive variance `P(1−P)`.
 
 A well-ranked but poorly calibrated `P` would show high AUROC with a reliability curve far
-from the diagonal — the honest outcome to report if it occurs, and the reason the
-reliability diagram is a primary figure rather than a supplement. Note that the ECE
+from the diagonal. **That is what happens.** Measured on the primary acquisition, in the
+corridor (n = 338 172):
+
+| | |
+|---|---|
+| Brier score | 0.0668 |
+| ECE (12 equal-width bins) | 0.0670 |
+| ECE (equal-mass bins) | 0.0670 |
+| **MCE (worst bin)** | **0.5981** |
+| ⟨U⟩ | 0.0268 |
+
+ECE of 0.067 is modest, but **MCE of 0.60 means the worst-populated bin is 60 percentage
+points away from the diagonal**. `P` orders pixels well and is badly calibrated as a
+probability: a pixel at `P ≈ 0.6` is not water 60 % of the time.
+
+The equal-mass recomputation makes the reason visible. Asking for 12 quantile bins yields
+**only 2 distinct bins**, because `P` is concentrated on a handful of values — the
+vote-sum histogram of §3.2 shows why, with 98 % of corridor pixels at vote 0 or vote 4.
+There is not enough spread in `P` for a 12-bin reliability curve to mean anything.
+
+So the honest claim is **"`P` is a calibrated-in-rank confidence score, not a calibrated
+probability"**, and the paper should not describe it as the latter. Post-hoc
+recalibration (isotonic or Platt, fitted out-of-sample) is the obvious remedy and is not
+attempted here. Reporting both ECE variants and the realised bin count, rather than a
+single ECE, is what exposes this — a lone ECE of 0.067 would have read as a pass. Note that the ECE
 computed here is an *empirical spatial frequency* over pixels in the corridor: it is a
 statement about how often pixels at `P ≈ q` are labelled water in this scene, and it
 inherits any bias in the reference product.
@@ -508,7 +623,8 @@ to the failure mode that actually occurs:
    snapping is small (≤ 0.03 metric points absolute). The cost is **always reported**,
    so the trade-off between GT-fitted optimality and transferability is explicit rather
    than buried.
-4. **Bootstrap 95 % CI.** Optional resampling of domain pixels with replacement
+4. **Block-bootstrap 95 % CI.** Resampling of domain pixels in contiguous **30 px
+   blocks** with replacement
    (≈ 203 replicates as wired, ≤ 40 000 px subsample, fixed seeds) puts a confidence
    band around the metric-vs-threshold curve and reports
    `frac_thresholds_within_best_CI` and a boolean
@@ -523,6 +639,92 @@ to the failure mode that actually occurs:
 The chosen threshold is then fed back into the graph as the operating point of the
 advanced-threshold node, so every mask metric in §5.4 is computed at a threshold that was
 *derived*, with its selection rule, plateau width and anchor cost on the record.
+
+#### Out-of-sample transfer
+
+The threshold is selected on 2021-09-02 and applied unchanged to two held-out
+acquisitions — same tile (31UDQ), same orbit (51), so directly comparable. Selection by
+raw argmax in all three cases, for a like-for-like comparison:
+
+| date | held out | IoU @ t\* | MCC @ t\* | own t\* | MCC @ own t\* | transfer cost |
+|---|---|---|---|---|---|---|
+| 2021-09-02 | — | 0.8249 | 0.8631 | 0.02 | 0.8631 | — |
+| **2021-06-14** | **yes** | 0.7708 | 0.8231 | 0.02 | 0.8231 | **0.0000** |
+| **2021-03-01** | **yes** | 0.8726 | 0.8999 | 0.02 | 0.8999 | **0.0000** |
+
+**Under raw argmax the threshold transfers at zero cost**: each held-out date selects
+exactly the same value it was given.
+
+That result, however, was an artifact — and re-running under the rule the paper actually
+proposes shows it:
+
+| date | own t* (plateau rule) | plateau | MCC at own t* | MCC at the primary t* = 0.08 | cost |
+|---|---|---|---|---|---|
+| 2021-09-02 | 0.08 | 0.157 | 0.8587 | — | — |
+| **2021-06-14** | **0.04** | 0.039 | 0.8174 | 0.8088 | **−0.0086** |
+| **2021-03-01** | **0.12** | 0.196 | 0.8946 | 0.8967 | **+0.0021** |
+
+The plateau-median rule selects a *different* threshold on each date (0.04 / 0.08 / 0.12),
+and transferring the primary scene's pick costs **−0.009 MCC** on one date and **gains
+0.002** on the other. So the honest figure is a transfer cost of order **0.005 MCC**, not
+zero — small, but real, and the zero came from the cliff artifact the rule exists to
+reject.
+
+One honest qualification remains:
+- **Accuracy does not transfer even though the threshold does.** MCC ranges 0.823–0.900
+  and IoU 0.771–0.873 across the three dates, a spread several times larger than anything
+  threshold selection contributes. Scene conditions, not the cutoff, dominate
+  performance variance — which is an argument for reporting multiple dates rather than
+  for tuning the threshold harder.
+
+#### The interval, once pixels stop being treated as independent
+
+Pixels in a river corridor are spatially autocorrelated, and the noise model adds a 3 px
+correlation length of its own, so resampling individual pixels overstates the information
+available. The sweep therefore resamples **contiguous 30 px blocks** (≥ 10× the
+correlation length), which preserves the local structure and yields a defensible effective
+sample size.
+
+| resampling | n | CI95 on MCC at t* | width |
+|---|---|---|---|
+| pixel (naive) | 349 074 pixels | [0.8569, 0.8604] | 0.0035 |
+| **block, 30 px** | **649 blocks** | **[0.8517, 0.8647]** | **0.0130** |
+
+**The effective sample size is 649, not 349 074 — 538× smaller — and the honest interval
+is 3.7× wider** than the pixel bootstrap suggests. Every pixel-level interval in the
+earlier literature on this kind of validation is subject to the same correction.
+
+The conclusion survives the correction: only 21.6 % of thresholds fall inside the best
+threshold's interval, so the selected cutoff remains statistically distinguishable. But it
+survives *after* the interval is widened fourfold, which is a different claim from
+surviving a claim that was never tested.
+
+#### What the rule actually selects on this scene
+
+Measured on the primary acquisition (MCC, step 0.02, wired 15 px corridor):
+
+| t | 0.02 | 0.10 | 0.30 | 0.50 | 0.70 | 0.90 | 0.98 |
+|---|---|---|---|---|---|---|---|
+| MCC | **0.8621** | 0.8564 | 0.8477 | 0.8397 | 0.8285 | 0.7967 | 0.7499 |
+
+| quantity | value |
+|---|---|
+| raw argmax | t = 0.02, MCC 0.8621 |
+| plateau fraction (within 99 % of max) | **0.157** |
+| plateau median — **what the rule selects** | **t = 0.08, MCC 0.8575** |
+| semantic anchor (majority vote) | t = 0.50, MCC 0.8397 |
+| anchor cost | 0.0223 |
+
+The plateau covers 15.7 % of the range, **below the 30 % trigger**, so the rule does not
+snap to the anchor: it returns the plateau median, `t = 0.08`. The raw argmax at 0.02 is
+rejected as the cliff artifact it is, at a cost of 0.005 MCC.
+
+This is worth recording because it reverses an earlier reading. The code carries a warning
+for a "flat metric" that "barely discriminates", written when the curve was nearly
+featureless. With the imagery in correct reflectance units (§3.2) the curve has real
+structure — MCC falls monotonically by 11 points from t = 0.02 to t = 0.98 — and the flat-
+metric warning no longer fires. **The degenerate threshold curve was a symptom of the unit
+bug, not a property of the method.**
 
 ### 5.7 Convergence — how many realisations are enough?
 
@@ -543,6 +745,66 @@ tolerance in probability units** — the standard practice for Monte-Carlo uncer
 propagation (JCGM 101:2008 §7.9 adaptive procedure).
 
 ---
+
+### 4.2 Geometric perturbation — the term the boundary metrics needed
+
+Radiometric noise leaves shoreline uncertainty a *lower bound*, because for a 10 m sensor
+the dominant displacement is multi-temporal **co-registration** error, of order one pixel.
+The noise node therefore also draws a per-realisation rigid sub-pixel translation from
+`N(0, shift_px)`, applied identically to every band — a co-registration draw — with a NaN
+border so pixels that move in from outside the scene are marked invalid rather than
+fabricated.
+
+| model | boundary distance to GT (px) | area sd (px) | perimeter sd (px) |
+|---|---|---|---|
+| radiometric only | 25.30 ± **0.32** | **253.9** | **108.3** |
+| + 0.5 px co-registration | 21.63 ± **1.34** | **1 380.5** | **1 086.5** |
+| + 1.0 px co-registration | 21.48 ± **1.36** | 1 362.3 | 1 072.6 |
+
+**A half-pixel of geometric uncertainty multiplies the ensemble spread of every aggregate
+by 4–10×** — boundary-displacement sd ×4.2, area sd ×5.4, perimeter sd ×10. The effect
+**saturates** between 0.5 and 1.0 px: a rigid shift of half a pixel already decorrelates
+the realisations, so the spread stops growing. That saturation is itself informative — it
+says the term is not a tunable knob but a threshold that is either crossed or not.
+
+One caveat kept deliberately: the *mean* boundary distance falls (25.30 → 21.63) when the
+shift is added. That is not an improvement in accuracy. Bilinear resampling smooths the
+reflectance field slightly and the NaN border trims the scene edge, both of which alter
+the mask. The quantity to read from this table is the **spread**, not the mean.
+
+### 5.8 Baselines
+
+A probability field is only worth its cost against something simpler.
+
+| method | IoU | MCC | precision | recall |
+|---|---|---|---|---|
+| **Monte-Carlo ensemble, t = 0.02** | **0.8249** | **0.8631** | — | — |
+| Otsu on MNDWI | 0.7947 | 0.8342 | 0.9264 | 0.8483 |
+| AWEIsh > 0 (published rule) | 0.7910 | 0.8406 | 0.9743 | 0.8078 |
+| **same rule, single deterministic run (MC bypassed)** | **0.7911** | **0.8412** | 0.9763 | 0.8066 |
+| MNDWI > 0 (published rule) | 0.7798 | 0.8296 | 0.9625 | 0.8043 |
+| MBWI > 0 | 0.7633 | 0.8238 | 0.9895 | 0.7695 |
+| NDWI > 0 | 0.7602 | 0.8197 | 0.9825 | 0.7706 |
+| Otsu on AWEIsh | 0.5852 | 0.6127 | 0.5892 | 0.9886 |
+| Otsu on NDWI | 0.5741 | 0.5873 | 0.5973 | 0.9365 |
+| Otsu on MBWI | 0.4518 | 0.4230 | 0.4523 | 0.9977 |
+
+**The Monte-Carlo ensemble does win**, by +0.034 IoU and +0.022 MCC over the identical
+rule run once without noise. The mechanism is the regularisation effect of §6: averaging
+perturbed realisations fills gaps and suppresses speckle.
+
+But the margin must be stated honestly. The nearest baseline is **one line of code** —
+Otsu on MNDWI, 0.7947 IoU — and the ensemble beats it by 0.030 IoU. A reader is entitled
+to ask whether 118 realisations are worth three IoU points, and the answer for a
+mask-only application is probably no. **The case for the ensemble is the uncertainty it
+quantifies, not the mask it produces** — which is the same conclusion §4.1 reaches from
+the other direction.
+
+Otsu behaves erratically on three of the four indices (IoU 0.45–0.59, recall ≈ 0.99,
+precision ≈ 0.5): inside a river corridor the histogram is not bimodal, so Otsu's
+assumption fails and it cuts far too low. That is itself an argument for the paper's
+thesis about thresholds — but it also means "Otsu" is not a single baseline, it is four
+very different ones, and reporting only the best would be cherry-picking.
 
 ## 6. Reproducibility, and what the design deliberately exposes
 
@@ -567,9 +829,34 @@ propagation (JCGM 101:2008 §7.9 adaptive procedure).
 
 Known caveats the paper should state rather than hide:
 
-1. `σ_abs = 0.005` is a reasoned assumption, not a certified figure. A sensitivity sweep
-   over `σ_abs`, `σ_rel` and the correlation length is the obvious companion experiment;
-   the graph exposes all three as parameters.
+1. **`σ_abs` is the most consequential free parameter, and performance cannot be used to
+   choose it.** Sweep on the primary acquisition (N = 118, 3 px correlation, 15 px
+   corridor), now that the imagery is in reflectance units:
+
+   | σ_abs | mean area (px) | sd (px) | graded pixels | mean P | t* | MCC | IoU |
+   |---|---|---|---|---|---|---|---|
+   | 0.0010 | 103 304 | 77.4 | 1.71 % | 0.2738 | 0.02 | 0.8487 | 0.8031 |
+   | 0.0025 | 103 196 | 129.7 | 3.38 % | 0.2733 | 0.02 | 0.8552 | 0.8127 |
+   | **0.0050 (wired)** | **102 717** | **253.9** | **7.19 %** | 0.2712 | 0.02 | **0.8631** | **0.8249** |
+   | 0.0100 | 101 150 | 482.9 | 16.63 % | 0.2639 | 0.02 | 0.8717 | 0.8391 |
+   | 0.0200 | 98 794 | 855.4 | 34.34 % | 0.2429 | 0.14 | 0.8743 | 0.8424 |
+
+   **IoU and MCC increase monotonically with the assumed noise, across the whole tested
+   range** — IoU 0.803 → 0.842, MCC 0.849 → 0.874, with no interior optimum. The
+   mechanism is straightforward: averaging more perturbed realisations regularises the
+   mask, filling gaps and suppressing speckle, which improves agreement with a 10 m
+   reference.
+
+   The consequence is a methodological constraint, not a tuning opportunity.
+   **Choosing `σ_abs` by maximising accuracy would drive it arbitrarily high**, so it must
+   be fixed from independent radiometric evidence and the curve reported — which is what
+   this table is for. Conclusions are *not* invariant to it: 4 IoU points and an
+   elevenfold range in ensemble spread (77 → 855 px) across a plausible interval. Mean
+   area also falls by 4.4 % as σ rises, so the estimate itself is mildly noise-dependent.
+
+   The other two parameters are unswept: `σ_rel` and the band-space correlation structure.
+   The noise correlation *length* is swept in §4.1, where it is the controlling variable
+   of the headline result.
 2. The noise model is diagonal in band space. Real atmospheric-correction residuals are
    correlated across bands, which would change index-level variance.
 3. Reference-product error is **measured, not assumed** (§2.3): the two references agree
@@ -648,11 +935,32 @@ Known caveats the paper should state rather than hide:
    when the running estimate of `sd(area)` (and of the boundary-displacement sd) is
    stable to within a stated tolerance across added realisations. That is a genuine
    convergence test, because those quantities are not closed-form functions of `P`.
-6. **A decision rule that isolates aleatoric uncertainty by construction**: the
-   scene-adaptive reflectance gate is calibrated once on the unperturbed scene and
-   frozen, so the ensemble spread measures radiometric measurement uncertainty only.
-   Model-form (epistemic) uncertainty is deliberately held fixed rather than
-   quantified — it is excluded, not separated.
+6. **A measured decomposition of the two uncertainty terms — and the finding that the
+   one usually propagated is the smaller one.** The scene-adaptive gate is calibrated once
+   on the unperturbed scene and frozen, so the ensemble spread is radiometric
+   (aleatoric) uncertainty alone. Quantifying the model-form (epistemic) term separately,
+   as the spread of the deterministic result across 13 plausible rule variants
+   (`k ∈ {1,2,3}` × gate percentile `∈ {95,98,99}`, plus each leave-one-out index subset):
+
+   | term | sd of water area | vs radiometric |
+   |---|---|---|
+   | **radiometric noise** (the only term originally propagated) | **253.9 px** | 1× |
+   | **co-registration**, 0.5 px sub-pixel shift | **1 380 px** | **5.4×** |
+   | epistemic — rule variants, `k = 2` only | **3 875 px** | 15× |
+   | epistemic — all 13 rule variants | **7 153 px** | **28×** |
+
+   Area ranges from 92 485 px (`k = 3`, 95th-percentile caps) to 113 516 px (`k = 1`,
+   99th-percentile caps) — a 21 031 px spread, **20 % of the estimate**.
+
+   **Radiometric noise — the only term the study originally propagated — is the smallest
+   of the three.** Model-form uncertainty exceeds it 28×, and geometric (co-registration)
+   uncertainty exceeds it 5×. A study propagating sensor noise alone reports an interval
+   roughly 28× too narrow.
+
+   This does not invalidate the aleatoric analysis; it relocates it. The correct statement
+   is that radiometric noise contributes 254 px of area uncertainty *conditional on a
+   fixed decision rule and perfect geometry*, and that relaxing either assumption
+   dominates it.
 
 ---
 

@@ -198,3 +198,122 @@ def test_reset_button_rewinds_tick_and_resumes():
     assert after['tick'] == 1
     # Same seed+tick sequence ⇒ identical to the very first realisation (reproducible)
     assert np.array_equal(after['geotiff']['bands'], first['geotiff']['bands'])
+
+
+# ── MINOR 17: independent error terms combine in quadrature, not linearly ─────
+
+def _sigma_of(node, value, n=4000, **params):
+    """Empirical per-pixel sigma of the perturbation at a constant reflectance."""
+    bands = np.full((1, 1, n), value, dtype=np.float32)
+    base = {'sigma_abs': 0.005, 'sigma_rel': 0.015, 'seed': 3,
+            'clip_negative': False}
+    base.update(params)
+    out = node.process({'geotiff': _geo(bands)}, base)['geotiff']['bands']
+    return float(np.std(out - value))
+
+
+def test_linear_combination_is_the_default():
+    # Back-compatible: sigma = sigma_abs + sigma_rel*|rho|
+    node = _mod.RasterNoiseNode()
+    got = _sigma_of(node, 0.3)
+    assert abs(got - (0.005 + 0.015 * 0.3)) < 0.0005, got
+
+
+def test_quadrature_combination_is_available():
+    # sqrt(sigma_abs^2 + (sigma_rel*rho)^2) — the correct combination for
+    # independent error contributions
+    node = _mod.RasterNoiseNode()
+    got = _sigma_of(node, 0.3, sigma_combine=1)
+    want = np.sqrt(0.005 ** 2 + (0.015 * 0.3) ** 2)
+    assert abs(got - want) < 0.0005, (got, want)
+
+
+def test_linear_overstates_sigma_on_bright_pixels():
+    """The reason this matters: on bright land the two differ by ~34 %."""
+    node = _mod.RasterNoiseNode()
+    lin = _sigma_of(node, 0.3, sigma_combine=0)
+    quad = _sigma_of(node, 0.3, sigma_combine=1)
+    assert lin / quad > 1.25, (lin, quad)
+    # ...while being indistinguishable over water, where rho is tiny
+    lin_w = _sigma_of(node, 0.005, sigma_combine=0)
+    quad_w = _sigma_of(node, 0.005, sigma_combine=1)
+    assert abs(lin_w / quad_w - 1.0) < 0.05
+
+
+# ── SERIOUS 10: co-registration is the dominant term for boundary metrics ─────
+
+def _ramp(h=64, w=64, n_bands=2):
+    """A diagonal ramp: any translation changes the values measurably."""
+    yy, xx = np.mgrid[0:h, 0:w]
+    a = (xx + yy).astype(np.float32) / (h + w)
+    return np.stack([a] * n_bands)
+
+
+def test_no_geometric_shift_by_default():
+    node = _mod.RasterNoiseNode()
+    bands = _ramp()
+    out = node.process({'geotiff': _geo(bands)},
+                       {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 1})['geotiff']['bands']
+    assert np.allclose(out, bands, atol=1e-5), 'default must not move the raster'
+
+
+def test_subpixel_shift_moves_the_raster():
+    node = _mod.RasterNoiseNode()
+    bands = _ramp()
+    out = node.process({'geotiff': _geo(bands)},
+                       {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 1,
+                        'shift_px': 0.5})['geotiff']['bands']
+    inner = (slice(None), slice(8, -8), slice(8, -8))
+    assert not np.allclose(out[inner], bands[inner], atol=1e-4)
+
+
+def test_shift_is_common_to_all_bands():
+    """Co-registration error is a scene-level rigid shift, not per-band jitter."""
+    node = _mod.RasterNoiseNode()
+    bands = _ramp(n_bands=3)
+    out = node.process({'geotiff': _geo(bands)},
+                       {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 5,
+                        'shift_px': 1.0})['geotiff']['bands']
+    inner = (slice(8, -8), slice(8, -8))
+    assert np.allclose(out[0][inner], out[1][inner], atol=1e-5)
+    assert np.allclose(out[0][inner], out[2][inner], atol=1e-5)
+
+
+def test_shift_magnitude_follows_the_parameter():
+    """A larger shift_px must displace the scene further, on average."""
+    bands = _ramp(128, 128)
+    inner = (slice(16, -16), slice(16, -16))
+
+    def mean_abs_move(px, draws=12):
+        node = _mod.RasterNoiseNode()
+        tot = []
+        for i in range(draws):
+            out = node.process({'geotiff': _geo(bands)},
+                               {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 100,
+                                'shift_px': px})['geotiff']['bands'][0]
+            tot.append(float(np.nanmean(np.abs(out[inner] - bands[0][inner]))))
+        return float(np.mean(tot))
+
+    assert mean_abs_move(2.0) > 2.0 * mean_abs_move(0.5)
+
+
+def test_shift_is_reproducible_under_a_fixed_seed():
+    bands = _ramp()
+    a = _mod.RasterNoiseNode().process(
+        {'geotiff': _geo(bands)},
+        {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 42, 'shift_px': 1.0})['geotiff']['bands']
+    b = _mod.RasterNoiseNode().process(
+        {'geotiff': _geo(bands)},
+        {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 42, 'shift_px': 1.0})['geotiff']['bands']
+    # equal_nan: the shift leaves a NaN border by design, marking pixels that moved in
+    # from outside the scene as invalid rather than silently duplicating the edge.
+    assert np.allclose(a, b, equal_nan=True)
+
+
+def test_shift_marks_vacated_pixels_invalid():
+    bands = _ramp()
+    out = _mod.RasterNoiseNode().process(
+        {'geotiff': _geo(bands)},
+        {'sigma_abs': 0.0, 'sigma_rel': 0.0, 'seed': 42, 'shift_px': 1.5})['geotiff']['bands']
+    assert np.isnan(out).any(), 'pixels shifted in from outside must not be fabricated'
+    assert np.isfinite(out[:, 8:-8, 8:-8]).all(), 'the interior must stay valid'
