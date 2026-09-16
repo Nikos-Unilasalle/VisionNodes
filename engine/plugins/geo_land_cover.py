@@ -72,7 +72,9 @@ class GeoLandCoverNode(NodeProcessor):
 
         # Get spatial metadata
         transform = geo.get('transform')
-        crs = geo.get('crs', 'EPSG:4326')
+        # Coerce: the STAC loader stores a rasterio CRS object and Earth Engine
+        # cannot encode it — the class mask would come back as None.
+        crs = str(geo.get('crs') or 'EPSG:4326')
         width = geo['bands'][0].shape[1]
         height = geo['bands'][0].shape[0]
         
