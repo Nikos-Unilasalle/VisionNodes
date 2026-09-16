@@ -623,7 +623,8 @@ to the failure mode that actually occurs:
    snapping is small (≤ 0.03 metric points absolute). The cost is **always reported**,
    so the trade-off between GT-fitted optimality and transferability is explicit rather
    than buried.
-4. **Bootstrap 95 % CI.** Optional resampling of domain pixels with replacement
+4. **Block-bootstrap 95 % CI.** Resampling of domain pixels in contiguous **30 px
+   blocks** with replacement
    (≈ 203 replicates as wired, ≤ 40 000 px subsample, fixed seeds) puts a confidence
    band around the metric-vs-threshold curve and reports
    `frac_thresholds_within_best_CI` and a boolean
@@ -651,22 +652,52 @@ raw argmax in all three cases, for a like-for-like comparison:
 | **2021-06-14** | **yes** | 0.7708 | 0.8231 | 0.02 | 0.8231 | **0.0000** |
 | **2021-03-01** | **yes** | 0.8726 | 0.8999 | 0.02 | 0.8999 | **0.0000** |
 
-**The threshold transfers at zero cost**: each held-out date selects exactly the same
-value it was given. That is the in-sample/out-of-sample gap the protocol was built to
-expose, and here it is empirically nil.
+**Under raw argmax the threshold transfers at zero cost**: each held-out date selects
+exactly the same value it was given.
 
-Two honest qualifications:
+That result, however, was an artifact — and re-running under the rule the paper actually
+proposes shows it:
 
-- The agreement is partly structural. At raw argmax the selected value sits at the bottom
-  of the range on every scene, so identical selection is less informative than it looks.
-  The comparison under the graph's plateau-median rule (`t = 0.08` on the primary scene)
-  has not been run on the held-out dates and should be, since that is the rule the paper
-  actually proposes.
+| date | own t* (plateau rule) | plateau | MCC at own t* | MCC at the primary t* = 0.08 | cost |
+|---|---|---|---|---|---|
+| 2021-09-02 | 0.08 | 0.157 | 0.8587 | — | — |
+| **2021-06-14** | **0.04** | 0.039 | 0.8174 | 0.8088 | **−0.0086** |
+| **2021-03-01** | **0.12** | 0.196 | 0.8946 | 0.8967 | **+0.0021** |
+
+The plateau-median rule selects a *different* threshold on each date (0.04 / 0.08 / 0.12),
+and transferring the primary scene's pick costs **−0.009 MCC** on one date and **gains
+0.002** on the other. So the honest figure is a transfer cost of order **0.005 MCC**, not
+zero — small, but real, and the zero came from the cliff artifact the rule exists to
+reject.
+
+One honest qualification remains:
 - **Accuracy does not transfer even though the threshold does.** MCC ranges 0.823–0.900
   and IoU 0.771–0.873 across the three dates, a spread several times larger than anything
   threshold selection contributes. Scene conditions, not the cutoff, dominate
   performance variance — which is an argument for reporting multiple dates rather than
   for tuning the threshold harder.
+
+#### The interval, once pixels stop being treated as independent
+
+Pixels in a river corridor are spatially autocorrelated, and the noise model adds a 3 px
+correlation length of its own, so resampling individual pixels overstates the information
+available. The sweep therefore resamples **contiguous 30 px blocks** (≥ 10× the
+correlation length), which preserves the local structure and yields a defensible effective
+sample size.
+
+| resampling | n | CI95 on MCC at t* | width |
+|---|---|---|---|
+| pixel (naive) | 349 074 pixels | [0.8569, 0.8604] | 0.0035 |
+| **block, 30 px** | **649 blocks** | **[0.8517, 0.8647]** | **0.0130** |
+
+**The effective sample size is 649, not 349 074 — 538× smaller — and the honest interval
+is 3.7× wider** than the pixel bootstrap suggests. Every pixel-level interval in the
+earlier literature on this kind of validation is subject to the same correction.
+
+The conclusion survives the correction: only 21.6 % of thresholds fall inside the best
+threshold's interval, so the selected cutoff remains statistically distinguishable. But it
+survives *after* the interval is widened fourfold, which is a different claim from
+surviving a claim that was never tested.
 
 #### What the rule actually selects on this scene
 
@@ -714,6 +745,32 @@ tolerance in probability units** — the standard practice for Monte-Carlo uncer
 propagation (JCGM 101:2008 §7.9 adaptive procedure).
 
 ---
+
+### 4.2 Geometric perturbation — the term the boundary metrics needed
+
+Radiometric noise leaves shoreline uncertainty a *lower bound*, because for a 10 m sensor
+the dominant displacement is multi-temporal **co-registration** error, of order one pixel.
+The noise node therefore also draws a per-realisation rigid sub-pixel translation from
+`N(0, shift_px)`, applied identically to every band — a co-registration draw — with a NaN
+border so pixels that move in from outside the scene are marked invalid rather than
+fabricated.
+
+| model | boundary distance to GT (px) | area sd (px) | perimeter sd (px) |
+|---|---|---|---|
+| radiometric only | 25.30 ± **0.32** | **253.9** | **108.3** |
+| + 0.5 px co-registration | 21.63 ± **1.34** | **1 380.5** | **1 086.5** |
+| + 1.0 px co-registration | 21.48 ± **1.36** | 1 362.3 | 1 072.6 |
+
+**A half-pixel of geometric uncertainty multiplies the ensemble spread of every aggregate
+by 4–10×** — boundary-displacement sd ×4.2, area sd ×5.4, perimeter sd ×10. The effect
+**saturates** between 0.5 and 1.0 px: a rigid shift of half a pixel already decorrelates
+the realisations, so the spread stops growing. That saturation is itself informative — it
+says the term is not a tunable knob but a threshold that is either crossed or not.
+
+One caveat kept deliberately: the *mean* boundary distance falls (25.30 → 21.63) when the
+shift is added. That is not an improvement in accuracy. Bilinear resampling smooths the
+reflectance field slightly and the NaN border trims the scene edge, both of which alter
+the mask. The quantity to read from this table is the **spread**, not the mean.
 
 ### 5.8 Baselines
 
@@ -885,21 +942,25 @@ Known caveats the paper should state rather than hide:
    as the spread of the deterministic result across 13 plausible rule variants
    (`k ∈ {1,2,3}` × gate percentile `∈ {95,98,99}`, plus each leave-one-out index subset):
 
-   | term | sd of water area |
-   |---|---|
-   | aleatoric — radiometric noise, wired settings | **253.9 px** |
-   | epistemic — rule variants, `k = 2` only | **3 875 px** (15×) |
-   | epistemic — all 13 variants | **7 153 px** (**28×**) |
+   | term | sd of water area | vs radiometric |
+   |---|---|---|
+   | **radiometric noise** (the only term originally propagated) | **253.9 px** | 1× |
+   | **co-registration**, 0.5 px sub-pixel shift | **1 380 px** | **5.4×** |
+   | epistemic — rule variants, `k = 2` only | **3 875 px** | 15× |
+   | epistemic — all 13 rule variants | **7 153 px** | **28×** |
 
    Area ranges from 92 485 px (`k = 3`, 95th-percentile caps) to 113 516 px (`k = 1`,
    99th-percentile caps) — a 21 031 px spread, **20 % of the estimate**.
 
-   **Model-form uncertainty exceeds radiometric uncertainty by more than an order of
-   magnitude.** A study that propagates only sensor noise — the standard framing, and the
-   one this pipeline started from — reports an interval roughly 28× too narrow. This does
-   not invalidate the aleatoric analysis; it relocates it. The correct statement is that
-   radiometric noise contributes 254 px of area uncertainty *conditional on a fixed
-   decision rule*, and that the choice of rule contributes far more.
+   **Radiometric noise — the only term the study originally propagated — is the smallest
+   of the three.** Model-form uncertainty exceeds it 28×, and geometric (co-registration)
+   uncertainty exceeds it 5×. A study propagating sensor noise alone reports an interval
+   roughly 28× too narrow.
+
+   This does not invalidate the aleatoric analysis; it relocates it. The correct statement
+   is that radiometric noise contributes 254 px of area uncertainty *conditional on a
+   fixed decision rule and perfect geometry*, and that relaxing either assumption
+   dominates it.
 
 ---
 

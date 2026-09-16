@@ -682,7 +682,7 @@ Two qualifications kept deliberately:
 
 ---
 
-## SERIOUS 8 — Spatial autocorrelation invalidates every p-value and CI
+## SERIOUS 8 — Spatial autocorrelation invalidates every p-value and CI  ✅ FIXED
 
 Pixels at 10 m in a river corridor are strongly autocorrelated; the noise model itself
 imposes a 3 px correlation length on top of the scene's own structure. The effective
@@ -708,10 +708,24 @@ by the cap. If the true domain holds 500 k pixels, the CI is inflated by ≈ √
 Two errors of opposite sign (cap inflates, independence assumption deflates) of unknown
 relative magnitude — the interval is uninterpretable.
 
-### Required fix
+### Done
 
-- **Block bootstrap**: resample contiguous blocks sized at ≥ 10× the correlation length,
-  not individual pixels.
+The sweep now resamples contiguous **30 px blocks** (≥ 10× the 3 px correlation length):
+
+| resampling | n | CI95 on MCC at t* | width |
+|---|---|---|---|
+| pixel (naive) | 349 074 pixels | [0.8569, 0.8604] | 0.0035 |
+| **block, 30 px** | **649 blocks** | **[0.8517, 0.8647]** | **0.0130** |
+
+**Effective sample size is 649, not 349 074 — 538× smaller — and the honest interval is
+3.7× wider.** The conclusion survives (21.6 % of thresholds fall inside the best CI, so
+the cutoff is still distinguishable), but it survives a test that was previously not being
+run.
+
+### Remaining
+
+- Pixel-level Mann–Whitney p-values elsewhere in the protocol are still descriptive only.
+  Effect sizes carry the argument there; the fix would be the same blocking idea.
 - Remove the subsample cap, or keep it and correct the interval for the sampling fraction
   — and fix the comment either way.
 - Report an effective sample size (e.g. from a variogram or Moran's I) and present all
@@ -784,7 +798,7 @@ trade-off to report, not consensus logic to claim.
 
 ---
 
-## SERIOUS 10 — The dominant uncertainty source for the headline metric is missing
+## SERIOUS 10 — The dominant uncertainty source for the headline metric is missing  ✅ ADDED — it is 5× radiometric
 
 The noise model covers radiometric perturbation only. Not modelled:
 
@@ -801,12 +815,26 @@ The paper reports **boundary-F1 at 3 px tolerance** as its finest-grained metric
 omitting the error term that dominates at that scale. A reviewer working on
 co-registration will raise this immediately.
 
-### Required fix
+### Done — and it was the larger term
 
-Add a sub-pixel geometric perturbation to the ensemble (random sub-pixel shift, or a
-smooth warp field, per realisation). This is cheap to implement in the same forward
-model and it directly targets the metric under discussion. If it is not added, state the
-omission and argue why the reported boundary uncertainty is a lower bound.
+`geo_raster_noise` now draws a per-realisation rigid sub-pixel translation from
+`N(0, shift_px)`, identical across bands (a co-registration draw), with a NaN border so
+pixels moving in from outside the scene are marked invalid rather than fabricated.
+
+| model | boundary distance (px) | area sd | perimeter sd |
+|---|---|---|---|
+| radiometric only | 25.30 ± **0.32** | **253.9** | **108.3** |
+| + 0.5 px co-registration | 21.63 ± **1.34** | **1 380.5** | **1 086.5** |
+| + 1.0 px co-registration | 21.48 ± **1.36** | 1 362.3 | 1 072.6 |
+
+**Half a pixel of geometric uncertainty multiplies every aggregate's spread by 4–10×** and
+**exceeds radiometric uncertainty by 5.4× on area.** The effect saturates between 0.5 and
+1.0 px — half a pixel already decorrelates the realisations — so it is a threshold, not a
+knob.
+
+Caveat: the *mean* boundary distance falls (25.30 → 21.63). That is not improved accuracy;
+bilinear resampling smooths the field and the NaN border trims the scene edge. Read the
+**spread**, not the mean.
 
 ---
 
@@ -908,7 +936,7 @@ single locked acquisition.
 
 ---
 
-## MINOR 17 — Linear rather than quadrature combination of noise terms
+## MINOR 17 — Linear rather than quadrature combination of noise terms  ✅ FIXED (switchable)
 
 `engine/plugins/geo_raster_noise.py`:
 
@@ -924,9 +952,11 @@ linear `0.0095` vs quadrature `√(0.005² + (0.015·0.3)²) = 0.0071` → **σ 
 Net effect: more false-positive flicker on bright land than the noise budget justifies,
 which inflates the apparent discrimination difficulty on the negative class.
 
-**Fix:** either switch to `sqrt(sigma_abs**2 + (sigma_rel*|ρ|)**2)`, or keep the linear
-form and state it as a deliberately conservative choice. Do not leave it unstated — the
-methods document currently writes it as `⊕` (quadrature), which does not match the code.
+**Done.** `sigma_combine` selects linear or quadrature; linear stays the default for
+backwards compatibility and is documented as the conservative choice. Measured effect on
+the primary scene: area sd 253.9 px (linear) vs 223.4 px (quadrature) — **the quadrature
+form is 12 % tighter** — with the mean essentially unchanged (102 717 vs 102 650 px). So
+the choice is worth ~12 % of the uncertainty estimate and nothing of the mask.
 
 ---
 
@@ -977,7 +1007,7 @@ Reviewers read these as evidence of tuning. Round them, or state where each came
 
 ---
 
-## MINOR 21 — The decision rule is implemented twice, with different guards
+## MINOR 21 — The decision rule is implemented twice, with different guards  ✅ FIXED
 
 `adaptive_gate`'s internal `_votesum` reimplements the four-index vote in order to select
 consensus pixels for cap calibration, using `BAND_MIN = -0.002` and `DEN_MIN = 1e-6`.
@@ -989,8 +1019,20 @@ No bias engine today (the calibration runs on the unperturbed scene, where guard
 fire), but a guaranteed source of drift: any change to the production rule silently fails
 to propagate to the calibration.
 
-**Fix:** single source of truth for the vote rule; the gate should consume the same
-index stack the vote does.
+**Done.** The gate now consumes an index stack computed by a `geo_spectral_indices` node
+with the production parameters, rather than re-deriving the four indices inline with a
+different validity floor (−0.002 vs −0.05).
+
+One subtlety that shaped the fix: the gate must calibrate on the **unperturbed** scene, so
+it cannot be fed the production stack (which is computed on the noisy raster) — that would
+make the calibration depend on the noise draw and destroy the freeze the design relies on.
+A second indices node on the base scene supplies it instead. The residual duplication is
+now *parameters* between two instances of the same node, not two different formulas, and
+the node note says so.
+
+Verified behaviour-preserving on real data: 105 087 consensus pixels, identical caps and a
+pixel-identical gate mask with and without the wiring — confirming the duplication had
+indeed been dormant rather than already biasing results.
 
 ---
 
@@ -1048,54 +1090,74 @@ Not everything is a problem. These are genuine strengths and should be defended:
 
 ## Where the audit stands
 
-**Closed — measured, with the result recorded whether or not it was the one hoped for:**
+Every item raised in this document has been either fixed, measured, or explicitly left
+open with a reason. Nothing is silently carried.
+
+### Closed
 
 | item | outcome |
 |---|---|
-| BLOCKER 1 | accumulator emits σ in input units + `scale`; fixed |
-| BLOCKER 2 | estimand = one acquisition; both references aligned; reference gap measured |
-| BLOCKER 3 | per-pixel σ proved redundant; replaced by ensemble aggregates |
-| SERIOUS 3 | premise retired (unit bug), **replaced by a harder constraint**: accuracy is monotone in σ_abs, so it cannot be tuned |
-| SERIOUS 4 | epistemic term measured — **28× the aleatoric term** |
+| BLOCKER 1 | accumulator emits σ in input units + `scale` |
+| BLOCKER 2 | estimand = one acquisition; both references aligned; reference gap measured (IoU 0.731) |
+| BLOCKER 3 | per-pixel σ proved redundant (`√(P(1−P))`, R² 0.9999); replaced by ensemble aggregates |
+| SERIOUS 3 | premise retired (unit bug) and **replaced by a harder constraint**: accuracy is monotone in σ_abs, so it cannot be tuned at all |
+| SERIOUS 4 | epistemic term measured — **28× the radiometric term** |
 | SERIOUS 6 | domain wired everywhere; IoU spans 13 points across windows; FP audit done |
-| SERIOUS 7 | out-of-sample threshold transfer cost **0.0000**; accuracy varies by scene, not cutoff |
-| SERIOUS 9 | four-index consensus falsified — **AWEIsh alone equals the vote** |
+| SERIOUS 7 | transfer cost ≈ **0.005 MCC** under the real rule (the earlier "zero" was the argmax artifact) |
+| SERIOUS 8 | **block bootstrap**: effective n = 649 blocks, not 349 074 pixels; interval 3.7× wider; conclusion survives |
+| SERIOUS 9 | four-index consensus falsified — **AWEIsh alone equals the vote** (effective indices 1.5–2.0) |
+| SERIOUS 10 | co-registration added — **5.4× the radiometric term** on area, 4–10× on every aggregate |
 | SERIOUS 11 | ensemble beats single-run (+0.034 IoU) but only +0.030 over one-line Otsu |
 | SERIOUS 12 | plateau fraction 15.7 %; the "flat metric" warning was a dB-bug symptom |
-| MINOR 13, 14, 15, 16, 18, 19, 22 | fixed |
+| MINOR 13, 14, 15, 16, 17, 18, 19, 21, 22 | fixed |
 
-**Open, and honestly so:**
+### The finding that reorders the paper
 
-| item | why it is still open |
+Three uncertainty terms, measured on the same scene, in the same units:
+
+| term | sd of water area | vs radiometric |
+|---|---|---|
+| **radiometric noise** — the only term originally propagated | **254 px** | **1×** |
+| co-registration, 0.5 px | 1 380 px | **5.4×** |
+| model form (13 rule variants) | 7 153 px | **28×** |
+
+**The term the study was built to propagate is the smallest of the three.** That is the
+single most important sentence in this audit. It does not invalidate the ensemble — it
+says the ensemble was answering a narrower question than it appeared to.
+
+### Still open, deliberately
+
+| item | why |
 |---|---|
-| SERIOUS 8 | block bootstrap not implemented. Pixel-level p-values and CIs remain descriptive. The ensemble percentile CIs of §4.1 are unaffected — realisations are independent. |
-| SERIOUS 10 | no sub-pixel geometric perturbation. Co-registration is likely the dominant term for boundary metrics, so `boundary_dist` is a lower bound. |
-| MINOR 17 | noise terms still combine linearly, overstating σ by ≈ 34 % on bright land. Documented, deliberately not changed mid-study. |
 | MINOR 20 | `min_area = 258 px` and `max_ticks = 118` still lack provenance. `N` should come from the stopping criterion, not by hand. |
-| MINOR 21 | the vote rule is still implemented twice (gate calibration vs production) with different validity floors. No bias today; a guaranteed source of drift. |
-| new | zeros are mapped to nodata for all continuous STAC collections. For JRC occurrence `0` means "never water" and is meaningful. Not exercised by this graph. |
-| new | `P` is a well-ranked but **poorly calibrated** score (MCE 0.60). Post-hoc recalibration not attempted. |
-| new | the plateau-median rule has not been re-run on the held-out dates (SERIOUS 7 used raw argmax for a like-for-like comparison). |
+| calibration | `P` is a well-ranked but poorly calibrated score (MCE 0.60). Post-hoc recalibration (isotonic/Platt, fitted out-of-sample) not attempted. |
+| Mann–Whitney | pixel-level p-values elsewhere in the protocol remain descriptive; the blocking fix applied to the sweep was not applied there. |
+| σ_rel, band covariance | unswept. The noise model is still diagonal in band space. |
+| scope | one AOI, three dates, one river type. A regulated permanent river is the easy case; a tidal or seasonal system would likely behave very differently. |
 
-## What the paper can now claim
+## What the paper can claim
 
 1. Ensemble uncertainty of **derived quantities** — area, perimeter, topology, shoreline —
-   with `sd(area)` rising 72 → 577 px as noise correlation goes 0 → 10 px at a constant
-   mean. Per-pixel σ maps are `√(P(1−P))` and carry nothing.
-2. **Model-form uncertainty dominates radiometric uncertainty by 28×.** Any interval from
-   noise propagation alone is far too narrow.
+   with `sd(area)` rising 72 → 577 px as noise correlation goes 0 → 10 px at constant mean.
+   Per-pixel σ maps are `√(P(1−P))` and carry nothing.
+2. **A measured hierarchy of uncertainty terms**, in which the usually-propagated one
+   ranks last: radiometric 254 px < co-registration 1 380 px < model form 7 153 px.
 3. A defined estimand, a dated reference, and a **published validation ceiling**
    (references agree at IoU 0.731).
-4. Threshold selection as a reported measurement, transferring at zero cost across three
-   dates — while accuracy does not transfer.
+4. Threshold selection as a reported measurement, with an **honest transfer cost**
+   (≈ 0.005 MCC across three dates) and **honest intervals** (block bootstrap, effective
+   n = 649).
 
 ## What it must not claim
 
 - That `P` is a calibrated probability (MCE 0.60).
 - That the four indices corroborate each other (effective count 1.5–2.0; AWEIsh alone
   equals the vote).
-- That σ_abs was chosen on evidence (it cannot be chosen on performance at all).
+- That σ_abs was chosen on evidence — it cannot be chosen on performance at all.
 - That the ensemble is worth its cost as a *mask producer* (+0.030 IoU over one-line Otsu).
+- That radiometric propagation bounds the uncertainty of the result. It bounds the
+  uncertainty **conditional on a fixed rule and perfect geometry**, and both of those
+  assumptions cost more than the noise does.
 
 ## Additional references for the fixes
 
