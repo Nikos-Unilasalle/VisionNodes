@@ -1,0 +1,2 @@
+tolerance_px,uncertainty_source,n_bins,boundary_fraction,overall,core,boundary
+3,ensemble_std,12,0.0322,"{'brier': 0.0083, 'ece': 0.0071, 'mce': 0.2354, 'mean_uncertainty': 0.0095, 'n_pixels': 3742960}","{'brier': 0.0038, 'ece': 0.0037, 'mce': 0.3148, 'mean_uncertainty': 0.0066, 'n_pixels': 3622267}","{'brier': 0.1429, 'ece': 0.1395, 'mce': 0.5415, 'mean_uncertainty': 0.096, 'n_pixels': 120693}"
