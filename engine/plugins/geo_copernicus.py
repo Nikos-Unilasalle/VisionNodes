@@ -130,8 +130,14 @@ COLLECTIONS: dict[str, dict] = {
         'rgb':          ['B04','B03','B02'],
         'units':        'REFLECTANCE',
         'has_cloud_filter': True,
-        'asset_keys':   ['B04','B03','B02','B08','B11'],  # incl. SWIR for BSI/MNDWI/turbidity
+        # Default when the Bands field is empty. BOTH SWIR bands are included: AWEIsh and
+        # MBWI need SWIR2 (B12), and omitting it used to silently truncate the stack.
+        'asset_keys':   ['B04','B03','B02','B08','B11','B12'],
         'categorical':  False,
+        # Planetary Computer serves L2A as uint16 DN; surface reflectance = DN * 1e-4.
+        # Without this the whole downstream (index thresholds, reflectance-unit gate
+        # caps, an additive noise sigma in reflectance units) is off by 1e4.
+        'value_scale':  1e-4,
     },
     'Copernicus DEM GLO-30 (Planetary)': {
         'backend':      'stac',
@@ -244,6 +250,20 @@ _CLASS_PALETTES = {
 
 # ── Node definition ───────────────────────────────────────────────────────────
 
+def _stderr_log(*args) -> None:
+    """Write a progress line to stderr, never raising.
+
+    The engine's stderr is inherited from whatever launched it. Under a GUI launch that
+    can be a pipe whose reader disappears, and then `print(..., flush=True)` raises
+    BrokenPipeError — which the fetch wrapper reports as an 'unexpected crash', losing a
+    download because of a log line. Diagnostics must never be able to fail the work.
+    """
+    try:
+        print(*args, file=sys.stderr, flush=True)
+    except (BrokenPipeError, OSError, ValueError):
+        pass
+
+
 @vision_node(
     type_id='geo_copernicus',
     label='Copernicus CDSE',
@@ -307,6 +327,96 @@ _CLASS_PALETTES = {
     resizable=True, min_width=280, min_height=200,
 )
 class GeoCopernicusNode(NodeProcessor):
+
+    @staticmethod
+    def _resolve_stac_assets(col_cfg: dict, bands_str: str | None) -> tuple[list, list]:
+        """Resolve which STAC assets to download for a collection.
+
+        The Bands parameter is authoritative when it names anything the collection
+        actually carries: band ORDER is load-bearing downstream (expressions address
+        bands positionally as B1..Bn), and a missing band silently truncates the stack,
+        surfacing much later as an unrelated "name 'B6' is not defined".
+
+        Returns ``(asset_keys, unavailable)``. Callers must warn about `unavailable`
+        rather than quietly delivering fewer bands than were asked for.
+        """
+        default = list(col_cfg.get('asset_keys') or col_cfg.get('default_bands') or [])
+        available = {str(b).upper(): b for b in (col_cfg.get('all_bands') or [])}
+        available.update({str(b).upper(): b for b in default})
+
+        requested = [tok.strip().upper() for tok in str(bands_str or '').split(',')
+                     if tok.strip()]
+        if not requested:
+            return default, []
+
+        keys, unavailable, seen = [], [], set()
+        for name in requested:
+            if name in seen:
+                continue
+            seen.add(name)
+            if name in available:
+                keys.append(available[name])
+            else:
+                unavailable.append(name)
+        return (keys or default), unavailable
+
+    @staticmethod
+    def _stac_cache_sig(col_name: str, bounds: list, date_start: str, date_end: str,
+                        resolution, polariz, orbit, composite, to_db, max_scenes,
+                        assets: list, col_cfg: dict | None = None) -> str:
+        """Cache key for a STAC fetch.
+
+        Two things the key must track beyond the query itself:
+
+        * `assets` — the RESOLVED band list, not the collection default, so editing the
+          Bands field cannot serve a raster with the wrong band count.
+        * the EFFECTIVE band transform (dB actually applied, value scale) rather than
+          the raw `to_db` request. Recording the request meant that changing the
+          post-processing left the key untouched, and a cache hit kept serving the old,
+          wrongly-transformed product as if the fix had not happened.
+        """
+        cfg = col_cfg or {}
+        sig = json.dumps({
+            'col': col_name, 'bbox': list(bounds),
+            'd0': date_start, 'd1': date_end,
+            'res': resolution, 'pol': polariz, 'orb': orbit,
+            'comp': composite, 'maxs': max_scenes,
+            'db': bool(to_db) and GeoCopernicusNode._is_sar(cfg),
+            'scale': cfg.get('value_scale'),
+            'assets': list(assets),
+        }, sort_keys=True)
+        return hashlib.md5(sig.encode()).hexdigest()[:14]
+
+    @staticmethod
+    def _is_sar(col_cfg: dict) -> bool:
+        return (col_cfg.get('units') == 'LINEAR_POWER'
+                or str(col_cfg.get('stac_id', '')).startswith('sentinel-1'))
+
+    @staticmethod
+    def _postprocess_band(band: np.ndarray, col_cfg: dict, to_db: bool,
+                          is_cat: bool) -> np.ndarray:
+        """Turn a raw composited asset into the value the rest of the app expects.
+
+        `to_db` is a SAR operation — the parameter is even labelled "SAR → dB" — but it
+        used to be applied to every non-categorical STAC collection. Sentinel-2
+        reflectance then arrived as 10*log10(DN), which silently invalidates every
+        spectral index, every reflectance-unit threshold, and any additive noise model
+        expressed in reflectance units. Apply it only to SAR.
+
+        `value_scale` converts a collection's native storage (e.g. uint16 DN) into
+        physical units, so the STAC path matches the SentinelHub path's contract.
+        """
+        if is_cat:
+            return band.astype('uint8')
+
+        band = np.where(band <= 0, np.nan, band)      # 0 is nodata for S1 and S2 alike
+        if to_db and GeoCopernicusNode._is_sar(col_cfg):
+            with np.errstate(divide='ignore', invalid='ignore'):
+                band = 10.0 * np.log10(band)
+        scale = col_cfg.get('value_scale')
+        if scale:
+            band = band * float(scale)
+        return band.astype('float32')
 
     def __init__(self):
         super().__init__()
@@ -514,8 +624,21 @@ class GeoCopernicusNode(NodeProcessor):
         try:
             self._do_fetch_impl(params, auto=auto, my_gen=my_gen)
         except BaseException as e:
+            # Report WHERE it broke. The bare message (e.g. '[Errno 32] Broken pipe')
+            # names neither file nor line and is unactionable.
+            import traceback as _tb
+            _frames = _tb.extract_tb(e.__traceback__)
+            _where = ''
+            if _frames:
+                _last = _frames[-1]
+                _where = (f' at {os.path.basename(_last.filename)}:{_last.lineno} '
+                          f'in {_last.name}()')
+            _stderr_log('[Copernicus] unexpected crash:\n' + _tb.format_exc())
             if self._generation == my_gen:
-                send_notification(f'Copernicus: unexpected crash: {e}', level='error', notif_id=self._notif_id)
+                send_notification(
+                    f'Copernicus: unexpected crash: {type(e).__name__}: {e}{_where} '
+                    f'— full traceback on stderr',
+                    level='error', notif_id=self._notif_id)
         finally:
             # Only clear loading flag if WE are still the latest fetch.
             # If a newer Fetch has bumped _generation, leave _loading alone — the new thread owns it.
@@ -911,14 +1034,16 @@ class GeoCopernicusNode(NodeProcessor):
         cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
         os.makedirs(cache_dir, exist_ok=True)
 
-        sig = json.dumps({
-            'col': col_name, 'bbox': [west, south, east, north],
-            'd0': date_start, 'd1': date_end,
-            'res': resolution, 'pol': polariz, 'orb': orbit,
-            'comp': composite, 'db': to_db, 'maxs': max_scenes,
-            'assets': col_cfg.get('asset_keys'),  # bust cache when band set changes
-        }, sort_keys=True)
-        sig_key = hashlib.md5(sig.encode()).hexdigest()[:14]
+        # Resolve the band set BEFORE the cache signature: the signature must depend on
+        # the bands actually requested, not on the collection default, otherwise editing
+        # the Bands field silently serves a stale raster with the wrong band count.
+        _bands_str = str(params.get('bands', '') or '').strip()
+        _resolved_assets, _unavailable = self._resolve_stac_assets(col_cfg, _bands_str)
+
+        sig_key = self._stac_cache_sig(
+            col_name, [west, south, east, north], date_start, date_end,
+            resolution, polariz, orbit, composite, to_db, max_scenes,
+            _resolved_assets, col_cfg)
         final_path = os.path.join(cache_dir, f'stac_{sig_key}.tif')
 
         if auto and not os.path.exists(final_path):
@@ -926,7 +1051,7 @@ class GeoCopernicusNode(NodeProcessor):
 
         # ── Cache hit: load existing GeoTIFF, skip re-download ───────────────
         if os.path.exists(final_path):
-            _log_early = lambda *a: print('[STAC]', *a, file=sys.stderr, flush=True)
+            _log_early = lambda *a: _stderr_log('[STAC]', *a)
             _log_early(f'cache hit → {final_path}')
             try:
                 import rasterio as _rio
@@ -989,7 +1114,7 @@ class GeoCopernicusNode(NodeProcessor):
         import traceback as _tb, time as _time
 
         def _log(*args):
-            print('[STAC]', *args, file=sys.stderr, flush=True)
+            _stderr_log('[STAC]', *args)
 
         _log(f'=== START {col_name} ===')
         _log(f'bbox={west:.3f},{south:.3f},{east:.3f},{north:.3f}  '
@@ -1087,8 +1212,21 @@ class GeoCopernicusNode(NodeProcessor):
             else:
                 asset_keys = ['vv', 'vh']
         else:
-            asset_keys = all_assets
-        _log(f'asset_keys={asset_keys}')
+            asset_keys = _resolved_assets      # resolved above, before the cache signature
+            if _unavailable:
+                # Never deliver fewer bands than requested without saying so: the failure
+                # otherwise surfaces downstream as a confusing expression error.
+                send_notification(
+                    f'Copernicus[STAC]: {col_name} has no '
+                    f'{", ".join(_unavailable)} — delivering {len(asset_keys)} band(s): '
+                    f'{", ".join(map(str, asset_keys))}',
+                    level='warning', notif_id=self._notif_id,
+                )
+                _log(f'UNAVAILABLE bands requested: {_unavailable}')
+        _log(f'asset_keys={asset_keys} (requested bands={_bands_str!r})')
+        if to_db and not self._is_sar(col_cfg):
+            _log(f'to_db requested but {col_name} is not SAR — ignoring (dB on optical '
+                 f'reflectance would invalidate every spectral index)')
 
         # ── Target CRS: pick UTM zone from bbox centroid (so resolution=m is honoured) ──
         lon_c   = 0.5 * (west + east)
@@ -1172,16 +1310,7 @@ class GeoCopernicusNode(NodeProcessor):
         out_bands: dict[str, np.ndarray] = {}
         for ak in asset_keys:
             band = compose_fn(ds[ak]).values  # → numpy
-            # Treat zeros as nodata for SAR (S1-RTC fills out-of-swath with 0)
-            if not is_cat:
-                band = np.where(band <= 0, np.nan, band)
-                if to_db:
-                    with np.errstate(divide='ignore', invalid='ignore'):
-                        band = 10.0 * np.log10(band)
-                band = band.astype('float32')
-            else:
-                band = band.astype('uint8')
-            out_bands[ak] = band
+            out_bands[ak] = self._postprocess_band(band, col_cfg, to_db, is_cat)
 
         # Sanity check: did we get any non-NaN data?
         valid_fraction = float(np.isfinite(next(iter(out_bands.values()))).mean()) if out_bands else 0.0
