@@ -188,5 +188,10 @@
     "name": "Reaction Diffusion (Gray-Scott)",
     "description": "Two parallel pipelines: a modular generic implementation using Canvas, Feedback, and Python nodes for dU/dt and dV/dt equations; and a simplified all-in-one Gray-Scott node with coral preset for direct experimentation.",
     "file": "reaction_diffusion.vn"
+  },
+  {
+    "name": "MC Water Mask — Ensemble Uncertainty (Seine 2021-09-02)",
+    "description": "Monte-Carlo surface-water pipeline built around a defined estimand: ONE Sentinel-2 L2A acquisition (2021-09-02 10:57:29 UTC, tile 31UDQ, 0.00% AOI cloud), so a 1-day window returns a single image and no mosaicking occurs. Perturbs reflectance with spatially correlated Gaussian noise, runs a 4-index vote (NDWI/MNDWI/AWEIsh/MBWI) gated by scene-adaptive NIR/SWIR caps frozen on the unperturbed scene, and accumulates the ensemble. The uncertainty product is Ensemble Statistics over per-realisation AGGREGATES (area, perimeter, components, boundary displacement), not a per-pixel std map -- for a binary outcome with i.i.d. realisations the per-pixel std is exactly sqrt(P(1-P)), a deterministic transform of the mean. Measured here: sd(area) = 72/117/254/577 px at 0/1/3/10 px noise correlation while the mean probability field stays constant to four decimals. Validation uses two references (WorldCover 10 m + JRC GSW MonthlyHistory, dated) and reports their disagreement as an explicit ceiling. See MC_PAPER_METHODS.md and MC_PAPER_WEAKNESSES.md alongside.",
+    "file": "mc_validation/mc_paper_ensemble_uncertainty.vn"
   }
 ]
