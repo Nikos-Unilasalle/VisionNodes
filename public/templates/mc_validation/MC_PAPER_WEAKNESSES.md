@@ -14,6 +14,14 @@ Companion document: `MC-paper-methods.md` (approach & protocol).
   (15/15 tests green) accumulating per-realisation aggregates, wired into the graph.
   Headline result becomes the ×8 gap in water-area uncertainty between i.i.d. and
   spatially correlated error models.
+- **Steps 6–8 — done.** Domain wired to all five validation nodes; metrics published at
+  four dilation radii plus whole-scene (IoU spans 13 points); false-positive audit beyond
+  the corridor (11.5 % of predicted water, but speckle — 3 099 components averaging 4 px);
+  out-of-sample threshold transfer measured at **zero cost** on two held-out dates; σ_abs
+  sweep shows accuracy **monotone** in the assumed noise, so it cannot be chosen by
+  performance. Also: with correct units the threshold curve has real structure
+  (plateau 15.7 %, MCC falling 11 points across the range), so the code's "flat metric"
+  warning was itself a symptom of the dB bug.
 - **Step 5 — done.** The aggregate-uncertainty result is now measured on the real
   acquisition, not just synthetically: `sd(area)` = 72 / 117 / 254 / 577 px at
   0 / 1 / 3 / 10 px noise correlation, at a constant mean. **A units bug found on the way
@@ -292,7 +300,7 @@ failures.
 
 ---
 
-## SERIOUS 3 — σ_abs was tuned to produce the desired output property  ⚠️ PREMISE RETIRED
+## SERIOUS 3 — σ_abs was tuned to produce the desired output property  ⚠️ PREMISE RETIRED, CONCERN SHARPENED
 
 The noise node's own annotation reads (translated): *"Without the floor, the noise tends
 to 0 over water in NIR/SWIR … plausible cause of the quasi-binary P observed."*
@@ -319,11 +327,37 @@ is the provenance of the value `0.005`.
 - Justify `σ_abs` from an **independent** radiometric source (L2A surface-reflectance
   validation / ACIX uncertainty budgets), cited, with the derivation shown — not from the
   appearance of `P`.
-- Publish a **sensitivity sweep**: ECE, Brier, F1, `plateau_fraction`, `⟨σ_P⟩` as
-  functions of `σ_abs ∈ [0.001, 0.02]`, `σ_rel ∈ [0.005, 0.05]`, and correlation length
-  `∈ {0, 1, 3, 10} px`. All three are already exposed as node parameters.
+- Publish a **sensitivity sweep** over `σ_abs`, `σ_rel` and the correlation length.
 - State conclusions that are **invariant** across that sweep, and label any conclusion
   that is not.
+
+### Sweep done — and it sharpens the concern rather than dissolving it
+
+N = 118, 3 px correlation, 15 px corridor, imagery in reflectance units:
+
+| σ_abs | mean area (px) | sd (px) | graded pixels | t* | MCC | IoU |
+|---|---|---|---|---|---|---|
+| 0.0010 | 103 304 | 77.4 | 1.71 % | 0.02 | 0.8487 | 0.8031 |
+| 0.0025 | 103 196 | 129.7 | 3.38 % | 0.02 | 0.8552 | 0.8127 |
+| **0.0050 (wired)** | 102 717 | 253.9 | 7.19 % | 0.02 | 0.8631 | 0.8249 |
+| 0.0100 | 101 150 | 482.9 | 16.63 % | 0.02 | 0.8717 | 0.8391 |
+| 0.0200 | 98 794 | 855.4 | 34.34 % | 0.14 | 0.8743 | 0.8424 |
+
+**Accuracy rises monotonically with the assumed noise, with no interior optimum.** More
+noise means more realisations averaged, which regularises the mask — gaps filled, speckle
+suppressed — and improves agreement with a 10 m reference.
+
+The original charge (σ_abs tuned to make `P` non-degenerate) is retired: that was the unit
+bug. But a sharper one replaces it. **σ_abs cannot be selected by any performance
+criterion, because performance is monotone in it** — optimising would drive it to the top
+of whatever range is searched. It must be fixed from independent radiometric evidence,
+before any metric is computed, and the curve published alongside.
+
+Conclusions are **not** invariant: 4 IoU points and an elevenfold range in ensemble spread
+(77 → 855 px) across a plausible interval, plus a 4.4 % drift in the mean area estimate
+itself. Every number in the paper should carry its σ_abs.
+
+`σ_rel` and the band-space correlation structure remain unswept.
 
 ---
 
@@ -546,7 +580,7 @@ invalidates every Monte-Carlo number produced before it:
 > rather than the transform actually applied, so fixing the transform did not move the
 > key and a cache hit kept serving the old product. Both are fixed, with tests.
 
-## SERIOUS 6 — The evaluation domain is derived from the ground truth
+## SERIOUS 6 — The evaluation domain is derived from the ground truth  ✅ MEASURED
 
 The analysis domain is the GT water mask, small-object-filtered (`min_area = 258 px`) and
 **dilated** (elliptical SE, size 15, 2 iterations). Consequences:
@@ -564,17 +598,33 @@ The analysis domain is the GT water mask, small-object-filtered (`min_area = 258
    possible negative set for a shoreline problem, *and* the hardest for boundary metrics
    — the two effects do not cancel and their net sign is unknown.
 
-### Required fix
+### Done — and the concern is confirmed
 
-- Report each metric at several dilation radii (e.g. 0, 5, 15, 31 px) **and** on the
-  whole scene, as a table.
-- Add an explicit **false-positive audit outside the corridor**: count and map predicted
-  water that lies beyond the largest dilation. This is a required figure, not an
-  appendix.
+| domain | pixels | IoU | precision | recall | MCC | own t* |
+|---|---|---|---|---|---|---|
+| GT only | 113 827 | 0.8606 | 1.0000 | 0.8606 | n/a | 0.02 |
+| + 5 px | 207 230 | 0.8353 | 0.9667 | 0.8600 | 0.8197 | 0.02 |
+| **+ 15 px (wired)** | 349 074 | **0.8249** | 0.9574 | 0.8564 | 0.8631 | 0.02 |
+| + 31 px | 552 694 | 0.8135 | 0.9462 | 0.8529 | 0.8731 | 0.02 |
+| whole scene | 3 853 696 | 0.7333 | 0.8436 | 0.8487 | 0.8412 | **0.30** |
+
+**IoU spans 13 points as a pure function of the evaluation window.** Recall is flat
+(0.853–0.861) while precision falls 1.000 → 0.844, so widening the domain adds only false
+positives — the corridor hides spurious water, not missed water. The selected threshold is
+domain-dependent too (0.02 in any corridor, 0.30 whole-scene), so domain and threshold are
+not independent choices. MCC is undefined on the GT-only domain (no true negatives).
+
+**False-positive audit beyond the 31 px corridor:** 13 715 px = **11.5 % of all predicted
+water**, in 3 099 components averaging 4 px, largest 305 px, only 6 above 100 px. Speckle,
+not spurious lakes. The bare percentage would have read as alarming; the component-size
+distribution is what makes it diagnosable.
+
+**Standing requirement:** publish the table, not a single IoU. A reported figure without
+its domain is not interpretable.
 
 ---
 
-## SERIOUS 7 — The threshold is selected on the same ground truth used to score it
+## SERIOUS 7 — The threshold is selected on the same ground truth used to score it  ✅ MEASURED (cost = 0)
 
 `thr_sweep` maximises F1/IoU/Youden/MCC against the GT, and the mask metrics in the
 results are then computed at that threshold against the same GT, on the same scene. The
@@ -585,14 +635,30 @@ The semantic anchor at `t = 0.5` mitigates this **only when it actually fires** 
 
 There is no held-out scene anywhere in the protocol.
 
-### Required fix
+### Done — transfer cost is zero, but accuracy still does not transfer
 
-- Select the threshold on scene A, evaluate on scene B (and report both directions).
-- Or spatial block cross-validation within one scene: partition into blocks larger than
-  the noise correlation length, fit `t` on some blocks, score on the rest.
-- Report the in-sample / out-of-sample gap explicitly. For a paper whose thesis is
-  "thresholds are the problem", the transferability of the chosen threshold *is* the
-  result.
+Threshold selected on 2021-09-02, applied unchanged to two held-out acquisitions (same
+tile 31UDQ, same orbit 51):
+
+| date | held out | IoU @ t* | MCC @ t* | own t* | MCC @ own | cost |
+|---|---|---|---|---|---|---|
+| 2021-09-02 | — | 0.8249 | 0.8631 | 0.02 | 0.8631 | — |
+| **2021-06-14** | yes | 0.7708 | 0.8231 | 0.02 | 0.8231 | **0.0000** |
+| **2021-03-01** | yes | 0.8726 | 0.8999 | 0.02 | 0.8999 | **0.0000** |
+
+Each held-out date independently selects the value it was given. The in-sample optimism
+this item warned about is empirically nil.
+
+Two qualifications kept deliberately:
+
+1. **Partly structural.** Under raw argmax the pick sits at the bottom of the range on
+   every scene, so identical selection is weaker evidence than it appears. The comparison
+   under the graph's own plateau-median rule (t = 0.08 on the primary scene) has not been
+   run on the held-out dates and should be — that is the rule the paper proposes.
+2. **Accuracy does not transfer even though the threshold does.** MCC ranges 0.823–0.900
+   and IoU 0.771–0.873 across the three dates — a spread several times anything threshold
+   selection contributes. Scene conditions dominate performance variance, which argues for
+   reporting multiple dates rather than tuning the cutoff harder.
 
 ---
 
@@ -960,11 +1026,14 @@ Ordered so that the cheapest decision-relevant work comes first.
    `sd(boundary_dist)` against the noise correlation length (0, 1, 3, 10 px). This is the
    paper's main figure, and it converts SERIOUS 3's defensive sensitivity analysis into
    the result.
-6. **Wire the domain everywhere**, then report metrics at several dilation radii plus a
-   false-positive audit outside the corridor. *(MINOR 22, SERIOUS 6)*
-7. **Second scene** → out-of-sample threshold; report the in/out-of-sample gap.
-   *(SERIOUS 7)*
-8. **σ_abs sensitivity sweep** and **k / index ablation**. *(SERIOUS 3, 4, 9)*
+6. ~~**Wire the domain everywhere**~~ — **DONE.** Domain wired to all five validation
+   nodes; metrics at 0/5/15/31 px and whole-scene; FP audit beyond the corridor.
+   *(MINOR 22, SERIOUS 6)*
+7. ~~**Second scene** → out-of-sample threshold~~ — **DONE.** Two held-out dates,
+   transfer cost 0.0000; accuracy varies by scene, not by threshold. *(SERIOUS 7)*
+8. ~~**σ_abs sensitivity sweep**~~ — **DONE**, and it constrains the design: accuracy is
+   monotone in σ_abs, so the parameter must come from radiometry, not from tuning.
+   **k / index ablation still outstanding.** *(SERIOUS 3 done, 4 and 9 open)*
 9. **Block bootstrap** + effective sample size; downgrade all pixel-level p-values to
    descriptive. Note the ensemble node's percentile CIs are already immune to this.
    *(SERIOUS 8)*

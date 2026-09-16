@@ -457,6 +457,54 @@ Once a threshold is chosen (§5.6), the binary mask is scored against ground tru
   acknowledges that ground truth (WorldCover, itself a classified product) is not
   sub-pixel accurate.
 
+#### Domain sensitivity — measured, not assumed
+
+The evaluation domain is the ground truth dilated by a chosen radius, so every mask
+metric is a function of that radius. Measured on the primary acquisition (N = 118, 3 px
+noise correlation, threshold fixed at the value selected on the wired 15 px corridor):
+
+| domain | pixels | IoU | F1 | precision | recall | MCC | own t* |
+|---|---|---|---|---|---|---|---|
+| GT only | 113 827 | 0.8606 | 0.9251 | 1.0000 | 0.8606 | n/a | 0.02 |
+| + 5 px | 207 230 | 0.8353 | 0.9102 | 0.9667 | 0.8600 | 0.8197 | 0.02 |
+| **+ 15 px (wired)** | 349 074 | **0.8249** | **0.9041** | 0.9574 | 0.8564 | **0.8631** | 0.02 |
+| + 31 px | 552 694 | 0.8135 | 0.8971 | 0.9462 | 0.8529 | 0.8731 | 0.02 |
+| whole scene | 3 853 696 | 0.7333 | 0.8461 | 0.8436 | 0.8487 | 0.8412 | **0.30** |
+
+Three things this settles:
+
+1. **IoU spans 13 points** (0.861 → 0.733) purely as a function of the evaluation window.
+   A reported IoU is meaningless without its domain, which is why the table is published
+   rather than a single figure.
+2. **Recall is essentially constant** (0.853–0.861) while precision falls from 1.000 to
+   0.844. Widening the domain adds only false positives — the corridor is not hiding
+   missed water, it is hiding spurious water.
+3. **The selected threshold is itself domain-dependent**: 0.02 inside any corridor, 0.30
+   on the whole scene. Threshold selection and domain choice are not independent, and
+   reporting one without the other is incomplete.
+
+MCC is **undefined on the GT-only domain**: with the domain equal to the truth there are
+no true negatives and the denominator vanishes. That is a property of the metric, not a
+result, and it is why the corridor cannot be tightened to zero.
+
+#### False positives beyond the corridor
+
+Restricting to a corridor makes distant false positives invisible, so they are audited
+separately. Predicted water lying **outside the widest (31 px) corridor**:
+
+| | |
+|---|---|
+| pixels | 13 715 — **11.5 % of all predicted water** |
+| connected components | 3 099 |
+| largest component | 305 px |
+| components above 100 px | 6 |
+
+The share is not negligible, but its shape is: 3 099 components averaging 4 px each, with
+nothing resembling a spurious lake. This is speckle, not systematic misclassification, and
+a minimum-area filter would remove most of it at a known cost in recall. Reporting the
+component-size distribution rather than the bare percentage is what separates those two
+diagnoses.
+
 The same scoring is intended to be run with the Monte-Carlo stage bypassed
 (single deterministic evaluation), so the comparison "MC vs no MC" is measured on
 identical metrics and the same domain.
@@ -524,6 +572,62 @@ The chosen threshold is then fed back into the graph as the operating point of t
 advanced-threshold node, so every mask metric in §5.4 is computed at a threshold that was
 *derived*, with its selection rule, plateau width and anchor cost on the record.
 
+#### Out-of-sample transfer
+
+The threshold is selected on 2021-09-02 and applied unchanged to two held-out
+acquisitions — same tile (31UDQ), same orbit (51), so directly comparable. Selection by
+raw argmax in all three cases, for a like-for-like comparison:
+
+| date | held out | IoU @ t\* | MCC @ t\* | own t\* | MCC @ own t\* | transfer cost |
+|---|---|---|---|---|---|---|
+| 2021-09-02 | — | 0.8249 | 0.8631 | 0.02 | 0.8631 | — |
+| **2021-06-14** | **yes** | 0.7708 | 0.8231 | 0.02 | 0.8231 | **0.0000** |
+| **2021-03-01** | **yes** | 0.8726 | 0.8999 | 0.02 | 0.8999 | **0.0000** |
+
+**The threshold transfers at zero cost**: each held-out date selects exactly the same
+value it was given. That is the in-sample/out-of-sample gap the protocol was built to
+expose, and here it is empirically nil.
+
+Two honest qualifications:
+
+- The agreement is partly structural. At raw argmax the selected value sits at the bottom
+  of the range on every scene, so identical selection is less informative than it looks.
+  The comparison under the graph's plateau-median rule (`t = 0.08` on the primary scene)
+  has not been run on the held-out dates and should be, since that is the rule the paper
+  actually proposes.
+- **Accuracy does not transfer even though the threshold does.** MCC ranges 0.823–0.900
+  and IoU 0.771–0.873 across the three dates, a spread several times larger than anything
+  threshold selection contributes. Scene conditions, not the cutoff, dominate
+  performance variance — which is an argument for reporting multiple dates rather than
+  for tuning the threshold harder.
+
+#### What the rule actually selects on this scene
+
+Measured on the primary acquisition (MCC, step 0.02, wired 15 px corridor):
+
+| t | 0.02 | 0.10 | 0.30 | 0.50 | 0.70 | 0.90 | 0.98 |
+|---|---|---|---|---|---|---|---|
+| MCC | **0.8621** | 0.8564 | 0.8477 | 0.8397 | 0.8285 | 0.7967 | 0.7499 |
+
+| quantity | value |
+|---|---|
+| raw argmax | t = 0.02, MCC 0.8621 |
+| plateau fraction (within 99 % of max) | **0.157** |
+| plateau median — **what the rule selects** | **t = 0.08, MCC 0.8575** |
+| semantic anchor (majority vote) | t = 0.50, MCC 0.8397 |
+| anchor cost | 0.0223 |
+
+The plateau covers 15.7 % of the range, **below the 30 % trigger**, so the rule does not
+snap to the anchor: it returns the plateau median, `t = 0.08`. The raw argmax at 0.02 is
+rejected as the cliff artifact it is, at a cost of 0.005 MCC.
+
+This is worth recording because it reverses an earlier reading. The code carries a warning
+for a "flat metric" that "barely discriminates", written when the curve was nearly
+featureless. With the imagery in correct reflectance units (§3.2) the curve has real
+structure — MCC falls monotonically by 11 points from t = 0.02 to t = 0.98 — and the flat-
+metric warning no longer fires. **The degenerate threshold curve was a symptom of the unit
+bug, not a property of the method.**
+
 ### 5.7 Convergence — how many realisations are enough?
 
 > **Caveat, see `MC-paper-weaknesses.md` BLOCKER 3:** because `σ_P = √(P(1−P))` is an
@@ -567,9 +671,34 @@ propagation (JCGM 101:2008 §7.9 adaptive procedure).
 
 Known caveats the paper should state rather than hide:
 
-1. `σ_abs = 0.005` is a reasoned assumption, not a certified figure. A sensitivity sweep
-   over `σ_abs`, `σ_rel` and the correlation length is the obvious companion experiment;
-   the graph exposes all three as parameters.
+1. **`σ_abs` is the most consequential free parameter, and performance cannot be used to
+   choose it.** Sweep on the primary acquisition (N = 118, 3 px correlation, 15 px
+   corridor), now that the imagery is in reflectance units:
+
+   | σ_abs | mean area (px) | sd (px) | graded pixels | mean P | t* | MCC | IoU |
+   |---|---|---|---|---|---|---|---|
+   | 0.0010 | 103 304 | 77.4 | 1.71 % | 0.2738 | 0.02 | 0.8487 | 0.8031 |
+   | 0.0025 | 103 196 | 129.7 | 3.38 % | 0.2733 | 0.02 | 0.8552 | 0.8127 |
+   | **0.0050 (wired)** | **102 717** | **253.9** | **7.19 %** | 0.2712 | 0.02 | **0.8631** | **0.8249** |
+   | 0.0100 | 101 150 | 482.9 | 16.63 % | 0.2639 | 0.02 | 0.8717 | 0.8391 |
+   | 0.0200 | 98 794 | 855.4 | 34.34 % | 0.2429 | 0.14 | 0.8743 | 0.8424 |
+
+   **IoU and MCC increase monotonically with the assumed noise, across the whole tested
+   range** — IoU 0.803 → 0.842, MCC 0.849 → 0.874, with no interior optimum. The
+   mechanism is straightforward: averaging more perturbed realisations regularises the
+   mask, filling gaps and suppressing speckle, which improves agreement with a 10 m
+   reference.
+
+   The consequence is a methodological constraint, not a tuning opportunity.
+   **Choosing `σ_abs` by maximising accuracy would drive it arbitrarily high**, so it must
+   be fixed from independent radiometric evidence and the curve reported — which is what
+   this table is for. Conclusions are *not* invariant to it: 4 IoU points and an
+   elevenfold range in ensemble spread (77 → 855 px) across a plausible interval. Mean
+   area also falls by 4.4 % as σ rises, so the estimate itself is mildly noise-dependent.
+
+   The other two parameters are unswept: `σ_rel` and the band-space correlation structure.
+   The noise correlation *length* is swept in §4.1, where it is the controlling variable
+   of the headline result.
 2. The noise model is diagonal in band space. Real atmospheric-correction residuals are
    correlated across bands, which would change index-level variance.
 3. Reference-product error is **measured, not assumed** (§2.3): the two references agree
