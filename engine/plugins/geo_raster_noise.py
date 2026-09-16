@@ -14,6 +14,17 @@ Noise model (per band, per pixel):
 uncertainty). Both are in the band's own units (reflectance in [0,1] if the
 raster has been normalised).
 
+`sigma_combine` selects how the two terms combine. Independent contributions should
+strictly add in quadrature; the linear default is kept for backwards compatibility and
+is the more conservative of the two (it overstates σ by ~34 % at ρ = 0.3 with the
+default settings, and is indistinguishable over dark targets).
+
+`shift_px` adds a per-realisation rigid SUB-PIXEL TRANSLATION, drawn from
+N(0, shift_px) independently in x and y and applied identically to every band. This
+models multi-temporal co-registration error, which for a 10 m sensor is of order one
+pixel and is therefore the dominant uncertainty term for any boundary-placement metric
+— radiometric noise alone leaves shoreline uncertainty a lower bound.
+
 The perturbed raster is optionally clipped: set `clip_min`/`clip_max` for an
 explicit range (e.g. ACOLITE Rrs to [-0.01, 0.5]) — active only when
 `clip_max > clip_min`, and it supersedes the legacy `clip_negative` floor.
@@ -72,6 +83,11 @@ from registry import vision_node, NodeProcessor
          'label': 'Base seed (-1 = entropy)'},
         {'id': 'spatial_corr_px', 'type': 'float', 'default': 0.0, 'min': 0.0, 'max': 50.0, 'step': 0.5,
          'label': 'Spatial correlation (px, 0 = iid)'},
+        {'id': 'sigma_combine', 'type': 'enum', 'default': 0,
+         'options': ['linear (σa + σr·|v|)', 'quadrature (√(σa² + (σr·v)²))'],
+         'label': 'Combine σ terms'},
+        {'id': 'shift_px', 'type': 'float', 'default': 0.0, 'min': 0.0, 'max': 10.0, 'step': 0.1,
+         'label': 'Co-registration σ (px, 0 = off)'},
         {'id': 'node_note', 'type': 'string', 'default': '', 'label': 'Note'},
     ],
     resizable=True, min_width=240, min_height=150,
@@ -139,7 +155,13 @@ class RasterNoiseNode(NodeProcessor):
             rng = np.random.default_rng()
         self._tick += 1
 
-        sigma = sigma_abs + sigma_rel * np.abs(bands)
+        # Independent error terms combine in quadrature; the linear sum is retained as the
+        # default only for backwards compatibility with existing graphs.
+        if int(params.get('sigma_combine', 0)) == 1:
+            sigma = np.sqrt(np.square(sigma_abs) +
+                            np.square(sigma_rel * np.abs(bands))).astype(np.float32)
+        else:
+            sigma = sigma_abs + sigma_rel * np.abs(bands)
         noise = rng.standard_normal(bands.shape).astype(np.float32)
         # Spatially-correlated noise: blur the white-noise field, then renormalize each
         # band to unit variance so the marginal per-pixel σ is preserved while neighbours
@@ -153,6 +175,21 @@ class RasterNoiseNode(NodeProcessor):
                 if _s > 1e-8:
                     noise[_i] /= _s
         noisy = bands + noise * sigma
+
+        # Rigid sub-pixel translation, identical across bands: a co-registration draw.
+        # Applied after the radiometric perturbation so the two are independent, and
+        # with a NaN-preserving border so edge pixels are marked invalid rather than
+        # silently duplicated inward.
+        shift_px = float(params.get('shift_px', 0.0) or 0.0)
+        if shift_px > 0:
+            dx, dy = (rng.standard_normal(2) * shift_px).astype(np.float32)
+            M = np.array([[1.0, 0.0, float(dx)], [0.0, 1.0, float(dy)]], np.float32)
+            h, w = noisy.shape[1], noisy.shape[2]
+            for _i in range(noisy.shape[0]):
+                noisy[_i] = cv2.warpAffine(
+                    noisy[_i], M, (w, h),
+                    flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
+                    borderValue=float('nan'))
         # Explicit [min, max] range clip (reference-script presets, e.g. rrs
         # [-0.01, 0.5]) takes precedence; it supersedes the legacy clip-negatives
         # floor. Range is active only when clip_max > clip_min, so existing

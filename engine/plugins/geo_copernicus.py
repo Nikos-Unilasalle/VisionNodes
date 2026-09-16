@@ -140,6 +140,8 @@ COLLECTIONS: dict[str, dict] = {
         'value_scale':  1e-4,
     },
     'Copernicus DEM GLO-30 (Planetary)': {
+        # elevation 0 is sea level, not missing data
+        'zero_is_valid': True,
         'backend':      'stac',
         'stac_id':      'cop-dem-glo-30',
         'all_bands':    ['data'],
@@ -154,6 +156,10 @@ COLLECTIONS: dict[str, dict] = {
     'JRC Global Surface Water': {
         'backend':      'stac',
         'stac_id':      'jrc-gsw',
+        # occurrence 0 = "never observed as water", seasonality 0 = "never" — real
+        # measurements, not gaps. Mapping them to NaN would delete precisely the
+        # negative class a water study needs.
+        'zero_is_valid': True,
         'all_bands':    ['occurrence','seasonality','extent','transition','change','recurrence'],
         'default_bands':['occurrence'],
         'rgb':          ['occurrence'],
@@ -383,6 +389,7 @@ class GeoCopernicusNode(NodeProcessor):
             'comp': composite, 'maxs': max_scenes,
             'db': bool(to_db) and GeoCopernicusNode._is_sar(cfg),
             'scale': cfg.get('value_scale'),
+            'zerovalid': bool(cfg.get('zero_is_valid')),
             'assets': list(assets),
         }, sort_keys=True)
         return hashlib.md5(sig.encode()).hexdigest()[:14]
@@ -409,7 +416,10 @@ class GeoCopernicusNode(NodeProcessor):
         if is_cat:
             return band.astype('uint8')
 
-        band = np.where(band <= 0, np.nan, band)      # 0 is nodata for S1 and S2 alike
+        # 0 marks nodata for S1 (out-of-swath fill) and S2 (gap fill), but it is a real
+        # value for others — JRC occurrence 0 is "never water", DEM 0 is sea level.
+        if not col_cfg.get('zero_is_valid'):
+            band = np.where(band <= 0, np.nan, band)
         if to_db and GeoCopernicusNode._is_sar(col_cfg):
             with np.errstate(divide='ignore', invalid='ignore'):
                 band = 10.0 * np.log10(band)
