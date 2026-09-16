@@ -234,13 +234,57 @@ whose `> 0` criterion is least standard (Wang et al. threshold MBWI dynamically 
 at zero). A further caveat: invalid data votes *against* water — `NaN > 0` evaluates to
 false — so a guarded pixel is treated as evidence of land rather than as an abstention.
 
-The claim that the four indices span complementary physics (NIR absorption, SWIR
-absorption, a multi-band tuned linear discriminant, a green-dominance contrast) is
-therefore **stated as a hypothesis, not a result**. Three of the four use NIR and all four
-use GREEN, so they are strongly correlated and a *k*-of-4 vote over correlated tests is
-closer to one test with jitter than to an independent consensus. The index correlation
-matrix, an effective number of independent votes, and a leave-one-out ablation over the
-four indices are required before the consensus framing can be defended.
+The claim that the four indices span complementary physics was **tested, and it does not
+hold.** Spearman correlation between the four, measured in the corridor on the unperturbed
+scene:
+
+| | NDWI | MNDWI | AWEIsh | MBWI |
+|---|---|---|---|---|
+| **NDWI** | 1.000 | 0.867 | 0.894 | 0.758 |
+| **MNDWI** | 0.867 | 1.000 | 0.881 | 0.828 |
+| **AWEIsh** | 0.894 | 0.881 | 1.000 | **0.947** |
+| **MBWI** | 0.758 | 0.828 | 0.947 | 1.000 |
+
+The correlation matrix has eigenvalues **3.73, 0.16, 0.09, 0.02** — 93 % of the variance in
+a single component. The effective number of independent indices is **2.0** (Li & Ji) or
+**1.51** (Cheverud–Nyholt), against a nominal four.
+
+The vote is dominated by one index. **AWEIsh agrees with the final *k*-of-2 verdict
+99.92 % of the time**, and in 94.0 % of detected water AWEIsh and MBWI alone already reach
+`k = 2`. The vote-sum histogram in the corridor is almost perfectly bimodal — 246 794
+pixels with no index voting water, 84 685 with all four, and only 11 062 in the contested
+2–3 band.
+
+Leave-one-out and single-index ablation, deterministic on the unperturbed scene:
+
+| rule | IoU | MCC | precision | recall |
+|---|---|---|---|---|
+| **all four, k = 2 (as wired)** | **0.7911** | **0.8412** | 0.9763 | 0.8066 |
+| all four, k = 1 | 0.8152 | 0.8558 | 0.9581 | 0.8453 |
+| all four, k = 3 | 0.7678 | 0.8266 | 0.9876 | 0.7752 |
+| all four, k = 4 | 0.7207 | 0.7931 | 0.9914 | 0.7252 |
+| drop NDWI (k = 2 of 3) | 0.7760 | 0.8304 | 0.9782 | 0.7896 |
+| drop MNDWI (k = 2 of 3) | 0.7830 | 0.8372 | 0.9855 | 0.7921 |
+| drop AWEIsh (k = 2 of 3) | 0.7678 | 0.8266 | 0.9876 | 0.7753 |
+| drop MBWI (k = 2 of 3) | 0.7910 | 0.8411 | 0.9763 | 0.8065 |
+| **AWEIsh alone** | **0.7917** | **0.8414** | 0.9753 | 0.8078 |
+| MNDWI alone | 0.7806 | 0.8305 | 0.9637 | 0.8043 |
+| MBWI alone | 0.7633 | 0.8238 | 0.9895 | 0.7695 |
+| NDWI alone | 0.7603 | 0.8198 | 0.9826 | 0.7706 |
+
+**A single index matches the four-index consensus** — AWEIsh alone scores 0.7917 IoU
+against the vote's 0.7911. Removing MBWI changes the result by 0.0001. The consensus is
+not adding information; it is re-measuring the same quantity four times.
+
+Two consequences the paper must carry rather than bury:
+
+1. **The decision rule should be described as "a multi-index vote dominated by AWEIsh",
+   not as independent corroboration.** The physics-complementarity argument is falsified
+   on this scene.
+2. **`k = 2` is not the best operating point.** `k = 1` scores higher on both IoU (0.8152)
+   and MCC (0.8558). The wired `k = 2` buys precision (0.976 vs 0.958) at a larger cost in
+   recall. That is a defensible trade-off for a water product, but it is a choice, and it
+   should be reported as one rather than presented as consensus logic.
 
 ### 3.3 Decision rule — multi-index vote ∧ adaptive reflectance gate
 
@@ -523,8 +567,31 @@ is tested, not asserted:
   back to the Bernoulli predictive variance `P(1−P)`.
 
 A well-ranked but poorly calibrated `P` would show high AUROC with a reliability curve far
-from the diagonal — the honest outcome to report if it occurs, and the reason the
-reliability diagram is a primary figure rather than a supplement. Note that the ECE
+from the diagonal. **That is what happens.** Measured on the primary acquisition, in the
+corridor (n = 338 172):
+
+| | |
+|---|---|
+| Brier score | 0.0668 |
+| ECE (12 equal-width bins) | 0.0670 |
+| ECE (equal-mass bins) | 0.0670 |
+| **MCE (worst bin)** | **0.5981** |
+| ⟨U⟩ | 0.0268 |
+
+ECE of 0.067 is modest, but **MCE of 0.60 means the worst-populated bin is 60 percentage
+points away from the diagonal**. `P` orders pixels well and is badly calibrated as a
+probability: a pixel at `P ≈ 0.6` is not water 60 % of the time.
+
+The equal-mass recomputation makes the reason visible. Asking for 12 quantile bins yields
+**only 2 distinct bins**, because `P` is concentrated on a handful of values — the
+vote-sum histogram of §3.2 shows why, with 98 % of corridor pixels at vote 0 or vote 4.
+There is not enough spread in `P` for a 12-bin reliability curve to mean anything.
+
+So the honest claim is **"`P` is a calibrated-in-rank confidence score, not a calibrated
+probability"**, and the paper should not describe it as the latter. Post-hoc
+recalibration (isotonic or Platt, fitted out-of-sample) is the obvious remedy and is not
+attempted here. Reporting both ECE variants and the realised bin count, rather than a
+single ECE, is what exposes this — a lone ECE of 0.067 would have read as a pass. Note that the ECE
 computed here is an *empirical spatial frequency* over pixels in the corridor: it is a
 statement about how often pixels at `P ≈ q` are labelled water in this scene, and it
 inherits any bias in the reference product.
@@ -647,6 +714,40 @@ tolerance in probability units** — the standard practice for Monte-Carlo uncer
 propagation (JCGM 101:2008 §7.9 adaptive procedure).
 
 ---
+
+### 5.8 Baselines
+
+A probability field is only worth its cost against something simpler.
+
+| method | IoU | MCC | precision | recall |
+|---|---|---|---|---|
+| **Monte-Carlo ensemble, t = 0.02** | **0.8249** | **0.8631** | — | — |
+| Otsu on MNDWI | 0.7947 | 0.8342 | 0.9264 | 0.8483 |
+| AWEIsh > 0 (published rule) | 0.7910 | 0.8406 | 0.9743 | 0.8078 |
+| **same rule, single deterministic run (MC bypassed)** | **0.7911** | **0.8412** | 0.9763 | 0.8066 |
+| MNDWI > 0 (published rule) | 0.7798 | 0.8296 | 0.9625 | 0.8043 |
+| MBWI > 0 | 0.7633 | 0.8238 | 0.9895 | 0.7695 |
+| NDWI > 0 | 0.7602 | 0.8197 | 0.9825 | 0.7706 |
+| Otsu on AWEIsh | 0.5852 | 0.6127 | 0.5892 | 0.9886 |
+| Otsu on NDWI | 0.5741 | 0.5873 | 0.5973 | 0.9365 |
+| Otsu on MBWI | 0.4518 | 0.4230 | 0.4523 | 0.9977 |
+
+**The Monte-Carlo ensemble does win**, by +0.034 IoU and +0.022 MCC over the identical
+rule run once without noise. The mechanism is the regularisation effect of §6: averaging
+perturbed realisations fills gaps and suppresses speckle.
+
+But the margin must be stated honestly. The nearest baseline is **one line of code** —
+Otsu on MNDWI, 0.7947 IoU — and the ensemble beats it by 0.030 IoU. A reader is entitled
+to ask whether 118 realisations are worth three IoU points, and the answer for a
+mask-only application is probably no. **The case for the ensemble is the uncertainty it
+quantifies, not the mask it produces** — which is the same conclusion §4.1 reaches from
+the other direction.
+
+Otsu behaves erratically on three of the four indices (IoU 0.45–0.59, recall ≈ 0.99,
+precision ≈ 0.5): inside a river corridor the histogram is not bimodal, so Otsu's
+assumption fails and it cuts far too low. That is itself an argument for the paper's
+thesis about thresholds — but it also means "Otsu" is not a single baseline, it is four
+very different ones, and reporting only the best would be cherry-picking.
 
 ## 6. Reproducibility, and what the design deliberately exposes
 
@@ -777,11 +878,28 @@ Known caveats the paper should state rather than hide:
    when the running estimate of `sd(area)` (and of the boundary-displacement sd) is
    stable to within a stated tolerance across added realisations. That is a genuine
    convergence test, because those quantities are not closed-form functions of `P`.
-6. **A decision rule that isolates aleatoric uncertainty by construction**: the
-   scene-adaptive reflectance gate is calibrated once on the unperturbed scene and
-   frozen, so the ensemble spread measures radiometric measurement uncertainty only.
-   Model-form (epistemic) uncertainty is deliberately held fixed rather than
-   quantified — it is excluded, not separated.
+6. **A measured decomposition of the two uncertainty terms — and the finding that the
+   one usually propagated is the smaller one.** The scene-adaptive gate is calibrated once
+   on the unperturbed scene and frozen, so the ensemble spread is radiometric
+   (aleatoric) uncertainty alone. Quantifying the model-form (epistemic) term separately,
+   as the spread of the deterministic result across 13 plausible rule variants
+   (`k ∈ {1,2,3}` × gate percentile `∈ {95,98,99}`, plus each leave-one-out index subset):
+
+   | term | sd of water area |
+   |---|---|
+   | aleatoric — radiometric noise, wired settings | **253.9 px** |
+   | epistemic — rule variants, `k = 2` only | **3 875 px** (15×) |
+   | epistemic — all 13 variants | **7 153 px** (**28×**) |
+
+   Area ranges from 92 485 px (`k = 3`, 95th-percentile caps) to 113 516 px (`k = 1`,
+   99th-percentile caps) — a 21 031 px spread, **20 % of the estimate**.
+
+   **Model-form uncertainty exceeds radiometric uncertainty by more than an order of
+   magnitude.** A study that propagates only sensor noise — the standard framing, and the
+   one this pipeline started from — reports an interval roughly 28× too narrow. This does
+   not invalidate the aleatoric analysis; it relocates it. The correct statement is that
+   radiometric noise contributes 254 px of area uncertainty *conditional on a fixed
+   decision rule*, and that the choice of rule contributes far more.
 
 ---
 

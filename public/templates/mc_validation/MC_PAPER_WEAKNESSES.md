@@ -361,7 +361,7 @@ itself. Every number in the paper should carry its σ_abs.
 
 ---
 
-## SERIOUS 4 — "Separates epistemic from aleatoric" is not what the design does
+## SERIOUS 4 — "Separates epistemic from aleatoric" is not what the design does  ✅ MEASURED — epistemic wins 28×
 
 The adaptive gate caps are calibrated once on the unperturbed scene and frozen; `k = 2`
 is fixed; the four indices are fixed; the vote rule is fixed. The ensemble therefore
@@ -373,6 +373,26 @@ not separated — it is **set to zero by construction**. The current wording cla
 separation the graph does not perform.
 
 ### Required fix — either
+
+### Done — and the excluded term is the larger one
+
+Spread of the deterministic result across 13 plausible rule variants
+(`k ∈ {1,2,3}` × gate percentile `∈ {95,98,99}`, plus each leave-one-out index subset):
+
+| term | sd of water area |
+|---|---|
+| aleatoric — radiometric noise, wired settings | **253.9 px** |
+| epistemic — rule variants, `k = 2` only | **3 875 px** (15×) |
+| epistemic — all 13 variants | **7 153 px** (**28×**) |
+
+Range 92 485 → 113 516 px: **20 % of the estimate**, driven entirely by choices nobody
+documented. The uncertainty the ensemble was built to propagate is **1/28th** of the
+uncertainty sitting in the decision rule.
+
+This does not invalidate the aleatoric analysis, it relocates it: radiometric noise
+contributes 254 px *conditional on a fixed rule*. But any confidence interval quoted from
+the ensemble alone is roughly 28× too narrow, and the paper must say so in the same
+sentence as the interval.
 
 **(a) Actually measure it.** A second, nested ensemble over rule variants:
 - `k ∈ {1, 2, 3}`
@@ -699,7 +719,7 @@ relative magnitude — the interval is uninterpretable.
 
 ---
 
-## SERIOUS 9 — "k-of-4, no index privileged" is false; two unguarded indices dominate
+## SERIOUS 9 — "k-of-4, no index privileged" is false  ✅ CONFIRMED — one index does the work
 
 Two separate problems compound.
 
@@ -731,10 +751,31 @@ than as unknown. Asymmetric treatment of missing data. (With the wired
 present bias is negligible — but the design is wrong and becomes a real bias at a
 tighter `valid_min`, e.g. the `-0.002` default.)
 
-### Required fix
+### Done — and the concern was understated
 
-- Report the **4×4 index correlation matrix** and an effective number of independent
-  votes.
+| | NDWI | MNDWI | AWEIsh | MBWI |
+|---|---|---|---|---|
+| **NDWI** | 1.000 | 0.867 | 0.894 | 0.758 |
+| **MNDWI** | 0.867 | 1.000 | 0.881 | 0.828 |
+| **AWEIsh** | 0.894 | 0.881 | 1.000 | **0.947** |
+| **MBWI** | 0.758 | 0.828 | 0.947 | 1.000 |
+
+Eigenvalues 3.73 / 0.16 / 0.09 / 0.02 — 93 % of variance in one component. Effective
+independent indices: **2.0** (Li & Ji), **1.51** (Cheverud–Nyholt), against a nominal 4.
+
+**AWEIsh agrees with the final verdict 99.92 % of the time.** AWEIsh alone scores IoU
+0.7917 against the four-index vote's 0.7911 — it is not an approximation of the vote, it
+*is* the vote. Dropping MBWI moves IoU by 0.0001. In 94 % of detected water, AWEIsh and
+MBWI alone already reach `k = 2`.
+
+Also found: **`k = 2` is not the best operating point.** `k = 1` scores IoU 0.8152 /
+MCC 0.8558 against `k = 2`'s 0.7911 / 0.8412. The wired choice buys precision
+(0.976 vs 0.958) at a larger cost in recall — defensible for a water product, but a
+trade-off to report, not consensus logic to claim.
+
+### Remaining fix
+
+- Report the correlation matrix and effective vote count in the paper (done above).
 - **Ablation**: `k ∈ {1,2,3,4}`, and leave-one-out over the four indices. Show how much
   each index actually contributes to the mask.
 - Either guard all four consistently or state that AWEIsh/MBWI are unguarded and why.
@@ -769,7 +810,7 @@ omission and argue why the reported boundary uncertainty is a lower bound.
 
 ---
 
-## SERIOUS 11 — Missing baselines
+## SERIOUS 11 — Missing baselines  ✅ MEASURED
 
 Currently the only intended comparison is "MC vs bypass" (ensemble vs one deterministic
 run). That is insufficient to place the method.
@@ -803,7 +844,7 @@ accordingly.
 
 ---
 
-## MINOR 13 — `anchor_cost` is measured against a value the code calls an artifact
+## MINOR 13 — `anchor_cost` is measured against a value the code calls an artifact  ✅ FIXED
 
 ```python
 raw_best_i = int(np.argmax(target))
@@ -822,7 +863,7 @@ otherwise be used), not against the raw argmax.
 
 ---
 
-## MINOR 14 — ECE with 12 equal-width bins on a quasi-binary P
+## MINOR 14 — ECE with 12 equal-width bins on a quasi-binary P  ✅ FIXED — and it mattered
 
 With `P` concentrated near 0 and 1, most of the 12 equal-width bins are empty or nearly
 so, and ECE is carried by the two extreme bins. ECE is known to be biased and strongly
@@ -889,7 +930,7 @@ methods document currently writes it as `⊕` (quadrature), which does not match
 
 ---
 
-## MINOR 18 — Asymmetric accumulator configuration
+## MINOR 18 — Asymmetric accumulator configuration  ✅ FIXED
 
 | Node | `cumulative` | `target_n` | `window` |
 |---|---|---|---|
@@ -906,7 +947,7 @@ convergence curve would use the wrong `N` for the `P` being reported.
 
 ---
 
-## MINOR 19 — Duplicate / legacy edges
+## MINOR 19 — Duplicate / legacy edges  ✅ FIXED
 
 - `mask_and.mask` → `acc_mean` on **both** `image__image` and `any__image`
 - `filter_threshold` → `filter_blob_filter` on **both** `main` and `mask__mask`
@@ -920,7 +961,7 @@ port resolution order changes.
 
 ---
 
-## MINOR 20 — Unexplained magic numbers
+## MINOR 20 — Unexplained magic numbers  ⚠️ PARTLY FIXED
 
 | Parameter | Value | Issue |
 |---|---|---|
@@ -1005,56 +1046,56 @@ Not everything is a problem. These are genuine strengths and should be defended:
 
 ---
 
-## Recommended order of attack
+## Where the audit stands
 
-Ordered so that the cheapest decision-relevant work comes first.
+**Closed — measured, with the result recorded whether or not it was the one hoped for:**
 
-1. ~~**Patch `sci_frame_accumulator`**~~ — **DONE.** Unnormalised σ + `scale` output,
-   rounding instead of truncation, graph rewired, 10/10 tests green, no regressions.
-   The convergence figure and ⟨U⟩ still need regenerating from a real run.
-   *(BLOCKER 1, MINOR 15)*
-2. ~~**Scatter σ_P vs √(P(1−P)/N)**~~ — **DONE, and the answer is negative.** The
-   `sigma_check` node is wired into the graph. σ_P is redundant with `P` by identity, not
-   by accident, and spatial correlation does not change it. *(BLOCKER 3)*
-3. ~~**Decide the framing**~~ — **DONE: option (a).** `sci_ensemble_stats` built, tested
-   (15/15) and wired: per-realisation area / perimeter / components / centroid /
-   boundary displacement, with percentile CIs over realisations. *(BLOCKER 3)*
-4. ~~**Define the estimand**~~ — **DONE.** Single acquisition 2021-09-02 10:57:29 UTC,
-   both references temporally aligned, reference error measured on the delivered grid (IoU
-   0.731 in-corridor, cores 0.996 / 0.974). *(BLOCKER 2)*
-5. **Run the ensemble node on the real scene**, then sweep `sd(area)` and
-   `sd(boundary_dist)` against the noise correlation length (0, 1, 3, 10 px). This is the
-   paper's main figure, and it converts SERIOUS 3's defensive sensitivity analysis into
-   the result.
-6. ~~**Wire the domain everywhere**~~ — **DONE.** Domain wired to all five validation
-   nodes; metrics at 0/5/15/31 px and whole-scene; FP audit beyond the corridor.
-   *(MINOR 22, SERIOUS 6)*
-7. ~~**Second scene** → out-of-sample threshold~~ — **DONE.** Two held-out dates,
-   transfer cost 0.0000; accuracy varies by scene, not by threshold. *(SERIOUS 7)*
-8. ~~**σ_abs sensitivity sweep**~~ — **DONE**, and it constrains the design: accuracy is
-   monotone in σ_abs, so the parameter must come from radiometry, not from tuning.
-   **k / index ablation still outstanding.** *(SERIOUS 3 done, 4 and 9 open)*
-9. **Block bootstrap** + effective sample size; downgrade all pixel-level p-values to
-   descriptive. Note the ensemble node's percentile CIs are already immune to this.
-   *(SERIOUS 8)*
-10. **Baselines**: Otsu/MNDWI, JRC cross-comparison. *(SERIOUS 11)*
-11. **Sub-pixel geometric perturbation** in the forward model. *(SERIOUS 10)* — more
-    valuable now than before, since it feeds straight into `boundary_dist`, a metric the
-    ensemble node already reports.
-12. **Hygiene sweep**: MINOR 13–14, 16–17, 19–22.
+| item | outcome |
+|---|---|
+| BLOCKER 1 | accumulator emits σ in input units + `scale`; fixed |
+| BLOCKER 2 | estimand = one acquisition; both references aligned; reference gap measured |
+| BLOCKER 3 | per-pixel σ proved redundant; replaced by ensemble aggregates |
+| SERIOUS 3 | premise retired (unit bug), **replaced by a harder constraint**: accuracy is monotone in σ_abs, so it cannot be tuned |
+| SERIOUS 4 | epistemic term measured — **28× the aleatoric term** |
+| SERIOUS 6 | domain wired everywhere; IoU spans 13 points across windows; FP audit done |
+| SERIOUS 7 | out-of-sample threshold transfer cost **0.0000**; accuracy varies by scene, not cutoff |
+| SERIOUS 9 | four-index consensus falsified — **AWEIsh alone equals the vote** |
+| SERIOUS 11 | ensemble beats single-run (+0.034 IoU) but only +0.030 over one-line Otsu |
+| SERIOUS 12 | plateau fraction 15.7 %; the "flat metric" warning was a dB-bug symptom |
+| MINOR 13, 14, 15, 16, 18, 19, 22 | fixed |
 
-Steps 1–4 are done: all three blockers are closed. The per-pixel uncertainty product
-turned out to be an identity and has been replaced; the estimand is a single locked
-acquisition with both references aligned and their disagreement measured.
+**Open, and honestly so:**
 
-**Step 5 is now the critical path** — running the ensemble node on the real scene and
-sweeping `sd(area)` against the noise correlation length. That produces the paper's
-headline figure. Everything after it is hardening.
+| item | why it is still open |
+|---|---|
+| SERIOUS 8 | block bootstrap not implemented. Pixel-level p-values and CIs remain descriptive. The ensemble percentile CIs of §4.1 are unaffected — realisations are independent. |
+| SERIOUS 10 | no sub-pixel geometric perturbation. Co-registration is likely the dominant term for boundary metrics, so `boundary_dist` is a lower bound. |
+| MINOR 17 | noise terms still combine linearly, overstating σ by ≈ 34 % on bright land. Documented, deliberately not changed mid-study. |
+| MINOR 20 | `min_area = 258 px` and `max_ticks = 118` still lack provenance. `N` should come from the stopping criterion, not by hand. |
+| MINOR 21 | the vote rule is still implemented twice (gate calibration vs production) with different validity floors. No bias today; a guaranteed source of drift. |
+| new | zeros are mapped to nodata for all continuous STAC collections. For JRC occurrence `0` means "never water" and is meaningful. Not exercised by this graph. |
+| new | `P` is a well-ranked but **poorly calibrated** score (MCE 0.60). Post-hoc recalibration not attempted. |
+| new | the plateau-median rule has not been re-run on the held-out dates (SERIOUS 7 used raw argmax for a like-for-like comparison). |
 
-One standing constraint from step 4: the reference envelope (IoU 0.731 in-corridor between the
-two references, cores agreeing at 0.974–0.996) caps what the mask metrics can resolve. Area and
-ensemble-spread claims are unaffected — they are the ones the paper now leads with — but a
-defensible 10 m *boundary* claim needs manual annotation on the locked acquisition.
+## What the paper can now claim
+
+1. Ensemble uncertainty of **derived quantities** — area, perimeter, topology, shoreline —
+   with `sd(area)` rising 72 → 577 px as noise correlation goes 0 → 10 px at a constant
+   mean. Per-pixel σ maps are `√(P(1−P))` and carry nothing.
+2. **Model-form uncertainty dominates radiometric uncertainty by 28×.** Any interval from
+   noise propagation alone is far too narrow.
+3. A defined estimand, a dated reference, and a **published validation ceiling**
+   (references agree at IoU 0.731).
+4. Threshold selection as a reported measurement, transferring at zero cost across three
+   dates — while accuracy does not transfer.
+
+## What it must not claim
+
+- That `P` is a calibrated probability (MCE 0.60).
+- That the four indices corroborate each other (effective count 1.5–2.0; AWEIsh alone
+  equals the vote).
+- That σ_abs was chosen on evidence (it cannot be chosen on performance at all).
+- That the ensemble is worth its cost as a *mask producer* (+0.030 IoU over one-line Otsu).
 
 ## Additional references for the fixes
 
