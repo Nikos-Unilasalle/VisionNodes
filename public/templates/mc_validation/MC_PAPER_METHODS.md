@@ -930,7 +930,8 @@ found when a reader compared them.
 | noise correlation | `spatial_corr_px = 3` | §3.1, §4.1 |
 | co-registration | `shift_px = 0` (off by default) | §4.2 |
 | seed | `42`, drawn as `seed + tick` | §3.1 |
-| realisations `N` | scalar `118` → `noise.max_ticks` and both accumulators' `target_n` | §4 |
+| realisations `N` | scalar `118` → `noise.max_ticks` and all three accumulators' `target_n` | §4 |
+| operating threshold | driven by `thr_sweep` → `threshold = 20` (= 0.08 × 255) | §5.6 |
 | index guard | `guard_invalid = true`, `valid_min = −0.05` | §3.2 |
 | AWEIsh / MBWI | `expr1` / `expr2`, unguarded, clamped ±5 | §3.2 |
 | vote | `(1*(B1>0)+…+1*(B4>0)) >= 2` | §3.2, §3.3 |
@@ -950,10 +951,13 @@ Two entries need a word of warning, because both have already misled a reader:
   not a 31 px element applied once — 338 172 px against 349 074 px, and 0.006 in MCC.
   Any table row here labelled "probe" uses the single-pass parameterisation and is
   *not* what the graph produces.
-- **The threshold node's stored value (179 ≈ 0.70) is stale.** It is driven at runtime by
-  `thr_sweep → out_optimal_threshold_255`; the selected value on this scene is
-  `t = 0.08` (= 20/255). A reader inspecting the node without running the graph will see
-  the cached number, not the operative one.
+- **Eight parameters are driven by edges, so the stored value is display-only.** They are
+  `noise.max_ticks`, the three accumulators' `target_n`, `blob.min_area`,
+  `corr_dilate.size`, `geo_copernicus.bbox`, and the threshold node's `threshold`. Every
+  stored value has been rewritten to equal what its edge delivers, so the file now reads
+  correctly when inspected statically — but the edge still wins at runtime, and editing a
+  driving scalar will silently diverge again. **`corr_dilate.iterations` is *not* driven**,
+  which is why the 15 × 2 distinction must be read from the node itself.
 
 Numbers in this document that are *not* in that table — every metric, every sd, every
 correlation — come from running the graph, not from reading it. They are reproducible by
