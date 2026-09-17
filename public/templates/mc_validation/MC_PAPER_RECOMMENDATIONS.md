@@ -39,10 +39,55 @@ and publish the redundancy as a result**. I recommend the second — *"multi-ind
 is universally assumed; we measure it and it does not hold"* is a contribution. What is not
 tenable is keeping four indices *while claiming* they corroborate one another.
 
-**The scene-adaptive gate.** It removes 1.71 % of what the vote proposes. A methods
-section describing an elaborate mechanism that does nothing is a magnet for reviewers.
-Either show it matters on a harder scene, or simplify it away. Do not leave it described as
-*the* mechanism that suppresses dark non-water surfaces.
+**The scene-adaptive gate — now tested, and the result is worse than "inert".**
+
+On the reference scene the gate removes 1.71 % of what the vote proposes. That looked like
+"untested rather than useless", because the scene was selected for 0.00 % cloud and the
+gate is, spectrally, a bright-surface rejector: the pixels it removes are 10–28× brighter
+in every band, and only 0.2 % of them are ground-truth water.
+
+Running it on cloudy acquisitions over the same AOI shows the opposite of the hoped-for
+result:
+
+| date | cloud | vote fires on | adaptive NIR cap | adaptive gate removes | fixed caps would remove |
+|---|---|---|---|---|---|
+| 2021-09-02 | 0 % | 2.7 % | 0.4365 | 1.71 % | 10.30 % |
+| 2021-04-28 | 30 % | 29.0 % | **1.1848** | **1.91 %** | **94.21 %** |
+| 2021-08-08 | 40 % | 31.4 % | **1.2224** | **2.33 %** | **95.62 %** |
+| 2021-05-03 | 59 % | 58.2 % | **1.2208** | **2.00 %** | **99.03 %** |
+
+**The self-calibration is hijacked by the population it exists to reject.** Clouds pass the
+*k*-of-2 vote, so they enter the consensus set Ω, so the 99th percentile of Ω is computed
+over clouds, so the cap is set at cloud brightness. The adaptive NIR cap reaches
+1.18–1.22 — **above the physical maximum reflectance of 1.0** — making the condition
+`ρ_NIR < c_n` vacuously true. The gate switches itself off exactly when it is needed.
+
+Note also that the pipeline carries **no cloud mask** (SCL is not used, and the draft does
+not mention one). The gate is implicitly serving that role, and failing at it.
+
+**A fix, tested.** Build Ω under the *fixed* caps before taking the percentile, so bright
+pixels cannot calibrate the gate:
+
+| date | cap now | cap with pre-filtered Ω | removes now | removes with fix |
+|---|---|---|---|---|
+| 2021-09-02 | 0.4365 | 0.2400 | 1.71 % | 8.07 % |
+| 2021-04-28 | 1.1848 | 0.2400 | 1.91 % | **92.02 %** |
+| 2021-08-08 | 1.2224 | 0.2400 | 2.33 % | **94.21 %** |
+| 2021-05-03 | 1.2208 | 0.2400 | 2.00 % | **98.40 %** |
+
+**But the fix exposes a second problem.** With a clean Ω the raw 99th percentile is
+0.060 / 0.094 / 0.105 / 0.109 across the four scenes — always below the floor
+`m·c_fix = 0.24`. The floor therefore always dominates and **the percentile never binds**:
+once the consensus set is correct, the "adaptive" path does not adapt.
+
+So the design principle *"we make self-calibration tuning-free"* is not currently supported.
+Two honest routes: lower `m` so the percentile can actually bind and show it tracks
+something real across scenes; or drop the adaptivity, keep fixed caps, and gain a simpler
+method that demonstrably works (94–99 % removal on cloudy scenes). **Either way, add a
+cloud mask** — the gate should not be doing that job by accident.
+
+This is a better outcome than the section being a liability: a diagnosed failure mode with
+a measured fix is a contribution. But it must be reported, not quietly repaired.
 
 **The product-agnostic SR/Rrs claim.** As it stands this is a liability rather than an
 asset: unvalidated, and precisely where the reported confusion lives. But **the test that
@@ -105,8 +150,8 @@ judgement and belongs to the authors.
 ## A caveat worth keeping in view
 
 This audit was adversarial by construction. It looked for what does not hold; it did not
-look for what does. That the gate is nearly inert **on this scene** does not mean it is
-useless — it means it has not yet been tested where it would matter.
-
-That is the difference between *refuted* and *not yet demonstrated*, and the paper is
-stronger for not conflating them.
+look for what does. The gate section is the case in point. "Nearly inert on this scene" meant *not yet tested
+where it would matter* — so it was tested, and the answer turned out to be a structural
+defect with a measured fix, which is worth more than either the original complaint or the
+original design. The distinction between *refuted* and *not yet demonstrated* is what made
+that experiment worth running rather than assuming either outcome.
