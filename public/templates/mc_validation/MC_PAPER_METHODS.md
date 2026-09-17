@@ -50,7 +50,7 @@ the problem is removed rather than mitigated:
 
 |                     |                                                                                                                                                                                                                                  |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source              | Sentinel-2 **L2A Surface Reflectance**, read from Microsoft Planetary Computer STAC (`sentinel-2-l2a`). The Copernicus Data Space Ecosystem backend is wired as an alternative; both return the same single item for this query. |
+| Source              | Sentinel-2 **L2A Surface Reflectance** via Microsoft Planetary Computer STAC (`sentinel-2-l2a`) — **collection index 8** in the loader, backend `stac`, no credentials. Index 0 (`Sentinel-2 L2A`, SentinelHub) is a *different code path* needing CDSE OAuth; both return the same single item here, but only the STAC path carries the band and scaling fixes this study depends on. |
 | Item ID             | `S2A_MSIL2A_20210902T105031_R051_T31UDQ_20210903T000651`                                                                                                                                                                         |
 | Acquisition         | 2021-09-02 **10:57:29 UTC**, tile **31UDQ**, orbit 51, single image                                                                                                                                                              |
 | Cloud cover         | **0.00 %** over the AOI, 0.00 % tile-wide                                                                                                                                                                                        |
@@ -505,15 +505,28 @@ Once a threshold is chosen (§5.6), the binary mask is scored against ground tru
 
 The evaluation domain is the ground truth dilated by a chosen radius, so every mask
 metric is a function of that radius. Measured on the primary acquisition (N = 118, 3 px
-noise correlation, threshold fixed at the value selected on the wired 15 px corridor):
+noise correlation; each row uses the threshold selected on that same domain):
 
-| domain | pixels | IoU | F1 | precision | recall | MCC | own t* |
-|---|---|---|---|---|---|---|---|
-| GT only | 113 827 | 0.8606 | 0.9251 | 1.0000 | 0.8606 | n/a | 0.02 |
-| + 5 px | 207 230 | 0.8353 | 0.9102 | 0.9667 | 0.8600 | 0.8197 | 0.02 |
-| **+ 15 px (wired)** | 349 074 | **0.8249** | **0.9041** | 0.9574 | 0.8564 | **0.8631** | 0.02 |
-| + 31 px | 552 694 | 0.8135 | 0.8971 | 0.9462 | 0.8529 | 0.8731 | 0.02 |
-| whole scene | 3 853 696 | 0.7333 | 0.8461 | 0.8436 | 0.8487 | 0.8412 | **0.30** |
+| domain | dilation | pixels | IoU | F1 | precision | recall | MCC | own t* |
+|---|---|---|---|---|---|---|---|---|
+| GT only | none | 113 827 | 0.8606 | 0.9251 | 1.0000 | 0.8606 | n/a | 0.02 |
+| probe +5 px | SE 11, ×1 | 207 230 | 0.8353 | 0.9102 | 0.9667 | 0.8600 | 0.8197 | 0.02 |
+| **wired corridor** | **SE 15, ×2** | **338 172** | **0.8185** | **0.9002** | **0.9642** | **0.8441** | **0.8575** | **0.08** |
+| probe +15 px | SE 31, ×1 | 349 074 | 0.8249 | 0.9041 | 0.9574 | 0.8564 | 0.8631 | 0.02 |
+| probe +31 px | SE 63, ×1 | 552 694 | 0.8135 | 0.8971 | 0.9462 | 0.8529 | 0.8731 | 0.02 |
+| whole scene | — | 3 853 696 | 0.7333 | 0.8461 | 0.8436 | 0.8487 | 0.8412 | **0.30** |
+
+> **Read the dilation column, not the label.** The graph's `corr_dilate` node
+> applies a 15 px elliptical element **twice**, which is not the same as applying a
+> 31 px element once: 338 172 px against 349 074 px. An earlier draft of this
+> document labelled the 31×1 probe "as wired" and used its numbers as the headline —
+> a 3 % difference in domain and 0.006 in MCC. **The bold row is what the `.vn`
+> actually produces**; the probe rows exist only to show how the metrics move with
+> the window.
+>
+> The wired row also carries the threshold the graph's own rule selects (`t = 0.08`,
+> plateau median) rather than the raw argmax (`0.02`) used for the probes, which is
+> why its precision is higher and its recall lower than the neighbouring probe.
 
 Three things this settles:
 
@@ -646,6 +659,9 @@ The threshold is selected on 2021-09-02 and applied unchanged to two held-out
 acquisitions — same tile (31UDQ), same orbit (51), so directly comparable. Selection by
 raw argmax in all three cases, for a like-for-like comparison:
 
+Raw-argmax selection on the +15 px probe domain, for a like-for-like comparison across
+dates (the plateau-rule version, on the wired domain, follows below):
+
 | date | held out | IoU @ t\* | MCC @ t\* | own t\* | MCC @ own t\* | transfer cost |
 |---|---|---|---|---|---|---|
 | 2021-09-02 | — | 0.8249 | 0.8631 | 0.02 | 0.8631 | — |
@@ -687,10 +703,10 @@ sample size.
 
 | resampling | n | CI95 on MCC at t* | width |
 |---|---|---|---|
-| pixel (naive) | 349 074 pixels | [0.8569, 0.8604] | 0.0035 |
-| **block, 30 px** | **649 blocks** | **[0.8517, 0.8647]** | **0.0130** |
+| pixel (naive) | 338 172 pixels | [0.8569, 0.8604] | 0.0035 |
+| **block, 30 px** | **642 blocks** | **[0.8504, 0.8635]** | **0.0131** |
 
-**The effective sample size is 649, not 349 074 — 538× smaller — and the honest interval
+**The effective sample size is 642, not 338 172 — 527× smaller — and the honest interval
 is 3.7× wider** than the pixel bootstrap suggests. Every pixel-level interval in the
 earlier literature on this kind of validation is subject to the same correction.
 
@@ -701,7 +717,7 @@ surviving a claim that was never tested.
 
 #### What the rule actually selects on this scene
 
-Measured on the primary acquisition (MCC, step 0.02, wired 15 px corridor):
+Measured on the primary acquisition (MCC, step 0.02, wired corridor, n = 338 172):
 
 | t | 0.02 | 0.10 | 0.30 | 0.50 | 0.70 | 0.90 | 0.98 |
 |---|---|---|---|---|---|---|---|
@@ -778,7 +794,7 @@ A probability field is only worth its cost against something simpler.
 
 | method | IoU | MCC | precision | recall |
 |---|---|---|---|---|
-| **Monte-Carlo ensemble, t = 0.02** | **0.8249** | **0.8631** | — | — |
+| **Monte-Carlo ensemble, wired corridor, t = 0.08** | **0.8185** | **0.8575** | 0.9642 | 0.8441 |
 | Otsu on MNDWI | 0.7947 | 0.8342 | 0.9264 | 0.8483 |
 | AWEIsh > 0 (published rule) | 0.7910 | 0.8406 | 0.9743 | 0.8078 |
 | **same rule, single deterministic run (MC bypassed)** | **0.7911** | **0.8412** | 0.9763 | 0.8066 |
@@ -789,12 +805,12 @@ A probability field is only worth its cost against something simpler.
 | Otsu on NDWI | 0.5741 | 0.5873 | 0.5973 | 0.9365 |
 | Otsu on MBWI | 0.4518 | 0.4230 | 0.4523 | 0.9977 |
 
-**The Monte-Carlo ensemble does win**, by +0.034 IoU and +0.022 MCC over the identical
-rule run once without noise. The mechanism is the regularisation effect of §6: averaging
+**The Monte-Carlo ensemble does win**, by **+0.027 IoU and +0.016 MCC** over the identical
+rule run once without noise (0.8185 / 0.8575 against 0.7911 / 0.8412). The mechanism is the regularisation effect of §6: averaging
 perturbed realisations fills gaps and suppresses speckle.
 
 But the margin must be stated honestly. The nearest baseline is **one line of code** —
-Otsu on MNDWI, 0.7947 IoU — and the ensemble beats it by 0.030 IoU. A reader is entitled
+Otsu on MNDWI, 0.7947 IoU — and the ensemble beats it by **0.024 IoU**. A reader is entitled
 to ask whether 118 realisations are worth three IoU points, and the answer for a
 mask-only application is probably no. **The case for the ensemble is the uncertainty it
 quantifies, not the mask it produces** — which is the same conclusion §4.1 reaches from
@@ -832,6 +848,9 @@ Known caveats the paper should state rather than hide:
 1. **`σ_abs` is the most consequential free parameter, and performance cannot be used to
    choose it.** Sweep on the primary acquisition (N = 118, 3 px correlation, 15 px
    corridor), now that the imagery is in reflectance units:
+
+   *(+15 px probe domain, raw-argmax selection — the sweep compares σ values against
+   each other, so the domain only needs to be held constant across rows.)*
 
    | σ_abs | mean area (px) | sd (px) | graded pixels | mean P | t* | MCC | IoU |
    |---|---|---|---|---|---|---|---|
@@ -893,6 +912,53 @@ Known caveats the paper should state rather than hide:
    whole-scene domain inflates every metric for the reason given in §5.1.
 
 ---
+
+## 6b. Reconciling this document with the graph file
+
+Every number below is a parameter a reader can open in
+`mc_paper_ensemble_uncertainty.vn` and check. It exists because an earlier draft of this
+document *did* disagree with the file, in three places, and the disagreements were only
+found when a reader compared them.
+
+| quantity | value in the `.vn` | where in this document |
+|---|---|---|
+| loader collection | `collection = 8` → *Sentinel-2 L2A (Planetary)*, backend `stac` | §2.1 Source |
+| acquisition window | `2021-09-02` → `2021-09-03` | §2.1 |
+| bands | `B04,B03,B02,B08,B11,B12` | §2.1, §3.2 |
+| σ_abs / σ_rel | `0.005` / `0.015` | §3.1 |
+| σ combination | `sigma_combine = 0` (linear) | §3.1, §6 caveat 6 |
+| noise correlation | `spatial_corr_px = 3` | §3.1, §4.1 |
+| co-registration | `shift_px = 0` (off by default) | §4.2 |
+| seed | `42`, drawn as `seed + tick` | §3.1 |
+| realisations `N` | scalar `118` → `noise.max_ticks` and both accumulators' `target_n` | §4 |
+| index guard | `guard_invalid = true`, `valid_min = −0.05` | §3.2 |
+| AWEIsh / MBWI | `expr1` / `expr2`, unguarded, clamped ±5 | §3.2 |
+| vote | `(1*(B1>0)+…+1*(B4>0)) >= 2` | §3.2, §3.3 |
+| gate | `VOTE_K=2`, `PCT=99`, `MIN_PIX=500`, `FLOOR_MULT=2` | §3.3 |
+| **evaluation corridor** | `corr_dilate`: elliptical SE **15**, **2 iterations** → **338 172 px** | §5.1, §5.4 |
+| small-object filter | `min_area = 258 px` | §5.1 |
+| sweep metric | `sweep_metric = 3` → **MCC** | §5.6 |
+| sweep step / anchor | `0.02` / `0.5` | §5.6 |
+| bootstrap | `sweep_boot = 200`, 30 px blocks | §5.6 |
+| calibration bins | `cal_bins = 12` | §5.5 |
+| std accumulator | `normalize = false` | §4 |
+| boundary tolerance | `boundary_f1.tolerance = 3` px | §5.4 |
+
+Two entries need a word of warning, because both have already misled a reader:
+
+- **`corr_dilate` is 15 × 2, not 31 × 1.** A 15 px structuring element applied twice is
+  not a 31 px element applied once — 338 172 px against 349 074 px, and 0.006 in MCC.
+  Any table row here labelled "probe" uses the single-pass parameterisation and is
+  *not* what the graph produces.
+- **The threshold node's stored value (179 ≈ 0.70) is stale.** It is driven at runtime by
+  `thr_sweep → out_optimal_threshold_255`; the selected value on this scene is
+  `t = 0.08` (= 20/255). A reader inspecting the node without running the graph will see
+  the cached number, not the operative one.
+
+Numbers in this document that are *not* in that table — every metric, every sd, every
+correlation — come from running the graph, not from reading it. They are reproducible by
+opening the template, pressing Fetch on the loader, and running the Monte-Carlo to
+`N = 118`.
 
 ## 7. Claimed contributions
 

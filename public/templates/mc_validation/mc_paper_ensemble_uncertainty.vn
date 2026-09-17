@@ -525,7 +525,7 @@
           "mode": 0,
           "threshold": 179,
           "color_index": 0,
-          "node_note": "Seuil P auto-calibre par Threshold Sweep (median-of-plateau F1). Plus de valeur figee."
+          "node_note": "Seuil PILOTE par thr_sweep (out_optimal_threshold_255). La valeur stockee ici (179 = 0.70) est un reliquat de cache, ECRASEE a l'execution. La regle selectionne t=0.08 (=20/255) sur cette scene: mediane de plateau, l'argmax brut a 0.02 etant rejete comme artefact de falaise."
         },
         "paramPorts": [
           {
@@ -561,7 +561,7 @@
         "params": {
           "bbox": "1.875070,48.886920,2.208878,49.024751",
           "bands": "B04,B03,B02,B08,B11,B12",
-          "collection": "0",
+          "collection": "8",
           "date_start": "2021-09-02",
           "date_end": "2021-09-03",
           "cloud_max": "20",
@@ -569,7 +569,7 @@
           "resolution": "10",
           "fetch": 0,
           "color_index": 3,
-          "node_note": "ESTIMAND: extension d'eau a l'instant de UNE acquisition Sentinel-2. Fenetre 1 jour -> 1 seule image (tuile 31UDQ, 2021-09-02 10:57:29 UTC, orbite 51, 0.00% de nuage sur l'AOI, 100% de couverture) : aucun mosaiquage, donc pas de melange de dates. Annee 2021 choisie car JRC GSW MonthlyHistory s'arrete en 2021-12 et WorldCover v200 est l'annee 2021 -> les DEUX references sont alignees temporellement. Dates de rechange meme AOI/tuile: 2021-06-14, 2021-03-01 (utiliser pour un seuil hors echantillon). ATTENTION: le backend STAC (collections 'Planetary') ignorait le champ Bands et livrait 5 bandes (B12 absent) -> AWEIsh et MBWI tombaient et le stack passait a 2 bandes. Corrige dans geo_copernicus. Il FAUT re-fetcher: la signature de cache depend maintenant des bandes resolues, donc l'ancien .tif 5 bandes n'est plus reutilise."
+          "node_note": "ESTIMAND: extension d'eau a l'instant de UNE acquisition Sentinel-2. Fenetre 1 jour -> 1 seule image (tuile 31UDQ, 2021-09-02 10:57:29 UTC, orbite 51, 0.00% de nuage sur l'AOI, 100% de couverture) : aucun mosaiquage, donc pas de melange de dates. Annee 2021 choisie car JRC GSW MonthlyHistory s'arrete en 2021-12 et WorldCover v200 est l'annee 2021 -> les DEUX references sont alignees temporellement. Dates de rechange meme AOI/tuile: 2021-06-14, 2021-03-01 (utiliser pour un seuil hors echantillon). ATTENTION: le backend STAC (collections 'Planetary') ignorait le champ Bands et livrait 5 bandes (B12 absent) -> AWEIsh et MBWI tombaient et le stack passait a 2 bandes. Corrige dans geo_copernicus. Il FAUT re-fetcher: la signature de cache depend maintenant des bandes resolues, donc l'ancien .tif 5 bandes n'est plus reutilise. BACKEND: collection 8 = 'Sentinel-2 L2A (Planetary)', backend STAC, sans credentials. C'est le backend sur lequel TOUTES les mesures du document ont ete faites, et celui ou vivent les correctifs (champ Bands honore, pas de dB sur l'optique, echelle reflectance). La collection 0 ('Sentinel-2 L2A', backend SentinelHub) est un CHEMIN DE CODE DIFFERENT qui exige des identifiants CDSE: le graphe etait sauvegarde sur 0 alors que les runs utilisaient 8, d'ou un desaccord entre le fichier et le document."
         },
         "minified": false
       },
