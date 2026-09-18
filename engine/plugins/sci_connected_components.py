@@ -7,7 +7,10 @@ from registry import vision_node, NodeProcessor
     label='Connected Components',
     category='segmentation',
     icon='Layers',
-    description="Label and count connected regions (particles, cells, blobs). Measures area and centroid of each object.",
+    description="Label and count connected regions (particles, cells, blobs). "
+                "Thresholds the input itself, filters by area, and measures the "
+                "area and centroid of each object. To only build a marker map for "
+                "Watershed, use 'Connected Components (Markers)' instead.",
     inputs=[{'id': 'image', 'color': 'any'}],
     outputs=[
         {'id': 'main',       'color': 'image',  'label': 'Labeled Image'},

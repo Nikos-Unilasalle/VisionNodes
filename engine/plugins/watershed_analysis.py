@@ -131,10 +131,14 @@ class DistanceTransformNode(NodeProcessor):
 
 @vision_node(
     type_id="feat_connected_components",
-    label="Connected Components",
+    label="Connected Components (Markers)",
     category='segmentation',
     icon="Database",
-    description="Labels connected regions in a binary image. Each region gets a unique ID (Markers).",
+    description="Labels a binary mask into a marker map to seed Watershed. No "
+                "parameters: it labels whatever the mask already contains. For "
+                "counting and measuring objects — with a threshold, area filters "
+                "and per-object areas and centroids — use 'Connected Components' "
+                "instead.",
     inputs=[{"id": "mask", "color": "any"}],
     outputs=[{"id": "main", "color": "image"}, {"id": "markers", "color": "markers"}, {"id": "count", "color": "scalar"}],
     params=[]
