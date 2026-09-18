@@ -134,7 +134,7 @@
         "y": 460
       },
       "data": {
-        "label": "Rotate",
+        "label": "Rotate Image",
         "params": {
           "angle": 332,
           "color_index": 4

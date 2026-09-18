@@ -37,7 +37,7 @@ class FillHolesNode(NodeProcessor):
 
 @vision_node(
     type_id="util_colormap",
-    label="Apply Colormap",
+    label="Colormap (Simple)",
     category='color',
     icon="Palette",
     description="Applies a scientific colormap (Heatmap, Jet, Magma) to a grayscale image.",

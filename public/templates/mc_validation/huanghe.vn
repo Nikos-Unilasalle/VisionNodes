@@ -513,7 +513,7 @@
       },
       "style": {},
       "data": {
-        "label": "Advanced Threshold",
+        "label": "Threshold (Advanced)",
         "params": {
           "mode": 0,
           "threshold": 179,

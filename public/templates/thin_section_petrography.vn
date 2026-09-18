@@ -62,7 +62,7 @@
         "y": 520
       },
       "data": {
-        "label": "FastSAM Grain Segmentation",
+        "label": "AI Segmenter (FastSAM)",
         "params": {
           "imgsz": 2,
           "conf": 0.06,
@@ -147,7 +147,7 @@
         "y": 1100
       },
       "data": {
-        "label": "Grain Size Histogram",
+        "label": "Grain Histogram",
         "params": {
           "bins": 30,
           "metric": 0,
@@ -473,7 +473,7 @@
                 "y": -220
               },
               "data": {
-                "label": "Group IN",
+                "label": "Group Input",
                 "params": {},
                 "ports": [
                   {
@@ -509,7 +509,7 @@
                 "y": -220
               },
               "data": {
-                "label": "Group OUT",
+                "label": "Group Output",
                 "params": {},
                 "ports": [
                   {
@@ -801,7 +801,7 @@
       },
       "style": {},
       "data": {
-        "label": "Blend Modes",
+        "label": "Blend",
         "params": {
           "mode": 4
         }
@@ -824,7 +824,7 @@
       },
       "style": {},
       "data": {
-        "label": "Blend Modes",
+        "label": "Blend",
         "params": {
           "mode": 1
         }
