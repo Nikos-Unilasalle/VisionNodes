@@ -2,7 +2,7 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="logic_compare",
-    label="Data Compare",
+    label="Compare",
     category='logic',
     icon="Layers",
     description="Compares two numerical values using a selected operator (>, <, ==, etc.) and returns true or false.",

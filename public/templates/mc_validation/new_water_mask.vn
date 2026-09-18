@@ -686,7 +686,7 @@
       },
       "style": {},
       "data": {
-        "label": "Advanced Morphology",
+        "label": "Morphology (Advanced)",
         "params": {
           "iterations": 2,
           "operation": 2,
@@ -1211,7 +1211,7 @@
                 "y": 2060
               },
               "data": {
-                "label": "Group IN",
+                "label": "Group Input",
                 "params": {},
                 "ports": [
                   {
@@ -1230,7 +1230,7 @@
                 "y": 2060
               },
               "data": {
-                "label": "Group OUT",
+                "label": "Group Output",
                 "params": {},
                 "ports": [
                   {

@@ -21,7 +21,7 @@ _IDS   = [i for _, i in _COLORMAPS]
 
 @vision_node(
     type_id='sci_colormap',
-    label='Colormap / LUT',
+    label='Colormap',
     category='color',
     icon='Palette',
     description="Apply scientific colormap (LUT) to grayscale image. Converts intensity to false color for visualization.",

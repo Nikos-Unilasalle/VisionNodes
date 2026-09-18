@@ -4,7 +4,7 @@ from registry import vision_node, NodeProcessor
 
 @vision_node(
     type_id='filter_low_pass',
-    label='Filter: Low Pass',
+    label='Low Pass',
     category='image',
     icon='Waves',
     description="Applies a Gaussian low-pass filter to smooth the image and reduce noise.",

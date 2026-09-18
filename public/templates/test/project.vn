@@ -206,7 +206,7 @@
       },
       "style": {},
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "model": 2,
           "prompt_mode": 3

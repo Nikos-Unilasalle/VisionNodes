@@ -33,7 +33,7 @@
       },
       "style": {},
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "hf_token": "",
           "model": 2,
@@ -44,7 +44,7 @@
         },
         "schema": {
           "type": "sam_segmenter",
-          "label": "SAM Segmenter",
+          "label": "AI Segmenter (SAM)",
           "category": "detect",
           "icon": "Scan",
           "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",
@@ -269,7 +269,7 @@
       },
       "style": {},
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "hf_token": "",
           "model": 2,
@@ -280,7 +280,7 @@
         },
         "schema": {
           "type": "sam_segmenter",
-          "label": "SAM Segmenter",
+          "label": "AI Segmenter (SAM)",
           "category": "detect",
           "icon": "Scan",
           "description": "Interactive AI segmentation powered by SAM 2 (Segment Anything Model 2, Meta). Draw a bounding box or place a point to segment any object with pixel-perfect precision. Supports four model sizes from Tiny (~40 MB) to Large (~900 MB). Models download automatically on first use.",

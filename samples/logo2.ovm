@@ -1,0 +1,1246 @@
+{
+  "canvases": [
+    {
+      "nodes": [
+        {
+          "id": "output",
+          "type": "render",
+          "position": {
+            "x": 2320,
+            "y": 92
+          },
+          "params": {}
+        },
+        {
+          "id": "ce456c4d-3b9a-4da8-a284-1fae3cf4d853",
+          "type": "curve/svg_solid",
+          "position": {
+            "x": 1053,
+            "y": -4
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "filePath": "/Users/nikos/Desktop/logo.svg",
+            "svgScale": 0.001,
+            "normalize": 0,
+            "depth": 100,
+            "bevelEnabled": 1,
+            "bevelSize": 0.4,
+            "bevelThickness": 0.02,
+            "bevelSegments": 5,
+            "curveSegments": 24,
+            "color": 16777215,
+            "emissive": 0,
+            "emissiveIntensity": 1,
+            "shadeless": 0,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": 0,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0
+          }
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "type": "curve/svg",
+          "position": {
+            "x": 248,
+            "y": 733
+          },
+          "params": {
+            "filePath": "/Users/nikos/Desktop/logo.svg",
+            "scale": 0.001,
+            "normalize": false
+          }
+        },
+        {
+          "id": "7f84340a-f861-4aab-9e6e-8c61479210ce",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1048,
+            "y": 276
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.162,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "c0f74fc3-1bc8-4332-9f2c-cea46c433450",
+          "type": "structure/array",
+          "position": {
+            "x": 1296,
+            "y": 263
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "468855f8-48c6-4e08-b99b-1ff623c09793",
+          "type": "list/get-item",
+          "position": {
+            "x": 767,
+            "y": 450
+          },
+          "params": {
+            "index": 0
+          }
+        },
+        {
+          "id": "5803a3b8-3f3c-4e11-a142-6fc9b88cd57d",
+          "type": "list/get-item",
+          "position": {
+            "x": 764,
+            "y": 543
+          },
+          "params": {
+            "index": 1
+          }
+        },
+        {
+          "id": "04220230-1f15-46b8-831a-5d9618704c8b",
+          "type": "list/get-item",
+          "position": {
+            "x": 767,
+            "y": 640
+          },
+          "params": {
+            "index": 2
+          }
+        },
+        {
+          "id": "e6f01b1d-b108-4031-91b2-bcdf4d253f19",
+          "type": "list/get-item",
+          "position": {
+            "x": 761,
+            "y": 740
+          },
+          "params": {
+            "index": 3
+          }
+        },
+        {
+          "id": "2bf701ab-9f49-4258-bd93-3839189e62c1",
+          "type": "list/get-item",
+          "position": {
+            "x": 759,
+            "y": 844
+          },
+          "params": {
+            "index": 4
+          }
+        },
+        {
+          "id": "ad93d0fb-a876-4136-9df9-a693791f82eb",
+          "type": "list/get-item",
+          "position": {
+            "x": 757,
+            "y": 942
+          },
+          "params": {
+            "index": 5
+          }
+        },
+        {
+          "id": "68631a92-ce45-4dda-901d-63e8dafc20d4",
+          "type": "list/get-item",
+          "position": {
+            "x": 764,
+            "y": 1046
+          },
+          "params": {
+            "index": 6
+          }
+        },
+        {
+          "id": "e9d08e7c-0cfa-40eb-a5a4-7232c2b1391a",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1048,
+            "y": 572
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.006,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "ac6867b2-695f-4d15-964e-6cee88007d81",
+          "type": "structure/array",
+          "position": {
+            "x": 1296,
+            "y": 579
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "d377f66d-a232-4cf1-a881-511b7f1f5b93",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1557,
+            "y": 323
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.003,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "710eb98d-9ee4-463c-87ce-99b4658e45ee",
+          "type": "structure/array",
+          "position": {
+            "x": 1801,
+            "y": 325
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "981dd4a0-2ab2-4a13-86f8-cef22ede9354",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1027,
+            "y": 884
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.005,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "9808933b-c619-444e-a5af-794a205accc4",
+          "type": "structure/array",
+          "position": {
+            "x": 1277,
+            "y": 867
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "5a7c7ab0-e65c-42a5-b33c-b8f35d79b92f",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1550,
+            "y": 616
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.005,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "98a8a528-34b3-4644-b41a-dcae6755cd85",
+          "type": "structure/array",
+          "position": {
+            "x": 1942,
+            "y": 631
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "8aa2c4e0-ff36-4d87-9c2b-76b07f73023d",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1469,
+            "y": 894
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.003,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "87a39e29-1e4e-47d8-97bf-98d663b1d251",
+          "type": "structure/array",
+          "position": {
+            "x": 1707,
+            "y": 917
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "6e80566b-0706-45b1-bb67-fefa948218d4",
+          "type": "curve/to_mesh",
+          "position": {
+            "x": 1523,
+            "y": 1215
+          },
+          "params": {
+            "visible": 1,
+            "location": {
+              "x": 0,
+              "y": 0,
+              "z": -0.016567932637149813
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            },
+            "thickness": 0.01,
+            "startProgress": 0,
+            "endProgress": 1,
+            "tubularSegments": 152,
+            "radialSegments": 12,
+            "color": 16758532,
+            "emissive": 15381256,
+            "emissiveIntensity": 1,
+            "shadeless": false,
+            "roughness": 0.4,
+            "metalness": 0.1,
+            "wireframe": false,
+            "opacity": 1,
+            "uvScaleX": 1,
+            "uvScaleY": 1,
+            "uvOffsetX": 0,
+            "uvOffsetY": 0,
+            "profile": [
+              {
+                "x": 0,
+                "y": 0.1
+              },
+              {
+                "x": 0.35,
+                "y": 0.9
+              },
+              {
+                "x": 1,
+                "y": 0.2
+              }
+            ],
+            "pointsList": [
+              {
+                "x": -2,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "x": -0.5,
+                "y": 1.5,
+                "z": 0
+              },
+              {
+                "x": 0.5,
+                "y": -1.5,
+                "z": 0
+              },
+              {
+                "x": 2,
+                "y": 0,
+                "z": 0
+              }
+            ],
+            "doubleSided": true
+          }
+        },
+        {
+          "id": "4c2a777f-802c-4a19-b228-e645a0949a57",
+          "type": "structure/array",
+          "position": {
+            "x": 1747,
+            "y": 1221
+          },
+          "params": {
+            "visible": 1,
+            "count": 2,
+            "mode": "linear",
+            "axis": "Z",
+            "spacing": 0.12,
+            "radius": 3,
+            "plane": "XZ",
+            "totalAngle": 360,
+            "orient": true,
+            "gridRows": 3,
+            "gridCols": 3,
+            "countX": 3,
+            "countY": 3,
+            "countZ": 3,
+            "spacingX": 2,
+            "spacingY": 2,
+            "spacingZ": 2,
+            "centerGrid": true
+          }
+        },
+        {
+          "id": "b8d548d8-48ff-4c73-87c3-6eb8fee396b7",
+          "type": "calibration/camera",
+          "position": {
+            "x": 1468,
+            "y": -10
+          },
+          "params": {
+            "location": {
+              "x": 0.4158831962372489,
+              "y": -0.2602054725386673,
+              "z": 1.3579746532656998
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "useTarget": false,
+            "target": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "up": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            },
+            "fov": 50,
+            "active": true,
+            "mode": "manual",
+            "projectionType": "perspective",
+            "calibrationPicks": {
+              "corner-floor": {
+                "x": 0.5,
+                "y": 0.78
+              },
+              "corner-ceiling": {
+                "x": 0.5,
+                "y": 0.22
+              },
+              "wallA-floor": {
+                "x": 0.92,
+                "y": 0.88
+              },
+              "wallA-ceiling": {
+                "x": 0.92,
+                "y": 0.12
+              },
+              "wallB-floor": {
+                "x": 0.08,
+                "y": 0.88
+              },
+              "wallB-ceiling": {
+                "x": 0.08,
+                "y": 0.12
+              }
+            }
+          }
+        },
+        {
+          "id": "f6e21fba-4bff-4858-a77c-cee305970f8f",
+          "type": "texture/image",
+          "position": {
+            "x": 692,
+            "y": 29
+          },
+          "params": {
+            "filePath": "/Users/nikos/Desktop/VNStudio/samples/wall.jpg",
+            "wrapS": "repeat",
+            "wrapT": "repeat"
+          }
+        },
+        {
+          "id": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "type": "structure/merge",
+          "position": {
+            "x": 2382,
+            "y": 587
+          },
+          "params": {
+            "visible": 1
+          }
+        }
+      ],
+      "connections": [
+        {
+          "id": "7f84340a-f861-4aab-9e6e-8c61479210ce.geometry->c0f74fc3-1bc8-4332-9f2c-cea46c433450.geometry",
+          "fromNode": "7f84340a-f861-4aab-9e6e-8c61479210ce",
+          "fromSocket": "geometry",
+          "toNode": "c0f74fc3-1bc8-4332-9f2c-cea46c433450",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->468855f8-48c6-4e08-b99b-1ff623c09793.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "468855f8-48c6-4e08-b99b-1ff623c09793",
+          "toSocket": "list"
+        },
+        {
+          "id": "468855f8-48c6-4e08-b99b-1ff623c09793.item->7f84340a-f861-4aab-9e6e-8c61479210ce.curve",
+          "fromNode": "468855f8-48c6-4e08-b99b-1ff623c09793",
+          "fromSocket": "item",
+          "toNode": "7f84340a-f861-4aab-9e6e-8c61479210ce",
+          "toSocket": "curve"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->5803a3b8-3f3c-4e11-a142-6fc9b88cd57d.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "5803a3b8-3f3c-4e11-a142-6fc9b88cd57d",
+          "toSocket": "list"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->04220230-1f15-46b8-831a-5d9618704c8b.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "04220230-1f15-46b8-831a-5d9618704c8b",
+          "toSocket": "list"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->e6f01b1d-b108-4031-91b2-bcdf4d253f19.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "e6f01b1d-b108-4031-91b2-bcdf4d253f19",
+          "toSocket": "list"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->2bf701ab-9f49-4258-bd93-3839189e62c1.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "2bf701ab-9f49-4258-bd93-3839189e62c1",
+          "toSocket": "list"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->ad93d0fb-a876-4136-9df9-a693791f82eb.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "ad93d0fb-a876-4136-9df9-a693791f82eb",
+          "toSocket": "list"
+        },
+        {
+          "id": "a34afc0c-bd3e-4451-ab3e-fd4db127f418.curves->68631a92-ce45-4dda-901d-63e8dafc20d4.list",
+          "fromNode": "a34afc0c-bd3e-4451-ab3e-fd4db127f418",
+          "fromSocket": "curves",
+          "toNode": "68631a92-ce45-4dda-901d-63e8dafc20d4",
+          "toSocket": "list"
+        },
+        {
+          "id": "e9d08e7c-0cfa-40eb-a5a4-7232c2b1391a.geometry->ac6867b2-695f-4d15-964e-6cee88007d81.geometry",
+          "fromNode": "e9d08e7c-0cfa-40eb-a5a4-7232c2b1391a",
+          "fromSocket": "geometry",
+          "toNode": "ac6867b2-695f-4d15-964e-6cee88007d81",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "5803a3b8-3f3c-4e11-a142-6fc9b88cd57d.item->e9d08e7c-0cfa-40eb-a5a4-7232c2b1391a.curve",
+          "fromNode": "5803a3b8-3f3c-4e11-a142-6fc9b88cd57d",
+          "fromSocket": "item",
+          "toNode": "e9d08e7c-0cfa-40eb-a5a4-7232c2b1391a",
+          "toSocket": "curve"
+        },
+        {
+          "id": "d377f66d-a232-4cf1-a881-511b7f1f5b93.geometry->710eb98d-9ee4-463c-87ce-99b4658e45ee.geometry",
+          "fromNode": "d377f66d-a232-4cf1-a881-511b7f1f5b93",
+          "fromSocket": "geometry",
+          "toNode": "710eb98d-9ee4-463c-87ce-99b4658e45ee",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "04220230-1f15-46b8-831a-5d9618704c8b.item->d377f66d-a232-4cf1-a881-511b7f1f5b93.curve",
+          "fromNode": "04220230-1f15-46b8-831a-5d9618704c8b",
+          "fromSocket": "item",
+          "toNode": "d377f66d-a232-4cf1-a881-511b7f1f5b93",
+          "toSocket": "curve"
+        },
+        {
+          "id": "981dd4a0-2ab2-4a13-86f8-cef22ede9354.geometry->9808933b-c619-444e-a5af-794a205accc4.geometry",
+          "fromNode": "981dd4a0-2ab2-4a13-86f8-cef22ede9354",
+          "fromSocket": "geometry",
+          "toNode": "9808933b-c619-444e-a5af-794a205accc4",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "5a7c7ab0-e65c-42a5-b33c-b8f35d79b92f.geometry->98a8a528-34b3-4644-b41a-dcae6755cd85.geometry",
+          "fromNode": "5a7c7ab0-e65c-42a5-b33c-b8f35d79b92f",
+          "fromSocket": "geometry",
+          "toNode": "98a8a528-34b3-4644-b41a-dcae6755cd85",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "e6f01b1d-b108-4031-91b2-bcdf4d253f19.item->5a7c7ab0-e65c-42a5-b33c-b8f35d79b92f.curve",
+          "fromNode": "e6f01b1d-b108-4031-91b2-bcdf4d253f19",
+          "fromSocket": "item",
+          "toNode": "5a7c7ab0-e65c-42a5-b33c-b8f35d79b92f",
+          "toSocket": "curve"
+        },
+        {
+          "id": "2bf701ab-9f49-4258-bd93-3839189e62c1.item->981dd4a0-2ab2-4a13-86f8-cef22ede9354.curve",
+          "fromNode": "2bf701ab-9f49-4258-bd93-3839189e62c1",
+          "fromSocket": "item",
+          "toNode": "981dd4a0-2ab2-4a13-86f8-cef22ede9354",
+          "toSocket": "curve"
+        },
+        {
+          "id": "8aa2c4e0-ff36-4d87-9c2b-76b07f73023d.geometry->87a39e29-1e4e-47d8-97bf-98d663b1d251.geometry",
+          "fromNode": "8aa2c4e0-ff36-4d87-9c2b-76b07f73023d",
+          "fromSocket": "geometry",
+          "toNode": "87a39e29-1e4e-47d8-97bf-98d663b1d251",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "68631a92-ce45-4dda-901d-63e8dafc20d4.item->6e80566b-0706-45b1-bb67-fefa948218d4.curve",
+          "fromNode": "68631a92-ce45-4dda-901d-63e8dafc20d4",
+          "fromSocket": "item",
+          "toNode": "6e80566b-0706-45b1-bb67-fefa948218d4",
+          "toSocket": "curve"
+        },
+        {
+          "id": "ad93d0fb-a876-4136-9df9-a693791f82eb.item->8aa2c4e0-ff36-4d87-9c2b-76b07f73023d.curve",
+          "fromNode": "ad93d0fb-a876-4136-9df9-a693791f82eb",
+          "fromSocket": "item",
+          "toNode": "8aa2c4e0-ff36-4d87-9c2b-76b07f73023d",
+          "toSocket": "curve"
+        },
+        {
+          "id": "6e80566b-0706-45b1-bb67-fefa948218d4.geometry->4c2a777f-802c-4a19-b228-e645a0949a57.geometry",
+          "fromNode": "6e80566b-0706-45b1-bb67-fefa948218d4",
+          "fromSocket": "geometry",
+          "toNode": "4c2a777f-802c-4a19-b228-e645a0949a57",
+          "toSocket": "geometry"
+        },
+        {
+          "id": "f6e21fba-4bff-4858-a77c-cee305970f8f.texture->ce456c4d-3b9a-4da8-a284-1fae3cf4d853.texture",
+          "fromNode": "f6e21fba-4bff-4858-a77c-cee305970f8f",
+          "fromSocket": "texture",
+          "toNode": "ce456c4d-3b9a-4da8-a284-1fae3cf4d853",
+          "toSocket": "texture"
+        },
+        {
+          "id": "c0f74fc3-1bc8-4332-9f2c-cea46c433450.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in0",
+          "fromNode": "c0f74fc3-1bc8-4332-9f2c-cea46c433450",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in0"
+        },
+        {
+          "id": "710eb98d-9ee4-463c-87ce-99b4658e45ee.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in1",
+          "fromNode": "710eb98d-9ee4-463c-87ce-99b4658e45ee",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in1"
+        },
+        {
+          "id": "ac6867b2-695f-4d15-964e-6cee88007d81.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in2",
+          "fromNode": "ac6867b2-695f-4d15-964e-6cee88007d81",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in2"
+        },
+        {
+          "id": "98a8a528-34b3-4644-b41a-dcae6755cd85.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in3",
+          "fromNode": "98a8a528-34b3-4644-b41a-dcae6755cd85",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in3"
+        },
+        {
+          "id": "981dd4a0-2ab2-4a13-86f8-cef22ede9354.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in4",
+          "fromNode": "981dd4a0-2ab2-4a13-86f8-cef22ede9354",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in4"
+        },
+        {
+          "id": "87a39e29-1e4e-47d8-97bf-98d663b1d251.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in5",
+          "fromNode": "87a39e29-1e4e-47d8-97bf-98d663b1d251",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in5"
+        },
+        {
+          "id": "4c2a777f-802c-4a19-b228-e645a0949a57.geometry->c6ec484d-2697-41d3-a2ce-562e3ce3f525.in6",
+          "fromNode": "4c2a777f-802c-4a19-b228-e645a0949a57",
+          "fromSocket": "geometry",
+          "toNode": "c6ec484d-2697-41d3-a2ce-562e3ce3f525",
+          "toSocket": "in6"
+        }
+      ],
+      "keyframes": {
+        "7f84340a-f861-4aab-9e6e-8c61479210ce": {
+          "thickness": [
+            {
+              "frame": 71,
+              "value": 0.162
+            },
+            {
+              "frame": 98,
+              "value": 0.002
+            }
+          ]
+        }
+      },
+      "markers": []
+    },
+    {
+      "nodes": [],
+      "connections": [],
+      "keyframes": {},
+      "markers": []
+    },
+    {
+      "nodes": [],
+      "connections": [],
+      "keyframes": {},
+      "markers": []
+    },
+    {
+      "nodes": [],
+      "connections": [],
+      "keyframes": {},
+      "markers": []
+    },
+    {
+      "nodes": [],
+      "connections": [],
+      "keyframes": {},
+      "markers": []
+    },
+    {
+      "nodes": [],
+      "connections": [],
+      "keyframes": {},
+      "markers": []
+    }
+  ],
+  "activeCanvas": 0
+}

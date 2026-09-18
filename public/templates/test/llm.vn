@@ -162,7 +162,7 @@
         "y": 280
       },
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "hf_token": "",
           "model": 1,

@@ -94,7 +94,7 @@
       },
       "style": {},
       "data": {
-        "label": "Advanced Threshold",
+        "label": "Threshold (Advanced)",
         "params": {
           "mode": 1,
           "color_index": 1
@@ -209,7 +209,7 @@
       },
       "style": {},
       "data": {
-        "label": "Blend Modes",
+        "label": "Blend",
         "params": {
           "mode": 7,
           "opacity": 75,

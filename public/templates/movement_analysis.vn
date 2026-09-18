@@ -274,7 +274,7 @@
                 "y": 120
               },
               "data": {
-                "label": "Group IN",
+                "label": "Group Input",
                 "params": {},
                 "ports": [
                   {
@@ -293,7 +293,7 @@
                 "y": 120
               },
               "data": {
-                "label": "Group OUT",
+                "label": "Group Output",
                 "params": {},
                 "ports": [
                   {
@@ -450,7 +450,7 @@
                 "y": 120
               },
               "data": {
-                "label": "Group IN",
+                "label": "Group Input",
                 "params": {},
                 "ports": [
                   {
@@ -469,7 +469,7 @@
                 "y": 120
               },
               "data": {
-                "label": "Group OUT",
+                "label": "Group Output",
                 "params": {},
                 "ports": [
                   {

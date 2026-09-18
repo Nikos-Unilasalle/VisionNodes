@@ -233,7 +233,7 @@
         "y": 680
       },
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "hf_token": "",
           "model": 3,
@@ -519,7 +519,7 @@
       },
       "style": {},
       "data": {
-        "label": "Blend Modes",
+        "label": "Blend",
         "params": {}
       },
       "width": 208,

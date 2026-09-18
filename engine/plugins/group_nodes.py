@@ -20,7 +20,7 @@ class GroupNodeProcessor(NodeProcessor):
 
 @vision_node(
     type_id='group_input',
-    label='Group IN',
+    label='Group Input',
     category='canvas',
     icon='LogIn',
     description='Relay: group input ports into the subgraph.',
@@ -36,7 +36,7 @@ class GroupInputProcessor(NodeProcessor):
 
 @vision_node(
     type_id='group_output',
-    label='Group OUT',
+    label='Group Output',
     category='canvas',
     icon='LogOut',
     description='Relay: inner subgraph outputs to group output ports.',

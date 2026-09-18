@@ -227,7 +227,7 @@
       },
       "style": {},
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "prompt_mode": 1
         }
@@ -499,7 +499,7 @@
         "y": 180
       },
       "data": {
-        "label": "SAM Segmenter",
+        "label": "AI Segmenter (SAM)",
         "params": {
           "source_id": "node-1779080971248-gr4vzq633",
           "source_type": "sam_segmenter"

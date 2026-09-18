@@ -46,7 +46,7 @@ def _resolve_unit(regions, dim):
 
 @vision_node(
     type_id='geo_grain_histogram',
-    label='Grain Size Histogram',
+    label='Grain Histogram',
     category='geology',
     icon='BarChart2',
     description=(
