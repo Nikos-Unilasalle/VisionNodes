@@ -8,7 +8,7 @@ import numpy as np
     category='mask',
     icon='Filter',
     description="Removes blobs based on area range from a binary mask. Eliminates noise or isolates specific objects.",
-    inputs=[{'id': 'mask', 'color': 'mask'}],
+    inputs=[{'id': 'mask', 'color': 'mask'}, {'id': 'min_area', 'color': 'scalar', 'label': 'Min Area'}],
     outputs=[
         {'id': 'main',  'color': 'mask',  'label': 'Filtered Mask'},
         {'id': 'mask',  'color': 'mask',  'label': 'Mask (Legacy)'},
@@ -36,7 +36,7 @@ class BlobFilterNode(NodeProcessor):
         if mask is None:
             return {'main': None, 'mask': None, 'count': 0}
 
-        min_area     = int(params.get('min_area', 100))
+        min_area     = int(round(float(params.get('min_area', 100))))
         max_area     = int(params.get('max_area', 0))
         circ_min     = float(params.get('circ_min', 0.0))
         circ_max     = float(params.get('circ_max', 0.0))    # 0 = off

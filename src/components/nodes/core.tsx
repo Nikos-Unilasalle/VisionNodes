@@ -22,7 +22,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { MarkdownToolbar } from '../MarkdownToolbar';
 import { getIcon, StyledHandle, BaseNode, HANDLE_COLORS, NodeColorContext, useNodeColor, NodeColorProvider, PALETTES } from './_shared';
-import { ScientificPlotterNode, PlotterProNode, ScientificHistogramNode, ScientificStatsNode, RootAnatomyReportNodeUI, TurbidityStatsNodeUI } from './scientific';
+import { ScientificPlotterNode, PlotterProNode, ScientificHistogramNode, ScientificStatsNode, RootAnatomyReportNodeUI, ReportPanelNodeUI, TurbidityStatsNodeUI } from './scientific';
 import { DrawTextNode } from './tools';
 import { UtilCSVExportNode, DFCollectNode } from './data';
 import { GeoTIFFReaderNode, GeoEarthEngineNode, GeoBandInfoNode, GeoLandCoverNode, GeoSedimentLoaderNode, GeoIndexNode, RasterColorizerNode } from './geo';
@@ -248,6 +248,7 @@ export const GenericCustomNode = memo((props: any) => {
   if (t === 'geo_sediment_loader') return <GeoSedimentLoaderNode {...props} />;
   if (t === 'geo_index') return <GeoIndexNode {...props} />;
   if (t === 'root_anatomy_report') return <RootAnatomyReportNodeUI {...props} />;
+  if (t === 'dict_report_panel') return <ReportPanelNodeUI {...props} />;
   if (t === 'geo_turbidity_stats') return <TurbidityStatsNodeUI {...props} />;
   if (t === 'ml_knn_classifier')  return <MLClassifierNodeUI {...props} />;
   if (t === 'ml_svm_classifier')  return <MLClassifierNodeUI {...props} />;
