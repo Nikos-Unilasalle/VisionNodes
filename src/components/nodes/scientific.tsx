@@ -549,7 +549,7 @@ export const ScientificCalibrationNode = memo(({ selected, data }: any) => {
         selected={selected} 
         data={data} 
         color="indigo" 
-        inputs={[{id: 'input', color: 'any', label: 'Pixels'}]} 
+        inputs={[{id: 'input', color: 'any', label: 'Pixels'}, {id: 'factor', color: 'scalar', label: 'Px / Unit'}]}
         outputs={[{id: 'main', color: 'any', label: 'Physical'}]}
     >
       <div className="flex flex-col items-center justify-center py-4 px-2 bg-black/20 rounded-lg border border-white/5 mt-1">
@@ -818,6 +818,75 @@ export const RootAnatomyReportNodeUI = ({ data, selected }: { data: any, selecte
              <BarChart2 size={10} />
           </button>
        </div>
+    </BaseNode>
+  );
+};
+
+
+interface ReportGroup { label: string; keys: string[] }
+
+const REPORT_PANEL_COLORS = [
+  { text: 'text-blue-400',    bg: 'bg-blue-500/5' },
+  { text: 'text-emerald-400', bg: 'bg-emerald-500/5' },
+  { text: 'text-purple-400',  bg: 'bg-purple-500/5' },
+  { text: 'text-amber-400',   bg: 'bg-amber-500/5' },
+  { text: 'text-rose-400',    bg: 'bg-rose-500/5' },
+  { text: 'text-cyan-400',    bg: 'bg-cyan-500/5' },
+];
+const REPORT_COMPACT_KEYS_PER_GROUP = 4;
+
+const formatReportValue = (v: unknown, digits: number): string => {
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) return '—';
+    if (Number.isInteger(v)) return String(v);
+    return Math.abs(v) >= 100 ? v.toFixed(1) : v.toPrecision(digits);
+  }
+  if (v === null || v === undefined || v === '') return '—';
+  return String(v);
+};
+
+/** Generic grouped measurement panel for dict_report_panel (any dict, groups from params). */
+export const ReportPanelNodeUI = ({ data, selected }: { data: any; selected: boolean }) => {
+  const nodeId = useNodeId();
+  const nd = useNodeData(nodeId);
+  const [expanded, setExpanded] = React.useState(false);
+  const report: Record<string, unknown> = nd?.report || {};
+  const groups: ReportGroup[] = nd?.groups?.length ? nd.groups : [{ label: 'Values', keys: Object.keys(report) }];
+  const digits: number = typeof nd?.digits === 'number' ? nd.digits : 4;
+  const title: string = nd?.title || data?.params?.title || 'Report';
+
+  return (
+    <BaseNode title={title} icon={BarChart2} selected={selected} data={data} color="accent"
+      inputs={[{ id: 'dict', color: 'dict' }, { id: 'dict_2', color: 'dict' }]}
+      outputs={[{ id: 'report', color: 'dict' }]} width={expanded ? '45rem' : '20rem'}>
+      <div className="flex flex-col gap-3 mt-2 w-full">
+        <div className={expanded ? 'grid grid-cols-2 gap-4' : 'flex flex-col gap-2'}>
+          {groups.map((g, i) => {
+            const c = REPORT_PANEL_COLORS[i % REPORT_PANEL_COLORS.length];
+            const keys = expanded ? g.keys : g.keys.slice(0, REPORT_COMPACT_KEYS_PER_GROUP);
+            return (
+              <div key={g.label} className={`${expanded ? 'p-3' : 'p-2'} rounded-xl border border-white/5 ${c.bg}`}>
+                <h5 className={`text-[8px] font-black uppercase tracking-wider ${c.text} mb-2 border-b border-white/10 pb-1`}>{g.label}</h5>
+                <div className={expanded ? 'space-y-1.5' : 'grid grid-cols-2 gap-2'}>
+                  {keys.map(k => (
+                    <div key={k} className={expanded ? 'flex justify-between items-center text-[10px]' : 'flex flex-col'}>
+                      <span className="text-gray-400 text-[8px] truncate">{k}</span>
+                      <span className={`font-mono font-bold ${c.text} ${expanded ? 'bg-black/20 px-1.5 py-0.5 rounded border border-white/5' : 'text-[11px]'}`}>
+                        {formatReportValue(report[k], digits)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={() => setExpanded(!expanded)}
+          className="w-full py-2 mt-1 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-gray-400 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all flex items-center justify-center gap-2">
+          {expanded ? 'Collapse View' : 'Full Report'}
+          <BarChart2 size={10} />
+        </button>
+      </div>
     </BaseNode>
   );
 };
