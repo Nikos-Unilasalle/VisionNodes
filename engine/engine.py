@@ -364,7 +364,13 @@ class VisionEngine:
         s_ids = topological_sort(flat_nodes, flat_edges)
         self.sorted_nodes = [nodes_dict[nid] for nid in s_ids if nid in nodes_dict]
         active_nids = set(nodes_dict.keys())
-        self.node_instances = {nid: inst for nid, inst in self.node_instances.items() if nid in active_nids}
+        # Keep an instance only if its node still exists AND still has the same type: a node id
+        # reused with another type (template reload / regeneration) must not run the old code.
+        retyped = {nid for nid, inst in self.node_instances.items()
+                   if nid in active_nids and type(inst) is not self.registry.get(nodes_dict[nid].get('type'))}
+        self.node_instances = {nid: inst for nid, inst in self.node_instances.items()
+                               if nid in active_nids and nid not in retyped}
+        self._node_cache = {nid: v for nid, v in self._node_cache.items() if nid not in retyped}
         # Clear cache when edge topology changes (new file load, reconnect) so stale results
         # from a previous session don't mask newly-valid outputs.
         edge_sig = str(sorted((e.get('source',''), e.get('sourceHandle',''), e.get('target',''), e.get('targetHandle','')) for e in flat_edges))
