@@ -1325,10 +1325,10 @@
         "label": "Zone Region Stats",
         "params": {
           "min_area": 30,
-          "max_area": 0,
-          "ignore_label": 1,
+          "max_area": 50000,
+          "ignore_label": -99,
           "color_index": 6,
-          "node_note": "Count and mean size per band (CSic / CSmc / CSoc). Ignore Label 1 = watershed background."
+          "node_note": "Count and mean size per band (CSic / CSmc / CSoc). Max Area drops the watershed background region (label numbering differs between engines, its size does not)."
         },
         "userLabel": "Cells per Zone"
       }
