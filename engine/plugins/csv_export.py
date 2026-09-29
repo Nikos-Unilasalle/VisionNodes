@@ -5,6 +5,17 @@ import os
 
 _SCALAR = (int, float, str, bool, type(None))
 
+def _flatten_dicts(inputs):
+    """Expand dict inputs into one column per scalar entry (e.g. a report dict)."""
+    flat = {}
+    for key, value in inputs.items():
+        if isinstance(value, dict):
+            flat.update({str(k): v for k, v in value.items() if isinstance(v, _SCALAR)})
+        else:
+            flat[key] = value
+    return flat
+
+
 @vision_node(
     type_id='util_csv_export',
     label='CSV Export',
@@ -91,6 +102,7 @@ class CSVExportNode(NodeProcessor):
             print(f"CSV Export: write error: {e}")
 
     def process(self, inputs, params):
+        inputs   = _flatten_dicts(inputs)
         record   = params.get('record', False)
         snapshot = params.get('snapshot', 0)
 

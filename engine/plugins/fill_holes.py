@@ -84,11 +84,10 @@ class FillHolesNode(NodeProcessor):
             # Invert, find small regions, fill them back
             inverted = cv2.bitwise_not(binary)
             n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(inverted, connectivity=4)
+            small = stats[:, cv2.CC_STAT_AREA] <= max_hole_px
+            small[0] = False
             filled = binary.copy()
-            for i in range(1, n_labels):
-                area = int(stats[i, cv2.CC_STAT_AREA])
-                if area <= max_hole_px:
-                    filled[labels == i] = 255
+            filled[small[labels]] = 255
 
         self._frame_count += 1
         if self._last_preview is None or self._frame_count % 6 == 0:

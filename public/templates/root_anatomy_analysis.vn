@@ -4,745 +4,3963 @@
       "id": "frame-1",
       "type": "canvas_frame",
       "position": {
-        "x": -150,
-        "y": -50
+        "x": 0,
+        "y": 0
       },
       "style": {
-        "width": 550,
-        "height": 420,
+        "width": 810,
+        "height": 630,
         "zIndex": -1
       },
       "data": {
-        "label": "Step 1: Input & Calibration",
+        "label": "Step 1: Input & Scale Bar",
         "params": {
-          "title": "Step 1: Input & Calibration",
+          "title": "Step 1: Input & Scale Bar",
           "color_index": 0
         }
       },
-      "width": 550,
-      "height": 420
-    },
-    {
-      "id": "src-1",
-      "type": "input_image",
-      "position": {
-        "x": -100,
-        "y": 100
-      },
-      "data": {
-        "label": "Root Section",
-        "params": {
-          "path": "samples/root_section.png",
-          "color_index": 0
-        }
-      },
-      "width": 208,
-      "height": 203,
-      "selected": false
-    },
-    {
-      "id": "src-2",
-      "type": "input_image",
-      "position": {
-        "x": -100,
-        "y": 340
-      },
-      "data": {
-        "label": "With Lateral Roots (ref)",
-        "params": {
-          "path": "samples/root_section_lateral.png",
-          "color_index": 0
-        }
-      },
-      "width": 208,
-      "height": 203,
-      "selected": false,
-      "positionAbsolute": {
-        "x": -100,
-        "y": 340
-      },
-      "dragging": false
-    },
-    {
-      "id": "cal-1",
-      "type": "root_calibrate",
-      "position": {
-        "x": 180,
-        "y": 100
-      },
-      "data": {
-        "label": "Calibration",
-        "params": {
-          "px_per_mm": 204,
-          "node_note": "204 px/mm = 2.8× Diaphot + XC-77 (Burton 2012). Adjust to your setup.",
-          "color_index": 0
-        }
-      },
-      "width": 208,
-      "height": 90,
-      "selected": false
+      "width": 810,
+      "height": 630
     },
     {
       "id": "frame-2",
       "type": "canvas_frame",
       "position": {
-        "x": 420,
-        "y": -50
+        "x": 870,
+        "y": 0
       },
       "style": {
-        "width": 620,
-        "height": 420,
+        "width": 1060,
+        "height": 630,
         "zIndex": -1
       },
       "data": {
-        "label": "Step 2: Isolation & Lateral Exclusion",
+        "label": "Step 2: Section (everything darker than the backdrop)",
         "params": {
-          "title": "Step 2: Isolation & Lateral Exclusion",
+          "title": "Step 2: Section (everything darker than the backdrop)",
           "color_index": 1
         }
       },
-      "width": 620,
-      "height": 420,
-      "selected": false,
-      "dragging": false
-    },
-    {
-      "id": "iso-1",
-      "type": "root_isolate_section",
-      "position": {
-        "x": 460,
-        "y": 100
-      },
-      "data": {
-        "label": "Isolate Section",
-        "params": {
-          "invert": true,
-          "blur": 5,
-          "dilation": 2,
-          "node_note": "invert=true pour image positive (fond clair, coupe sombre). false si image déjà inversée.",
-          "color_index": 1
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false
-    },
-    {
-      "id": "msk-1",
-      "type": "util_roi_polygon",
-      "position": {
-        "x": 680,
-        "y": 320
-      },
-      "data": {
-        "label": "Lateral Root Polygon",
-        "params": {
-          "node_note": "Draw polygon around lateral roots to exclude them. Skip if none.",
-          "color_index": 1
-        }
-      },
-      "width": 208,
-      "height": 264,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 680,
-        "y": 320
-      },
-      "dragging": false
+      "width": 1060,
+      "height": 630
     },
     {
       "id": "frame-3",
       "type": "canvas_frame",
       "position": {
-        "x": 1080,
-        "y": -50
+        "x": 1990,
+        "y": 0
       },
       "style": {
-        "width": 520,
-        "height": 420,
+        "width": 1060,
+        "height": 630,
         "zIndex": -1
       },
       "data": {
-        "label": "Step 3: Tissue Segmentation",
+        "label": "Step 3: Cell Lumens & Scale",
         "params": {
-          "title": "Step 3: Tissue Segmentation",
+          "title": "Step 3: Cell Lumens & Scale",
           "color_index": 2
         }
       },
-      "width": 520,
-      "height": 420,
-      "selected": false,
-      "dragging": false
-    },
-    {
-      "id": "ste-1",
-      "type": "root_segment_stele",
-      "position": {
-        "x": 1120,
-        "y": 100
-      },
-      "data": {
-        "label": "Stele Segmentation",
-        "params": {
-          "window_size": 21,
-          "radial_weight": 2,
-          "auto_invert": true,
-          "node_note": "Auto-invert logic handles dark-stele images. Increase radial_weight if cortex bleeds into stele mask.",
-          "threshold_adj": 0.57,
-          "color_index": 2
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 1120,
-        "y": 100
-      },
-      "dragging": false
-    },
-    {
-      "id": "ctx-1",
-      "type": "root_cortex_areas",
-      "position": {
-        "x": 1370,
-        "y": 100
-      },
-      "data": {
-        "label": "Cortex Mapping",
-        "params": {
-          "color_index": 2
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false
+      "width": 1060,
+      "height": 630
     },
     {
       "id": "frame-4",
       "type": "canvas_frame",
       "position": {
-        "x": 1640,
-        "y": -50
+        "x": 3110,
+        "y": 0
       },
       "style": {
-        "width": 1160,
-        "height": 420,
+        "width": 1060,
+        "height": 630,
         "zIndex": -1
       },
       "data": {
-        "label": "Step 4: Anatomical Features",
+        "label": "Step 4: Coarse Stele (cell-size texture)",
         "params": {
-          "title": "Step 4: Anatomical Features",
+          "title": "Step 4: Coarse Stele (cell-size texture)",
           "color_index": 3
         }
       },
-      "width": 1160,
-      "height": 420
-    },
-    {
-      "id": "lay-1",
-      "type": "root_layers",
-      "position": {
-        "x": 1670,
-        "y": 100
-      },
-      "data": {
-        "label": "Endo/Exodermis",
-        "params": {
-          "layer_width": 15,
-          "node_note": "Adjust layer_width to match ~1 cell thickness in your images.",
-          "color_index": 3
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false
-    },
-    {
-      "id": "aer-1",
-      "type": "root_aerenchyma_detect",
-      "position": {
-        "x": 1920,
-        "y": 100
-      },
-      "data": {
-        "label": "Aerenchyma Detect",
-        "params": {
-          "min_area": 0,
-          "sd_multiplier": 1,
-          "node_note": "sd_multiplier: lower = more lacunae detected. 1–2 recommended.",
-          "color_index": 3
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false,
-      "dragging": false
-    },
-    {
-      "id": "cel-1",
-      "type": "root_cortical_cells",
-      "position": {
-        "x": 2170,
-        "y": 100
-      },
-      "data": {
-        "label": "Cell Counting",
-        "params": {
-          "min_cell_area": 20,
-          "max_cell_area": 1000,
-          "color_index": 3
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false
-    },
-    {
-      "id": "xyl-1",
-      "type": "root_xylem_detect",
-      "position": {
-        "x": 2420,
-        "y": 100
-      },
-      "data": {
-        "label": "Metaxylem Detect",
-        "params": {
-          "min_jump_ratio": 3.13,
-          "node_note": "Increase min_jump_ratio to suppress false positives in noisy stele.",
-          "color_index": 3
-        }
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false,
-      "dragging": false
-    },
-    {
-      "id": "proto-1",
-      "type": "root_protoxylem_detect",
-      "position": {
-        "x": 2670,
-        "y": 100
-      },
-      "data": {
-        "label": "Protoxylem Detect",
-        "params": {
-          "min_area": 80,
-          "max_area": 1883,
-          "node_note": "Adjust max_area below the smallest metaxylem vessel in your images.",
-          "color_index": 3
-        },
-        "lockedOut": false
-      },
-      "width": 208,
-      "height": 188,
-      "selected": false,
-      "dragging": false
+      "width": 1060,
+      "height": 630
     },
     {
       "id": "frame-5",
       "type": "canvas_frame",
       "position": {
-        "x": 2940,
-        "y": -50
+        "x": 0,
+        "y": 700
       },
       "style": {
-        "width": 620,
-        "height": 420,
+        "width": 1310,
+        "height": 630,
         "zIndex": -1
       },
       "data": {
-        "label": "Step 5: Viz & Report",
+        "label": "Step 5: Stele Refinement (cell level)",
         "params": {
-          "title": "Step 5: Viz & Report",
+          "title": "Step 5: Stele Refinement (cell level)",
           "color_index": 4
         }
       },
-      "width": 620,
-      "height": 420
+      "width": 1310,
+      "height": 630
     },
     {
-      "id": "ovl-1",
-      "type": "root_anatomy_overlay",
+      "id": "frame-6",
+      "type": "canvas_frame",
       "position": {
-        "x": 2970,
-        "y": 100
+        "x": 1370,
+        "y": 700
+      },
+      "style": {
+        "width": 1310,
+        "height": 1440,
+        "zIndex": -1
       },
       "data": {
-        "label": "Anatomy Overlay",
+        "label": "Step 6: Tissues",
         "params": {
-          "opacity": 0.45,
-          "show_outlines": true,
-          "thickness": 2,
-          "color_outline": "#232222",
-          "color_section": "#ff8c00",
-          "color_stele": "#00ff00",
-          "color_aerenchyma": "#ff0000",
-          "color_xylem": "#535320",
-          "color_protoxylem": "#ffa500",
-          "color_endodermis": "#00ffff",
-          "color_exodermis": "#ff00ff",
-          "color_index": 4
+          "title": "Step 6: Tissues",
+          "color_index": 5
         }
       },
-      "width": 208,
-      "height": 188,
-      "selected": false,
-      "dragging": false
+      "width": 1310,
+      "height": 1440
     },
     {
-      "id": "rep-1",
-      "type": "root_anatomy_report",
+      "id": "frame-7",
+      "type": "canvas_frame",
       "position": {
-        "x": 3230,
-        "y": 100
+        "x": 2740,
+        "y": 700
+      },
+      "style": {
+        "width": 1060,
+        "height": 900,
+        "zIndex": -1
       },
       "data": {
-        "label": "Full Report",
+        "label": "Step 7: Cortical Cells & Radial Zones",
         "params": {
-          "order": "paper",
-          "color_index": 4
+          "title": "Step 7: Cortical Cells & Radial Zones",
+          "color_index": 6
         }
       },
-      "width": 208,
-      "height": 90,
-      "selected": false
+      "width": 1060,
+      "height": 900
     },
     {
-      "id": "csv-1",
+      "id": "frame-8",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 2210
+      },
+      "style": {
+        "width": 1810,
+        "height": 1440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Step 8: RootScan Variables",
+        "params": {
+          "title": "Step 8: RootScan Variables",
+          "color_index": 7
+        }
+      },
+      "width": 1810,
+      "height": 1440
+    },
+    {
+      "id": "frame-9",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1870,
+        "y": 2210
+      },
+      "style": {
+        "width": 1810,
+        "height": 1440,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Step 9: Segmentation Map (RootScan colours)",
+        "params": {
+          "title": "Step 9: Segmentation Map (RootScan colours)",
+          "color_index": 0
+        }
+      },
+      "width": 1810,
+      "height": 1440
+    },
+    {
+      "id": "src",
+      "type": "input_image",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "samples/root_section_brightfield_a.jpg",
+          "color_index": 0,
+          "node_note": "Bright-field or fluorescence cross-section. Other samples: root_section_brightfield_b.jpg, root_section.png (fluo), root_section_lateral.png (fluo + lateral roots)."
+        },
+        "userLabel": "Root Section"
+      }
+    },
+    {
+      "id": "scale",
+      "type": "sci_scale_bar_detect",
+      "position": {
+        "x": 30,
+        "y": 340
+      },
+      "data": {
+        "label": "Scale Bar Detect",
+        "params": {
+          "source": 0,
+          "bar_length": 500.0,
+          "unit": 0,
+          "fallback_px_per_mm": 784.0,
+          "color_index": 0,
+          "node_note": "Enter the length printed next to the scale bar (500 µm on the bright-field samples, 200 µm on root_section.png, 100 µm on root_section_lateral.png). Fallback used if no bar is found."
+        },
+        "userLabel": "Scale Bar → px/mm"
+      }
+    },
+    {
+      "id": "ruler",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 280,
+        "y": 340
+      },
+      "data": {
+        "label": "Visual Calibration",
+        "params": {
+          "points": "[]",
+          "real_len": 0.5,
+          "unit": "mm",
+          "readout": 1,
+          "color_index": 0,
+          "node_note": "Draw a line over the scale bar and enter its length in mm (500 µm = 0.5). Then set Scale Bar → px/mm to Source = Manual."
+        },
+        "userLabel": "Draw on Scale Bar (optional)"
+      }
+    },
+    {
+      "id": "gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 280,
+        "y": 70
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "pol",
+      "type": "filter_auto_polarity",
+      "position": {
+        "x": 530,
+        "y": 70
+      },
+      "data": {
+        "label": "Auto Polarity",
+        "params": {
+          "target": 0,
+          "method": 1,
+          "color_index": 0,
+          "node_note": "Fluorescence (bright walls on black) is inverted: afterwards walls are dark and lumens bright."
+        },
+        "userLabel": "Bright Backdrop"
+      }
+    },
+    {
+      "id": "sec_blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 900,
+        "y": 70
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 0,
+          "size": 49,
+          "sigma": 0,
+          "color_index": 1
+        },
+        "userLabel": "Smooth (cell scale)"
+      }
+    },
+    {
+      "id": "sec_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 1150,
+        "y": 70
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 6,
+          "offset": -10,
+          "color_index": 1,
+          "node_note": "Triangle = the dominant histogram peak is the backdrop; everything darker is tissue, including out-of-focus parts. Offset: margin below the backdrop tone."
+        },
+        "userLabel": "Darker than Backdrop"
+      }
+    },
+    {
+      "id": "sec_close",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1400,
+        "y": 70
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 1
+        },
+        "userLabel": "Close Gaps"
+      }
+    },
+    {
+      "id": "sec_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 1650,
+        "y": 70
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 900,
+        "y": 340
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 25,
+          "iterations": 2,
+          "color_index": 1,
+          "node_note": "Removes anything thinner than ~50 px (scale bar, hairs, specks)."
+        },
+        "userLabel": "Remove Scale Bar & Debris"
+      }
+    },
+    {
+      "id": "roi",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": 1150,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Polygon",
+        "params": {
+          "points": "[]",
+          "filled": true,
+          "color_index": 1,
+          "node_note": "Optional: draw a polygon around the main root to cut lateral roots or debris. Empty = keep all."
+        },
+        "userLabel": "Keep Region (optional)"
+      }
+    },
+    {
+      "id": "sec_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 1
+        },
+        "userLabel": "Apply Region"
+      }
+    },
+    {
+      "id": "section",
+      "type": "mask_keep_largest",
+      "position": {
+        "x": 1650,
+        "y": 340
+      },
+      "data": {
+        "label": "Keep Largest Blobs",
+        "params": {
+          "count": 1,
+          "color_index": 1
+        },
+        "userLabel": "SECTION"
+      }
+    },
+    {
+      "id": "walls",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2020,
+        "y": 70
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 41,
+          "c": 1,
+          "adaptive_method": 1,
+          "invert": false,
+          "color_index": 2,
+          "node_note": "Walls = pixels darker than their neighbourhood. Low C keeps faint walls (dark/low-contrast tissue)."
+        },
+        "userLabel": "Cell Walls"
+      }
+    },
+    {
+      "id": "lum_sub",
+      "type": "mask_operations",
+      "position": {
+        "x": 2270,
+        "y": 70
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 2
+        },
+        "userLabel": "Section − Walls"
+      }
+    },
+    {
+      "id": "lumens",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 2520,
+        "y": 70
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 5,
+          "iterations": 1,
+          "color_index": 2,
+          "node_note": "One blob per cell interior."
+        },
+        "userLabel": "LUMENS"
+      }
+    },
+    {
+      "id": "lum_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 2770,
+        "y": 70
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 2
+        },
+        "userLabel": "Lumen Areas"
+      }
+    },
+    {
+      "id": "lum_med",
+      "type": "sci_stats",
+      "position": {
+        "x": 2020,
+        "y": 340
+      },
+      "data": {
+        "label": "Statistics",
+        "params": {
+          "color_index": 2
+        },
+        "userLabel": "Median Lumen Area"
+      }
+    },
+    {
+      "id": "sigma",
+      "type": "math_expr",
+      "position": {
+        "x": 2270,
+        "y": 340
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "sqrt(a) / 2.7",
+          "color_index": 2,
+          "node_note": "σ ≈ typical cell diameter / 2.7 → detectors adapt to magnification automatically."
+        },
+        "userLabel": "Texture Scale σ",
+        "ports": [
+          {
+            "id": "scalar__0_med",
+            "color": "scalar",
+            "label": "med"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dog",
+      "type": "filter_dog",
+      "position": {
+        "x": 3140,
+        "y": 70
+      },
+      "data": {
+        "label": "Difference of Gaussians",
+        "params": {
+          "sigma": 5.0,
+          "ratio": 2.0,
+          "output": 0,
+          "color_index": 3,
+          "node_note": "Energy at the cortical-cell scale: high in the cortex (large cells), low in the stele (small cells)."
+        },
+        "userLabel": "Band Energy (DoG)"
+      }
+    },
+    {
+      "id": "en_blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 3390,
+        "y": 70
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 0,
+          "size": 91,
+          "sigma": 0,
+          "color_index": 3
+        },
+        "userLabel": "Smooth"
+      }
+    },
+    {
+      "id": "inner",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 3640,
+        "y": 70
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 31,
+          "iterations": 2,
+          "color_index": 3,
+          "node_note": "Ignore the rim so the epidermis does not bias the threshold."
+        },
+        "userLabel": "Inner Section"
+      }
+    },
+    {
+      "id": "st_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 3890,
+        "y": 70
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 3,
+          "offset": 0,
+          "color_index": 3,
+          "node_note": "Offset < 0 shrinks the stele, > 0 grows it (e.g. −10 for root_section_lateral.png)."
+        },
+        "userLabel": "Low Energy (Otsu in section)"
+      }
+    },
+    {
+      "id": "st_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 3140,
+        "y": 340
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 31,
+          "iterations": 2,
+          "color_index": 3
+        },
+        "userLabel": "Detach"
+      }
+    },
+    {
+      "id": "st_big",
+      "type": "mask_keep_largest",
+      "position": {
+        "x": 3390,
+        "y": 340
+      },
+      "data": {
+        "label": "Keep Largest Blobs",
+        "params": {
+          "count": 1,
+          "color_index": 3
+        },
+        "userLabel": "Largest"
+      }
+    },
+    {
+      "id": "st_close",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 3640,
+        "y": 340
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 31,
+          "iterations": 2,
+          "color_index": 3
+        },
+        "userLabel": "Smooth Outline"
+      }
+    },
+    {
+      "id": "coarse",
+      "type": "fill_holes",
+      "position": {
+        "x": 3890,
+        "y": 340
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 3
+        },
+        "userLabel": "COARSE STELE (±1 cell)"
+      }
+    },
+    {
+      "id": "band_out",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 30,
+        "y": 770
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 5,
+          "shape": 2,
+          "size": 31,
+          "iterations": 2,
+          "color_index": 4,
+          "node_note": "The true boundary lies within ~2 cortical cells of the coarse stele."
+        },
+        "userLabel": "Band Outer (+2 cells)"
+      }
+    },
+    {
+      "id": "core",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 280,
+        "y": 770
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 31,
+          "iterations": 3,
+          "color_index": 4
+        },
+        "userLabel": "Sure Stele (−3 cells)"
+      }
+    },
+    {
+      "id": "ring",
+      "type": "mask_operations",
+      "position": {
+        "x": 530,
+        "y": 770
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 4
+        },
+        "userLabel": "Search Band"
+      }
+    },
+    {
+      "id": "snap",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 780,
+        "y": 770
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 3,
+          "offset": 8,
+          "color_index": 4,
+          "node_note": "Inside the boundary tissue is darker on average (dense walls of endodermis/pericycle, or stained ring); outside are the large bright cortical lumens. Offset > 0 moves the line outward."
+        },
+        "userLabel": "Dense / Dark Side (Otsu in band)"
+      }
+    },
+    {
+      "id": "st_union",
+      "type": "mask_operations",
+      "position": {
+        "x": 1030,
+        "y": 770
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 4
+        },
+        "userLabel": "Sure + Dark Band"
+      }
+    },
+    {
+      "id": "st_open2",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 30,
+        "y": 1040
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 15,
+          "iterations": 1,
+          "color_index": 4
+        },
+        "userLabel": "Detach"
+      }
+    },
+    {
+      "id": "st_big2",
+      "type": "mask_keep_largest",
+      "position": {
+        "x": 280,
+        "y": 1040
+      },
+      "data": {
+        "label": "Keep Largest Blobs",
+        "params": {
+          "count": 1,
+          "color_index": 4
+        },
+        "userLabel": "Largest"
+      }
+    },
+    {
+      "id": "st_fill2",
+      "type": "fill_holes",
+      "position": {
+        "x": 530,
+        "y": 1040
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 4
+        },
+        "userLabel": "Fill"
+      }
+    },
+    {
+      "id": "stele",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1400,
+        "y": 770
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 5,
+          "node_note": "Smooths the cell-level outline (outer edge of the endodermis)."
+        },
+        "userLabel": "STELE"
+      }
+    },
+    {
+      "id": "cortex",
+      "type": "mask_operations",
+      "position": {
+        "x": 1650,
+        "y": 770
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5
+        },
+        "userLabel": "CORTEX = Section − Stele"
+      }
+    },
+    {
+      "id": "mx_lum",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 1400,
+        "y": 1040
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 71,
+          "c": -8,
+          "adaptive_method": 1,
+          "invert": true,
+          "color_index": 5,
+          "node_note": "Vessel lumens shine brighter than their surroundings: used only as markers."
+        },
+        "userLabel": "Bright Highlights"
+      }
+    },
+    {
+      "id": "mx_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1650,
+        "y": 1040
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        },
+        "userLabel": "In Stele"
+      }
+    },
+    {
+      "id": "mx_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1900,
+        "y": 1040
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 7,
+          "iterations": 1,
+          "color_index": 5
+        },
+        "userLabel": "Clean Markers"
+      }
+    },
+    {
+      "id": "st_lum",
+      "type": "mask_operations",
+      "position": {
+        "x": 2150,
+        "y": 1040
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        },
+        "userLabel": "Stele Lumens"
+      }
+    },
+    {
+      "id": "st_lum_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 2400,
+        "y": 1040
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 5
+        },
+        "userLabel": "Fill"
+      }
+    },
+    {
+      "id": "vessels",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 1400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 5,
+          "node_note": "Complete lumens (from the wall map) that contain a bright highlight."
+        },
+        "userLabel": "Whole Vessels"
+      }
+    },
+    {
+      "id": "mx_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 1650,
+        "y": 1310
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 5
+        },
+        "userLabel": "Vessel Areas"
+      }
+    },
+    {
+      "id": "mx_floor",
+      "type": "math_expr",
+      "position": {
+        "x": 1900,
+        "y": 1310
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "2 * a",
+          "color_index": 5,
+          "node_note": "Ignore ordinary cells: only lumens at least twice the median cell are vessel candidates."
+        },
+        "userLabel": "Floor = 2 × Median Lumen",
+        "ports": [
+          {
+            "id": "scalar__0_med",
+            "color": "scalar",
+            "label": "med"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mx_break",
+      "type": "list_natural_break",
+      "position": {
+        "x": 2150,
+        "y": 1310
+      },
+      "data": {
+        "label": "List Natural Break",
+        "params": {
+          "log_scale": true,
+          "min_value": 0,
+          "color_index": 5,
+          "node_note": "Metaxylem = the large-vessel population, split from small vessels without a fixed size."
+        },
+        "userLabel": "Small | Large Split"
+      }
+    },
+    {
+      "id": "metaxylem",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 2400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1000,
+          "max_area": 0,
+          "circ_min": 0.3,
+          "connectivity": 4,
+          "color_index": 5,
+          "node_note": "Circularity ≥ 0.3 rejects torn tissue (ragged streaks) mistaken for a lumen."
+        },
+        "userLabel": "METAXYLEM"
+      }
+    },
+    {
+      "id": "ae_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 1400,
+        "y": 1580
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 2,
+          "color_index": 5
+        },
+        "userLabel": "Bright in Cortex"
+      }
+    },
+    {
+      "id": "ae_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 1580
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 21,
+          "iterations": 2,
+          "color_index": 5,
+          "node_note": "Only spaces wider than ~2 cortical cells survive = lacunae."
+        },
+        "userLabel": "Keep Wide Spaces"
+      }
+    },
+    {
+      "id": "ae_big",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 1900,
+        "y": 1580
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 2000,
+          "max_area": 0,
+          "color_index": 5
+        },
+        "userLabel": "Large Spaces"
+      }
+    },
+    {
+      "id": "aerenchyma",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2150,
+        "y": 1580
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 5,
+          "node_note": "RootScan rule: a lacuna must reach the middle third of the cortex (excludes gaps at the rim and near the stele)."
+        },
+        "userLabel": "AERENCHYMA"
+      }
+    },
+    {
+      "id": "st_ero",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1400,
+        "y": 1850
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 21,
+          "iterations": 1,
+          "color_index": 5,
+          "node_note": "Kernel ≈ endodermis thickness."
+        },
+        "userLabel": "Stele − 1 layer"
+      }
+    },
+    {
+      "id": "endo",
+      "type": "mask_operations",
+      "position": {
+        "x": 1650,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5
+        },
+        "userLabel": "ENDODERMIS band"
+      }
+    },
+    {
+      "id": "sec_ero",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1900,
+        "y": 1850
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 5
+        },
+        "userLabel": "Section − 1 layer"
+      }
+    },
+    {
+      "id": "exo",
+      "type": "mask_operations",
+      "position": {
+        "x": 2150,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5
+        },
+        "userLabel": "EXODERMIS band"
+      }
+    },
+    {
+      "id": "zones",
+      "type": "mask_depth_bands",
+      "position": {
+        "x": 2770,
+        "y": 770
+      },
+      "data": {
+        "label": "Mask Depth Bands",
+        "params": {
+          "bands": 3,
+          "range_low": 0.2,
+          "range_high": 0.8,
+          "ignore_border": true,
+          "color_index": 6,
+          "node_note": "0 = stele edge, 1 = section edge. The image frame is not an edge (sections cut by the frame)."
+        },
+        "userLabel": "Inner | Middle | Outer Cortex"
+      }
+    },
+    {
+      "id": "cell_region",
+      "type": "mask_operations",
+      "position": {
+        "x": 3020,
+        "y": 770
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 6
+        },
+        "userLabel": "Cortex − Lacunae"
+      }
+    },
+    {
+      "id": "cell_rad",
+      "type": "math_expr",
+      "position": {
+        "x": 3270,
+        "y": 770
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "sqrt(a / pi)",
+          "color_index": 6
+        },
+        "userLabel": "Cell Radius (px)",
+        "ports": [
+          {
+            "id": "scalar__0_med",
+            "color": "scalar",
+            "label": "med"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cell_sig",
+      "type": "math_expr",
+      "position": {
+        "x": 3520,
+        "y": 770
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "0.5 * a",
+          "color_index": 6
+        },
+        "userLabel": "Peak Smoothing σ",
+        "ports": [
+          {
+            "id": "scalar__0_rad",
+            "color": "scalar",
+            "label": "rad"
+          }
+        ]
+      }
+    },
+    {
+      "id": "peaks",
+      "type": "feat_peak_markers",
+      "position": {
+        "x": 2770,
+        "y": 1040
+      },
+      "data": {
+        "label": "Local Maxima Markers",
+        "params": {
+          "polarity": 0,
+          "sigma": 3.5,
+          "min_distance": 7.0,
+          "color_index": 6,
+          "node_note": "Each cell interior is a bright dome after smoothing; its top seeds one cell."
+        },
+        "userLabel": "One Marker per Cell"
+      }
+    },
+    {
+      "id": "ws",
+      "type": "feat_watershed",
+      "position": {
+        "x": 3020,
+        "y": 1040
+      },
+      "data": {
+        "label": "Watershed",
+        "params": {
+          "visualization": 0,
+          "boundary_color": "#FF0000",
+          "boundary_thickness": 1,
+          "color_index": 6,
+          "node_note": "Grows each marker until it meets the neighbouring cell on the wall → whole cells, walls included."
+        },
+        "userLabel": "Cells (Watershed)"
+      }
+    },
+    {
+      "id": "cell_stats",
+      "type": "sci_zone_stats",
+      "position": {
+        "x": 3270,
+        "y": 1040
+      },
+      "data": {
+        "label": "Zone Region Stats",
+        "params": {
+          "min_area": 30,
+          "max_area": 0,
+          "ignore_label": 1,
+          "color_index": 6,
+          "node_note": "Count and mean size per band (CSic / CSmc / CSoc). Ignore Label 1 = watershed background."
+        },
+        "userLabel": "Cells per Zone"
+      }
+    },
+    {
+      "id": "cz_ic",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 3520,
+        "y": 1040
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "zone_1_mean_area",
+          "key_2": "zone_2_mean_area",
+          "key_3": "zone_3_mean_area",
+          "color_index": 6
+        },
+        "userLabel": "CSic | CSmc | CSoc"
+      }
+    },
+    {
+      "id": "wall_sec",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 7
+        },
+        "userLabel": "Walls ∩ Section"
+      }
+    },
+    {
+      "id": "wall_ctx",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 7
+        },
+        "userLabel": "Walls ∩ Cortex"
+      }
+    },
+    {
+      "id": "wall_st",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 2820
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 7
+        },
+        "userLabel": "Walls ∩ Stele"
+      }
+    },
+    {
+      "id": "lat",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 3090
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7
+        },
+        "userLabel": "Excluded by Region"
+      }
+    },
+    {
+      "id": "lat_sec",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 3360
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 7
+        },
+        "userLabel": "Lateral ∩ Tissue"
+      }
+    },
+    {
+      "id": "px_rxsa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "RXSA (px²)"
+      }
+    },
+    {
+      "id": "px_xscwa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "XSCWA (px²)"
+      }
+    },
+    {
+      "id": "px_tca",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 2820
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "TCA (px²)"
+      }
+    },
+    {
+      "id": "px_ccwa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 3090
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "CCWA (px²)"
+      }
+    },
+    {
+      "id": "px_aa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 3360
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "AA (px²)"
+      }
+    },
+    {
+      "id": "px_la",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "LA (px²)"
+      }
+    },
+    {
+      "id": "px_tsa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "TSA (px²)"
+      }
+    },
+    {
+      "id": "px_scwa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 2820
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "SCWA (px²)"
+      }
+    },
+    {
+      "id": "px_xva",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 3090
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "XVA (px²)"
+      }
+    },
+    {
+      "id": "px_ea",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 3360
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "EA (px²)"
+      }
+    },
+    {
+      "id": "px_exa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 780,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 7
+        },
+        "userLabel": "ExA (px²)"
+      }
+    },
+    {
+      "id": "cca",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 2280
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a - b",
+          "color_index": 7
+        },
+        "userLabel": "CCA = TCA − AA",
+        "ports": [
+          {
+            "id": "scalar__0_tca",
+            "color": "scalar",
+            "label": "tca"
+          },
+          {
+            "id": "scalar__1_aa",
+            "color": "scalar",
+            "label": "aa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_pct_a",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 2550
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / b",
+          "color_index": 7
+        },
+        "userLabel": "%A",
+        "ports": [
+          {
+            "id": "scalar__0_px_aa",
+            "color": "scalar",
+            "label": "px_aa"
+          },
+          {
+            "id": "scalar__1_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_pct_cca",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 2820
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / b",
+          "color_index": 7
+        },
+        "userLabel": "%CCA",
+        "ports": [
+          {
+            "id": "scalar__0_cca",
+            "color": "scalar",
+            "label": "cca"
+          },
+          {
+            "id": "scalar__1_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_tsa_rxsa",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 3090
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / b",
+          "color_index": 7
+        },
+        "userLabel": "TSA:RXSA",
+        "ports": [
+          {
+            "id": "scalar__0_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          },
+          {
+            "id": "scalar__1_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_tsa_tca",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 3360
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / b",
+          "color_index": 7
+        },
+        "userLabel": "TSA:TCA",
+        "ports": [
+          {
+            "id": "scalar__0_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          },
+          {
+            "id": "scalar__1_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "n_cf",
+      "type": "math_expr",
+      "position": {
+        "x": 780,
+        "y": 3090
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "(sqrt(a / pi) - sqrt(b / pi)) / (2 * sqrt(c / pi))",
+          "color_index": 7,
+          "node_note": "Radial cortex thickness / mean cell diameter (RootScan #CF)."
+        },
+        "userLabel": "#CF (cell files)",
+        "ports": [
+          {
+            "id": "scalar__0_rxsa",
+            "color": "scalar",
+            "label": "rxsa"
+          },
+          {
+            "id": "scalar__1_tsa",
+            "color": "scalar",
+            "label": "tsa"
+          },
+          {
+            "id": "scalar__2_cell",
+            "color": "scalar",
+            "label": "cell"
+          }
+        ]
+      }
+    },
+    {
+      "id": "quality",
+      "type": "scalar_input",
+      "position": {
+        "x": 780,
+        "y": 3360
+      },
+      "data": {
+        "label": "Number",
+        "params": {
+          "value": 5,
+          "format": 0,
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "color_index": 7,
+          "node_note": "Manual image quality rating (RootScan Part VI)."
+        },
+        "userLabel": "Quality Score (1–5)"
+      }
+    },
+    {
+      "id": "areas_px",
+      "type": "dict_builder",
+      "position": {
+        "x": 1280,
+        "y": 2280
+      },
+      "data": {
+        "label": "Build Dict",
+        "params": {
+          "name_rxsa": "RXSA",
+          "name_xscwa": "XSCWA",
+          "name_tca": "TCA",
+          "name_ccwa": "CCWA",
+          "name_aa": "AA",
+          "name_la": "LA",
+          "name_tsa": "TSA",
+          "name_scwa": "SCWA",
+          "name_xva": "XVA",
+          "name_ea": "EA",
+          "name_exa": "ExA",
+          "name_cca": "CCA",
+          "name_csic": "CSic",
+          "name_csmc": "CSmc",
+          "name_csoc": "CSoc",
+          "color_index": 7
+        },
+        "userLabel": "Areas (px²)",
+        "ports": [
+          {
+            "id": "scalar__rxsa",
+            "color": "scalar",
+            "label": "rxsa"
+          },
+          {
+            "id": "scalar__xscwa",
+            "color": "scalar",
+            "label": "xscwa"
+          },
+          {
+            "id": "scalar__tca",
+            "color": "scalar",
+            "label": "tca"
+          },
+          {
+            "id": "scalar__ccwa",
+            "color": "scalar",
+            "label": "ccwa"
+          },
+          {
+            "id": "scalar__aa",
+            "color": "scalar",
+            "label": "aa"
+          },
+          {
+            "id": "scalar__la",
+            "color": "scalar",
+            "label": "la"
+          },
+          {
+            "id": "scalar__tsa",
+            "color": "scalar",
+            "label": "tsa"
+          },
+          {
+            "id": "scalar__scwa",
+            "color": "scalar",
+            "label": "scwa"
+          },
+          {
+            "id": "scalar__xva",
+            "color": "scalar",
+            "label": "xva"
+          },
+          {
+            "id": "scalar__ea",
+            "color": "scalar",
+            "label": "ea"
+          },
+          {
+            "id": "scalar__exa",
+            "color": "scalar",
+            "label": "exa"
+          },
+          {
+            "id": "scalar__cca",
+            "color": "scalar",
+            "label": "cca"
+          },
+          {
+            "id": "any__csic",
+            "color": "any",
+            "label": "csic"
+          },
+          {
+            "id": "any__csmc",
+            "color": "any",
+            "label": "csmc"
+          },
+          {
+            "id": "any__csoc",
+            "color": "any",
+            "label": "csoc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "others",
+      "type": "dict_builder",
+      "position": {
+        "x": 1280,
+        "y": 2820
+      },
+      "data": {
+        "label": "Build Dict",
+        "params": {
+          "name_pct_a": "%A",
+          "name_pct_cca": "%CCA",
+          "name_n_lac": "#Lac",
+          "name_n_cc": "#CC",
+          "name_n_cf": "#CF",
+          "name_n_mx": "#MX",
+          "name_tsa_rxsa": "TSA:RXSA",
+          "name_tsa_tca": "TSA:TCA",
+          "name_px_per_mm": "px_per_mm",
+          "name_quality": "quality_score",
+          "color_index": 7
+        },
+        "userLabel": "Counts & Ratios",
+        "ports": [
+          {
+            "id": "scalar__pct_a",
+            "color": "scalar",
+            "label": "pct_a"
+          },
+          {
+            "id": "scalar__pct_cca",
+            "color": "scalar",
+            "label": "pct_cca"
+          },
+          {
+            "id": "scalar__n_lac",
+            "color": "scalar",
+            "label": "n_lac"
+          },
+          {
+            "id": "scalar__n_cc",
+            "color": "scalar",
+            "label": "n_cc"
+          },
+          {
+            "id": "scalar__n_cf",
+            "color": "scalar",
+            "label": "n_cf"
+          },
+          {
+            "id": "scalar__n_mx",
+            "color": "scalar",
+            "label": "n_mx"
+          },
+          {
+            "id": "scalar__tsa_rxsa",
+            "color": "scalar",
+            "label": "tsa_rxsa"
+          },
+          {
+            "id": "scalar__tsa_tca",
+            "color": "scalar",
+            "label": "tsa_tca"
+          },
+          {
+            "id": "scalar__px_per_mm",
+            "color": "scalar",
+            "label": "px_per_mm"
+          },
+          {
+            "id": "scalar__quality",
+            "color": "scalar",
+            "label": "quality"
+          }
+        ]
+      }
+    },
+    {
+      "id": "areas_mm",
+      "type": "dict_scale",
+      "position": {
+        "x": 1280,
+        "y": 2550
+      },
+      "data": {
+        "label": "Scale Dict Values",
+        "params": {
+          "operation": 1,
+          "factor": 784.0,
+          "power": 2,
+          "digits": 5,
+          "color_index": 7,
+          "node_note": "Every area ÷ (px/mm)². Calibration comes from the scale bar."
+        },
+        "userLabel": "px² → mm²"
+      }
+    },
+    {
+      "id": "report",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 1530,
+        "y": 2280
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Anatomy Report",
+          "groups": "Cross-Section: RXSA, XSCWA, LA, TSA:RXSA | Cortex: TCA, CCWA, CCA, %CCA, #CC, #CF | Aerenchyma: AA, %A, #Lac | Cell Size by Zone: CSic, CSmc, CSoc | Stele: TSA, SCWA, XVA, #MX, TSA:TCA | Layers & Quality: EA, ExA, px_per_mm, quality_score",
+          "digits": 4,
+          "color_index": 7,
+          "node_note": "Areas in mm², counts, ratios — RootScan Table 1. Click Full Report for every variable."
+        },
+        "userLabel": "Anatomy Report"
+      }
+    },
+    {
+      "id": "csv",
       "type": "util_csv_export",
       "position": {
-        "x": 3230,
-        "y": 240
+        "x": 1530,
+        "y": 3090
       },
       "data": {
         "label": "CSV Export",
         "params": {
-          "filename": "root_analysis",
+          "filename": "root_anatomy",
           "path": "exports",
-          "color_index": 4
-        }
-      },
-      "width": 208,
-      "height": 281,
-      "selected": false
+          "auto_timestamp": true,
+          "color_index": 7,
+          "node_note": "Click Snapshot: one row per image, one column per variable."
+        },
+        "ports": [
+          {
+            "id": "dict__report_0",
+            "color": "dict",
+            "label": "report_0"
+          }
+        ]
+      }
     },
     {
-      "id": "qs-1",
-      "type": "root_quality_score",
+      "id": "not_sec",
+      "type": "plugin_invert_mask",
       "position": {
-        "x": 2960,
-        "y": 340
+        "x": 1900,
+        "y": 2280
       },
       "data": {
-        "label": "Quality Score",
+        "label": "Invert Mask",
         "params": {
-          "score": 5,
-          "focus": 5,
-          "color_index": 4
-        }
-      },
-      "width": 208,
-      "height": 90,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 2960,
-        "y": 340
-      },
-      "dragging": false
+          "color_index": 0
+        },
+        "userLabel": "Outside Section"
+      }
     },
     {
-      "id": "node-1778052552378",
+      "id": "cc_lum",
+      "type": "mask_operations",
+      "position": {
+        "x": 2150,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0,
+          "node_note": "Only the lumens are coloured, so the walls stay visible as a dark network."
+        },
+        "userLabel": "Cortical Cell Lumens"
+      }
+    },
+    {
+      "id": "cells_in",
+      "type": "mask_operations",
+      "position": {
+        "x": 2400,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        },
+        "userLabel": "Inner Cells"
+      }
+    },
+    {
+      "id": "cells_mid",
+      "type": "mask_operations",
+      "position": {
+        "x": 2650,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        },
+        "userLabel": "Middle Cells"
+      }
+    },
+    {
+      "id": "cells_out",
+      "type": "mask_operations",
+      "position": {
+        "x": 2900,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        },
+        "userLabel": "Outer Cells"
+      }
+    },
+    {
+      "id": "endo_lum",
+      "type": "mask_operations",
+      "position": {
+        "x": 3150,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        },
+        "userLabel": "Endodermis Lumens"
+      }
+    },
+    {
+      "id": "exo_lum",
+      "type": "mask_operations",
+      "position": {
+        "x": 3400,
+        "y": 2280
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        },
+        "userLabel": "Exodermis Lumens"
+      }
+    },
+    {
+      "id": "ol_sec",
+      "type": "mask_outline",
+      "position": {
+        "x": 1900,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 3,
+          "color_index": 0
+        },
+        "userLabel": "Section Outline"
+      }
+    },
+    {
+      "id": "ol_st",
+      "type": "mask_outline",
+      "position": {
+        "x": 2150,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 3,
+          "color_index": 0
+        },
+        "userLabel": "Stele Outline"
+      }
+    },
+    {
+      "id": "ol_mx",
+      "type": "mask_outline",
+      "position": {
+        "x": 2400,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 2,
+          "color_index": 0
+        },
+        "userLabel": "Vessel Outlines"
+      }
+    },
+    {
+      "id": "ol_1",
+      "type": "mask_operations",
+      "position": {
+        "x": 2650,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 0
+        },
+        "userLabel": "Outlines"
+      }
+    },
+    {
+      "id": "ol_all",
+      "type": "mask_operations",
+      "position": {
+        "x": 2900,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 0
+        },
+        "userLabel": "All Outlines"
+      }
+    },
+    {
+      "id": "paint_0",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3150,
+        "y": 2550
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#ffffff",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Background"
+      }
+    },
+    {
+      "id": "paint_1",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3400,
+        "y": 2550
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#f3ead3",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Tissue"
+      }
+    },
+    {
+      "id": "paint_2",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 1900,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#b2dfdb",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Stele Tissue"
+      }
+    },
+    {
+      "id": "paint_3",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2150,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#3e2723",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Cell Walls"
+      }
+    },
+    {
+      "id": "paint_4",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2400,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#ff7043",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Outer Cortex Cells"
+      }
+    },
+    {
+      "id": "paint_5",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2650,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#ffca28",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Middle Cortex Cells"
+      }
+    },
+    {
+      "id": "paint_6",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2900,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#9ccc65",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Inner Cortex Cells"
+      }
+    },
+    {
+      "id": "paint_7",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3150,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#e0f7fa",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Stele Cell Lumens"
+      }
+    },
+    {
+      "id": "paint_8",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3400,
+        "y": 2820
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#b39ddb",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Exodermis / Epidermis Cells"
+      }
+    },
+    {
+      "id": "paint_9",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 1900,
+        "y": 3090
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#00acc1",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Endodermis Cells"
+      }
+    },
+    {
+      "id": "paint_10",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2150,
+        "y": 3090
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#6d2c1f",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Aerenchyma Lacunae"
+      }
+    },
+    {
+      "id": "paint_11",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2400,
+        "y": 3090
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#2e7d32",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Metaxylem"
+      }
+    },
+    {
+      "id": "paint_12",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2650,
+        "y": 3090
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#3e2723",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Cell Boundaries"
+      }
+    },
+    {
+      "id": "paint_13",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2900,
+        "y": 3090
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#111111",
+          "alpha": 1.0,
+          "color_index": 0
+        },
+        "userLabel": "Outlines"
+      }
+    },
+    {
+      "id": "legend",
+      "type": "image_legend",
+      "position": {
+        "x": 3150,
+        "y": 3090
+      },
+      "data": {
+        "label": "Image Legend",
+        "params": {
+          "entries": "Stele Tissue:#b2dfdb\nCell Walls:#3e2723\nOuter Cortex Cells:#ff7043\nMiddle Cortex Cells:#ffca28\nInner Cortex Cells:#9ccc65\nStele Cell Lumens:#e0f7fa\nExodermis / Epidermis Cells:#b39ddb\nEndodermis Cells:#00acc1\nAerenchyma Lacunae:#6d2c1f\nMetaxylem:#2e7d32",
+          "position": "top-left",
+          "font_scale": 0.9,
+          "swatch_size": 26,
+          "bg_alpha": 0.8,
+          "padding": 14,
+          "color_index": 0
+        },
+        "userLabel": "Legend"
+      }
+    },
+    {
+      "id": "compose",
+      "type": "util_compose",
+      "position": {
+        "x": 3400,
+        "y": 3090
+      },
+      "data": {
+        "label": "Compose",
+        "params": {
+          "mode": 0,
+          "gap": 4,
+          "color_index": 0
+        },
+        "userLabel": "Original | Segmentation"
+      }
+    },
+    {
+      "id": "display",
       "type": "output_display",
       "position": {
-        "x": 3780,
-        "y": -220
+        "x": 1900,
+        "y": 3360
       },
-      "style": {},
       "data": {
         "label": "Display",
         "params": {
           "color_index": 0
-        },
-        "ports": [
-          {
-            "id": "image__0_v9dlpy",
-            "color": "image",
-            "label": "img0"
-          },
-          {
-            "id": "image__1_e1mgzr",
-            "color": "image",
-            "label": "img1"
-          }
-        ]
-      },
-      "width": 208,
-      "height": 217,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 3780,
-        "y": -220
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1778053337719",
-      "type": "root_exclude_lateral",
-      "position": {
-        "x": 940,
-        "y": 420
-      },
-      "style": {},
-      "data": {
-        "label": "Exclude Lateral",
-        "params": {
-          "color_index": 1
-        },
-        "schema": {
-          "type": "root_exclude_lateral",
-          "label": "Exclude Lateral",
-          "category": "root_anatomy",
-          "icon": "Scissors",
-          "description": "Excludes lateral roots using a polygon mask. Calculates LA. Must run before stele segmentation.",
-          "inputs": [
-            {
-              "id": "data",
-              "color": "root_data"
-            },
-            {
-              "id": "mask",
-              "color": "mask",
-              "label": "Exclusion Mask"
-            }
-          ],
-          "outputs": [
-            {
-              "id": "data",
-              "color": "root_data"
-            }
-          ],
-          "params": [],
-          "resizable": false,
-          "min_width": 200,
-          "min_height": 150,
-          "colorable": true
         }
-      },
-      "width": 208,
-      "height": 90,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 940,
-        "y": 420
-      },
-      "dragging": false
-    },
-    {
-      "id": "node-1778053357306",
-      "type": "canvas_reroute",
-      "position": {
-        "x": 400,
-        "y": -160
-      },
-      "style": {
-        "width": 16,
-        "height": 16
-      },
-      "data": {
-        "label": "Reroute",
-        "params": {}
-      },
-      "width": 16,
-      "height": 16,
-      "selected": false,
-      "dragging": false,
-      "positionAbsolute": {
-        "x": 400,
-        "y": -160
       }
-    },
-    {
-      "id": "node-1778053393528",
-      "type": "canvas_reroute",
-      "position": {
-        "x": 2740,
-        "y": -180
-      },
-      "style": {
-        "width": 16,
-        "height": 16
-      },
-      "data": {
-        "label": "Reroute",
-        "params": {}
-      },
-      "width": 16,
-      "height": 16,
-      "selected": false,
-      "positionAbsolute": {
-        "x": 2740,
-        "y": -180
-      },
-      "dragging": false
     }
   ],
   "edges": [
     {
       "id": "e1",
-      "source": "src-1",
-      "target": "cal-1",
+      "source": "src",
+      "target": "gray",
       "sourceHandle": "image__main",
-      "targetHandle": "any__image",
-      "selected": false
+      "targetHandle": "image__image"
     },
     {
       "id": "e2",
-      "source": "cal-1",
-      "target": "iso-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "src",
+      "target": "scale",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
     },
     {
       "id": "e3",
-      "source": "src-1",
-      "target": "msk-1",
+      "source": "src",
+      "target": "ruler",
       "sourceHandle": "image__main",
-      "targetHandle": "image__image",
-      "selected": false
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e4",
+      "source": "ruler",
+      "target": "scale",
+      "sourceHandle": "scalar__factor",
+      "targetHandle": "scalar__manual_px_per_mm"
+    },
+    {
+      "id": "e5",
+      "source": "gray",
+      "target": "pol",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e6",
+      "source": "pol",
+      "target": "sec_blur",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
     },
     {
       "id": "e7",
-      "source": "ste-1",
-      "target": "ctx-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_blur",
+      "target": "sec_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
     },
     {
       "id": "e8",
-      "source": "ctx-1",
-      "target": "lay-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_thr",
+      "target": "sec_close",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
     },
     {
       "id": "e9",
-      "source": "lay-1",
-      "target": "aer-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_close",
+      "target": "sec_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
     },
     {
       "id": "e10",
-      "source": "aer-1",
-      "target": "cel-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_fill",
+      "target": "sec_open",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
     },
     {
       "id": "e11",
-      "source": "cel-1",
-      "target": "xyl-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "src",
+      "target": "roi",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
     },
     {
       "id": "e12",
-      "source": "xyl-1",
-      "target": "proto-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_open",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
     },
     {
       "id": "e13",
-      "source": "proto-1",
-      "target": "ovl-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "roi",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
     },
     {
       "id": "e14",
-      "source": "ovl-1",
-      "target": "rep-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "sec_and",
+      "target": "section",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
     },
     {
       "id": "e15",
-      "source": "rep-1",
-      "target": "csv-1",
-      "sourceHandle": "dict__report",
-      "targetHandle": "any__val_1",
-      "selected": false
+      "source": "pol",
+      "target": "walls",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
     },
     {
       "id": "e16",
-      "source": "proto-1",
-      "target": "qs-1",
-      "sourceHandle": "root_data__data",
-      "targetHandle": "root_data__data",
-      "selected": false
+      "source": "section",
+      "target": "lum_sub",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
     },
     {
-      "source": "iso-1",
-      "sourceHandle": "root_data__data",
-      "target": "ste-1",
-      "targetHandle": "root_data__data",
-      "id": "e-1778052588664",
-      "selected": false
+      "id": "e17",
+      "source": "walls",
+      "target": "lum_sub",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_b"
     },
     {
-      "source": "src-1",
+      "id": "e18",
+      "source": "lum_sub",
+      "target": "lumens",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e19",
+      "source": "lumens",
+      "target": "lum_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e20",
+      "source": "lum_cc",
+      "target": "lum_med",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__data_list"
+    },
+    {
+      "id": "e21",
+      "source": "lum_med",
+      "target": "sigma",
+      "sourceHandle": "scalar__median",
+      "targetHandle": "scalar__0_med"
+    },
+    {
+      "id": "e22",
+      "source": "pol",
+      "target": "dog",
       "sourceHandle": "image__main",
-      "target": "node-1778053357306",
-      "targetHandle": "any__in",
-      "id": "e-1778053377506",
-      "selected": false
+      "targetHandle": "image__image"
     },
     {
-      "source": "node-1778053357306",
-      "sourceHandle": "any__out",
-      "target": "node-1778053393528",
-      "targetHandle": "any__in",
-      "id": "e-1778053434431"
+      "id": "e23",
+      "source": "sigma",
+      "target": "dog",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__sigma"
     },
     {
-      "source": "node-1778053393528",
-      "sourceHandle": "any__out",
-      "target": "node-1778052552378",
-      "targetHandle": "image__main",
-      "id": "e-1778053457372"
+      "id": "e24",
+      "source": "dog",
+      "target": "en_blur",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
     },
     {
-      "source": "ovl-1",
-      "sourceHandle": "image__image",
-      "target": "node-1778052552378",
-      "targetHandle": "image__0_v9dlpy",
-      "id": "e-1778053464225",
-      "selected": false
+      "id": "e25",
+      "source": "section",
+      "target": "inner",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e26",
+      "source": "en_blur",
+      "target": "st_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e27",
+      "source": "inner",
+      "target": "st_thr",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e28",
+      "source": "st_thr",
+      "target": "st_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e29",
+      "source": "st_open",
+      "target": "st_big",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e30",
+      "source": "st_big",
+      "target": "st_close",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e31",
+      "source": "st_close",
+      "target": "coarse",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e32",
+      "source": "coarse",
+      "target": "band_out",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e33",
+      "source": "coarse",
+      "target": "core",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e34",
+      "source": "band_out",
+      "target": "ring",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e35",
+      "source": "core",
+      "target": "ring",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e36",
+      "source": "sec_blur",
+      "target": "snap",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e37",
+      "source": "ring",
+      "target": "snap",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e38",
+      "source": "core",
+      "target": "st_union",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e39",
+      "source": "snap",
+      "target": "st_union",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e40",
+      "source": "st_union",
+      "target": "st_open2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e41",
+      "source": "st_open2",
+      "target": "st_big2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e42",
+      "source": "st_big2",
+      "target": "st_fill2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e43",
+      "source": "st_fill2",
+      "target": "stele",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e44",
+      "source": "section",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e45",
+      "source": "stele",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e46",
+      "source": "pol",
+      "target": "mx_lum",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e47",
+      "source": "mx_lum",
+      "target": "mx_and",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e48",
+      "source": "stele",
+      "target": "mx_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e49",
+      "source": "mx_and",
+      "target": "mx_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e50",
+      "source": "lumens",
+      "target": "st_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e51",
+      "source": "stele",
+      "target": "st_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e52",
+      "source": "st_lum",
+      "target": "st_lum_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e53",
+      "source": "st_lum_fill",
+      "target": "vessels",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e54",
+      "source": "mx_open",
+      "target": "vessels",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e55",
+      "source": "vessels",
+      "target": "mx_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e56",
+      "source": "mx_cc",
+      "target": "mx_break",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__values"
+    },
+    {
+      "id": "e57",
+      "source": "lum_med",
+      "target": "mx_floor",
+      "sourceHandle": "scalar__median",
+      "targetHandle": "scalar__0_med"
+    },
+    {
+      "id": "e58",
+      "source": "mx_floor",
+      "target": "mx_break",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_value"
+    },
+    {
+      "id": "e59",
+      "source": "vessels",
+      "target": "metaxylem",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e60",
+      "source": "mx_break",
+      "target": "metaxylem",
+      "sourceHandle": "scalar__threshold",
+      "targetHandle": "scalar__min_area"
+    },
+    {
+      "id": "e61",
+      "source": "pol",
+      "target": "ae_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e62",
+      "source": "cortex",
+      "target": "ae_thr",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e63",
+      "source": "ae_thr",
+      "target": "ae_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e64",
+      "source": "ae_open",
+      "target": "ae_big",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e65",
+      "source": "ae_big",
+      "target": "aerenchyma",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e66",
+      "source": "stele",
+      "target": "st_ero",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e67",
+      "source": "stele",
+      "target": "endo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e68",
+      "source": "st_ero",
+      "target": "endo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e69",
+      "source": "section",
+      "target": "sec_ero",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e70",
+      "source": "section",
+      "target": "exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e71",
+      "source": "sec_ero",
+      "target": "exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e72",
+      "source": "stele",
+      "target": "zones",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__inner"
+    },
+    {
+      "id": "e73",
+      "source": "section",
+      "target": "zones",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__outer"
+    },
+    {
+      "id": "e74",
+      "source": "zones",
+      "target": "aerenchyma",
+      "sourceHandle": "mask__band_2",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e75",
+      "source": "cortex",
+      "target": "cell_region",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e76",
+      "source": "aerenchyma",
+      "target": "cell_region",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e77",
+      "source": "lum_med",
+      "target": "cell_rad",
+      "sourceHandle": "scalar__median",
+      "targetHandle": "scalar__0_med"
+    },
+    {
+      "id": "e78",
+      "source": "cell_rad",
+      "target": "cell_sig",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__0_rad"
+    },
+    {
+      "id": "e79",
+      "source": "pol",
+      "target": "peaks",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e80",
+      "source": "cell_region",
+      "target": "peaks",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e81",
+      "source": "cell_sig",
+      "target": "peaks",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__sigma"
+    },
+    {
+      "id": "e82",
+      "source": "cell_rad",
+      "target": "peaks",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_distance"
+    },
+    {
+      "id": "e83",
+      "source": "pol",
+      "target": "ws",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e84",
+      "source": "peaks",
+      "target": "ws",
+      "sourceHandle": "markers__markers",
+      "targetHandle": "markers__markers"
+    },
+    {
+      "id": "e85",
+      "source": "cell_region",
+      "target": "ws",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e86",
+      "source": "ws",
+      "target": "cell_stats",
+      "sourceHandle": "markers__markers_out",
+      "targetHandle": "markers__regions"
+    },
+    {
+      "id": "e87",
+      "source": "zones",
+      "target": "cell_stats",
+      "sourceHandle": "markers__bands",
+      "targetHandle": "markers__zones"
+    },
+    {
+      "id": "e88",
+      "source": "cell_stats",
+      "target": "cz_ic",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e89",
+      "source": "walls",
+      "target": "wall_sec",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e90",
+      "source": "section",
+      "target": "wall_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e91",
+      "source": "walls",
+      "target": "wall_ctx",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e92",
+      "source": "cortex",
+      "target": "wall_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e93",
+      "source": "walls",
+      "target": "wall_st",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e94",
+      "source": "stele",
+      "target": "wall_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e95",
+      "source": "sec_open",
+      "target": "lat",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e96",
+      "source": "roi",
+      "target": "lat",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e97",
+      "source": "lat",
+      "target": "lat_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e98",
+      "source": "sec_open",
+      "target": "lat_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e99",
+      "source": "section",
+      "target": "px_rxsa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e100",
+      "source": "wall_sec",
+      "target": "px_xscwa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e101",
+      "source": "cortex",
+      "target": "px_tca",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e102",
+      "source": "wall_ctx",
+      "target": "px_ccwa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e103",
+      "source": "aerenchyma",
+      "target": "px_aa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e104",
+      "source": "lat_sec",
+      "target": "px_la",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e105",
+      "source": "stele",
+      "target": "px_tsa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e106",
+      "source": "wall_st",
+      "target": "px_scwa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e107",
+      "source": "metaxylem",
+      "target": "px_xva",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e108",
+      "source": "endo",
+      "target": "px_ea",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e109",
+      "source": "exo",
+      "target": "px_exa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e110",
+      "source": "px_tca",
+      "target": "cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_tca"
+    },
+    {
+      "id": "e111",
+      "source": "px_aa",
+      "target": "cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_aa"
+    },
+    {
+      "id": "e112",
+      "source": "px_aa",
+      "target": "r_pct_a",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_aa"
+    },
+    {
+      "id": "e113",
+      "source": "px_tca",
+      "target": "r_pct_a",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tca"
+    },
+    {
+      "id": "e114",
+      "source": "cca",
+      "target": "r_pct_cca",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__0_cca"
+    },
+    {
+      "id": "e115",
+      "source": "px_rxsa",
+      "target": "r_pct_cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_rxsa"
+    },
+    {
+      "id": "e116",
+      "source": "px_tsa",
+      "target": "r_tsa_rxsa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_tsa"
+    },
+    {
+      "id": "e117",
+      "source": "px_rxsa",
+      "target": "r_tsa_rxsa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_rxsa"
+    },
+    {
+      "id": "e118",
+      "source": "px_tsa",
+      "target": "r_tsa_tca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_tsa"
+    },
+    {
+      "id": "e119",
+      "source": "px_tca",
+      "target": "r_tsa_tca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tca"
+    },
+    {
+      "id": "e120",
+      "source": "px_rxsa",
+      "target": "n_cf",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_rxsa"
+    },
+    {
+      "id": "e121",
+      "source": "px_tsa",
+      "target": "n_cf",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_tsa"
+    },
+    {
+      "id": "e122",
+      "source": "cell_stats",
+      "target": "n_cf",
+      "sourceHandle": "scalar__mean_area",
+      "targetHandle": "scalar__2_cell"
+    },
+    {
+      "id": "e123",
+      "source": "px_rxsa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__rxsa"
+    },
+    {
+      "id": "e124",
+      "source": "px_xscwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__xscwa"
+    },
+    {
+      "id": "e125",
+      "source": "px_tca",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__tca"
+    },
+    {
+      "id": "e126",
+      "source": "px_ccwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__ccwa"
+    },
+    {
+      "id": "e127",
+      "source": "px_aa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__aa"
+    },
+    {
+      "id": "e128",
+      "source": "px_la",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__la"
+    },
+    {
+      "id": "e129",
+      "source": "px_tsa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__tsa"
+    },
+    {
+      "id": "e130",
+      "source": "px_scwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__scwa"
+    },
+    {
+      "id": "e131",
+      "source": "px_xva",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__xva"
+    },
+    {
+      "id": "e132",
+      "source": "px_ea",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__ea"
+    },
+    {
+      "id": "e133",
+      "source": "px_exa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__exa"
+    },
+    {
+      "id": "e134",
+      "source": "cca",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__cca"
+    },
+    {
+      "id": "e135",
+      "source": "cz_ic",
+      "target": "areas_px",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__csic"
+    },
+    {
+      "id": "e136",
+      "source": "cz_ic",
+      "target": "areas_px",
+      "sourceHandle": "any__val_2",
+      "targetHandle": "any__csmc"
+    },
+    {
+      "id": "e137",
+      "source": "cz_ic",
+      "target": "areas_px",
+      "sourceHandle": "any__val_3",
+      "targetHandle": "any__csoc"
+    },
+    {
+      "id": "e138",
+      "source": "r_pct_a",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__pct_a"
+    },
+    {
+      "id": "e139",
+      "source": "r_pct_cca",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__pct_cca"
+    },
+    {
+      "id": "e140",
+      "source": "aerenchyma",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_lac"
+    },
+    {
+      "id": "e141",
+      "source": "cell_stats",
+      "target": "others",
+      "sourceHandle": "scalar__total_count",
+      "targetHandle": "scalar__n_cc"
+    },
+    {
+      "id": "e142",
+      "source": "n_cf",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__n_cf"
+    },
+    {
+      "id": "e143",
+      "source": "metaxylem",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_mx"
+    },
+    {
+      "id": "e144",
+      "source": "r_tsa_rxsa",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__tsa_rxsa"
+    },
+    {
+      "id": "e145",
+      "source": "r_tsa_tca",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__tsa_tca"
+    },
+    {
+      "id": "e146",
+      "source": "scale",
+      "target": "others",
+      "sourceHandle": "scalar__px_per_mm",
+      "targetHandle": "scalar__px_per_mm"
+    },
+    {
+      "id": "e147",
+      "source": "quality",
+      "target": "others",
+      "sourceHandle": "scalar__value",
+      "targetHandle": "scalar__quality"
+    },
+    {
+      "id": "e148",
+      "source": "areas_px",
+      "target": "areas_mm",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e149",
+      "source": "scale",
+      "target": "areas_mm",
+      "sourceHandle": "scalar__px_per_mm",
+      "targetHandle": "scalar__factor"
+    },
+    {
+      "id": "e150",
+      "source": "areas_mm",
+      "target": "report",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e151",
+      "source": "others",
+      "target": "report",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict_2"
+    },
+    {
+      "id": "e152",
+      "source": "report",
+      "target": "csv",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__report_0"
+    },
+    {
+      "id": "e153",
+      "source": "section",
+      "target": "not_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e154",
+      "source": "lumens",
+      "target": "cc_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e155",
+      "source": "cell_region",
+      "target": "cc_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e156",
+      "source": "cc_lum",
+      "target": "cells_in",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e157",
+      "source": "zones",
+      "target": "cells_in",
+      "sourceHandle": "mask__band_1",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e158",
+      "source": "cc_lum",
+      "target": "cells_mid",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e159",
+      "source": "zones",
+      "target": "cells_mid",
+      "sourceHandle": "mask__band_2",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e160",
+      "source": "cc_lum",
+      "target": "cells_out",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e161",
+      "source": "zones",
+      "target": "cells_out",
+      "sourceHandle": "mask__band_3",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e162",
+      "source": "lumens",
+      "target": "endo_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e163",
+      "source": "endo",
+      "target": "endo_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e164",
+      "source": "lumens",
+      "target": "exo_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e165",
+      "source": "exo",
+      "target": "exo_lum",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e166",
+      "source": "section",
+      "target": "ol_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e167",
+      "source": "stele",
+      "target": "ol_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e168",
+      "source": "metaxylem",
+      "target": "ol_mx",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e169",
+      "source": "ol_sec",
+      "target": "ol_1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e170",
+      "source": "ol_st",
+      "target": "ol_1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e171",
+      "source": "ol_1",
+      "target": "ol_all",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e172",
+      "source": "ol_mx",
+      "target": "ol_all",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e173",
+      "source": "src",
+      "target": "paint_0",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e174",
+      "source": "not_sec",
+      "target": "paint_0",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e175",
+      "source": "paint_0",
+      "target": "paint_1",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e176",
+      "source": "section",
+      "target": "paint_1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e177",
+      "source": "paint_1",
+      "target": "paint_2",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e178",
+      "source": "stele",
+      "target": "paint_2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e179",
+      "source": "paint_2",
+      "target": "paint_3",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e180",
+      "source": "wall_sec",
+      "target": "paint_3",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e181",
+      "source": "paint_3",
+      "target": "paint_4",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e182",
+      "source": "cells_out",
+      "target": "paint_4",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e183",
+      "source": "paint_4",
+      "target": "paint_5",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e184",
+      "source": "cells_mid",
+      "target": "paint_5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e185",
+      "source": "paint_5",
+      "target": "paint_6",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e186",
+      "source": "cells_in",
+      "target": "paint_6",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e187",
+      "source": "paint_6",
+      "target": "paint_7",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e188",
+      "source": "st_lum",
+      "target": "paint_7",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e189",
+      "source": "paint_7",
+      "target": "paint_8",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e190",
+      "source": "exo_lum",
+      "target": "paint_8",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e191",
+      "source": "paint_8",
+      "target": "paint_9",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e192",
+      "source": "endo_lum",
+      "target": "paint_9",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e193",
+      "source": "paint_9",
+      "target": "paint_10",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e194",
+      "source": "aerenchyma",
+      "target": "paint_10",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e195",
+      "source": "paint_10",
+      "target": "paint_11",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e196",
+      "source": "metaxylem",
+      "target": "paint_11",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e197",
+      "source": "paint_11",
+      "target": "paint_12",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e198",
+      "source": "ws",
+      "target": "paint_12",
+      "sourceHandle": "mask__boundaries",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e199",
+      "source": "paint_12",
+      "target": "paint_13",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e200",
+      "source": "ol_all",
+      "target": "paint_13",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e201",
+      "source": "paint_13",
+      "target": "legend",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e202",
+      "source": "src",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "id": "e203",
+      "source": "legend",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_b"
+    },
+    {
+      "id": "e204",
+      "source": "compose",
+      "target": "display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
     }
   ],
   "ui": {
     "previewSize": {
-      "w": 893.1015625,
-      "h": 446
+      "w": 900,
+      "h": 450
     },
     "previewPos": {
-      "x": 416.70703125,
-      "y": -64.61328125
+      "x": 420,
+      "y": -60
     },
-    "activePaletteIndex": 6,
-    "visualizedNodeId": "node-1778052552378"
+    "visualizedNodeId": "display"
   }
 }

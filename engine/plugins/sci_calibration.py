@@ -8,8 +8,8 @@ import cv2
     category='measure',
     icon='Scaling',
     description="Converts pixel measurements (length or area) into real-world units based on a calibration factor.",
-    inputs=[{'id': 'input', 'color': 'any'}],
-    outputs=[{'id': 'output', 'color': 'any'}],
+    inputs=[{'id': 'input', 'color': 'any'}, {'id': 'factor', 'color': 'scalar', 'label': 'Pixels per Unit'}],
+    outputs=[{'id': 'main', 'color': 'any'}],
     params=[
         {'id': 'factor',     'label': 'Pixels per Unit', 'type': 'float', 'default': 100.0},
         {'id': 'dimension',  'label': 'Dimension',       'type': 'string', 'default': 'Area', 'options': ['Length', 'Area']},
@@ -22,7 +22,7 @@ class CalibrationNode(NodeProcessor):
         
         # Fallback for stale connections or mismatched IDs
         if val is None:
-            relevant_inputs = [v for k, v in inputs.items() if k not in ['raw_frame', 'image']]
+            relevant_inputs = [v for k, v in inputs.items() if k not in ['raw_frame', 'image', 'factor']]
             if relevant_inputs:
                 val = relevant_inputs[0]
 

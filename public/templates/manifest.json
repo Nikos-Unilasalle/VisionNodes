@@ -136,7 +136,7 @@
   },
   {
     "name": "Root Anatomy Analysis",
-    "description": "High-throughput phenotyping of root cross-sections. Segments RXSA, TSA, Cortex, Aerenchyma lacunae, Xylem vessels and cortical cells following the RootScan methodology.",
+    "description": "RootScan-equivalent root cross-section phenotyping (Burton et al. 2012, Table 1) built only from generic nodes. Scale bar auto-calibration, section, stele, metaxylem, aerenchyma (middle cortex), cortical cells by watershed in inner/middle/outer zones, 25 variables in a grouped report + CSV. Bright-field and fluorescence.",
     "file": "root_anatomy_analysis.vn"
   },
   {
