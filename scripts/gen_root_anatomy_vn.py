@@ -315,8 +315,9 @@ node('peaks', 'feat_peak_markers', 'One Marker per Cell', f, 0, 1, {'polarity': 
      'Each cell interior is a bright dome after smoothing; its top seeds one cell.')
 node('ws', 'feat_watershed', 'Cells (Watershed)', f, 1, 1, {'visualization': 0, 'boundary_color': '#FF0000', 'boundary_thickness': 1},
      'Grows each marker until it meets the neighbouring cell on the wall → whole cells, walls included.')
-node('cell_stats', 'sci_zone_stats', 'Cells per Zone', f, 2, 1, {'min_area': 30, 'max_area': 0, 'ignore_label': 1},
-     'Count and mean size per band (CSic / CSmc / CSoc). Ignore Label 1 = watershed background.')
+node('cell_stats', 'sci_zone_stats', 'Cells per Zone', f, 2, 1, {'min_area': 30, 'max_area': 50000, 'ignore_label': -99},
+     'Count and mean size per band (CSic / CSmc / CSoc). Max Area drops the watershed background region '
+     '(label numbering differs between engines, its size does not).')
 node('cz_ic', 'plugin_dict_get', 'CSic | CSmc | CSoc', f, 3, 1,
      {'key_1': 'zone_1_mean_area', 'key_2': 'zone_2_mean_area', 'key_3': 'zone_3_mean_area'})
 edge('cortex', 'mask', 'cell_region', 'mask_a')
