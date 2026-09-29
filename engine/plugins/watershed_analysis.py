@@ -2,55 +2,75 @@ import cv2
 import numpy as np
 from registry import NodeProcessor, vision_node
 
+THRESHOLD_MODES = ["Binary", "Binary Inv", "Otsu", "Otsu Inv", "70% of Max", "Triangle", "Triangle Inv"]
+AUTO_MODES = (2, 3, 4, 5, 6)
+INVERTED_MODES = (1, 3, 6)
+TRIANGLE_MODES = (5, 6)
+
+
+def _threshold_value(mode, manual, region):
+    """Threshold for `mode`, computed from `region` pixels (1-D uint8) for auto modes."""
+    if mode in (0, 1):
+        return float(manual)
+    if region.size == 0:
+        return 0.0
+    if mode == 4:
+        return 0.7 * float(region.max())
+    method = cv2.THRESH_TRIANGLE if mode in TRIANGLE_MODES else cv2.THRESH_OTSU
+    t, _ = cv2.threshold(region.reshape(-1, 1), 0, 255, cv2.THRESH_BINARY + method)
+    return float(t)
+
+
 @vision_node(
     type_id="feat_threshold_adv",
     label="Threshold (Advanced)",
     category='segmentation',
     icon="Layers",
-    description="Advanced thresholding including Otsu's method and relative percentage thresholds.",
-    inputs=[{"id": "image", "color": "image"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"}],
+    description="Advanced thresholding: Otsu, Triangle (one dominant background peak + a tail, "
+                "e.g. objects on a flat backdrop, even faint/out-of-focus ones) and % of max. "
+                "Optional mask: Otsu / % of Max are computed from masked pixels only and the "
+                "result is clipped to the mask. Offset shifts the automatic threshold.",
+    inputs=[{"id": "image", "color": "image"}, {"id": "mask", "color": "mask", "label": "Region (opt.)"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "mask", "color": "mask"},
+             {"id": "value", "color": "scalar", "label": "Threshold"}],
     params=[
-        {"id": "mode", "label": "Mode", "type": "enum", "options": ["Binary", "Binary Inv", "Otsu", "Otsu Inv", "70% of Max"], "default": 0},
-        {"id": "threshold", "label": "Value", "type": "scalar", "min": 0, "max": 255, "default": 127}
+        {"id": "mode", "label": "Mode", "type": "enum", "options": THRESHOLD_MODES, "default": 0},
+        {"id": "threshold", "label": "Value", "type": "scalar", "min": 0, "max": 255, "default": 127},
+        {"id": "offset", "label": "Auto Offset", "type": "scalar", "min": -128, "max": 128, "default": 0},
     ]
 )
 class AdvancedThresholdNode(NodeProcessor):
     def process(self, inputs, params):
         img = inputs.get('image')
-        if img is None: return {"main": None, "mask": None}
-        
-        # Convert to gray if needed
+        if img is None: return {"main": None, "mask": None, "value": None}
+
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if (len(img.shape) == 3 and img.shape[2] >= 3) else img
-        
         mode = int(params.get('mode', 0))
-        val = int(params.get('threshold', 127))
-        
-        # Otsu's method requires 8-bit or 16-bit images. Convert float to uint8.
-        if mode in [2, 3] and gray.dtype != np.uint8:
+
+        # Otsu's method requires 8-bit images. Convert float to uint8.
+        if mode in AUTO_MODES and gray.dtype != np.uint8:
             gray = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-        
-        res = None
-        if mode == 0: # Binary
-            _, res = cv2.threshold(gray, val, 255, cv2.THRESH_BINARY)
-        elif mode == 1: # Binary Inv
-            _, res = cv2.threshold(gray, val, 255, cv2.THRESH_BINARY_INV)
-        elif mode == 2: # Otsu
-            _, res = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        elif mode == 3: # Otsu Inv
-            _, res = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-        elif mode == 4: # Percentage of Max
-            max_val = np.max(gray)
-            if max_val > 0:
-                _, res = cv2.threshold(gray, 0.7 * max_val, 255, cv2.THRESH_BINARY)
-            else:
-                res = np.zeros_like(gray)
-        
-        # Ensure output is uint8 for preview and subsequent nodes
-        if res is not None:
-            res = res.astype(np.uint8)
-            
-        return {"main": res, "mask": res}
+
+        region_mask = inputs.get('mask')
+        if region_mask is not None:
+            if region_mask.ndim == 3:
+                region_mask = cv2.cvtColor(region_mask, cv2.COLOR_BGR2GRAY)
+            if region_mask.shape[:2] != gray.shape[:2]:
+                region_mask = cv2.resize(region_mask, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_NEAREST)
+            inside = region_mask > 0
+        else:
+            inside = None
+
+        region = gray[inside] if inside is not None else gray.ravel()
+        t = _threshold_value(mode, params.get('threshold', 127), region)
+        if mode in AUTO_MODES:
+            t += float(params.get('offset', 0))
+
+        hit = gray <= t if mode in INVERTED_MODES else gray > t
+        if inside is not None:
+            hit &= inside
+        res = hit.astype(np.uint8) * 255
+        return {"main": res, "mask": res, "value": t}
 
 @vision_node(
     type_id="feat_morphology_adv",
@@ -177,7 +197,8 @@ class ConnectedComponentsNode(NodeProcessor):
         "distance-transform peak) before flooding, so nothing is dropped."
     ),
     inputs=[{"id": "image", "color": "image"}, {"id": "markers", "color": "markers"}, {"id": "mask", "color": "mask", "label": "Cell Mask (opt)"}],
-    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "markers"}, {"id": "count", "color": "scalar"}],
+    outputs=[{"id": "main", "color": "image"}, {"id": "markers_out", "color": "markers"}, {"id": "count", "color": "scalar"},
+             {"id": "boundaries", "color": "mask", "label": "Boundary Lines"}],
     params=[
         {"id": "visualization", "label": "Visualization", "type": "enum", "options": ["Original + Boundaries", "Colorized Regions", "Regions + Boundaries", "Original"], "default": 0},
         {"id": "rescue_unseeded", "label": "Rescue Unseeded Regions", "type": "enum", "options": ["No", "Yes"], "default": 0},
@@ -307,7 +328,10 @@ class WatershedNode(NodeProcessor):
         else:  # Original
             out_img = img.copy()
 
-        return {"main": out_img, "markers_out": res_markers, "count": count}
+        boundaries = (res_markers == -1).astype(np.uint8) * 255
+        boundaries[[0, -1], :] = 0   # cv2.watershed always flags the 1-px image frame as -1
+        boundaries[:, [0, -1]] = 0
+        return {"main": out_img, "markers_out": res_markers, "count": count, "boundaries": boundaries}
 
 @vision_node(
     type_id="feat_marker_filter",
