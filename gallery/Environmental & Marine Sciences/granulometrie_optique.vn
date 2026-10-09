@@ -870,7 +870,7 @@
       "id": "e-1777615845935-2",
       "source": "node-1777615839942",
       "target": "gray-1",
-      "sourceHandle": "main",
+      "sourceHandle": "image__main",
       "targetHandle": "image__image",
       "selected": false
     },
