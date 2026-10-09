@@ -134,7 +134,7 @@
     {
       "id": "e-painter-region",
       "source": "n-painter",
-      "sourceHandle": "markers__labels",
+      "sourceHandle": "image__labels",
       "target": "n-region",
       "targetHandle": "markers__labels_map",
       "selected": false

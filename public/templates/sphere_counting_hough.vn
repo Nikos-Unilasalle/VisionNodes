@@ -340,7 +340,7 @@
       "data": {
         "label": "Cluster Heatmap",
         "params": {
-          "feature": 2,
+          "feature": "cluster_id",
           "colormap": 1,
           "alpha": 0.47,
           "colorbar": true,
