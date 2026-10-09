@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import ReactFlow, {
   Background, Controls, ControlButton, applyEdgeChanges, applyNodeChanges,
   Node, Edge, Connection, EdgeChange, NodeChange, Panel, BackgroundVariant,
-  NodeRemoveChange, useViewport,
+  NodeRemoveChange, useViewport, internalsSymbol,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import {
@@ -889,14 +889,32 @@ function App() {
       return Math.sqrt(distToSq(nodeCenter, {x:sx, y:sy}, {x:tx, y:ty})) < 30;
     });
     if (edgeToInsert && edgeToInsert.source !== node.id && edgeToInsert.target !== node.id) {
+      // Wire to the dropped node's real handles ("{color}__{port}"). A bare
+      // 'main' matches no handle, so React Flow would drop both edges from the
+      // canvas while the engine still ran them.
+      const bounds = (instance?.getNode(node.id) as any)?.[internalsSymbol]?.handleBounds;
+      const handleIds = (list: any[] | null | undefined): string[] =>
+        (list ?? []).map(h => h.id).filter((id: unknown): id is string => typeof id === 'string' && !id.endsWith('__DYNAMIC_NEW_HANDLE'));
+      const targets = handleIds(bounds?.target);
+      const sources = handleIds(bounds?.source);
+      const fits = (sourceHandle: string, targetHandle: string) =>
+        isValidConnection({ source: '', target: '', sourceHandle, targetHandle });
+      const incoming = edgeToInsert.sourceHandle;
+      const outgoing = edgeToInsert.targetHandle;
+      const inHandle = incoming ? targets.find(t => fits(incoming, t)) : targets[0];
+      const outHandle = outgoing
+        ? sources.find(s => s.endsWith('__main') && fits(s, outgoing)) ?? sources.find(s => fits(s, outgoing))
+        : sources[0];
+      // Nothing compatible on one side: keep the original edge rather than break it.
+      if (!inHandle || !outHandle) return;
       setViewEdges((eds) => {
         return eds.filter(e => e.id !== edgeToInsert.id).concat([
-          { id: `e-${Date.now()}-1`, source: edgeToInsert.source, target: node.id, sourceHandle: edgeToInsert.sourceHandle, targetHandle: 'main' },
-          { id: `e-${Date.now()}-2`, source: node.id, target: edgeToInsert.target, sourceHandle: 'main', targetHandle: edgeToInsert.targetHandle }
+          { id: `e-${Date.now()}-1`, source: edgeToInsert.source, target: node.id, sourceHandle: edgeToInsert.sourceHandle, targetHandle: inHandle },
+          { id: `e-${Date.now()}-2`, source: node.id, target: edgeToInsert.target, sourceHandle: outHandle, targetHandle: edgeToInsert.targetHandle }
         ]);
       });
     }
-  }, [nodes, edges, setViewEdges]);
+  }, [nodes, edges, setViewEdges, instance, isValidConnection]);
 
   const updateNodeParams = (id: string, params: Record<string, unknown>) => {
     const now = Date.now();
@@ -1202,6 +1220,7 @@ function App() {
     previewSize, previewPos, activePaletteIndex, visualizedNodeId,
     confirmUnsaved,
     setSelectedNodeId,
+    pluginSchemas,
   });
 
   useEffect(() => {

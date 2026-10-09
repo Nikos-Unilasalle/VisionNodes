@@ -172,4 +172,12 @@ export const nodeTypes: Record<string, React.ComponentType<any>> = Object.fromEn
   Object.entries(_baseNodeTypes).map(([k, v]) => [k, withNodeColor(v)])
 );
 
+/**
+ * Types drawn by a hand-written component rather than from their schema —
+ * their handles need not follow the schema's ports (see normalizeEdgeHandles).
+ */
+export const CUSTOM_COMPONENT_TYPES: ReadonlySet<string> = new Set(
+  Object.entries(_baseNodeTypes).filter(([, v]) => v !== N.GenericCustomNode).map(([k]) => k)
+);
+
 export { withNodeColor, ColoredGenericCustomNode };
