@@ -452,18 +452,28 @@ class VisionEngine:
                         sh = sh_raw.split('__')[-1].lower()
                         th = th_raw.split('__')[-1].lower()
                         
-                        # Try to get value from source results (case-insensitive keys)
-                        val = source_res.get(sh) if hasattr(source_res, 'get') else None
-                        if val is None:
+                        # Try to get value from source results (case-insensitive keys).
+                        # Use a sentinel so a legitimately-None output (e.g. an accumulator
+                        # not yet warmed up) is still delivered — vs. a key that was never
+                        # produced at all. Both used to collapse to the same "no value"
+                        # branch below, so a connected-but-None port silently vanished
+                        # instead of reaching the node as `None`, e.g. a Python Node's `b`
+                        # was left undefined and raised NameError rather than being testable.
+                        _MISSING = object()
+                        val = source_res.get(sh, _MISSING) if hasattr(source_res, 'get') else _MISSING
+                        found = val is not _MISSING
+                        if not found:
                             source_res_lower = {k.lower(): v for k, v in source_res.items()}
-                            val = source_res_lower.get(sh)
-                        
-                        if val is None and sh == 'main':
+                            val = source_res_lower.get(sh, _MISSING)
+                            found = val is not _MISSING
+
+                        if not found and sh == 'main':
                             # Fallback: if 'main' requested but not found, take the first available output
                             if source_res:
                                 val = next(iter(source_res.values()))
+                                found = True
 
-                        if val is not None:
+                        if found:
                             if th:
                                 inputs[th] = val
                                 # Compatibility shims for common names
