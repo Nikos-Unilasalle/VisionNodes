@@ -98,7 +98,9 @@ class GeoLandCoverNode(NodeProcessor):
 
             target_class = int(params.get('land_class', 40))
             # Clip the global image to our ROI to make it "bounded"
-            class_mask = img.eq(target_class).clip(roi)
+            # uint8: eq() comes back 2 bytes/px, and getDownloadURL caps the RAW
+            # (uncompressed) output at 48 MiB -> a ~30 Mpx 10 m scene was refused.
+            class_mask = img.eq(target_class).toUint8().clip(roi)
             
             # Use dimensions for absolute precision
             url = class_mask.getDownloadURL({
