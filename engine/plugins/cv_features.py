@@ -542,15 +542,23 @@ class FillContoursNode(NodeProcessor):
     category='segmentation',
     icon="Maximize",
     description="Detects straight line segments in the image (walls, joints, etc.). "
+                "Runs its own blur + Canny edge detection internally (same convention as "
+                "Hough Circles), so it works directly on a plain photo — HoughLinesP needs a "
+                "binary edge map, not a raw grayscale image, so this used to require an "
+                "external Canny node chained beforehand with two hand-tuned thresholds "
+                "that Hough itself had no way to reason about. "
                 "Outputs the detected segments as a list AND an overlay image with "
                 "the lines drawn (ch10 §10.4).",
     inputs=[{"id": "image", "color": "any"}],
     outputs=[
         {"id": "main",       "color": "image", "label": "Overlay"},
+        {"id": "edges",      "color": "mask",  "label": "Edge Map"},
         {"id": "lines_list", "color": "list"},
         {"id": "count",      "color": "scalar"},
     ],
     params=[
+        {"id": "blur_ksize", "label": "Blur Size", "type": "scalar", "min": 1, "max": 15, "step": 2, "default": 3},
+        {"id": "canny_high", "label": "Canny High", "type": "scalar", "min": 1, "max": 500, "default": 150},
         {"id": "rho", "label": "Rho", "type": "scalar", "min": 1, "max": 10, "default": 1},
         {"id": "theta_deg", "label": "Theta (deg)", "type": "scalar", "min": 1, "max": 180, "default": 1},
         {"id": "threshold", "label": "Threshold", "type": "scalar", "min": 1, "max": 500, "default": 50},
@@ -562,10 +570,13 @@ class FillContoursNode(NodeProcessor):
 class HoughLinesNode(NodeProcessor):
     def process(self, inputs, params):
         image = inputs.get('image')
-        if image is None: return {"main": None, "lines_list": [], "count": 0.0}
+        if image is None: return {"main": None, "edges": None, "lines_list": [], "count": 0.0}
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
 
+        blur_ksize = int(params.get('blur_ksize', 3))
+        if blur_ksize % 2 == 0: blur_ksize += 1
+        canny_high = float(params.get('canny_high', 150))
         rho = float(params.get('rho', 1))
         theta = float(params.get('theta_deg', 1)) * np.pi / 180
         thresh = int(params.get('threshold', 50))
@@ -573,14 +584,22 @@ class HoughLinesNode(NodeProcessor):
         max_gap = float(params.get('max_gap', 10))
         thick = int(params.get('thickness', 2))
 
-        lines = cv2.HoughLinesP(gray, rho, theta, thresh, minLineLength=min_len, maxLineGap=max_gap)
+        # HoughLinesP needs a binary edge map, not a raw grayscale image — same
+        # internal edge-detection step Hough Circles does via HOUGH_GRADIENT,
+        # so this node works directly on a photo without an external Canny node.
+        blurred = cv2.GaussianBlur(gray, (blur_ksize, blur_ksize), 0) if blur_ksize > 1 else gray
+        edges = cv2.Canny(blurred, canny_high / 2.0, canny_high)
+
+        lines = cv2.HoughLinesP(edges, rho, theta, thresh, minLineLength=min_len, maxLineGap=max_gap)
 
         overlay = image.copy() if len(image.shape) == 3 else cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
         results = []
         if lines is not None:
             h, w = gray.shape[:2]
             for i, line in enumerate(lines):
-                x1, y1, x2, y2 = line[0]
+                # cv2.HoughLinesP's return shape is (N, 1, 4) on some OpenCV
+                # builds and (N, 4) on others — ravel() handles both.
+                x1, y1, x2, y2 = np.ravel(line)[:4]
                 cv2.line(overlay, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), thick, cv2.LINE_AA)
                 results.append({
                     "id": i,
@@ -590,4 +609,4 @@ class HoughLinesNode(NodeProcessor):
                     "relative": True,
                     "color": "#00ff00"
                 })
-        return {"main": overlay, "lines_list": results, "count": float(len(results))}
+        return {"main": overlay, "edges": edges, "lines_list": results, "count": float(len(results))}
