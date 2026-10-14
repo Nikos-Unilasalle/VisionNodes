@@ -209,7 +209,7 @@ class RasterNoiseNode(NodeProcessor):
         else:
             lo, hi = 0.0, 1.0
         span = (hi - lo) or 1.0
-        prev = np.clip((b0 - lo) / span * 255.0, 0, 255).astype(np.uint8)
+        prev = np.clip(np.nan_to_num((b0 - lo) / span * 255.0, nan=0.0), 0, 255).astype(np.uint8)
         preview = cv2.applyColorMap(prev, cv2.COLORMAP_BONE)
 
         self._last_output = {'geotiff': out_geo, 'preview': preview, 'tick': self._tick}

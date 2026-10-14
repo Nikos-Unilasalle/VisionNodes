@@ -38,13 +38,16 @@ class GeoTIFFReaderNode(NodeProcessor):
         self._pending_thumb = None
 
     def _stretch_band(self, band):
-        valid = band[band != 0]
+        # NaN (nodata of float rasters) must not reach the percentiles: a single NaN
+        # makes p2/p98 NaN and the whole preview garbage.
+        valid = band[np.isfinite(band) & (band != 0)]
         if valid.size == 0:
             return np.zeros_like(band, dtype=np.uint8)
         p2, p98 = np.percentile(valid, (2, 98))
         if p98 == p2:
             return np.full_like(band, 128, dtype=np.uint8)
-        return np.clip((band - p2) / (p98 - p2) * 255, 0, 255).astype(np.uint8)
+        scaled = np.nan_to_num((band - p2) / (p98 - p2) * 255, nan=0.0)
+        return np.clip(scaled, 0, 255).astype(np.uint8)
 
     def process(self, inputs, params):
         if not RASTERIO_AVAILABLE:
