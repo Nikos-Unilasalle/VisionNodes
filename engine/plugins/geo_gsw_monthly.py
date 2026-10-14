@@ -203,7 +203,9 @@ class GswMonthlyNode(NodeProcessor):
             if image is None:
                 return self._fail(f'No GSW image for {year}-{month:02d}')
 
-            url = ee.Image(image).select('water').clip(roi).getDownloadURL({
+            # uint8 (codes 0/1/2): getDownloadURL caps the RAW output at 48 MiB,
+            # so the pixel type, not the mask's content, sets the maximum ROI size.
+            url = ee.Image(image).select('water').toUint8().clip(roi).getDownloadURL({
                 'dimensions': [width, height],
                 'crs': crs,
                 'region': roi,

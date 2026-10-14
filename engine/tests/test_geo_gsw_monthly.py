@@ -34,6 +34,9 @@ class _FakeEEImage:
     def clip(self, *_a, **_k):
         return self
 
+    def toUint8(self):
+        return self
+
     def rename(self, *_a, **_k):
         return self
 
