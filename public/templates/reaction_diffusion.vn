@@ -394,14 +394,14 @@
       "source": "node-1779225774963-yid2ke6ff",
       "target": "node-1779225937710-r1k5xu79r",
       "sourceHandle": "image__main",
-      "targetHandle": "main",
+      "targetHandle": "image__image",
       "selected": false
     },
     {
       "id": "e-1779225941437-2",
       "source": "node-1779225937710-r1k5xu79r",
       "target": "node-1779225913120-vo29ytlqs",
-      "sourceHandle": "main",
+      "sourceHandle": "image__main",
       "targetHandle": "image__image",
       "selected": false
     },
@@ -426,14 +426,14 @@
       "source": "node-1779225748128-ebfq9uec4",
       "target": "node-1779227347470-j05cqp3de",
       "sourceHandle": "image__U",
-      "targetHandle": "main",
+      "targetHandle": "any__image",
       "selected": false
     },
     {
       "id": "e-1779227353158-2",
       "source": "node-1779227347470-j05cqp3de",
       "target": "node-1779226693264-ma0xpbkwh",
-      "sourceHandle": "main",
+      "sourceHandle": "image__image",
       "targetHandle": "image__image_a",
       "selected": false
     },

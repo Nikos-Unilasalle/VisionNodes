@@ -1,6 +1,15 @@
 import { useCallback } from 'react';
 import { save, open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile, readTextFile, rename, readDir } from '@tauri-apps/plugin-fs';
+import { CUSTOM_COMPONENT_TYPES } from '../data/nodeTypes';
+import { normalizeEdgeHandles } from '../utils/normalizeEdgeHandles';
+import { restoreDynamicPorts } from '../utils/restoreDynamicPorts';
+
+/** Saved handles brought in line with what the current nodes draw. */
+function repairGraph(nodes: any[], edges: any[], schemas: any[] | undefined) {
+  const normalized = normalizeEdgeHandles(nodes, edges, schemas, CUSTOM_COMPONENT_TYPES);
+  return restoreDynamicPorts(normalized.nodes, normalized.edges, schemas);
+}
 
 /** Guard against canvas-coordinate values accidentally stored as previewPos. */
 function _clampPreviewPos(pos: { x: number; y: number }): { x: number; y: number } {
@@ -33,6 +42,7 @@ export function useFileOperations({
   visualizedNodeId,
   confirmUnsaved,
   setSelectedNodeId,
+  pluginSchemas,
 }: any) {
 
   const buildProjectContent = useCallback(() => {
@@ -124,9 +134,13 @@ export function useFileOperations({
   const loadProjectFromPath = useCallback(async (filePath: string) => {
     try {
       const content = await readTextFile(filePath);
-      const { nodes: rawNodes, edges: newEdges, ui } = JSON.parse(content);
-      const newNodes = rawNodes.map((n: any) =>
-        n.type === 'canvas_reroute' ? { ...n, style: { ...n.style, width: 8, height: (typeof n.style?.height === 'number' && n.style.height >= 24) ? n.style.height : 48 } } : n
+      const { nodes: rawNodes, edges: rawEdges, ui } = JSON.parse(content);
+      const { nodes: newNodes, edges: newEdges } = repairGraph(
+        rawNodes.map((n: any) =>
+          n.type === 'canvas_reroute' ? { ...n, style: { ...n.style, width: 8, height: (typeof n.style?.height === 'number' && n.style.height >= 24) ? n.style.height : 48 } } : n
+        ),
+        rawEdges,
+        pluginSchemas,
       );
       setGroupStack([]); groupStackRef.current = [];
       setNodes(newNodes); setEdges(newEdges); setActiveFilePath(filePath);
@@ -143,7 +157,7 @@ export function useFileOperations({
       console.error('Failed to load project:', err);
       pushNotification('Open failed — see console', 'error');
     }
-  }, [setNodes, setEdges, setActiveFilePath, setPreviewSize, setPreviewPos, setActivePaletteIndex, setVisualizedNodeId, setPreviewNode, updateGraph, pushNotification, setGroupStack, groupStackRef]);
+  }, [setNodes, setEdges, setActiveFilePath, setPreviewSize, setPreviewPos, setActivePaletteIndex, setVisualizedNodeId, setPreviewNode, updateGraph, pushNotification, setGroupStack, groupStackRef, pluginSchemas]);
 
   const loadProject = useCallback(async () => {
     await confirmUnsaved();
@@ -159,8 +173,7 @@ export function useFileOperations({
   }, [confirmUnsaved, loadProjectFromPath]);
 
   const applyTemplateData = useCallback((data: any) => {
-    const nodes = data.nodes || [];
-    const edges = data.edges || [];
+    const { nodes, edges } = repairGraph(data.nodes || [], data.edges || [], pluginSchemas);
     setGroupStack([]); groupStackRef.current = [];
     setNodes(nodes); setEdges(edges);
     setSelectedNodeId?.(nodes.find((n: any) => n.selected)?.id ?? null);
@@ -171,7 +184,7 @@ export function useFileOperations({
       if (data.ui.visualizedNodeId !== undefined) { setVisualizedNodeId(data.ui.visualizedNodeId); setPreviewNode(data.ui.visualizedNodeId); }
     }
     updateGraph(nodes, edges);
-  }, [setNodes, setEdges, setPreviewSize, setPreviewPos, setActivePaletteIndex, setVisualizedNodeId, setPreviewNode, updateGraph, setGroupStack, groupStackRef]);
+  }, [setNodes, setEdges, setPreviewSize, setPreviewPos, setActivePaletteIndex, setVisualizedNodeId, setPreviewNode, updateGraph, setGroupStack, groupStackRef, pluginSchemas]);
 
   const loadTemplate = useCallback(async (file: string) => {
     try {

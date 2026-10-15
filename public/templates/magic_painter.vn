@@ -10,7 +10,7 @@
   "edges": [
     { "id": "e1", "source": "src-1",   "target": "hand-1",    "sourceHandle": "image__main",   "targetHandle": "image__image" },
     { "id": "e2", "source": "src-1",   "target": "overlay-1", "sourceHandle": "image__main",   "targetHandle": "image__image" },
-    { "id": "e3", "source": "hand-1",  "target": "sel-1",     "sourceHandle": "data__hand_0",  "targetHandle": "list__list_in" },
+    { "id": "e3", "source": "hand-1",  "target": "sel-1",     "sourceHandle": "dict__hand_0",  "targetHandle": "list__list_in" },
     { "id": "e4", "source": "sel-1",   "target": "point-1",   "sourceHandle": "any__item_out", "targetHandle": "scalar__x" },
     { "id": "e5", "source": "point-1", "target": "overlay-1", "sourceHandle": "dict__draw",    "targetHandle": "any__data" },
     { "id": "e6", "source": "overlay-1","target": "disp-1",   "sourceHandle": "image__main",   "targetHandle": "image__main" }

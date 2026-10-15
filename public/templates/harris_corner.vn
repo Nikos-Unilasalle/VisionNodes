@@ -781,7 +781,7 @@
       "source": "reroute-1778442231027",
       "sourceHandle": "any__out_0_i7pojn",
       "target": "node-1777700510121",
-      "targetHandle": "main"
+      "targetHandle": "image__image"
     },
     {
       "id": "rr-out-1778442231027-2",

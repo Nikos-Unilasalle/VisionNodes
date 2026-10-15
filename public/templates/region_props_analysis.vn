@@ -179,7 +179,7 @@
       "data": {
         "label": "Heatmap: Area",
         "params": {
-          "feature": 0,
+          "feature": "area",
           "colormap": 0,
           "alpha": 0.85,
           "bg_alpha": 0.3,
@@ -229,7 +229,7 @@
       "data": {
         "label": "Heatmap: Circularity",
         "params": {
-          "feature": 1,
+          "feature": "circularity",
           "colormap": 1,
           "alpha": 0.85,
           "bg_alpha": 0.3,
@@ -810,7 +810,7 @@
       "id": "e-1777703512150-2",
       "source": "n-thresh",
       "target": "n-heat-area",
-      "sourceHandle": "main",
+      "sourceHandle": "image__main",
       "targetHandle": "image__image",
       "selected": false
     },
@@ -826,7 +826,7 @@
       "id": "e-1777704322607-2",
       "source": "n-cc",
       "target": "n-props",
-      "sourceHandle": "main",
+      "sourceHandle": "image__main",
       "targetHandle": "image__image",
       "selected": false
     },
@@ -890,7 +890,7 @@
       "id": "e-1777705830866-2",
       "source": "n-disp-prev",
       "target": "node-1777705416792",
-      "sourceHandle": "main",
+      "sourceHandle": "image__main",
       "targetHandle": "image__image_a"
     },
     {
@@ -898,21 +898,21 @@
       "source": "n-img",
       "target": "node-1777703332998",
       "sourceHandle": "image__main",
-      "targetHandle": "main"
+      "targetHandle": "image__image"
     },
     {
       "id": "e-1777706061332-1",
       "source": "node-1777703332998",
       "target": "n-props",
-      "sourceHandle": "main",
-      "targetHandle": "main"
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
     },
     {
       "id": "e-1777706061332-2",
       "source": "n-props",
       "target": "n-disp-prev",
-      "sourceHandle": "main",
-      "targetHandle": "main"
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
     }
   ],
   "ui": {
