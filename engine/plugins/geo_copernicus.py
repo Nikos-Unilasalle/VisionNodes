@@ -138,6 +138,11 @@ COLLECTIONS: dict[str, dict] = {
         # Without this the whole downstream (index thresholds, reflectance-unit gate
         # caps, an additive noise sigma in reflectance units) is off by 1e4.
         'value_scale':  1e-4,
+        # Processing baseline >= 04.00 (acquisitions from 2022-01-25) adds +1000 to the DN
+        # (BOA_ADD_OFFSET); odc.stac does not remove it, so every reflectance came out
+        # +0.1 too high (forest red ~0.125 instead of ~0.025) and NDVI/BSI were biased.
+        'boa_offset_dn':   1000,
+        'boa_offset_from': '2022-01-25',
     },
     'Copernicus DEM GLO-30 (Planetary)': {
         # elevation 0 is sea level, not missing data
@@ -747,6 +752,10 @@ class GeoCopernicusNode(NodeProcessor):
             mosaic_mode = 'SIMPLE'
         if 'SCL' in bands and len(bands) == 1:
             mosaic_mode = 'SIMPLE'
+        # Collections without a cloud filter (S1, DEM…) are always downloaded as SIMPLE;
+        # normalise here so the cache key matches the one used when the tile was written.
+        if mosaic_mode == 'CLOUD_FREE' and not col_cfg.get('has_cloud_filter'):
+            mosaic_mode = 'SIMPLE'
 
         # Clear any leftover cancel flag from a previous operation
         clear_cancel(self._notif_id)
@@ -1318,8 +1327,16 @@ class GeoCopernicusNode(NodeProcessor):
         compose_fn = compose_fns.get(composite, compose_fns['median'])
 
         out_bands: dict[str, np.ndarray] = {}
+        boa_off = col_cfg.get('boa_offset_dn')
         for ak in asset_keys:
-            band = compose_fn(ds[ak]).values  # → numpy
+            da = ds[ak]
+            if boa_off and ak != 'SCL':
+                import xarray as _xr
+                _t = da['time'].values
+                _sub = np.where(_t >= np.datetime64(col_cfg.get('boa_offset_from', '2022-01-25')),
+                                float(boa_off), 0.0).astype('float32')
+                da = da - _xr.DataArray(_sub, dims=['time'])
+            band = compose_fn(da).values  # → numpy
             out_bands[ak] = self._postprocess_band(band, col_cfg, to_db, is_cat)
 
         # Sanity check: did we get any non-NaN data?

@@ -96,7 +96,11 @@ export const BaseNode = ({
   const updateNodeInternals = useUpdateNodeInternals();
   // Externalized-param input handles — rendered natively on any node (see App.onExternalizeParam).
   const paramPorts: { id: string; color: string; label?: string }[] = (data as any)?.paramPorts ?? [];
-  const allInputs = paramPorts.length ? [...inputs, ...paramPorts] : inputs;
+  // A param can share its id with a declared input (Blob Filter's `min_area`):
+  // one handle, not two with the same id and React key.
+  const allInputs = paramPorts.length
+    ? [...inputs, ...paramPorts.filter(p => !inputs.some((i: any) => i.id === p.id))]
+    : inputs;
   const totalInputs = allInputs.length + (data?.params?.var_count || 0);
   const totalOutputs = outputs.length;
   const maxPorts = Math.max(totalInputs, totalOutputs);
@@ -167,7 +171,7 @@ export const BaseNode = ({
         ? allInputs.map((inp: any, i: number) => {
             const portLeft = getPortLeft(i, totalInputs);
             return (
-              <React.Fragment key={inp.id}>
+              <React.Fragment key={`in-${inp.id}`}>
                 <StyledHandle type="target" position={Position.Top} id={inp.id} color={inp.color} left={portLeft} noBorder={isMinified} />
                 {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{inp.label || inp.id}</span>}
               </React.Fragment>
@@ -176,7 +180,7 @@ export const BaseNode = ({
         : allInputs.map((inp: any, i: number) => {
             const top = getPortTop(i, totalInputs);
             return (
-              <div key={inp.id} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
+              <div key={`in-${inp.id}`} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
                 <StyledHandle type="target" position={Position.Left} id={inp.id} color={inp.color} top="50%" noBorder={isMinified} />
                 {!isMinified && <span className="ml-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 max-w-[42%] truncate">{inp.label || inp.id}</span>}
               </div>
@@ -190,7 +194,7 @@ export const BaseNode = ({
         if (isRotated) {
           const portLeft = getPortLeft(allInputs.length + i, totalInputs);
           return (
-            <React.Fragment key={char}>
+            <React.Fragment key={`var-${char}`}>
               <StyledHandle type="target" position={Position.Top} id={char} color="scalar" left={portLeft} noBorder={isMinified} />
               {!isMinified && <span className="absolute text-[8px] font-medium text-accent uppercase tracking-widest pointer-events-none z-10 text-center" style={{ left: portLeft, top: 8, transform: 'translateX(-50%)' }}>{char}</span>}
             </React.Fragment>
@@ -198,7 +202,7 @@ export const BaseNode = ({
         }
         const top = getPortTop(allInputs.length + i, totalInputs);
         return (
-          <div key={char} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
+          <div key={`var-${char}`} className="absolute left-0 w-full flex items-center pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
             <StyledHandle type="target" position={Position.Left} id={char} color="scalar" top="50%" noBorder={isMinified} />
             {!isMinified && <span className="ml-[12px] text-[8px] font-medium text-accent uppercase tracking-widest">{char}</span>}
           </div>
@@ -250,7 +254,7 @@ export const BaseNode = ({
         ? outputs.map((out: any, i: number) => {
             const portLeft = getPortLeft(i, totalOutputs);
             return (
-              <React.Fragment key={out.id}>
+              <React.Fragment key={`out-${out.id}`}>
                 <StyledHandle type="source" position={Position.Bottom} id={out.id} color={out.color} left={portLeft} noBorder={isMinified} />
                 {!isMinified && <span className="absolute text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 pointer-events-none z-10 text-center" style={{ left: portLeft, bottom: 8, transform: 'translateX(-50%)' }}>{out.label || out.id}</span>}
               </React.Fragment>
@@ -259,7 +263,7 @@ export const BaseNode = ({
         : outputs.map((out: any, i: number) => {
             const top = getPortTop(i, totalOutputs);
             return (
-              <div key={out.id} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
+              <div key={`out-${out.id}`} className="absolute right-0 w-full flex items-center justify-end pointer-events-none z-10" style={{ top, transform: 'translateY(-50%)' }}>
                 {!isMinified && <span className="mr-[12px] text-[7px] font-medium text-gray-500 uppercase tracking-tighter opacity-80 max-w-[42%] truncate text-right">{out.label || out.id}</span>}
                 <StyledHandle type="source" position={Position.Right} id={out.id} color={out.color} top="50%" noBorder={isMinified} />
               </div>
