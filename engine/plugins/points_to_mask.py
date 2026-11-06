@@ -7,7 +7,7 @@ from registry import vision_node, NodeProcessor
     label='Points to Mask',
     category='mask',
     icon='Target',
-    description="Convert a list of points into a binary mask. Each point is drawn as a filled circle.",
+    description="Convert a list of points into a binary mask. Each point is drawn as a filled circle. Accepts {x, y} (normalised or px), [x, y], or detection items with cx, cy in px.",
     inputs=[
         {'id': 'points', 'color': 'list'},
         {'id': 'reference', 'color': 'image'}
@@ -42,7 +42,10 @@ class PointsToMaskNode(NodeProcessor):
             x, y = None, None
             
             # Case 1: Dict with 'x' and 'y' (normalized or pixel)
-            if isinstance(p, dict):
+            if isinstance(p, dict) and p.get('cx') is not None and p.get('cy') is not None:
+                # Detection lists (cx, cy) are in pixels
+                x, y = int(round(float(p['cx']))), int(round(float(p['cy'])))
+            elif isinstance(p, dict):
                 x_val = p.get('x')
                 y_val = p.get('y')
                 if x_val is not None and y_val is not None:

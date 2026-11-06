@@ -140,6 +140,11 @@
     "file": "root_anatomy_analysis.vn"
   },
   {
+    "name": "Root Zoning by Cell Sampling",
+    "description": "Root cross-section analysed cell by cell, for poor images where many cells cannot be resolved. A ridge filter finds the cell walls, Cell Tessellation rebuilds every cell from wall to wall and keeps as MEASURED only those closed by a real wall; Cells from Walls adds the small cells it misses (enclosed spaces of two wall detectors). The rest of the tissue is UNRESOLVED. Cell size along the normalised radius ρ defines the zones and a first guess of the stele, whose outline is then traced all the way round (Ring Contour, re-centred, so an off-centre stele is followed), vessels are the cells much larger than their neighbours, and the measured cells are projected over the unresolved areas. Report: the RootScan variables plus a Measured vs Projected group and a bar chart of cells measured + projected per tissue (share of each tissue measured, cells measured, cells projected, 95 % interval). Five tissue zones (rhizodermis/exodermis, outer and inner cortex, vascular cylinder, pith) with cells measured + projected per zone; large peripheral stele cells picked apart. Map: the reconstruction itself, beside the photograph (coloured = measured, hatched = projected). Needs the whole section in the frame.",
+    "file": "root_hough_zoning.vn"
+  },
+  {
     "name": "Thin Section Petrography",
     "description": "Segments mineral grains from polarized light microscopy images (XPL + PPL). Detects opaque minerals, builds per-grain watershed markers, segments grains, and exports shape descriptors (area, circularity, aspect ratio, intensity) to CSV.",
     "file": "thin_section_petrography.vn"

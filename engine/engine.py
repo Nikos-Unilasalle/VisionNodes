@@ -154,7 +154,7 @@ def _is_serializable(v, _depth=0):
     if _depth > 3:
         return False
     if isinstance(v, dict):
-        if len(v) > 64:
+        if len(v) > 256:  # flat report dicts (one value per variable) easily exceed 64 keys
             return False
         return all(_is_serializable(x, _depth + 1) for x in v.values())
     if isinstance(v, (list, tuple)):
