@@ -32,8 +32,10 @@ def _distance_to_outer_edge(outer, ignore_border):
         "Relative depth between an inner mask and the edge of an outer mask: 0 at the inner "
         "boundary, 1 at the outer edge. Splits the layer in between into N concentric bands "
         "(e.g. inner / middle / outer cortex, rind layers, coating thickness zones) and outputs "
-        "a mask for a depth range (e.g. 0.2–0.8 = middle 60%). The image frame is not treated "
-        "as an edge, so objects cut by the frame keep correct depths."
+        "a mask for a depth range (e.g. 0.2–0.8 = middle 60%). Without an inner mask, depth runs "
+        "from 0 at the deepest point of the outer mask to 1 at its edge (e.g. 0–0.3 = the centre "
+        "of a stele: the pith). The image frame is not treated as an edge, so objects cut by the "
+        "frame keep correct depths."
     ),
     inputs=[
         {'id': 'inner', 'color': 'mask', 'label': 'Inner (e.g. stele)'},
@@ -66,10 +68,13 @@ class MaskDepthBandsNode(NodeProcessor):
         inner = _binary(inner_in, outer.shape) if inner_in is not None else np.zeros_like(outer)
         layer = (outer > 0) & (inner == 0)
 
-        d_in = cv2.distanceTransform((inner == 0).astype(np.uint8), cv2.DIST_L2, 5) if inner.any() \
-            else np.zeros(outer.shape, np.float32)
         d_out = _distance_to_outer_edge(outer, bool(params.get('ignore_border', True)))
-        depth = np.where(layer, d_in / (d_in + d_out + 1e-6), 0).astype(np.float32)
+        if inner.any():
+            d_in = cv2.distanceTransform((inner == 0).astype(np.uint8), cv2.DIST_L2, 5)
+            depth = np.where(layer, d_in / (d_in + d_out + 1e-6), 0).astype(np.float32)
+        else:   # no inner mask: 0 at the deepest point of the outer mask, 1 at its edge
+            top = float(d_out[layer].max()) if layer.any() else 1.0
+            depth = np.where(layer, 1 - d_out / max(top, 1e-6), 0).astype(np.float32)
 
         n = int(np.clip(int(params.get('bands', 3)), 1, MAX_BANDS))
         bands = np.where(layer, np.minimum((depth * n).astype(np.int32), n - 1) + 1, 0).astype(np.int32)

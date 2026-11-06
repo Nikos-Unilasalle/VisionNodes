@@ -88,11 +88,13 @@ _MPL_DARK = {
         "Universal bar chart. "
         "Accepts a DataFrame (set x_col + y_col) OR a plain dict ({label: value}). "
         "Supports grouped bars (hue_col), horizontal/vertical layout, "
-        "sorted display, error bars, and a second series overlay for comparison. "
+        "sorted display, error bars, and a second series overlay for comparison — side by side, "
+        "or stacked on the first one as a hatched extension (e.g. counted + estimated). "
         "Ideal for: F1-per-class ablation, feature importance, area statistics."
     ),
     inputs=[
         {'id': 'table',   'color': 'data', 'label': 'DataFrame'},
+        {'id': 'data_a',  'color': 'dict', 'label': 'Dict A (instead of a DataFrame)'},
         {'id': 'data_b',  'color': 'dict', 'label': 'Dict B (comparison overlay)'},
     ],
     outputs=[
@@ -109,6 +111,8 @@ _MPL_DARK = {
          'type': 'string', 'default': 'Series A'},
         {'id': 'dict_key_b', 'label': 'Dict B label (legend)',
          'type': 'string', 'default': 'Series B'},
+        {'id': 'b_mode',     'label': 'Series B',
+         'type': 'enum', 'options': ['Side by side', 'Stacked on A (hatched)'], 'default': 0},
         {'id': '_sec_layout', 'label': 'Layout', 'type': 'section'},
         {'id': 'orientation', 'label': 'Orientation',
          'type': 'enum', 'options': ['Vertical', 'Horizontal'], 'default': 0},
@@ -140,6 +144,8 @@ class MLBarChartNode(NodeProcessor):
         _, plt = _get_mpl()
 
         df     = inputs.get('table')
+        if df is None:
+            df = inputs.get('data_a')
         dict_b = inputs.get('data_b')
 
         # ── Resolve data ──────────────────────────────────────────────────────
@@ -170,8 +176,9 @@ class MLBarChartNode(NodeProcessor):
                                   level='warning', notif_id=_NOTIF)
                 return {}
 
-            # Merge keys
-            all_keys = list(dict(sorted(
+            # Merge keys (stacked mode keeps the dict order: categories are often ordered)
+            stacked_b = int(params.get('b_mode', 0)) == 1
+            all_keys = list({**dict_a, **dict_b_}.keys()) if stacked_b else list(dict(sorted(
                 {**dict_a, **dict_b_}.items(),
                 key=lambda kv: float(kv[1]) if isinstance(kv[1], (int, float)) else 0,
                 reverse=True,
@@ -231,13 +238,39 @@ class MLBarChartNode(NodeProcessor):
             fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
             n = len(categories)
-            cmap_fn = plt.cm.get_cmap(cmap_name)
+            import matplotlib
+            cmap_fn = matplotlib.colormaps[cmap_name]
 
             if values_a is not None:
                 colors = [cmap_fn(i / max(n - 1, 1)) for i in range(n)]
                 x_pos  = np.arange(n)
 
-                if values_b is not None:
+                if values_b is not None and int(params.get('b_mode', 0)) == 1:
+                    # B stacked on A, hatched in the same colour: one bar = A + B
+                    label_a = str(params.get('dict_key_a', 'Series A'))
+                    label_b = str(params.get('dict_key_b', 'Series B'))
+                    total = [a + b for a, b in zip(values_a, values_b)]
+                    bar = ax.barh if horiz else ax.bar
+                    size = {'height': bw} if horiz else {'width': bw}
+                    bar(x_pos, values_a, color=colors, alpha=alpha, edgecolor='none', label=label_a, **size)
+                    bar(x_pos, values_b, **({'left': values_a} if horiz else {'bottom': values_a}),
+                        color='none', edgecolor=colors, hatch='///', linewidth=1, label=label_b, **size)
+                    if horiz:
+                        ax.set_yticks(x_pos); ax.set_yticklabels(categories, fontsize=8); ax.invert_yaxis()
+                    else:
+                        ax.set_xticks(x_pos); ax.set_xticklabels(categories, rotation=35, ha='right', fontsize=8)
+                    if show_vals:
+                        top = max(total or [1])
+                        for i, t in enumerate(total):
+                            if horiz:
+                                ax.text(t + 0.01 * top, i, f'≈ {t:.0f}', va='center', ha='left', fontsize=8, color='#cccccc')
+                            else:
+                                ax.text(i, t + 0.01 * top, f'≈ {t:.0f}', ha='center', va='bottom', fontsize=8, color='#cccccc')
+                    leg = ax.legend(fontsize=8, labelcolor='#cccccc')
+                    for patch in leg.get_patches():
+                        patch.set_edgecolor('#aaaaaa')
+                    leg.get_patches()[0].set_facecolor('#aaaaaa')
+                elif values_b is not None:
                     # Grouped two-series
                     offset = bw / 2 * 0.5
                     ba = x_pos - offset

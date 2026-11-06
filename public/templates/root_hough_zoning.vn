@@ -1,0 +1,5366 @@
+{
+  "nodes": [
+    {
+      "id": "frame-1",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "style": {
+        "width": 560,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 1: Input & Scale Bar",
+          "color_index": 0
+        }
+      },
+      "width": 560,
+      "height": 630
+    },
+    {
+      "id": "frame-2",
+      "type": "canvas_frame",
+      "position": {
+        "x": 620,
+        "y": 0
+      },
+      "style": {
+        "width": 1060,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 2: Section",
+          "color_index": 1
+        }
+      },
+      "width": 1060,
+      "height": 630
+    },
+    {
+      "id": "frame-3",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1740,
+        "y": 0
+      },
+      "style": {
+        "width": 310,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 3: Cell Walls",
+          "color_index": 2
+        }
+      },
+      "width": 310,
+      "height": 630
+    },
+    {
+      "id": "frame-4",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2110,
+        "y": 0
+      },
+      "style": {
+        "width": 810,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 4: Cells (measured vs unresolved)",
+          "color_index": 3
+        }
+      },
+      "width": 810,
+      "height": 630
+    },
+    {
+      "id": "frame-5",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2980,
+        "y": 0
+      },
+      "style": {
+        "width": 560,
+        "height": 1170,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 5: Zones from Cell Size vs Distance to Centre",
+          "color_index": 4
+        }
+      },
+      "width": 560,
+      "height": 1170
+    },
+    {
+      "id": "frame-6",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 1240
+      },
+      "style": {
+        "width": 1310,
+        "height": 900,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 6: Stele, Cortex, Layers & Walls",
+          "color_index": 5
+        }
+      },
+      "width": 1310,
+      "height": 900
+    },
+    {
+      "id": "frame-7",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1370,
+        "y": 1240
+      },
+      "style": {
+        "width": 1310,
+        "height": 1710,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 7: Metaxylem & Aerenchyma",
+          "color_index": 6
+        }
+      },
+      "width": 1310,
+      "height": 1710
+    },
+    {
+      "id": "frame-8",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2740,
+        "y": 1240
+      },
+      "style": {
+        "width": 1310,
+        "height": 1710,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 8: Tissue Zones & Projection over Unresolved Areas",
+          "color_index": 7
+        }
+      },
+      "width": 1310,
+      "height": 1710
+    },
+    {
+      "id": "frame-9",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 3120
+      },
+      "style": {
+        "width": 1810,
+        "height": 1710,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 9: RootScan Variables",
+          "color_index": 0
+        }
+      },
+      "width": 1810,
+      "height": 1710
+    },
+    {
+      "id": "frame-10",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1870,
+        "y": 3120
+      },
+      "style": {
+        "width": 1810,
+        "height": 1710,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 10: Cell Map (measured vs unresolved)",
+          "color_index": 1
+        }
+      },
+      "width": 1810,
+      "height": 1710
+    },
+    {
+      "id": "src",
+      "type": "input_image",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "samples/root_section_brightfield_c.jpg",
+          "color_index": 0,
+          "node_note": "Bright-field root cross-section. Also try root_section_brightfield_a.jpg / _b.jpg."
+        }
+      }
+    },
+    {
+      "id": "scale",
+      "type": "sci_scale_bar_detect",
+      "position": {
+        "x": 30,
+        "y": 340
+      },
+      "data": {
+        "label": "Scale Bar Detect",
+        "params": {
+          "source": 0,
+          "bar_length": 500.0,
+          "unit": 0,
+          "fallback_px_per_mm": 790.0,
+          "color_index": 0,
+          "node_note": "Length printed next to the scale bar (500 µm here)."
+        }
+      }
+    },
+    {
+      "id": "gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 280,
+        "y": 70
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "pol",
+      "type": "filter_auto_polarity",
+      "position": {
+        "x": 280,
+        "y": 340
+      },
+      "data": {
+        "label": "Auto Polarity",
+        "params": {
+          "target": 0,
+          "method": 1,
+          "color_index": 0,
+          "node_note": "Bright backdrop, dark walls, bright lumens (fluorescence images are inverted)."
+        }
+      }
+    },
+    {
+      "id": "sec_blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 650,
+        "y": 70
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 0,
+          "size": 15,
+          "sigma": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 900,
+        "y": 70
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 6,
+          "offset": -30,
+          "color_index": 1,
+          "node_note": "Everything clearly darker than the backdrop is tissue; offset -30 leaves out the blurred halo, which would bias ρ."
+        }
+      }
+    },
+    {
+      "id": "sec_close",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1150,
+        "y": 70
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 1400,
+        "y": 70
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 650,
+        "y": 340
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 25,
+          "iterations": 2,
+          "color_index": 1,
+          "node_note": "Removes the scale bar, hairs and specks."
+        }
+      }
+    },
+    {
+      "id": "roi",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": 900,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Polygon",
+        "params": {
+          "points": "[]",
+          "filled": true,
+          "color_index": 1,
+          "node_note": "Optional: draw a polygon around the main root to cut lateral roots or debris. Empty = keep all."
+        }
+      }
+    },
+    {
+      "id": "sec_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1150,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "section",
+      "type": "mask_keep_largest",
+      "position": {
+        "x": 1400,
+        "y": 340
+      },
+      "data": {
+        "label": "Keep Largest Blobs",
+        "params": {
+          "count": 1,
+          "color_index": 1,
+          "node_note": "SECTION"
+        }
+      }
+    },
+    {
+      "id": "ridge",
+      "type": "filter_ridge",
+      "position": {
+        "x": 1770,
+        "y": 70
+      },
+      "data": {
+        "label": "Ridge Filter",
+        "params": {
+          "method": 0,
+          "polarity": 0,
+          "sigma_min": 1.0,
+          "sigma_max": 4.0,
+          "n_scales": 4,
+          "norm_radius": 15,
+          "floor_pct": 40,
+          "color_index": 2,
+          "node_note": "Cell walls = dark lines, 2 to 8 px thick (σ 1–4). Local normalisation makes the faint walls of pale or blurred tissue (pith, inner cortex) count as much as the dark ones."
+        }
+      }
+    },
+    {
+      "id": "tess",
+      "type": "seg_cell_tessellation",
+      "position": {
+        "x": 2140,
+        "y": 70
+      },
+      "data": {
+        "label": "Cell Tessellation",
+        "params": {
+          "smooth": 1.0,
+          "depth": 0.3,
+          "wall_level": 0.7,
+          "wall_ratio": 3.0,
+          "min_closure": 0.8,
+          "min_solidity": 0.85,
+          "min_area": 15,
+          "max_area": 0,
+          "color_index": 3,
+          "node_note": "Every cell rebuilt from wall to wall. A cell counts as MEASURED only if a real wall closes it; elsewhere the tissue is UNRESOLVED (hatched) and its cells are projected in Step 8."
+        }
+      }
+    },
+    {
+      "id": "walls_a",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2390,
+        "y": 70
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 31,
+          "c": -2,
+          "adaptive_method": 1,
+          "invert": true,
+          "color_index": 3,
+          "node_note": "Walls seen by the ridge filter (brighter than their surroundings in its map)."
+        }
+      }
+    },
+    {
+      "id": "med3",
+      "type": "filter_blur",
+      "position": {
+        "x": 2390,
+        "y": 340
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 1,
+          "size": 3,
+          "sigma": 0,
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "walls_b",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2640,
+        "y": 340
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 31,
+          "c": 0,
+          "adaptive_method": 1,
+          "invert": false,
+          "color_index": 3,
+          "node_note": "Walls seen as pixels darker than their surroundings: good on small dark-walled cells."
+        }
+      }
+    },
+    {
+      "id": "cells",
+      "type": "seg_cells_from_walls",
+      "position": {
+        "x": 2640,
+        "y": 70
+      },
+      "data": {
+        "label": "Cells from Walls",
+        "params": {
+          "min_area": 12,
+          "max_area": 6000,
+          "min_solidity": 0.82,
+          "overlap": 0.1,
+          "footprint": 2,
+          "min_contrast": 10,
+          "color_index": 3,
+          "node_note": "Adds the cells that the wall-to-wall test left out (small cells of the stele ring, cells beside vessels): spaces enclosed by the walls of either detector. Cells already resolved by Cell Tessellation are kept as they are; a new lumen must be 10 grey levels brighter than its wall (dark gaps between thick walls are no cells). Everything coloured on the map comes from here."
+        }
+      }
+    },
+    {
+      "id": "radial0",
+      "type": "geom_radial_coords",
+      "position": {
+        "x": 3010,
+        "y": 70
+      },
+      "data": {
+        "label": "Radial Coordinates",
+        "params": {
+          "smooth": 3.0,
+          "ignore_border": true,
+          "color_index": 4,
+          "node_note": "First pass: centre = centroid of the section (wrong when the frame cuts the section)."
+        }
+      }
+    },
+    {
+      "id": "zoning0",
+      "type": "sci_profile_zoning",
+      "position": {
+        "x": 3260,
+        "y": 70
+      },
+      "data": {
+        "label": "Profile Zoning",
+        "params": {
+          "position_key": "rho",
+          "value_key": "radius",
+          "weight_key": "score",
+          "log_values": true,
+          "zones": 0,
+          "max_zones": 6,
+          "outlier_mad": 3.0,
+          "outlier_side": 1,
+          "min_items": 12,
+          "core_rule": 1,
+          "n_boot": 0,
+          "seed": 0,
+          "color_index": 4,
+          "node_note": "First pass, only to find the core (stele) and re-centre on it."
+        }
+      }
+    },
+    {
+      "id": "radial",
+      "type": "geom_radial_coords",
+      "position": {
+        "x": 3010,
+        "y": 610
+      },
+      "data": {
+        "label": "Radial Coordinates",
+        "params": {
+          "smooth": 3.0,
+          "ignore_border": true,
+          "color_index": 4,
+          "node_note": "ρ = 0 at the centre of the core found in the first pass, 1 on the section outline, along each ray."
+        }
+      }
+    },
+    {
+      "id": "zoning",
+      "type": "sci_profile_zoning",
+      "position": {
+        "x": 3260,
+        "y": 610
+      },
+      "data": {
+        "label": "Profile Zoning",
+        "params": {
+          "position_key": "rho",
+          "value_key": "radius",
+          "weight_key": "score",
+          "log_values": true,
+          "zones": 0,
+          "max_zones": 6,
+          "outlier_mad": 3.0,
+          "outlier_side": 1,
+          "min_items": 12,
+          "core_rule": 1,
+          "n_boot": 50,
+          "seed": 0,
+          "color_index": 4,
+          "node_note": "Zones = stretches of ρ where cell size is homogeneous; number chosen by BIC. Core = everything inside the largest rise of cell size before the cortex (small stele cells → larger cortical cells) = the stele. Cells much larger than their neighbours (vessels) are set aside as outliers."
+        }
+      }
+    },
+    {
+      "id": "zone_get",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 3010,
+        "y": 880
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "main_zone_median_radius",
+          "key_2": "core_edge",
+          "key_3": "objects",
+          "color_index": 4
+        }
+      }
+    },
+    {
+      "id": "ring",
+      "type": "geom_ring_contour",
+      "position": {
+        "x": 280,
+        "y": 1580
+      },
+      "data": {
+        "label": "Ring Contour",
+        "params": {
+          "side": 0,
+          "sigma": 8.0,
+          "band_low": 0.5,
+          "band_high": 1.5,
+          "max_step": 1,
+          "passes": 6,
+          "color_index": 5,
+          "node_note": "The stele is darker than the cortex around it (small cells, many walls). Its outline is searched all the way round, near the core found from cell sizes (first guess), and re-centred on itself: an off-centre stele is followed."
+        }
+      }
+    },
+    {
+      "id": "stele",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5,
+          "node_note": "STELE = inside the ring contour, within the section."
+        }
+      }
+    },
+    {
+      "id": "cortex",
+      "type": "mask_operations",
+      "position": {
+        "x": 280,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5,
+          "node_note": "CORTEX = Section − Stele"
+        }
+      }
+    },
+    {
+      "id": "depth",
+      "type": "mask_depth_bands",
+      "position": {
+        "x": 530,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Depth Bands",
+        "params": {
+          "bands": 3,
+          "range_low": 0.2,
+          "range_high": 0.8,
+          "ignore_border": true,
+          "color_index": 5,
+          "node_note": "RootScan thirds of the cortex (inner | middle | outer) for CSic, CSmc, CSoc."
+        }
+      }
+    },
+    {
+      "id": "st_ero",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 780,
+        "y": 1310
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 21,
+          "iterations": 1,
+          "color_index": 5,
+          "node_note": "Kernel ≈ endodermis thickness (same geometric band as Root Anatomy Analysis)."
+        }
+      }
+    },
+    {
+      "id": "endo",
+      "type": "mask_operations",
+      "position": {
+        "x": 1030,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5,
+          "node_note": "ENDODERMIS band"
+        }
+      }
+    },
+    {
+      "id": "sec_ero",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 780,
+        "y": 1580
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "exo",
+      "type": "mask_operations",
+      "position": {
+        "x": 1030,
+        "y": 1580
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5,
+          "node_note": "EXODERMIS band"
+        }
+      }
+    },
+    {
+      "id": "walls",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 30,
+        "y": 1580
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 41,
+          "c": 1,
+          "adaptive_method": 1,
+          "invert": false,
+          "color_index": 5,
+          "node_note": "Walls = pixels darker than their neighbourhood. Trusted only inside measured cells."
+        }
+      }
+    },
+    {
+      "id": "sh_sec",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "sh_ctx",
+      "type": "mask_operations",
+      "position": {
+        "x": 280,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "sh_st",
+      "type": "mask_operations",
+      "position": {
+        "x": 530,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "lum_sub",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "lumens",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 1310
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 5,
+          "iterations": 1,
+          "color_index": 6,
+          "node_note": "Lumens (section − walls). Vessels are large and stay visible even on poor images, so they are segmented directly: circles describe oval or irregular vessels badly."
+        }
+      }
+    },
+    {
+      "id": "lum_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 1900,
+        "y": 1310
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "lum_med",
+      "type": "sci_stats",
+      "position": {
+        "x": 2150,
+        "y": 1310
+      },
+      "data": {
+        "label": "Statistics",
+        "params": {
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_lum",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 71,
+          "c": -8,
+          "adaptive_method": 1,
+          "invert": true,
+          "color_index": 6,
+          "node_note": "Vessel lumens shine brighter than their surroundings: used only as markers."
+        }
+      }
+    },
+    {
+      "id": "mx_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 1580
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 1580
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 7,
+          "iterations": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "st_lum2",
+      "type": "mask_operations",
+      "position": {
+        "x": 1900,
+        "y": 1580
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "st_lum_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 2150,
+        "y": 1580
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "vessels",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2400,
+        "y": 1580
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 1400,
+        "y": 1850
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_floor",
+      "type": "math_expr",
+      "position": {
+        "x": 1650,
+        "y": 1850
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "2 * a",
+          "color_index": 6
+        },
+        "ports": [
+          {
+            "id": "scalar__0_med",
+            "color": "scalar",
+            "label": "med"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mx_break",
+      "type": "list_natural_break",
+      "position": {
+        "x": 1900,
+        "y": 1850
+      },
+      "data": {
+        "label": "List Natural Break",
+        "params": {
+          "log_scale": true,
+          "min_value": 0,
+          "color_index": 6,
+          "node_note": "Metaxylem = the large-vessel population (same rule as Root Anatomy Analysis)."
+        }
+      }
+    },
+    {
+      "id": "metaxylem",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 2150,
+        "y": 1850
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1000,
+          "max_area": 0,
+          "circ_min": 0.3,
+          "connectivity": 4,
+          "color_index": 6,
+          "node_note": "METAXYLEM"
+        }
+      }
+    },
+    {
+      "id": "mx_tess",
+      "type": "mask_operations",
+      "position": {
+        "x": 1900,
+        "y": 2660
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6,
+          "node_note": "Measured cells of the stele."
+        }
+      }
+    },
+    {
+      "id": "mx_pts",
+      "type": "points_to_mask",
+      "position": {
+        "x": 1400,
+        "y": 2660
+      },
+      "data": {
+        "label": "Points to Mask",
+        "params": {
+          "radius": 2,
+          "color_index": 6,
+          "node_note": "Centres of the cells much larger than their neighbours at the same ρ (Step 5 outliers)."
+        }
+      }
+    },
+    {
+      "id": "mx_sel",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2150,
+        "y": 2660
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 6,
+          "node_note": "Measured stele cells that are outliers: vessels whose wall is sharp (real shape)."
+        }
+      }
+    },
+    {
+      "id": "mx_mark",
+      "type": "mask_operations",
+      "position": {
+        "x": 1650,
+        "y": 2660
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 6,
+          "node_note": "Vessel markers: bright highlight or outlier cell centre."
+        }
+      }
+    },
+    {
+      "id": "mx_cand",
+      "type": "mask_operations",
+      "position": {
+        "x": 2400,
+        "y": 2660
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 6,
+          "node_note": "Vessels seen as lumens (blurred or dark stele) or as measured cells (sharp stele)."
+        }
+      }
+    },
+    {
+      "id": "ae_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 2400,
+        "y": 1850
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "ae_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1400,
+        "y": 2120
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 21,
+          "iterations": 2,
+          "color_index": 6,
+          "node_note": "Only spaces wider than ~2 cortical cells survive."
+        }
+      }
+    },
+    {
+      "id": "ae_big",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 1650,
+        "y": 2120
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 2000,
+          "max_area": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "ae_mid",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 1900,
+        "y": 2120
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 6,
+          "node_note": "RootScan rule: a lacuna reaches the middle third of the cortex."
+        }
+      }
+    },
+    {
+      "id": "big_amin",
+      "type": "math_expr",
+      "position": {
+        "x": 2150,
+        "y": 2120
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "pi * (2 * a) * (2 * a)",
+          "color_index": 6
+        },
+        "ports": [
+          {
+            "id": "any__0_rctx",
+            "color": "any",
+            "label": "rctx"
+          }
+        ]
+      }
+    },
+    {
+      "id": "big_cells",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 2400,
+        "y": 2120
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 2000,
+          "max_area": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "normal",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 2390
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "cores",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 2390
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 6,
+          "shape": 2,
+          "size": 7,
+          "iterations": 1,
+          "color_index": 6,
+          "node_note": "Cores of measured cells of ordinary size."
+        }
+      }
+    },
+    {
+      "id": "aerenchyma",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 1900,
+        "y": 2390
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 1,
+          "connectivity": 0,
+          "color_index": 6,
+          "node_note": "AERENCHYMA: a bright space that contains measured cells is pale tissue, not a lacuna."
+        }
+      }
+    },
+    {
+      "id": "cell_region",
+      "type": "mask_operations",
+      "position": {
+        "x": 2770,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7,
+          "node_note": "Cortex − Lacunae"
+        }
+      }
+    },
+    {
+      "id": "proj_ctx",
+      "type": "sci_sample_projection",
+      "position": {
+        "x": 3020,
+        "y": 1310
+      },
+      "data": {
+        "label": "Sample Projection",
+        "params": {
+          "size_key": "area",
+          "size_kind": 2,
+          "position_key": "rho",
+          "bandwidth": 0.05,
+          "packing": 1.0,
+          "min_items": 5,
+          "n_boot": 300,
+          "seed": 0,
+          "color_index": 7,
+          "node_note": "Cortical cells per third of the cortex = cells measured + cells projected over the unresolved part (band area ÷ mean measured cell area at the same ρ; 95 % bootstrap interval). Packing 1: wall-to-wall cells tile the tissue."
+        }
+      }
+    },
+    {
+      "id": "proj",
+      "type": "sci_sample_projection",
+      "position": {
+        "x": 3270,
+        "y": 1310
+      },
+      "data": {
+        "label": "Sample Projection",
+        "params": {
+          "size_key": "area",
+          "size_kind": 2,
+          "position_key": "rho",
+          "bandwidth": 0.05,
+          "packing": 1.0,
+          "min_items": 5,
+          "n_boot": 300,
+          "seed": 0,
+          "color_index": 7,
+          "node_note": "Same projection on the data-driven zones of Step 5."
+        }
+      }
+    },
+    {
+      "id": "cc_get",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 2770,
+        "y": 1580
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "total_n_low",
+          "key_2": "total_n_high",
+          "key_3": "total_completeness",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "cc_split",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 3520,
+        "y": 1850
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "total_n_detected",
+          "key_2": "total_n_projected",
+          "key_3": "total_measured_share",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "cs_n",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 3020,
+        "y": 1580
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "zone_1_n_estimated",
+          "key_2": "zone_2_n_estimated",
+          "key_3": "zone_3_n_estimated",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "cs_a",
+      "type": "plugin_dict_get",
+      "position": {
+        "x": 3270,
+        "y": 1580
+      },
+      "data": {
+        "label": "Dict Get",
+        "params": {
+          "key_1": "zone_1_area_px",
+          "key_2": "zone_2_area_px",
+          "key_3": "zone_3_area_px",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "r_csic",
+      "type": "math_expr",
+      "position": {
+        "x": 2770,
+        "y": 1850
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1)",
+          "color_index": 7,
+          "node_note": "Cell size = band area ÷ estimated cells in the band (territory, walls included, as RootScan)."
+        },
+        "ports": [
+          {
+            "id": "any__0_area",
+            "color": "any",
+            "label": "area"
+          },
+          {
+            "id": "any__1_n",
+            "color": "any",
+            "label": "n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_csmc",
+      "type": "math_expr",
+      "position": {
+        "x": 3020,
+        "y": 1850
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1)",
+          "color_index": 7,
+          "node_note": "Cell size = band area ÷ estimated cells in the band (territory, walls included, as RootScan)."
+        },
+        "ports": [
+          {
+            "id": "any__0_area",
+            "color": "any",
+            "label": "area"
+          },
+          {
+            "id": "any__1_n",
+            "color": "any",
+            "label": "n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_csoc",
+      "type": "math_expr",
+      "position": {
+        "x": 3270,
+        "y": 1850
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1)",
+          "color_index": 7,
+          "node_note": "Cell size = band area ÷ estimated cells in the band (territory, walls included, as RootScan)."
+        },
+        "ports": [
+          {
+            "id": "any__0_area",
+            "color": "any",
+            "label": "area"
+          },
+          {
+            "id": "any__1_n",
+            "color": "any",
+            "label": "n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "oc_band",
+      "type": "mask_depth_bands",
+      "position": {
+        "x": 2770,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Depth Bands",
+        "params": {
+          "bands": 2,
+          "range_low": 0.55,
+          "range_high": 1.0,
+          "ignore_border": true,
+          "color_index": 7,
+          "node_note": "Outer cortex = the outer 45 % of the cortex depth."
+        }
+      }
+    },
+    {
+      "id": "z_exo",
+      "type": "mask_operations",
+      "position": {
+        "x": 3020,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 7,
+          "node_note": "RHIZODERMIS / EXODERMIS: outer cell layers."
+        }
+      }
+    },
+    {
+      "id": "z_outer",
+      "type": "mask_operations",
+      "position": {
+        "x": 3270,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7,
+          "node_note": "OUTER CORTEX"
+        }
+      }
+    },
+    {
+      "id": "z_inner",
+      "type": "mask_operations",
+      "position": {
+        "x": 3520,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7,
+          "node_note": "INNER CORTEX"
+        }
+      }
+    },
+    {
+      "id": "pith_band",
+      "type": "mask_depth_bands",
+      "position": {
+        "x": 2770,
+        "y": 2390
+      },
+      "data": {
+        "label": "Mask Depth Bands",
+        "params": {
+          "bands": 1,
+          "range_low": 0.0,
+          "range_high": 0.3,
+          "ignore_border": true,
+          "color_index": 7,
+          "node_note": "Pith = centre of the stele (inner 30 % of its depth)."
+        }
+      }
+    },
+    {
+      "id": "z_vasc",
+      "type": "mask_operations",
+      "position": {
+        "x": 3020,
+        "y": 2390
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7,
+          "node_note": "VASCULAR CYLINDER = stele − pith"
+        }
+      }
+    },
+    {
+      "id": "zones5",
+      "type": "mask_to_zones",
+      "position": {
+        "x": 3270,
+        "y": 2390
+      },
+      "data": {
+        "label": "Masks to Zones",
+        "params": {
+          "names": "Rhizodermis / exodermis, Outer cortex, Inner cortex, Vascular cylinder, Pith",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "st_outer",
+      "type": "mask_depth_bands",
+      "position": {
+        "x": 3520,
+        "y": 2660
+      },
+      "data": {
+        "label": "Mask Depth Bands",
+        "params": {
+          "bands": 1,
+          "range_low": 0.4,
+          "range_high": 1.0,
+          "ignore_border": true,
+          "color_index": 7,
+          "node_note": "Outer 60 % of the stele depth."
+        }
+      }
+    },
+    {
+      "id": "st_out_nomx",
+      "type": "mask_operations",
+      "position": {
+        "x": 3770,
+        "y": 2660
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "st_large",
+      "type": "seg_isolated_objects",
+      "position": {
+        "x": 3770,
+        "y": 2120
+      },
+      "data": {
+        "label": "Isolated Objects",
+        "params": {
+          "size_factor": 1.2,
+          "ring": 6,
+          "min_free": 0.5,
+          "min_round": 0.7,
+          "color_index": 7,
+          "node_note": "LARGE PERIPHERAL STELE CELLS: round cells, larger than most stele cells, set alone in the dense dark tissue of the outer stele (at the tips of the small-cell groups)."
+        }
+      }
+    },
+    {
+      "id": "tissue",
+      "type": "mask_operations",
+      "position": {
+        "x": 3520,
+        "y": 2390
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7,
+          "node_note": "Tissue = section − lacunae − metaxylem"
+        }
+      }
+    },
+    {
+      "id": "tissue2",
+      "type": "mask_operations",
+      "position": {
+        "x": 3770,
+        "y": 2390
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "proj_z",
+      "type": "sci_sample_projection",
+      "position": {
+        "x": 2770,
+        "y": 2660
+      },
+      "data": {
+        "label": "Sample Projection",
+        "params": {
+          "size_key": "area",
+          "size_kind": 2,
+          "position_key": "rho",
+          "bandwidth": 0.05,
+          "packing": 1.0,
+          "min_items": 5,
+          "n_boot": 0,
+          "seed": 0,
+          "color_index": 7,
+          "node_note": "Cells per tissue = measured + projected over the unresolved part of the tissue."
+        }
+      }
+    },
+    {
+      "id": "chart",
+      "type": "ml_bar_chart",
+      "position": {
+        "x": 3020,
+        "y": 2660
+      },
+      "data": {
+        "label": "Bar Chart",
+        "params": {
+          "dict_key_a": "measured",
+          "dict_key_b": "projected (unresolved area)",
+          "b_mode": 1,
+          "orientation": 1,
+          "show_values": true,
+          "title": "Cells measured + projected",
+          "xlabel": "Number of cells",
+          "color_index": 7,
+          "node_note": "Solid = cells measured one by one; hatched = cells projected over the unresolved (blurred) area."
+        }
+      }
+    },
+    {
+      "id": "tissue_report",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 3270,
+        "y": 2660
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Cells by Tissue",
+          "digits": 0,
+          "groups": "Estimated (measured + projected): Rhizodermis / exodermis, Outer cortex, Inner cortex, Vascular cylinder, Pith",
+          "color_index": 7,
+          "node_note": "Number of cells per tissue, measured + projected (metaxylem vessels: #MX in the anatomy report)."
+        }
+      }
+    },
+    {
+      "id": "zone_report",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 3520,
+        "y": 1310
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Data-driven Zones",
+          "digits": 4,
+          "groups": "Zones: zones, boundary_1, boundary_1_low, boundary_1_high, boundary_2, boundary_2_low, boundary_2_high, boundary_3, boundary_3_low, boundary_3_high | Zone 1: zone_1_from, zone_1_to, zone_1_measured_share, zone_1_n_detected, zone_1_n_projected, zone_1_n_estimated, zone_1_n_low, zone_1_n_high, zone_1_mean_diameter_unit, zone_1_outliers | Zone 2: zone_2_from, zone_2_to, zone_2_measured_share, zone_2_n_detected, zone_2_n_projected, zone_2_n_estimated, zone_2_n_low, zone_2_n_high, zone_2_mean_diameter_unit, zone_2_outliers | Zone 3: zone_3_from, zone_3_to, zone_3_measured_share, zone_3_n_detected, zone_3_n_projected, zone_3_n_estimated, zone_3_n_low, zone_3_n_high, zone_3_mean_diameter_unit, zone_3_outliers | Zone 4: zone_4_from, zone_4_to, zone_4_measured_share, zone_4_n_detected, zone_4_n_projected, zone_4_n_estimated, zone_4_n_low, zone_4_n_high, zone_4_mean_diameter_unit, zone_4_outliers",
+          "color_index": 7,
+          "node_note": "Zones found from cell size alone: share of the zone measured, cells measured, cells projected over the rest, total with 95 % interval (diameters in µm)."
+        }
+      }
+    },
+    {
+      "id": "shw_sec",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "shw_ctx",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "shw_st",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 3730
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "lat",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 4000
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "lat_sec",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 4270
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_rxsa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_tca",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_tsa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 3730
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_aa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 4000
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_la",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 280,
+        "y": 4270
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_xva",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_ea",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_exa",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 3730
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_sh_sec",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 4000
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_sh_ctx",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 530,
+        "y": 4270
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_sh_st",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 780,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_shw_sec",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 780,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_shw_ctx",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 780,
+        "y": 3730
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "px_shw_st",
+      "type": "feat_mask_stats",
+      "position": {
+        "x": 780,
+        "y": 4000
+      },
+      "data": {
+        "label": "Mask Statistics",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "xscwa",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 3190
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1) * c",
+          "color_index": 0,
+          "node_note": "Wall fraction measured in the sharp patches, applied to the whole region."
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_shw_sec",
+            "color": "scalar",
+            "label": "px_shw_sec"
+          },
+          {
+            "id": "scalar__1_px_sh_sec",
+            "color": "scalar",
+            "label": "px_sh_sec"
+          },
+          {
+            "id": "scalar__2_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ccwa",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 3460
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1) * c",
+          "color_index": 0,
+          "node_note": "Wall fraction measured in the sharp patches, applied to the whole region."
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_shw_ctx",
+            "color": "scalar",
+            "label": "px_shw_ctx"
+          },
+          {
+            "id": "scalar__1_px_sh_ctx",
+            "color": "scalar",
+            "label": "px_sh_ctx"
+          },
+          {
+            "id": "scalar__2_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scwa",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 3730
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1) * c",
+          "color_index": 0,
+          "node_note": "Wall fraction measured in the sharp patches, applied to the whole region."
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_shw_st",
+            "color": "scalar",
+            "label": "px_shw_st"
+          },
+          {
+            "id": "scalar__1_px_sh_st",
+            "color": "scalar",
+            "label": "px_sh_st"
+          },
+          {
+            "id": "scalar__2_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cca",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 4000
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a - b",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          },
+          {
+            "id": "scalar__1_px_aa",
+            "color": "scalar",
+            "label": "px_aa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "n_cf",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 4270
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "(sqrt(a / pi) - sqrt(b / pi)) / max(2 * sqrt(c / max(d, 1) / pi), 1e-9)",
+          "color_index": 0,
+          "node_note": "Radial cortex thickness / mean cell diameter (RootScan #CF)."
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          },
+          {
+            "id": "scalar__1_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          },
+          {
+            "id": "scalar__2_cca",
+            "color": "scalar",
+            "label": "cca"
+          },
+          {
+            "id": "scalar__3_proj_ctx",
+            "color": "scalar",
+            "label": "proj_ctx"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_pct_a",
+      "type": "math_expr",
+      "position": {
+        "x": 1280,
+        "y": 3190
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_aa",
+            "color": "scalar",
+            "label": "px_aa"
+          },
+          {
+            "id": "scalar__1_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_res_sec",
+      "type": "math_expr",
+      "position": {
+        "x": 280,
+        "y": 4540
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_sh_sec",
+            "color": "scalar",
+            "label": "px_sh_sec"
+          },
+          {
+            "id": "scalar__1_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_res_ctx",
+      "type": "math_expr",
+      "position": {
+        "x": 530,
+        "y": 4540
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_sh_ctx",
+            "color": "scalar",
+            "label": "px_sh_ctx"
+          },
+          {
+            "id": "scalar__1_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_res_st",
+      "type": "math_expr",
+      "position": {
+        "x": 1030,
+        "y": 4540
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_sh_st",
+            "color": "scalar",
+            "label": "px_sh_st"
+          },
+          {
+            "id": "scalar__1_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_pct_cca",
+      "type": "math_expr",
+      "position": {
+        "x": 1280,
+        "y": 3460
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "100 * a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_cca",
+            "color": "scalar",
+            "label": "cca"
+          },
+          {
+            "id": "scalar__1_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_tsa_rxsa",
+      "type": "math_expr",
+      "position": {
+        "x": 1280,
+        "y": 3730
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          },
+          {
+            "id": "scalar__1_px_rxsa",
+            "color": "scalar",
+            "label": "px_rxsa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "r_tsa_tca",
+      "type": "math_expr",
+      "position": {
+        "x": 1280,
+        "y": 4000
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "a / max(b, 1)",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__0_px_tsa",
+            "color": "scalar",
+            "label": "px_tsa"
+          },
+          {
+            "id": "scalar__1_px_tca",
+            "color": "scalar",
+            "label": "px_tca"
+          }
+        ]
+      }
+    },
+    {
+      "id": "quality",
+      "type": "scalar_input",
+      "position": {
+        "x": 780,
+        "y": 4270
+      },
+      "data": {
+        "label": "Number",
+        "params": {
+          "value": 5,
+          "format": 0,
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "color_index": 0,
+          "node_note": "Manual image quality rating (RootScan Part VI)."
+        }
+      }
+    },
+    {
+      "id": "areas_px",
+      "type": "dict_builder",
+      "position": {
+        "x": 1530,
+        "y": 3190
+      },
+      "data": {
+        "label": "Build Dict",
+        "params": {
+          "name_rxsa": "RXSA",
+          "name_tca": "TCA",
+          "name_aa": "AA",
+          "name_la": "LA",
+          "name_tsa": "TSA",
+          "name_xva": "XVA",
+          "name_ea": "EA",
+          "name_exa": "ExA",
+          "name_xscwa": "XSCWA",
+          "name_ccwa": "CCWA",
+          "name_scwa": "SCWA",
+          "name_cca": "CCA",
+          "name_csic": "CSic",
+          "name_csmc": "CSmc",
+          "name_csoc": "CSoc",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__rxsa",
+            "color": "scalar",
+            "label": "rxsa"
+          },
+          {
+            "id": "scalar__tca",
+            "color": "scalar",
+            "label": "tca"
+          },
+          {
+            "id": "scalar__aa",
+            "color": "scalar",
+            "label": "aa"
+          },
+          {
+            "id": "scalar__la",
+            "color": "scalar",
+            "label": "la"
+          },
+          {
+            "id": "scalar__tsa",
+            "color": "scalar",
+            "label": "tsa"
+          },
+          {
+            "id": "scalar__xva",
+            "color": "scalar",
+            "label": "xva"
+          },
+          {
+            "id": "scalar__ea",
+            "color": "scalar",
+            "label": "ea"
+          },
+          {
+            "id": "scalar__exa",
+            "color": "scalar",
+            "label": "exa"
+          },
+          {
+            "id": "scalar__xscwa",
+            "color": "scalar",
+            "label": "xscwa"
+          },
+          {
+            "id": "scalar__ccwa",
+            "color": "scalar",
+            "label": "ccwa"
+          },
+          {
+            "id": "scalar__scwa",
+            "color": "scalar",
+            "label": "scwa"
+          },
+          {
+            "id": "scalar__cca",
+            "color": "scalar",
+            "label": "cca"
+          },
+          {
+            "id": "scalar__csic",
+            "color": "scalar",
+            "label": "csic"
+          },
+          {
+            "id": "scalar__csmc",
+            "color": "scalar",
+            "label": "csmc"
+          },
+          {
+            "id": "scalar__csoc",
+            "color": "scalar",
+            "label": "csoc"
+          }
+        ]
+      }
+    },
+    {
+      "id": "others",
+      "type": "dict_builder",
+      "position": {
+        "x": 1530,
+        "y": 3730
+      },
+      "data": {
+        "label": "Build Dict",
+        "params": {
+          "name_pct_a": "%A",
+          "name_pct_cca": "%CCA",
+          "name_n_lac": "#Lac",
+          "name_n_cc": "#CC",
+          "name_n_cf": "#CF",
+          "name_n_mx": "#MX",
+          "name_tsa_rxsa": "TSA:RXSA",
+          "name_tsa_tca": "TSA:TCA",
+          "name_px_per_mm": "px_per_mm",
+          "name_quality": "quality_score",
+          "name_cc_low": "#CC_low",
+          "name_cc_high": "#CC_high",
+          "name_cc_meas": "#CC_measured",
+          "name_cc_proj": "#CC_projected",
+          "name_res_sec": "section_measured_%",
+          "name_res_ctx": "cortex_measured_%",
+          "name_res_st": "stele_measured_%",
+          "name_n_cells": "cells_measured",
+          "name_n_zones": "zones",
+          "name_st_edge": "stele_edge_contrast",
+          "name_n_st_large": "large_peripheral_stele_cells",
+          "color_index": 0
+        },
+        "ports": [
+          {
+            "id": "scalar__pct_a",
+            "color": "scalar",
+            "label": "pct_a"
+          },
+          {
+            "id": "scalar__pct_cca",
+            "color": "scalar",
+            "label": "pct_cca"
+          },
+          {
+            "id": "scalar__n_lac",
+            "color": "scalar",
+            "label": "n_lac"
+          },
+          {
+            "id": "scalar__n_cc",
+            "color": "scalar",
+            "label": "n_cc"
+          },
+          {
+            "id": "scalar__n_cf",
+            "color": "scalar",
+            "label": "n_cf"
+          },
+          {
+            "id": "scalar__n_mx",
+            "color": "scalar",
+            "label": "n_mx"
+          },
+          {
+            "id": "scalar__tsa_rxsa",
+            "color": "scalar",
+            "label": "tsa_rxsa"
+          },
+          {
+            "id": "scalar__tsa_tca",
+            "color": "scalar",
+            "label": "tsa_tca"
+          },
+          {
+            "id": "scalar__px_per_mm",
+            "color": "scalar",
+            "label": "px_per_mm"
+          },
+          {
+            "id": "scalar__quality",
+            "color": "scalar",
+            "label": "quality"
+          },
+          {
+            "id": "any__cc_low",
+            "color": "any",
+            "label": "cc_low"
+          },
+          {
+            "id": "any__cc_high",
+            "color": "any",
+            "label": "cc_high"
+          },
+          {
+            "id": "any__cc_meas",
+            "color": "any",
+            "label": "cc_meas"
+          },
+          {
+            "id": "any__cc_proj",
+            "color": "any",
+            "label": "cc_proj"
+          },
+          {
+            "id": "scalar__res_sec",
+            "color": "scalar",
+            "label": "res_sec"
+          },
+          {
+            "id": "scalar__res_ctx",
+            "color": "scalar",
+            "label": "res_ctx"
+          },
+          {
+            "id": "scalar__res_st",
+            "color": "scalar",
+            "label": "res_st"
+          },
+          {
+            "id": "scalar__n_cells",
+            "color": "scalar",
+            "label": "n_cells"
+          },
+          {
+            "id": "scalar__n_zones",
+            "color": "scalar",
+            "label": "n_zones"
+          },
+          {
+            "id": "scalar__st_edge",
+            "color": "scalar",
+            "label": "st_edge"
+          },
+          {
+            "id": "scalar__n_st_large",
+            "color": "scalar",
+            "label": "n_st_large"
+          }
+        ]
+      }
+    },
+    {
+      "id": "areas_mm",
+      "type": "dict_scale",
+      "position": {
+        "x": 1530,
+        "y": 3460
+      },
+      "data": {
+        "label": "Scale Dict Values",
+        "params": {
+          "operation": 1,
+          "factor": 790.0,
+          "power": 2,
+          "digits": 5,
+          "color_index": 0,
+          "node_note": "Every area ÷ (px/mm)². Calibration comes from the scale bar."
+        }
+      }
+    },
+    {
+      "id": "report",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 1530,
+        "y": 4000
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Anatomy Report",
+          "groups": "Measured vs Projected: section_measured_%, cortex_measured_%, stele_measured_%, cells_measured, #CC_measured, #CC_projected, #CC, #CC_low, #CC_high | Cross-Section: RXSA, XSCWA, LA, TSA:RXSA | Cortex: TCA, CCWA, CCA, %CCA, #CC, #CF | Aerenchyma: AA, %A, #Lac | Cell Size by Zone: CSic, CSmc, CSoc | Stele: TSA, SCWA, XVA, #MX, large_peripheral_stele_cells, TSA:TCA | Layers & Quality: EA, ExA, px_per_mm, quality_score | Uncertainty: stele_edge_contrast, zones",
+          "digits": 4,
+          "color_index": 0,
+          "node_note": "Same variables as Root Anatomy Analysis (RootScan Table 1), areas in mm². First group: how much of each tissue was MEASURED (cells closed by a real wall) and how many cortical cells were PROJECTED over the unresolved rest, with the 95 % interval of the total. Outlines (RXSA, TCA, TSA, AA, XVA, #MX) are measured; wall areas are measured in the resolved cells and applied to the whole tissue; #CC, #CF and CS = measured + projected. stele_edge_contrast: how sharp the stele outline was (below ~1.2, check it on the map)."
+        }
+      }
+    },
+    {
+      "id": "csv",
+      "type": "util_csv_export",
+      "position": {
+        "x": 1530,
+        "y": 4270
+      },
+      "data": {
+        "label": "CSV Export",
+        "params": {
+          "filename": "root_zoning",
+          "path": "exports",
+          "auto_timestamp": true,
+          "color_index": 0,
+          "node_note": "Click Snapshot: one row per image (RootScan variables + data-driven zones)."
+        },
+        "ports": [
+          {
+            "id": "dict__report_0",
+            "color": "dict",
+            "label": "report_0"
+          },
+          {
+            "id": "dict__report_1",
+            "color": "dict",
+            "label": "report_1"
+          },
+          {
+            "id": "dict__report_2",
+            "color": "dict",
+            "label": "report_2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "c_outer",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 1900,
+        "y": 3190
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "c_inner",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2150,
+        "y": 3190
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "c_exo",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2400,
+        "y": 3190
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "c_vasc",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2650,
+        "y": 3190
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "c_pith",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2900,
+        "y": 3190
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "ol_sec",
+      "type": "mask_outline",
+      "position": {
+        "x": 3150,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "ol_st",
+      "type": "mask_outline",
+      "position": {
+        "x": 3400,
+        "y": 3190
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 3,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "ol_mx",
+      "type": "mask_outline",
+      "position": {
+        "x": 1900,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "ol_ae",
+      "type": "mask_outline",
+      "position": {
+        "x": 2150,
+        "y": 3460
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "endo_cells",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2400,
+        "y": 3460
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_0",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2650,
+        "y": 3460
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#eb6834",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_1",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2900,
+        "y": 3460
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#1baf7a",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_2",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3150,
+        "y": 3460
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#2a78d6",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_3",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3400,
+        "y": 3460
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#eda100",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_4",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 1900,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#e87ba4",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_5",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2150,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#8d4f00",
+          "alpha": 0.9,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_6",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2400,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#7e57c2",
+          "alpha": 0.85,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_7",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2650,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#ef9a9a",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_8",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2900,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#008300",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_9",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3150,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#c62828",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_10",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 3400,
+        "y": 3730
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#1b5e20",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_11",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 1900,
+        "y": 4000
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#212121",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "paint_12",
+      "type": "draw_tint_mask",
+      "position": {
+        "x": 2150,
+        "y": 4000
+      },
+      "data": {
+        "label": "Tint Mask",
+        "params": {
+          "color": "#212121",
+          "alpha": 1.0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "legend",
+      "type": "image_legend",
+      "position": {
+        "x": 2400,
+        "y": 4000
+      },
+      "data": {
+        "label": "Image Legend",
+        "params": {
+          "entries": "Outer Cortex:#eb6834\nInner Cortex:#1baf7a\nRhizodermis / Exodermis:#2a78d6\nVascular Cylinder:#eda100\nPith:#e87ba4\nLarge Peripheral Stele Cells:#8d4f00\nEndodermis:#7e57c2\nAerenchyma Lacunae:#ef9a9a\nMetaxylem:#008300\nSection & Stele Outlines:#212121\nUnresolved (hatched, projected):#afafaf",
+          "position": "top-left",
+          "font_scale": 0.9,
+          "swatch_size": 26,
+          "bg_alpha": 0.8,
+          "padding": 14,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "compose",
+      "type": "util_compose",
+      "position": {
+        "x": 2650,
+        "y": 4000
+      },
+      "data": {
+        "label": "Compose",
+        "params": {
+          "mode": 0,
+          "gap": 4,
+          "color_index": 1,
+          "node_note": "Photograph | reconstruction, side by side: what is coloured was measured, nothing else."
+        }
+      }
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": {
+        "x": 2900,
+        "y": 4000
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 1
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "src",
+      "target": "gray",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e2",
+      "source": "src",
+      "target": "scale",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e3",
+      "source": "gray",
+      "target": "pol",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e4",
+      "source": "pol",
+      "target": "sec_blur",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e5",
+      "source": "sec_blur",
+      "target": "sec_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e6",
+      "source": "sec_thr",
+      "target": "sec_close",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e7",
+      "source": "sec_close",
+      "target": "sec_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e8",
+      "source": "sec_fill",
+      "target": "sec_open",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e9",
+      "source": "src",
+      "target": "roi",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e10",
+      "source": "sec_open",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e11",
+      "source": "roi",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e12",
+      "source": "sec_and",
+      "target": "section",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e13",
+      "source": "pol",
+      "target": "ridge",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e14",
+      "source": "section",
+      "target": "ridge",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e15",
+      "source": "ridge",
+      "target": "tess",
+      "sourceHandle": "any__ridge",
+      "targetHandle": "any__walls"
+    },
+    {
+      "id": "e16",
+      "source": "section",
+      "target": "tess",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e17",
+      "source": "ridge",
+      "target": "walls_a",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e18",
+      "source": "pol",
+      "target": "med3",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e19",
+      "source": "med3",
+      "target": "walls_b",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e20",
+      "source": "walls_a",
+      "target": "cells",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__walls"
+    },
+    {
+      "id": "e21",
+      "source": "walls_b",
+      "target": "cells",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__walls_2"
+    },
+    {
+      "id": "e22",
+      "source": "section",
+      "target": "cells",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__region"
+    },
+    {
+      "id": "e23",
+      "source": "tess",
+      "target": "cells",
+      "sourceHandle": "markers__resolved_labels",
+      "targetHandle": "markers__existing"
+    },
+    {
+      "id": "e24",
+      "source": "pol",
+      "target": "cells",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e25",
+      "source": "section",
+      "target": "radial0",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e26",
+      "source": "tess",
+      "target": "radial0",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e27",
+      "source": "radial0",
+      "target": "zoning0",
+      "sourceHandle": "list__items",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e28",
+      "source": "radial0",
+      "target": "zoning0",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e29",
+      "source": "section",
+      "target": "radial",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e30",
+      "source": "zoning0",
+      "target": "radial",
+      "sourceHandle": "mask__core",
+      "targetHandle": "mask__center_mask"
+    },
+    {
+      "id": "e31",
+      "source": "tess",
+      "target": "radial",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e32",
+      "source": "radial",
+      "target": "zoning",
+      "sourceHandle": "list__items",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e33",
+      "source": "radial",
+      "target": "zoning",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e34",
+      "source": "zoning",
+      "target": "zone_get",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e35",
+      "source": "pol",
+      "target": "ring",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e36",
+      "source": "zoning",
+      "target": "ring",
+      "sourceHandle": "mask__core",
+      "targetHandle": "mask__prior"
+    },
+    {
+      "id": "e37",
+      "source": "section",
+      "target": "ring",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__region"
+    },
+    {
+      "id": "e38",
+      "source": "ring",
+      "target": "stele",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e39",
+      "source": "section",
+      "target": "stele",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e40",
+      "source": "section",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e41",
+      "source": "stele",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e42",
+      "source": "stele",
+      "target": "depth",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__inner"
+    },
+    {
+      "id": "e43",
+      "source": "section",
+      "target": "depth",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__outer"
+    },
+    {
+      "id": "e44",
+      "source": "stele",
+      "target": "st_ero",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e45",
+      "source": "stele",
+      "target": "endo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e46",
+      "source": "st_ero",
+      "target": "endo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e47",
+      "source": "section",
+      "target": "sec_ero",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e48",
+      "source": "section",
+      "target": "exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e49",
+      "source": "sec_ero",
+      "target": "exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e50",
+      "source": "pol",
+      "target": "walls",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e51",
+      "source": "cells",
+      "target": "sh_sec",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e52",
+      "source": "section",
+      "target": "sh_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e53",
+      "source": "cells",
+      "target": "sh_ctx",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e54",
+      "source": "cortex",
+      "target": "sh_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e55",
+      "source": "cells",
+      "target": "sh_st",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e56",
+      "source": "stele",
+      "target": "sh_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e57",
+      "source": "section",
+      "target": "lum_sub",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e58",
+      "source": "walls",
+      "target": "lum_sub",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e59",
+      "source": "lum_sub",
+      "target": "lumens",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e60",
+      "source": "lumens",
+      "target": "lum_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e61",
+      "source": "lum_cc",
+      "target": "lum_med",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__data_list"
+    },
+    {
+      "id": "e62",
+      "source": "pol",
+      "target": "mx_lum",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e63",
+      "source": "mx_lum",
+      "target": "mx_and",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e64",
+      "source": "stele",
+      "target": "mx_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e65",
+      "source": "mx_and",
+      "target": "mx_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e66",
+      "source": "lumens",
+      "target": "st_lum2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e67",
+      "source": "stele",
+      "target": "st_lum2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e68",
+      "source": "st_lum2",
+      "target": "st_lum_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e69",
+      "source": "st_lum_fill",
+      "target": "vessels",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e70",
+      "source": "cells",
+      "target": "mx_tess",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e71",
+      "source": "stele",
+      "target": "mx_tess",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e72",
+      "source": "zoning",
+      "target": "mx_pts",
+      "sourceHandle": "list__outliers",
+      "targetHandle": "list__points"
+    },
+    {
+      "id": "e73",
+      "source": "src",
+      "target": "mx_pts",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__reference"
+    },
+    {
+      "id": "e74",
+      "source": "mx_tess",
+      "target": "mx_sel",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e75",
+      "source": "mx_pts",
+      "target": "mx_sel",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e76",
+      "source": "mx_open",
+      "target": "mx_mark",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e77",
+      "source": "mx_pts",
+      "target": "mx_mark",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e78",
+      "source": "mx_mark",
+      "target": "vessels",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e79",
+      "source": "vessels",
+      "target": "mx_cand",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e80",
+      "source": "mx_sel",
+      "target": "mx_cand",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e81",
+      "source": "mx_cand",
+      "target": "mx_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e82",
+      "source": "lum_med",
+      "target": "mx_floor",
+      "sourceHandle": "scalar__median",
+      "targetHandle": "scalar__0_med"
+    },
+    {
+      "id": "e83",
+      "source": "mx_cc",
+      "target": "mx_break",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__values"
+    },
+    {
+      "id": "e84",
+      "source": "mx_floor",
+      "target": "mx_break",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_value"
+    },
+    {
+      "id": "e85",
+      "source": "mx_cand",
+      "target": "metaxylem",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e86",
+      "source": "mx_break",
+      "target": "metaxylem",
+      "sourceHandle": "scalar__threshold",
+      "targetHandle": "scalar__min_area"
+    },
+    {
+      "id": "e87",
+      "source": "pol",
+      "target": "ae_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e88",
+      "source": "cortex",
+      "target": "ae_thr",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e89",
+      "source": "ae_thr",
+      "target": "ae_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e90",
+      "source": "ae_open",
+      "target": "ae_big",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e91",
+      "source": "ae_big",
+      "target": "ae_mid",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e92",
+      "source": "depth",
+      "target": "ae_mid",
+      "sourceHandle": "mask__band_2",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e93",
+      "source": "zone_get",
+      "target": "big_amin",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__0_rctx"
+    },
+    {
+      "id": "e94",
+      "source": "cells",
+      "target": "big_cells",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e95",
+      "source": "big_amin",
+      "target": "big_cells",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_area"
+    },
+    {
+      "id": "e96",
+      "source": "cells",
+      "target": "normal",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e97",
+      "source": "big_cells",
+      "target": "normal",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e98",
+      "source": "normal",
+      "target": "cores",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e99",
+      "source": "ae_mid",
+      "target": "aerenchyma",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e100",
+      "source": "cores",
+      "target": "aerenchyma",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e101",
+      "source": "cortex",
+      "target": "cell_region",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e102",
+      "source": "aerenchyma",
+      "target": "cell_region",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e103",
+      "source": "cells",
+      "target": "proj_ctx",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e104",
+      "source": "depth",
+      "target": "proj_ctx",
+      "sourceHandle": "markers__bands",
+      "targetHandle": "markers__zones"
+    },
+    {
+      "id": "e105",
+      "source": "radial",
+      "target": "proj_ctx",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e106",
+      "source": "zoning",
+      "target": "proj_ctx",
+      "sourceHandle": "list__outliers",
+      "targetHandle": "list__exclude"
+    },
+    {
+      "id": "e107",
+      "source": "cell_region",
+      "target": "proj_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e108",
+      "source": "scale",
+      "target": "proj_ctx",
+      "sourceHandle": "scalar__px_per_um",
+      "targetHandle": "scalar__px_per_unit"
+    },
+    {
+      "id": "e109",
+      "source": "cells",
+      "target": "proj_ctx",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__measured"
+    },
+    {
+      "id": "e110",
+      "source": "cells",
+      "target": "proj",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e111",
+      "source": "zoning",
+      "target": "proj",
+      "sourceHandle": "markers__zones",
+      "targetHandle": "markers__zones"
+    },
+    {
+      "id": "e112",
+      "source": "zoning",
+      "target": "proj",
+      "sourceHandle": "list__outliers",
+      "targetHandle": "list__exclude"
+    },
+    {
+      "id": "e113",
+      "source": "radial",
+      "target": "proj",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e114",
+      "source": "scale",
+      "target": "proj",
+      "sourceHandle": "scalar__px_per_um",
+      "targetHandle": "scalar__px_per_unit"
+    },
+    {
+      "id": "e115",
+      "source": "cells",
+      "target": "proj",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__measured"
+    },
+    {
+      "id": "e116",
+      "source": "proj_ctx",
+      "target": "cc_split",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e117",
+      "source": "proj_ctx",
+      "target": "cc_get",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e118",
+      "source": "proj_ctx",
+      "target": "cs_n",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e119",
+      "source": "proj_ctx",
+      "target": "cs_a",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "any__dict_in"
+    },
+    {
+      "id": "e120",
+      "source": "cs_a",
+      "target": "r_csic",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__0_area"
+    },
+    {
+      "id": "e121",
+      "source": "cs_n",
+      "target": "r_csic",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__1_n"
+    },
+    {
+      "id": "e122",
+      "source": "cs_a",
+      "target": "r_csmc",
+      "sourceHandle": "any__val_2",
+      "targetHandle": "any__0_area"
+    },
+    {
+      "id": "e123",
+      "source": "cs_n",
+      "target": "r_csmc",
+      "sourceHandle": "any__val_2",
+      "targetHandle": "any__1_n"
+    },
+    {
+      "id": "e124",
+      "source": "cs_a",
+      "target": "r_csoc",
+      "sourceHandle": "any__val_3",
+      "targetHandle": "any__0_area"
+    },
+    {
+      "id": "e125",
+      "source": "cs_n",
+      "target": "r_csoc",
+      "sourceHandle": "any__val_3",
+      "targetHandle": "any__1_n"
+    },
+    {
+      "id": "e126",
+      "source": "stele",
+      "target": "oc_band",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__inner"
+    },
+    {
+      "id": "e127",
+      "source": "section",
+      "target": "oc_band",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__outer"
+    },
+    {
+      "id": "e128",
+      "source": "exo",
+      "target": "z_exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e129",
+      "source": "cortex",
+      "target": "z_exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e130",
+      "source": "oc_band",
+      "target": "z_outer",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e131",
+      "source": "exo",
+      "target": "z_outer",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e132",
+      "source": "cortex",
+      "target": "z_inner",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e133",
+      "source": "oc_band",
+      "target": "z_inner",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e134",
+      "source": "stele",
+      "target": "pith_band",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__outer"
+    },
+    {
+      "id": "e135",
+      "source": "stele",
+      "target": "z_vasc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e136",
+      "source": "pith_band",
+      "target": "z_vasc",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e137",
+      "source": "z_exo",
+      "target": "zones5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_1"
+    },
+    {
+      "id": "e138",
+      "source": "z_outer",
+      "target": "zones5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_2"
+    },
+    {
+      "id": "e139",
+      "source": "z_inner",
+      "target": "zones5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_3"
+    },
+    {
+      "id": "e140",
+      "source": "z_vasc",
+      "target": "zones5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_4"
+    },
+    {
+      "id": "e141",
+      "source": "pith_band",
+      "target": "zones5",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__mask_5"
+    },
+    {
+      "id": "e142",
+      "source": "stele",
+      "target": "st_outer",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__outer"
+    },
+    {
+      "id": "e143",
+      "source": "st_outer",
+      "target": "st_out_nomx",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e144",
+      "source": "metaxylem",
+      "target": "st_out_nomx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e145",
+      "source": "cells",
+      "target": "st_large",
+      "sourceHandle": "markers__labels",
+      "targetHandle": "markers__labels"
+    },
+    {
+      "id": "e146",
+      "source": "st_out_nomx",
+      "target": "st_large",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__region"
+    },
+    {
+      "id": "e147",
+      "source": "metaxylem",
+      "target": "st_large",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__occupied"
+    },
+    {
+      "id": "e148",
+      "source": "stele",
+      "target": "st_large",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__tissue"
+    },
+    {
+      "id": "e149",
+      "source": "section",
+      "target": "tissue",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e150",
+      "source": "aerenchyma",
+      "target": "tissue",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e151",
+      "source": "tissue",
+      "target": "tissue2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e152",
+      "source": "metaxylem",
+      "target": "tissue2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e153",
+      "source": "cells",
+      "target": "proj_z",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e154",
+      "source": "zones5",
+      "target": "proj_z",
+      "sourceHandle": "markers__zones",
+      "targetHandle": "markers__zones"
+    },
+    {
+      "id": "e155",
+      "source": "zones5",
+      "target": "proj_z",
+      "sourceHandle": "list__names",
+      "targetHandle": "list__names"
+    },
+    {
+      "id": "e156",
+      "source": "radial",
+      "target": "proj_z",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e157",
+      "source": "tissue2",
+      "target": "proj_z",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e158",
+      "source": "cells",
+      "target": "proj_z",
+      "sourceHandle": "mask__resolved",
+      "targetHandle": "mask__measured"
+    },
+    {
+      "id": "e159",
+      "source": "scale",
+      "target": "proj_z",
+      "sourceHandle": "scalar__px_per_um",
+      "targetHandle": "scalar__px_per_unit"
+    },
+    {
+      "id": "e160",
+      "source": "proj_z",
+      "target": "chart",
+      "sourceHandle": "dict__detected_by_zone",
+      "targetHandle": "dict__data_a"
+    },
+    {
+      "id": "e161",
+      "source": "proj_z",
+      "target": "chart",
+      "sourceHandle": "dict__projected_by_zone",
+      "targetHandle": "dict__data_b"
+    },
+    {
+      "id": "e162",
+      "source": "proj_z",
+      "target": "tissue_report",
+      "sourceHandle": "dict__estimated_by_zone",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e163",
+      "source": "proj",
+      "target": "zone_report",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e164",
+      "source": "zoning",
+      "target": "zone_report",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "dict__dict_2"
+    },
+    {
+      "id": "e165",
+      "source": "walls",
+      "target": "shw_sec",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e166",
+      "source": "sh_sec",
+      "target": "shw_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e167",
+      "source": "walls",
+      "target": "shw_ctx",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e168",
+      "source": "sh_ctx",
+      "target": "shw_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e169",
+      "source": "walls",
+      "target": "shw_st",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e170",
+      "source": "sh_st",
+      "target": "shw_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e171",
+      "source": "sec_open",
+      "target": "lat",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e172",
+      "source": "roi",
+      "target": "lat",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e173",
+      "source": "lat",
+      "target": "lat_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e174",
+      "source": "sec_open",
+      "target": "lat_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e175",
+      "source": "section",
+      "target": "px_rxsa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e176",
+      "source": "cortex",
+      "target": "px_tca",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e177",
+      "source": "stele",
+      "target": "px_tsa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e178",
+      "source": "aerenchyma",
+      "target": "px_aa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e179",
+      "source": "lat_sec",
+      "target": "px_la",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e180",
+      "source": "metaxylem",
+      "target": "px_xva",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e181",
+      "source": "endo",
+      "target": "px_ea",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e182",
+      "source": "exo",
+      "target": "px_exa",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e183",
+      "source": "sh_sec",
+      "target": "px_sh_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e184",
+      "source": "sh_ctx",
+      "target": "px_sh_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e185",
+      "source": "sh_st",
+      "target": "px_sh_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e186",
+      "source": "shw_sec",
+      "target": "px_shw_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e187",
+      "source": "shw_ctx",
+      "target": "px_shw_ctx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e188",
+      "source": "shw_st",
+      "target": "px_shw_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e189",
+      "source": "px_shw_sec",
+      "target": "xscwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_shw_sec"
+    },
+    {
+      "id": "e190",
+      "source": "px_sh_sec",
+      "target": "xscwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_sh_sec"
+    },
+    {
+      "id": "e191",
+      "source": "px_rxsa",
+      "target": "xscwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__2_px_rxsa"
+    },
+    {
+      "id": "e192",
+      "source": "px_shw_ctx",
+      "target": "ccwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_shw_ctx"
+    },
+    {
+      "id": "e193",
+      "source": "px_sh_ctx",
+      "target": "ccwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_sh_ctx"
+    },
+    {
+      "id": "e194",
+      "source": "px_tca",
+      "target": "ccwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__2_px_tca"
+    },
+    {
+      "id": "e195",
+      "source": "px_shw_st",
+      "target": "scwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_shw_st"
+    },
+    {
+      "id": "e196",
+      "source": "px_sh_st",
+      "target": "scwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_sh_st"
+    },
+    {
+      "id": "e197",
+      "source": "px_tsa",
+      "target": "scwa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__2_px_tsa"
+    },
+    {
+      "id": "e198",
+      "source": "px_tca",
+      "target": "cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_tca"
+    },
+    {
+      "id": "e199",
+      "source": "px_aa",
+      "target": "cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_aa"
+    },
+    {
+      "id": "e200",
+      "source": "px_rxsa",
+      "target": "n_cf",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_rxsa"
+    },
+    {
+      "id": "e201",
+      "source": "px_tsa",
+      "target": "n_cf",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tsa"
+    },
+    {
+      "id": "e202",
+      "source": "cca",
+      "target": "n_cf",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__2_cca"
+    },
+    {
+      "id": "e203",
+      "source": "proj_ctx",
+      "target": "n_cf",
+      "sourceHandle": "scalar__total",
+      "targetHandle": "scalar__3_proj_ctx"
+    },
+    {
+      "id": "e204",
+      "source": "px_aa",
+      "target": "r_pct_a",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_aa"
+    },
+    {
+      "id": "e205",
+      "source": "px_tca",
+      "target": "r_pct_a",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tca"
+    },
+    {
+      "id": "e206",
+      "source": "px_sh_sec",
+      "target": "r_res_sec",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_sh_sec"
+    },
+    {
+      "id": "e207",
+      "source": "px_rxsa",
+      "target": "r_res_sec",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_rxsa"
+    },
+    {
+      "id": "e208",
+      "source": "px_sh_ctx",
+      "target": "r_res_ctx",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_sh_ctx"
+    },
+    {
+      "id": "e209",
+      "source": "px_tca",
+      "target": "r_res_ctx",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tca"
+    },
+    {
+      "id": "e210",
+      "source": "px_sh_st",
+      "target": "r_res_st",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_sh_st"
+    },
+    {
+      "id": "e211",
+      "source": "px_tsa",
+      "target": "r_res_st",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tsa"
+    },
+    {
+      "id": "e212",
+      "source": "cca",
+      "target": "r_pct_cca",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__0_cca"
+    },
+    {
+      "id": "e213",
+      "source": "px_rxsa",
+      "target": "r_pct_cca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_rxsa"
+    },
+    {
+      "id": "e214",
+      "source": "px_tsa",
+      "target": "r_tsa_rxsa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_tsa"
+    },
+    {
+      "id": "e215",
+      "source": "px_rxsa",
+      "target": "r_tsa_rxsa",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_rxsa"
+    },
+    {
+      "id": "e216",
+      "source": "px_tsa",
+      "target": "r_tsa_tca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__0_px_tsa"
+    },
+    {
+      "id": "e217",
+      "source": "px_tca",
+      "target": "r_tsa_tca",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__1_px_tca"
+    },
+    {
+      "id": "e218",
+      "source": "px_rxsa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__rxsa"
+    },
+    {
+      "id": "e219",
+      "source": "px_tca",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__tca"
+    },
+    {
+      "id": "e220",
+      "source": "px_aa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__aa"
+    },
+    {
+      "id": "e221",
+      "source": "px_la",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__la"
+    },
+    {
+      "id": "e222",
+      "source": "px_tsa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__tsa"
+    },
+    {
+      "id": "e223",
+      "source": "px_xva",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__xva"
+    },
+    {
+      "id": "e224",
+      "source": "px_ea",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__ea"
+    },
+    {
+      "id": "e225",
+      "source": "px_exa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__area_px",
+      "targetHandle": "scalar__exa"
+    },
+    {
+      "id": "e226",
+      "source": "xscwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__xscwa"
+    },
+    {
+      "id": "e227",
+      "source": "ccwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__ccwa"
+    },
+    {
+      "id": "e228",
+      "source": "scwa",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__scwa"
+    },
+    {
+      "id": "e229",
+      "source": "cca",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__cca"
+    },
+    {
+      "id": "e230",
+      "source": "r_csic",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__csic"
+    },
+    {
+      "id": "e231",
+      "source": "r_csmc",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__csmc"
+    },
+    {
+      "id": "e232",
+      "source": "r_csoc",
+      "target": "areas_px",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__csoc"
+    },
+    {
+      "id": "e233",
+      "source": "r_pct_a",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__pct_a"
+    },
+    {
+      "id": "e234",
+      "source": "r_pct_cca",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__pct_cca"
+    },
+    {
+      "id": "e235",
+      "source": "aerenchyma",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_lac"
+    },
+    {
+      "id": "e236",
+      "source": "proj_ctx",
+      "target": "others",
+      "sourceHandle": "scalar__total",
+      "targetHandle": "scalar__n_cc"
+    },
+    {
+      "id": "e237",
+      "source": "n_cf",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__n_cf"
+    },
+    {
+      "id": "e238",
+      "source": "metaxylem",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_mx"
+    },
+    {
+      "id": "e239",
+      "source": "r_tsa_rxsa",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__tsa_rxsa"
+    },
+    {
+      "id": "e240",
+      "source": "r_tsa_tca",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__tsa_tca"
+    },
+    {
+      "id": "e241",
+      "source": "scale",
+      "target": "others",
+      "sourceHandle": "scalar__px_per_mm",
+      "targetHandle": "scalar__px_per_mm"
+    },
+    {
+      "id": "e242",
+      "source": "quality",
+      "target": "others",
+      "sourceHandle": "scalar__value",
+      "targetHandle": "scalar__quality"
+    },
+    {
+      "id": "e243",
+      "source": "cc_get",
+      "target": "others",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__cc_low"
+    },
+    {
+      "id": "e244",
+      "source": "cc_get",
+      "target": "others",
+      "sourceHandle": "any__val_2",
+      "targetHandle": "any__cc_high"
+    },
+    {
+      "id": "e245",
+      "source": "cc_split",
+      "target": "others",
+      "sourceHandle": "any__val_1",
+      "targetHandle": "any__cc_meas"
+    },
+    {
+      "id": "e246",
+      "source": "cc_split",
+      "target": "others",
+      "sourceHandle": "any__val_2",
+      "targetHandle": "any__cc_proj"
+    },
+    {
+      "id": "e247",
+      "source": "r_res_sec",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__res_sec"
+    },
+    {
+      "id": "e248",
+      "source": "r_res_ctx",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__res_ctx"
+    },
+    {
+      "id": "e249",
+      "source": "r_res_st",
+      "target": "others",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__res_st"
+    },
+    {
+      "id": "e250",
+      "source": "cells",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_cells"
+    },
+    {
+      "id": "e251",
+      "source": "zoning",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_zones"
+    },
+    {
+      "id": "e252",
+      "source": "ring",
+      "target": "others",
+      "sourceHandle": "scalar__contrast",
+      "targetHandle": "scalar__st_edge"
+    },
+    {
+      "id": "e253",
+      "source": "st_large",
+      "target": "others",
+      "sourceHandle": "scalar__count",
+      "targetHandle": "scalar__n_st_large"
+    },
+    {
+      "id": "e254",
+      "source": "areas_px",
+      "target": "areas_mm",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e255",
+      "source": "scale",
+      "target": "areas_mm",
+      "sourceHandle": "scalar__px_per_mm",
+      "targetHandle": "scalar__factor"
+    },
+    {
+      "id": "e256",
+      "source": "areas_mm",
+      "target": "report",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e257",
+      "source": "others",
+      "target": "report",
+      "sourceHandle": "dict__dict",
+      "targetHandle": "dict__dict_2"
+    },
+    {
+      "id": "e258",
+      "source": "report",
+      "target": "csv",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__report_0"
+    },
+    {
+      "id": "e259",
+      "source": "zone_report",
+      "target": "csv",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__report_1"
+    },
+    {
+      "id": "e260",
+      "source": "tissue_report",
+      "target": "csv",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__report_2"
+    },
+    {
+      "id": "e261",
+      "source": "cells",
+      "target": "c_outer",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e262",
+      "source": "z_outer",
+      "target": "c_outer",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e263",
+      "source": "cells",
+      "target": "c_inner",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e264",
+      "source": "z_inner",
+      "target": "c_inner",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e265",
+      "source": "cells",
+      "target": "c_exo",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e266",
+      "source": "z_exo",
+      "target": "c_exo",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e267",
+      "source": "cells",
+      "target": "c_vasc",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e268",
+      "source": "z_vasc",
+      "target": "c_vasc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e269",
+      "source": "cells",
+      "target": "c_pith",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e270",
+      "source": "pith_band",
+      "target": "c_pith",
+      "sourceHandle": "mask__range_mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e271",
+      "source": "section",
+      "target": "ol_sec",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e272",
+      "source": "stele",
+      "target": "ol_st",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e273",
+      "source": "metaxylem",
+      "target": "ol_mx",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e274",
+      "source": "aerenchyma",
+      "target": "ol_ae",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e275",
+      "source": "cells",
+      "target": "endo_cells",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e276",
+      "source": "ol_st",
+      "target": "endo_cells",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e277",
+      "source": "cells",
+      "target": "paint_0",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e278",
+      "source": "c_outer",
+      "target": "paint_0",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e279",
+      "source": "paint_0",
+      "target": "paint_1",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e280",
+      "source": "c_inner",
+      "target": "paint_1",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e281",
+      "source": "paint_1",
+      "target": "paint_2",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e282",
+      "source": "c_exo",
+      "target": "paint_2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e283",
+      "source": "paint_2",
+      "target": "paint_3",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e284",
+      "source": "c_vasc",
+      "target": "paint_3",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e285",
+      "source": "paint_3",
+      "target": "paint_4",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e286",
+      "source": "c_pith",
+      "target": "paint_4",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e287",
+      "source": "paint_4",
+      "target": "paint_5",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e288",
+      "source": "st_large",
+      "target": "paint_5",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e289",
+      "source": "paint_5",
+      "target": "paint_6",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e290",
+      "source": "endo_cells",
+      "target": "paint_6",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e291",
+      "source": "paint_6",
+      "target": "paint_7",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e292",
+      "source": "aerenchyma",
+      "target": "paint_7",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e293",
+      "source": "paint_7",
+      "target": "paint_8",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e294",
+      "source": "metaxylem",
+      "target": "paint_8",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e295",
+      "source": "paint_8",
+      "target": "paint_9",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e296",
+      "source": "ol_ae",
+      "target": "paint_9",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e297",
+      "source": "paint_9",
+      "target": "paint_10",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e298",
+      "source": "ol_mx",
+      "target": "paint_10",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e299",
+      "source": "paint_10",
+      "target": "paint_11",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e300",
+      "source": "ol_st",
+      "target": "paint_11",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e301",
+      "source": "paint_11",
+      "target": "paint_12",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e302",
+      "source": "ol_sec",
+      "target": "paint_12",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e303",
+      "source": "src",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "id": "e304",
+      "source": "paint_12",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_b"
+    },
+    {
+      "id": "e305",
+      "source": "compose",
+      "target": "legend",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e306",
+      "source": "legend",
+      "target": "display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 900,
+      "h": 450
+    },
+    "previewPos": {
+      "x": 420,
+      "y": -60
+    },
+    "visualizedNodeId": "display"
+  }
+}
