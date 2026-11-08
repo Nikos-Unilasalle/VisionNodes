@@ -145,6 +145,21 @@
     "file": "root_hough_zoning.vn"
   },
   {
+    "name": "Root Topology & Spatial Regularization (CRF)",
+    "description": "Advanced root cross-section phenotyping combining cell sampling, spatial graph topology, and Markov Random Field (CRF) regularization. Builds a Region Adjacency Graph (RAG) + Delaunay network to compute BFS topological layers from the endodermis (pericycle L1, L2), normalized relative distance (d_stele / R_local), canonical metaxylem polar coordinates, and local size Z-scores (Z_i = (Area_i - μ_neighbors) / σ_neighbors). Large Peripheral Stele Cells are identified by the intersection of topological layers {1, 2} and local size contrast. Weighted graph regularization (CRF) cleans up confetti misclassifications and enforces contiguous tissue sheets. Full RootScan report, cell feature extraction table, stacked bar chart, and side-by-side reconstruction map.",
+    "file": "root_spatial_graph_zoning.vn"
+  },
+  {
+    "name": "Root Predictive Ellipse Zoning (Metaxylem Anchor)",
+    "description": "Predictive allometric root zoning anchored on the metaxylem envelope. Fits an anisotropic enclosing ellipse to the high-contrast metaxylem vessels to capture the organ's physiological center, cut tilt angle, and eccentricity invariant to oblique sectioning. Propagates concentric allometric shells inward (pith) and outward (vascular bundles, large peripheral stele cells, endodermis monolayer, inner/outer cortex, rhizodermis/exodermis) with proportional auto-calibration to the section scale. Complete phenotyping report and side-by-side reconstruction.",
+    "file": "root_predictive_ellipse_zoning.vn"
+  },
+  {
+    "name": "Root Measured Ellipse Zoning (Profile Boundaries)",
+    "description": "Predictive Ellipse Zoning whose zone boundaries are measured instead of assumed. A first Ellipse Propagation pass anchored on the metaxylem gives the elliptical ρ field; every measured cell is tagged with its ρ (List Sample Map) and Profile Zoning splits cell size along ρ where it changes level (number of zones by BIC, 90 % bootstrap band on each boundary, vessels set aside as outliers). The final pass snaps each prior shell (pith, large peripheral stele cells, endodermis, inner/outer cortex) to the nearest measured boundary within Δρ 0.15; the report flags which boundaries are measured and which stay prior. Same reconstruction, report and publication figure as the Predictive Ellipse template.",
+    "file": "root_measured_zoning.vn"
+  },
+  {
     "name": "Thin Section Petrography",
     "description": "Segments mineral grains from polarized light microscopy images (XPL + PPL). Detects opaque minerals, builds per-grain watershed markers, segments grains, and exports shape descriptors (area, circularity, aspect ratio, intensity) to CSV.",
     "file": "thin_section_petrography.vn"
