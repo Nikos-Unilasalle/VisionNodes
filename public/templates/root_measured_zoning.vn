@@ -1,0 +1,2057 @@
+{
+  "nodes": [
+    {
+      "id": "frame-1",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "style": {
+        "width": 560,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 1: Input & Scale Bar",
+          "color_index": 0
+        }
+      },
+      "width": 560,
+      "height": 630
+    },
+    {
+      "id": "frame-2",
+      "type": "canvas_frame",
+      "position": {
+        "x": 620,
+        "y": 0
+      },
+      "style": {
+        "width": 1060,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 2: Section",
+          "color_index": 1
+        }
+      },
+      "width": 1060,
+      "height": 630
+    },
+    {
+      "id": "frame-3",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1740,
+        "y": 0
+      },
+      "style": {
+        "width": 310,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 3: Cell Walls",
+          "color_index": 2
+        }
+      },
+      "width": 310,
+      "height": 630
+    },
+    {
+      "id": "frame-4",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2110,
+        "y": 0
+      },
+      "style": {
+        "width": 810,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 4: Cells Segmentation",
+          "color_index": 3
+        }
+      },
+      "width": 810,
+      "height": 630
+    },
+    {
+      "id": "frame-5",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2980,
+        "y": 0
+      },
+      "style": {
+        "width": 560,
+        "height": 1170,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 5: Radial Prior & Center",
+          "color_index": 4
+        }
+      },
+      "width": 560,
+      "height": 1170
+    },
+    {
+      "id": "frame-6",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 1240
+      },
+      "style": {
+        "width": 1310,
+        "height": 900,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 6: Stele & Tissue Priors",
+          "color_index": 5
+        }
+      },
+      "width": 1310,
+      "height": 900
+    },
+    {
+      "id": "frame-7",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1370,
+        "y": 1240
+      },
+      "style": {
+        "width": 1310,
+        "height": 1170,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 7: Metaxylem Anchor Detection",
+          "color_index": 6
+        }
+      },
+      "width": 1310,
+      "height": 1170
+    },
+    {
+      "id": "frame-8",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 2480
+      },
+      "style": {
+        "width": 1060,
+        "height": 1170,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 8: Predictive Ellipse Propagation",
+          "color_index": 7
+        }
+      },
+      "width": 1060,
+      "height": 1170
+    },
+    {
+      "id": "frame-9",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1120,
+        "y": 2480
+      },
+      "style": {
+        "width": 1310,
+        "height": 1170,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 9: Reconstruction & Report",
+          "color_index": 0
+        }
+      },
+      "width": 1310,
+      "height": 1170
+    },
+    {
+      "id": "frame-10",
+      "type": "canvas_frame",
+      "position": {
+        "x": 0,
+        "y": 3720
+      },
+      "style": {
+        "width": 1060,
+        "height": 630,
+        "zIndex": -1
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "Step 8b: Measured Zone Boundaries (Profile Zoning along ρ)",
+          "color_index": 3
+        }
+      },
+      "width": 1060,
+      "height": 630
+    },
+    {
+      "id": "src",
+      "type": "input_image",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "samples/root.png",
+          "color_index": 0,
+          "node_note": "Root cross-section image (drawing or photo)."
+        }
+      }
+    },
+    {
+      "id": "scale",
+      "type": "sci_scale_bar_detect",
+      "position": {
+        "x": 30,
+        "y": 340
+      },
+      "data": {
+        "label": "Scale Bar Detect",
+        "params": {
+          "source": 0,
+          "bar_length": 500.0,
+          "unit": 0,
+          "fallback_px_per_mm": 118.0,
+          "color_index": 0,
+          "node_note": "Scale calibration: detected or fallback (px/mm)."
+        }
+      }
+    },
+    {
+      "id": "gray",
+      "type": "filter_gray",
+      "position": {
+        "x": 280,
+        "y": 70
+      },
+      "data": {
+        "label": "Grayscale",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "pol",
+      "type": "filter_auto_polarity",
+      "position": {
+        "x": 280,
+        "y": 340
+      },
+      "data": {
+        "label": "Auto Polarity",
+        "params": {
+          "target": 0,
+          "method": 1,
+          "color_index": 0,
+          "node_note": "Bright backdrop, dark walls, bright lumens."
+        }
+      }
+    },
+    {
+      "id": "sec_blur",
+      "type": "filter_blur",
+      "position": {
+        "x": 650,
+        "y": 70
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 0,
+          "size": 15,
+          "sigma": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_thr",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 900,
+        "y": 70
+      },
+      "data": {
+        "label": "Threshold (Advanced)",
+        "params": {
+          "mode": 6,
+          "offset": -30,
+          "color_index": 1,
+          "node_note": "Darker than backdrop is tissue."
+        }
+      }
+    },
+    {
+      "id": "sec_close",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1150,
+        "y": 70
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 1,
+          "shape": 2,
+          "size": 31,
+          "iterations": 1,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 1400,
+        "y": 70
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 650,
+        "y": 340
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 25,
+          "iterations": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "roi",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": 900,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Polygon",
+        "params": {
+          "points": "[]",
+          "filled": true,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "sec_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1150,
+        "y": 340
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 1
+        }
+      }
+    },
+    {
+      "id": "section",
+      "type": "mask_keep_largest",
+      "position": {
+        "x": 1400,
+        "y": 340
+      },
+      "data": {
+        "label": "Keep Largest Blobs",
+        "params": {
+          "count": 1,
+          "color_index": 1,
+          "node_note": "ROOT SECTION"
+        }
+      }
+    },
+    {
+      "id": "ridge",
+      "type": "filter_ridge",
+      "position": {
+        "x": 1770,
+        "y": 70
+      },
+      "data": {
+        "label": "Ridge Filter",
+        "params": {
+          "method": 0,
+          "polarity": 0,
+          "sigma_min": 1.0,
+          "sigma_max": 4.0,
+          "n_scales": 4,
+          "norm_radius": 15,
+          "floor_pct": 40,
+          "color_index": 2,
+          "node_note": "Cell walls = dark lines, multiscale ridge filter."
+        }
+      }
+    },
+    {
+      "id": "tess",
+      "type": "seg_cell_tessellation",
+      "position": {
+        "x": 2140,
+        "y": 70
+      },
+      "data": {
+        "label": "Cell Tessellation",
+        "params": {
+          "smooth": 1.0,
+          "depth": 0.3,
+          "wall_level": 0.7,
+          "wall_ratio": 3.0,
+          "min_closure": 0.8,
+          "min_solidity": 0.85,
+          "min_area": 15,
+          "max_area": 0,
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "walls_a",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2390,
+        "y": 70
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 31,
+          "c": -2,
+          "adaptive_method": 1,
+          "invert": true,
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "med3",
+      "type": "filter_blur",
+      "position": {
+        "x": 2390,
+        "y": 340
+      },
+      "data": {
+        "label": "Blur",
+        "params": {
+          "method": 1,
+          "size": 3,
+          "sigma": 0,
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "walls_b",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2640,
+        "y": 340
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 31,
+          "c": 0,
+          "adaptive_method": 1,
+          "invert": false,
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "cells",
+      "type": "seg_cells_from_walls",
+      "position": {
+        "x": 2640,
+        "y": 70
+      },
+      "data": {
+        "label": "Cells from Walls",
+        "params": {
+          "min_area": 12,
+          "max_area": 6000,
+          "min_solidity": 0.82,
+          "overlap": 0.1,
+          "footprint": 2,
+          "min_contrast": 10,
+          "color_index": 3,
+          "node_note": "Segmented individual cell bodies."
+        }
+      }
+    },
+    {
+      "id": "radial0",
+      "type": "geom_radial_coords",
+      "position": {
+        "x": 3010,
+        "y": 70
+      },
+      "data": {
+        "label": "Radial Coordinates",
+        "params": {
+          "smooth": 3.0,
+          "ignore_border": true,
+          "color_index": 4
+        }
+      }
+    },
+    {
+      "id": "zoning0",
+      "type": "sci_profile_zoning",
+      "position": {
+        "x": 3260,
+        "y": 70
+      },
+      "data": {
+        "label": "Profile Zoning",
+        "params": {
+          "position_key": "rho",
+          "value_key": "radius",
+          "weight_key": "score",
+          "log_values": true,
+          "zones": 0,
+          "max_zones": 6,
+          "outlier_mad": 3.0,
+          "outlier_side": 1,
+          "min_items": 12,
+          "core_rule": 1,
+          "n_boot": 0,
+          "seed": 0,
+          "color_index": 4
+        }
+      }
+    },
+    {
+      "id": "radial",
+      "type": "geom_radial_coords",
+      "position": {
+        "x": 3010,
+        "y": 610
+      },
+      "data": {
+        "label": "Radial Coordinates",
+        "params": {
+          "smooth": 3.0,
+          "ignore_border": true,
+          "color_index": 4
+        }
+      }
+    },
+    {
+      "id": "zoning",
+      "type": "sci_profile_zoning",
+      "position": {
+        "x": 3260,
+        "y": 610
+      },
+      "data": {
+        "label": "Profile Zoning",
+        "params": {
+          "position_key": "rho",
+          "value_key": "radius",
+          "weight_key": "score",
+          "log_values": true,
+          "zones": 0,
+          "max_zones": 6,
+          "outlier_mad": 3.0,
+          "outlier_side": 1,
+          "min_items": 12,
+          "core_rule": 1,
+          "n_boot": 50,
+          "seed": 0,
+          "color_index": 4
+        }
+      }
+    },
+    {
+      "id": "ring",
+      "type": "geom_ring_contour",
+      "position": {
+        "x": 280,
+        "y": 1580
+      },
+      "data": {
+        "label": "Ring Contour",
+        "params": {
+          "side": 0,
+          "sigma": 8.0,
+          "band_low": 0.5,
+          "band_high": 1.5,
+          "max_step": 1,
+          "passes": 6,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "stele",
+      "type": "mask_operations",
+      "position": {
+        "x": 30,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "cortex",
+      "type": "mask_operations",
+      "position": {
+        "x": 280,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "walls",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 30,
+        "y": 1580
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 41,
+          "c": 1,
+          "adaptive_method": 1,
+          "invert": false,
+          "color_index": 5
+        }
+      }
+    },
+    {
+      "id": "lum_sub",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "lumens",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 1310
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 5,
+          "iterations": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "lum_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 1900,
+        "y": 1310
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "lum_med",
+      "type": "sci_stats",
+      "position": {
+        "x": 2150,
+        "y": 1310
+      },
+      "data": {
+        "label": "Statistics",
+        "params": {
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_lum",
+      "type": "cv_adaptive_threshold",
+      "position": {
+        "x": 2400,
+        "y": 1310
+      },
+      "data": {
+        "label": "Adaptive Threshold",
+        "params": {
+          "block_size": 71,
+          "c": -8,
+          "adaptive_method": 1,
+          "invert": true,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_and",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 1580
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 1650,
+        "y": 1580
+      },
+      "data": {
+        "label": "Morphology (Advanced)",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 7,
+          "iterations": 1,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "st_lum2",
+      "type": "mask_operations",
+      "position": {
+        "x": 1900,
+        "y": 1580
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "st_lum_fill",
+      "type": "fill_holes",
+      "position": {
+        "x": 2150,
+        "y": 1580
+      },
+      "data": {
+        "label": "Fill Holes",
+        "params": {
+          "method": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "vessels",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2400,
+        "y": 1580
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_cc",
+      "type": "sci_connected_components",
+      "position": {
+        "x": 1400,
+        "y": 1850
+      },
+      "data": {
+        "label": "Connected Components",
+        "params": {
+          "threshold": 128,
+          "min_area": 30,
+          "max_area": 500000,
+          "connectivity": 1,
+          "colorize": true,
+          "show_cross": false,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_floor",
+      "type": "math_expr",
+      "position": {
+        "x": 1650,
+        "y": 1850
+      },
+      "data": {
+        "label": "Math Expression",
+        "params": {
+          "expression": "2 * a",
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_break",
+      "type": "list_natural_break",
+      "position": {
+        "x": 1900,
+        "y": 1850
+      },
+      "data": {
+        "label": "List Natural Break",
+        "params": {
+          "log_scale": true,
+          "min_value": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "metaxylem",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 2150,
+        "y": 1850
+      },
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1000,
+          "max_area": 0,
+          "circ_min": 0.3,
+          "connectivity": 4,
+          "color_index": 6,
+          "node_note": "METAXYLEM ANCHOR (6 VESSELS)"
+        }
+      }
+    },
+    {
+      "id": "mx_tess",
+      "type": "mask_operations",
+      "position": {
+        "x": 1900,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_pts",
+      "type": "points_to_mask",
+      "position": {
+        "x": 1400,
+        "y": 2120
+      },
+      "data": {
+        "label": "Points to Mask",
+        "params": {
+          "radius": 2,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_sel",
+      "type": "mask_select_by_marker",
+      "position": {
+        "x": 2150,
+        "y": 2120
+      },
+      "data": {
+        "label": "Select Blobs by Marker",
+        "params": {
+          "mode": 0,
+          "connectivity": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_mark",
+      "type": "mask_operations",
+      "position": {
+        "x": 1650,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "mx_cand",
+      "type": "mask_operations",
+      "position": {
+        "x": 2400,
+        "y": 2120
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 6
+        }
+      }
+    },
+    {
+      "id": "ellipse_prop",
+      "type": "geom_ellipse_propagation",
+      "position": {
+        "x": 30,
+        "y": 2550
+      },
+      "data": {
+        "label": "Predictive Ellipse Propagation",
+        "params": {
+          "auto_calibrate": true,
+          "scale_pith": 0.65,
+          "scale_mx": 1.0,
+          "scale_lpsc": 1.18,
+          "scale_endo": 1.32,
+          "scale_inner_cortex": 1.88,
+          "scale_outer_cortex": 2.45,
+          "scale_rhizodermis": 2.8,
+          "show_shells": true,
+          "shell_thickness": 2,
+          "color_index": 7,
+          "node_note": "FINAL PASS: every prior shell snaps to the nearest measured boundary within Δρ 0.15; report flags measured_* vs prior.",
+          "snap_tolerance": 0.15
+        }
+      }
+    },
+    {
+      "id": "ol_st_pred",
+      "type": "mask_outline",
+      "position": {
+        "x": 280,
+        "y": 2550
+      },
+      "data": {
+        "label": "Mask Outline",
+        "params": {
+          "thickness": 3,
+          "color_index": 7,
+          "node_note": "Predicted Stele Boundary"
+        }
+      }
+    },
+    {
+      "id": "zones_all",
+      "type": "mask_to_zones",
+      "position": {
+        "x": 30,
+        "y": 2820
+      },
+      "data": {
+        "label": "Masks to Zones",
+        "params": {
+          "names": "Pith, Vascular cylinder, Large Peripheral Stele Cells, Endodermis, Inner cortex, Outer cortex, Rhizodermis / Exodermis",
+          "color_index": 7
+        }
+      }
+    },
+    {
+      "id": "report",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 1150,
+        "y": 2550
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Measured Ellipse Zoning Report",
+          "groups": "Anchor Metaxylem Ellipse: center_x, center_y, major_axis, minor_axis, aspect_ratio, tilt_angle_deg | Allometric Scales: calibrated_section_ratio, scale_pith, scale_metaxylem, scale_lpsc, scale_endodermis, scale_inner_cortex, scale_outer_cortex, scale_rhizodermis | Cell Partitioning: cells_pith, cells_vascular, cells_lpsc, cells_endodermis, cells_inner_cortex, cells_outer_cortex, cells_rhizodermis | Measured vs Prior Boundaries: measured_boundaries, measured_pith, measured_lpsc, measured_endodermis, measured_inner_cortex, measured_outer_cortex",
+          "digits": 3,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "compose",
+      "type": "util_compose",
+      "position": {
+        "x": 1150,
+        "y": 2820
+      },
+      "data": {
+        "label": "Compose",
+        "params": {
+          "mode": 0,
+          "gap": 4,
+          "color_index": 0,
+          "node_note": "Side-by-side: Original image | Predictive elliptical propagation."
+        }
+      }
+    },
+    {
+      "id": "legend",
+      "type": "image_legend",
+      "position": {
+        "x": 1150,
+        "y": 3090
+      },
+      "data": {
+        "label": "Image Legend",
+        "params": {
+          "entries": "Metaxylem Anchor (Lumina):#008300\nPith (Moelle):#e87ba4\nVascular Cylinder:#00a1ed\nLarge Peripheral Stele Cells:#d97706\nEndodermis Monolayer:#c2577e\nInner Cortex:#1baf7a\nOuter Cortex:#eb6834\nRhizodermis / Exodermis:#2a78d6\nPropagated Elliptical Shells:#00e5ff",
+          "position": "top-left",
+          "font_scale": 0.85,
+          "swatch_size": 24,
+          "bg_alpha": 0.82,
+          "padding": 12,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "display",
+      "type": "output_display",
+      "position": {
+        "x": 1400,
+        "y": 3090
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "pub_fig",
+      "type": "draw_root_publication",
+      "position": {
+        "x": 1150,
+        "y": 3360
+      },
+      "data": {
+        "label": "Root Publication Figure",
+        "params": {
+          "canvas_mode": "clean_white",
+          "zone_opacity": 0.32,
+          "cell_opacity": 0.9,
+          "pt_to_px": 1.33,
+          "complete_steles": true,
+          "hatch_lacunae": true,
+          "lacunae_min_area": 25,
+          "draw_legend": true,
+          "draw_scale_bar": true,
+          "scale_bar_um": 200,
+          "pixel_size_um": 0.5,
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "pub_display",
+      "type": "output_display",
+      "position": {
+        "x": 1400,
+        "y": 3360
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 0
+        }
+      }
+    },
+    {
+      "id": "ellipse_prior",
+      "type": "geom_ellipse_propagation",
+      "position": {
+        "x": 30,
+        "y": 3790
+      },
+      "data": {
+        "label": "Predictive Ellipse Propagation",
+        "params": {
+          "auto_calibrate": true,
+          "scale_pith": 0.65,
+          "scale_mx": 1.0,
+          "scale_lpsc": 1.18,
+          "scale_endo": 1.32,
+          "scale_inner_cortex": 1.88,
+          "scale_outer_cortex": 2.45,
+          "scale_rhizodermis": 2.8,
+          "show_shells": false,
+          "shell_thickness": 2,
+          "color_index": 3,
+          "node_note": "PRIOR PASS: metaxylem anchor + allometric prior shells. Only its float ρ field is used."
+        }
+      }
+    },
+    {
+      "id": "rho_cells",
+      "type": "list_sample_map",
+      "position": {
+        "x": 280,
+        "y": 3790
+      },
+      "data": {
+        "label": "List Sample Map",
+        "params": {
+          "key": "rho_e",
+          "x_key": "cx",
+          "y_key": "cy",
+          "color_index": 3,
+          "node_note": "Each measured cell gets its elliptical ρ."
+        }
+      }
+    },
+    {
+      "id": "profile",
+      "type": "sci_profile_zoning",
+      "position": {
+        "x": 530,
+        "y": 3790
+      },
+      "data": {
+        "label": "Profile Zoning",
+        "params": {
+          "position_key": "rho_e",
+          "value_key": "radius",
+          "weight_key": "score",
+          "log_values": true,
+          "zones": 0,
+          "max_zones": 8,
+          "outlier_mad": 3.0,
+          "outlier_side": 1,
+          "min_items": 12,
+          "core_rule": 1,
+          "n_boot": 50,
+          "seed": 0,
+          "color_index": 3,
+          "node_note": "MEASURED BOUNDARIES: cell size along ρ is split where it changes level (number of zones by BIC, 90 % bootstrap band on each boundary). Large outliers (vessels) are set aside."
+        }
+      }
+    },
+    {
+      "id": "profile_display",
+      "type": "output_display",
+      "position": {
+        "x": 780,
+        "y": 3790
+      },
+      "data": {
+        "label": "Display",
+        "params": {
+          "color_index": 3
+        }
+      }
+    },
+    {
+      "id": "profile_stats",
+      "type": "dict_report_panel",
+      "position": {
+        "x": 530,
+        "y": 4060
+      },
+      "data": {
+        "label": "Report Panel",
+        "params": {
+          "title": "Measured Boundaries (Profile Zoning)",
+          "groups": "",
+          "digits": 3,
+          "color_index": 3
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "src",
+      "target": "gray",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e2",
+      "source": "src",
+      "target": "scale",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e3",
+      "source": "gray",
+      "target": "pol",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e4",
+      "source": "pol",
+      "target": "sec_blur",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e5",
+      "source": "sec_blur",
+      "target": "sec_thr",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e6",
+      "source": "sec_thr",
+      "target": "sec_close",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e7",
+      "source": "sec_close",
+      "target": "sec_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e8",
+      "source": "sec_fill",
+      "target": "sec_open",
+      "sourceHandle": "mask__main",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e9",
+      "source": "src",
+      "target": "roi",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e10",
+      "source": "sec_open",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e11",
+      "source": "roi",
+      "target": "sec_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e12",
+      "source": "sec_and",
+      "target": "section",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e13",
+      "source": "pol",
+      "target": "ridge",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e14",
+      "source": "section",
+      "target": "ridge",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e15",
+      "source": "ridge",
+      "target": "tess",
+      "sourceHandle": "any__ridge",
+      "targetHandle": "any__walls"
+    },
+    {
+      "id": "e16",
+      "source": "section",
+      "target": "tess",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e17",
+      "source": "ridge",
+      "target": "walls_a",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e18",
+      "source": "pol",
+      "target": "med3",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e19",
+      "source": "med3",
+      "target": "walls_b",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e20",
+      "source": "walls_a",
+      "target": "cells",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__walls"
+    },
+    {
+      "id": "e21",
+      "source": "walls_b",
+      "target": "cells",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__walls_2"
+    },
+    {
+      "id": "e22",
+      "source": "section",
+      "target": "cells",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__region"
+    },
+    {
+      "id": "e23",
+      "source": "tess",
+      "target": "cells",
+      "sourceHandle": "markers__resolved_labels",
+      "targetHandle": "markers__existing"
+    },
+    {
+      "id": "e24",
+      "source": "pol",
+      "target": "cells",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e25",
+      "source": "section",
+      "target": "radial0",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e26",
+      "source": "tess",
+      "target": "radial0",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e27",
+      "source": "radial0",
+      "target": "zoning0",
+      "sourceHandle": "list__items",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e28",
+      "source": "radial0",
+      "target": "zoning0",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e29",
+      "source": "section",
+      "target": "radial",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e30",
+      "source": "zoning0",
+      "target": "radial",
+      "sourceHandle": "mask__core",
+      "targetHandle": "mask__center_mask"
+    },
+    {
+      "id": "e31",
+      "source": "tess",
+      "target": "radial",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e32",
+      "source": "radial",
+      "target": "zoning",
+      "sourceHandle": "list__items",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e33",
+      "source": "radial",
+      "target": "zoning",
+      "sourceHandle": "any__position",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e34",
+      "source": "pol",
+      "target": "ring",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e35",
+      "source": "zoning",
+      "target": "ring",
+      "sourceHandle": "mask__core",
+      "targetHandle": "mask__prior"
+    },
+    {
+      "id": "e36",
+      "source": "section",
+      "target": "ring",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__region"
+    },
+    {
+      "id": "e37",
+      "source": "ring",
+      "target": "stele",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e38",
+      "source": "section",
+      "target": "stele",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e39",
+      "source": "section",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e40",
+      "source": "stele",
+      "target": "cortex",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e41",
+      "source": "pol",
+      "target": "walls",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e42",
+      "source": "section",
+      "target": "lum_sub",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e43",
+      "source": "walls",
+      "target": "lum_sub",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e44",
+      "source": "lum_sub",
+      "target": "lumens",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e45",
+      "source": "lumens",
+      "target": "lum_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e46",
+      "source": "lum_cc",
+      "target": "lum_med",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__data_list"
+    },
+    {
+      "id": "e47",
+      "source": "pol",
+      "target": "mx_lum",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e48",
+      "source": "mx_lum",
+      "target": "mx_and",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e49",
+      "source": "stele",
+      "target": "mx_and",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e50",
+      "source": "mx_and",
+      "target": "mx_open",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__mask"
+    },
+    {
+      "id": "e51",
+      "source": "lumens",
+      "target": "st_lum2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e52",
+      "source": "stele",
+      "target": "st_lum2",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e53",
+      "source": "st_lum2",
+      "target": "st_lum_fill",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e54",
+      "source": "st_lum_fill",
+      "target": "vessels",
+      "sourceHandle": "mask__main",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e55",
+      "source": "cells",
+      "target": "mx_tess",
+      "sourceHandle": "mask__interiors",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e56",
+      "source": "stele",
+      "target": "mx_tess",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e57",
+      "source": "zoning",
+      "target": "mx_pts",
+      "sourceHandle": "list__outliers",
+      "targetHandle": "list__points"
+    },
+    {
+      "id": "e58",
+      "source": "src",
+      "target": "mx_pts",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__reference"
+    },
+    {
+      "id": "e59",
+      "source": "mx_tess",
+      "target": "mx_sel",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e60",
+      "source": "mx_pts",
+      "target": "mx_sel",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e61",
+      "source": "mx_open",
+      "target": "mx_mark",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e62",
+      "source": "mx_pts",
+      "target": "mx_mark",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e63",
+      "source": "mx_mark",
+      "target": "vessels",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__marker"
+    },
+    {
+      "id": "e64",
+      "source": "vessels",
+      "target": "mx_cand",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e65",
+      "source": "mx_sel",
+      "target": "mx_cand",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e66",
+      "source": "mx_cand",
+      "target": "mx_cc",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "any__image"
+    },
+    {
+      "id": "e67",
+      "source": "lum_med",
+      "target": "mx_floor",
+      "sourceHandle": "scalar__median",
+      "targetHandle": "None__0_med"
+    },
+    {
+      "id": "e68",
+      "source": "mx_cc",
+      "target": "mx_break",
+      "sourceHandle": "list__areas",
+      "targetHandle": "list__values"
+    },
+    {
+      "id": "e69",
+      "source": "mx_floor",
+      "target": "mx_break",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_value"
+    },
+    {
+      "id": "e70",
+      "source": "mx_cand",
+      "target": "metaxylem",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e71",
+      "source": "mx_break",
+      "target": "metaxylem",
+      "sourceHandle": "scalar__threshold",
+      "targetHandle": "scalar__min_area"
+    },
+    {
+      "id": "e72",
+      "source": "metaxylem",
+      "target": "ellipse_prop",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__landmarks"
+    },
+    {
+      "id": "e73",
+      "source": "section",
+      "target": "ellipse_prop",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__boundary"
+    },
+    {
+      "id": "e74",
+      "source": "cells",
+      "target": "ellipse_prop",
+      "sourceHandle": "markers__labels",
+      "targetHandle": "markers__labels"
+    },
+    {
+      "id": "e75",
+      "source": "cells",
+      "target": "ellipse_prop",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e76",
+      "source": "ellipse_prop",
+      "target": "ol_st_pred",
+      "sourceHandle": "mask__stele_mask",
+      "targetHandle": "mask__mask"
+    },
+    {
+      "id": "e77",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__pith_mask",
+      "targetHandle": "mask__mask_1"
+    },
+    {
+      "id": "e78",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__vascular_mask",
+      "targetHandle": "mask__mask_2"
+    },
+    {
+      "id": "e79",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__lpsc_mask",
+      "targetHandle": "mask__mask_3"
+    },
+    {
+      "id": "e80",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__endodermis_mask",
+      "targetHandle": "mask__mask_4"
+    },
+    {
+      "id": "e81",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__inner_cortex_mask",
+      "targetHandle": "mask__mask_5"
+    },
+    {
+      "id": "e82",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__outer_cortex_mask",
+      "targetHandle": "mask__mask_6"
+    },
+    {
+      "id": "e83",
+      "source": "ellipse_prop",
+      "target": "zones_all",
+      "sourceHandle": "mask__rhizodermis_mask",
+      "targetHandle": "None__mask_7"
+    },
+    {
+      "id": "e84",
+      "source": "ellipse_prop",
+      "target": "report",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e85",
+      "source": "src",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_a"
+    },
+    {
+      "id": "e86",
+      "source": "ellipse_prop",
+      "target": "compose",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image_b"
+    },
+    {
+      "id": "e87",
+      "source": "compose",
+      "target": "legend",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e88",
+      "source": "legend",
+      "target": "display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e89",
+      "source": "cells",
+      "target": "pub_fig",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e90",
+      "source": "cells",
+      "target": "pub_fig",
+      "sourceHandle": "markers__labels",
+      "targetHandle": "labels__labels"
+    },
+    {
+      "id": "e91",
+      "source": "section",
+      "target": "pub_fig",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__boundary"
+    },
+    {
+      "id": "e92",
+      "source": "metaxylem",
+      "target": "pub_fig",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__landmarks"
+    },
+    {
+      "id": "e93",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__pith_mask",
+      "targetHandle": "mask__pith_mask"
+    },
+    {
+      "id": "e94",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__vascular_mask",
+      "targetHandle": "mask__vascular_mask"
+    },
+    {
+      "id": "e95",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__endodermis_mask",
+      "targetHandle": "mask__endodermis_mask"
+    },
+    {
+      "id": "e96",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__inner_cortex_mask",
+      "targetHandle": "mask__inner_cortex_mask"
+    },
+    {
+      "id": "e97",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__outer_cortex_mask",
+      "targetHandle": "mask__outer_cortex_mask"
+    },
+    {
+      "id": "e98",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "mask__rhizodermis_mask",
+      "targetHandle": "mask__rhizodermis_mask"
+    },
+    {
+      "id": "e99",
+      "source": "ellipse_prop",
+      "target": "pub_fig",
+      "sourceHandle": "dict__report",
+      "targetHandle": "dict__ellipse_report"
+    },
+    {
+      "id": "e100",
+      "source": "pub_fig",
+      "target": "pub_display",
+      "sourceHandle": "image__figure_with_legend",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e101",
+      "source": "metaxylem",
+      "target": "ellipse_prior",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__landmarks"
+    },
+    {
+      "id": "e102",
+      "source": "section",
+      "target": "ellipse_prior",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__boundary"
+    },
+    {
+      "id": "e103",
+      "source": "cells",
+      "target": "ellipse_prior",
+      "sourceHandle": "markers__labels",
+      "targetHandle": "markers__labels"
+    },
+    {
+      "id": "e104",
+      "source": "cells",
+      "target": "ellipse_prior",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "e105",
+      "source": "tess",
+      "target": "rho_cells",
+      "sourceHandle": "list__cells",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e106",
+      "source": "ellipse_prior",
+      "target": "rho_cells",
+      "sourceHandle": "any__rho",
+      "targetHandle": "any__map"
+    },
+    {
+      "id": "e107",
+      "source": "rho_cells",
+      "target": "profile",
+      "sourceHandle": "list__items",
+      "targetHandle": "list__items"
+    },
+    {
+      "id": "e108",
+      "source": "ellipse_prior",
+      "target": "profile",
+      "sourceHandle": "any__rho",
+      "targetHandle": "any__position"
+    },
+    {
+      "id": "e109",
+      "source": "profile",
+      "target": "profile_display",
+      "sourceHandle": "image__main",
+      "targetHandle": "image__main"
+    },
+    {
+      "id": "e110",
+      "source": "profile",
+      "target": "profile_stats",
+      "sourceHandle": "dict__stats",
+      "targetHandle": "dict__dict"
+    },
+    {
+      "id": "e111",
+      "source": "profile",
+      "target": "ellipse_prop",
+      "sourceHandle": "list__boundaries",
+      "targetHandle": "list__boundaries"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 900,
+      "h": 450
+    },
+    "previewPos": {
+      "x": 420,
+      "y": -60
+    },
+    "visualizedNodeId": "display"
+  }
+}
