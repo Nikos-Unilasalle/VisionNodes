@@ -46,6 +46,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'use_robust_decoalescence', 'label': 'Robust Decoalescence & Unit Area Estimation', 'type': 'bool', 'default': False},
         {'id': 'decoal_threshold', 'label': 'Decoalescence Multiplier Threshold', 'type': 'float', 'default': 1.80, 'min': 1.2, 'max': 3.0, 'step': 0.05},
         {'id': 'use_antipodal_mirror', 'label': 'Antipodal Mirror Reflection Imputation', 'type': 'bool', 'default': True},
+        {'id': 'zones_from_masks', 'label': 'Count Zones from Input Masks', 'type': 'bool', 'default': False},
         {'id': 'draw_legend', 'label': 'Include Legend & Accounting Panel', 'type': 'bool', 'default': True},
         {'id': 'draw_scale_bar', 'label': 'Draw Scale Bar', 'type': 'bool', 'default': True},
         {'id': 'scale_bar_um', 'label': 'Scale Bar Length (um)', 'type': 'int', 'default': 200, 'min': 10, 'max': 2000},
@@ -166,6 +167,9 @@ class RootPublicationFigureNode(NodeProcessor):
         use_robust_decoal = bool(params.get('use_robust_decoalescence', False))
         decoal_th         = float(params.get('decoal_threshold', 1.80))
         use_antipodal_mirror = bool(params.get('use_antipodal_mirror', True))
+        # True: cells are counted in the zone their centroid falls in (the input masks, as drawn) and
+        # zone areas are the mask areas; False: legacy elliptic shells rebuilt from the report scales.
+        zones_from_masks = bool(params.get('zones_from_masks', False))
 
         def _to_mask(m):
             if m is None:
@@ -419,7 +423,15 @@ class RootPublicationFigureNode(NodeProcessor):
         s_outer = float(ep_rep.get('scale_outer_cortex', s_endo * 1.86))
         s_rhizo = float(ep_rep.get('scale_rhizodermis', s_endo * 2.12))
 
+        zone_bins = {'pith': pith_obs_cells, 'vascular': vasc_obs_cells, 'endodermis': endo_obs_cells,
+                     'inner_cortex': inner_obs_cells, 'outer_cortex': outer_obs_cells,
+                     'rhizodermis': rhizo_obs_cells}
         for p in props:
+            if zones_from_masks:
+                zone = cell_assignments.get(p.label)
+                if zone in zone_bins:
+                    zone_bins[zone].append(p)
+                continue
             yc, xc = p.centroid
             dx, dy = xc - cx_s, yc - cy_s
             xr = cos_t * dx + sin_t * dy
@@ -443,6 +455,11 @@ class RootPublicationFigureNode(NodeProcessor):
             elif s_outer < r_norm <= s_rhizo:
                 rhizo_obs_cells.append(p)
 
+        if zones_from_masks:
+            mx_px = mx_completed_mask
+            area_pith_theo = float(np.count_nonzero(m_pith & root_roi & ~mx_px))
+            area_stele_theo = float(np.count_nonzero((m_pith | m_vasc | m_endo) & root_roi))
+
         # 1. Pith
         n_pith_obs = len(pith_obs_cells)
         area_pith_obs = sum(p.area for p in pith_obs_cells)
@@ -465,6 +482,8 @@ class RootPublicationFigureNode(NodeProcessor):
 
         # 2. Central vascular (subtracting completed metaxylem vessels)
         area_vasc_theo = max(0.0, area_stele_theo - area_pith_theo - area_mx_total)
+        if zones_from_masks:
+            area_vasc_theo = float(np.count_nonzero(m_vasc & root_roi & ~mx_completed_mask))
         area_vasc_obs = sum(p.area for p in vasc_obs_cells)
         if use_robust_decoal:
             unit_vasc_area = self._robust_unit_area(vasc_obs_cells, default=125.0)
@@ -506,7 +525,8 @@ class RootPublicationFigureNode(NodeProcessor):
         # 4. Inner Cortex (subtracting cortical lacunae intersecting inner cortex)
         a_base = maj_s
         b_base = min_s
-        area_inner_theo = max(0.0, np.pi * a_base * b_base * (s_inner**2 - s_endo**2))
+        area_inner_theo = (float(np.count_nonzero(m_inner & root_roi)) if zones_from_masks
+                           else max(0.0, np.pi * a_base * b_base * (s_inner**2 - s_endo**2)))
         area_inner_obs = sum(p.area for p in inner_obs_cells)
         if use_robust_decoal:
             unit_inner_area = self._robust_unit_area(inner_obs_cells, default=320.0)
@@ -526,7 +546,8 @@ class RootPublicationFigureNode(NodeProcessor):
         n_inner_total_pred = n_inner_eff + n_inner_missing_pred
 
         # 5. Outer Cortex (subtracting cortical lacunae intersecting outer cortex)
-        area_outer_theo = max(0.0, np.pi * a_base * b_base * (s_outer**2 - s_inner**2))
+        area_outer_theo = (float(np.count_nonzero(m_outer & root_roi)) if zones_from_masks
+                           else max(0.0, np.pi * a_base * b_base * (s_outer**2 - s_inner**2)))
         area_outer_obs = sum(p.area for p in outer_obs_cells)
         if use_robust_decoal:
             unit_outer_area = self._robust_unit_area(outer_obs_cells, default=350.0)
@@ -547,7 +568,8 @@ class RootPublicationFigureNode(NodeProcessor):
 
         # 6. Rhizodermis
         n_rhizo_obs = len(rhizo_obs_cells)
-        area_rhizo_theo = max(0.0, np.pi * a_base * b_base * (s_rhizo**2 - s_outer**2))
+        area_rhizo_theo = (float(np.count_nonzero(m_rhizo & root_roi)) if zones_from_masks
+                           else max(0.0, np.pi * a_base * b_base * (s_rhizo**2 - s_outer**2)))
         area_rhizo_obs = sum(p.area for p in rhizo_obs_cells)
         if use_robust_decoal:
             unit_rhizo_area = self._robust_unit_area(rhizo_obs_cells, default=300.0)

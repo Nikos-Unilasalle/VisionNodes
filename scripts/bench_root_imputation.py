@@ -43,10 +43,12 @@ DEFAULT_SEVERITIES = (0.1, 0.2, 0.35, 0.5)
 DEFAULT_SEEDS = (0, 1)
 
 _VN = None
+_ZONING = 'template'
 
 
-def _init_worker(template=TEMPLATE):
-    global _VN
+def _init_worker(template=TEMPLATE, zoning='template'):
+    global _VN, _ZONING
+    _ZONING = zoning
     import vn_headless as H
     H.load_plugins()
     with open(template) as f:
@@ -69,11 +71,19 @@ def _run_pipeline(path):
     ep = r['ellipse_prop']
     if any(ep.get(f'{z}_mask') is None for z in ZONES):
         raise PipelineFailure('pipeline produced no zone masks (metaxylem anchor lost?)')
+    section = _required(r['section'].get('mask'), 'section mask') > 0
+    mx = _required(r['metaxylem'].get('mask'), 'metaxylem mask') > 0
+    zones = {z: np.asarray(ep[f'{z}_mask']) > 0 for z in ZONES}
+    if _ZONING == 'measured':
+        import radial_zoning_lib as R
+        gray = cv2.cvtColor(np.asarray(r['src']['main']), cv2.COLOR_BGR2GRAY)
+        _, masks, _, _ = R.measure_boundaries(gray, section, mx, n_boot=0)
+        zones = {z: masks.get(f'{z}_mask', np.zeros_like(section)) for z in ZONES}
     return {
-        'section': _required(r['section'].get('mask'), 'section mask') > 0,
+        'section': section,
         'labels': _required(r['cells'].get('labels'), 'cell labels'),
-        'mx': _required(r['metaxylem'].get('mask'), 'metaxylem mask') > 0,
-        'zones': {z: np.asarray(ep[f'{z}_mask']) > 0 for z in ZONES},
+        'mx': mx,
+        'zones': zones,
         'node_report': r['pub_fig'].get('predictive_report') or {},
     }
 
@@ -217,6 +227,8 @@ def main():
     ap.add_argument('--seeds', nargs='+', type=int, default=list(DEFAULT_SEEDS))
     ap.add_argument('--territory', type=int, default=2, help='wall half-width in px for the territory estimator')
     ap.add_argument('--workers', type=int, default=4)
+    ap.add_argument('--zoning', choices=('template', 'measured'), default='template',
+                    help='zone masks: the template\'s elliptic shells, or measured radial boundaries')
     ap.add_argument('--template', default=TEMPLATE,
                     help='.vn to benchmark; must expose section, cells, metaxylem, ellipse_prop, pub_fig nodes')
     args = ap.parse_args()
@@ -226,7 +238,7 @@ def main():
             ap.error(f'cannot read image {p}')
     os.makedirs(args.out, exist_ok=True)
 
-    with ProcessPoolExecutor(args.workers, initializer=_init_worker, initargs=(args.template,)) as pool:
+    with ProcessPoolExecutor(args.workers, initializer=_init_worker, initargs=(args.template, args.zoning)) as pool:
         cleans = list(pool.map(_clean_job, args.images))
         rows, truths, jobs = [], {}, []
         for path, res, truth, node_truth, clean_lacunae in cleans:
