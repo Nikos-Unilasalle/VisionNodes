@@ -314,7 +314,8 @@ class GeomEllipsePropagationNode(NodeProcessor):
             'major_axis': float(max(a, b)),
             'minor_axis': float(min(a, b)),
             'aspect_ratio': float(aspect_ratio),
-            'tilt_angle_deg': float(angle),
+            # direction of the MAJOR axis (fitEllipse's angle belongs to its first axis, a)
+            'tilt_angle_deg': float(angle if a >= b else (angle + 90.0) % 180.0),
             'scale_pith': float(s_pith),
             'scale_metaxylem': float(s_mx),
             'scale_lpsc': float(s_lpsc),

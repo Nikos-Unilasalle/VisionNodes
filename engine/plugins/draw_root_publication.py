@@ -692,7 +692,8 @@ class RootPublicationFigureNode(NodeProcessor):
             th_endo_2x = max(2, int(round(TISSUES['endodermis']['th_ring_pt'] * pt_scale * 2.0)))
             box_endo_2x = (
                 (cx_s * 2.0, cy_s * 2.0),
-                (maj_s * s_endo * 2.0, min_s * s_endo * 2.0),
+                # full axes (2 x semi-axis) on the 2x canvas; angle_s is the major-axis direction
+                (maj_s * s_endo * 4.0, min_s * s_endo * 4.0),
                 angle_s
             )
             mask_e = np.zeros((h * 2, w * 2), dtype=np.uint8)

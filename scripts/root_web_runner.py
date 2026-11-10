@@ -514,7 +514,7 @@ def build_tables(st, census, zone_area, areas):
          f'{int(rep.get("lacunae_count", 0))} lacunae'],
         ['Total xylem vessel area (XVA)', _num(sum(v['reg'] for v in vessels) * ar, 0), unit_a,
          'after elliptical regularisation'],
-        ['Section tilt', _num(float(np.degrees(ell[4])) % 180, 1), '°', 'orientation of the anchor ellipse'],
+        ['Section tilt', _num(R.major_axis_tilt_deg(ell), 1), '°', 'direction of the anchor ellipse\'s major axis'],
         ['Anchor aspect ratio', _num(max(ell[2], ell[3]) / min(ell[2], ell[3]), 3), '', 'a / b'],
     ]
     bound_rows = []

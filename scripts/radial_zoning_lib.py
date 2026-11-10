@@ -295,11 +295,17 @@ def zone_masks(rho, section, b):
     }
 
 
+def major_axis_tilt_deg(ell):
+    """Direction of the anchor ellipse's major axis, in degrees [0, 180)."""
+    _, _, a, b, t = ell
+    return float((np.degrees(t) + (0.0 if a >= b else 90.0)) % 180.0)
+
+
 def anchor_report(ell):
     """Anchor ellipse in the keys of the Ellipse Propagation report (centre, semi-axes, tilt)."""
     cx, cy, a, b, t = ell
     return {'center_x': float(cx), 'center_y': float(cy), 'major_axis': float(max(a, b)),
-            'minor_axis': float(min(a, b)), 'tilt_angle_deg': float(np.degrees(t)),
+            'minor_axis': float(min(a, b)), 'tilt_angle_deg': major_axis_tilt_deg(ell),
             'aspect_ratio': float(max(a, b) / max(min(a, b), 1e-6))}
 
 

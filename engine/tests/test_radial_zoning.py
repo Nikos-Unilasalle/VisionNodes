@@ -154,3 +154,18 @@ def test_clean_vessels_keeps_a_small_round_vessel_and_a_leaky_one():
     cv2.circle(mask, (480, 300), 23, 255, -1)              # half the area, still round
     cv2.rectangle(mask, (120, 296), (175, 304), 255, -1)    # leak glued to the vessel at (120, 300)
     assert _count(R.clean_vessels(mask)) == 6
+
+
+@pytest.mark.parametrize('rx, ry, expected', [(90, 60, 0.0), (60, 90, 90.0)])
+def test_reported_tilt_is_the_direction_of_the_major_axis(rx, ry, expected):
+    import vn_headless as H
+    H.load_plugins()
+    mx = np.zeros((500, 500), np.uint8)
+    for k in range(6):
+        th = k * np.pi / 3
+        cv2.circle(mx, (int(250 + rx * np.cos(th)), int(250 + ry * np.sin(th))), 12, 255, -1)
+    rep = H.registry.NODE_CLASS_REGISTRY['geom_ellipse_propagation']().process(
+        {'landmarks': mx}, {'auto_calibrate': False})['report']
+    tilt = rep['tilt_angle_deg'] % 180
+    assert min(abs(tilt - expected), 180 - abs(tilt - expected)) < 5
+    assert R.major_axis_tilt_deg(R.anchor_ellipse(mx)) == pytest.approx(tilt, abs=1e-6)
