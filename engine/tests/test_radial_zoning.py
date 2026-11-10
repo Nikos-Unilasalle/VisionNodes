@@ -169,3 +169,19 @@ def test_reported_tilt_is_the_direction_of_the_major_axis(rx, ry, expected):
     tilt = rep['tilt_angle_deg'] % 180
     assert min(abs(tilt - expected), 180 - abs(tilt - expected)) < 5
     assert R.major_axis_tilt_deg(R.anchor_ellipse(mx)) == pytest.approx(tilt, abs=1e-6)
+
+
+def test_cortical_cell_files_counts_layers_along_rays():
+    size, c = 600, 300
+    yy, xx = np.indices((size, size))
+    r = np.hypot(xx - c, yy - c)
+    section = r <= 280
+    ring = (r >= 100) & (r < 260)
+    labels = np.zeros((size, size), np.int32)
+    layer = ((r - 100) // 20).astype(int)                 # 8 concentric layers of 20 px
+    sector = (np.degrees(np.arctan2(yy - c, xx - c)) // 10).astype(int) + 18
+    labels[ring] = 1 + layer[ring] * 100 + sector[ring]
+    labels[ring & (((r - 100) % 20) < 2)] = 0             # walls between layers
+    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100 (polar grid stops at RHO_MAX)
+    med, lo, hi = R.cortical_cell_files(labels, section, ell, 100 / 100, 260 / 100)
+    assert med == 8 and lo >= 7 and hi <= 9

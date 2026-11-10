@@ -315,3 +315,31 @@ def ellipse_report(base_report, b):
             'scale_endodermis': b['endo_outer'], 'scale_inner_cortex': b['cortex_transition'],
             'scale_outer_cortex': b['edge'] - b['rhizo_layer_px'] / b['px_per_rho'],
             'scale_rhizodermis': b['edge']}
+
+
+MIN_CELL_RUN_PX = 3   # a label crossed on fewer polar samples than this is a wall fragment, not a cell
+FULL_RAY_COVER = 0.95  # rays leaving the section inside the band (tears, notches) are skipped
+
+
+def cortical_cell_files(labels, section, ell, rho_lo, rho_hi):
+    """Number of cortical cell files (layers) between rho_lo and rho_hi, like RootScan's CF_num.
+
+    Along every ray of the polar unwrap of the label map, the distinct cells crossed in the band
+    are counted; returns (median, 25th, 75th percentile) over the rays that stay inside the
+    section across the whole band.
+    """
+    prof = polar_profiles(None, section, ell, labels=labels)
+    rho = np.arange(0, RHO_MAX, RHO_STEP)
+    band = (rho > rho_lo) & (rho < rho_hi)
+    pol, inside = prof['polar'][band], prof['inside'][band]
+    counts = []
+    for j in range(pol.shape[1]):
+        if inside[:, j].mean() < FULL_RAY_COVER:
+            continue
+        v = pol[:, j]
+        ids, n = np.unique(v[v > 0], return_counts=True)
+        counts.append(int((n >= MIN_CELL_RUN_PX).sum()))
+    if not counts:
+        raise ValueError('no complete ray across the cortex')
+    lo, med, hi = np.percentile(counts, [25, 50, 75])
+    return float(med), float(lo), float(hi)

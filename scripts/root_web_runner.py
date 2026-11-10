@@ -203,9 +203,14 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
     pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
+    cortex_outer = bounds['edge'] - bounds['rhizo_layer_px'] / bounds['px_per_rho']
+    try:
+        cell_files = R.cortical_cell_files(labels, section, ell, bounds['endo_outer'], cortex_outer)
+    except ValueError:
+        cell_files = None
     return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
-            'recovered': recovered, 'n_recovered': n_recovered, 'n_split': n_split, 'n_filled': n_filled,
+            'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
             'rho': rho}
 
@@ -541,6 +546,9 @@ def build_tables(st, census, zone_area, areas):
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],
+        ['Cortical cell files (CF)', _num(st['cell_files'][0], 1) if st['cell_files'] else None, 'files',
+         (f'median over rays from the endodermis to the rhizodermis, interquartile '
+          f'{st["cell_files"][1]:.0f}-{st["cell_files"][2]:.0f}') if st['cell_files'] else 'no complete ray'],
         ['Cortical lacunae (%AA)', _num(100 * lac / max(cortex, 1), 1), '% of cortex',
          f'{int(rep.get("lacunae_count", 0))} lacunae'],
         ['Total xylem vessel area (XVA)', _num(sum(v['reg'] for v in vessels) * ar, 0), unit_a,
