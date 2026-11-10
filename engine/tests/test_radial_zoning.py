@@ -110,3 +110,47 @@ def test_publication_node_counts_cells_in_mask_zones():
                                 'draw_legend': False})['predictive_report']
     assert rep['pith_cells_observed'] == 1
     assert rep['outer_cortex_observed'] == 1
+
+
+def test_main_rise_searches_all_boundaries_when_the_core_is_the_main_zone():
+    import vn_headless as H
+    H.load_plugins()
+    from plugins.sci_profile_zoning import _main_rise
+    # innermost zone holds the largest disc share (finely resolved stele): rise at boundary 1
+    edges = [0.0, 0.50, 0.69, 0.82, 0.87, 0.93, 1.0]
+    medians = list(np.log([7.0, 12.5, 14.0, 10.0, 7.5, 9.5]))
+    assert _main_rise(6, edges, medians, 0.8, True) == 1
+    # the usual case (core before the main zone) is unchanged
+    edges = [0.0, 0.45, 0.53, 0.81, 0.86, 1.0]
+    medians = list(np.log([6.0, 7.0, 14.0, 9.0, 8.0]))
+    assert _main_rise(5, edges, medians, 0.8, True) == 2
+
+
+def _ring_of_vessels(extra=None):
+    mask = np.zeros((600, 600), np.uint8)
+    for k in range(6):
+        th = k * np.pi / 3
+        cv2.circle(mask, (int(300 + 180 * np.cos(th)), int(300 + 180 * np.sin(th))), 32, 255, -1)
+    if extra is not None:
+        extra(mask)
+    return mask
+
+
+def _count(mask):
+    return cv2.connectedComponents(mask.astype(np.uint8))[0] - 1
+
+
+def test_clean_vessels_drops_a_small_irregular_candidate():
+    def blob(m):  # cluster of small cells: small and far from round
+        for dx in (0, 14, 28):
+            cv2.circle(m, (260 + dx, 300), 8, 255, -1)
+        cv2.rectangle(m, (260, 296), (288, 304), 255, -1)
+    assert _count(R.clean_vessels(_ring_of_vessels(blob))) == 6
+
+
+def test_clean_vessels_keeps_a_small_round_vessel_and_a_leaky_one():
+    mask = _ring_of_vessels()
+    cv2.circle(mask, (480, 300), 32, 0, -1)
+    cv2.circle(mask, (480, 300), 23, 255, -1)              # half the area, still round
+    cv2.rectangle(mask, (120, 296), (175, 304), 255, -1)    # leak glued to the vessel at (120, 300)
+    assert _count(R.clean_vessels(mask)) == 6

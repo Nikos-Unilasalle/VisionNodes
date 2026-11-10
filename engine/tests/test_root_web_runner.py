@@ -86,8 +86,16 @@ def test_transparent_png_is_flattened_on_white(tmp_path):
     rgba = np.zeros((300, 300, 4), np.uint8)
     path = tmp_path / 'alpha.png'
     cv2.imwrite(str(path), rgba)
-    flat = cv2.imread(W._flatten_to_png(str(path)))
+    flat = W._read_bgr(str(path))
     assert flat.shape == (300, 300, 3) and flat.min() == 255
+
+
+@pytest.mark.parametrize('factor', [0.5, 2.0])
+def test_root_diameter_is_proportional_to_resolution(factor):
+    img = cv2.imread(SAMPLE)
+    d1 = W.root_diameter_px(img)
+    d2 = W.root_diameter_px(cv2.resize(img, None, fx=factor, fy=factor, interpolation=cv2.INTER_AREA))
+    assert d2 / d1 == pytest.approx(factor, rel=0.03)
 
 
 def test_bundle_holds_every_plugin_the_template_needs(tmp_path):

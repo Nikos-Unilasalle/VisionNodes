@@ -35,6 +35,7 @@ SEARCH_FROM = 1.0        # change points are searched outside the metaxylem ring
 EDGE_COVER = 0.5         # rho of the section edge = last rho where >= 50 % of rays are inside
 WALL_PROMINENCE = {'drawing': 25.0, 'photo': 6.0}  # grey levels of a wall dip
 MIN_VESSEL_AREA = 400    # px, same as the publication node
+VESSEL_SCORE_MIN = 0.35  # (size / ring median) x (circularity / ring median) below this: not a vessel
 DRAWING_MEDIAN_GREY = 225  # median grey inside the section above which the image is a line drawing
 
 
@@ -220,6 +221,33 @@ def outermost_layer_px(prof, max_px=120):
     return float(np.median(out)) if out else float('nan')
 
 
+def _circularity(component):
+    cnts, _ = cv2.findContours(component.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    perimeter = cv2.arcLength(cnts[0], True)
+    return 4 * np.pi * component.sum() / max(perimeter ** 2, 1e-9)
+
+
+def clean_vessels(mx_mask):
+    """Metaxylem mask without the candidates that are both small and irregular for their ring.
+
+    The large metaxylem vessels of a polyarch ring have comparable sizes and are round. Each
+    candidate is scored by (area / median area) x (circularity / median circularity) of the
+    ring: a true vessel may be smaller than the others, or less round when its mask leaks into
+    neighbouring cells, but not both. Candidates scoring under VESSEL_SCORE_MIN are dropped.
+    """
+    mask = np.asarray(mx_mask) > 0
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8))
+    ids = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= MIN_VESSEL_AREA]
+    if len(ids) < 2:
+        return mask
+    area = np.array([stats[i, cv2.CC_STAT_AREA] for i in ids], float)
+    circ = np.array([_circularity(lab == i) for i in ids])
+    score = (area / np.median(area)) * (circ / np.median(circ))
+    keep = np.zeros(n, bool)
+    keep[[i for i, sc in zip(ids, score) if sc >= VESSEL_SCORE_MIN]] = True
+    return keep[lab]
+
+
 def vessel_inner_edges(mx_mask, rho):
     """Minimum rho of every metaxylem vessel (the inner edge of the ring)."""
     n, lab, stats, _ = cv2.connectedComponentsWithStats((np.asarray(mx_mask) > 0).astype(np.uint8))
@@ -236,6 +264,7 @@ def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOO
     section = np.asarray(section) > 0
     kind = kind or guess_kind(gray, section)
     rng = rng if rng is not None else np.random.default_rng(0)
+    mx_mask = clean_vessels(mx_mask)
     ell = anchor_ellipse(mx_mask)
     rho = rho_field(section.shape, ell)
     prof = polar_profiles(gray, section, ell, WALL_PROMINENCE[kind])
@@ -264,6 +293,14 @@ def zone_masks(rho, section, b):
         'outer_cortex_mask': body & (rho > b['cortex_transition']),
         'rhizodermis_mask': rhizo,
     }
+
+
+def anchor_report(ell):
+    """Anchor ellipse in the keys of the Ellipse Propagation report (centre, semi-axes, tilt)."""
+    cx, cy, a, b, t = ell
+    return {'center_x': float(cx), 'center_y': float(cy), 'major_axis': float(max(a, b)),
+            'minor_axis': float(min(a, b)), 'tilt_angle_deg': float(np.degrees(t)),
+            'aspect_ratio': float(max(a, b) / max(min(a, b), 1e-6))}
 
 
 def ellipse_report(base_report, b):

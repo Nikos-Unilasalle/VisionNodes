@@ -61,6 +61,9 @@ BOUNDARIES = (('pith', 'Pith / vascular cylinder', 'inner edge of the metaxylem 
               ('edge', 'Section edge', 'rho where half of the rays leave the section', '#42a5f5'))
 STAGES = ('Segmenting the section', 'Measuring tissue boundaries', 'Counting cells', 'Drawing figures')
 MIN_SIDE_PX = 256
+WORKING_ROOT_DIAMETER_PX = 766.0  # root size of the reference micrograph the template was tuned on
+MIN_ROOT_DIAMETER_PX = 150
+SCALE_TOLERANCE = 0.02            # no resampling within ±2 % of the working size
 BG, PANEL, FG, MUTED, GRID = '#0f1115', '#161a20', '#e6e8eb', '#9aa3ad', '#2a3038'
 
 
@@ -81,10 +84,10 @@ def _pub_params(vn, **extra):
     return {**params, 'zones_from_masks': True, **extra}
 
 
-def _publish(vn, pipe, masks, ellipse_report, labels, pixel_size_um):
+def _publish(vn, pipe, masks, ellipse_report, labels, pixel_size_um, mx):
     node = H.registry.NODE_CLASS_REGISTRY['draw_root_publication']()
     inputs = {'image': pipe['cells']['main'], 'labels': labels, 'boundary': pipe['section']['mask'],
-              'landmarks': pipe['metaxylem']['mask'], 'ellipse_report': ellipse_report,
+              'landmarks': mx.astype(np.uint8) * 255, 'ellipse_report': ellipse_report,
               **{k: (v.astype(np.uint8) * 255) for k, v in masks.items()}}
     extra = {'pixel_size_um': pixel_size_um} if pixel_size_um else {'draw_scale_bar': False}
     out = node.process(inputs, _pub_params(vn, **extra))
@@ -98,8 +101,8 @@ def _report(stage, fraction, progress):
         progress(stage, float(fraction))
 
 
-def _flatten_to_png(image_path):
-    """Readable 8-bit BGR copy of the upload (alpha flattened on white, 16-bit scaled), as a PNG path."""
+def _read_bgr(image_path):
+    """8-bit BGR image of the upload (alpha flattened on white, 16-bit scaled)."""
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     if img is None:
         raise AnalysisError('This file could not be read as an image (use PNG, JPEG, TIFF or WebP).')
@@ -112,15 +115,58 @@ def _flatten_to_png(image_path):
         img = (img[..., :3] * alpha + 255 * (1 - alpha)).astype(np.uint8)
     if min(img.shape[:2]) < MIN_SIDE_PX:
         raise AnalysisError(f'The image is too small (at least {MIN_SIDE_PX} px per side is needed).')
+    return img
+
+
+def root_diameter_px(img):
+    """Equivalent diameter (px) of the root: largest dark region on the bright backdrop, holes filled.
+
+    Every smoothing scale is a fraction of the image size, so the estimate is proportional to
+    the resolution (it is what makes the analysis resolution-independent).
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (0, 0), max(gray.shape) / 200)
+    _, dark = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(dark)
+    if n < 2:
+        raise AnalysisError('No root section was found in the image.')
+    root = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    cnts, _ = cv2.findContours(root, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filled = np.zeros_like(root)
+    cv2.drawContours(filled, cnts, -1, 1, -1)
+    return float(2 * np.sqrt(filled.sum() / np.pi))
+
+
+def _normalised_upload(image_path):
+    """Upload resampled so the root spans WORKING_ROOT_DIAMETER_PX, as a temp PNG; returns (path, scale).
+
+    scale = working px per original px. The template's pixel-sized settings were tuned at
+    this root size, so every resolution or magnification is analysed at the same scale.
+    """
+    img = _read_bgr(image_path)
+    diameter = root_diameter_px(img)
+    if diameter < MIN_ROOT_DIAMETER_PX:
+        raise AnalysisError(f'The root is too small in the image ({diameter:.0f} px across; '
+                            f'at least {MIN_ROOT_DIAMETER_PX} px are needed).')
+    scale = WORKING_ROOT_DIAMETER_PX / diameter
+    if abs(scale - 1) > SCALE_TOLERANCE:
+        interp = cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC
+        img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=interp)
+    else:
+        scale = 1.0
     fd, out = tempfile.mkstemp(suffix='.png', prefix='root_upload_')
     os.close(fd)
     cv2.imwrite(out, img)
-    return out
+    return out, scale
 
 
 def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None):
-    """Template + measured boundaries + census. Returns the raw state used by the figures."""
-    image_path = _flatten_to_png(image_path)
+    """Template + measured boundaries + census. Returns the raw state used by the figures.
+
+    Lengths inside the state are in working pixels; `scale` converts them back to the upload.
+    """
+    image_path, scale = _normalised_upload(image_path)
+    work_pixel_um = pixel_size_um / scale if pixel_size_um else None
     H.load_plugins()
     vn = _load_template()
     try:
@@ -132,7 +178,8 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
     if not section.any():
         raise AnalysisError('No root section was found in the image.')
     mx = pipe['metaxylem'].get('mask')
-    if mx is None or not np.any(mx):
+    mx = R.clean_vessels(mx) if mx is not None else None
+    if mx is None or not mx.any():
         raise AnalysisError('No metaxylem ring was detected: the method needs at least 5 large vessels.')
     _report(STAGES[1], 0.0, progress)
     gray = cv2.cvtColor(pipe['src']['main'], cv2.COLOR_BGR2GRAY)
@@ -141,12 +188,12 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
     except ValueError as exc:
         raise AnalysisError(f'Tissue boundaries could not be measured ({exc}).') from exc
     _report(STAGES[2], 0.0, progress)
-    ellipse_report = R.ellipse_report(pipe['ellipse_prop']['report'], bounds)
+    ellipse_report = {**R.ellipse_report(pipe['ellipse_prop']['report'], bounds), **R.anchor_report(ell)}
     labels = np.asarray(pipe['cells']['labels'])
-    pub = _publish(vn, pipe, masks, ellipse_report, labels, pixel_size_um)
-    return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': np.asarray(mx) > 0, 'bounds': bounds,
+    pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
+    return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
-            'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um,
+            'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
             'rho': R.rho_field(section.shape, ell)}
 
 
@@ -442,7 +489,8 @@ def _metaxylem_vessels(mx):
 def build_tables(st, census, zone_area, areas):
     """Metric tables; cells are raw numbers (formatted by the app) or short strings."""
     px = st['pixel_size_um']
-    lin, ar = (px, px * px) if px else (1.0, 1.0)
+    lin = (px if px else 1.0) / st['scale']  # working px -> µm, or -> pixels of the upload
+    ar = lin * lin
     unit_l, unit_a = ('µm', 'µm²') if px else ('px', 'px²')
     b, rep, ell = st['bounds'], st['report'], st['ell']
     r_px = b['px_per_rho']
@@ -487,7 +535,8 @@ def build_tables(st, census, zone_area, areas):
                     _num(2 * np.sqrt(v['reg'] / np.pi) * lin, 1), _num(v['major'] * lin, 1),
                     _num(v['minor'] * lin, 1)] for i, v in enumerate(vessels)]
     geom_rows = [
-        ['Stele centre x', _num(ell[0], 1), 'px'], ['Stele centre y', _num(ell[1], 1), 'px'],
+        ['Stele centre x', _num(ell[0] / st['scale'], 1), 'px'],
+        ['Stele centre y', _num(ell[1] / st['scale'], 1), 'px'],
         ['Anchor semi-axis a', _num(ell[2] * lin, 1), unit_l], ['Anchor semi-axis b', _num(ell[3] * lin, 1), unit_l],
         ['ρ unit (mean anchor radius)', _num(r_px * lin, 1), unit_l],
         ['Section equivalent diameter', _num(2 * np.sqrt(sec_area / np.pi) * lin, 1), unit_l],
@@ -495,6 +544,7 @@ def build_tables(st, census, zone_area, areas):
         ['Endodermis thickness (one cell)', _num(b['endo_cell_rho'] * r_px * lin, 1), unit_l],
         ['Rhizodermis thickness (one cell)', _num(b['rhizo_layer_px'] * lin, 1), unit_l],
         ['Pixel size', _num(px, 4), 'µm / px'],
+        ['Analysis scale', _num(st['scale'], 3), '× upload'],
     ]
     note_unit = '' if px else ' Set the pixel size to get micrometres.'
     return [
@@ -516,7 +566,9 @@ def build_tables(st, census, zone_area, areas):
                      f'Equivalent diameter ({unit_l})', f'Major axis ({unit_l})', f'Minor axis ({unit_l})'],
          'rows': vessel_rows, 'note': 'Regularised = ellipse fitted to the lumen (removes notches).'},
         {'id': 'geometry', 'title': 'Section geometry', 'columns': ['Quantity', 'Value', 'Unit'],
-         'rows': geom_rows, 'note': ''},
+         'rows': geom_rows,
+         'note': 'Images are resampled so the root spans 766 px before analysis (resolution independence); '
+                 'every value here is converted back to the uploaded image.'},
     ]
 
 
@@ -551,7 +603,7 @@ def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None):
                         'cells_estimated': sum(c['total'] for c in census.values()),
                         'boundaries': {k: st['bounds'][k] for k in ('pith', 'endo_inner', 'endo_outer',
                                                                     'cortex_transition', 'edge')},
-                        'pixel_size_um': pixel_size_um}}
+                        'pixel_size_um': pixel_size_um, 'analysis_scale': st['scale']}}
 
 
 def _csv(table):
