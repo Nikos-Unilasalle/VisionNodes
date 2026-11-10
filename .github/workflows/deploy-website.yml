@@ -12,6 +12,7 @@ on:
       - 'engine/plugins/**'
       - 'engine/tests/vn_headless.py'
       - 'scripts/radial_zoning_lib.py'
+      - 'scripts/cell_recovery_lib.py'
       - 'scripts/root_web_runner.py'
       - 'scripts/build_root_webapp.py'
       - 'public/templates/root_predictive_ellipse_zoning.vn'
