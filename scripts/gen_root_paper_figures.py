@@ -295,17 +295,17 @@ def fig6(gt, za, zb, areas_a, curves, failures, out):
 
 
 PIPELINE_STAGES = (
-    ('1. Ancre invariante', '#e3ecf7', ('Image brute\ndégradée', 'Extraction des\nlumières contrastées',
-                                         'Enveloppe des\nvaisseaux (k ≥ 5)', 'Ajustement d\'ellipse\n(cx, cy, a, b, θ)')),
+    ('1. Ancre invariante', '#e3ecf7', ('Image brute\n(toute résolution)', 'Mise à l\'échelle :\nracine = 766 px',
+                                         'Vaisseaux filtrés\n(taille × circularité)', 'Ajustement d\'ellipse\n(cx, cy, a, b, θ)')),
     ('2. Frontières\nmesurées', '#e6f2e6', ('Champ elliptique ρ(x, y)\net déroulement (ρ, φ)',
                                            'Profils radiaux : densité\nde paroi, taille L_θ',
                                            'Ruptures de profil\n+ IC bootstrap',
                                            'Moelle : vaisseaux ;\nrhizoderme : contour')),
-    ('3. Régularisation,\nimputation', '#fbefe0', ('Régularisation\ndes métaxylèmes', 'Libération du\nphloème absorbé',
-                                                   'Lacunes corticales\n(hachures)',
-                                                   'Imputation par\nsymétrie antipodale')),
-    ('4. Rendu et\nmétrologie', '#efe6f5', ('Rendu graphique\nanti-aliasé 2×', 'Figure de\npublication',
-                                            'Rapport\nmétrologique')),
+    ('3. Segmentation\nen deux passes', '#fbefe0', ('1re passe : parois\net lumières', '2de passe : parois\npâles du cortex',
+                                                    'Contrôle par la taille\nattendue selon ρ',
+                                                    'Comptage par densité\nde territoire')),
+    ('4. Rendu et\nmétrologie', '#efe6f5', ('Figure de\npublication', 'Files corticales,\naérenchyme, XVA',
+                                            'Application web\nRhizoFit')),
 )
 
 
@@ -391,12 +391,14 @@ BOUNDARY_STYLE = (('pith', 'Moelle (bord interne des vaisseaux)', '#8e7cc3'),
                   ('cortex_transition', 'Transition corticale', '#e65100'))
 
 
-def fig_radial(sample_a, sample_b, gt_prof, out):
-    """Polar unwraps of A and B with measured boundaries, and the radial profiles they come from."""
+def fig_radial(sample_a, sample_b, gt_prof, out, names=('A — tracé', 'B — micrographie'),
+               legends=('Vérité terrain A (cellules comptées)', 'A (tracé, image brute)',
+                        'B (micrographie, image brute)'), short=('A', 'B')):
+    """Polar unwraps of two images with measured boundaries, and the radial profiles they come from."""
     rho = np.arange(0, R.RHO_MAX, R.RHO_STEP)
     fig = plt.figure(figsize=(12, 10.5), dpi=250)
     gs = fig.add_gridspec(3, 2, height_ratios=(1.15, 1, 1), hspace=0.32, wspace=0.12)
-    for col, (smp, title) in enumerate(((sample_a, 'A — tracé'), (sample_b, 'B — micrographie'))):
+    for col, (smp, title) in enumerate(((sample_a, names[0]), (sample_b, names[1]))):
         ax = fig.add_subplot(gs[0, col])
         b = smp['bounds']
         edge = b['edge']
@@ -412,9 +414,9 @@ def fig_radial(sample_a, sample_b, gt_prof, out):
         ax.set_xlabel('Azimut φ (°)', fontsize=9)
         if col == 0:
             ax.set_ylabel('ρ (anneau de métaxylème = 1)', fontsize=9)
-    styles = (('GT', gt_prof, COL_GT, 'Vérité terrain A (cellules comptées)'),
-              ('A', sample_a['prof'], COL_A, 'A (tracé, image brute)'),
-              ('B', sample_b['prof'], COL_B, 'B (micrographie, image brute)'))
+    styles = (('GT', gt_prof, COL_GT, legends[0]),
+              ('A', sample_a['prof'], COL_A, legends[1]),
+              ('B', sample_b['prof'], COL_B, legends[2]))
     ax_d = fig.add_subplot(gs[1, :])
     ax_l = fig.add_subplot(gs[2, :], sharex=ax_d)
     for key, prof, c, lab in styles:
@@ -439,7 +441,7 @@ def fig_radial(sample_a, sample_b, gt_prof, out):
     ax_d.legend(fontsize=8, loc='upper right', frameon=True)
     ax_l.set_yscale('log')
     ax_l.set_ylabel('Taille circonférentielle\ndes cellules L_θ (unités ρ)', fontsize=9.5)
-    ax_l.set_xlabel('ρ (traits pleins : frontières mesurées sur A ; tiretés : sur B)', fontsize=9.5)
+    ax_l.set_xlabel(f'ρ (traits pleins : frontières mesurées sur {short[0]} ; tiretés : sur {short[1]})', fontsize=9.5)
     ax_l.set_title('Intercept linéaire moyen (stéréologie), bande = écart interquartile entre secteurs',
                    fontsize=10.5, fontweight='bold')
     ax_l.set_xlim(0.15, 3.0)

@@ -139,13 +139,22 @@ def root_diameter_px(img):
     return float(2 * np.sqrt(filled.sum() / np.pi))
 
 
-def _normalised_upload(image_path):
+def _normalised_upload(image_path, scale=None):
     """Upload resampled so the root spans WORKING_ROOT_DIAMETER_PX, as a temp PNG; returns (path, scale).
 
     scale = working px per original px. The template's pixel-sized settings were tuned at
     this root size, so every resolution or magnification is analysed at the same scale.
+    A given `scale` is applied as is (e.g. to analyse damaged copies in the frame of the intact image).
     """
     img = _read_bgr(image_path)
+    if scale is not None:
+        if scale != 1.0:
+            img = cv2.resize(img, None, fx=scale, fy=scale,
+                             interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC)
+        fd, out = tempfile.mkstemp(suffix='.png', prefix='root_upload_')
+        os.close(fd)
+        cv2.imwrite(out, img)
+        return out, float(scale)
     diameter = root_diameter_px(img)
     if diameter < MIN_ROOT_DIAMETER_PX:
         raise AnalysisError(f'The root is too small in the image ({diameter:.0f} px across; '
@@ -162,12 +171,12 @@ def _normalised_upload(image_path):
     return out, scale
 
 
-def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None):
+def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None):
     """Template + measured boundaries + census. Returns the raw state used by the figures.
 
     Lengths inside the state are in working pixels; `scale` converts them back to the upload.
     """
-    image_path, scale = _normalised_upload(image_path)
+    image_path, scale = _normalised_upload(image_path, scale)
     work_pixel_um = pixel_size_um / scale if pixel_size_um else None
     H.load_plugins()
     vn = _load_template()

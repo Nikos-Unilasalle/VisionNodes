@@ -44,11 +44,14 @@ DEFAULT_SEEDS = (0, 1)
 
 _VN = None
 _ZONING = 'template'
+_SCALES = {}  # rhizofit mode: working scale of each image, fixed on the intact image
+_CURRENT_IMAGE = {}  # name of the intact image a damaged copy comes from
 
 
-def _init_worker(template=TEMPLATE, zoning='template'):
-    global _VN, _ZONING
+def _init_worker(template=TEMPLATE, zoning='template', scales=None):
+    global _VN, _ZONING, _SCALES
     _ZONING = zoning
+    _SCALES = dict(scales or {})
     import vn_headless as H
     H.load_plugins()
     with open(template) as f:
@@ -74,6 +77,8 @@ def _run_pipeline(path):
     section = _required(r['section'].get('mask'), 'section mask') > 0
     mx = _required(r['metaxylem'].get('mask'), 'metaxylem mask') > 0
     zones = {z: np.asarray(ep[f'{z}_mask']) > 0 for z in ZONES}
+    if _ZONING == 'rhizofit':
+        return _run_rhizofit(path, r)
     if _ZONING == 'measured':
         import radial_zoning_lib as R
         gray = cv2.cvtColor(np.asarray(r['src']['main']), cv2.COLOR_BGR2GRAY)
@@ -88,13 +93,53 @@ def _run_pipeline(path):
     }
 
 
+def _run_rhizofit(path, template_run):
+    """Full RhizoFit engine (scripts/root_web_runner.py) in the frame of the intact image."""
+    import root_web_runner as RW
+    try:
+        scale = _CURRENT_IMAGE.get('scale', _SCALES.get(_CURRENT_IMAGE.get('name', os.path.basename(path))))
+        st = RW.run_pipeline(path, n_boot=0, scale=scale)
+    except RW.AnalysisError as exc:
+        raise PipelineFailure(str(exc)) from exc
+    names = {'pith': 'pith_mask', 'vascular': 'vascular_mask', 'endodermis': 'endodermis_mask',
+             'inner_cortex': 'inner_cortex_mask', 'outer_cortex': 'outer_cortex_mask',
+             'rhizodermis': 'rhizodermis_mask'}
+    zones = {z: np.asarray(st['masks'][names[z]]) if z in names else np.zeros_like(st['section'])
+             for z in ZONES}
+    return {'section': st['section'], 'labels': st['labels'], 'mx': st['mx'], 'zones': zones,
+            'node_report': st['report']}
+
+
+class _Count:
+    def __init__(self, n_obs, n_total):
+        self.n_obs, self.n_total, self.n_proj = n_obs, n_total, n_total - n_obs
+        self.a_theo = self.a_obs = self.a_mean = ''
+
+
+def _census_counts(res, zones):
+    """RhizoFit census (census_lib): territory density, cortex lacunae kept empty."""
+    import census_lib as CS
+    out = {}
+    for z, m in zones.items():
+        if not np.any(m):
+            out[z] = _Count(0, 0)
+            continue
+        n_obs, n_tot, _ = CS.zone_census(res['labels'], m, res['mx'],
+                                         keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
+        out[z] = _Count(n_obs, n_tot)
+    return out
+
+
 def _counts(res, zones, territory, clean_lacunae=None):
     lac = clean_lacunae if clean_lacunae is not None else B.extract_cortical_lacunae(res['labels'], zones)
     exclude = res['mx'] | lac
-    return {
+    out = {
         'raw': B.impute_counts(res['labels'], zones, exclude=exclude),
         'territory': B.impute_counts(res['labels'], zones, territory_px=territory, exclude=exclude),
     }
+    if _ZONING == 'rhizofit':
+        out['census'] = _census_counts(res, zones)
+    return out
 
 
 def _rows(meta, truth, res, clean_zones, territory, clean_lacunae=None):
@@ -122,6 +167,8 @@ def _rows(meta, truth, res, clean_zones, territory, clean_lacunae=None):
 
 
 def _clean_job(image_path):
+    _CURRENT_IMAGE['name'] = os.path.basename(image_path)
+    _CURRENT_IMAGE.pop('scale', None)
     res = _run_pipeline(image_path)
     assign = B.assign_cells(res['labels'], res['zones'])
     truth = {z: sum(1 for v in assign.values() if v == z) for z in ZONES}
@@ -134,7 +181,14 @@ def _clean_job(image_path):
 
 def _damage_job(args):
     image_path, clean, truth, node_truth, kind, severity, seed, territory = args
+    _CURRENT_IMAGE['name'] = os.path.basename(image_path)
     img = cv2.imread(image_path)
+    if _ZONING == 'rhizofit':  # damage in the working frame of the intact analysis, then analyse as is
+        scale = _SCALES.get(os.path.basename(image_path), 1.0)
+        if scale != 1.0:
+            img = cv2.resize(img, None, fx=scale, fy=scale,
+                             interpolation=cv2.INTER_AREA if scale < 1 else cv2.INTER_CUBIC)
+        _CURRENT_IMAGE['scale'] = 1.0
     damaged, _, achieved = B.damage_image(img, clean['section'], kind, severity, seed=seed)
     with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
         tmp_path = tmp.name
@@ -227,7 +281,7 @@ def main():
     ap.add_argument('--seeds', nargs='+', type=int, default=list(DEFAULT_SEEDS))
     ap.add_argument('--territory', type=int, default=2, help='wall half-width in px for the territory estimator')
     ap.add_argument('--workers', type=int, default=4)
-    ap.add_argument('--zoning', choices=('template', 'measured'), default='template',
+    ap.add_argument('--zoning', choices=('template', 'measured', 'rhizofit'), default='template',
                     help='zone masks: the template\'s elliptic shells, or measured radial boundaries')
     ap.add_argument('--template', default=TEMPLATE,
                     help='.vn to benchmark; must expose section, cells, metaxylem, ellipse_prop, pub_fig nodes')
@@ -238,7 +292,20 @@ def main():
             ap.error(f'cannot read image {p}')
     os.makedirs(args.out, exist_ok=True)
 
-    with ProcessPoolExecutor(args.workers, initializer=_init_worker, initargs=(args.template, args.zoning)) as pool:
+    scales = {}
+    if args.zoning == 'rhizofit':
+        import root_web_runner as RW
+        for p in args.images:
+            scale = RW.WORKING_ROOT_DIAMETER_PX / RW.root_diameter_px(RW._read_bgr(p))
+            try:
+                RW.run_pipeline(p, n_boot=0, scale=scale)
+            except RW.AnalysisError:
+                # root overflowing the frame (diameter unknown): analyse at native resolution
+                print(f'{os.path.basename(p)}: anchor lost at scale {scale:.2f}, using the native resolution')
+                scale = 1.0
+            scales[os.path.basename(p)] = scale
+    with ProcessPoolExecutor(args.workers, initializer=_init_worker,
+                             initargs=(args.template, args.zoning, scales)) as pool:
         cleans = list(pool.map(_clean_job, args.images))
         rows, truths, jobs = [], {}, []
         for path, res, truth, node_truth, clean_lacunae in cleans:
