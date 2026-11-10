@@ -26,6 +26,7 @@ STATIC_FILES = (
     os.path.join('engine', 'tests', 'vn_headless.py'),
     os.path.join('scripts', 'radial_zoning_lib.py'),
     os.path.join('scripts', 'cell_recovery_lib.py'),
+    os.path.join('scripts', 'census_lib.py'),
     os.path.join('scripts', 'root_web_runner.py'),
     TEMPLATE,
 )

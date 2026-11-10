@@ -33,6 +33,7 @@ for _p in (os.path.join(REPO, 'scripts'), os.path.join(REPO, 'engine'), os.path.
         sys.path.insert(0, _p)
 
 import cell_recovery_lib as CR  # noqa: E402
+import census_lib as CS  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import vn_headless as H  # noqa: E402
 
@@ -200,6 +201,8 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
         labels, created, n_split, n_filled = CR.check_against_polar_profile(labels, recovered, rho, cortex,
                                                                             expected)
         recovered = recovered | created
+        labels, _ = CR.drop_fragments(labels, rho, cortex, expected)
+        recovered &= labels > 0
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
     pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
@@ -486,6 +489,22 @@ def _cell_areas(labels, masks, mx):
     return {z: area[ids[np.asarray(masks[m])[r, c]]].tolist() for z, m in zip(ZONES, ZONE_MASKS)}
 
 
+def _census_territory(st):
+    """Census by territory density (census_lib); the endodermis keeps its perimeter estimate."""
+    rep = st['report']
+    out = {}
+    for z, mname in zip(ZONES, ZONE_MASKS):
+        k_unit = REPORT_KEYS[z][3]
+        unit = float(rep[k_unit]) if k_unit and k_unit in rep else None
+        if z == 'endo':
+            obs, tot = int(rep.get('endo_cells_observed', 0)), int(rep.get('endo_cells_total_pred', 0))
+        else:
+            obs, tot, _ = CS.zone_census(st['labels'], st['masks'][mname], st['mx'],
+                                         keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
+        out[z] = {'observed': obs, 'imputed': max(tot - obs, 0), 'total': tot, 'unit_area_px': unit}
+    return out
+
+
 def _census(rep):
     out = {}
     for z in ZONES:
@@ -598,8 +617,9 @@ def build_tables(st, census, zone_area, areas):
          'columns': ['Tissue', 'Observed', 'Imputed', 'Estimated total', f'Mean cell area ({unit_a})',
                      f'Zone area ({unit_a})', 'Share of section (%)', 'Density (cells/mm²)'],
          'rows': census_rows,
-         'note': 'Voids are filled by antipodal symmetry; voids empty on both sides of the inner cortex are kept '
-                 'as aerenchyma. Endodermis total = perimeter / median cell length.' + note_unit},
+         'note': 'Each cell owns a territory (lumen grown by a quarter of a cell diameter); the cell density of '
+                 'the territories is applied to the uncovered part of the zone. Uncovered cortex regions larger '
+                 'than three cells are aerenchyma. Endodermis total = perimeter / median cell length.' + note_unit},
         {'id': 'metaxylem', 'title': 'Metaxylem vessels',
          'columns': ['Vessel', f'Raw area ({unit_a})', f'Regularised area ({unit_a})',
                      f'Equivalent diameter ({unit_l})', f'Major axis ({unit_l})', f'Minor axis ({unit_l})'],
@@ -620,7 +640,7 @@ def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None):
         raise AnalysisError('The pixel size must be a positive number of micrometres per pixel.')
     st = run_pipeline(image_path, pixel_size_um, n_boot, progress)
     _report(STAGES[3], 0.0, progress)
-    census = _census(st['report'])
+    census = _census_territory(st)
     zone_area = {z: float(np.count_nonzero(st['masks'][m])) for z, m in zip(ZONES, ZONE_MASKS)}
     areas = _cell_areas(st['labels'], st['masks'], st['mx'])
     unit, factor = ('µm²', pixel_size_um ** 2) if pixel_size_um else ('px²', 1.0)

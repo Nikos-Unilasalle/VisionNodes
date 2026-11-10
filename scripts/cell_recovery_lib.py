@@ -206,3 +206,23 @@ def check_against_polar_profile(labels, recovered, rho, zone, expected):
         created |= region
         n_filled += 1
     return out, created, n_split, n_filled
+
+
+FRAGMENT_RATIO = 0.25     # cortex objects below this x expected area at their rho are wall fragments
+
+
+def drop_fragments(labels, rho, zone, expected):
+    """Labels without the tiny objects of `zone` (intercellular spaces, wall fragments).
+
+    An object whose area is under FRAGMENT_RATIO x the expected cell area at its rho is not a
+    cell. Returns (labels, number dropped); the input is not modified.
+    """
+    out = np.asarray(labels).astype(np.int32).copy()
+    area, cy, cx = _centroids(out)
+    ids = np.nonzero(area[1:])[0] + 1
+    r, c = np.round(cy[ids]).astype(int), np.round(cx[ids]).astype(int)
+    inside = np.asarray(zone)[r, c]
+    exp_a = expected(np.asarray(rho)[r, c])
+    tiny = ids[inside & (area[ids] < FRAGMENT_RATIO * exp_a)]
+    out[np.isin(out, tiny)] = 0
+    return out, len(tiny)
