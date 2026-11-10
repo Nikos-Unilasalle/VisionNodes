@@ -32,6 +32,7 @@ for _p in (os.path.join(REPO, 'scripts'), os.path.join(REPO, 'engine'), os.path.
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+import cell_recovery_lib as CR  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import vn_headless as H  # noqa: E402
 
@@ -190,9 +191,15 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
     _report(STAGES[2], 0.0, progress)
     ellipse_report = {**R.ellipse_report(pipe['ellipse_prop']['report'], bounds), **R.anchor_report(ell)}
     labels = np.asarray(pipe['cells']['labels'])
+    cortex = masks['inner_cortex_mask'] | masks['outer_cortex_mask']
+    try:
+        labels, recovered, n_recovered = CR.recover_faint_cells(labels, gray, cortex)
+    except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
+        recovered, n_recovered = np.zeros_like(section), 0
     pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
     return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
+            'recovered': recovered, 'n_recovered': n_recovered,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
             'rho': R.rho_field(section.shape, ell)}
 
@@ -277,6 +284,16 @@ def _img_zones(st):
     return img
 
 
+def _img_recovered(st):
+    img = st['pipe']['src']['main'].copy()
+    rec = st['recovered']
+    img[rec] = (0.55 * img[rec] + np.array([40, 160, 40]) * 0.45).astype(np.uint8)
+    edges = cv2.morphologyEx(np.where(rec, st['labels'], 0).astype(np.uint16), cv2.MORPH_GRADIENT,
+                             np.ones((3, 3), np.uint8)) > 0
+    img[edges & rec] = (30, 150, 30)
+    return img
+
+
 def build_images(st):
     pipe = st['pipe']
     specs = (
@@ -287,6 +304,10 @@ def build_images(st):
          pipe['ridge']['main']),
         ('cells', 'Segmented cells', 'Segmentation', 'Individual cell lumens found between the walls.',
          pipe['cells']['main']),
+        ('recovered', 'Recovered faint cells', 'Segmentation',
+         f'{st["n_recovered"]} pale cortex cells found by a second pass (illumination flattened, dark wall '
+         'lines, watershed) in regions the first pass left empty; what stays empty is aerenchyma.',
+         _img_recovered(st)),
         ('anchor', 'Metaxylem anchor', 'Geometry',
          'Metaxylem vessels and the ellipse fitted around their ring (ρ = 1), with the stele centre.',
          _img_anchor(st)),
@@ -507,6 +528,7 @@ def build_tables(st, census, zone_area, areas):
         ['Cells observed', obs_total, 'cells', 'segmented in the six tissues'],
         ['Cells estimated', est_total, 'cells', 'observed + imputed (endodermis: perimeter / cell length)'],
         ['Metaxylem vessels', len(vessels), 'vessels', 'large vessels of the anchor ring'],
+        ['Faint cells recovered', st['n_recovered'], 'cells', 'second-pass segmentation of pale cortex walls'],
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],

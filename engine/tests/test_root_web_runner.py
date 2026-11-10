@@ -27,8 +27,8 @@ def result():
 
 def test_analysis_returns_every_panel(result):
     res, stages = result
-    assert [i['id'] for i in res['images']] == ['input', 'section', 'walls', 'cells', 'anchor', 'rho', 'unwrap',
-                                                'zones', 'publication']
+    assert [i['id'] for i in res['images']] == ['input', 'section', 'walls', 'cells', 'recovered', 'anchor', 'rho',
+                                                'unwrap', 'zones', 'publication']
     assert [c['id'] for c in res['charts']] == ['profiles', 'counts', 'areas', 'composition']
     assert all(item['png'].startswith(b'\x89PNG') for item in res['images'] + res['charts'])
     assert [t['id'] for t in res['tables']] == ['summary', 'boundaries', 'census', 'metaxylem', 'geometry']
@@ -59,7 +59,7 @@ def test_boundaries_are_ordered(result):
 
 def test_bundle_zip_contains_images_charts_and_tables(result):
     names = zipfile.ZipFile(io.BytesIO(W.bundle_zip(result[0]))).namelist()
-    assert 'images/09_publication.png' in names and 'charts/01_profiles.png' in names
+    assert 'images/10_publication.png' in names and 'charts/01_profiles.png' in names
     assert 'tables/census.csv' in names and 'tables/metrics.json' in names
 
 
