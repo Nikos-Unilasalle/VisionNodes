@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RhizoFit · Root anatomy from a cross-section</title>
+  <meta name="description" content="RhizoFit — upload a monocot root cross-section and get tissue zoning, cell census and anatomical metrics, computed in your browser.">
+  <link rel="icon" href="../logo.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="institute" href="https://www.unilasalle.fr" target="_blank" rel="noopener" title="UniLaSalle — Institut Polytechnique">
+        <img src="assets/unilasalle.png" alt="UniLaSalle — Institut Polytechnique">
+      </a>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <ellipse cx="16" cy="16" rx="14" ry="11" transform="rotate(-35 16 16)" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <ellipse cx="16" cy="16" rx="7.5" ry="6" transform="rotate(-35 16 16)" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".7"/>
+        <circle cx="16" cy="16" r="2.2" fill="currentColor"/>
+      </svg>
+      <div>
+        <h1>RhizoFit</h1>
+        <p>Root anatomy from a cross-section · powered by VNStudio</p>
+      </div>
+    </div>
+    <nav class="toplinks">
+      <a href="#" data-tab-link="about">Method</a>
+      <a href="https://github.com/Nikos-Unilasalle/VisionNodes" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Image</h2>
+        <label class="dropzone" id="dropzone" tabindex="0">
+          <input type="file" id="file-input" accept="image/png,image/jpeg,image/tiff,image/webp,image/bmp" hidden>
+          <img id="thumb" alt="" hidden>
+          <div class="dropzone-text" id="dropzone-text">
+            <strong>Drop a cross-section here</strong>
+            <span>or click to choose · PNG, JPEG, TIFF, WebP</span>
+          </div>
+        </label>
+        <div class="samples">
+          <span>Try a sample:</span>
+          <button class="chip" data-sample="micrograph">Micrograph</button>
+          <button class="chip" data-sample="drawing">Expert drawing</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Settings</h2>
+        <label class="field">
+          <span>Pixel size <em>(µm per pixel, optional)</em></span>
+          <input type="number" id="pixel-size" min="0" step="any" placeholder="e.g. 0.5">
+        </label>
+        <label class="field">
+          <span>Boundary confidence</span>
+          <select id="n-boot">
+            <option value="200" selected>Precise · 200 bootstrap draws</option>
+            <option value="50">Fast · 50 bootstrap draws</option>
+          </select>
+        </label>
+        <button class="primary" id="run" disabled>Analyze</button>
+        <p class="privacy">Your image never leaves your computer: the analysis runs in this browser tab.</p>
+      </section>
+
+      <section class="panel status" id="status-panel">
+        <h2>Status</h2>
+        <ol class="steps" id="steps"></ol>
+        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+        <p class="status-text" id="status-text">Starting the Python runtime…</p>
+      </section>
+    </aside>
+
+    <main class="content">
+      <div class="tabs" role="tablist">
+        <button role="tab" class="tab active" data-tab="images">Images</button>
+        <button role="tab" class="tab" data-tab="charts">Charts</button>
+        <button role="tab" class="tab" data-tab="metrics">Metrics</button>
+        <button role="tab" class="tab" data-tab="about">Method</button>
+        <div class="tabs-spacer"></div>
+        <button class="ghost" id="download-all" disabled>Download all (.zip)</button>
+      </div>
+
+      <section class="tab-panel active" id="tab-images">
+        <div class="empty" id="empty-state">
+          <div class="empty-mark"></div>
+          <h3>No analysis yet</h3>
+          <p>Choose a root cross-section on the left, or try one of the samples. Results appear here: segmentation steps, the polar unwrap, measured tissue zones and the publication figure.</p>
+        </div>
+        <div id="image-groups"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-charts">
+        <div class="grid charts" id="chart-grid"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-metrics">
+        <div id="tables"></div>
+      </section>
+
+      <section class="tab-panel" id="tab-about">
+        <article class="about">
+          <h3>What RhizoFit does</h3>
+          <p>RhizoFit runs the <em>Predictive Ellipse Zoning</em> pipeline of VNStudio on a transverse section of a monocot root with a polyarch stele (maize, rice, sorghum). Every step below is the same Python code as in VNStudio, executed in your browser with Pyodide.</p>
+          <ol>
+            <li><strong>Segmentation.</strong> The section, the cell walls (multiscale ridge filter) and the individual cell lumens are extracted.</li>
+            <li><strong>Geometric anchor.</strong> The large metaxylem vessels (at least five) are detected and an ellipse is fitted around their ring. It fixes the centre, tilt and flattening of the section and defines the coordinate ρ (ρ = 1 on the outer edge of the ring).</li>
+            <li><strong>Polar unwrap and measured boundaries.</strong> The section is unrolled along its tilted ellipses. Along ρ, two profiles are measured without any segmentation: the wall density and the stereological cell size (mean linear intercept). The endodermis/cortex boundary and the inner/outer cortex transition are the change points of these profiles, with a 95 % interval obtained by resampling 16 angular sectors. The pith ends at the inner edge of the vessels; the endodermis and the rhizodermis are one measured cell thick, the rhizodermis following the real outline.</li>
+            <li><strong>Census and imputation.</strong> Cells are counted per tissue. Voids left by tears are filled from the cells facing them across the stele centre (antipodal symmetry); voids empty on both sides of the inner cortex are kept as aerenchyma.</li>
+          </ol>
+          <h3>Limits</h3>
+          <ul>
+            <li>Monocot roots with a ring of at least five metaxylem vessels only. Without the ring, nothing can be measured.</li>
+            <li>On bright-field micrographs, small stele cells whose walls are not resolved merge and are under-counted.</li>
+            <li>The boundaries move on badly damaged sections: check their 95 % interval in the Metrics tab.</li>
+            <li>This is an exploratory method, validated so far on one section against an expert drawing.</li>
+          </ul>
+          <h3>Pixel size</h3>
+          <p>Without a pixel size, lengths and areas are given in pixels. With it (µm per pixel, from your microscope calibration), they are given in µm and µm², and cell densities in cells per mm². The samples use an assumed 0.5 µm/px for the micrograph (0.32 µm/px for the drawing, which is a 1.56× enlargement of it).</p>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div class="lightbox" id="lightbox" hidden>
+    <div class="lightbox-bar">
+      <div class="lightbox-title" id="lightbox-title"></div>
+      <div class="lightbox-actions">
+        <span class="zoom-level" id="zoom-level">100 %</span>
+        <button class="icon" id="lb-fit" title="Fit (double-click)">Fit</button>
+        <button class="icon" id="lb-download" title="Download PNG">Download</button>
+        <button class="icon" id="lb-close" title="Close (Esc)">✕</button>
+      </div>
+    </div>
+    <button class="lb-nav prev" id="lb-prev" aria-label="Previous">‹</button>
+    <div class="lightbox-stage" id="lightbox-stage"><img id="lightbox-img" alt="" draggable="false"></div>
+    <button class="lb-nav next" id="lb-next" aria-label="Next">›</button>
+    <div class="lightbox-caption" id="lightbox-caption"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

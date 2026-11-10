@@ -96,8 +96,11 @@ def _gather_inputs(nid, edges_by_target, results):
     return inputs
 
 
-def run(vn, overrides=None):
-    """Run a parsed .vn dict. `overrides` = {node_id: {param: value}}. Returns {node_id: outputs}."""
+def run(vn, overrides=None, on_node=None):
+    """Run a parsed .vn dict. `overrides` = {node_id: {param: value}}. Returns {node_id: outputs}.
+
+    `on_node(index, total, node_id)` is called before each node runs (progress reporting).
+    """
     overrides = overrides or {}
     nodes = [n for n in vn['nodes'] if n['type'] not in CANVAS_ONLY]
     reroutes = {n['id'] for n in vn['nodes'] if n['type'] == 'canvas_reroute'}
@@ -108,7 +111,10 @@ def run(vn, overrides=None):
 
     by_id = {n['id']: n for n in nodes}
     results = {}
-    for nid in _topo_order(nodes, edges):
+    order = _topo_order(nodes, edges)
+    for i, nid in enumerate(order):
+        if on_node is not None:
+            on_node(i, len(order), nid)
         node = by_id[nid]
         cls = registry.NODE_CLASS_REGISTRY.get(node['type'])
         if cls is None:
