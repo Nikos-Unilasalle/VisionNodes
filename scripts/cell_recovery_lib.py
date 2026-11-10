@@ -92,3 +92,117 @@ def recover_faint_cells(labels, gray, zone):
             next_id += 1
             added += 1
     return out, (out > 0) & (labels == 0), added
+
+
+# --------------------------------------------------------------------------- polar size check
+RHO_BIN = 0.1             # width of the rho bands of the expected-size profile
+MIN_BAND_CELLS = 8        # bands with fewer reference cells borrow from their neighbours
+CLUSTER_RATIO = 2.0       # a recovered region larger than this x expected area is a cluster
+LACUNA_MAX_CELLS = 3.0    # an empty region up to this x expected area is unseen cells, not aerenchyma
+LACUNA_MIN_CELLS = 0.4    # ... and at least this x expected area
+MIN_LACUNA_SOLIDITY = 0.8
+
+
+def _centroids(labels):
+    n = int(labels.max())
+    area = np.bincount(labels.ravel(), minlength=n + 1).astype(float)
+    ys, xs = np.indices(labels.shape)
+    cy = np.bincount(labels.ravel(), ys.ravel(), minlength=n + 1) / np.maximum(area, 1)
+    cx = np.bincount(labels.ravel(), xs.ravel(), minlength=n + 1) / np.maximum(area, 1)
+    return area, cy, cx
+
+
+def expected_area_profile(labels, rho, zone):
+    """Expected cell area as a function of rho: median area of the reference (first-pass) cells
+    whose centroid falls in each rho band of `zone`, over the whole circumference.
+
+    Returns a callable rho -> area (px). Bands with too few cells are filled by interpolation.
+    """
+    area, cy, cx = _centroids(np.asarray(labels))
+    ids = np.nonzero(area[1:])[0] + 1
+    r, c = np.round(cy[ids]).astype(int), np.round(cx[ids]).astype(int)
+    inside = np.asarray(zone)[r, c]
+    ids, rr = ids[inside], np.asarray(rho)[r[inside], c[inside]]
+    if len(ids) < MIN_BAND_CELLS:
+        raise ValueError('too few reference cells for a size profile')
+    edges = np.arange(np.floor(rr.min() / RHO_BIN) * RHO_BIN, rr.max() + RHO_BIN, RHO_BIN)
+    centres, medians = [], []
+    for lo in edges[:-1]:
+        sel = (rr >= lo) & (rr < lo + RHO_BIN)
+        if sel.sum() >= MIN_BAND_CELLS:
+            centres.append(lo + RHO_BIN / 2)
+            medians.append(float(np.median(area[ids[sel]])))
+    if not centres:
+        med = float(np.median(area[ids]))
+        return lambda x: np.full(np.shape(x), med) if np.ndim(x) else med
+    centres, medians = np.array(centres), np.array(medians)
+    return lambda x: np.interp(x, centres, medians)
+
+
+def _split(region, n):
+    """Split a region into n compact parts (k-means on pixel coordinates); list of masks."""
+    ys, xs = np.nonzero(region)
+    pts = np.column_stack([xs, ys]).astype(np.float32)
+    n = int(min(n, len(pts)))
+    if n < 2:
+        return [region]
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.5)
+    cv2.setRNGSeed(0)
+    _, lab, _ = cv2.kmeans(pts, n, None, criteria, 3, cv2.KMEANS_PP_CENTERS)
+    parts = []
+    for k in range(n):
+        m = np.zeros(region.shape, bool)
+        m[ys[lab.ravel() == k], xs[lab.ravel() == k]] = True
+        parts.append(m)
+    return parts
+
+
+def check_against_polar_profile(labels, recovered, rho, zone, expected):
+    """Second look at the uncertain regions with the expected cell size at their rho.
+
+    * recovered cells larger than CLUSTER_RATIO x expected are clusters whose thin walls were
+      missed: split into round(area / expected) compact cells;
+    * empty regions of `zone` between LACUNA_MIN_CELLS and LACUNA_MAX_CELLS x expected and
+      convex are unseen cells, not aerenchyma: filled with round(area / expected) cells.
+
+    Returns (labels, mask of the cells created, n_split_regions, n_filled_regions).
+    """
+    out = np.asarray(labels).astype(np.int32).copy()
+    rho = np.asarray(rho)
+    created = np.zeros(out.shape, bool)
+    next_id = int(out.max()) + 1
+    n_split = n_filled = 0
+
+    area, cy, cx = _centroids(out)
+    for lid in np.unique(out[recovered]):
+        if lid == 0:
+            continue
+        exp_a = float(expected(rho[int(round(cy[lid])), int(round(cx[lid]))]))
+        if area[lid] <= CLUSTER_RATIO * exp_a:
+            continue
+        region = out == lid
+        parts = _split(region, round(area[lid] / exp_a))
+        for p in parts[1:]:
+            out[p] = next_id
+            next_id += 1
+        created |= region
+        n_split += 1
+
+    empty = np.asarray(zone) & (out == 0)
+    n, lab, stats, cents = cv2.connectedComponentsWithStats(empty.astype(np.uint8))
+    for i in range(1, n):
+        a = stats[i, cv2.CC_STAT_AREA]
+        cxi, cyi = cents[i]
+        exp_a = float(expected(rho[int(round(cyi)), int(round(cxi))]))
+        if not LACUNA_MIN_CELLS * exp_a <= a <= LACUNA_MAX_CELLS * exp_a:
+            continue
+        region = lab == i
+        cnts, _ = cv2.findContours(region.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if a / max(cv2.contourArea(cv2.convexHull(cnts[0])), 1.0) < MIN_LACUNA_SOLIDITY:
+            continue
+        for p in _split(region, max(1, round(a / exp_a))):
+            out[p] = next_id
+            next_id += 1
+        created |= region
+        n_filled += 1
+    return out, created, n_split, n_filled

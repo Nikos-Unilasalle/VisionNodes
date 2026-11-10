@@ -192,16 +192,22 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None)
     ellipse_report = {**R.ellipse_report(pipe['ellipse_prop']['report'], bounds), **R.anchor_report(ell)}
     labels = np.asarray(pipe['cells']['labels'])
     cortex = masks['inner_cortex_mask'] | masks['outer_cortex_mask']
+    rho = R.rho_field(section.shape, ell)
+    n_split = n_filled = 0
     try:
+        expected = CR.expected_area_profile(labels, rho, cortex)  # first-pass cells only
         labels, recovered, n_recovered = CR.recover_faint_cells(labels, gray, cortex)
+        labels, created, n_split, n_filled = CR.check_against_polar_profile(labels, recovered, rho, cortex,
+                                                                            expected)
+        recovered = recovered | created
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
     pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
     return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
-            'recovered': recovered, 'n_recovered': n_recovered,
+            'recovered': recovered, 'n_recovered': n_recovered, 'n_split': n_split, 'n_filled': n_filled,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
-            'rho': R.rho_field(section.shape, ell)}
+            'rho': rho}
 
 
 # --------------------------------------------------------------------------- images
@@ -306,7 +312,8 @@ def build_images(st):
          pipe['cells']['main']),
         ('recovered', 'Recovered faint cells', 'Segmentation',
          f'{st["n_recovered"]} pale cortex cells found by a second pass (illumination flattened, dark wall '
-         'lines, watershed) in regions the first pass left empty; what stays empty is aerenchyma.',
+         f'lines, watershed). Checked against the expected cell size at their ρ: {st["n_split"]} clusters split, '
+         f'{st["n_filled"]} small empty regions turned into cells. What stays empty is aerenchyma.',
          _img_recovered(st)),
         ('anchor', 'Metaxylem anchor', 'Geometry',
          'Metaxylem vessels and the ellipse fitted around their ring (ρ = 1), with the stele centre.',
@@ -529,6 +536,8 @@ def build_tables(st, census, zone_area, areas):
         ['Cells estimated', est_total, 'cells', 'observed + imputed (endodermis: perimeter / cell length)'],
         ['Metaxylem vessels', len(vessels), 'vessels', 'large vessels of the anchor ring'],
         ['Faint cells recovered', st['n_recovered'], 'cells', 'second-pass segmentation of pale cortex walls'],
+        ['Clusters split', st['n_split'], 'regions', 'recovered regions > 2x the expected cell area at their ρ'],
+        ['Lacunae reclassified', st['n_filled'], 'regions', 'empty regions of 0.4-3 expected cells: unseen cells'],
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],
