@@ -7,6 +7,14 @@ on:
     paths:
       - 'website/**'
       - '.github/workflows/deploy-website.yml'
+      # RhizoFit web app: Python engine bundled into website/public/rhizofit/engine.zip
+      - 'engine/registry.py'
+      - 'engine/plugins/**'
+      - 'engine/tests/vn_headless.py'
+      - 'scripts/radial_zoning_lib.py'
+      - 'scripts/root_web_runner.py'
+      - 'scripts/build_root_webapp.py'
+      - 'public/templates/root_predictive_ellipse_zoning.vn'
 
 permissions:
   contents: write
@@ -22,6 +30,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
+      - name: Bundle the RhizoFit engine 🌱
+        run: python3 scripts/build_root_webapp.py
 
       - name: Install and Build 🏗️
         run: |
