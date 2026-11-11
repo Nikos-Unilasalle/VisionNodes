@@ -114,3 +114,7 @@ modifications à faire.md
 
 # RhizoFit web app: Python bundle built in CI (scripts/build_root_webapp.py)
 website/public/rhizofit/engine.zip
+
+# Paper material stays local, never on GitHub
+scripts/gen_rhizofit_paper.py
+scripts/gen_root_paper_figures.py
