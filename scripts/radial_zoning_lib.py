@@ -1,8 +1,10 @@
 """Measured tissue boundaries of a root cross-section, from radial density profiles.
 
 The section is unwrapped in the metaxylem-anchored elliptical frame (rho, phi): rho = 1
-on the outer envelope of the metaxylem ring. Along every iso-rho line, without any cell
-segmentation, two profiles are measured per angular sector:
+on the outer envelope of the metaxylem ring. The unwrap extends to the farthest point of the
+section contour (plus a margin), so its extent is set by each section, not by a constant;
+the profiles carry their own rho samples (prof['rho'], prof['rho_step']). Along every iso-rho
+line, without any cell segmentation, two profiles are measured per angular sector:
 
   darkness   mean wall darkness
   L_theta    circumferential mean linear intercept = arc length / wall crossings
@@ -26,7 +28,12 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from scipy.signal import find_peaks
 
-RHO_MAX, RHO_STEP = 3.2, 0.01
+RHO_STEP = 0.01          # radial sampling of the polar unwrap (rho units), unless the grid would exceed MAX_POLAR_ROWS
+EXTENT_MARGIN = 0.15     # rho: the unwrap runs to the farthest point of the section plus this margin
+MAX_POLAR_ROWS = 512     # bound of the polar grid (rows x N_PHI) for in-browser use; it exceeds the working root
+                         # radius in px (root_web_runner normalises the diameter to 766 px), so a coarser step
+                         # (very thick cortex around a small vessel ring) still samples every ray below 1 px
+FEATURE_SMOOTH = 0.02    # rho, Gaussian smoothing of the change-point features
 N_PHI = 8192
 N_SECTORS = 16
 N_BOOT = 200
@@ -49,24 +56,53 @@ def anchor_ellipse(mx_mask):
     return cx, cy, max(w, 10) / 2, max(h, 10) / 2, np.deg2rad(ang)
 
 
-def rho_field(shape, ell):
+def _rho_at(xx, yy, ell):
     cx, cy, a, b, t = ell
-    yy, xx = np.indices(shape, dtype=np.float32)
     dx, dy = xx - cx, yy - cy
     xr, yr = np.cos(t) * dx + np.sin(t) * dy, -np.sin(t) * dx + np.cos(t) * dy
     return np.sqrt((xr / a) ** 2 + (yr / b) ** 2)
 
 
-def _unwrap_maps(ell):
+def rho_field(shape, ell):
+    yy, xx = np.indices(shape, dtype=np.float32)
+    return _rho_at(xx, yy, ell)
+
+
+def section_extent(section, ell):
+    """Farthest rho reached by the section, i.e. max over phi of the section edge rho_edge(phi).
+
+    The section contour is the second geometric invariant next to the metaxylem anchor: the
+    extent of the unwrap is read from it, so no root is truncated however thick its cortex.
+    """
+    cnts, _ = cv2.findContours(np.asarray(section, np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not cnts:
+        raise ValueError('empty section mask')
+    pts = np.vstack(cnts).reshape(-1, 2).astype(np.float32)
+    return float(_rho_at(pts[:, 0], pts[:, 1], ell).max())
+
+
+def polar_rho(section, ell):
+    """Radial samples of the unwrap, from 0 to the section extent plus EXTENT_MARGIN.
+
+    The step is RHO_STEP; past MAX_POLAR_ROWS samples it grows so the grid stays bounded.
+    """
+    extent = section_extent(section, ell) + EXTENT_MARGIN
+    if extent / RHO_STEP <= MAX_POLAR_ROWS:
+        return np.arange(0, extent, RHO_STEP)
+    return np.linspace(0, extent, MAX_POLAR_ROWS, endpoint=False)
+
+
+def _unwrap_maps(ell, rho_samples):
     cx, cy, a, b, t = ell
-    rho = np.arange(0, RHO_MAX, RHO_STEP)[:, None]
+    step = float(rho_samples[1])
+    rho = rho_samples[:, None]
     phi = np.linspace(0, 2 * np.pi, N_PHI, endpoint=False)[None, :]
     xr, yr = rho * a * np.cos(phi), rho * b * np.sin(phi)
     mx = (cx + np.cos(t) * xr - np.sin(t) * yr).astype(np.float32)
     my = (cy + np.sin(t) * xr + np.cos(t) * yr).astype(np.float32)
     dphi = 2 * np.pi / N_PHI
     ds_phi = rho * np.sqrt((a * np.sin(phi)) ** 2 + (b * np.cos(phi)) ** 2) * dphi
-    ds_rho = np.broadcast_to(RHO_STEP * np.sqrt((a * np.cos(phi)) ** 2 + (b * np.sin(phi)) ** 2), ds_phi.shape)
+    ds_rho = np.broadcast_to(step * np.sqrt((a * np.cos(phi)) ** 2 + (b * np.sin(phi)) ** 2), ds_phi.shape)
     return mx, my, ds_phi, ds_rho
 
 
@@ -114,7 +150,9 @@ def polar_profiles(gray, section, ell, prominence=None, labels=None):
 
     With `labels` (a ground-truth label map) wall crossings are label changes, not dips.
     """
-    mx, my, ds_phi, ds_rho = _unwrap_maps(ell)
+    rho = polar_rho(section, ell)
+    step = float(rho[1])
+    mx, my, ds_phi, ds_rho = _unwrap_maps(ell, rho)
     inside = _remap(section.astype(np.uint8), mx, my, nearest=True) > 0
     if labels is not None:
         pol = _remap(labels.astype(np.float32), mx, my, nearest=True).astype(np.int32)
@@ -131,9 +169,9 @@ def polar_profiles(gray, section, ell, prominence=None, labels=None):
     cover = inside.mean(1)
     edge_idx = int(np.nonzero(cover >= EDGE_COVER)[0].max())
     return {'Lt': _intercepts(cross_t, inside, ds_phi), 'Lr': _intercepts(cross_r, inside, ds_rho),
-            'dark': dark, 'cover': cover, 'edge_rho': edge_idx * RHO_STEP, 'polar': pol,
-            'cross_r': cross_r, 'inside': inside, 'ds_rho': ds_rho,
-            'px_per_rho': float(np.median(ds_rho[0]) / RHO_STEP)}
+            'dark': dark, 'cover': cover, 'edge_rho': edge_idx * step, 'polar': pol,
+            'cross_r': cross_r, 'inside': inside, 'ds_rho': ds_rho, 'rho': rho, 'rho_step': step,
+            'px_per_rho': float(np.median(ds_rho[0]) / step)}
 
 
 def _segment(f, k, min_len):
@@ -161,21 +199,22 @@ def _segment(f, k, min_len):
 
 
 def _features(prof, rows, px_per_rho):
+    """Standardised, smoothed [log L_theta, darkness] sector-median profile along rho."""
     with np.errstate(all='ignore'), warnings.catch_warnings():
         warnings.simplefilter('ignore', RuntimeWarning)
         lt = np.log(np.nanmedian(prof['Lt'][:, rows], 1) / px_per_rho)
         dk = np.nanmedian(prof['dark'][:, rows], 1)
     f = np.column_stack([lt, dk])
     f = np.nan_to_num((f - np.nanmean(f, 0)) / np.nanstd(f, 0))
-    return gaussian_filter1d(f, 2.0, axis=0)
+    return gaussian_filter1d(f, FEATURE_SMOOTH / prof['rho_step'], axis=0)
 
 
 def change_points(prof, rng, n_boot=N_BOOT):
     """Endodermis outer edge and cortex transition (rho), with bootstrap 95 % intervals over sectors."""
-    rho = np.arange(0, RHO_MAX, RHO_STEP)
+    rho = prof['rho']
     sel = (rho >= SEARCH_FROM) & (rho <= prof['edge_rho'] - 0.05)
     rr = rho[sel]
-    min_len = int(round(MIN_SEG / RHO_STEP))
+    min_len = int(round(MIN_SEG / prof['rho_step']))
 
     def run(rows):
         return [float(rr[c]) for c in _segment(_features(prof, rows, prof['px_per_rho'])[sel], 3, min_len)]
@@ -191,7 +230,7 @@ def change_points(prof, rng, n_boot=N_BOOT):
 
 def radial_cell_size(prof, lo, hi):
     """Median radial intercept (px) over rho in [lo, hi], all sectors."""
-    rho = np.arange(0, RHO_MAX, RHO_STEP)
+    rho = prof['rho']
     band = prof['Lr'][(rho >= lo) & (rho <= hi)]
     if not np.isfinite(band).any():
         raise ValueError(f'no radial cell size measured between rho {lo:.2f} and {hi:.2f}')
@@ -251,7 +290,10 @@ def clean_vessels(mx_mask):
 def vessel_inner_edges(mx_mask, rho):
     """Minimum rho of every metaxylem vessel (the inner edge of the ring)."""
     n, lab, stats, _ = cv2.connectedComponentsWithStats((np.asarray(mx_mask) > 0).astype(np.uint8))
-    return [float(rho[lab == i].min()) for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= MIN_VESSEL_AREA]
+    edges = [float(rho[lab == i].min()) for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= MIN_VESSEL_AREA]
+    if not edges:
+        raise ValueError(f'no metaxylem vessel reaches {MIN_VESSEL_AREA} px')
+    return edges
 
 
 def guess_kind(gray, section):
@@ -329,7 +371,7 @@ def cortical_cell_files(labels, section, ell, rho_lo, rho_hi):
     section across the whole band.
     """
     prof = polar_profiles(None, section, ell, labels=labels)
-    rho = np.arange(0, RHO_MAX, RHO_STEP)
+    rho = prof['rho']
     band = (rho > rho_lo) & (rho < rho_hi)
     pol, inside = prof['polar'][band], prof['inside'][band]
     counts = []

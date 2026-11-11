@@ -182,6 +182,66 @@ def test_cortical_cell_files_counts_layers_along_rays():
     sector = (np.degrees(np.arctan2(yy - c, xx - c)) // 10).astype(int) + 18
     labels[ring] = 1 + layer[ring] * 100 + sector[ring]
     labels[ring & (((r - 100) % 20) < 2)] = 0             # walls between layers
-    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100 (polar grid stops at RHO_MAX)
+    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100
     med, lo, hi = R.cortical_cell_files(labels, section, ell, 100 / 100, 260 / 100)
     assert med == 8 and lo >= 7 and hi <= 9
+
+
+# --------------------------------------------------------------------------- polar extent
+
+def _disc(size, radius):
+    yy, xx = np.indices((size, size))
+    return np.hypot(xx - size / 2, yy - size / 2) <= radius
+
+
+def test_polar_extent_reaches_a_section_edge_beyond_the_former_cap():
+    section = _disc(1000, 450)
+    ell = (500.0, 500.0, 100.0, 100.0, 0.0)               # rho = r / 100: edge at rho 4.5
+    prof = R.polar_profiles(np.full(section.shape, 255, np.uint8), section, ell, prominence=25.0)
+    assert prof['edge_rho'] == pytest.approx(4.5, abs=0.03)
+    assert prof['polar'].shape[0] == len(prof['rho'])
+    assert prof['cover'][-1] == 0                          # the grid ends outside the section
+
+
+def test_polar_extent_stays_bounded_for_a_tiny_anchor():
+    section = _disc(1000, 450)
+    ell = (500.0, 500.0, 25.0, 25.0, 0.0)                 # rho = r / 25: edge at rho 18
+    prof = R.polar_profiles(np.full(section.shape, 255, np.uint8), section, ell, prominence=25.0)
+    assert len(prof['rho']) <= R.MAX_POLAR_ROWS
+    assert prof['edge_rho'] == pytest.approx(18.0, abs=0.1)
+
+
+def test_boundaries_of_a_thick_cortex_section_beyond_the_former_cap():
+    img, section, mx = _synthetic_section(endo_rho=1.4, cortex_rho=3.6, edge_rho=4.6)
+    b, masks, ell, _ = R.measure_boundaries(img, section, mx, kind='drawing', n_boot=0)
+    unit = np.sqrt(ell[2] * ell[3]) / RING_R             # rho = 1 on the fitted envelope of the vessels
+    assert b['edge'] == pytest.approx(4.6 / unit, abs=0.03)
+    assert b['endo_outer'] == pytest.approx(1.4 / unit, abs=0.12)
+    assert b['cortex_transition'] == pytest.approx(3.6 / unit, abs=0.15)
+    assert b['rhizo_layer_px'] < 30                        # one small outer cell, not a cortex cell
+
+
+def test_cortical_cell_files_count_layers_beyond_the_former_cap():
+    size, c = 1000, 500
+    yy, xx = np.indices((size, size))
+    r = np.hypot(xx - c, yy - c)
+    section = r <= 470
+    ring = (r >= 100) & (r < 460)
+    labels = np.zeros((size, size), np.int32)
+    layer = ((r - 100) // 20).astype(int)                 # 18 concentric layers of 20 px
+    sector = (np.degrees(np.arctan2(yy - c, xx - c)) // 10).astype(int) + 18
+    labels[ring] = 1 + layer[ring] * 100 + sector[ring]
+    labels[ring & (((r - 100) % 20) < 2)] = 0
+    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100: cortex out to rho 4.6
+    med, lo, hi = R.cortical_cell_files(labels, section, ell, 1.0, 4.6)
+    assert med == 18 and lo >= 17 and hi <= 19
+
+
+def test_vessel_inner_edges_fails_clearly_when_no_vessel_is_large_enough():
+    tiny = np.zeros((200, 200), np.uint8)
+    for k in range(6):
+        a = 2 * np.pi * k / 6
+        cv2.circle(tiny, (int(100 + 60 * np.cos(a)), int(100 + 60 * np.sin(a))), 4, 255, -1)
+    rho = np.ones((200, 200), np.float32)
+    with pytest.raises(ValueError, match='metaxylem'):
+        R.vessel_inner_edges(tiny, rho)

@@ -206,12 +206,13 @@ node('mx_open', 'feat_morphology_adv', f, 1, 1, {'operation': OPEN, 'shape': ELL
 node('st_lum2', 'mask_operations', f, 2, 1, {'operation': AND})
 node('st_lum_fill', 'fill_holes', f, 3, 1, {'method': 0})
 node('vessels', 'mask_select_by_marker', f, 4, 1, {'mode': KEEP, 'connectivity': 0})
-node('mx_cc', 'sci_connected_components', f, 0, 2,
-     {'threshold': 128, 'min_area': 30, 'max_area': 500000, 'connectivity': 1, 'colorize': True, 'show_cross': False})
-node('mx_floor', 'math_expr', f, 1, 2, {'expression': '2 * a'})
-node('mx_break', 'list_natural_break', f, 2, 2, {'log_scale': True, 'min_value': 0, 'min_ratio': 1.5})
+node('mx_floor', 'math_expr', f, 1, 2, {'expression': '2 * a'},
+     'Candidate floor: twice the median lumen (scale-free).')
+node('mx_ring', 'geom_ring_pattern', f, 2, 2,
+     {'min_count': 5, 'size_ratio': 2.0, 'radius_tol': 0.25, 'circ_min': 0.3, 'max_candidates': 40},
+     'Polyarch ring by geometric consensus: near-equal, round, equidistant, evenly spaced lumens.')
 node('metaxylem', 'filter_blob_filter', f, 3, 2, {'min_area': 1000, 'max_area': 0, 'circ_min': 0.3, 'connectivity': 4},
-     'METAXYLEM ANCHOR (6 VESSELS)')
+     'METAXYLEM ANCHOR (RING OF VESSELS)')
 edge('section', 'mask', 'lum_sub', 'mask_a')
 edge('walls', 'main', 'lum_sub', 'mask_b')
 edge('lum_sub', 'mask', 'lumens', 'mask')
@@ -225,9 +226,14 @@ edge('lumens', 'mask', 'st_lum2', 'mask_a')
 edge('stele', 'mask', 'st_lum2', 'mask_b')
 edge('st_lum2', 'mask', 'st_lum_fill', 'mask')
 edge('st_lum_fill', 'main', 'vessels', 'mask')
+# Large vessels hug the stele edge, and a ring of many vessels can pull the stele contour inside
+# them: tessellated lumens are also searched in the zoning core (the small-cell inner region).
+node('mx_region', 'mask_operations', f, 0, 2, {'operation': OR})
+edge('stele', 'mask', 'mx_region', 'mask_a')
+edge('zoning', 'core', 'mx_region', 'mask_b')
 node('mx_tess', 'mask_operations', f, 2, 3, {'operation': AND})
 edge('cells', 'interiors', 'mx_tess', 'mask_a')
-edge('stele', 'mask', 'mx_tess', 'mask_b')
+edge('mx_region', 'mask', 'mx_tess', 'mask_b')
 node('mx_pts', 'points_to_mask', f, 0, 3, {'radius': 2})
 edge('zoning', 'outliers', 'mx_pts', 'points')
 edge('src', 'main', 'mx_pts', 'reference')
@@ -241,12 +247,11 @@ edge('mx_mark', 'mask', 'vessels', 'marker')
 node('mx_cand', 'mask_operations', f, 4, 3, {'operation': OR})
 edge('vessels', 'mask', 'mx_cand', 'mask_a')
 edge('mx_sel', 'mask', 'mx_cand', 'mask_b')
-edge('mx_cand', 'mask', 'mx_cc', 'image')
 edge('lum_med', 'median', 'mx_floor', '0_med')
-edge('mx_cc', 'areas', 'mx_break', 'values')
-edge('mx_floor', 'result', 'mx_break', 'min_value')
-edge('mx_cand', 'mask', 'metaxylem', 'mask')
-edge('mx_break', 'threshold', 'metaxylem', 'min_area')
+edge('mx_cand', 'mask', 'mx_ring', 'mask')
+edge('mx_floor', 'result', 'mx_ring', 'min_area')
+edge('mx_ring', 'mask', 'metaxylem', 'mask')
+edge('mx_floor', 'result', 'metaxylem', 'min_area')
 
 # ── Step 8: Predictive Ellipse Propagation ───────────────────────────────────
 f = F['frame-8']

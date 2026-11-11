@@ -171,8 +171,11 @@ def _normalised_upload(image_path, scale=None):
     return out, scale
 
 
-def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None):
+def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=False):
     """Template + measured boundaries + census. Returns the raw state used by the figures.
+
+    `walled_lacunae` (experimental, off by default): also recognise aerenchyma lacunae enclosed by
+    intact walls, which the first segmentation outlines as cells (cell_recovery_lib.remove_walled_lacunae).
 
     Lengths inside the state are in working pixels; `scale` converts them back to the upload.
     """
@@ -203,13 +206,16 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     labels = np.asarray(pipe['cells']['labels'])
     cortex = masks['inner_cortex_mask'] | masks['outer_cortex_mask']
     rho = R.rho_field(section.shape, ell)
-    n_split = n_filled = 0
+    n_split = n_filled = n_walled = 0
     try:
         expected = CR.expected_area_profile(labels, rho, cortex)  # first-pass cells only
         labels, recovered, n_recovered = CR.recover_faint_cells(labels, gray, cortex)
         labels, created, n_split, n_filled = CR.check_against_polar_profile(labels, recovered, rho, cortex,
                                                                             expected)
         recovered = recovered | created
+        if walled_lacunae:
+            labels, n_walled, _ = CR.remove_walled_lacunae(labels, gray, cortex, rho, expected,
+                                                           bounds['px_per_rho'])
         labels, _ = CR.drop_fragments(labels, rho, cortex, expected)
         recovered &= labels > 0
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
@@ -223,6 +229,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
             'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
+            'n_walled_lacunae': n_walled if walled_lacunae else None,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
             'rho': rho}
 
@@ -286,11 +293,11 @@ def _img_rho(st):
 
 
 def _img_unwrap(st):
-    b = st['bounds']
-    pol = st['prof']['polar'][:int((b['edge'] + 0.05) / R.RHO_STEP)]
+    b, step = st['bounds'], st['prof']['rho_step']
+    pol = st['prof']['polar'][:int((b['edge'] + 0.05) / step)]
     img = cv2.resize(pol, (1600, pol.shape[0] * 2), interpolation=cv2.INTER_AREA)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    scale = img.shape[0] / pol.shape[0] / R.RHO_STEP
+    scale = img.shape[0] / pol.shape[0] / step
     for key, _, _, col in BOUNDARIES:
         y = int(round(b[key] * scale))
         cv2.line(img, (0, y), (img.shape[1], y), _bgr(col), 2, cv2.LINE_AA)
@@ -389,8 +396,8 @@ def _legend(ax, **kw):
 
 
 def _chart_profiles(st):
-    rho = np.arange(0, R.RHO_MAX, R.RHO_STEP)
     prof, b = st['prof'], st['bounds']
+    rho = prof['rho']
     fig, axes = _fig(3, 1, figsize=(10, 9), sharex=True)
     with np.errstate(all='ignore'), warnings.catch_warnings():
         warnings.simplefilter('ignore', RuntimeWarning)  # rho rows outside the section are all-NaN
@@ -571,6 +578,9 @@ def build_tables(st, census, zone_area, areas):
         ['Faint cells recovered', st['n_recovered'], 'cells', 'second-pass segmentation of pale cortex walls'],
         ['Clusters split', st['n_split'], 'regions', 'recovered regions > 2x the expected cell area at their ρ'],
         ['Lacunae reclassified', st['n_filled'], 'regions', 'empty regions of 0.4-3 expected cells: unseen cells'],
+        ['Walled lacunae', st.get('n_walled_lacunae'), 'regions',
+         'wall-enclosed radial sectors over 3 expected cells and 3 layers deep, counted as aerenchyma'
+         if st.get('n_walled_lacunae') is not None else 'detection off (experimental option)'],
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],
@@ -642,12 +652,12 @@ def build_tables(st, census, zone_area, areas):
 
 # --------------------------------------------------------------------------- entry points
 
-def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None):
+def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, walled_lacunae=False):
     """Full analysis of one image; see the module docstring for the result layout."""
     pixel_size_um = float(pixel_size_um) if pixel_size_um else None
     if pixel_size_um is not None and not 0 < pixel_size_um < 1000:
         raise AnalysisError('The pixel size must be a positive number of micrometres per pixel.')
-    st = run_pipeline(image_path, pixel_size_um, n_boot, progress)
+    st = run_pipeline(image_path, pixel_size_um, n_boot, progress, walled_lacunae=bool(walled_lacunae))
     _report(STAGES[3], 0.0, progress)
     census = _census_territory(st)
     zone_area = {z: float(np.count_nonzero(st['masks'][m])) for z, m in zip(ZONES, ZONE_MASKS)}

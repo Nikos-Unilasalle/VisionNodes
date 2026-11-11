@@ -831,26 +831,6 @@
       }
     },
     {
-      "id": "mx_cc",
-      "type": "sci_connected_components",
-      "position": {
-        "x": 1400,
-        "y": 1850
-      },
-      "data": {
-        "label": "Connected Components",
-        "params": {
-          "threshold": 128,
-          "min_area": 30,
-          "max_area": 500000,
-          "connectivity": 1,
-          "colorize": true,
-          "show_cross": false,
-          "color_index": 6
-        }
-      }
-    },
-    {
       "id": "mx_floor",
       "type": "math_expr",
       "position": {
@@ -861,24 +841,28 @@
         "label": "Math Expression",
         "params": {
           "expression": "2 * a",
-          "color_index": 6
+          "color_index": 6,
+          "node_note": "Candidate floor: twice the median lumen (scale-free)."
         }
       }
     },
     {
-      "id": "mx_break",
-      "type": "list_natural_break",
+      "id": "mx_ring",
+      "type": "geom_ring_pattern",
       "position": {
         "x": 1900,
         "y": 1850
       },
       "data": {
-        "label": "List Natural Break",
+        "label": "Ring Pattern",
         "params": {
-          "log_scale": true,
-          "min_value": 0,
-          "min_ratio": 1.5,
-          "color_index": 6
+          "min_count": 5,
+          "size_ratio": 2.0,
+          "radius_tol": 0.25,
+          "circ_min": 0.3,
+          "max_candidates": 40,
+          "color_index": 6,
+          "node_note": "Polyarch ring by geometric consensus: near-equal, round, equidistant, evenly spaced lumens."
         }
       }
     },
@@ -897,7 +881,22 @@
           "circ_min": 0.3,
           "connectivity": 4,
           "color_index": 6,
-          "node_note": "METAXYLEM ANCHOR (6 VESSELS)"
+          "node_note": "METAXYLEM ANCHOR (RING OF VESSELS)"
+        }
+      }
+    },
+    {
+      "id": "mx_region",
+      "type": "mask_operations",
+      "position": {
+        "x": 1400,
+        "y": 1850
+      },
+      "data": {
+        "label": "Mask Operations",
+        "params": {
+          "operation": 0,
+          "color_index": 6
         }
       }
     },
@@ -1522,321 +1521,328 @@
     },
     {
       "id": "e55",
+      "source": "stele",
+      "target": "mx_region",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask_a"
+    },
+    {
+      "id": "e56",
+      "source": "zoning",
+      "target": "mx_region",
+      "sourceHandle": "mask__core",
+      "targetHandle": "mask__mask_b"
+    },
+    {
+      "id": "e57",
       "source": "cells",
       "target": "mx_tess",
       "sourceHandle": "mask__interiors",
       "targetHandle": "mask__mask_a"
     },
     {
-      "id": "e56",
-      "source": "stele",
+      "id": "e58",
+      "source": "mx_region",
       "target": "mx_tess",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask_b"
     },
     {
-      "id": "e57",
+      "id": "e59",
       "source": "zoning",
       "target": "mx_pts",
       "sourceHandle": "list__outliers",
       "targetHandle": "list__points"
     },
     {
-      "id": "e58",
+      "id": "e60",
       "source": "src",
       "target": "mx_pts",
       "sourceHandle": "image__main",
       "targetHandle": "image__reference"
     },
     {
-      "id": "e59",
+      "id": "e61",
       "source": "mx_tess",
       "target": "mx_sel",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask"
     },
     {
-      "id": "e60",
+      "id": "e62",
       "source": "mx_pts",
       "target": "mx_sel",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__marker"
     },
     {
-      "id": "e61",
+      "id": "e63",
       "source": "mx_open",
       "target": "mx_mark",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask_a"
     },
     {
-      "id": "e62",
+      "id": "e64",
       "source": "mx_pts",
       "target": "mx_mark",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask_b"
     },
     {
-      "id": "e63",
+      "id": "e65",
       "source": "mx_mark",
       "target": "vessels",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__marker"
     },
     {
-      "id": "e64",
+      "id": "e66",
       "source": "vessels",
       "target": "mx_cand",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask_a"
     },
     {
-      "id": "e65",
+      "id": "e67",
       "source": "mx_sel",
       "target": "mx_cand",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask_b"
     },
     {
-      "id": "e66",
-      "source": "mx_cand",
-      "target": "mx_cc",
-      "sourceHandle": "mask__mask",
-      "targetHandle": "any__image"
-    },
-    {
-      "id": "e67",
+      "id": "e68",
       "source": "lum_med",
       "target": "mx_floor",
       "sourceHandle": "scalar__median",
       "targetHandle": "None__0_med"
     },
     {
-      "id": "e68",
-      "source": "mx_cc",
-      "target": "mx_break",
-      "sourceHandle": "list__areas",
-      "targetHandle": "list__values"
-    },
-    {
       "id": "e69",
-      "source": "mx_floor",
-      "target": "mx_break",
-      "sourceHandle": "scalar__result",
-      "targetHandle": "scalar__min_value"
+      "source": "mx_cand",
+      "target": "mx_ring",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask"
     },
     {
       "id": "e70",
-      "source": "mx_cand",
+      "source": "mx_floor",
+      "target": "mx_ring",
+      "sourceHandle": "scalar__result",
+      "targetHandle": "scalar__min_area"
+    },
+    {
+      "id": "e71",
+      "source": "mx_ring",
       "target": "metaxylem",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__mask"
     },
     {
-      "id": "e71",
-      "source": "mx_break",
+      "id": "e72",
+      "source": "mx_floor",
       "target": "metaxylem",
-      "sourceHandle": "scalar__threshold",
+      "sourceHandle": "scalar__result",
       "targetHandle": "scalar__min_area"
     },
     {
-      "id": "e72",
+      "id": "e73",
       "source": "metaxylem",
       "target": "ellipse_prop",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__landmarks"
     },
     {
-      "id": "e73",
+      "id": "e74",
       "source": "section",
       "target": "ellipse_prop",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__boundary"
     },
     {
-      "id": "e74",
+      "id": "e75",
       "source": "cells",
       "target": "ellipse_prop",
       "sourceHandle": "markers__labels",
       "targetHandle": "markers__labels"
     },
     {
-      "id": "e75",
+      "id": "e76",
       "source": "cells",
       "target": "ellipse_prop",
       "sourceHandle": "image__main",
       "targetHandle": "image__image"
     },
     {
-      "id": "e76",
+      "id": "e77",
       "source": "ellipse_prop",
       "target": "ol_st_pred",
       "sourceHandle": "mask__stele_mask",
       "targetHandle": "mask__mask"
     },
     {
-      "id": "e77",
+      "id": "e78",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__pith_mask",
       "targetHandle": "mask__mask_1"
     },
     {
-      "id": "e78",
+      "id": "e79",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__vascular_mask",
       "targetHandle": "mask__mask_2"
     },
     {
-      "id": "e79",
+      "id": "e80",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__lpsc_mask",
       "targetHandle": "mask__mask_3"
     },
     {
-      "id": "e80",
+      "id": "e81",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__endodermis_mask",
       "targetHandle": "mask__mask_4"
     },
     {
-      "id": "e81",
+      "id": "e82",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__inner_cortex_mask",
       "targetHandle": "mask__mask_5"
     },
     {
-      "id": "e82",
+      "id": "e83",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__outer_cortex_mask",
       "targetHandle": "mask__mask_6"
     },
     {
-      "id": "e83",
+      "id": "e84",
       "source": "ellipse_prop",
       "target": "zones_all",
       "sourceHandle": "mask__rhizodermis_mask",
       "targetHandle": "None__mask_7"
     },
     {
-      "id": "e84",
+      "id": "e85",
       "source": "ellipse_prop",
       "target": "report",
       "sourceHandle": "dict__report",
       "targetHandle": "dict__dict"
     },
     {
-      "id": "e85",
+      "id": "e86",
       "source": "src",
       "target": "compose",
       "sourceHandle": "image__main",
       "targetHandle": "image__image_a"
     },
     {
-      "id": "e86",
+      "id": "e87",
       "source": "ellipse_prop",
       "target": "compose",
       "sourceHandle": "image__main",
       "targetHandle": "image__image_b"
     },
     {
-      "id": "e87",
+      "id": "e88",
       "source": "compose",
       "target": "legend",
       "sourceHandle": "image__main",
       "targetHandle": "image__image"
     },
     {
-      "id": "e88",
+      "id": "e89",
       "source": "legend",
       "target": "display",
       "sourceHandle": "image__main",
       "targetHandle": "image__main"
     },
     {
-      "id": "e89",
+      "id": "e90",
       "source": "cells",
       "target": "pub_fig",
       "sourceHandle": "image__main",
       "targetHandle": "image__image"
     },
     {
-      "id": "e90",
+      "id": "e91",
       "source": "cells",
       "target": "pub_fig",
       "sourceHandle": "markers__labels",
       "targetHandle": "labels__labels"
     },
     {
-      "id": "e91",
+      "id": "e92",
       "source": "section",
       "target": "pub_fig",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__boundary"
     },
     {
-      "id": "e92",
+      "id": "e93",
       "source": "metaxylem",
       "target": "pub_fig",
       "sourceHandle": "mask__mask",
       "targetHandle": "mask__landmarks"
     },
     {
-      "id": "e93",
+      "id": "e94",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__pith_mask",
       "targetHandle": "mask__pith_mask"
     },
     {
-      "id": "e94",
+      "id": "e95",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__vascular_mask",
       "targetHandle": "mask__vascular_mask"
     },
     {
-      "id": "e95",
+      "id": "e96",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__endodermis_mask",
       "targetHandle": "mask__endodermis_mask"
     },
     {
-      "id": "e96",
+      "id": "e97",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__inner_cortex_mask",
       "targetHandle": "mask__inner_cortex_mask"
     },
     {
-      "id": "e97",
+      "id": "e98",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__outer_cortex_mask",
       "targetHandle": "mask__outer_cortex_mask"
     },
     {
-      "id": "e98",
+      "id": "e99",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "mask__rhizodermis_mask",
       "targetHandle": "mask__rhizodermis_mask"
     },
     {
-      "id": "e99",
+      "id": "e100",
       "source": "ellipse_prop",
       "target": "pub_fig",
       "sourceHandle": "dict__report",
       "targetHandle": "dict__ellipse_report"
     },
     {
-      "id": "e100",
+      "id": "e101",
       "source": "pub_fig",
       "target": "pub_display",
       "sourceHandle": "image__figure_with_legend",

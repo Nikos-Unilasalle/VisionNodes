@@ -105,3 +105,27 @@ def test_bundle_holds_every_plugin_the_template_needs(tmp_path):
     assert 'scripts/root_web_runner.py' in names and 'engine/tests/vn_headless.py' in names
     assert any(n.endswith('draw_root_publication.py') for n in names)
     assert len(names) == len(files)
+
+
+def _summary_row(res, name):
+    rows = next(t for t in res['tables'] if t['id'] == 'summary')['rows']
+    return next(r for r in rows if r[0] == name)
+
+
+def test_walled_lacuna_detection_is_off_by_default(result):
+    res, _ = result
+    row = _summary_row(res, 'Walled lacunae')
+    assert row[1] is None and 'off' in row[3]
+
+
+def test_walled_lacuna_detection_runs_when_enabled(monkeypatch):
+    calls = []
+
+    def spy(labels, gray, zone, rho, expected, px_per_rho):
+        calls.append(1)
+        return np.asarray(labels).astype(np.int32), 0, np.zeros(np.asarray(labels).shape, bool)
+
+    monkeypatch.setattr(W.CR, 'remove_walled_lacunae', spy)
+    res = W.analyze(SAMPLE, pixel_size_um=0.5, n_boot=0, walled_lacunae=True)
+    assert calls == [1]
+    assert _summary_row(res, 'Walled lacunae')[1] == 0

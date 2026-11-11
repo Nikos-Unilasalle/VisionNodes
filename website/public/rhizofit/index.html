@@ -63,6 +63,11 @@
             <option value="50">Fast · 50 bootstrap draws</option>
           </select>
         </label>
+        <label class="field check">
+          <input type="checkbox" id="walled-lacunae">
+          <span>Detect wall-enclosed lacunae <em>(experimental)</em></span>
+        </label>
+        <p class="hint">Aerenchyma sectors closed by intact walls are otherwise taken for cells. Validated on synthetic sections only; may mistake clusters of very pale cells for lacunae.</p>
         <button class="primary" id="run" disabled>Analyze</button>
         <p class="privacy">Your image never leaves your computer: the analysis runs in this browser tab.</p>
       </section>

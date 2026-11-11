@@ -41,8 +41,9 @@ from js import report_progress
 def _b64(data):
     return base64.b64encode(data).decode('ascii')
 
-def run_analysis(path, pixel_size, n_boot):
-    res = W.analyze(path, pixel_size or None, n_boot=int(n_boot), progress=report_progress)
+def run_analysis(path, pixel_size, n_boot, walled_lacunae):
+    res = W.analyze(path, pixel_size or None, n_boot=int(n_boot), progress=report_progress,
+                    walled_lacunae=bool(walled_lacunae))
     payload = {
         'images': [{**{k: v for k, v in it.items() if k != 'png'}, 'png': _b64(it['png'])} for it in res['images']],
         'charts': [{**{k: v for k, v in it.items() if k != 'png'}, 'png': _b64(it['png'])} for it in res['charts']],
@@ -55,13 +56,13 @@ def run_analysis(path, pixel_size, n_boot):
   post('ready');
 }
 
-async function analyze({ bytes, name, pixelSize, nBoot }) {
+async function analyze({ bytes, name, pixelSize, nBoot, walledLacunae }) {
   const ext = (name.match(/\.[a-z0-9]+$/i) || ['.png'])[0].toLowerCase();
   const path = `/tmp/upload${ext}`;
   pyodide.FS.writeFile(path, new Uint8Array(bytes));
   const runAnalysis = pyodide.globals.get('run_analysis');
   try {
-    const json = runAnalysis(path, pixelSize || 0, nBoot);
+    const json = runAnalysis(path, pixelSize || 0, nBoot, Boolean(walledLacunae));
     post('result', { result: JSON.parse(json) });
   } catch (err) {
     const msg = String(err.message || err);

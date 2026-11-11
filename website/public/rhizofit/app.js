@@ -139,7 +139,7 @@
     setStatus(`${STAGES[0]}…`, 0);
     worker.postMessage({
       type: 'analyze', bytes: state.file.bytes.slice(0), name: state.file.name,
-      pixelSize, nBoot: Number($('#n-boot').value),
+      pixelSize, nBoot: Number($('#n-boot').value), walledLacunae: $('#walled-lacunae').checked,
     });
   });
 
