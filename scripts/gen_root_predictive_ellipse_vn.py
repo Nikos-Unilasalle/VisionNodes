@@ -209,7 +209,7 @@ node('vessels', 'mask_select_by_marker', f, 4, 1, {'mode': KEEP, 'connectivity':
 node('mx_cc', 'sci_connected_components', f, 0, 2,
      {'threshold': 128, 'min_area': 30, 'max_area': 500000, 'connectivity': 1, 'colorize': True, 'show_cross': False})
 node('mx_floor', 'math_expr', f, 1, 2, {'expression': '2 * a'})
-node('mx_break', 'list_natural_break', f, 2, 2, {'log_scale': True, 'min_value': 0})
+node('mx_break', 'list_natural_break', f, 2, 2, {'log_scale': True, 'min_value': 0, 'min_ratio': 1.5})
 node('metaxylem', 'filter_blob_filter', f, 3, 2, {'min_area': 1000, 'max_area': 0, 'circ_min': 0.3, 'connectivity': 4},
      'METAXYLEM ANCHOR (6 VESSELS)')
 edge('section', 'mask', 'lum_sub', 'mask_a')

@@ -32,7 +32,9 @@ def _otsu_split(sorted_vals):
         "Finds the natural break that best separates a list of numbers into two groups "
         "(Otsu's criterion in 1-D). Log scale suits sizes/areas. Typical use: split object "
         "areas into 'small' and 'large' without a hand-picked threshold, then feed the "
-        "threshold to a Blob Filter."
+        "threshold to a Blob Filter. Min Group Ratio guards against splitting a single "
+        "population: when the mean of the upper group is less than this many times the mean of "
+        "the lower group, all values are kept above the threshold (1 = always split)."
     ),
     inputs=[{'id': 'values', 'color': 'list'}, {'id': 'min_value', 'color': 'scalar', 'label': 'Ignore Below'}],
     outputs=[
@@ -45,6 +47,7 @@ def _otsu_split(sorted_vals):
     params=[
         {'id': 'log_scale', 'label': 'Log Scale', 'type': 'bool', 'default': True},
         {'id': 'min_value', 'label': 'Ignore Below', 'type': 'float', 'default': 0.0, 'min': 0},
+        {'id': 'min_ratio', 'label': 'Min Group Ratio', 'type': 'float', 'default': 1.0, 'min': 1.0, 'step': 0.1},
     ],
 )
 class ListNaturalBreakNode(NodeProcessor):
@@ -65,6 +68,9 @@ class ListNaturalBreakNode(NodeProcessor):
             k = _otsu_split(space)
             mid = (space[k - 1] + space[k]) / 2.0
             threshold = float(np.exp(mid) if use_log else mid)
+            min_ratio = max(float(params.get('min_ratio', 1.0)), 1.0)
+            if ordered[k:].mean() < min_ratio * ordered[:k].mean():
+                threshold = float(ordered[0])  # one population: nothing to split off
 
         above = ordered[ordered >= threshold]
         below = ordered[ordered < threshold]

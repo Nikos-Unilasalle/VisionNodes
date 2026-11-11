@@ -118,3 +118,5 @@ website/public/rhizofit/engine.zip
 # Paper material stays local, never on GitHub
 scripts/gen_rhizofit_paper.py
 scripts/gen_root_paper_figures.py
+scripts/gen_unfold_figure.py
+scripts/granar/

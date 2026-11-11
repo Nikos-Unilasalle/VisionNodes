@@ -288,6 +288,23 @@ class TestListNaturalBreak:
         out = _node('list_natural_break').process({'values': values}, {'log_scale': True, 'min_value': 100})
         assert 600 < out['threshold'] <= 5000
 
+    def test_single_population_kept_whole_when_groups_too_close(self):
+        # six metaxylem vessels of near-equal size, nothing else above the floor
+        values = [2527, 2556, 2582, 2589, 2608, 2689]
+        out = _node('list_natural_break').process({'values': values}, {'log_scale': True, 'min_ratio': 1.5})
+        assert out['count_above'] == 6 and out['count_below'] == 0
+        assert out['threshold'] <= 2527
+
+    def test_min_ratio_keeps_split_of_distinct_groups(self):
+        values = [220, 250, 300, 280, 400, 500, 640, 700, 1100, 1500, 2600, 3400, 4000]
+        out = _node('list_natural_break').process({'values': values}, {'log_scale': True, 'min_ratio': 1.5})
+        assert out['count_above'] == 5 and out['count_below'] == 8
+
+    def test_default_min_ratio_keeps_previous_behaviour(self):
+        values = [2527, 2556, 2582, 2589, 2608, 2689]
+        out = _node('list_natural_break').process({'values': values}, {'log_scale': True})
+        assert out['count_above'] == 1 and out['count_below'] == 5
+
     def test_empty_or_single_value(self):
         assert _node('list_natural_break').process({'values': []}, {})['threshold'] is None
         out = _node('list_natural_break').process({'values': [5.0]}, {})
