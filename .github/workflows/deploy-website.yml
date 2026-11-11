@@ -1,6 +1,7 @@
 name: Deploy Website
 
 on:
+  workflow_dispatch:   # manual redeploy (e.g. when a push-triggered run gets stuck)
   push:
     branches:
       - main
