@@ -7,7 +7,8 @@ relative paths work unchanged:
 
   engine/registry.py, engine/tests/vn_headless.py
   engine/plugins/<the plugins that declare the template's node types>
-  scripts/radial_zoning_lib.py, scripts/root_web_runner.py
+  scripts/radial_zoning_lib.py, scripts/cell_recovery_lib.py, scripts/cell_files_lib.py,
+  scripts/census_lib.py, scripts/root_web_runner.py
   public/templates/root_predictive_ellipse_zoning.vn
 
 Usage: python3 scripts/build_root_webapp.py [--out website/public/rhizofit/engine.zip]
@@ -26,6 +27,7 @@ STATIC_FILES = (
     os.path.join('engine', 'tests', 'vn_headless.py'),
     os.path.join('scripts', 'radial_zoning_lib.py'),
     os.path.join('scripts', 'cell_recovery_lib.py'),
+    os.path.join('scripts', 'cell_files_lib.py'),
     os.path.join('scripts', 'census_lib.py'),
     os.path.join('scripts', 'root_web_runner.py'),
     TEMPLATE,

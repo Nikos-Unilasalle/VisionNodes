@@ -171,22 +171,6 @@ def test_reported_tilt_is_the_direction_of_the_major_axis(rx, ry, expected):
     assert R.major_axis_tilt_deg(R.anchor_ellipse(mx)) == pytest.approx(tilt, abs=1e-6)
 
 
-def test_cortical_cell_files_counts_layers_along_rays():
-    size, c = 600, 300
-    yy, xx = np.indices((size, size))
-    r = np.hypot(xx - c, yy - c)
-    section = r <= 280
-    ring = (r >= 100) & (r < 260)
-    labels = np.zeros((size, size), np.int32)
-    layer = ((r - 100) // 20).astype(int)                 # 8 concentric layers of 20 px
-    sector = (np.degrees(np.arctan2(yy - c, xx - c)) // 10).astype(int) + 18
-    labels[ring] = 1 + layer[ring] * 100 + sector[ring]
-    labels[ring & (((r - 100) % 20) < 2)] = 0             # walls between layers
-    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100
-    med, lo, hi = R.cortical_cell_files(labels, section, ell, 100 / 100, 260 / 100)
-    assert med == 8 and lo >= 7 and hi <= 9
-
-
 # --------------------------------------------------------------------------- polar extent
 
 def _disc(size, radius):
@@ -219,22 +203,6 @@ def test_boundaries_of_a_thick_cortex_section_beyond_the_former_cap():
     assert b['endo_outer'] == pytest.approx(1.4 / unit, abs=0.12)
     assert b['cortex_transition'] == pytest.approx(3.6 / unit, abs=0.15)
     assert b['rhizo_layer_px'] < 30                        # one small outer cell, not a cortex cell
-
-
-def test_cortical_cell_files_count_layers_beyond_the_former_cap():
-    size, c = 1000, 500
-    yy, xx = np.indices((size, size))
-    r = np.hypot(xx - c, yy - c)
-    section = r <= 470
-    ring = (r >= 100) & (r < 460)
-    labels = np.zeros((size, size), np.int32)
-    layer = ((r - 100) // 20).astype(int)                 # 18 concentric layers of 20 px
-    sector = (np.degrees(np.arctan2(yy - c, xx - c)) // 10).astype(int) + 18
-    labels[ring] = 1 + layer[ring] * 100 + sector[ring]
-    labels[ring & (((r - 100) % 20) < 2)] = 0
-    ell = (c, c, 100.0, 100.0, 0.0)                       # rho = r / 100: cortex out to rho 4.6
-    med, lo, hi = R.cortical_cell_files(labels, section, ell, 1.0, 4.6)
-    assert med == 18 and lo >= 17 and hi <= 19
 
 
 def test_vessel_inner_edges_fails_clearly_when_no_vessel_is_large_enough():
