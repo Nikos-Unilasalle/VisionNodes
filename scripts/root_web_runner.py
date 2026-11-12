@@ -34,6 +34,7 @@ for _p in (os.path.join(REPO, 'scripts'), os.path.join(REPO, 'engine'), os.path.
 
 import cell_files_lib as CF  # noqa: E402
 import cell_recovery_lib as CR  # noqa: E402
+import photometry_lib as PH  # noqa: E402
 import census_lib as CS  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import vn_headless as H  # noqa: E402
@@ -141,13 +142,14 @@ def root_diameter_px(img):
 
 
 def _normalised_upload(image_path, scale=None):
-    """Upload resampled so the root spans WORKING_ROOT_DIAMETER_PX, as a temp PNG; returns (path, scale).
+    """Upload normalised (photometry_lib) and resampled so the root spans WORKING_ROOT_DIAMETER_PX,
+    as a temp PNG; returns (path, scale, photometry report).
 
     scale = working px per original px. The template's pixel-sized settings were tuned at
     this root size, so every resolution or magnification is analysed at the same scale.
     A given `scale` is applied as is (e.g. to analyse damaged copies in the frame of the intact image).
     """
-    img = _read_bgr(image_path)
+    img, photometry = PH.normalise(_read_bgr(image_path))  # lighting gradient / weak contrast undone
     if scale is not None:
         if scale != 1.0:
             img = cv2.resize(img, None, fx=scale, fy=scale,
@@ -155,7 +157,7 @@ def _normalised_upload(image_path, scale=None):
         fd, out = tempfile.mkstemp(suffix='.png', prefix='root_upload_')
         os.close(fd)
         cv2.imwrite(out, img)
-        return out, float(scale)
+        return out, float(scale), photometry
     diameter = root_diameter_px(img)
     if diameter < MIN_ROOT_DIAMETER_PX:
         raise AnalysisError(f'The root is too small in the image ({diameter:.0f} px across; '
@@ -169,7 +171,7 @@ def _normalised_upload(image_path, scale=None):
     fd, out = tempfile.mkstemp(suffix='.png', prefix='root_upload_')
     os.close(fd)
     cv2.imwrite(out, img)
-    return out, scale
+    return out, scale, photometry
 
 
 def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=False):
@@ -180,7 +182,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
 
     Lengths inside the state are in working pixels; `scale` converts them back to the upload.
     """
-    image_path, scale = _normalised_upload(image_path, scale)
+    image_path, scale, photometry = _normalised_upload(image_path, scale)
     work_pixel_um = pixel_size_um / scale if pixel_size_um else None
     H.load_plugins()
     vn = _load_template()
@@ -231,7 +233,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
             'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
             'n_walled_lacunae': n_walled if walled_lacunae else None,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
-            'rho': rho}
+            'rho': rho, 'photometry': photometry}
 
 
 # --------------------------------------------------------------------------- images
@@ -554,6 +556,18 @@ def _metaxylem_vessels(mx):
     return rows
 
 
+def _photometry_note(rep):
+    """What the photometric normalisation did to the upload, in words."""
+    if not rep:
+        return 'none'
+    done = []
+    if rep.get('flat_field'):
+        done.append(f"uneven lighting flattened ({100 * rep['illumination_variation']:.0f} % across the root)")
+    if rep.get('stretch', 1.0) > 1.0:
+        done.append(f"weak contrast stretched x{rep['stretch']:.2f}")
+    return '; '.join(done) or 'none'
+
+
 def build_tables(st, census, zone_area, areas):
     """Metric tables; cells are raw numbers (formatted by the app) or short strings."""
     px = st['pixel_size_um']
@@ -581,6 +595,8 @@ def build_tables(st, census, zone_area, areas):
         ['Walled lacunae', st.get('n_walled_lacunae'), 'regions',
          'wall-enclosed radial sectors over 3 expected cells and 3 layers deep, counted as aerenchyma'
          if st.get('n_walled_lacunae') is not None else 'detection off (experimental option)'],
+        ['Image correction', _photometry_note(st.get('photometry')), '', 'applied before the analysis; '
+         'a correct micrograph is not modified'],
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],
