@@ -19,6 +19,7 @@ import sys
 import tempfile
 import warnings
 import zipfile
+from functools import partial
 
 import cv2
 import matplotlib
@@ -36,6 +37,7 @@ import cell_files_lib as CF  # noqa: E402
 import cell_recovery_lib as CR  # noqa: E402
 import photometry_lib as PH  # noqa: E402
 import census_lib as CS  # noqa: E402
+import damaged_region_lib as DR  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import vn_headless as H  # noqa: E402
 
@@ -224,6 +226,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
     pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
+    damage = DR.damaged_regions(gray, section, rho, DR.phi_field(section.shape, ell), bounds['px_per_rho'])
     try:
         cell_files = CF.cortical_cell_files(labels, section, ell, bounds['endo_outer'], bounds['rhizo_layer_px'])
     except ValueError:
@@ -233,7 +236,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
             'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
             'n_walled_lacunae': n_walled if walled_lacunae else None,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
-            'rho': rho, 'photometry': photometry}
+            'rho': rho, 'photometry': photometry, 'damage': damage}
 
 
 # --------------------------------------------------------------------------- images
@@ -508,8 +511,17 @@ def _cell_areas(labels, masks, mx):
 
 
 def _census_territory(st):
-    """Census by territory density (census_lib); the endodermis keeps its perimeter estimate."""
+    """Census by territory density (census_lib); the endodermis keeps its perimeter estimate.
+
+    Torn or blurred parts of the section (damaged_region_lib) are completed from the healthy cells of
+    the same layers; the zones then follow the expected section, tears restored.
+    """
     rep = st['report']
+    damage = st['damage']
+    damaged = damage['torn'] | damage['blurred']
+    masks = (R.zone_masks(st['rho'], damage['expected_section'], st['bounds']) if damage['torn'].any()
+             else st['masks'])
+    phi = DR.phi_field(damaged.shape, st['ell']) if damaged.any() else None
     out = {}
     for z, mname in zip(ZONES, ZONE_MASKS):
         k_unit = REPORT_KEYS[z][3]
@@ -517,8 +529,10 @@ def _census_territory(st):
         if z == 'endo':
             obs, tot = int(rep.get('endo_cells_observed', 0)), int(rep.get('endo_cells_total_pred', 0))
         else:
-            obs, tot, _ = CS.zone_census(st['labels'], st['masks'][mname], st['mx'],
-                                         keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
+            factor = (partial(DR.outline_completion, damage['expected_section'], damaged) if z == 'rhizodermis'
+                      else partial(DR.polar_completion, st['labels'], masks[mname], damaged, st['mx'], st['rho'], phi))
+            obs, tot = DR.completed_count(CS.zone_census, st['labels'], masks[mname], damaged, st['mx'], factor,
+                                          keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
         out[z] = {'observed': obs, 'imputed': max(tot - obs, 0), 'total': tot, 'unit_area_px': unit}
     return out
 
@@ -568,6 +582,18 @@ def _photometry_note(rep):
     return '; '.join(done) or 'none'
 
 
+def _damage_note(damage):
+    """Damaged parts of the section completed in the census, in words."""
+    if not damage:
+        return 'none'
+    done = []
+    if damage['torn_share'] > 0:
+        done.append(f"{100 * damage['torn_share']:.0f} % torn away")
+    if damage['blurred_share'] > 0:
+        done.append(f"{100 * damage['blurred_share']:.0f} % out of focus")
+    return '; '.join(done) or 'none'
+
+
 def build_tables(st, census, zone_area, areas):
     """Metric tables; cells are raw numbers (formatted by the app) or short strings."""
     px = st['pixel_size_um']
@@ -597,6 +623,8 @@ def build_tables(st, census, zone_area, areas):
          if st.get('n_walled_lacunae') is not None else 'detection off (experimental option)'],
         ['Image correction', _photometry_note(st.get('photometry')), '', 'applied before the analysis; '
          'a correct micrograph is not modified'],
+        ['Damaged section', _damage_note(st.get('damage')), '', 'of the expected section; their cells are '
+         'counted from the healthy cells of the same layers (polar rows; rhizodermis by outline length)'],
         ['Section area', _num(sec_area * ar, 0), unit_a, ''],
         ['Stele share of the section', _num(100 * stele / max(sec_area, 1), 1), '%', 'pith + vascular + endodermis'],
         ['Cortex share of the section', _num(100 * cortex / max(sec_area, 1), 1), '%', 'inner + outer cortex'],
