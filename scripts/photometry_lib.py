@@ -97,7 +97,8 @@ def normalise(img):
             report['contrast'] = contrast
             if 0 < contrast < MIN_CONTRAST:
                 s = min(MIN_CONTRAST / contrast, MAX_STRETCH)
-                f = bg + s * (f - bg)
+                bg_bgr = np.median(f[backdrop], axis=0)       # each channel around its own backdrop: no tint
+                f = bg_bgr + s * (f - bg_bgr)
                 report['stretch'] = float(s)
     out = np.clip(f, 0, 255).astype(np.uint8)
     return out, report

@@ -85,3 +85,14 @@ def test_the_input_is_not_modified():
     PH.normalise(np.clip(img * 0.5 + 60, 0, 255).astype(np.uint8))
     PH.normalise(img)
     assert np.array_equal(img, before)
+
+
+def test_stretching_a_tinted_micrograph_keeps_its_backdrop_colour():
+    img, root = _micrograph()
+    tinted = np.clip(img.astype(np.float32) * np.array([1.0, 0.97, 0.92]), 0, 255)
+    mean = tinted[root].mean(0)
+    flat = np.clip(mean + 0.2 * (tinted - mean), 0, 255).astype(np.uint8)
+    out, rep = PH.normalise(flat)
+    assert rep['stretch'] > 1.0
+    before, after = np.median(flat[~root], 0), np.median(out[~root], 0)
+    assert np.abs(after.astype(float) - before).max() <= 2
