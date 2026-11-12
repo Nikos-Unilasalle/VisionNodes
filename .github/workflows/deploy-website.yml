@@ -16,6 +16,7 @@ on:
       - 'scripts/cell_recovery_lib.py'
       - 'scripts/cell_files_lib.py'
       - 'scripts/photometry_lib.py'
+      - 'scripts/damaged_region_lib.py'
       - 'scripts/census_lib.py'
       - 'scripts/root_web_runner.py'
       - 'scripts/build_root_webapp.py'
