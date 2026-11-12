@@ -102,11 +102,20 @@ def _main_rise(k, edges, medians, similar, use_log):
     """Index of the zone that starts with the largest step up of the median, among the
     boundaries up to the start of the main zone (only rises beyond the `similar` ratio count).
     When the innermost zone is itself the main zone (a finely resolved core holds most
-    objects), every boundary is searched instead. None if the value never steps up."""
+    objects), every boundary is searched instead; so is every boundary past the main zone when
+    nothing rises before it (a stele that outweighs a torn cortex). None if the value never
+    steps up."""
     first = _main_zone(k, edges, medians, similar, use_log)[0]
-    last = first if first > 0 else k - 1
+    best = _largest_rise(range(1, first + 1) if first > 0 else range(1, k), medians, similar, use_log)
+    if best is None and first > 0:  # nothing rises before the main zone: look further out
+        best = _largest_rise(range(first + 1, k), medians, similar, use_log)
+    return best
+
+
+def _largest_rise(boundaries, medians, similar, use_log):
+    """Boundary with the largest relative step up of the median (beyond `similar`), or None."""
     best, best_step = None, 0.0
-    for z in range(1, last + 1):
+    for z in boundaries:
         step = medians[z] - medians[z - 1]
         lim = -np.log(similar) if use_log else (1 - similar) * abs(medians[z - 1])
         rel = step if use_log else step / max(abs(medians[z - 1]), 1e-9)

@@ -526,7 +526,8 @@
         "params": {
           "smooth": 3.0,
           "ignore_border": true,
-          "color_index": 4
+          "color_index": 4,
+          "envelope": true
         }
       }
     },
@@ -568,7 +569,8 @@
         "params": {
           "smooth": 3.0,
           "ignore_border": true,
-          "color_index": 4
+          "color_index": 4,
+          "envelope": true
         }
       }
     },

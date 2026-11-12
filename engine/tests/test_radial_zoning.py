@@ -126,6 +126,17 @@ def test_main_rise_searches_all_boundaries_when_the_core_is_the_main_zone():
     assert _main_rise(5, edges, medians, 0.8, True) == 2
 
 
+def test_main_rise_searches_all_boundaries_when_none_precedes_the_main_zone():
+    import vn_headless as H
+    H.load_plugins()
+    from plugins.sci_profile_zoning import _main_rise
+    # pith | stele (main zone by disc share) | transition | cortex: no rise before the stele,
+    # the core edge is the largest rise further out (stele -> transition)
+    edges = [0.02, 0.24, 0.61, 0.67, 0.87, 0.96, 1.0]
+    medians = list(np.log([8.6, 5.5, 11.4, 16.7, 7.3, 6.0]))
+    assert _main_rise(6, edges, medians, 0.8, True) == 2
+
+
 def _ring_of_vessels(extra=None):
     mask = np.zeros((600, 600), np.uint8)
     for k in range(6):

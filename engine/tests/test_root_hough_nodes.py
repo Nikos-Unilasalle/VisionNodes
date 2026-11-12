@@ -90,6 +90,26 @@ def test_radial_coords_is_normalised_along_each_ray():
     assert pos[150, 348] == pytest.approx(1, abs=0.03)
 
 
+def _torn_disc():
+    """Disc of radius 100 centred at (150, 150) with a 60° sector cut down to radius 40."""
+    mask = np.zeros((300, 300), np.uint8)
+    cv2.circle(mask, (150, 150), 100, 255, -1)
+    cv2.ellipse(mask, (150, 150), (110, 110), 0, -30, 30, 0, -1)
+    cv2.circle(mask, (150, 150), 40, 255, -1)
+    return mask
+
+
+def test_radial_coords_convex_envelope_ignores_a_torn_sector():
+    mask = _torn_disc()
+    items = [{'cx': 70.0, 'cy': 150.0}, {'cx': 210.0, 'cy': 150.0}]   # rho 0.8 opposite, 0.6 inside the tear
+    plain = _node('geom_radial_coords').process({'mask': mask, 'items': items}, {'smooth': 0})
+    env = _node('geom_radial_coords').process({'mask': mask, 'items': items}, {'smooth': 0, 'envelope': True})
+    assert abs(plain['center_x'] - 150) > 5                       # the tear pulls the centroid away
+    assert env['center_x'] == pytest.approx(150, abs=2)
+    assert [it['rho'] for it in env['items']] == pytest.approx([0.8, 0.6], abs=0.04)
+    assert env['position'][150, 280] == -1                         # the torn sector stays outside the mask
+
+
 def test_radial_coords_uses_centre_mask():
     mask = np.zeros((200, 200), np.uint8)
     cv2.circle(mask, (100, 100), 80, 255, -1)

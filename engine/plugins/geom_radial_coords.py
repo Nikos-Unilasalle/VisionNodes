@@ -19,6 +19,48 @@ def _centroid(m):
     return mo['m10'] / mo['m00'], mo['m01'] / mo['m00']
 
 
+TORN_DEPTH = 0.12        # a ray this much shorter than the convex hull crosses a bite or a tear
+ENVELOPE_PASSES = 3      # restore the outline, re-centre, repeat
+
+
+def _filled(mask_or_pts, shape):
+    out = np.zeros(shape, np.uint8)
+    cv2.fillPoly(out, [np.round(mask_or_pts).astype(np.int32)], 1)
+    return out
+
+
+def intact_envelope(mask):
+    """The outline the object would have without bites or torn sectors, filled.
+
+    Rays much shorter than the convex hull's (a notch deeper than TORN_DEPTH) cross damage:
+    their length is interpolated around the circle from the intact rays on both sides, so a
+    torn sector is closed by an arc rather than by the hull's chord. The centre is then moved to
+    the centroid of the restored outline and the restoration repeated."""
+    mask = (np.asarray(mask) > 0).astype(np.uint8)
+    cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not cnts:
+        return mask
+    hull = _filled(cv2.convexHull(max(cnts, key=cv2.contourArea))[:, 0, :], mask.shape)
+    restored = hull
+    th = (np.arange(N_ANGLES) + 0.5) / N_ANGLES * 2 * np.pi - np.pi
+    for _ in range(ENVELOPE_PASSES):
+        c = _centroid(restored)
+        if c is None:
+            return hull
+        r_obj = _boundary_radius(mask, c[0], c[1], 0, False)
+        r_hull = _boundary_radius(hull, c[0], c[1], 0, False)
+        if r_obj is None or r_hull is None:
+            return hull
+        torn = r_obj < (1 - TORN_DEPTH) * r_hull
+        if torn.all():
+            return hull
+        r = r_obj.copy()
+        if torn.any():
+            r[torn] = np.interp(np.flatnonzero(torn), np.flatnonzero(~torn), r_obj[~torn], period=N_ANGLES)
+        restored = _filled(np.c_[c[0] + np.cos(th) * r, c[1] + np.sin(th) * r], mask.shape) | mask
+    return restored
+
+
 def _boundary_radius(mask, cx, cy, smooth, ignore_border):
     """Distance from the centre to the mask outline, for N_ANGLES directions (outermost point).
     With ignore_border, outline points on the image frame are dropped and the radius is
@@ -75,7 +117,12 @@ def _item_xy(item, w, h):
         "Outputs a position map (float, −1 outside the mask) and, when a list of objects is "
         "connected, adds 'rho', 'theta' (degrees) and 'dist_px' to each object. Use it to study "
         "how a property changes from the centre to the edge (cell size across a root, ring "
-        "width in wood, colony density in a dish)."
+        "width in wood, colony density in a dish).\n\n"
+        "- Restore Torn Outline: rays much shorter than the convex hull's cross a bite or a torn "
+        "sector; the outline there is interpolated around the circle from the intact sides and "
+        "the centre taken on the restored shape, so the damage neither pulls the centre away nor "
+        "shortens the rays that cross it (ρ keeps its value on the intact object). The position "
+        "map stays −1 outside the mask itself."
     ),
     inputs=[
         {'id': 'mask', 'color': 'mask', 'label': 'Object Mask'},
@@ -93,6 +140,7 @@ def _item_xy(item, w, h):
     params=[
         {'id': 'smooth', 'label': 'Outline Smoothing (°)', 'type': 'float', 'default': 3.0, 'min': 0, 'max': 45, 'step': 0.5},
         {'id': 'ignore_border', 'label': 'Image Frame Is Not an Edge', 'type': 'bool', 'default': True},
+        {'id': 'envelope', 'label': 'Restore Torn Outline', 'type': 'bool', 'default': False},
     ],
 )
 class RadialCoordinatesNode(NodeProcessor):
@@ -106,11 +154,12 @@ class RadialCoordinatesNode(NodeProcessor):
         h, w = mask.shape
         c_in = inputs.get('center_mask')
         center = _centroid(_binary(c_in, mask.shape)) if c_in is not None else None
-        center = center or _centroid(mask)
+        reference = intact_envelope(mask) if bool(params.get('envelope', False)) else mask
+        center = center or _centroid(reference)
         if center is None:
             return empty
         cx, cy = center
-        rb = _boundary_radius(mask, cx, cy, float(params.get('smooth', 3.0)),
+        rb = _boundary_radius(reference, cx, cy, float(params.get('smooth', 3.0)),
                               bool(params.get('ignore_border', True)))
         if rb is None:
             return empty
