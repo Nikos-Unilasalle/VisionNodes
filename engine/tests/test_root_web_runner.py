@@ -98,11 +98,12 @@ def test_root_diameter_is_proportional_to_resolution(factor):
     assert d2 / d1 == pytest.approx(factor, rel=0.03)
 
 
-def test_bundle_holds_every_plugin_the_template_needs(tmp_path):
+def test_bundle_holds_every_plugin_the_pipeline_needs(tmp_path):
     out = tmp_path / 'engine.zip'
     files = B.build(str(out))
     names = zipfile.ZipFile(out).namelist()
-    assert 'scripts/root_web_runner.py' in names and 'engine/tests/vn_headless.py' in names
+    assert 'scripts/root_web_runner.py' in names and 'scripts/rhizofit_pipeline.py' in names
+    assert 'engine/registry.py' in names and not any(n.endswith('.vn') or 'vn_headless' in n for n in names)
     assert any(n.endswith('draw_root_publication.py') for n in names)
     assert len(names) == len(files)
 

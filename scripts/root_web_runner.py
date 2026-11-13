@@ -1,7 +1,7 @@
 """RhizoFit: root cross-section analysis for the web app (runs natively and in Pyodide).
 
-One call, `analyze(image_path, pixel_size_um)`, runs the Predictive Ellipse Zoning template,
-measures the tissue boundaries on the polar unwrap (radial_zoning_lib), counts and imputes
+One call, `analyze(image_path, pixel_size_um)`, runs the Predictive Ellipse Zoning pipeline
+(rhizofit_pipeline: the template's nodes as plain Python calls, no graph engine), measures the tissue boundaries on the polar unwrap (radial_zoning_lib), counts and imputes
 cells in the measured zones, and returns everything the app displays:
 
   images   [{id, title, group, caption, png}]   step-by-step images
@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _p in (os.path.join(REPO, 'scripts'), os.path.join(REPO, 'engine'), os.path.join(REPO, 'engine', 'tests')):
+for _p in (os.path.join(REPO, 'scripts'), os.path.join(REPO, 'engine')):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
@@ -40,9 +40,8 @@ import census_lib as CS  # noqa: E402
 import anchor_choice_lib as AC  # noqa: E402
 import damaged_region_lib as DR  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
-import vn_headless as H  # noqa: E402
+import rhizofit_pipeline as P  # noqa: E402
 
-TEMPLATE = os.path.join(REPO, 'public', 'templates', 'root_predictive_ellipse_zoning.vn')
 ZONES = ('pith', 'vascular', 'endo', 'inner_cortex', 'outer_cortex', 'rhizodermis')
 ZONE_LABELS = ('Pith', 'Vascular cylinder', 'Endodermis', 'Inner cortex', 'Outer cortex', 'Rhizodermis')
 ZONE_MASKS = ('pith_mask', 'vascular_mask', 'endodermis_mask', 'inner_cortex_mask', 'outer_cortex_mask',
@@ -80,24 +79,17 @@ class AnalysisError(RuntimeError):
 
 # --------------------------------------------------------------------------- pipeline
 
-def _load_template():
-    with open(TEMPLATE) as f:
-        return json.load(f)
+def _pub_params(**extra):
+    return {**P.PUBLICATION_PARAMS, 'zones_from_masks': True, **extra}
 
 
-def _pub_params(vn, **extra):
-    node = next(n for n in vn['nodes'] if n['id'] == 'pub_fig')
-    params = {k: v for k, v in node['data']['params'].items() if k not in ('color_index', 'node_note')}
-    return {**params, 'zones_from_masks': True, **extra}
-
-
-def _publish(vn, pipe, masks, ellipse_report, labels, pixel_size_um, mx):
-    node = H.registry.NODE_CLASS_REGISTRY['draw_root_publication']()
+def _publish(pipe, masks, ellipse_report, labels, pixel_size_um, mx):
+    node = P.node_class('draw_root_publication')()
     inputs = {'image': pipe['cells']['main'], 'labels': labels, 'boundary': pipe['section']['mask'],
               'landmarks': mx.astype(np.uint8) * 255, 'ellipse_report': ellipse_report,
               **{k: (v.astype(np.uint8) * 255) for k, v in masks.items()}}
     extra = {'pixel_size_um': pixel_size_um} if pixel_size_um else {'draw_scale_bar': False}
-    out = node.process(inputs, _pub_params(vn, **extra))
+    out = node.process(inputs, _pub_params(**extra))
     if not out.get('predictive_report'):
         raise AnalysisError('The publication node produced no report.')
     return out
@@ -185,7 +177,7 @@ def _vessels(pipe):
 
 
 def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=False):
-    """Template + measured boundaries + census. Returns the raw state used by the figures.
+    """Segmentation pipeline + measured boundaries + census. Returns the raw state used by the figures.
 
     `walled_lacunae` (experimental, off by default): also recognise aerenchyma lacunae enclosed by
     intact walls, which the first segmentation outlines as cells (cell_recovery_lib.remove_walled_lacunae).
@@ -194,20 +186,14 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     """
     image_path, scale, photometry = _normalised_upload(image_path, scale)
     work_pixel_um = pixel_size_um / scale if pixel_size_um else None
-    H.load_plugins()
-    vn = _load_template()
     try:
-        runs = {'stele': (vn, H.run(vn, {'src': {'path': image_path}},
-                                    on_node=lambda i, n, _nid: _report(STAGES[0], i / n / 2, progress)))}
-        vn_whole = AC.whole_section_template(vn)
-        runs['whole'] = (vn_whole, H.run(vn_whole, {'src': {'path': image_path}},
-                                         on_node=lambda i, n, _nid: _report(STAGES[0], 0.5 + i / n / 2, progress)))
+        runs = P.run(image_path, on_step=lambda i, n, _nid: _report(STAGES[0], i / n, progress))
     finally:
         os.remove(image_path)
-    vessels = {k: _vessels(p) for k, (_, p) in runs.items()}
+    vessels = {k: _vessels(p) for k, p in runs.items()}
     counts = {k: 0 if m is None else len(_metaxylem_vessels(m)) for k, m in vessels.items()}
-    chosen, reason = AC.choose(*(AC.ring_of(runs[k][1], counts[k]) for k in ('stele', 'whole')))
-    vn, pipe = runs[chosen or 'stele']
+    chosen, reason = AC.choose(*(AC.ring_of(runs[k], counts[k]) for k in ('stele', 'whole')))
+    pipe = runs[chosen or 'stele']
     section = np.asarray(pipe['section'].get('mask') if pipe['section'].get('mask') is not None else 0) > 0
     if not section.any():
         raise AnalysisError('No root section was found in the image.')
@@ -240,7 +226,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
         recovered &= labels > 0
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
-    pub = _publish(vn, pipe, masks, ellipse_report, labels, work_pixel_um, mx)
+    pub = _publish(pipe, masks, ellipse_report, labels, work_pixel_um, mx)
     damage = DR.damaged_regions(gray, section, rho, DR.phi_field(section.shape, ell), bounds['px_per_rho'])
     try:
         cell_files = CF.cortical_cell_files(labels, section, ell, bounds['endo_outer'], bounds['rhizo_layer_px'])
