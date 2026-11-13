@@ -10,6 +10,10 @@ REFINE_ITERATIONS = 4
 MIN_RADIUS_PX = 2.0
 GROWTH_SLACK = 2.0        # growth tries blobs within this many tolerances of the current ring
 MISSING_GAP_RATIO = 1.5   # an angular gap this many times the typical gap holds a missing member
+MIN_REGULARITY = 0.6      # innermost-ring selection: evenly spaced rings only
+LARGE_SHARE = 1 / 3       # ... of objects at least a third the size of the best-scoring ring's
+INNER_TOLERANCE = 0.1     # rings within 10 % of the innermost radius compete on score
+SELECT = ['Best score', 'Innermost ring of large objects']
 
 
 def _empty():
@@ -123,12 +127,12 @@ def ring_score(areas, centroids, centre):
     return float(areas.sum()) * angular_regularity(centroids, centre)[0]
 
 
-def best_ring(areas, centroids, min_count, size_ratio, radius_tol):
+def candidate_rings(areas, centroids, min_count, size_ratio, radius_tol):
     """Consensus search: every size-homogeneous triplet proposes a circle; the members of each
-    proposal are refined, then grown greedily; the ring with the best ring_score wins.
-    Returns (member indices, centre, radius) or None."""
+    proposal are refined, then grown greedily. Returns every distinct ring of at least min_count
+    members as (member indices, centre, radius, ring_score)."""
     ring = _Ring(areas, centroids, size_ratio, radius_tol)
-    seen, grown, best, best_score = set(), set(), None, -1.0
+    seen, grown, rings = set(), set(), []
     for trip in itertools.combinations(range(len(areas)), TRIPLET):
         a = areas[list(trip)]
         if a.max() > size_ratio * a.min():
@@ -146,10 +150,38 @@ def best_ring(areas, centroids, min_count, size_ratio, radius_tol):
             continue
         grown.add(idx.tobytes())
         idx, centre, radius = ring.extend(idx, centre, radius, areas)
-        score = ring_score(areas[idx], centroids[idx], centre) if len(idx) >= min_count else -1.0
-        if score > best_score:
-            best, best_score = (idx, centre, radius), score
-    return best
+        if len(idx) >= min_count:
+            rings.append((idx, centre, radius, ring_score(areas[idx], centroids[idx], centre)))
+    return rings
+
+
+def best_ring(areas, centroids, min_count, size_ratio, radius_tol):
+    """The ring with the best ring_score (large, evenly spaced objects win), or None.
+    Returns (member indices, centre, radius)."""
+    rings = candidate_rings(areas, centroids, min_count, size_ratio, radius_tol)
+    if not rings:
+        return None
+    idx, centre, radius, _ = max(rings, key=lambda r: r[3])
+    return idx, centre, radius
+
+
+def innermost_large_ring(areas, centroids, min_count, size_ratio, radius_tol):
+    """The innermost evenly spaced ring of large objects, or None.
+
+    'Large' is relative to the best-scoring ring: a ring whose median object is under
+    LARGE_SHARE of that ring's is made of ordinary cells and is ignored. Of the rings left, the
+    innermost wins (ties within INNER_TOLERANCE of its radius go to the best score). In a root,
+    the metaxylem ring lies inside the stele, a ring of aerenchyma lacunae in the cortex."""
+    rings = [r for r in candidate_rings(areas, centroids, min_count, size_ratio, radius_tol)
+             if angular_regularity(centroids[r[0]], r[1])[0] >= MIN_REGULARITY]
+    if not rings:
+        return None
+    best = max(rings, key=lambda r: r[3])
+    floor = LARGE_SHARE * float(np.median(areas[best[0]]))
+    large = [r for r in rings if float(np.median(areas[r[0]])) >= floor]
+    inner = min(r[2] for r in large)
+    idx, centre, radius, _ = max((r for r in large if r[2] <= (1 + INNER_TOLERANCE) * inner), key=lambda r: r[3])
+    return idx, centre, radius
 
 
 def angular_regularity(centroids, centre):
@@ -188,7 +220,11 @@ def _draw(binary, keep, centre, radius):
         "alignment. No absolute size is needed: the result is scale-free.\n\n"
         "- Min Count: fewer members than this gives an empty selection.\n"
         "- Regularity: 1 − variation of the angular gaps (1 = evenly spaced).\n"
-        "- Missing: members predicted from wide angular gaps (merged or undetected objects)."
+        "- Missing: members predicted from wide angular gaps (merged or undetected objects).\n"
+        "- Select Ring: 'Best score' keeps the ring of largest, most regular objects; 'Innermost "
+        "ring of large objects' keeps, among the evenly spaced rings whose objects are at least a "
+        "third the size of the best ring's, the one nearest the centre (in a root: the metaxylem "
+        "ring inside the stele rather than a ring of aerenchyma lacunae in the cortex)."
     ),
     inputs=[
         {'id': 'mask', 'color': 'mask', 'label': 'Candidate Blobs'},
@@ -215,6 +251,7 @@ def _draw(binary, keep, centre, radius):
         {'id': 'min_area', 'label': 'Min Area (px²)', 'type': 'float', 'default': 0, 'min': 0},
         {'id': 'max_candidates', 'label': 'Max Candidates (largest)', 'type': 'int', 'default': 40,
          'min': 3, 'max': 200},
+        {'id': 'select', 'label': 'Select Ring', 'type': 'enum', 'options': SELECT, 'default': 0},
     ],
 )
 class RingPatternNode(NodeProcessor):
@@ -235,8 +272,9 @@ class RingPatternNode(NodeProcessor):
             return out
         areas = np.array([r[1] for r in rows])
         centroids = np.array([r[3] for r in rows], float)
-        found = best_ring(areas, centroids, min_count, float(params.get('size_ratio', 2.0)),
-                          float(params.get('radius_tol', 0.25)))
+        pick = innermost_large_ring if int(params.get('select', 0)) == 1 else best_ring
+        found = pick(areas, centroids, min_count, float(params.get('size_ratio', 2.0)),
+                     float(params.get('radius_tol', 0.25)))
         if found is None:
             return out
         idx, centre, radius = found

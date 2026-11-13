@@ -177,3 +177,35 @@ def test_tessellated_vessels_are_searched_beyond_the_stele_contour():
     types, links = _template_graph()
     assert ('mx_region', 'mx_tess') in links
     assert ('stele', 'mx_region') in links and ('zoning', 'mx_region') in links
+
+
+def _two_rings(inner_r=120, inner_blob=20, n_inner=6, outer_r=300, outer_blob=30, n_outer=12, extra=None):
+    """A metaxylem-like inner ring and an aerenchyma-like outer ring of larger, more numerous lumens."""
+    m = np.zeros((SIZE, SIZE), np.uint8)
+    for r, b, n in ((inner_r, inner_blob, n_inner), (outer_r, outer_blob, n_outer)):
+        for k in range(n):
+            a = 2 * np.pi * k / n + 0.1
+            cv2.circle(m, (int(CENTRE[0] + r * np.cos(a)), int(CENTRE[1] + r * np.sin(a))), b, 255, -1)
+    if extra:
+        r, b, n = extra
+        for k in range(n):
+            a = 2 * np.pi * k / n + 0.3
+            cv2.circle(m, (int(CENTRE[0] + r * np.cos(a)), int(CENTRE[1] + r * np.sin(a))), b, 255, -1)
+    return m
+
+
+def test_best_score_prefers_the_larger_outer_ring():
+    out = _node().process({'mask': _two_rings()}, {'min_count': 5})
+    assert out['count'] == 12 and out['radius'] == pytest.approx(300, rel=0.05)
+
+
+def test_innermost_large_ring_keeps_the_inner_ring_of_large_lumens():
+    out = _node().process({'mask': _two_rings()}, {'min_count': 5, 'select': 1})
+    assert out['count'] == 6 and out['radius'] == pytest.approx(120, rel=0.05)
+
+
+def test_innermost_large_ring_ignores_an_inner_ring_of_small_cells():
+    # a ring of small cells further in must not win: its lumens are far smaller than the vessels'
+    mask = _two_rings(extra=(70, 7, 8))
+    out = _node().process({'mask': mask}, {'min_count': 5, 'select': 1})
+    assert out['count'] == 6 and out['radius'] == pytest.approx(120, rel=0.05)

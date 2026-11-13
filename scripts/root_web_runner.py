@@ -37,6 +37,7 @@ import cell_files_lib as CF  # noqa: E402
 import cell_recovery_lib as CR  # noqa: E402
 import photometry_lib as PH  # noqa: E402
 import census_lib as CS  # noqa: E402
+import anchor_choice_lib as AC  # noqa: E402
 import damaged_region_lib as DR  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import vn_headless as H  # noqa: E402
@@ -176,6 +177,13 @@ def _normalised_upload(image_path, scale=None):
     return out, scale, photometry
 
 
+def _vessels(pipe):
+    """Cleaned metaxylem mask of one run, or None when it holds no vessel."""
+    mx = pipe['metaxylem'].get('mask')
+    mx = R.clean_vessels(mx) if mx is not None else None
+    return mx if mx is not None and mx.any() else None
+
+
 def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=False):
     """Template + measured boundaries + census. Returns the raw state used by the figures.
 
@@ -189,17 +197,24 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     H.load_plugins()
     vn = _load_template()
     try:
-        pipe = H.run(vn, {'src': {'path': image_path}},
-                     on_node=lambda i, n, _nid: _report(STAGES[0], i / n, progress))
+        runs = {'stele': (vn, H.run(vn, {'src': {'path': image_path}},
+                                    on_node=lambda i, n, _nid: _report(STAGES[0], i / n / 2, progress)))}
+        vn_whole = AC.whole_section_template(vn)
+        runs['whole'] = (vn_whole, H.run(vn_whole, {'src': {'path': image_path}},
+                                         on_node=lambda i, n, _nid: _report(STAGES[0], 0.5 + i / n / 2, progress)))
     finally:
         os.remove(image_path)
+    vessels = {k: _vessels(p) for k, (_, p) in runs.items()}
+    counts = {k: 0 if m is None else len(_metaxylem_vessels(m)) for k, m in vessels.items()}
+    chosen, reason = AC.choose(*(AC.ring_of(runs[k][1], counts[k]) for k in ('stele', 'whole')))
+    vn, pipe = runs[chosen or 'stele']
     section = np.asarray(pipe['section'].get('mask') if pipe['section'].get('mask') is not None else 0) > 0
     if not section.any():
         raise AnalysisError('No root section was found in the image.')
-    mx = pipe['metaxylem'].get('mask')
-    mx = R.clean_vessels(mx) if mx is not None else None
-    if mx is None or not mx.any():
+    mx = vessels[chosen] if chosen else None
+    if mx is None:
         raise AnalysisError('No metaxylem ring was detected: the method needs at least 5 large vessels.')
+    anchor = {'search': chosen, 'reason': reason}
     _report(STAGES[1], 0.0, progress)
     gray = cv2.cvtColor(pipe['src']['main'], cv2.COLOR_BGR2GRAY)
     try:
@@ -236,7 +251,7 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
             'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
             'n_walled_lacunae': n_walled if walled_lacunae else None,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
-            'rho': rho, 'photometry': photometry, 'damage': damage}
+            'rho': rho, 'photometry': photometry, 'damage': damage, 'anchor': anchor}
 
 
 # --------------------------------------------------------------------------- images
