@@ -11,7 +11,7 @@ on:
       # RhizoFit web app: Python engine bundled into website/public/rhizofit/engine.zip
       - 'engine/registry.py'
       - 'engine/plugins/**'
-      - 'engine/tests/vn_headless.py'
+      - 'scripts/rhizofit_pipeline.py'
       - 'scripts/radial_zoning_lib.py'
       - 'scripts/cell_recovery_lib.py'
       - 'scripts/cell_files_lib.py'
@@ -21,7 +21,6 @@ on:
       - 'scripts/census_lib.py'
       - 'scripts/root_web_runner.py'
       - 'scripts/build_root_webapp.py'
-      - 'public/templates/root_predictive_ellipse_zoning.vn'
 
 permissions:
   contents: write
