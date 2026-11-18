@@ -18,7 +18,10 @@ on:
       - 'scripts/photometry_lib.py'
       - 'scripts/damaged_region_lib.py'
       - 'scripts/anchor_choice_lib.py'
+      - 'scripts/anchor_score_lib.py'
+      - 'scripts/vessel_edge_lib.py'
       - 'scripts/census_lib.py'
+      - 'scripts/lumen_census_lib.py'
       - 'scripts/root_web_runner.py'
       - 'scripts/build_root_webapp.py'
 
