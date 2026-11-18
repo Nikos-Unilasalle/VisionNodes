@@ -224,3 +224,34 @@ def test_vessel_inner_edges_fails_clearly_when_no_vessel_is_large_enough():
     rho = np.ones((200, 200), np.float32)
     with pytest.raises(ValueError, match='metaxylem'):
         R.vessel_inner_edges(tiny, rho)
+
+
+def _mixed_ring(small_r=10, large_r=13):
+    """Six vessels on a ring, alternately smaller and larger, all under or around MIN_VESSEL_AREA."""
+    mask = np.zeros((300, 300), np.uint8)
+    for k in range(6):
+        a = 2 * np.pi * k / 6
+        cv2.circle(mask, (int(150 + 90 * np.cos(a)), int(150 + 90 * np.sin(a))), small_r if k % 2 else large_r, 255, -1)
+    return mask
+
+
+def test_clean_vessels_keeps_vessels_above_the_floor_it_is_given():
+    mask = _mixed_ring()                                     # small vessels: ~314 px, under 400
+    assert _count(R.clean_vessels(mask)) == 3
+    assert _count(R.clean_vessels(mask, min_area=200)) == 6
+
+
+def test_vessel_inner_edges_uses_the_floor_it_is_given():
+    mask = _mixed_ring(small_r=9, large_r=9)                  # every vessel ~254 px
+    rho = np.ones(mask.shape, np.float32)
+    with pytest.raises(ValueError, match='metaxylem'):
+        R.vessel_inner_edges(mask, rho)
+    assert len(R.vessel_inner_edges(mask, rho, min_area=200)) == 6
+
+
+def test_endodermis_band_is_one_cell_of_the_outer_stele_rows(measured):
+    # stele cells: 900 Voronoi cells over rho 0.1-1.4; the band must hold one of them, not two
+    b, _, _ = measured
+    unit = (0.85 * RING_R + 13) / RING_R
+    cell_side = np.sqrt(np.pi * (1.4 ** 2 - 0.1 ** 2) * RING_R ** 2 / 900) / (RING_R * unit)
+    assert b['endo_cell_rho'] < 1.25 * cell_side

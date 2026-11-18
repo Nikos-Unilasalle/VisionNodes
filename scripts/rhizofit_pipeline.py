@@ -108,7 +108,7 @@ PARAMS = {
     'st_lum2': {'operation': _INTERSECT},
     'mx_region': {'operation': _UNION},
     'mx_open': {'operation': 0, 'shape': 2, 'size': 7, 'iterations': 1},
-    'st_lum_fill': {'method': 0},
+    'st_lum_fill': {'method': 3},   # Enclosed by Larger: a loop of lumens keeps its inside empty
     'mx_tess': {'operation': _INTERSECT},
     'mx_mark': {'operation': _UNION},
     'mx_sel': {'mode': 0, 'connectivity': 0},

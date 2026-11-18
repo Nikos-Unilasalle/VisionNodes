@@ -80,3 +80,31 @@ def test_draw_root_publication_none_fallback():
     node = RootPublicationFigureNode()
     res = node.process({}, {})
     assert res['main'] is None
+
+
+def test_given_lacunae_mask_replaces_the_gap_rule():
+    """With a 'lacunae' input, the hatched lacunae and their area are exactly that mask (in the cortex)."""
+    node = RootPublicationFigureNode()
+    h, w = 300, 300
+    y, x = np.ogrid[:h, :w]
+    r = np.sqrt((x - 150) ** 2 + (y - 150) ** 2)
+    labels = np.zeros((h, w), np.int32)
+    labels[(r >= 60) & (r < 130) & ((x // 10 + y // 10) % 2 == 0)] = 3   # cortex with many uncovered gaps
+    cortex_in = ((r >= 60) & (r < 100)).astype(np.uint8) * 255
+    cortex_out = ((r >= 100) & (r < 130)).astype(np.uint8) * 255
+    lac = np.zeros((h, w), np.uint8)
+    lac[140:160, 75:95] = 255                                           # one given lacuna, inner cortex
+    inputs = {'labels': labels, 'boundary': (r <= 145).astype(np.uint8) * 255,
+              'pith_mask': (r < 30).astype(np.uint8) * 255, 'endodermis_mask': ((r >= 30) & (r < 60)).astype(np.uint8) * 255,
+              'inner_cortex_mask': cortex_in, 'outer_cortex_mask': cortex_out,
+              'rhizodermis_mask': ((r >= 130) & (r < 145)).astype(np.uint8) * 255,
+              'ellipse_report': {'center_x': 150.0, 'center_y': 150.0, 'major_axis': 80.0, 'minor_axis': 80.0,
+                                 'tilt_angle_deg': 0.0, 'scale_pith': 0.5, 'scale_endodermis': 1.2,
+                                 'scale_metaxylem': 1.0}}
+    params = {'hatch_lacunae': True, 'draw_legend': False}
+    free = node.process(inputs, params)['predictive_report']
+    given = node.process({**inputs, 'lacunae': lac}, params)['predictive_report']
+    expected = int(((lac > 0) & (cortex_in > 0)).sum())
+    assert free['lacunae_total_area_px'] > 10 * expected
+    assert given['lacunae_total_area_px'] == expected
+    assert given['lacunae_count'] == 1

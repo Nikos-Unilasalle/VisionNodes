@@ -28,25 +28,68 @@ def _centroid_ids(labels):
     return ids, area, np.round(cy[ids]).astype(int), np.round(cx[ids]).astype(int)
 
 
-def zone_census(labels, zone, vessels, keep_lacunae=False):
-    """(observed, estimated total, uncovered area kept as lacunae) for one zone mask."""
+def _growth(labels, sel):
+    """Territory growth (px) of the observed cells `sel`: TERRITORY_GROWTH x their median diameter."""
+    area = np.bincount(np.asarray(labels).ravel())
+    return max(2, int(TERRITORY_GROWTH * 2 * np.sqrt(np.median(area[sel]) / np.pi)))
+
+
+def _territories(labels, zone, vessels):
+    """(observed cell ids, territory mask, cells per territory pixel) of one zone; None without cells."""
     labels = np.asarray(labels)
     zone = np.asarray(zone, bool) & ~np.asarray(vessels, bool)
     ids, area, r, c = _centroid_ids(labels)
     sel = ids[zone[r, c] & ~np.asarray(vessels, bool)[r, c]]
-    n_obs = len(sel)
-    if n_obs == 0:
-        return 0, 0, 0
-    diameter = 2 * np.sqrt(np.median(area[sel]) / np.pi)
+    if len(sel) == 0:
+        return None
     own = np.where(np.isin(labels, sel), labels, 0)
-    territory = (expand_labels(own, distance=max(2, int(TERRITORY_GROWTH * diameter))) > 0) & zone
-    density = n_obs / max(int(territory.sum()), 1)
+    territory = (expand_labels(own, distance=_growth(labels, sel)) > 0) & zone
+    return sel, territory, len(sel) / max(int(territory.sum()), 1)
+
+
+def _lacunae(uncovered, density):
+    """Uncovered regions holding more than LACUNA_CELLS cells at the zone's density."""
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(uncovered.astype(np.uint8))
+    big = np.zeros(n, bool)
+    big[1:] = stats[1:, cv2.CC_STAT_AREA] * density > LACUNA_CELLS
+    return big[lab]
+
+
+def lacuna_mask(labels, zone, vessels):
+    """Lacunae of one zone: uncovered by any cell territory and larger than LACUNA_CELLS cells.
+
+    The single definition of aerenchyma used by the census, %AA and the figure: walls between
+    cells lie inside the territories, and a few unseen cells are imputed, not called lacunae.
+    """
+    t = _territories(labels, zone, vessels)
+    if t is None:
+        return np.zeros(np.asarray(zone).shape, bool)
+    _, territory, density = t
+    zone = np.asarray(zone, bool) & ~np.asarray(vessels, bool)
+    lac = _lacunae(zone & ~territory, density)
+    if not lac.any():
+        return lac
+    # a recognised lacuna reaches the cells around it: the territory rim it lost is given back
+    free = zone & (np.asarray(labels) <= 0)
+    n, lab = cv2.connectedComponents(free.astype(np.uint8), connectivity=4)
+    keep = np.zeros(n, bool)
+    keep[np.unique(lab[lac])] = True
+    keep[0] = False
+    grown = expand_labels(lac.astype(np.int32), distance=_growth(labels, t[0])) > 0
+    return lac | (grown & keep[lab])
+
+
+def zone_census(labels, zone, vessels, keep_lacunae=False):
+    """(observed, estimated total, uncovered area kept as lacunae) for one zone mask."""
+    t = _territories(labels, zone, vessels)
+    if t is None:
+        return 0, 0, 0
+    sel, territory, density = t
+    zone = np.asarray(zone, bool) & ~np.asarray(vessels, bool)
     uncovered = zone & ~territory
     lacunae = 0
     if keep_lacunae:
-        n, lab, stats, _ = cv2.connectedComponentsWithStats(uncovered.astype(np.uint8))
-        for i in range(1, n):
-            if stats[i, cv2.CC_STAT_AREA] * density > LACUNA_CELLS:
-                uncovered[lab == i] = False
-                lacunae += int(stats[i, cv2.CC_STAT_AREA])
-    return n_obs, int(round(n_obs + uncovered.sum() * density)), lacunae
+        lac = lacuna_mask(labels, zone, vessels)
+        uncovered &= ~lac
+        lacunae = int(lac.sum())
+    return len(sel), int(round(len(sel) + uncovered.sum() * density)), lacunae

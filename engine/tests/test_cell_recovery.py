@@ -96,47 +96,6 @@ def test_small_empty_region_becomes_cells_and_large_one_stays_a_lacuna():
 
 # --------------------------------------------------------------------------- walled lacunae
 
-def _grid(wall_free_box=None, pale_box=None):
-    """Grid of walled cells (labels separated by 1-px gaps). Inside `wall_free_box` the image has
-    no wall but the labels are still cut (watershed pieces of a lacuna); inside `pale_box` the
-    walls are faint but present."""
-    gray = np.full((SIZE, SIZE), 210, np.float32)
-    labels = np.zeros((SIZE, SIZE), np.int32)
-    lid = 1
-    for y in range(0, SIZE, CELL):
-        for x in range(0, SIZE, CELL):
-            labels[y + 2:y + CELL - 1, x + 2:x + CELL - 1] = lid
-            lid += 1
-            gray[y:y + CELL, x:x + 2] = 90
-            gray[y:y + 2, x:x + CELL] = 90
-    if pale_box is not None:
-        y0, y1, x0, x1 = pale_box
-        g = gray[y0:y1, x0:x1]
-        g[g < 200] = 185
-    if wall_free_box is not None:
-        y0, y1, x0, x1 = wall_free_box
-        gray[y0 + 2:y1, x0 + 2:x1] = 210
-    return gray, labels
-
-
-def test_pieces_without_walls_between_them_are_merged():
-    gray, labels = _grid(wall_free_box=(96, 168, 96, 168))   # 3 x 3 cells with no wall inside
-    zone = np.ones_like(labels, bool)
-    out, n = CR.merge_wall_less(labels, gray, zone)
-    inside = np.unique(out[100:166, 100:166])
-    assert len(inside[inside > 0]) == 1
-    assert n == 8
-    assert len(np.unique(out[out > 0])) == len(np.unique(labels[labels > 0])) - 8
-
-
-def test_walled_cells_are_not_merged_even_with_pale_walls():
-    gray, labels = _grid(pale_box=(96, 240, 96, 240))
-    zone = np.ones_like(labels, bool)
-    out, n = CR.merge_wall_less(labels, gray, zone)
-    assert n == 0
-    assert np.array_equal(out, labels)
-
-
 def _rho_scene():
     """rho = distance to the centre / 10 px; expected cell area 100 px (10 x 10, 1 rho deep)."""
     yy, xx = np.indices((SIZE, SIZE))
@@ -166,30 +125,6 @@ def test_large_cell_within_one_layer_stays_a_cell():
     assert (out == 2).sum() == (labels == 2).sum()
 
 
-def test_lacuna_rules_do_not_modify_inputs():
-    gray, labels = _grid(wall_free_box=(96, 168, 96, 168))
-    before = labels.copy()
-    CR.merge_wall_less(labels, gray, np.ones_like(labels, bool))
-    assert np.array_equal(labels, before)
-
-
-def test_remove_walled_lacunae_keeps_other_pieces_unmerged():
-    # wall-free block 5 cells deep along rho (lacuna) and a wall-free pair in one layer (not one)
-    gray, labels = _grid(wall_free_box=(96, 216, 168, 216))
-    g2, _ = _grid(wall_free_box=(312, 336, 24, 72))
-    gray[312:336, 24:72] = g2[312:336, 24:72]
-    yy, _ = np.indices(labels.shape)
-    rho = yy / float(CELL)                       # rho grows with the row: 1 cell = 1 rho
-    zone = np.ones_like(labels, bool)
-    out, n, lac = CR.remove_walled_lacunae(labels, gray, zone, rho, lambda _r: CELL * CELL * 0.8,
-                                           px_per_rho=float(CELL))
-    assert n == 1
-    assert lac[120:200, 175:210].all() and not (out[120:200, 175:210] > 0).any()
-    piece = out[314:334, 26:70]
-    assert len(np.unique(piece[piece > 0])) == 2               # the two pieces stay two cells
-    assert out[10, 10] == labels[10, 10]
-
-
 def test_thick_arc_along_the_layers_stays_cells():
     # 3.5 layers deep but spread along the circumference: a band of pale cells, not a radial sector
     yy, xx = np.indices((SIZE, SIZE))
@@ -200,3 +135,33 @@ def test_thick_arc_along_the_layers_stays_cells():
     zone = np.ones_like(labels, bool)
     out, n = CR.lacunae_from_cells(labels, r / 10.0, zone, lambda _r: 100.0, px_per_rho=10.0)
     assert n == 0 and (out == 1).sum() == (labels == 1).sum()
+
+
+def _toned(labels, strip_level, lumen=120.0):
+    gray = np.full(labels.shape, 60.0, np.float32)          # walls and tissue
+    gray[labels > 0] = lumen
+    gray[labels == 1] = strip_level
+    return gray
+
+
+def test_a_lacuna_must_be_as_empty_as_the_backdrop():
+    labels, rho, _ = _rho_scene()
+    zone = np.ones_like(labels, bool)
+    full = CR.lacunae_from_cells(labels, rho, zone, lambda _r: 100.0, px_per_rho=10.0,
+                                 gray=_toned(labels, 120.0), background=230.0)
+    assert full[1] == 0 and (full[0] == 1).any()              # filled like a cell: stays a cell
+    empty = CR.lacunae_from_cells(labels, rho, zone, lambda _r: 100.0, px_per_rho=10.0,
+                                  gray=_toned(labels, 225.0), background=230.0)
+    assert empty[1] == 1 and not (empty[0] == 1).any()        # as bright as the backdrop: a lacuna
+
+
+def test_remove_walled_lacunae_takes_out_the_empty_sector_only():
+    labels, rho, _ = _rho_scene()
+    gray = _toned(labels, 225.0)
+    before = labels.copy()
+    out, n, lac = CR.remove_walled_lacunae(labels, gray, np.ones_like(labels, bool), rho,
+                                           lambda _r: 100.0, px_per_rho=10.0, background=230.0)
+    assert n == 1 and lac[labels == 1].all() and not lac[labels != 1].any()
+    assert (out == 2).sum() == (labels == 2).sum() and (out == 3).sum() == (labels == 3).sum()
+    assert np.array_equal(labels, before)
+

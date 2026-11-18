@@ -4,6 +4,30 @@ import numpy as np
 from registry import vision_node, NodeProcessor
 
 
+def _fill_enclosed_by_larger(binary):
+    """Fill every hole whose area does not exceed the area of the mask component around it."""
+    fg = (binary > 0).astype(np.uint8)
+    _, labels = cv2.connectedComponents(fg, connectivity=8)
+    comp_area = np.bincount(labels.ravel())
+    n_holes, holes, stats, _ = cv2.connectedComponentsWithStats(1 - fg, connectivity=4)
+    h, w = fg.shape
+    filled = binary.copy()
+    for k in range(1, n_holes):
+        x, y, bw, bh, area = stats[k]
+        if x == 0 or y == 0 or x + bw == w or y + bh == h:
+            continue                                        # touches the border: background
+        hole = holes[y:y + bh, x:x + bw] == k
+        y0, x0 = max(0, y - 1), max(0, x - 1)
+        pad = np.zeros((min(h, y + bh + 1) - y0, min(w, x + bw + 1) - x0), bool)
+        pad[y - y0:y - y0 + bh, x - x0:x - x0 + bw] = hole
+        rim = cv2.dilate(pad.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+        around = labels[y0:y0 + pad.shape[0], x0:x0 + pad.shape[1]][rim & ~pad]
+        around = around[around > 0]
+        if around.size and area <= comp_area[np.bincount(around).argmax()]:
+            filled[y:y + bh, x:x + bw][hole] = 255
+    return filled
+
+
 @vision_node(
     type_id='fill_holes',
     label='Fill Holes',
@@ -18,7 +42,10 @@ from registry import vision_node, NodeProcessor
         'fast, removes all internal holes regardless of size.\n'
         'Method "Flood Fill": floods from image border — preserves holes '
         'touching the border.\n'
-        'Method "Size Filter": removes only holes smaller than max_hole_px.'
+        'Method "Size Filter": removes only holes smaller than max_hole_px.\n'
+        'Method "Enclosed by Larger": fills a hole only when the object around it is larger '
+        'than the hole — a speck inside a lumen is filled, the inside of a thin loop is not. '
+        'Scale-free: no size to set.'
     ),
     resizable=True,
     min_width=240,
@@ -31,7 +58,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'main', 'label': 'Filled Mask', 'color': 'mask'},
     ],
     params=[
-        {'id': 'method',      'label': 'Method',         'type': 'enum', 'options': ['Contour Fill', 'Flood Fill', 'Size Filter'], 'default': 0},
+        {'id': 'method',      'label': 'Method',         'type': 'enum', 'options': ['Contour Fill', 'Flood Fill', 'Size Filter', 'Enclosed by Larger'], 'default': 0},
         {'id': 'max_hole_px', 'label': 'Max Hole (px²)', 'type': 'int',  'default': 500, 'min': 1, 'max': 50000},
     ],
 )
@@ -79,6 +106,9 @@ class FillHolesNode(NodeProcessor):
             # Pixels still 0 = interior holes → fill them
             filled = binary.copy()
             filled[flooded == 0] = 255
+
+        elif method == 3:  # Enclosed by Larger
+            filled = _fill_enclosed_by_larger(binary)
 
         else:  # Size Filter — fill only holes smaller than max_hole_px
             # Invert, find small regions, fill them back

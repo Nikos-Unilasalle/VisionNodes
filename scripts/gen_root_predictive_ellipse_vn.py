@@ -204,7 +204,7 @@ node('mx_lum', 'cv_adaptive_threshold', f, 4, 0, {'block_size': 71, 'c': -8, 'ad
 node('mx_and', 'mask_operations', f, 0, 1, {'operation': AND})
 node('mx_open', 'feat_morphology_adv', f, 1, 1, {'operation': OPEN, 'shape': ELLIPSE, 'size': 7, 'iterations': 1})
 node('st_lum2', 'mask_operations', f, 2, 1, {'operation': AND})
-node('st_lum_fill', 'fill_holes', f, 3, 1, {'method': 0})
+node('st_lum_fill', 'fill_holes', f, 3, 1, {'method': 3})
 node('vessels', 'mask_select_by_marker', f, 4, 1, {'mode': KEEP, 'connectivity': 0})
 node('mx_floor', 'math_expr', f, 1, 2, {'expression': '2 * a'},
      'Candidate floor: twice the median lumen (scale-free).')

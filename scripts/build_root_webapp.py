@@ -9,7 +9,8 @@ paths work unchanged:
   engine/plugins/<the plugins listed in rhizofit_pipeline.PLUGINS>
   scripts/rhizofit_pipeline.py, scripts/radial_zoning_lib.py, scripts/cell_recovery_lib.py,
   scripts/cell_files_lib.py, scripts/photometry_lib.py, scripts/damaged_region_lib.py,
-  scripts/anchor_choice_lib.py, scripts/census_lib.py, scripts/root_web_runner.py
+  scripts/anchor_choice_lib.py, scripts/anchor_score_lib.py, scripts/census_lib.py, scripts/lumen_census_lib.py, scripts/vessel_edge_lib.py,
+  scripts/root_web_runner.py
 
 Usage: python3 scripts/build_root_webapp.py [--out website/public/rhizofit/engine.zip]
 """
@@ -30,7 +31,10 @@ STATIC_FILES = (
     os.path.join('scripts', 'photometry_lib.py'),
     os.path.join('scripts', 'damaged_region_lib.py'),
     os.path.join('scripts', 'anchor_choice_lib.py'),
+    os.path.join('scripts', 'anchor_score_lib.py'),
     os.path.join('scripts', 'census_lib.py'),
+    os.path.join('scripts', 'lumen_census_lib.py'),
+    os.path.join('scripts', 'vessel_edge_lib.py'),
     os.path.join('scripts', 'root_web_runner.py'),
 )
 DEFAULT_OUT = os.path.join(REPO, 'website', 'public', 'rhizofit', 'engine.zip')

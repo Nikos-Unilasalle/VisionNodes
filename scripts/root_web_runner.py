@@ -37,10 +37,12 @@ import cell_files_lib as CF  # noqa: E402
 import cell_recovery_lib as CR  # noqa: E402
 import photometry_lib as PH  # noqa: E402
 import census_lib as CS  # noqa: E402
-import anchor_choice_lib as AC  # noqa: E402
+import lumen_census_lib as LC  # noqa: E402
+import anchor_score_lib as AS  # noqa: E402
 import damaged_region_lib as DR  # noqa: E402
 import radial_zoning_lib as R  # noqa: E402
 import rhizofit_pipeline as P  # noqa: E402
+import vessel_edge_lib as VE  # noqa: E402
 
 ZONES = ('pith', 'vascular', 'endo', 'inner_cortex', 'outer_cortex', 'rhizodermis')
 ZONE_LABELS = ('Pith', 'Vascular cylinder', 'Endodermis', 'Inner cortex', 'Outer cortex', 'Rhizodermis')
@@ -67,6 +69,7 @@ BOUNDARIES = (('pith', 'Pith / vascular cylinder', 'inner edge of the metaxylem 
               ('edge', 'Section edge', 'rho where half of the rays leave the section', '#42a5f5'))
 STAGES = ('Segmenting the section', 'Measuring tissue boundaries', 'Counting cells', 'Drawing figures')
 MIN_SIDE_PX = 256
+STELE_ZONES = ('pith', 'vascular')   # counted by lumens (lumen_census_lib), not by closed-wall cells
 WORKING_ROOT_DIAMETER_PX = 766.0  # root size of the reference micrograph the template was tuned on
 MIN_ROOT_DIAMETER_PX = 150
 SCALE_TOLERANCE = 0.02            # no resampling within ±2 % of the working size
@@ -83,12 +86,25 @@ def _pub_params(**extra):
     return {**P.PUBLICATION_PARAMS, 'zones_from_masks': True, **extra}
 
 
-def _publish(pipe, masks, ellipse_report, labels, pixel_size_um, mx):
+def cortical_lacunae(labels, masks, mx, damaged):
+    """Aerenchyma lacunae of the cortex (census_lib.lacuna_mask, one layer zone at a time).
+    Damaged (torn or blurred) parts are not judged: missing tissue there is not aerenchyma."""
+    out = np.zeros(np.asarray(damaged).shape, bool)
+    for z in ('inner_cortex_mask', 'outer_cortex_mask'):
+        out |= CS.lacuna_mask(labels, np.asarray(masks[z], bool) & ~damaged, mx)
+    return out
+
+
+def _publish(pipe, masks, ellipse_report, labels, pixel_size_um, mx, min_vessel_area=R.MIN_VESSEL_AREA,
+             lacunae=None):
     node = P.node_class('draw_root_publication')()
     inputs = {'image': pipe['cells']['main'], 'labels': labels, 'boundary': pipe['section']['mask'],
               'landmarks': mx.astype(np.uint8) * 255, 'ellipse_report': ellipse_report,
               **{k: (v.astype(np.uint8) * 255) for k, v in masks.items()}}
+    if lacunae is not None:
+        inputs['lacunae'] = lacunae.astype(np.uint8) * 255
     extra = {'pixel_size_um': pixel_size_um} if pixel_size_um else {'draw_scale_bar': False}
+    extra['min_vessel_area'] = int(min_vessel_area)
     out = node.process(inputs, _pub_params(**extra))
     if not out.get('predictive_report'):
         raise AnalysisError('The publication node produced no report.')
@@ -117,23 +133,51 @@ def _read_bgr(image_path):
     return img
 
 
+MAX_ANCHOR_OFFSET = 0.5  # anchor centre farther than this from the section centre (section radii): no polyarch stele
+STELE_ONLY_RATIO = 0.6   # dark region under this share of the textured section: only the stele is dark
+
+
+def _filled_equivalent_diameter(mask):
+    """Equivalent diameter (px) of the largest region of `mask`, holes filled; 0 if empty."""
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8))
+    if n < 2:
+        return 0.0
+    region = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    cnts, _ = cv2.findContours(region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    filled = np.zeros_like(region)
+    cv2.drawContours(filled, cnts, -1, 1, -1)
+    return float(2 * np.sqrt(filled.sum() / np.pi))
+
+
 def root_diameter_px(img):
     """Equivalent diameter (px) of the root: largest dark region on the bright backdrop, holes filled.
 
     Every smoothing scale is a fraction of the image size, so the estimate is proportional to
     the resolution (it is what makes the analysis resolution-independent).
+    On a thin-walled section (pale cortex, dark stele) the dark region is the stele alone; the root
+    is then the textured region that is not the slide (photometry_lib's backdrop), which spans the
+    cortex. That estimate is used only when the dark region is clearly smaller, so sections whose
+    whole root is dark keep the dark-region estimate.
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (0, 0), max(gray.shape) / 200)
     _, dark = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    n, lab, stats, _ = cv2.connectedComponentsWithStats(dark)
-    if n < 2:
+    d_dark = _filled_equivalent_diameter(dark > 0)
+    if d_dark == 0:
         raise AnalysisError('No root section was found in the image.')
-    root = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
-    cnts, _ = cv2.findContours(root, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filled = np.zeros_like(root)
-    cv2.drawContours(filled, cnts, -1, 1, -1)
-    return float(2 * np.sqrt(filled.sum() / np.pi))
+    d_tex = _filled_equivalent_diameter(~PH.backdrop_mask(gray))
+    return d_tex if d_dark < STELE_ONLY_RATIO * d_tex else d_dark
+
+
+def anchor_offset(section, ell):
+    """Distance from the section's centroid to the anchor centre, in equivalent section radii.
+
+    The metaxylem ring of a polyarch stele sits at the centre of the section (torn sections included:
+    0.14 at most for a 60 degree sector torn away). A ring found far from it is made of other large
+    lumens, e.g. cortex cells around a single central vessel, as in wheat."""
+    ys, xs = np.nonzero(section)
+    radius = np.sqrt(len(ys) / np.pi)
+    return float(np.hypot(ell[0] - xs.mean(), ell[1] - ys.mean()) / radius)
 
 
 def _normalised_upload(image_path, scale=None):
@@ -169,18 +213,27 @@ def _normalised_upload(image_path, scale=None):
     return out, scale, photometry
 
 
-def _vessels(pipe):
-    """Cleaned metaxylem mask of one run, or None when it holds no vessel."""
-    mx = pipe['metaxylem'].get('mask')
-    mx = R.clean_vessels(mx) if mx is not None else None
-    return mx if mx is not None and mx.any() else None
+def vessel_floor(pipe):
+    """Smallest vessel area (px): the ring search's own floor, twice the median cell lumen
+    (`mx_floor`); R.MIN_VESSEL_AREA when the pipeline did not compute it. The single definition of
+    a vessel's size used by the anchor search and every measurement after it."""
+    floor = (pipe.get('mx_floor') or {}).get('result')
+    return float(floor) if floor else float(R.MIN_VESSEL_AREA)
 
 
-def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=False):
+def _lumen_area(pipe):
+    """Median cell lumen area (px) of the section, the reference of the anchor's size contrast."""
+    med = (pipe.get('lum_med') or {}).get('median')
+    if not med:
+        raise AnalysisError('No cell lumen was segmented: the vessel ring cannot be judged.')
+    return float(med)
+
+
+def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=True):
     """Segmentation pipeline + measured boundaries + census. Returns the raw state used by the figures.
 
-    `walled_lacunae` (experimental, off by default): also recognise aerenchyma lacunae enclosed by
-    intact walls, which the first segmentation outlines as cells (cell_recovery_lib.remove_walled_lacunae).
+    `walled_lacunae` (on by default): also recognise aerenchyma lacunae enclosed by intact walls,
+    which the first segmentation outlines as cells (cell_recovery_lib.remove_walled_lacunae).
 
     Lengths inside the state are in working pixels; `scale` converts them back to the upload.
     """
@@ -190,23 +243,27 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
         runs = P.run(image_path, on_step=lambda i, n, _nid: _report(STAGES[0], i / n, progress))
     finally:
         os.remove(image_path)
-    vessels = {k: _vessels(p) for k, p in runs.items()}
-    counts = {k: 0 if m is None else len(_metaxylem_vessels(m)) for k, m in vessels.items()}
-    chosen, reason = AC.choose(*(AC.ring_of(runs[k], counts[k]) for k in ('stele', 'whole')))
-    pipe = runs[chosen or 'stele']
-    section = np.asarray(pipe['section'].get('mask') if pipe['section'].get('mask') is not None else 0) > 0
+    base = runs['stele']
+    section = np.asarray(base['section'].get('mask') if base['section'].get('mask') is not None else 0) > 0
     if not section.any():
         raise AnalysisError('No root section was found in the image.')
-    mx = vessels[chosen] if chosen else None
-    if mx is None:
-        raise AnalysisError('No metaxylem ring was detected: the method needs at least 5 large vessels.')
-    anchor = {'search': chosen, 'reason': reason}
+    min_vessel = vessel_floor(base)
+    best = AS.best_anchor({k: p['mx_cand'].get('mask') for k, p in runs.items()}, _lumen_area(base), min_vessel)
+    if best is None:
+        raise AnalysisError('No metaxylem ring was detected: no three large round lumens lie on a circle.')
+    pipe = runs[best['search']]
+    mx = best['mask']
+    anchor = {'search': best['search'], 'count': best['count'], **best['criteria']}
     _report(STAGES[1], 0.0, progress)
     gray = cv2.cvtColor(pipe['src']['main'], cv2.COLOR_BGR2GRAY)
     try:
-        bounds, masks, ell, prof = R.measure_boundaries(gray, section, mx, n_boot=n_boot)
+        bounds, masks, ell, prof = R.measure_boundaries(gray, section, mx, n_boot=n_boot, min_vessel_area=min_vessel)
     except ValueError as exc:
         raise AnalysisError(f'Tissue boundaries could not be measured ({exc}).') from exc
+    if anchor_offset(section, ell) > MAX_ANCHOR_OFFSET:
+        raise AnalysisError('No metaxylem ring was found around the centre of the section. RhizoFit needs a '
+                            'ring of at least three large metaxylem vessels (polyarch stele, as in maize, rice '
+                            'or sorghum); a section with a single central vessel, as in wheat, is outside its domain.')
     _report(STAGES[2], 0.0, progress)
     ellipse_report = {**R.ellipse_report(pipe['ellipse_prop']['report'], bounds), **R.anchor_report(ell)}
     labels = np.asarray(pipe['cells']['labels'])
@@ -221,23 +278,25 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
         recovered = recovered | created
         if walled_lacunae:
             labels, n_walled, _ = CR.remove_walled_lacunae(labels, gray, cortex, rho, expected,
-                                                           bounds['px_per_rho'])
+                                                           bounds['px_per_rho'],
+                                                           background=float(np.median(gray[~section])))
         labels, _ = CR.drop_fragments(labels, rho, cortex, expected)
         recovered &= labels > 0
     except ValueError:  # no segmented cortex cell to calibrate on: keep the first pass
         recovered, n_recovered = np.zeros_like(section), 0
-    pub = _publish(pipe, masks, ellipse_report, labels, work_pixel_um, mx)
     damage = DR.damaged_regions(gray, section, rho, DR.phi_field(section.shape, ell), bounds['px_per_rho'])
+    lacunae = cortical_lacunae(labels, masks, mx, damage['torn'] | damage['blurred'])
+    pub = _publish(pipe, masks, ellipse_report, labels, work_pixel_um, mx, min_vessel, lacunae)
     try:
         cell_files = CF.cortical_cell_files(labels, section, ell, bounds['endo_outer'], bounds['rhizo_layer_px'])
     except ValueError:
         cell_files = None
-    return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds,
+    return {'pipe': pipe, 'gray': gray, 'section': section, 'mx': mx, 'bounds': bounds, 'min_vessel_area': min_vessel,
             'masks': masks, 'ell': ell, 'prof': prof, 'labels': labels, 'pub': pub,
             'recovered': recovered, 'n_recovered': n_recovered, 'cell_files': cell_files, 'n_split': n_split, 'n_filled': n_filled,
             'n_walled_lacunae': n_walled if walled_lacunae else None,
             'report': pub['predictive_report'], 'pixel_size_um': pixel_size_um, 'scale': scale,
-            'rho': rho, 'photometry': photometry, 'damage': damage, 'anchor': anchor}
+            'rho': rho, 'photometry': photometry, 'damage': damage, 'anchor': anchor, 'lacunae': lacunae}
 
 
 # --------------------------------------------------------------------------- images
@@ -512,7 +571,8 @@ def _cell_areas(labels, masks, mx):
 
 
 def _census_territory(st):
-    """Census by territory density (census_lib); the endodermis keeps its perimeter estimate.
+    """Census by territory density (census_lib), by lumens in the stele (lumen_census_lib); the
+    endodermis keeps its perimeter estimate.
 
     Torn or blurred parts of the section (damaged_region_lib) are completed from the healthy cells of
     the same layers; the zones then follow the expected section, tears restored.
@@ -523,6 +583,8 @@ def _census_territory(st):
     masks = (R.zone_masks(st['rho'], damage['expected_section'], st['bounds']) if damage['torn'].any()
              else st['masks'])
     phi = DR.phi_field(damaged.shape, st['ell']) if damaged.any() else None
+    lumens = LC.lumen_basins(st['gray'], np.asarray(st['section'], bool) & ~(np.asarray(st['mx']) > 0))
+    shapes = LC.basin_shapes(lumens)
     out = {}
     for z, mname in zip(ZONES, ZONE_MASKS):
         k_unit = REPORT_KEYS[z][3]
@@ -532,8 +594,12 @@ def _census_territory(st):
         else:
             factor = (partial(DR.outline_completion, damage['expected_section'], damaged) if z == 'rhizodermis'
                       else partial(DR.polar_completion, st['labels'], masks[mname], damaged, st['mx'], st['rho'], phi))
-            obs, tot = DR.completed_count(CS.zone_census, st['labels'], masks[mname], damaged, st['mx'], factor,
-                                          keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
+            if z in STELE_ZONES:      # cells too small for closed walls: counted by their lumens
+                obs, tot = DR.completed_count(partial(LC.zone_census, shapes=shapes), lumens, masks[mname], damaged,
+                                              st['mx'], factor)
+            else:
+                obs, tot = DR.completed_count(CS.zone_census, st['labels'], masks[mname], damaged, st['mx'], factor,
+                                              keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
         out[z] = {'observed': obs, 'imputed': max(tot - obs, 0), 'total': tot, 'unit_area_px': unit}
     return out
 
@@ -558,17 +624,33 @@ def _num(v, digits=2):
     return int(round(v)) if digits == 0 else round(v, digits)
 
 
-def _metaxylem_vessels(mx):
+def _metaxylem_vessels(mx, min_area=R.MIN_VESSEL_AREA, image=None):
+    """Area and axes of every anchor vessel. With `image` (bright lumens, dark walls) the lumen edge
+    is placed at half height of the lumen-to-wall drop (vessel_edge_lib); else the mask outline."""
     n, lab, stats, cent = cv2.connectedComponentsWithStats(mx.astype(np.uint8))
     rows = []
     for i in range(1, n):
-        if stats[i, cv2.CC_STAT_AREA] < R.MIN_VESSEL_AREA:
+        if stats[i, cv2.CC_STAT_AREA] < min_area:
             continue
-        cnts, _ = cv2.findContours((lab == i).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        (_, _), (w, h), _ = cv2.fitEllipse(cnts[0])
-        rows.append({'raw': float(stats[i, cv2.CC_STAT_AREA]), 'reg': float(np.pi * w * h / 4),
-                     'major': float(max(w, h)), 'minor': float(min(w, h))})
+        comp = lab == i
+        edge = VE.lumen_edge(image, comp) if image is not None else None
+        if edge is None:
+            cnts, _ = cv2.findContours(comp.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            outline, raw = cnts[0], float(stats[i, cv2.CC_STAT_AREA])
+        else:
+            outline, raw = edge.reshape(-1, 1, 2), float(cv2.contourArea(edge.reshape(-1, 1, 2)))
+        (_, _), (w, h), _ = cv2.fitEllipse(outline)
+        rows.append({'raw': raw, 'reg': float(np.pi * w * h / 4), 'major': float(max(w, h)), 'minor': float(min(w, h))})
     return rows
+
+
+def _lumen_image(st):
+    """Polarity-normalised working image (bright lumens, dark walls), or None."""
+    img = P.output(st['pipe'].get('pol'), 'main')
+    if img is None:
+        return None
+    img = np.asarray(img)
+    return img[..., 0] if img.ndim == 3 else img
 
 
 def _photometry_note(rep):
@@ -607,7 +689,7 @@ def build_tables(st, census, zone_area, areas):
     stele = sum(zone_area[z] for z in ('pith', 'vascular', 'endo'))
     cortex = zone_area['inner_cortex'] + zone_area['outer_cortex']
     lac = float(rep.get('lacunae_total_area_px', 0))
-    vessels = _metaxylem_vessels(st['mx'])
+    vessels = _metaxylem_vessels(st['mx'], st.get('min_vessel_area', R.MIN_VESSEL_AREA), _lumen_image(st))
     obs_total = sum(c['observed'] for c in census.values())
     imp_total = sum(c['imputed'] for c in census.values())
     est_total = sum(c['total'] for c in census.values())
@@ -620,8 +702,8 @@ def build_tables(st, census, zone_area, areas):
         ['Clusters split', st['n_split'], 'regions', 'recovered regions > 2x the expected cell area at their ρ'],
         ['Lacunae reclassified', st['n_filled'], 'regions', 'empty regions of 0.4-3 expected cells: unseen cells'],
         ['Walled lacunae', st.get('n_walled_lacunae'), 'regions',
-         'wall-enclosed radial sectors over 3 expected cells and 3 layers deep, counted as aerenchyma'
-         if st.get('n_walled_lacunae') is not None else 'detection off (experimental option)'],
+         'wall-enclosed radial sectors over 3 expected cells and 3 layers deep, as bright as the backdrop, '
+         'counted as aerenchyma' if st.get('n_walled_lacunae') is not None else 'detection off'],
         ['Image correction', _photometry_note(st.get('photometry')), '', 'applied before the analysis; '
          'a correct micrograph is not modified'],
         ['Damaged section', _damage_note(st.get('damage')), '', 'of the expected section; their cells are '
@@ -688,7 +770,8 @@ def build_tables(st, census, zone_area, areas):
         {'id': 'metaxylem', 'title': 'Metaxylem vessels',
          'columns': ['Vessel', f'Raw area ({unit_a})', f'Regularised area ({unit_a})',
                      f'Equivalent diameter ({unit_l})', f'Major axis ({unit_l})', f'Minor axis ({unit_l})'],
-         'rows': vessel_rows, 'note': 'Regularised = ellipse fitted to the lumen (removes notches).'},
+         'rows': vessel_rows, 'note': 'Raw = inside the lumen edge, placed at half height of the lumen-to-wall intensity drop; '
+                         'regularised = ellipse fitted to that edge (removes notches).'},
         {'id': 'geometry', 'title': 'Section geometry', 'columns': ['Quantity', 'Value', 'Unit'],
          'rows': geom_rows,
          'note': 'Images are resampled so the root spans 766 px before analysis (resolution independence); '
@@ -698,7 +781,7 @@ def build_tables(st, census, zone_area, areas):
 
 # --------------------------------------------------------------------------- entry points
 
-def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, walled_lacunae=False):
+def analyze(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, walled_lacunae=True):
     """Full analysis of one image; see the module docstring for the result layout."""
     pixel_size_um = float(pixel_size_um) if pixel_size_um else None
     if pixel_size_um is not None and not 0 < pixel_size_um < 1000:

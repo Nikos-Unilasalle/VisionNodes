@@ -27,6 +27,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'outer_cortex_mask', 'color': 'mask'},
         {'id': 'rhizodermis_mask', 'color': 'mask'},
         {'id': 'ellipse_report', 'color': 'dict'},
+        {'id': 'lacunae', 'color': 'mask', 'label': 'Lacunae (optional)'},
     ],
     outputs=[
         {'id': 'main', 'color': 'image', 'label': 'Publication Figure'},
@@ -40,6 +41,7 @@ from registry import vision_node, NodeProcessor
         {'id': 'cell_opacity', 'label': 'Cell Opacity (Vibrant Top)', 'type': 'float', 'default': 0.90, 'min': 0.0, 'max': 1.0, 'step': 0.02},
         {'id': 'pt_to_px', 'label': 'Point to Pixel Scale', 'type': 'float', 'default': 1.33, 'min': 0.8, 'max': 2.5, 'step': 0.05},
         {'id': 'complete_metaxylem', 'label': 'Geometrically Complete Metaxylem (Ellipses)', 'type': 'bool', 'default': True},
+        {'id': 'min_vessel_area', 'label': 'Min Vessel Area (px)', 'type': 'int', 'default': 400, 'min': 10, 'max': 5000},
         {'id': 'complete_steles', 'label': 'Geometrically Complete Stele Boundary', 'type': 'bool', 'default': True},
         {'id': 'hatch_lacunae', 'label': 'Hatch Cortical Lacunae (45 deg)', 'type': 'bool', 'default': True},
         {'id': 'lacunae_min_area', 'label': 'Min Lacuna Area (px)', 'type': 'int', 'default': 25, 'min': 5, 'max': 500},
@@ -161,6 +163,7 @@ class RootPublicationFigureNode(NodeProcessor):
         cell_alpha  = float(params.get('cell_opacity', 0.90))
         pt_scale    = float(params.get('pt_to_px', 1.33))
         comp_mx     = bool(params.get('complete_metaxylem', True))
+        min_vessel_area = float(params.get('min_vessel_area', 400))
         comp_stele  = bool(params.get('complete_steles', True))
         hatch_lac   = bool(params.get('hatch_lacunae', True))
         min_lac_area = int(params.get('lacunae_min_area', 25))
@@ -217,7 +220,7 @@ class RootPublicationFigureNode(NodeProcessor):
         raw_cnts, _ = cv2.findContours(raw_mx_mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         for cnt in raw_cnts:
-            if cv2.contourArea(cnt) >= 400 and len(cnt) >= 5:
+            if cv2.contourArea(cnt) >= min_vessel_area and len(cnt) >= 5:
                 if comp_mx:
                     ell = cv2.fitEllipse(cnt)
                     mx_ellipses.append(ell)
@@ -362,8 +365,12 @@ class RootPublicationFigureNode(NodeProcessor):
         total_lacunae_area = 0
         if hatch_lac:
             cortex_area = (m_inner | m_outer) & root_roi
-            cells_coverage = (labels > 0)
-            cortex_gaps = cortex_area & (~cells_coverage)
+            given_lac = inputs.get('lacunae')
+            if given_lac is not None:  # lacunae decided upstream: hatched and counted as given
+                cortex_gaps = cortex_area & _to_mask(given_lac)
+                min_lac_area = 1
+            else:
+                cortex_gaps = cortex_area & (labels <= 0)
 
             n_gaps, gap_labels, gap_stats, _ = cv2.connectedComponentsWithStats(cortex_gaps.astype(np.uint8))
             lacunae_mask = np.zeros((h, w), dtype=bool)

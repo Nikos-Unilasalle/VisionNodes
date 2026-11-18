@@ -113,16 +113,17 @@ def _summary_row(res, name):
     return next(r for r in rows if r[0] == name)
 
 
-def test_walled_lacuna_detection_is_off_by_default(result):
+def test_walled_lacuna_detection_is_on_by_default(result):
     res, _ = result
     row = _summary_row(res, 'Walled lacunae')
-    assert row[1] is None and 'off' in row[3]
+    assert row[1] is not None and 'backdrop' in row[3]
 
 
 def test_walled_lacuna_detection_runs_when_enabled(monkeypatch):
     calls = []
 
-    def spy(labels, gray, zone, rho, expected, px_per_rho):
+    def spy(labels, gray, zone, rho, expected, px_per_rho, background):
+        assert background is not None
         calls.append(1)
         return np.asarray(labels).astype(np.int32), 0, np.zeros(np.asarray(labels).shape, bool)
 
@@ -130,3 +131,37 @@ def test_walled_lacuna_detection_runs_when_enabled(monkeypatch):
     res = W.analyze(SAMPLE, pixel_size_um=0.5, n_boot=0, walled_lacunae=True)
     assert calls == [1]
     assert _summary_row(res, 'Walled lacunae')[1] == 0
+
+
+def test_vessel_floor_is_the_ring_search_floor():
+    import radial_zoning_lib as R
+    assert W.vessel_floor({'mx_floor': {'result': 221.0}}) == 221.0
+    assert W.vessel_floor({'mx_floor': {'result': 900.0}}) == 900.0
+    assert W.vessel_floor({}) == R.MIN_VESSEL_AREA
+
+
+def _pale_cortex_root(size=1200, r_root=480, r_stele=150):
+    """Large pale-walled cortex on a bright slide around a small dark stele (thin-walled sections)."""
+    img = np.full((size, size), 232, np.uint8)
+    c = size // 2
+    yy, xx = np.indices(img.shape)
+    rr = np.hypot(yy - c, xx - c)
+    cortex = rr < r_root
+    walls = cortex & (((xx // 55) * 55 == xx) | ((yy // 55) * 55 == yy) | (np.abs(rr - r_root) < 3))
+    img[cortex] = 222
+    img[walls] = 120
+    img[rr < r_stele] = 90
+    return cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+
+
+def test_root_diameter_spans_a_pale_cortex_not_only_the_dark_stele():
+    img = _pale_cortex_root()
+    d = W.root_diameter_px(img)
+    assert abs(d - 960) / 960 < 0.15
+
+
+def test_anchor_offset_is_zero_for_a_centred_ring_and_large_for_an_eccentric_one():
+    sec = np.zeros((400, 400), bool)
+    cv2.circle(sec.view(np.uint8), (200, 200), 150, 1, -1)
+    assert W.anchor_offset(sec, (200.0, 200.0, 50.0, 50.0, 0.0)) < 0.01
+    assert W.anchor_offset(sec, (200.0, 90.0, 40.0, 40.0, 0.0)) > W.MAX_ANCHOR_OFFSET

@@ -41,7 +41,7 @@ MIN_SEG = 0.12           # minimal zone width (rho units) for the change-point s
 SEARCH_FROM = 1.0        # change points are searched outside the metaxylem ring
 EDGE_COVER = 0.5         # rho of the section edge = last rho where >= 50 % of rays are inside
 WALL_PROMINENCE = {'drawing': 25.0, 'photo': 6.0}  # grey levels of a wall dip
-MIN_VESSEL_AREA = 400    # px, same as the publication node
+MIN_VESSEL_AREA = 400    # px, default floor; the runner passes min(this, the ring search's own floor)
 VESSEL_SCORE_MIN = 0.35  # (size / ring median) x (circularity / ring median) below this: not a vessel
 DRAWING_MEDIAN_GREY = 225  # median grey inside the section above which the image is a line drawing
 
@@ -228,12 +228,12 @@ def change_points(prof, rng, n_boot=N_BOOT):
             'endo_outer_ci': ci[0].tolist(), 'cortex_transition_ci': ci[1].tolist()}
 
 
-def radial_cell_size(prof, lo, hi):
-    """Median radial intercept (px) over rho in [lo, hi], all sectors."""
+def cell_size(prof, lo, hi, key='Lr'):
+    """Median intercept (px) over rho in [lo, hi], all sectors: radial ('Lr') or tangential ('Lt')."""
     rho = prof['rho']
-    band = prof['Lr'][(rho >= lo) & (rho <= hi)]
+    band = prof[key][(rho >= lo) & (rho <= hi)]
     if not np.isfinite(band).any():
-        raise ValueError(f'no radial cell size measured between rho {lo:.2f} and {hi:.2f}')
+        raise ValueError(f'no cell size measured between rho {lo:.2f} and {hi:.2f}')
     return float(np.nanmedian(band))
 
 
@@ -266,17 +266,18 @@ def _circularity(component):
     return 4 * np.pi * component.sum() / max(perimeter ** 2, 1e-9)
 
 
-def clean_vessels(mx_mask):
+def clean_vessels(mx_mask, min_area=MIN_VESSEL_AREA):
     """Metaxylem mask without the candidates that are both small and irregular for their ring.
 
     The large metaxylem vessels of a polyarch ring have comparable sizes and are round. Each
     candidate is scored by (area / median area) x (circularity / median circularity) of the
     ring: a true vessel may be smaller than the others, or less round when its mask leaks into
-    neighbouring cells, but not both. Candidates scoring under VESSEL_SCORE_MIN are dropped.
+    neighbouring cells, but not both. Candidates scoring under VESSEL_SCORE_MIN are dropped, and so
+    are candidates under `min_area` px.
     """
     mask = np.asarray(mx_mask) > 0
     n, lab, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8))
-    ids = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= MIN_VESSEL_AREA]
+    ids = [i for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= min_area]
     if len(ids) < 2:
         return mask
     area = np.array([stats[i, cv2.CC_STAT_AREA] for i in ids], float)
@@ -287,12 +288,12 @@ def clean_vessels(mx_mask):
     return keep[lab]
 
 
-def vessel_inner_edges(mx_mask, rho):
+def vessel_inner_edges(mx_mask, rho, min_area=MIN_VESSEL_AREA):
     """Minimum rho of every metaxylem vessel (the inner edge of the ring)."""
     n, lab, stats, _ = cv2.connectedComponentsWithStats((np.asarray(mx_mask) > 0).astype(np.uint8))
-    edges = [float(rho[lab == i].min()) for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= MIN_VESSEL_AREA]
+    edges = [float(rho[lab == i].min()) for i in range(1, n) if stats[i, cv2.CC_STAT_AREA] >= min_area]
     if not edges:
-        raise ValueError(f'no metaxylem vessel reaches {MIN_VESSEL_AREA} px')
+        raise ValueError(f'no metaxylem vessel reaches {min_area:.0f} px')
     return edges
 
 
@@ -301,18 +302,20 @@ def guess_kind(gray, section):
     return 'drawing' if float(np.median(gray[section])) >= DRAWING_MEDIAN_GREY else 'photo'
 
 
-def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOOT):
+def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOOT, min_vessel_area=MIN_VESSEL_AREA):
     """All boundaries of one section, in rho units, with their uncertainty and the zone masks."""
     section = np.asarray(section) > 0
     kind = kind or guess_kind(gray, section)
     rng = rng if rng is not None else np.random.default_rng(0)
-    mx_mask = clean_vessels(mx_mask)
+    mx_mask = clean_vessels(mx_mask, min_vessel_area)
     ell = anchor_ellipse(mx_mask)
     rho = rho_field(section.shape, ell)
     prof = polar_profiles(gray, section, ell, WALL_PROMINENCE[kind])
     cp = change_points(prof, rng, n_boot)
-    vessels = vessel_inner_edges(mx_mask, rho)
-    endo_cell_rho = radial_cell_size(prof, cp['endo_outer'] - 0.10, cp['endo_outer']) / prof['px_per_rho']
+    vessels = vessel_inner_edges(mx_mask, rho, min_vessel_area)
+    # the endodermis is one row of cells about as deep as they are wide: their width along the boundary
+    # crosses many walls and is reliable, whereas a radial intercept misses pale walls and spans two rows
+    endo_cell_rho = cell_size(prof, cp['endo_outer'] - 0.10, cp['endo_outer'], 'Lt') / prof['px_per_rho']
     rhizo_px = outermost_layer_px(prof)
     b = {'pith': float(np.median(vessels)), 'pith_range': [min(vessels), max(vessels)], 'n_vessels': len(vessels),
          'metaxylem': 1.0, 'endo_inner': cp['endo_outer'] - endo_cell_rho, **cp,

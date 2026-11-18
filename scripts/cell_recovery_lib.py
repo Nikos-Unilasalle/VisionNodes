@@ -231,105 +231,22 @@ def drop_fragments(labels, rho, zone, expected):
 # --------------------------------------------------------------------------- walled lacunae
 #
 # An aerenchyma lacuna whose border walls are intact is enclosed like a cell, so the first
-# segmentation outlines it as one giant object, or cuts it into cell-sized pieces along lines
-# where the image shows no wall at all. Two rules recover it:
-#   1. a cell is a region closed by walls: neighbours whose shared border shows no wall (less
-#      than WALL_LESS x the darkness of a typical border of the zone, after illumination
-#      flattening) merge. On bright-field micrographs the interior texture is half as contrasted
-#      as a wall, so the criterion is relative to the walls, not to the noise; pale walls keep
-#      20 % or more of a typical wall's contrast, wall-less watershed lines about 2 %;
-#   2. a lacuna is a radial sector spanning several layers: an object larger than
+# segmentation outlines it as one giant object. Two rules recognise it:
+#   1. a lacuna is a radial sector spanning several layers: an object larger than
 #      LACUNA_MAX_CELLS expected cells at its rho, deeper than LACUNA_MIN_DEPTH cell sizes along
 #      rho and not elongated along the layers (spread along rho / spread along the tangent >=
 #      LACUNA_MIN_ELONGATION) is aerenchyma, not a cell. Lysigenous aerenchyma forms sectors
 #      separated by radial bridges of living cells; a band of pale cells along a layer, or a
-#      large cell confined to one layer, stays cells.
+#      large cell confined to one layer, stays cells;
+#   2. a lacuna is empty: its interior is past half height between the lumens of the zone's cells
+#      and the backdrop outside the section (EMPTY_SHARE). A large object of pale or merged cells
+#      is still filled like a cell.
+# Neighbouring objects are never merged to make a lacuna: on real micrographs pale walls are
+# common in the inner cortex and merging them made lacunae out of ordinary cells.
 
-SEAM_WINDOW = 5           # px; a seam pixel sees two different labels within this window
-MIN_SEAM = 0.3            # seams shorter than this x cell diameter are corner contacts, not borders
 LACUNA_MIN_DEPTH = 3.0    # radial extent of a lacuna, in expected cell sizes (sqrt of the area)
 LACUNA_MIN_ELONGATION = 0.8  # spread along rho / spread along the tangent of a lacuna
-WALL_LESS = 0.1           # a border with less than this x the contrast of a typical border has no wall
-
-
-def _flatten(gray, cell_d):
-    g = np.asarray(gray, np.float32)
-    return cv2.GaussianBlur(g, (0, 0), 0.8) - cv2.GaussianBlur(g, (0, 0), 0.6 * cell_d)
-
-
-def _seams(labels, zone):
-    """(rows, cols, lower label, upper label) of the pixels of `zone` that see two labels nearby."""
-    k = np.ones((SEAM_WINDOW, SEAM_WINDOW), np.uint8)
-    lab = np.where(zone, labels, 0).astype(np.float32)
-    hi = cv2.dilate(lab, k)
-    lo = cv2.erode(np.where(lab > 0, lab, np.float32(np.inf)), k)
-    seam = zone & np.isfinite(lo) & (hi > lo)
-    r, c = np.nonzero(seam)
-    return r, c, lo[r, c].astype(np.int64), hi[r, c].astype(np.int64)
-
-
-def _find(parent, i):
-    while parent[i] != i:
-        parent[i] = parent[parent[i]]
-        i = parent[i]
-    return i
-
-
-def _interior_levels(labels, flat, zone, n):
-    """Median flattened level of the interior of every object (away from its borders)."""
-    core = cv2.erode((zone & (labels > 0)).astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
-    core &= cv2.erode(labels.astype(np.float32), np.ones((5, 5), np.uint8)) == labels  # one label around
-    med = np.zeros(n)
-    for i in np.unique(labels[core]):
-        med[i] = np.median(flat[core & (labels == i)])
-    return med
-
-
-def merge_wall_less(labels, gray, zone):
-    """Label map where neighbouring objects of `zone` with no wall between them are merged.
-
-    A border has no wall when it is darker than the two interiors by less than WALL_LESS x the
-    contrast of a typical border of the zone. Returns (new label map, number of merges). Inputs
-    are not modified.
-    """
-    labels = np.asarray(labels).astype(np.int32)
-    ref = reference_cell_area(labels, zone)
-    cell_d = 2 * np.sqrt(ref / np.pi)
-    flat = _flatten(gray, cell_d)
-    r, c, lo, hi = _seams(labels, zone)
-    if not len(r):
-        return labels.copy(), 0
-    n = int(labels.max()) + 1
-    med = _interior_levels(labels, flat, zone, n)
-    pair = lo * n + hi
-    pairs, inv = np.unique(pair, return_inverse=True)
-    seam_lvl = np.array([np.median(flat[r[inv == k], c[inv == k]]) for k in range(len(pairs))])
-    seam_len = np.bincount(inv, minlength=len(pairs))
-    contrast = 0.5 * (med[pairs // n] + med[pairs % n]) - seam_lvl
-    typical = float(np.median(contrast[seam_len >= MIN_SEAM * cell_d])) if (seam_len >= MIN_SEAM * cell_d).any() else 0.0
-    if typical <= 0:
-        return labels.copy(), 0
-    parent = np.arange(n)
-    merges = 0
-    for k, p in enumerate(pairs):
-        if seam_len[k] < MIN_SEAM * cell_d or contrast[k] >= WALL_LESS * typical:
-            continue
-        ra, rb = _find(parent, int(p // n)), _find(parent, int(p % n))
-        if ra != rb:
-            parent[max(ra, rb)] = min(ra, rb)
-            merges += 1
-    if not merges:
-        return labels.copy(), 0
-    root = np.array([_find(parent, i) for i in range(n)])
-    out = root[labels]
-    # the border pixels between merged pieces join the merged object
-    k = np.ones((SEAM_WINDOW, SEAM_WINDOW), np.uint8)
-    near_hi = cv2.dilate(out.astype(np.float32), k)
-    near_lo = cv2.erode(np.where(out > 0, out, np.float32(np.inf)).astype(np.float32), k)
-    merged_roots = np.unique(root[root != np.arange(n)])
-    fill = zone & (labels == 0) & (near_hi == near_lo) & np.isin(near_hi.astype(np.int64), merged_roots)
-    out[fill] = near_hi[fill].astype(np.int32)
-    return out.astype(np.int32), merges
+EMPTY_SHARE = 0.5         # a lacuna's interior lies past half way from the lumen level to the backdrop
 
 
 def radial_elongation(mask, grad):
@@ -346,18 +263,32 @@ def radial_elongation(mask, grad):
     return float((d @ g).std() / max((d @ np.array([-g[1], g[0]])).std(), 1e-6))
 
 
-def lacunae_from_cells(labels, rho, zone, expected, px_per_rho):
+def emptiness(gray, mask, lumen_level, background):
+    """Where the interior of `mask` lies between the cell lumens (0) and the empty backdrop (1)."""
+    inner = cv2.erode(mask.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+    inner = inner if inner.any() else mask
+    return float((np.median(gray[inner]) - lumen_level) / max(background - lumen_level, 1e-6))
+
+
+def lacunae_from_cells(labels, rho, zone, expected, px_per_rho, gray=None, background=None):
     """Label map without the objects of `zone` that are aerenchyma lacunae, not cells.
 
     An object is a lacuna when its area exceeds LACUNA_MAX_CELLS x the expected cell area at its
     rho, its radial extent exceeds LACUNA_MIN_DEPTH expected cell sizes and it is not elongated
-    along the layers (radial_elongation >= LACUNA_MIN_ELONGATION). Returns (new label map,
-    number of lacunae). Inputs are not modified.
+    along the layers (radial_elongation >= LACUNA_MIN_ELONGATION). With `gray` and the `background`
+    level (the backdrop outside the section), a lacuna must also be empty: its interior lies past
+    EMPTY_SHARE of the way from the lumens of the zone's cells to the backdrop (half height), so
+    a large object of pale or merged cells, still filled like a cell, is not taken for a channel.
+    Returns (new label map, number of lacunae). Inputs are not modified.
     """
     out = np.asarray(labels).astype(np.int32).copy()
     rho = np.asarray(rho, np.float64)
     grad = np.gradient(rho)
     area, cy, cx = _centroids(out)
+    judge_empty = gray is not None and background is not None
+    if judge_empty:
+        gray = np.asarray(gray, np.float32)
+        lumen_level = float(np.median(gray[zone & (out > 0)])) if (zone & (out > 0)).any() else 0.0
     removed = 0
     for i in np.unique(out[zone & (out > 0)]):
         e = float(expected(rho[int(round(cy[i])), int(round(cx[i]))]))
@@ -365,23 +296,20 @@ def lacunae_from_cells(labels, rho, zone, expected, px_per_rho):
             continue
         m = out == i
         depth = (rho[m].max() - rho[m].min()) * px_per_rho / np.sqrt(e)
-        if depth > LACUNA_MIN_DEPTH and radial_elongation(m, grad) >= LACUNA_MIN_ELONGATION:
-            out[m] = 0
-            removed += 1
+        if depth <= LACUNA_MIN_DEPTH or radial_elongation(m, grad) < LACUNA_MIN_ELONGATION:
+            continue
+        if judge_empty and emptiness(gray, m, lumen_level, background) < EMPTY_SHARE:
+            continue
+        out[m] = 0
+        removed += 1
     return out, removed
 
 
-def remove_walled_lacunae(labels, gray, zone, rho, expected, px_per_rho):
+def remove_walled_lacunae(labels, gray, zone, rho, expected, px_per_rho, background):
     """Label map without the walled lacunae of `zone`; every other object is left as it was.
-
-    Wall-less neighbours are merged only to recognise a lacuna (merge_wall_less, then
-    lacunae_from_cells); pieces of a merged region that is not a lacuna keep their own labels.
+    `background`: grey level of the backdrop outside the section (the level of an empty lacuna).
     Returns (new label map, number of lacunae, lacuna mask). Inputs are not modified.
     """
     labels = np.asarray(labels).astype(np.int32)
-    merged, _ = merge_wall_less(labels, gray, zone)
-    kept, n = lacunae_from_cells(merged, rho, zone, expected, px_per_rho)
-    lacuna = (merged > 0) & (kept == 0)
-    out = labels.copy()
-    out[lacuna] = 0
-    return out, n, lacuna
+    kept, n = lacunae_from_cells(labels, rho, zone, expected, px_per_rho, gray, background)
+    return kept, n, (labels > 0) & (kept == 0)

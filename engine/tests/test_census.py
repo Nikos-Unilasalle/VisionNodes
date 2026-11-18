@@ -44,3 +44,30 @@ def test_large_uncovered_cortex_region_is_kept_as_lacuna():
     _, tot_imputed, _ = CS.zone_census(labels, zone, np.zeros_like(zone))
     _, tot_cortex, lac = CS.zone_census(labels, zone, np.zeros_like(zone), keep_lacunae=True)
     assert tot_imputed > tot_cortex and lac > 0
+
+
+def test_lacuna_mask_covers_the_hole_but_not_the_walls():
+    labels, _ = _tissue()
+    labels[100:300, 100:300] = 0
+    zone = np.ones(labels.shape, bool)
+    lac = CS.lacuna_mask(labels, zone, np.zeros_like(zone))
+    assert lac[200, 200]
+    assert not lac[:90, :90].any()                         # intact tissue: walls are not lacunae
+    _, _, area = CS.zone_census(labels, zone, np.zeros_like(zone), keep_lacunae=True)
+    assert area == int(lac.sum())
+
+
+def test_a_single_missing_cell_is_not_a_lacuna():
+    labels, _ = _tissue()
+    labels[200:220, 200:220] = 0
+    zone = np.ones(labels.shape, bool)
+    assert not CS.lacuna_mask(labels, zone, np.zeros_like(zone)).any()
+
+
+def test_a_lacuna_reaches_the_cells_around_it():
+    labels, _ = _tissue()
+    labels[100:300, 100:300] = 0                           # hole: 200 x 200 px up to the next lumens
+    zone = np.ones(labels.shape, bool)
+    lac = CS.lacuna_mask(labels, zone, np.zeros_like(zone))
+    assert lac.sum() >= 0.97 * 200 * 200
+    assert not (lac & (labels > 0)).any()
