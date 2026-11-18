@@ -255,3 +255,10 @@ def test_endodermis_band_is_one_cell_of_the_outer_stele_rows(measured):
     unit = (0.85 * RING_R + 13) / RING_R
     cell_side = np.sqrt(np.pi * (1.4 ** 2 - 0.1 ** 2) * RING_R ** 2 / 900) / (RING_R * unit)
     assert b['endo_cell_rho'] < 1.25 * cell_side
+
+
+def test_a_given_stele_edge_fixes_the_endodermis_and_the_transition_is_searched_beyond():
+    img, section, mx = _synthetic_section()
+    b, masks, _, _ = R.measure_boundaries(img, section, mx, kind='drawing', n_boot=0, stele_edge=1.4)
+    assert b['endo_outer'] == pytest.approx(1.4)
+    assert b['cortex_transition'] == pytest.approx(2.4, abs=0.15)

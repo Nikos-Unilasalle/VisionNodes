@@ -215,6 +215,8 @@ def change_points(prof, rng, n_boot=N_BOOT):
     sel = (rho >= SEARCH_FROM) & (rho <= prof['edge_rho'] - 0.05)
     rr = rho[sel]
     min_len = int(round(MIN_SEG / prof['rho_step']))
+    if len(rr) == 0:
+        raise ValueError('the section does not extend beyond the metaxylem ring')
 
     def run(rows):
         return [float(rr[c]) for c in _segment(_features(prof, rows, prof['px_per_rho'])[sel], 3, min_len)]
@@ -260,6 +262,24 @@ def outermost_layer_px(prof, max_px=120):
     return float(np.median(out)) if out else float('nan')
 
 
+def transition_beyond(prof, start, rng, n_boot=N_BOOT):
+    """Cortex transition (rho) searched beyond a known endodermis edge `start`, with its bootstrap 95 %
+    interval: the profile from `start` to the section edge is split into two constant segments."""
+    rho = prof['rho']
+    sel = (rho >= start + MIN_SEG) & (rho <= prof['edge_rho'] - 0.05)
+    rr = rho[sel]
+    min_len = int(round(MIN_SEG / prof['rho_step']))
+    if len(rr) < 2 * min_len:
+        raise ValueError('the cortex beyond the stele is too thin to place a transition')
+
+    def run(rows):
+        return float(rr[_segment(_features(prof, rows, prof['px_per_rho'])[sel], 2, min_len)[0]])
+    base = run(np.arange(N_SECTORS))
+    ci = (np.percentile([run(rng.integers(0, N_SECTORS, N_SECTORS)) for _ in range(n_boot)], [2.5, 97.5]).tolist()
+          if n_boot else [np.nan, np.nan])
+    return base, ci
+
+
 def _circularity(component):
     cnts, _ = cv2.findContours(component.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     perimeter = cv2.arcLength(cnts[0], True)
@@ -302,8 +322,13 @@ def guess_kind(gray, section):
     return 'drawing' if float(np.median(gray[section])) >= DRAWING_MEDIAN_GREY else 'photo'
 
 
-def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOOT, min_vessel_area=MIN_VESSEL_AREA):
-    """All boundaries of one section, in rho units, with their uncertainty and the zone masks."""
+def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOOT, min_vessel_area=MIN_VESSEL_AREA,
+                       stele_edge=None):
+    """All boundaries of one section, in rho units, with their uncertainty and the zone masks.
+
+    `stele_edge` (rho), when the stele outline is seen directly (a dark stele in a pale, thin-walled
+    cortex), fixes the endodermis/cortex boundary; only the cortex transition is then searched beyond it.
+    """
     section = np.asarray(section) > 0
     kind = kind or guess_kind(gray, section)
     rng = rng if rng is not None else np.random.default_rng(0)
@@ -311,7 +336,12 @@ def measure_boundaries(gray, section, mx_mask, kind=None, rng=None, n_boot=N_BOO
     ell = anchor_ellipse(mx_mask)
     rho = rho_field(section.shape, ell)
     prof = polar_profiles(gray, section, ell, WALL_PROMINENCE[kind])
-    cp = change_points(prof, rng, n_boot)
+    if stele_edge is None:
+        cp = change_points(prof, rng, n_boot)
+    else:
+        trans, trans_ci = transition_beyond(prof, stele_edge, rng, n_boot)
+        cp = {'endo_outer': float(stele_edge), 'cortex_transition': trans,
+              'endo_outer_ci': [float(stele_edge), float(stele_edge)], 'cortex_transition_ci': trans_ci}
     vessels = vessel_inner_edges(mx_mask, rho, min_vessel_area)
     # the endodermis is one row of cells about as deep as they are wide: their width along the boundary
     # crosses many walls and is reliable, whereas a radial intercept misses pale walls and spans two rows

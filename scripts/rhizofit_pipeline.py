@@ -22,6 +22,8 @@ import io
 import os
 import sys
 
+import numpy as np
+
 _ENGINE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'engine')
 if _ENGINE not in sys.path:
     sys.path.insert(0, _ENGINE)
@@ -187,7 +189,7 @@ class _Runner:
         return self.results[node_id]
 
 
-def _shared(r, image_path):
+def _shared(r, image_path, section=None):
     """Nodes upstream of the vessel search: section, walls, cells, radial zoning, stele."""
     o = r.out
     r.node('src', 'input_image', {'path': image_path})
@@ -205,6 +207,8 @@ def _shared(r, image_path):
     r.node('sec_open', 'feat_morphology_adv', mask=o('sec_fill', 'main'))
     r.node('sec_and', 'mask_operations', mask_a=o('sec_open', 'mask'), mask_b=o('roi', 'mask'))
     r.node('section', 'mask_keep_largest', mask=o('sec_and', 'mask'))
+    if section is not None:   # section given by the caller (thin-walled roots: see root_web_runner)
+        r.results['section'] = {'mask': (np.asarray(section) > 0).astype(np.uint8) * 255}
     r.node('ridge', 'filter_ridge', image=o('pol', 'main'), mask=o('section', 'mask'))
     r.node('lum_sub', 'mask_operations', mask_a=o('section', 'mask'), mask_b=o('walls', 'main'))
     r.node('tess', 'seg_cell_tessellation', walls=o('ridge', 'ridge'), mask=o('section', 'mask'))
@@ -248,10 +252,11 @@ def _vessel_search(r, search):
            boundary=o('section', 'mask'), labels=o('cells', 'labels'), image=o('cells', 'main'))
 
 
-def run(image_path, searches=SEARCHES, on_step=None):
+def run(image_path, searches=SEARCHES, on_step=None, section=None):
     """Run the pipeline on one image file. Returns {search: {node_id: outputs}}.
 
     `on_step(index, total, node_id)` is called before each node runs (progress reporting).
+    `section` (bool array, same size as the image) replaces the thresholded section mask.
     Every search works on its own copy of the shared outputs, as two separate template runs would.
     """
     unknown = set(searches) - set(SEARCHES)
@@ -259,7 +264,7 @@ def run(image_path, searches=SEARCHES, on_step=None):
         raise ValueError(f'unknown vessel search(es): {sorted(unknown)}')
     registry = load_plugins()
     shared = _Runner(registry, on_step=on_step)
-    _shared(shared, image_path)
+    _shared(shared, image_path, section)
     runs = {}
     for search in searches:
         r = _Runner(registry, copy.deepcopy(shared.results), on_step, shared.step)

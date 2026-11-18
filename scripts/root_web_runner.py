@@ -134,19 +134,44 @@ def _read_bgr(image_path):
 
 
 MAX_ANCHOR_OFFSET = 0.5  # anchor centre farther than this from the section centre (section radii): no polyarch stele
-STELE_ONLY_RATIO = 0.6   # dark region under this share of the textured section: only the stele is dark
+STELE_ONLY_RATIO = 0.33  # dark region under this share of the textured section: only the stele is dark (thin-walled wheat-like sections 0.27-0.31; maize >= 0.94, LAT >= 0.35)
 
 
-def _filled_equivalent_diameter(mask):
-    """Equivalent diameter (px) of the largest region of `mask`, holes filled; 0 if empty."""
-    n, lab, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8))
+MIN_DENSITY_CELLS = 10    # fewer observed cells than this: no density can be measured on them
+CENTRAL_VESSEL_MIN = 4.0  # a single central vessel is at least this many median cell lumens
+CENTRAL_DOMINANCE = 2.0   # ... and at least twice the next largest lumen of the stele (else: a ring)
+
+
+def _largest_filled(mask):
+    """Largest region of `mask`, holes filled (uint8 0/1); None if empty."""
+    n, lab, stats, _ = cv2.connectedComponentsWithStats(np.asarray(mask).astype(np.uint8))
     if n < 2:
-        return 0.0
+        return None
     region = (lab == 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
-    cnts, _ = cv2.findContours(region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, _ = cv2.findContours(region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     filled = np.zeros_like(region)
     cv2.drawContours(filled, cnts, -1, 1, -1)
-    return float(2 * np.sqrt(filled.sum() / np.pi))
+    return filled
+
+
+def _equivalent_diameter(region):
+    return 0.0 if region is None else float(2 * np.sqrt(region.sum() / np.pi))
+
+
+def dark_and_textured(img):
+    """(dark region, textured section) of an image, each the largest region with holes filled.
+
+    The dark region is the darker part on the bright backdrop (smoothing proportional to the image
+    size); the textured section is everything that is not the slide (photometry_lib's backdrop)."""
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (0, 0), max(gray.shape) / 200)
+    _, dark = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    return _largest_filled(dark > 0), _largest_filled(~PH.backdrop_mask(gray))
+
+
+def thin_walled(dark, textured):
+    """True when only the stele is dark: a pale, thin-walled cortex around a dark stele."""
+    return _equivalent_diameter(dark) < STELE_ONLY_RATIO * _equivalent_diameter(textured)
 
 
 def root_diameter_px(img):
@@ -159,14 +184,46 @@ def root_diameter_px(img):
     cortex. That estimate is used only when the dark region is clearly smaller, so sections whose
     whole root is dark keep the dark-region estimate.
     """
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (0, 0), max(gray.shape) / 200)
-    _, dark = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    d_dark = _filled_equivalent_diameter(dark > 0)
-    if d_dark == 0:
+    dark, textured = dark_and_textured(img)
+    if dark is None:
         raise AnalysisError('No root section was found in the image.')
-    d_tex = _filled_equivalent_diameter(~PH.backdrop_mask(gray))
-    return d_tex if d_dark < STELE_ONLY_RATIO * d_tex else d_dark
+    return _equivalent_diameter(textured if thin_walled(dark, textured) else dark)
+
+
+def rhizodermis_by_outline(section, layer_px):
+    """Cells of the outermost layer: outline length of the section over the layer thickness."""
+    cnts, _ = cv2.findContours(np.asarray(section).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not cnts or not layer_px:
+        return 0
+    outline = cv2.approxPolyDP(max(cnts, key=cv2.contourArea), 1.0, True)   # pixel staircase smoothed
+    return int(round(cv2.arcLength(outline, True) / layer_px))
+
+
+def central_vessel(candidates, stele, lumen_area):
+    """Mask of a single central metaxylem vessel: the largest vessel candidate whose centre lies in the
+    stele, if it is at least CENTRAL_VESSEL_MIN median cell lumens and CENTRAL_DOMINANCE times the next
+    largest candidate of the stele; else None. A polyarch stele has several vessels of similar sizes;
+    a root with one large central vessel (e.g. wheat) has one that dominates."""
+    n, lab, stats, cent = cv2.connectedComponentsWithStats((np.asarray(candidates) > 0).astype(np.uint8))
+    stele = np.asarray(stele) > 0
+    inside = [i for i in range(1, n) if stele[int(round(cent[i][1])), int(round(cent[i][0]))]]
+    if not inside:
+        return None
+    areas = sorted(((stats[i, cv2.CC_STAT_AREA], i) for i in inside), reverse=True)
+    best_area, best = areas[0]
+    if best_area < CENTRAL_VESSEL_MIN * lumen_area:
+        return None
+    if len(areas) > 1 and best_area < CENTRAL_DOMINANCE * areas[1][0]:
+        return None
+    return lab == best
+
+
+def stele_edge_rho(stele, ell):
+    """Median rho along the outline of the stele region (the endodermis/cortex boundary)."""
+    cnts, _ = cv2.findContours(np.asarray(stele).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    pts = max(cnts, key=cv2.contourArea)[:, 0, :]
+    rho = R.rho_field(np.asarray(stele).shape, ell)
+    return float(np.median(rho[pts[:, 1], pts[:, 0]]))
 
 
 def anchor_offset(section, ell):
@@ -229,6 +286,54 @@ def _lumen_area(pipe):
     return float(med)
 
 
+def _section_of(runs):
+    base = runs['stele']
+    section = np.asarray(base['section'].get('mask') if base['section'].get('mask') is not None else 0) > 0
+    if not section.any():
+        raise AnalysisError('No root section was found in the image.')
+    return section
+
+
+def _boundaries(pipe, section, mx, min_vessel, n_boot, stele_edge=None):
+    gray = cv2.cvtColor(pipe['src']['main'], cv2.COLOR_BGR2GRAY)
+    try:
+        bounds, masks, ell, prof = R.measure_boundaries(gray, section, mx, n_boot=n_boot, min_vessel_area=min_vessel,
+                                                        stele_edge=stele_edge)
+    except ValueError as exc:
+        raise AnalysisError(f'Tissue boundaries could not be measured ({exc}).') from exc
+    if anchor_offset(section, ell) > MAX_ANCHOR_OFFSET:
+        raise AnalysisError('No metaxylem ring was found around the centre of the section. RhizoFit needs a '
+                            'ring of at least three large metaxylem vessels (polyarch stele, as in maize, rice '
+                            'or sorghum), or a single large central vessel in a dark stele (as in wheat).')
+    return gray, bounds, masks, ell, prof
+
+
+def _polyarch_anchor(runs, n_boot):
+    """Anchor on the most plausible ring of metaxylem vessels (polyarch stele)."""
+    section = _section_of(runs)
+    base = runs['stele']
+    min_vessel = vessel_floor(base)
+    best = AS.best_anchor({k: p['mx_cand'].get('mask') for k, p in runs.items()}, _lumen_area(base), min_vessel)
+    if best is None:
+        raise AnalysisError('No metaxylem ring was detected: no three large round lumens lie on a circle.')
+    pipe = runs[best['search']]
+    anchor = {'search': best['search'], 'count': best['count'], **best['criteria']}
+    return (pipe, section, best['mask'], min_vessel, anchor) + _boundaries(pipe, section, best['mask'], min_vessel, n_boot)
+
+
+def _central_vessel_anchor(runs, stele, n_boot):
+    """Anchor on a single large central vessel, the stele outline giving the endodermis; None if absent."""
+    pipe = runs['whole']
+    mx = central_vessel(pipe['mx_cand'].get('mask'), stele, _lumen_area(pipe))
+    if mx is None:
+        return None
+    section = _section_of(runs)
+    min_vessel = vessel_floor(pipe)
+    edge = stele_edge_rho(stele, R.anchor_ellipse(mx))
+    anchor = {'search': 'central vessel', 'count': 1}
+    return (pipe, section, mx, min_vessel, anchor) + _boundaries(pipe, section, mx, min_vessel, n_boot, edge)
+
+
 def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None, scale=None, walled_lacunae=True):
     """Segmentation pipeline + measured boundaries + census. Returns the raw state used by the figures.
 
@@ -240,30 +345,22 @@ def run_pipeline(image_path, pixel_size_um=None, n_boot=R.N_BOOT, progress=None,
     image_path, scale, photometry = _normalised_upload(image_path, scale)
     work_pixel_um = pixel_size_um / scale if pixel_size_um else None
     try:
+        work = cv2.imread(image_path)
         runs = P.run(image_path, on_step=lambda i, n, _nid: _report(STAGES[0], i / n, progress))
+        try:
+            found = _polyarch_anchor(runs, n_boot)
+        except AnalysisError as polyarch_error:
+            # no centred ring of vessels: a thin-walled root with one large central vessel (e.g. wheat)?
+            dark, textured = dark_and_textured(work)
+            if dark is None or textured is None or not thin_walled(dark, textured):
+                raise
+            runs = P.run(image_path, section=textured)
+            found = _central_vessel_anchor(runs, dark, n_boot)
+            if found is None:
+                raise polyarch_error
     finally:
         os.remove(image_path)
-    base = runs['stele']
-    section = np.asarray(base['section'].get('mask') if base['section'].get('mask') is not None else 0) > 0
-    if not section.any():
-        raise AnalysisError('No root section was found in the image.')
-    min_vessel = vessel_floor(base)
-    best = AS.best_anchor({k: p['mx_cand'].get('mask') for k, p in runs.items()}, _lumen_area(base), min_vessel)
-    if best is None:
-        raise AnalysisError('No metaxylem ring was detected: no three large round lumens lie on a circle.')
-    pipe = runs[best['search']]
-    mx = best['mask']
-    anchor = {'search': best['search'], 'count': best['count'], **best['criteria']}
-    _report(STAGES[1], 0.0, progress)
-    gray = cv2.cvtColor(pipe['src']['main'], cv2.COLOR_BGR2GRAY)
-    try:
-        bounds, masks, ell, prof = R.measure_boundaries(gray, section, mx, n_boot=n_boot, min_vessel_area=min_vessel)
-    except ValueError as exc:
-        raise AnalysisError(f'Tissue boundaries could not be measured ({exc}).') from exc
-    if anchor_offset(section, ell) > MAX_ANCHOR_OFFSET:
-        raise AnalysisError('No metaxylem ring was found around the centre of the section. RhizoFit needs a '
-                            'ring of at least three large metaxylem vessels (polyarch stele, as in maize, rice '
-                            'or sorghum); a section with a single central vessel, as in wheat, is outside its domain.')
+    pipe, section, mx, min_vessel, anchor, gray, bounds, masks, ell, prof = found
     _report(STAGES[2], 0.0, progress)
     ellipse_report = {**R.ellipse_report(pipe['ellipse_prop']['report'], bounds), **R.anchor_report(ell)}
     labels = np.asarray(pipe['cells']['labels'])
@@ -600,6 +697,10 @@ def _census_territory(st):
             else:
                 obs, tot = DR.completed_count(CS.zone_census, st['labels'], masks[mname], damaged, st['mx'], factor,
                                               keep_lacunae=z in ('inner_cortex', 'outer_cortex'))
+            if z == 'rhizodermis' and obs < MIN_DENSITY_CELLS:
+                # too few epidermal cells segmented to measure a density (thin epidermis): one layer of
+                # cells as wide as the layer is thick, along the outline of the section
+                tot = max(obs, rhizodermis_by_outline(damage['expected_section'], st['bounds']['rhizo_layer_px']))
         out[z] = {'observed': obs, 'imputed': max(tot - obs, 0), 'total': tot, 'unit_area_px': unit}
     return out
 

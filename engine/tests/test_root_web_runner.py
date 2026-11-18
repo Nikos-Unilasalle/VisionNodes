@@ -165,3 +165,37 @@ def test_anchor_offset_is_zero_for_a_centred_ring_and_large_for_an_eccentric_one
     cv2.circle(sec.view(np.uint8), (200, 200), 150, 1, -1)
     assert W.anchor_offset(sec, (200.0, 200.0, 50.0, 50.0, 0.0)) < 0.01
     assert W.anchor_offset(sec, (200.0, 90.0, 40.0, 40.0, 0.0)) > W.MAX_ANCHOR_OFFSET
+
+
+def test_central_vessel_is_the_largest_candidate_inside_the_stele():
+    cand = np.zeros((200, 200), np.uint8)
+    cv2.circle(cand, (100, 100), 15, 255, -1)    # central vessel, inside the stele
+    cv2.circle(cand, (170, 170), 22, 255, -1)    # larger cortex cell, outside it
+    stele = np.zeros((200, 200), bool)
+    cv2.circle(stele.view(np.uint8), (100, 100), 40, 1, -1)
+    mx = W.central_vessel(cand, stele, lumen_area=20.0)
+    assert mx[100, 100] and not mx[170, 170]
+
+
+def test_no_central_vessel_when_the_stele_holds_only_small_lumens():
+    cand = np.zeros((200, 200), np.uint8)
+    cv2.circle(cand, (100, 100), 3, 255, -1)
+    stele = np.zeros((200, 200), bool)
+    cv2.circle(stele.view(np.uint8), (100, 100), 40, 1, -1)
+    assert W.central_vessel(cand, stele, lumen_area=20.0) is None
+
+
+def test_rhizodermis_by_outline_is_perimeter_over_layer_thickness():
+    sec = np.zeros((400, 400), np.uint8)
+    cv2.circle(sec, (200, 200), 150, 1, -1)
+    assert W.rhizodermis_by_outline(sec, 10.0) == pytest.approx(2 * np.pi * 150 / 10, rel=0.05)
+
+
+def test_no_central_vessel_when_the_stele_holds_a_ring_of_similar_vessels():
+    cand = np.zeros((200, 200), np.uint8)
+    for k in range(6):
+        th = k * np.pi / 3
+        cv2.circle(cand, (int(100 + 25 * np.cos(th)), int(100 + 25 * np.sin(th))), 8, 255, -1)
+    stele = np.zeros((200, 200), bool)
+    cv2.circle(stele.view(np.uint8), (100, 100), 45, 1, -1)
+    assert W.central_vessel(cand, stele, lumen_area=10.0) is None
