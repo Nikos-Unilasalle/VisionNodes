@@ -165,3 +165,40 @@ def test_remove_walled_lacunae_takes_out_the_empty_sector_only():
     assert (out == 2).sum() == (labels == 2).sum() and (out == 3).sum() == (labels == 3).sum()
     assert np.array_equal(labels, before)
 
+
+
+def test_fragments_of_an_empty_radial_channel_are_taken_out():
+    # an empty radial channel cut by the segmentation into three small pieces, among filled cells
+    yy, xx = np.indices((400, 400))
+    c = 200
+    r = np.hypot(yy - c, xx - c)
+    rho = r / 50.0
+    labels = np.zeros((400, 400), np.int32)
+    k = 2
+    for y0 in range(0, 400, 20):                 # filled cells everywhere, with dark walls between them
+        for x0 in range(0, 400, 20):
+            labels[y0 + 2:y0 + 18, x0 + 2:x0 + 18] = k
+            k += 1
+    channel = (np.abs(xx - c) < 22) & (yy < c - 60) & (yy > c - 190)
+    labels[channel] = 0
+    for i, (lo, hi) in enumerate(((10, 60), (60, 100), (100, 140))):   # three fragments along the channel
+        labels[channel & (yy >= lo) & (yy < hi)] = 1000 + i
+    gray = np.full(labels.shape, 60.0, np.float32)
+    gray[labels > 0] = 120.0
+    gray[channel] = 228.0
+    out, n, lac = CR.remove_walled_lacunae(labels, gray, np.ones_like(labels, bool), rho,
+                                           lambda _r: 300.0, px_per_rho=50.0, background=230.0)
+    assert all(not (out == 1000 + i).any() for i in range(3))
+    assert (out[~channel & (labels > 0)] > 0).mean() > 0.99
+
+
+def test_a_band_of_pale_cells_along_a_layer_is_not_a_channel():
+    yy, xx = np.indices((400, 400))
+    c = 200
+    r = np.hypot(yy - c, xx - c)
+    rho = r / 50.0
+    band = (r > 120) & (r < 150)
+    gray = np.full((400, 400), 120.0, np.float32)
+    gray[band] = 228.0
+    ch = CR.empty_channels(gray, np.ones((400, 400), bool), rho, lambda _r: 300.0, 50.0, 120.0, 230.0)
+    assert not ch.any()

@@ -15,6 +15,7 @@ map and would be counted as aerenchyma. Each empty region is re-examined on its 
 """
 import cv2
 import numpy as np
+from skimage.morphology import reconstruction
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 
@@ -247,6 +248,11 @@ def drop_fragments(labels, rho, zone, expected):
 LACUNA_MIN_DEPTH = 3.0    # radial extent of a lacuna, in expected cell sizes (sqrt of the area)
 LACUNA_MIN_ELONGATION = 0.8  # spread along rho / spread along the tangent of a lacuna
 EMPTY_SHARE = 0.5         # a lacuna's interior lies past half way from the lumen level to the backdrop
+CHANNEL_SEED = 0.75       # an empty channel holds pixels this far from the lumen level to the backdrop...
+CHANNEL_REACH = 0.45      # ... and extends over the pixels connected to them past this level
+CHANNEL_MIN_DEPTH = 1.5   # radial extent of an empty channel, in expected cell sizes
+CHANNEL_MIN_CELLS = 1.5   # area of an empty channel, in expected cell areas
+CHANNEL_OWN = 0.5         # an object with at least this share of its area in a channel is part of it
 
 
 def radial_elongation(mask, grad):
@@ -305,6 +311,42 @@ def lacunae_from_cells(labels, rho, zone, expected, px_per_rho, gray=None, backg
     return out, removed
 
 
+def empty_channels(gray, zone, rho, expected, px_per_rho, lumen_level, background):
+    """Aerenchyma channels seen as empty space, whatever the segmentation made of them.
+
+    A channel has no walls inside: the segmentation cuts it into fragments that are each too small to
+    be judged as a lacuna. Here the channel is the region of pixels connected to clearly empty ones
+    (past CHANNEL_SEED of the way from the zone's lumens to the backdrop) through pixels still past
+    CHANNEL_REACH (hysteresis), kept when it is larger than CHANNEL_MIN_CELLS expected cells, deeper
+    than CHANNEL_MIN_DEPTH cell sizes along rho and radial (radial_elongation >= LACUNA_MIN_ELONGATION).
+    A band of pale cells along a layer is tangential and is not kept."""
+    g = cv2.GaussianBlur(np.asarray(gray, np.float32), (0, 0), 1.5)
+    e = (g - lumen_level) / max(background - lumen_level, 1e-6)
+    zone = np.asarray(zone, bool)
+    seeds = (e >= CHANNEL_SEED) & zone
+    if not seeds.any():
+        return np.zeros(zone.shape, bool)
+    region = reconstruction(seeds.astype(np.uint8), ((e >= CHANNEL_REACH) & zone).astype(np.uint8),
+                            method='dilation') > 0
+    region = cv2.morphologyEx(region.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8)) > 0
+    n, lab = cv2.connectedComponents(region.astype(np.uint8))
+    rho = np.asarray(rho, np.float64)
+    grad = np.gradient(rho)
+    out = np.zeros(zone.shape, bool)
+    for i in range(1, n):
+        m = lab == i
+        ys, xs = np.nonzero(m)
+        e_area = float(expected(rho[int(ys.mean()), int(xs.mean())]))
+        if m.sum() <= CHANNEL_MIN_CELLS * e_area:
+            continue
+        if (rho[m].max() - rho[m].min()) * px_per_rho / np.sqrt(e_area) <= CHANNEL_MIN_DEPTH:
+            continue
+        if radial_elongation(m, grad) < LACUNA_MIN_ELONGATION:
+            continue
+        out |= m
+    return out
+
+
 def remove_walled_lacunae(labels, gray, zone, rho, expected, px_per_rho, background):
     """Label map without the walled lacunae of `zone`; every other object is left as it was.
     `background`: grey level of the backdrop outside the section (the level of an empty lacuna).
@@ -312,4 +354,15 @@ def remove_walled_lacunae(labels, gray, zone, rho, expected, px_per_rho, backgro
     """
     labels = np.asarray(labels).astype(np.int32)
     kept, n = lacunae_from_cells(labels, rho, zone, expected, px_per_rho, gray, background)
+    zone = np.asarray(zone, bool)
+    if (zone & (kept > 0)).any():
+        lumen_level = float(np.median(np.asarray(gray, np.float32)[zone & (kept > 0)]))
+        channels = empty_channels(gray, zone, rho, expected, px_per_rho, lumen_level, background)
+        if channels.any():   # fragments of a channel the segmentation cut up are not cells
+            area = np.bincount(kept.ravel())
+            inside = np.bincount(kept[channels].ravel(), minlength=len(area))
+            frag = np.nonzero((area > 0) & (inside >= CHANNEL_OWN * area) & (np.arange(len(area)) > 0))[0]
+            if len(frag):
+                kept = np.where(np.isin(kept, frag), 0, kept)
+                n += len(frag)
     return kept, n, (labels > 0) & (kept == 0)
