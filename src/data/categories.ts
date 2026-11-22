@@ -269,7 +269,6 @@ export const CATEGORIES: Category[] = [
     { type: 'sci_scale_bar_detect',   label: 'Scale Bar Detect',    description: 'Finds the scale bar printed on the image and converts its known length to px/mm and px/µm.' },
     { type: 'dict_scale',             label: 'Scale Dict Values',   description: 'Multiplies / divides every numeric value of a dict by factor^power (e.g. px² → mm² for a whole table).' },
     { type: 'dict_report_panel',      label: 'Report Panel',        description: 'Displays dicts as a grouped measurement panel (groups: "Title: key, key | …"), compact and full views.' },
-    { type: 'sci_profile_zoning',     label: 'Profile Zoning',      description: 'Optimal contiguous zones along a position (e.g. ρ) where a measured value is homogeneous; auto number by BIC, outliers set aside, bootstrap boundary intervals.' },
     { type: 'sci_sample_projection',  label: 'Sample Projection',   description: 'Projects a sample of clearly detected objects over whole zones: expected count with bootstrap 95 % interval, completeness, auto packing.' },
     { type: 'list_natural_break',     label: 'List Natural Break',  description: 'Splits a list of numbers into two groups at the natural break (1-D Otsu, log scale option). Outputs the threshold.' },
     { type: 'sci_index_painter',      label: 'Index Painter',       description: 'Interactive float-value painter: draw regions and assign scalar values. Outputs a float32 index map and a uint8 label map.' },
