@@ -1,0 +1,930 @@
+{
+  "nodes": [
+    {
+      "id": "frame-source",
+      "type": "canvas_frame",
+      "position": {
+        "x": 46,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "SOURCE",
+          "color_index": 0
+        }
+      },
+      "width": 277,
+      "height": 609,
+      "style": {
+        "zIndex": -1,
+        "width": 277,
+        "height": 609
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 40,
+        "y": 80
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "frame-preprocess",
+      "type": "canvas_frame",
+      "position": {
+        "x": 360,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "PRÉTRAITEMENT",
+          "color_index": 1
+        }
+      },
+      "width": 280,
+      "height": 480,
+      "style": {
+        "zIndex": -1,
+        "width": 280,
+        "height": 480
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 360,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "frame-thresh",
+      "type": "canvas_frame",
+      "position": {
+        "x": 660,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "SEUILLAGE & MORPHOLOGIE",
+          "color_index": 2
+        }
+      },
+      "width": 280,
+      "height": 660,
+      "style": {
+        "zIndex": -1,
+        "width": 280,
+        "height": 660
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 660,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "frame-separation",
+      "type": "canvas_frame",
+      "position": {
+        "x": 960,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "SÉPARATION PAR DISTANCE",
+          "color_index": 3
+        }
+      },
+      "width": 580,
+      "height": 760,
+      "style": {
+        "zIndex": -1,
+        "width": 580,
+        "height": 760
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 960,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "frame-watershed",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1560,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "WATERSHED",
+          "color_index": 4
+        }
+      },
+      "width": 280,
+      "height": 300,
+      "style": {
+        "zIndex": -1,
+        "width": 280,
+        "height": 300
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1560,
+        "y": 80
+      },
+      "dragging": false
+    },
+    {
+      "id": "frame-analyse",
+      "type": "canvas_frame",
+      "position": {
+        "x": 1860,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "ANALYSE QUANTITATIVE",
+          "color_index": 0
+        }
+      },
+      "width": 280,
+      "height": 550,
+      "style": {
+        "zIndex": -1,
+        "width": 280,
+        "height": 550
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1860,
+        "y": 80
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "frame-results",
+      "type": "canvas_frame",
+      "position": {
+        "x": 2160,
+        "y": 80
+      },
+      "data": {
+        "label": "Frame",
+        "params": {
+          "title": "VISUALISATION & RÉSULTATS",
+          "color_index": 1
+        }
+      },
+      "width": 744,
+      "height": 897,
+      "style": {
+        "zIndex": -1,
+        "width": 744,
+        "height": 897
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2160,
+        "y": 80
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "note-title",
+      "type": "canvas_note",
+      "position": {
+        "x": 960,
+        "y": -160
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "GRANULOMÉTRIE OPTIQUE\n\nPipeline complet d'analyse quantitative de particules par segmentation Watershed.\nMesure automatique : nombre, aire moyenne, distribution de taille.\n\nApplications : sciences des matériaux, géologie, microscopie, contrôle qualité."
+        }
+      },
+      "width": 560,
+      "height": 170,
+      "style": {
+        "width": 560,
+        "height": 170
+      },
+      "selected": true,
+      "positionAbsolute": {
+        "x": 960,
+        "y": -160
+      },
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "note-import",
+      "type": "canvas_note",
+      "position": {
+        "x": 104.97609120179513,
+        "y": 828.3185924999605
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Remplacez billes.jpg par votre propre image : grains de sable, cellules, bulles, pores, galets…\n\nUtilisez le node Input Image pour importer via Cmd+O ou glisser-déposer.",
+          "color_index": 0
+        }
+      },
+      "width": 220,
+      "height": 110,
+      "style": {
+        "width": 220,
+        "height": 110
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 104.97609120179513,
+        "y": 828.3185924999605
+      },
+      "dragging": false
+    },
+    {
+      "id": "note-otsu",
+      "type": "canvas_note",
+      "position": {
+        "x": 660,
+        "y": 770
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Otsu calcule automatiquement le seuil optimal en maximisant la variance inter-classes fond/objet.\nOpening élimine le bruit. Closing bouche les petits trous.",
+          "color_index": 0
+        }
+      },
+      "width": 270,
+      "height": 95,
+      "style": {
+        "width": 270,
+        "height": 95
+      },
+      "selected": false
+    },
+    {
+      "id": "note-dist",
+      "type": "canvas_note",
+      "position": {
+        "x": 960,
+        "y": 870
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "La transformée en distance : chaque pixel blanc prend pour valeur sa distance au bord le plus proche. Les maxima locaux correspondent aux centres des particules → graines du Watershed.",
+          "color_index": 0
+        }
+      },
+      "width": 560,
+      "height": 95,
+      "style": {
+        "width": 560,
+        "height": 95
+      },
+      "selected": false
+    },
+    {
+      "id": "note-watershed",
+      "type": "canvas_note",
+      "position": {
+        "x": 1571.0082651772213,
+        "y": 412.26145657651637
+      },
+      "data": {
+        "label": "Note",
+        "params": {
+          "text": "Watershed simule une inondation depuis les graines. Il sépare les particules qui se touchent là où les bassins versants se rencontrent (frontières blanches).",
+          "color_index": 0
+        }
+      },
+      "width": 260,
+      "height": 140,
+      "style": {
+        "width": 260,
+        "height": 140
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false,
+      "positionAbsolute": {
+        "x": 1571.0082651772213,
+        "y": 412.26145657651637
+      }
+    },
+    {
+      "id": "gray-1",
+      "type": "filter_gray",
+      "position": {
+        "x": 390,
+        "y": 360
+      },
+      "data": {
+        "label": "Niveaux de Gris",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "thresh-otsu",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 690,
+        "y": 160
+      },
+      "data": {
+        "label": "Seuil Otsu (automatique)",
+        "params": {
+          "mode": 0,
+          "threshold": 137,
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "morph-open",
+      "type": "feat_morphology_adv",
+      "position": {
+        "x": 690,
+        "y": 360
+      },
+      "data": {
+        "label": "Opening — Éliminer le Bruit",
+        "params": {
+          "operation": 0,
+          "shape": 2,
+          "size": 5,
+          "iterations": 2,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false
+    },
+    {
+      "id": "dist-1",
+      "type": "feat_distance_transform",
+      "position": {
+        "x": 990,
+        "y": 161
+      },
+      "data": {
+        "label": "Transform. en Distance (L2)",
+        "params": {
+          "dist_type": 0,
+          "mask_size": 1,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 990,
+        "y": 161
+      },
+      "dragging": false
+    },
+    {
+      "id": "thresh-peak",
+      "type": "feat_threshold_adv",
+      "position": {
+        "x": 990,
+        "y": 370
+      },
+      "data": {
+        "label": "Seuil Pics (70% du max)",
+        "params": {
+          "mode": 0,
+          "threshold": 4,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "conncomp-1",
+      "type": "feat_connected_components",
+      "position": {
+        "x": 1280,
+        "y": 260
+      },
+      "data": {
+        "label": "Marqueurs-Graines",
+        "params": {
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1280,
+        "y": 260
+      },
+      "dragging": false
+    },
+    {
+      "id": "filter-1",
+      "type": "feat_marker_filter",
+      "position": {
+        "x": 1280,
+        "y": 440
+      },
+      "data": {
+        "label": "Filtrer Fragments (min 80 px²)",
+        "params": {
+          "min_area": 100,
+          "max_area": 10800,
+          "area_unit": 0,
+          "remap_ids": 1,
+          "color_index": 3
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1280,
+        "y": 440
+      },
+      "dragging": false
+    },
+    {
+      "id": "wshed-1",
+      "type": "feat_watershed",
+      "position": {
+        "x": 1580,
+        "y": 221.23659413679508
+      },
+      "data": {
+        "label": "Watershed",
+        "params": {
+          "visualization": 2,
+          "boundary_color": 3,
+          "boundary_thickness": 3,
+          "region_alpha": 0.35,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1580,
+        "y": 221.23659413679508
+      },
+      "dragging": false
+    },
+    {
+      "id": "analysis-1",
+      "type": "sci_marker_analysis",
+      "position": {
+        "x": 1890,
+        "y": 160
+      },
+      "data": {
+        "label": "Mesure des Particules",
+        "params": {
+          "show_labels": 1,
+          "show_points": 1,
+          "font_scale": 0.5,
+          "thickness": 1,
+          "coord_type": 0,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false
+    },
+    {
+      "id": "stats-1",
+      "type": "sci_stats",
+      "position": {
+        "x": 1890,
+        "y": 390
+      },
+      "data": {
+        "label": "Statistiques d'Aire (px²)",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 208,
+      "selected": false
+    },
+    {
+      "id": "disp-watershed",
+      "type": "output_display",
+      "position": {
+        "x": 2200,
+        "y": 160
+      },
+      "data": {
+        "label": "Segmentation Watershed",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 160
+      },
+      "dragging": false
+    },
+    {
+      "id": "disp-analysis",
+      "type": "output_display",
+      "position": {
+        "x": 2200,
+        "y": 340
+      },
+      "data": {
+        "label": "Particules Annotées",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 144,
+      "selected": false
+    },
+    {
+      "id": "plotter-1",
+      "type": "sci_plotter",
+      "position": {
+        "x": 2190,
+        "y": 570
+      },
+      "data": {
+        "label": "Aire Moy. & Écart-type (px²)",
+        "params": {
+          "buffer_size": 200,
+          "auto_scale": true,
+          "width": 300,
+          "height": 200,
+          "color_index": 4
+        }
+      },
+      "width": 690,
+      "height": 238,
+      "style": {
+        "width": 690,
+        "height": 238
+      },
+      "selected": false,
+      "dragging": false,
+      "resizing": false
+    },
+    {
+      "id": "insp-count",
+      "type": "data_inspector",
+      "position": {
+        "x": 2195.175159335729,
+        "y": 830.9076428785077
+      },
+      "data": {
+        "label": "Nombre de Particules",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 100,
+      "style": {
+        "width": 208,
+        "height": 100
+      },
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2195.175159335729,
+        "y": 830.9076428785077
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777615546380",
+      "type": "input_image",
+      "position": {
+        "x": 76.54857068789096,
+        "y": 169.29313094752064
+      },
+      "style": {},
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/billes.jpg",
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 211,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 76.54857068789096,
+        "y": 169.29313094752064
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777615839942",
+      "type": "feat_clahe",
+      "position": {
+        "x": 381.9873224762715,
+        "y": 234.83262019765903
+      },
+      "style": {},
+      "data": {
+        "label": "CLAHE (Contrast)",
+        "params": {
+          "clip_limit": 3,
+          "grid_size": 7,
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 381.9873224762715,
+        "y": 234.83262019765903
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777615884535",
+      "type": "util_roi_polygon",
+      "position": {
+        "x": 81.4660683334605,
+        "y": 415.3563591225912
+      },
+      "style": {},
+      "data": {
+        "label": "ROI Polygon",
+        "params": {
+          "points": "[{\"x\":0.05375,\"y\":0.09583333333333334},{\"x\":0.83,\"y\":0.06805555555555555},{\"x\":0.915,\"y\":0.9125},{\"x\":0.0625,\"y\":0.9666666666666667}]",
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 245,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 81.4660683334605,
+        "y": 415.3563591225912
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777616603454-0.047415830823509975",
+      "type": "input_image",
+      "position": {
+        "x": 2476.7631289036835,
+        "y": 158.88600977249624
+      },
+      "style": {},
+      "data": {
+        "label": "Image File",
+        "params": {
+          "path": "/Users/nikos/Desktop/VNStudio/samples/billes.jpg",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 211,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2476.7631289036835,
+        "y": 158.88600977249624
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1777616619909",
+      "type": "util_compose",
+      "position": {
+        "x": 2483.0771720469143,
+        "y": 402.8069365820122
+      },
+      "style": {},
+      "data": {
+        "label": "Compose",
+        "params": {
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 112,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2483.0771720469143,
+        "y": 402.8069365820122
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-gray-otsu",
+      "source": "gray-1",
+      "sourceHandle": "image__main",
+      "target": "thresh-otsu",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-otsu-open",
+      "source": "thresh-otsu",
+      "sourceHandle": "mask__mask",
+      "target": "morph-open",
+      "targetHandle": "any__mask",
+      "selected": false
+    },
+    {
+      "id": "e-dist-peak",
+      "source": "dist-1",
+      "sourceHandle": "image__main",
+      "target": "thresh-peak",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "id": "e-peak-conn",
+      "source": "thresh-peak",
+      "sourceHandle": "mask__mask",
+      "target": "conncomp-1",
+      "targetHandle": "any__mask",
+      "selected": false
+    },
+    {
+      "id": "e-conn-filter",
+      "source": "conncomp-1",
+      "sourceHandle": "any__markers",
+      "target": "filter-1",
+      "targetHandle": "any__markers",
+      "selected": false
+    },
+    {
+      "id": "e-filter-wshed",
+      "source": "filter-1",
+      "sourceHandle": "any__markers_out",
+      "target": "wshed-1",
+      "targetHandle": "any__markers",
+      "selected": false
+    },
+    {
+      "id": "e-wshed-analysis-markers",
+      "source": "wshed-1",
+      "sourceHandle": "any__markers_out",
+      "target": "analysis-1",
+      "targetHandle": "any__markers",
+      "selected": false
+    },
+    {
+      "id": "e-analysis-stats",
+      "source": "analysis-1",
+      "sourceHandle": "list__data_list",
+      "target": "stats-1",
+      "targetHandle": "list__data_list",
+      "selected": false
+    },
+    {
+      "id": "e-wshed-disp",
+      "source": "wshed-1",
+      "sourceHandle": "image__main",
+      "target": "disp-watershed",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-analysis-disp",
+      "source": "analysis-1",
+      "sourceHandle": "image__main",
+      "target": "disp-analysis",
+      "targetHandle": "image__main",
+      "selected": false
+    },
+    {
+      "id": "e-stats-plotter-mean",
+      "source": "stats-1",
+      "sourceHandle": "scalar__mean",
+      "target": "plotter-1",
+      "targetHandle": "any__v0",
+      "selected": false
+    },
+    {
+      "id": "e-stats-plotter-std",
+      "source": "stats-1",
+      "sourceHandle": "scalar__std",
+      "target": "plotter-1",
+      "targetHandle": "any__v1",
+      "selected": false
+    },
+    {
+      "id": "e-analysis-insp",
+      "source": "analysis-1",
+      "sourceHandle": "scalar__count",
+      "target": "insp-count",
+      "targetHandle": "any__data",
+      "selected": false
+    },
+    {
+      "source": "morph-open",
+      "sourceHandle": "mask__mask",
+      "target": "dist-1",
+      "targetHandle": "any__mask",
+      "id": "e-1777615657978",
+      "selected": false
+    },
+    {
+      "id": "e-1777615845935-2",
+      "source": "node-1777615839942",
+      "target": "gray-1",
+      "sourceHandle": "main",
+      "targetHandle": "image__image",
+      "selected": false
+    },
+    {
+      "source": "node-1777615546380",
+      "sourceHandle": "image__main",
+      "target": "node-1777615884535",
+      "targetHandle": "image__image",
+      "id": "e-1777615903666",
+      "selected": false
+    },
+    {
+      "source": "node-1777615884535",
+      "sourceHandle": "image__masked",
+      "target": "node-1777615839942",
+      "targetHandle": "image__image",
+      "id": "e-1777615997343",
+      "selected": false
+    },
+    {
+      "source": "node-1777615884535",
+      "sourceHandle": "image__masked",
+      "target": "wshed-1",
+      "targetHandle": "image__image",
+      "id": "e-1777616012005",
+      "selected": false
+    },
+    {
+      "source": "node-1777616603454-0.047415830823509975",
+      "sourceHandle": "image__main",
+      "target": "node-1777616619909",
+      "targetHandle": "image__image_a",
+      "id": "e-1777616627356",
+      "selected": false
+    },
+    {
+      "source": "wshed-1",
+      "sourceHandle": "image__main",
+      "target": "node-1777616619909",
+      "targetHandle": "image__image_b",
+      "id": "e-1777616637993",
+      "selected": false
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 1237,
+      "h": 556
+    },
+    "previewPos": {
+      "x": 96.95703125,
+      "y": -32.19140625
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1777616619909"
+  }
+}
