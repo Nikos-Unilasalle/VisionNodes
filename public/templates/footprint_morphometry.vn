@@ -93,7 +93,7 @@
       "data": {
         "label": "Footprint",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/footprint.jpg",
+          "path": "samples/footprint.jpg",
           "color_index": 0
         }
       },

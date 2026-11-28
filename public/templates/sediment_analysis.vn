@@ -11,7 +11,7 @@
       "data": {
         "label": "Sediment Layers",
         "params": {
-          "path": "sediment_layers.csv",
+          "path": "samples/sediment_layers.csv",
           "norm_mode": 0,
           "layer_index": 1,
           "color_index": 0
@@ -66,7 +66,7 @@
       "data": {
         "label": "Sediment Layers",
         "params": {
-          "path": "sediment_layers.csv",
+          "path": "samples/sediment_layers.csv",
           "layer_index": 2,
           "norm_mode": 0,
           "color_index": 0
@@ -86,7 +86,7 @@
       "data": {
         "label": "Sediment Layers",
         "params": {
-          "path": "sediment_layers.csv",
+          "path": "samples/sediment_layers.csv",
           "layer_index": 3,
           "norm_mode": 0,
           "color_index": 0
@@ -565,7 +565,7 @@
         "label": "Note",
         "params": {
           "color_index": 4,
-          "text": "S\u00e9lection de 3 couches"
+          "text": "Sélection de 3 couches"
         }
       },
       "width": 280,

@@ -89,7 +89,7 @@
       "data": {
         "label": "Image source",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/billes.jpg",
+          "path": "samples/billes.jpg",
           "color_index": 3
         }
       },

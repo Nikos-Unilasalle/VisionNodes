@@ -638,18 +638,6 @@
       "selected": false
     },
     {
-      "sourceHandle": "list__contours_list",
-      "targetHandle": "list__contours",
-      "id": "e-1777699787381-0.44859221207066624",
-      "selected": false
-    },
-    {
-      "sourceHandle": "list__contours_list",
-      "targetHandle": "list__contours",
-      "id": "e-1777699787381-0.8626734432218736",
-      "selected": false
-    },
-    {
       "source": "mog-1",
       "sourceHandle": "mask__mask",
       "target": "group-1777699945275",

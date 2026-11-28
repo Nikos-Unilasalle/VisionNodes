@@ -1,4 +1,4 @@
-"""Generate public/templates/root_anatomy_analysis.vn from generic nodes only.
+"""Generate docs/root_anatomy/root_anatomy_analysis.vn from generic nodes only.
 
 Usage:  .venv/bin/python scripts/gen_root_anatomy_vn.py
 
@@ -493,7 +493,7 @@ vn = {'nodes': FRAMES + NODES, 'edges': EDGES,
       'ui': {'previewSize': {'w': 900, 'h': 450}, 'previewPos': {'x': 420, 'y': -60}, 'visualizedNodeId': 'display'}}
 
 if __name__ == '__main__':
-    out = os.path.join(REPO, 'public', 'templates', 'root_anatomy_analysis.vn')
+    out = os.path.join(REPO, 'docs', 'root_anatomy', 'root_anatomy_analysis.vn')
     with open(out, 'w') as fh:
         json.dump(vn, fh, indent=2, ensure_ascii=False)
     print(f'{len(NODES)} nodes, {len(EDGES)} edges, {len(FRAMES)} frames -> {out}')

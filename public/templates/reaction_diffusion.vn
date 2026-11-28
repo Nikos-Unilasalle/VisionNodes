@@ -43,7 +43,7 @@
       "data": {
         "label": "man.jpg",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/portrait.jpeg",
+          "path": "samples/portrait.jpeg",
           "color_index": 1
         }
       },
@@ -185,9 +185,9 @@
       },
       "style": {},
       "data": {
-        "label": "Screenshot 2026-05-19 at 23.35.54.png",
+        "label": "portrait.jpeg",
         "params": {
-          "path": "/var/folders/wv/px3cct8n26z3fc8s63b43wwc0000gn/T/TemporaryItems/NSIRD_screencaptureui_nOc1gB/Screenshot 2026-05-19 at 23.35.54.png",
+          "path": "samples/portrait.jpeg",
           "color_index": 4
         }
       },

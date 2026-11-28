@@ -1,0 +1,969 @@
+{
+  "nodes": [
+    {
+      "id": "node-1778916628968-0.6760854756931174",
+      "type": "input_image",
+      "position": {
+        "x": 140,
+        "y": 120
+      },
+      "data": {
+        "label": "① Blood Smear Image",
+        "params": {
+          "path": "samples/blood.jpg"
+        }
+      },
+      "width": 208,
+      "height": 203,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 140,
+        "y": 120
+      }
+    },
+    {
+      "id": "node-1778917687098-5nctdb8y3",
+      "type": "sci_interactive_calibration",
+      "position": {
+        "x": 2200,
+        "y": 1000
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Visual Calibration",
+        "params": {
+          "points": "[{\"x\":0.2977607544057116,\"y\":0.7890259881870112},{\"x\":0.36667661436342436,\"y\":0.7775400115273925}]",
+          "unit": "µm",
+          "real_len": 7.2
+        },
+        "rotated": false,
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 1000
+      },
+      "dragging": false
+    },
+    {
+      "id": "teleport_1778917690495_62qj",
+      "type": "canvas_teleport",
+      "position": {
+        "x": 1940,
+        "y": 960
+      },
+      "data": {
+        "label": "① Blood Smear Image",
+        "params": {
+          "source_id": "node-1778916628968-0.6760854756931174",
+          "source_type": "input_image"
+        },
+        "source_outputs": [
+          {
+            "id": "main",
+            "color": "image"
+          },
+          {
+            "id": "width",
+            "color": "scalar"
+          },
+          {
+            "id": "height",
+            "color": "scalar"
+          }
+        ]
+      },
+      "width": 173,
+      "selected": false,
+      "height": 126,
+      "positionAbsolute": {
+        "x": 1940,
+        "y": 960
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916645866-latty6r3x",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#E2A0A4",
+          "r": 226,
+          "g": 160,
+          "b": 164,
+          "node_note": "erythrocites",
+          "color_index": 4
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 380,
+        "y": 60
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916650306-0.46502027647819144",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 240
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#D097C1",
+          "r": 208,
+          "g": 151,
+          "b": 193,
+          "s_tol": 45,
+          "h_tol": 6,
+          "v_tol": 53,
+          "mode": 0,
+          "threshold": 20,
+          "node_note": "neutrophiles",
+          "color_index": 3
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 240
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916652742-0.6355882495359223",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 380
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#5B029C",
+          "r": 91,
+          "g": 2,
+          "b": 156,
+          "h_tol": 21,
+          "s_tol": 98,
+          "v_tol": 62,
+          "color_index": 2
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916816049-m9cbarcc2",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 20
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 501,
+          "color_index": 4
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 20
+      }
+    },
+    {
+      "id": "node-1778916840210-0.29021636636267356",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 180
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1709,
+          "color_index": 3
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 180
+      }
+    },
+    {
+      "id": "node-1778916862524-0.4515152333955982",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 360
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 1709,
+          "color_index": 2
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 660,
+        "y": 300
+      }
+    },
+    {
+      "id": "node-1778916877756-0.9280644263834067",
+      "type": "filter_color_mask",
+      "position": {
+        "x": 700,
+        "y": 540
+      },
+      "style": {},
+      "data": {
+        "label": "Color Mask",
+        "params": {
+          "color": "#9066CA",
+          "r": 144,
+          "g": 102,
+          "b": 202,
+          "h_tol": 7,
+          "s_tol": 51,
+          "v_tol": 25,
+          "node_note": "plaquettes",
+          "color_index": 0
+        },
+        "exposedParams": [
+          "color"
+        ]
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 700,
+        "y": 540
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778916881594-0.3069963638143294",
+      "type": "filter_blob_filter",
+      "position": {
+        "x": 980,
+        "y": 540
+      },
+      "style": {},
+      "data": {
+        "label": "Blob Filter",
+        "params": {
+          "min_area": 500,
+          "max_area": 12000,
+          "color_index": 0
+        },
+        "minified": false
+      },
+      "width": 208,
+      "height": 121,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 980,
+        "y": 540
+      }
+    },
+    {
+      "id": "node-1778917464167-s35tihpie",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1260,
+        "y": 520
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1260,
+        "y": 520
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778934082130-2kq7mjvuc",
+      "type": "util_fill_holes",
+      "position": {
+        "x": 1320,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Fill Holes (Simple)",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1320,
+        "y": 120
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778934233215-n2npr7eos",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1820,
+        "y": -100
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.85,
+          "min_circularity": 0.65,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": -100
+      }
+    },
+    {
+      "id": "node-1778934362193-g931z0ae1",
+      "type": "plugin_mask_to_image",
+      "position": {
+        "x": 1560,
+        "y": 120
+      },
+      "style": {},
+      "data": {
+        "label": "Mask to Image",
+        "params": {
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false
+    },
+    {
+      "id": "node-1778934568211-qgnxzi0qh",
+      "type": "feat_hough_circles",
+      "position": {
+        "x": 1820,
+        "y": 100
+      },
+      "style": {},
+      "data": {
+        "label": "Hough Circles",
+        "params": {
+          "max_r": 103,
+          "min_dist": 51,
+          "param1": 7,
+          "param2": 20,
+          "thickness": 7,
+          "viz_color": "#D400FF",
+          "min_r": 60,
+          "dp": 2,
+          "color_index": 4
+        }
+      },
+      "width": 208,
+      "height": 185,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 100
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956813737-jkmttdt59",
+      "type": "hema_hemogramme",
+      "position": {
+        "x": 2620,
+        "y": 180
+      },
+      "style": {},
+      "data": {
+        "label": "Hemogramme",
+        "params": {}
+      },
+      "width": 380,
+      "height": 393,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2620,
+        "y": 180
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956908146-3y2y9fum1",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 0
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 0
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956996586-0.06326680218067293",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 200
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 200
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778956998519-0.071608456713256",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 380
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 380
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957005353-0.7175029286385134",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 600
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 600
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957405241-20s1in10w",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1280,
+        "y": 320
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.25,
+          "use_aspect": false,
+          "min_circularity": 0.6,
+          "min_size": 6024,
+          "node_note": "Lymphocytes",
+          "color_index": 2
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1280,
+        "y": 320
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957594304-0.445523635066188",
+      "type": "feat_shape_gate",
+      "position": {
+        "x": 1820,
+        "y": 420
+      },
+      "style": {},
+      "data": {
+        "label": "Shape Gate",
+        "params": {
+          "min_aspect": 0.25,
+          "use_aspect": false,
+          "min_circularity": 0.15,
+          "min_size": 14905,
+          "node_note": "Monocyte",
+          "color_index": 1
+        }
+      },
+      "width": 208,
+      "height": 153,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 420
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1778957689737-mj8d7lrb4",
+      "type": "filter_morphology_smart",
+      "position": {
+        "x": 1820,
+        "y": 600
+      },
+      "style": {},
+      "data": {
+        "label": "Smart Morphology",
+        "params": {
+          "area_thresh_pct": 0,
+          "amount": 16,
+          "color_index": 0
+        }
+      },
+      "width": 208,
+      "height": 90,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 1820,
+        "y": 600
+      }
+    },
+    {
+      "id": "node-1778957799185-0.5876012824595953",
+      "type": "obj_extractor",
+      "position": {
+        "x": 2200,
+        "y": 800
+      },
+      "style": {
+        "height": 24
+      },
+      "data": {
+        "label": "Object Extractor",
+        "params": {},
+        "minified": true
+      },
+      "width": 208,
+      "height": 24,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 2200,
+        "y": 800
+      },
+      "dragging": false
+    },
+    {
+      "id": "reroute-1778958208658",
+      "type": "canvas_reroute",
+      "position": {
+        "x": 456,
+        "y": 143
+      },
+      "data": {
+        "label": "Reroute",
+        "params": {},
+        "ports": [
+          {
+            "id": "any__out_0_byrrc2",
+            "color": "any",
+            "label": "out_0"
+          },
+          {
+            "id": "any__out_1_lger27",
+            "color": "any",
+            "label": "out_1"
+          },
+          {
+            "id": "any__out_2_32l1v0",
+            "color": "any",
+            "label": "out_2"
+          },
+          {
+            "id": "any__out_3_kf2rkg",
+            "color": "any",
+            "label": "out_3"
+          }
+        ]
+      },
+      "style": {
+        "width": 8,
+        "height": 514
+      },
+      "width": 8,
+      "height": 514,
+      "selected": false,
+      "dragging": false,
+      "resizing": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "teleport_1778917690495_62qj",
+      "sourceHandle": "image__main",
+      "target": "node-1778917687098-5nctdb8y3",
+      "targetHandle": "image__image",
+      "id": "e-1778917693953",
+      "selected": false
+    },
+    {
+      "source": "node-1778916645866-latty6r3x",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916816049-m9cbarcc2",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916818583",
+      "selected": false
+    },
+    {
+      "source": "node-1778916650306-0.46502027647819144",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916840210-0.29021636636267356",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916847700",
+      "selected": false
+    },
+    {
+      "source": "node-1778916652742-0.6355882495359223",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916862524-0.4515152333955982",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916865917",
+      "selected": false
+    },
+    {
+      "source": "node-1778916877756-0.9280644263834067",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778916881594-0.3069963638143294",
+      "targetHandle": "mask__mask",
+      "id": "e-1778916884471",
+      "selected": false
+    },
+    {
+      "id": "e-1778917464218-d6j2f2xdr",
+      "source": "node-1778916881594-0.3069963638143294",
+      "target": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "id": "e-1778917464218-psoczqag8",
+      "source": "node-1778916881594-0.3069963638143294",
+      "target": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask",
+      "targetHandle": "mask__mask",
+      "selected": false
+    },
+    {
+      "source": "node-1778916816049-m9cbarcc2",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778934082130-2kq7mjvuc",
+      "targetHandle": "any__mask",
+      "id": "e-1778934092786",
+      "selected": false
+    },
+    {
+      "source": "node-1778934082130-2kq7mjvuc",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778934233215-n2npr7eos",
+      "targetHandle": "mask__mask",
+      "id": "e-1778934237748",
+      "selected": false
+    },
+    {
+      "source": "node-1778934233215-n2npr7eos",
+      "sourceHandle": "mask__mask_rej",
+      "target": "node-1778934362193-g931z0ae1",
+      "targetHandle": "mask__mask",
+      "id": "e-1778934365714",
+      "selected": false
+    },
+    {
+      "source": "node-1778934362193-g931z0ae1",
+      "sourceHandle": "image__main",
+      "target": "node-1778934568211-qgnxzi0qh",
+      "targetHandle": "image__image",
+      "id": "e-1778934571098",
+      "selected": false
+    },
+    {
+      "source": "node-1778956908146-3y2y9fum1",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__rbc",
+      "id": "e-1778956918155",
+      "selected": false
+    },
+    {
+      "source": "node-1778934233215-n2npr7eos",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778956908146-3y2y9fum1",
+      "targetHandle": "mask__mask",
+      "id": "e-1778956929802",
+      "selected": false
+    },
+    {
+      "source": "node-1778934568211-qgnxzi0qh",
+      "sourceHandle": "list__circles_list",
+      "target": "node-1778956908146-3y2y9fum1",
+      "targetHandle": "list__objects",
+      "id": "e-1778956932516",
+      "selected": false
+    },
+    {
+      "source": "node-1778916840210-0.29021636636267356",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778956996586-0.06326680218067293",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957011874",
+      "selected": false
+    },
+    {
+      "source": "node-1778956996586-0.06326680218067293",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__neu",
+      "id": "e-1778957015749",
+      "selected": false
+    },
+    {
+      "source": "node-1778916862524-0.4515152333955982",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778957405241-20s1in10w",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957409408",
+      "selected": false
+    },
+    {
+      "source": "node-1778957405241-20s1in10w",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778956998519-0.071608456713256",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957547242",
+      "selected": false
+    },
+    {
+      "source": "node-1778956998519-0.071608456713256",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__lym",
+      "id": "e-1778957549848",
+      "selected": false
+    },
+    {
+      "source": "node-1778917687098-5nctdb8y3",
+      "sourceHandle": "scalar__factor",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "scalar__calibration",
+      "id": "e-1778957560750",
+      "selected": false
+    },
+    {
+      "source": "node-1778957405241-20s1in10w",
+      "sourceHandle": "mask__mask_rej",
+      "target": "node-1778957594304-0.445523635066188",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957599074",
+      "selected": false
+    },
+    {
+      "source": "node-1778957594304-0.445523635066188",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778957689737-mj8d7lrb4",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957693251",
+      "selected": false
+    },
+    {
+      "source": "node-1778957689737-mj8d7lrb4",
+      "sourceHandle": "mask__mask",
+      "target": "node-1778957005353-0.7175029286385134",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957732575",
+      "selected": false
+    },
+    {
+      "source": "node-1778957005353-0.7175029286385134",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__mon",
+      "id": "e-1778957735752",
+      "selected": false
+    },
+    {
+      "source": "node-1778917464167-s35tihpie",
+      "sourceHandle": "mask__mask_kept",
+      "target": "node-1778957799185-0.5876012824595953",
+      "targetHandle": "mask__mask",
+      "id": "e-1778957811914",
+      "selected": false
+    },
+    {
+      "source": "node-1778957799185-0.5876012824595953",
+      "sourceHandle": "dict__stats",
+      "target": "node-1778956813737-jkmttdt59",
+      "targetHandle": "dict__plt",
+      "id": "e-1778957816126",
+      "selected": false
+    },
+    {
+      "id": "rr-in-1778958208658",
+      "source": "node-1778916628968-0.6760854756931174",
+      "sourceHandle": "image__main",
+      "target": "reroute-1778958208658",
+      "targetHandle": "any__in"
+    },
+    {
+      "id": "rr-out-1778958208658-0",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_0_byrrc2",
+      "target": "node-1778916645866-latty6r3x",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-1",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_1_lger27",
+      "target": "node-1778916650306-0.46502027647819144",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-2",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_2_32l1v0",
+      "target": "node-1778916652742-0.6355882495359223",
+      "targetHandle": "image__image"
+    },
+    {
+      "id": "rr-out-1778958208658-3",
+      "source": "reroute-1778958208658",
+      "sourceHandle": "any__out_3_kf2rkg",
+      "target": "node-1778916877756-0.9280644263834067",
+      "targetHandle": "image__image"
+    }
+  ],
+  "ui": {
+    "previewSize": {
+      "w": 523.125,
+      "h": 523
+    },
+    "previewPos": {
+      "x": 1659.890625,
+      "y": -409.62890625
+    },
+    "activePaletteIndex": 6,
+    "visualizedNodeId": "node-1778916628968-0.6760854756931174"
+  }
+}

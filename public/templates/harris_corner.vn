@@ -10,7 +10,7 @@
       "data": {
         "label": "Sample Image",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/stonewall.jpg",
+          "path": "samples/stonewall.jpg",
           "color_index": 0
         }
       },

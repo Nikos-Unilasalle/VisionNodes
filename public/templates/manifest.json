@@ -1,30 +1,5 @@
 [
   {
-    "name": "MC Water Mask — Uncertainty & Confidence Analysis",
-    "description": "Post-hoc analysis of a Monte Carlo water mask run using only generic nodes. Loads water_prob_mc.tif and water_mask_mc.tif. geo_band_stats reports global P(water) stats (mean/median/std/count). geo_band_calc computes pixel-wise Bernoulli uncertainty P(1−P). geotiff_to_mask + feat_mask_stats give water extent (area_px, area_pct). geo_statistics gives mean P within the water mask. A second geotiff_to_mask at P>0.9 + feat_mask_stats computes high-confidence coverage relative to the water mask.",
-    "file": "mc_validation/mc_analysis.vn"
-  },
-  {
-    "name": "MC Water Mask — Shapefile Validation",
-    "description": "Validates MC P(water) against two river shapefiles (with/without bridges). Rasterizes both shapefiles, stacks four pre-computed index TIFs (MNDWI, NDWI, AWEI, MBWI) into a 4-band stack, thresholds the probability at P≥0.7 to build a predicted mask, then computes sci_mask_metrics (TP/FP/FN IoU) vs both references. Two Python nodes produce: CDF + threshold sweep figure, and an index comparison bar chart.",
-    "file": "mc_validation/mc_validation.vn"
-  },
-  {
-    "name": "MC Water Mask — Sensitivity vs Spectral Indices",
-    "description": "Quantifies MC P(water) sensitivity vs NDWI, MNDWI, AWEI, MBWI. Loads a Sentinel-2 L2A 6-band raster, normalises DN, computes the 4 indices via geo_spectral_indices, then plots quantile-binned mean P(water) ± P10–P90 vs each index value with Spearman r. Rendered as a 2×2 journal-quality figure.",
-    "file": "mc_validation/mc_sensitivity.vn"
-  },
-  {
-    "name": "Monte-Carlo Probabilistic Water Mask",
-    "description": "Per-pixel calibrated water probability by Monte-Carlo uncertainty propagation — built entirely from generic nodes. Accepts 6 individual ACOLITE L2W band TIFs (Blue 492 nm, Green 559 nm, Red 665 nm, NIR 833 nm, SWIR1 1610 nm, SWIR2 2186 nm) stacked via geo_band_stack. No DN normalization needed (already Rrs). Raster Gaussian Noise drives stochastic sensor perturbation → four water indices (NDWI, MNDWI, AWEInsh, AWEIsh) → k=2-of-4 consensus vote → Frame Accumulator (mean=probability, std=uncertainty). The probability map is then turned into a water mask WITHOUT any threshold: geo_persistence extracts water bodies by 0-D topological persistence (auto-detected significance cut), replacing the old P≥0.5 binarize + area filter. Optional reference shapefile branch computes Precision/Recall/F1/IoU. Let it run ~60 ticks, then press Stop.",
-    "file": "mc_validation/mc_water_mask.vn"
-  },
-  {
-    "name": "MC Water Mask — Threshold-Free Topology",
-    "description": "Extracts water bodies from the MC P(water) map WITHOUT any threshold, using 0-D persistent homology (geo_persistence). Each candidate blob is scored by its topological persistence (peak − merge saddle = how robustly it survives across all thresholds); the significance cut is auto-detected from the largest gap in the persistence spectrum, so real lakes separate from speckle with no hand-picked value. Outputs a persistence saliency map, the birth/death persistence diagram (scatter), and a threshold-free mask — contrasted against a naive fixed P≥0.5 cut to show what the threshold choice costs.",
-    "file": "mc_validation/mc_topology.vn"
-  },
-  {
     "name": "RANSAC Homography — Robust Geometric Alignment",
     "description": "Estimates a robust homography between two views of the same scene using SIFT keypoints + Brute-Force matching + RANSAC geometric verification. A Python node synthetically rotates the source image 20° to create a second view for self-contained testing. Outputs: inlier match overlay, warped image (img1 aligned to img2's frame), and the 3×3 H matrix. Replace sources with real scene photos for outlier filtering in action.",
     "file": "ransac_homography.vn"
@@ -60,19 +35,9 @@
     "file": "harris_corner.vn"
   },
   {
-    "name": "Smile Detector",
-    "description": "Detects smiles in real-time via MediaPipe by measuring mouth corner distance, records frame data, and exports results to CSV.",
-    "file": "smile_detector.vn"
-  },
-  {
     "name": "YOLO Object Detection",
     "description": "Object detection on static images using YOLOv11. Displays bounding boxes, object count, and a list of detected objects.",
     "file": "yolo_detection.vn"
-  },
-  {
-    "name": "SORT Multi-Object Tracking",
-    "description": "Real-time multi-object tracking: YOLO detects objects while SORT assigns persistent IDs using a Kalman Filter and the Hungarian algorithm.",
-    "file": "sort_tracking.vn"
   },
   {
     "name": "DeepSORT Multi-Object Tracking",
@@ -83,11 +48,6 @@
     "name": "Pebble Segmenter",
     "description": "Segments individual pebbles using a watershed algorithm: applies Otsu thresholding, morphological cleanup, distance transform, marker area filtering, and shape analysis.",
     "file": "galets_segmenter.vn"
-  },
-  {
-    "name": "Interactive Magic Painter",
-    "description": "Draw on screen using hand landmarks tracked in real time.",
-    "file": "magic_painter.vn"
   },
   {
     "name": "Ghost Motion Trail",
@@ -135,24 +95,9 @@
     "file": "sediment_analysis.vn"
   },
   {
-    "name": "Root Anatomy Analysis",
-    "description": "RootScan-equivalent root cross-section phenotyping (Burton et al. 2012, Table 1) built only from generic nodes. Scale bar auto-calibration, section, stele, metaxylem, aerenchyma (middle cortex), cortical cells by watershed in inner/middle/outer zones, 25 variables in a grouped report + CSV. Bright-field and fluorescence.",
-    "file": "root_anatomy_analysis.vn"
-  },
-  {
     "name": "Thin Section Petrography",
     "description": "Segments mineral grains from polarized light microscopy images (XPL + PPL). Detects opaque minerals, builds per-grain watershed markers, segments grains, and exports shape descriptors (area, circularity, aspect ratio, intensity) to CSV.",
     "file": "thin_section_petrography.vn"
-  },
-  {
-    "name": "IMU Phase Space (M5StickC Plus2)",
-    "description": "Visualizes accelerometer and gyroscope data from an M5StickC Plus2 in a 2D phase space. Features a 2x3 dashboard displaying Accel XY/XZ/YZ and Gyro XY/XZ/YZ with colored motion trails and fadeout. Connects via serial port CSV stream.",
-    "file": "imu_phase_space.vn"
-  },
-  {
-    "name": "Sentinel-2 Marine Turbidity Mapping",
-    "description": "End-to-end coastal turbidity mapping pipeline. Loads Sentinel-2 L2A bands (B03/B04/B08/B11), normalizes to reflectance, calculates the MNDWI water mask, performs sun glint correction (NIR deglint), and applies the bio-optical Nechad 2010 model to generate a colorized NTU map and export as a GeoTIFF.",
-    "file": "sentinel2_turbidity.vn"
   },
   {
     "name": "Gaze Heatmap",
@@ -170,11 +115,6 @@
     "file": "stone_wall_gdino_sam_ollama.vn"
   },
   {
-    "name": "AI Dialogue — Two LLMs Debate",
-    "description": "Two AI personas (Alice & Bob) debate for a fixed number of turns via a single LLM Conversation orchestrator node. The transcript streams into a sticky Note (text input), turns collect into a Variable accumulator. Works with Ollama (local/cloud), OpenAI, Anthropic, Groq, DeepSeek.",
-    "file": "ai_dialogue.vn"
-  },
-  {
     "name": "Sphere Counting (Hough Circles)",
     "description": "Optimized workflow for counting and visualizing spherical objects (beads, grains, cells). Employs bilateral filtering to reduce specular reflections and CLAHE contrast enhancement prior to Hough circle detection.",
     "file": "sphere_counting_hough.vn"
@@ -190,8 +130,58 @@
     "file": "reaction_diffusion.vn"
   },
   {
-    "name": "MC Water Mask — Ensemble Uncertainty (Seine 2021-09-02)",
-    "description": "Monte-Carlo surface-water pipeline built around a defined estimand: ONE Sentinel-2 L2A acquisition (2021-09-02 10:57:29 UTC, tile 31UDQ, 0.00% AOI cloud), so a 1-day window returns a single image and no mosaicking occurs. Perturbs reflectance with spatially correlated Gaussian noise, runs a 4-index vote (NDWI/MNDWI/AWEIsh/MBWI) gated by scene-adaptive NIR/SWIR caps frozen on the unperturbed scene, and accumulates the ensemble. The uncertainty product is Ensemble Statistics over per-realisation AGGREGATES (area, perimeter, components, boundary displacement), not a per-pixel std map -- for a binary outcome with i.i.d. realisations the per-pixel std is exactly sqrt(P(1-P)), a deterministic transform of the mean. Measured here: sd(area) = 72/117/254/577 px at 0/1/3/10 px noise correlation while the mean probability field stays constant to four decimals. Validation uses two references (WorldCover 10 m + JRC GSW MonthlyHistory, dated) and reports their disagreement as an explicit ceiling. See MC_PAPER_ARTICLE.md (publication methodology section), MC_PAPER_METHODS.md (full protocol) and MC_PAPER_WEAKNESSES.md (adversarial audit) alongside.",
-    "file": "mc_validation/mc_paper_ensemble_uncertainty.vn"
+    "name": "Blood Pattern Analysis — Forensics",
+    "description": "Full forensic BPA pipeline: Metadata Reader → Image Loader → Stain Detector → Origin Reconstructor → 4 visualizations (Stringing Overlay, Convergence Heatmap, Top-Down XY View, 3D Scene). Loads an Attinger dataset sample (HP_50 by default).",
+    "file": "bpa_forensics.vn"
+  },
+  {
+    "name": "Blood Pattern Analysis — Batch Evaluation",
+    "description": "Runs the full BPA pipeline on all 30 Attinger dataset samples in one click. BPA Batch Evaluator → DataFrame with (sample_id, est_x/y/z, error_cm, n_stains, blood_volume, dowel_angle, hematocrit). Connected to scatter plots, error histogram, and CSV export.",
+    "file": "bpa_batch_analysis.vn"
+  },
+  {
+    "name": "Hematology — Blood Cell Count (CBC)",
+    "description": "Veterinary complete blood count (CBC) pipeline processing two parallel color-separated channels. Pink channel extracts RBCs via watershed segmentation and size filtering; purple channel isolates WBCs and platelets, compiling a structured CBC report.",
+    "file": "hema_blood_analysis.vn"
+  },
+  {
+    "name": "FastSAM Grain Analysis (Petro)",
+    "description": "Automatic petrographic grain segmentation using fine-tuned FastSAM (GrainSight). Detects individual grains with colored masks and computes shape descriptors (area, perimeter, circularity, aspect ratio, Feret diameter) with µm/px calibration.",
+    "file": "fastsam_grain_analysis.vn"
+  },
+  {
+    "name": "SAM Grain Analysis (Petro)",
+    "description": "Dual-mode petrographic thin-section pipeline combining SAM 2 automatic grain detection on PPL with interference-color segmentation on XPL, modal point counting, neighbor contact analysis, and a petrographic report.",
+    "file": "sam_grain_analysis.vn"
+  },
+  {
+    "name": "Thin Section — Full Petrographic Pipeline",
+    "description": "Complete thin-section petrography pipeline (12 nodes, 29 connections): PPL color segmentation, grain separation and point counting; XPL+PPL opaque detection, watershed grains, morphometry, neighbor analysis, and petrographic report.",
+    "file": "thin_section_analysis.vn"
+  },
+  {
+    "name": "Thin Section — Dual Mode XPL+PPL",
+    "description": "Dual-light petrographic thin-section analysis. Phase 1: color-based modal identification on PPL; Phase 2: watershed grain segmentation on XPL+PPL; Phase 3: µm/px scale-bar calibration with modal %, shape descriptors, and size histogram.",
+    "file": "thin_section_dual_mode.vn"
+  },
+  {
+    "name": "Footprint — A: Zone Analysis & Asymmetry",
+    "description": "Forensic footwear analysis pipeline A. Auto-aligns footprint via OBB, segments 4 longitudinal zones (Toes/Forefoot/Arch/Heel), computes per-zone area percentages, medial/lateral asymmetry score, and pressure centroid. Uses only generic nodes + Python Node.",
+    "file": "footprint_zone_analysis.vn"
+  },
+  {
+    "name": "Analyse d'Empreintes — Cours CV",
+    "description": "Educational computer-vision pipeline for forensic footwear analysis: thresholding, morphology, contour detection, and geometric bounding box / OBB analysis in 7 annotated steps.",
+    "file": "footwear_cv_course.vn"
+  },
+  {
+    "name": "GP Turbidity Ensemble Uncertainty",
+    "description": "Satellite turbidity modeling with symbolic Gaussian Process / genetic programming ensemble uncertainty. Combines Sentinel-2 ACOLITE products, NDWI water masking, and Naiades ground truth to map NTU mean and uncertainty.",
+    "file": "gp_ensemble_uncertainty.vn"
+  },
+  {
+    "name": "GP Turbidity Ensemble Uncertainty v2",
+    "description": "Extended symbolic GP turbidity ensemble pipeline with multi-scene calibration, water masking, spectral feature extraction, and spatial uncertainty mapping.",
+    "file": "gp_ensemble_uncertainty_v2.vn"
   }
 ]

@@ -10,7 +10,7 @@
       "data": {
         "label": "Petrographic Image",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/Thin plate LP.jpg",
+          "path": "samples/Thin plate LP.jpg",
           "color_index": 0
         },
         "minified": false
@@ -178,7 +178,7 @@
       "data": {
         "label": "Petrographic Image",
         "params": {
-          "path": "/Users/nikos/Desktop/VNStudio/samples/Thin plate LN.jpg",
+          "path": "samples/Thin plate LN.jpg",
           "color_index": 0
         },
         "minified": false

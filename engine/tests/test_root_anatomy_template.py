@@ -1,4 +1,4 @@
-"""Integration test: run public/templates/root_anatomy_analysis.vn headlessly on the samples.
+"""Integration test: run docs/root_anatomy/root_anatomy_analysis.vn headlessly on the samples.
 
 Guards the generic-node rewrite of the Root Anatomy template against regressions on
 bright-field (dark walls on white) and fluorescence (bright walls on black) sections.
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vn_headless as H  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-TEMPLATE = os.path.join(REPO, 'public', 'templates', 'root_anatomy_analysis.vn')
+TEMPLATE = os.path.join(REPO, 'docs', 'root_anatomy', 'root_anatomy_analysis.vn')
 
 # (sample, printed scale-bar length µm, expected px/mm, TSA:RXSA range, metaxylem count range)
 # Metaxylem counts were checked visually (A: 16 large vessels, B: 7).
@@ -30,6 +30,8 @@ H.load_plugins()
 
 @pytest.fixture(scope='module')
 def template():
+    if not os.path.exists(TEMPLATE):
+        pytest.skip(f'{TEMPLATE} not present (archived under gitignored docs/)')
     with open(TEMPLATE) as fh:
         return json.load(fh)
 
