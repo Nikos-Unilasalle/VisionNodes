@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import base64
 import os
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, resolve_resource_path, send_notification
 
 def _load_image_robust(path):
     """Load any image file to uint8 BGR. Tries cv2 then PIL fallback."""
@@ -95,15 +95,20 @@ class ImageInput(NodeProcessor):
     def __init__(self, engine=None):
         self.last_path = ""
         self.cached_img = None
+        self._warned_missing = ""
     def process(self, inputs, params):
         path = params.get('path', '')
         if not path: return {"main": None}
-        full_path = os.path.abspath(os.path.expanduser(path))
+        full_path = resolve_resource_path(path)
         if full_path != self.last_path:
             img = _load_image_robust(full_path)
             if img is not None:
                 self.cached_img = img
                 self.last_path = full_path
+                self._warned_missing = ""
+            elif not os.path.exists(full_path) and self._warned_missing != path:
+                self._warned_missing = path
+                send_notification(f"Image not found: {path}", level="warning", notif_id="input_image_missing")
         if self.cached_img is not None:
              h, w = self.cached_img.shape[:2]
              out = {"main": self.cached_img, "width": w, "height": h}
@@ -145,16 +150,21 @@ class MovieInput(NodeProcessor):
         self.last_path = ""
         self.cap = None
         self.total_frames = 0
+        self._warned_missing = ""
     def process(self, inputs, params):
         path = params.get('path', '')
         if not path: return {"main": None}
-        full_path = os.path.abspath(os.path.expanduser(path))
+        full_path = resolve_resource_path(path)
         if full_path != self.last_path:
             if self.cap: self.cap.release()
             self.cap = cv2.VideoCapture(full_path)
             if self.cap.isOpened():
                 self.last_path = full_path
                 self.total_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                self._warned_missing = ""
+            elif not os.path.exists(full_path) and self._warned_missing != path:
+                self._warned_missing = path
+                send_notification(f"Movie not found: {path}", level="warning", notif_id="input_movie_missing")
         if not self.cap or not self.cap.isOpened(): return {"main": None}
         playing = params.get('playing', False)
         command = None

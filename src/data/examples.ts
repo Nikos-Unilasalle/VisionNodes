@@ -757,7 +757,7 @@ export const EXAMPLES = [
     nodes: [
       { id: "src-1", type: "input_webcam", position: { x: 50, y: 150 }, data: { label: "Webcam", params: {} } },
       { id: "mog-1", type: "bg_sub_mog2", position: { x: 250, y: 150 }, data: { label: "Movement Mask", params: { history: 100 } } },
-      { id: "blend-1", type: "plugin_blend_images", position: { x: 500, y: 150 }, data: { label: "Ghost Blend", params: { opacity: 0.3 } } },
+      { id: "blend-1", type: "plugin_blend_modes", position: { x: 500, y: 150 }, data: { label: "Ghost Blend", params: { mode: 0, opacity: 30 } } },
       { id: "disp-1", type: "output_display", position: { x: 750, y: 150 }, data: { label: "Trail View", params: {} } }
     ],
     edges: [

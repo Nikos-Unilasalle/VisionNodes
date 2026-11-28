@@ -4,7 +4,7 @@ import hashlib
 import threading
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel, _notification_queue
+from registry import vision_node, NodeProcessor, send_notification, is_cancelled, clear_cancel, _notification_queue, get_cache_dir
 
 _NOTIF_ID = 'copernicus_marine'
 _SECRETS_PATH = os.path.expanduser('~/.vnstudio/secrets.json')
@@ -226,9 +226,7 @@ class GeoCopernicusMarineNode(NodeProcessor):
         # Caching logic based on params hash
         cache_str = f"{dataset_id}_{variable}_{bbox_val}_{date_start}_{date_end}_{min_depth}_{max_depth}_{service_idx}"
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()
-        _engine_dir = os.path.dirname(os.path.abspath(__file__))
-        cache_dir = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = get_cache_dir('copernicus_marine_cache', raw_cache, anchor_file=__file__)
         nc_file_path = os.path.join(cache_dir, f"{cache_hash}.nc")
 
         if auto:

@@ -19,7 +19,7 @@ from __future__ import annotations
 import threading
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_cache_dir
 
 _NOTIF = 'wfs_loader'
 
@@ -146,7 +146,8 @@ class WFSLoaderNode(NodeProcessor):
 
         wfs_url = str(params.get('wfs_url', _DEFAULT_WFS)).strip() or _DEFAULT_WFS
         type_name = str(params.get('type_name', '')).strip()
-        cache_dir = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
+        raw_cache = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
+        cache_dir = get_cache_dir('copernicus_cache', raw_cache)
 
         if not type_name:
             send_notification('WFS Loader: renseigner le typeName de la couche',

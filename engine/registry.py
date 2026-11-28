@@ -59,13 +59,267 @@ import os as _os
 import sys as _sys
 import site as _site
 import sysconfig as _sysconfig
+import tempfile as _tempfile
 
 def _site_is_writable() -> bool:
     """True when the interpreter's main site-packages can be written to."""
     p = _sysconfig.get_paths().get('purelib')
     return bool(p) and _os.access(p, _os.W_OK)
 
-VN_HOME = _os.path.join(_os.path.expanduser('~'), '.vnstudio')
+def is_dir_writable(path: str) -> bool:
+    """Return True if *path* (or its nearest existing ancestor) can be written to."""
+    try:
+        probe = _os.path.abspath(path)
+        while probe and not _os.path.exists(probe):
+            parent = _os.path.dirname(probe)
+            if parent == probe:
+                break
+            probe = parent
+        if not probe or not _os.path.isdir(probe):
+            return False
+        test_file = _os.path.join(probe, f".vn_write_test_{_os.getpid()}")
+        with open(test_file, "wb"):
+            pass
+        _os.remove(test_file)
+        return True
+    except Exception:
+        return False
+
+def _resolve_vn_home() -> str:
+    candidate = _os.path.join(_os.path.expanduser('~'), '.vnstudio')
+    if is_dir_writable(candidate):
+        return candidate
+    fallback = _os.path.join(_tempfile.gettempdir(), 'vnstudio')
+    _os.makedirs(fallback, exist_ok=True)
+    return fallback
+
+VN_HOME = _resolve_vn_home()
+VN_MODELS_DIR = _os.path.join(VN_HOME, 'models')
+VN_CACHE_DIR = _os.path.join(VN_HOME, 'cache')
+VN_SNAPSHOTS_DIR = _os.path.join(VN_HOME, 'snapshots')
+
+def _app_candidate_roots() -> list[str]:
+    """Return ordered candidate roots for bundled/dev assets (read-only or writable)."""
+    roots: list[str] = []
+    engine_dir = _os.path.dirname(_os.path.abspath(__file__))
+    project_root = _os.path.dirname(engine_dir)
+    for d in (
+        _os.getcwd(),
+        project_root,
+        engine_dir,
+        getattr(_sys, '_MEIPASS', ''),
+        _os.environ.get('VNSTUDIO_RESOURCE_DIR', ''),
+        _os.environ.get('VNSTUDIO_APP_DIR', ''),
+    ):
+        if d and _os.path.isdir(d) and d not in roots:
+            roots.append(d)
+    # On macOS, VNSTUDIO_APP_DIR is Contents/MacOS inside VNStudio.app; also check
+    # the folder containing VNStudio.app (where users extract samples.zip).
+    app_dir = _os.environ.get('VNSTUDIO_APP_DIR', '')
+    if app_dir:
+        cur = _os.path.abspath(app_dir)
+        for _ in range(4):
+            parent = _os.path.dirname(cur)
+            if parent and parent != cur and parent not in roots:
+                roots.append(parent)
+            cur = parent
+    if VN_HOME not in roots:
+        roots.append(VN_HOME)
+    return roots
+
+def configure_runtime_environment() -> None:
+    """Configure stdio, SSL CA bundle, and writable cache dirs for compiled builds."""
+    # 1. Windows GUI apps (windows_subsystem = "windows") can spawn child Python
+    #    with sys.stdout/sys.stderr set to None, crashing print() and tqdm.
+    if _sys.stdout is None or _sys.stderr is None:
+        _os.makedirs(VN_HOME, exist_ok=True)
+        log_path = _os.path.join(VN_HOME, 'engine.log')
+        try:
+            stream = open(log_path, 'a', encoding='utf-8', buffering=1)
+        except Exception:
+            stream = open(_os.devnull, 'w', encoding='utf-8')
+        if _sys.stdout is None:
+            _sys.stdout = stream
+        if _sys.stderr is None:
+            _sys.stderr = stream
+
+    # 2. python-build-standalone on macOS/Linux/Windows may lack a working system
+    #    CA bundle path for urllib/ssl. Wire certifi if available.
+    try:
+        import certifi
+        ca_path = certifi.where()
+        if ca_path and _os.path.isfile(ca_path):
+            if not _os.path.isfile(_os.environ.get('SSL_CERT_FILE', '')):
+                _os.environ['SSL_CERT_FILE'] = ca_path
+            if not _os.path.isfile(_os.environ.get('REQUESTS_CA_BUNDLE', '')):
+                _os.environ['REQUESTS_CA_BUNDLE'] = ca_path
+    except Exception:
+        pass
+
+    # 3. Route ML library caches into writable ~/.vnstudio/cache & models.
+    _os.makedirs(VN_MODELS_DIR, exist_ok=True)
+    _os.makedirs(VN_CACHE_DIR, exist_ok=True)
+    _os.environ.setdefault('HF_HOME', _os.path.join(VN_CACHE_DIR, 'huggingface'))
+    _os.environ.setdefault('HF_HUB_DISABLE_SYMLINKS_WARNING', '1')
+    _os.environ.setdefault('TORCH_HOME', _os.path.join(VN_CACHE_DIR, 'torch'))
+    _os.environ.setdefault('YOLO_CONFIG_DIR', _os.path.join(VN_CACHE_DIR, 'ultralytics'))
+    _os.environ.setdefault('EASYOCR_MODULE_PATH', _os.path.join(VN_MODELS_DIR, 'easyocr'))
+    _os.environ.setdefault('MPLCONFIGDIR', _os.path.join(VN_CACHE_DIR, 'matplotlib'))
+
+def get_ssl_context():
+    """Return an ssl.SSLContext backed by certifi when available."""
+    import ssl
+    try:
+        import certifi
+        ca_path = certifi.where()
+        if ca_path and _os.path.isfile(ca_path):
+            return ssl.create_default_context(cafile=ca_path)
+    except Exception:
+        pass
+    return ssl.create_default_context()
+
+def get_model_path(filename: str) -> str:
+    """Resolve a model file: check ~/.vnstudio/models, bundled/dev dirs, else writable target."""
+    _os.makedirs(VN_MODELS_DIR, exist_ok=True)
+    user_path = _os.path.join(VN_MODELS_DIR, filename)
+    if _os.path.isfile(user_path) and _os.path.getsize(user_path) > 0:
+        return user_path
+    for root in _app_candidate_roots():
+        for sub in (
+            _os.path.join(root, filename),
+            _os.path.join(root, 'models', filename),
+            _os.path.join(root, 'engine', filename),
+            _os.path.join(root, 'resources', filename),
+            _os.path.join(root, 'resources', 'engine', filename),
+        ):
+            if _os.path.isfile(sub) and _os.path.getsize(sub) > 0:
+                return sub
+    return user_path
+
+def get_cache_dir(name: str, custom_dir: Optional[str] = None, anchor_file: Optional[str] = None) -> str:
+    """Resolve a writable cache directory, avoiding read-only bundle directories."""
+    raw = (custom_dir or '').strip()
+    if raw and _os.path.isabs(raw):
+        _os.makedirs(raw, exist_ok=True)
+        return raw
+    rel_name = raw or name
+    if anchor_file and not _USE_USER_OVERLAY:
+        anchor_dir = _os.path.dirname(_os.path.abspath(anchor_file))
+        if is_dir_writable(anchor_dir):
+            dev_candidate = _os.path.join(anchor_dir, rel_name)
+            _os.makedirs(dev_candidate, exist_ok=True)
+            return dev_candidate
+    target = _os.path.join(VN_CACHE_DIR, rel_name)
+    _os.makedirs(target, exist_ok=True)
+    return target
+
+def resolve_resource_path(path: str) -> str:
+    """Resolve a data/media path across CWD, dev root, ~/.vnstudio, and app bundle dir."""
+    if not path:
+        return ''
+    expanded = _os.path.expanduser(path)
+    if _os.path.isabs(expanded):
+        return expanded
+    norm = expanded.lstrip('./\\')
+    candidates = [_os.path.abspath(expanded)]
+    for root in _app_candidate_roots():
+        candidates.append(_os.path.join(root, norm))
+        if not norm.startswith(('samples/', 'samples\\')):
+            candidates.append(_os.path.join(root, 'samples', norm))
+        candidates.append(_os.path.join(root, 'samples', _os.path.basename(norm)))
+    for c in candidates:
+        if _os.path.exists(c):
+            return _os.path.abspath(c)
+    return _os.path.abspath(expanded)
+
+def download_file(
+    url: str,
+    dest_path: str,
+    notif_id: Optional[str] = None,
+    label: Optional[str] = None,
+    timeout: int = 120,
+    min_bytes: int = 1024,
+    retries: int = 3,
+) -> str:
+    """Atomically download *url* to *dest_path* with certifi SSL, retries, and UI progress."""
+    import time
+    import urllib.request
+    import urllib.error
+
+    dest_dir = _os.path.dirname(_os.path.abspath(dest_path))
+    if dest_dir:
+        _os.makedirs(dest_dir, exist_ok=True)
+    if _os.path.isfile(dest_path) and _os.path.getsize(dest_path) >= min_bytes:
+        return dest_path
+
+    tag = label or _os.path.basename(dest_path)
+    tmp_path = dest_path + f'.part.{_os.getpid()}'
+    ssl_ctx = get_ssl_context()
+    last_err: Optional[Exception] = None
+
+    for attempt in range(1, max(1, retries) + 1):
+        try:
+            if notif_id:
+                send_notification(f'Downloading {tag}…', progress=0.05, notif_id=notif_id)
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'VNStudio/1.0 (https://github.com/Nikos-Unilasalle/VisionNodes)'},
+            )
+            with urllib.request.urlopen(req, timeout=timeout, context=ssl_ctx) as resp:
+                total_hdr = resp.headers.get('Content-Length')
+                total = int(total_hdr) if total_hdr and total_hdr.isdigit() else 0
+                downloaded = 0
+                last_pct = -0.1
+                with open(tmp_path, 'wb') as out_f:
+                    while True:
+                        chunk = resp.read(65536)
+                        if not chunk:
+                            break
+                        out_f.write(chunk)
+                        downloaded += len(chunk)
+                        if notif_id and total > 0:
+                            pct = min(0.99, downloaded / total)
+                            if pct - last_pct >= 0.05:
+                                send_notification(
+                                    f'Downloading {tag}: {int(pct * 100)}%',
+                                    progress=pct,
+                                    notif_id=notif_id,
+                                )
+                                last_pct = pct
+            if downloaded < min_bytes:
+                raise IOError(f'Downloaded file too small ({downloaded} bytes < {min_bytes})')
+            if total > 0 and downloaded < total:
+                raise IOError(f'Incomplete download ({downloaded}/{total} bytes)')
+            _os.replace(tmp_path, dest_path)
+            if notif_id:
+                send_notification(f'{tag} ready ✓', progress=1.0, notif_id=notif_id)
+            return dest_path
+        except Exception as exc:
+            last_err = exc
+            try:
+                if _os.path.exists(tmp_path):
+                    _os.remove(tmp_path)
+            except Exception:
+                pass
+            if attempt < retries:
+                time.sleep(min(4.0, 0.8 * attempt))
+
+    if notif_id:
+        send_notification(f'{tag} download failed: {str(last_err)[:120]}', level='error', notif_id=notif_id)
+    raise RuntimeError(f'Failed to download {tag} from {url}: {last_err}') from last_err
+
+
+def from_pretrained_cached(loader_fn, *args, **kwargs):
+    """Call *loader_fn* online, falling back to ``local_files_only=True`` if offline."""
+    try:
+        return loader_fn(*args, **kwargs)
+    except Exception as first_err:
+        if 'local_files_only' in kwargs:
+            raise
+        try:
+            return loader_fn(*args, local_files_only=True, **kwargs)
+        except Exception:
+            raise first_err
 
 def setup_user_overlay() -> None:
     """Make ~/.vnstudio a writable, importable package overlay (bundled only)."""
@@ -133,14 +387,22 @@ import contextlib
 @contextlib.contextmanager
 def hf_ui_progress(notif_id: str, prefix: str = "Downloading"):
     """Context manager to intercept huggingface_hub downloads and pipe them to UI."""
+    hf_utils = None
+    original_tqdm = None
     try:
         from huggingface_hub import utils as hf_utils
         import tqdm
-        
-        original_tqdm = hf_utils.tqdm
-        
+        import io as _io
+
+        original_tqdm = getattr(hf_utils, 'tqdm', None)
+        if original_tqdm is None:
+            yield
+            return
+
         class UI_Tqdm(tqdm.tqdm):
             def __init__(self, *args, **kwargs):
+                if kwargs.get('file') is None and _sys.stderr is None:
+                    kwargs['file'] = _io.StringIO()
                 super().__init__(*args, **kwargs)
                 self._notif_id = notif_id
                 self._prefix = prefix
@@ -159,14 +421,14 @@ def hf_ui_progress(notif_id: str, prefix: str = "Downloading"):
 
         hf_utils.tqdm = UI_Tqdm
         yield
-    except ImportError:
+    except Exception:
         yield
     finally:
-        try:
-            from huggingface_hub import utils as hf_utils
-            hf_utils.tqdm = original_tqdm
-        except Exception:
-            pass
+        if hf_utils is not None and original_tqdm is not None:
+            try:
+                hf_utils.tqdm = original_tqdm
+            except Exception:
+                pass
 
 
 
@@ -193,7 +455,7 @@ def vision_node(
                     'default': ''
                 })
 
-        NODE_SCHEMAS.append({
+        schema_entry = {
             "type": type_id,
             "label": label,
             "category": category,
@@ -211,7 +473,12 @@ def vision_node(
             "variable_inputs": variable_inputs,
             "hf_model": hf_model,
             "hf_filename": hf_filename,
-        })
+        }
+        existing_idx = next((i for i, s in enumerate(NODE_SCHEMAS) if s.get("type") == type_id), None)
+        if existing_idx is not None:
+            NODE_SCHEMAS[existing_idx] = schema_entry
+        else:
+            NODE_SCHEMAS.append(schema_entry)
         NODE_CLASS_REGISTRY[type_id] = cls
         return cls
     return decorator
@@ -295,12 +562,12 @@ class NodeProcessor(ABC):
                         # Download specific file
                         from huggingface_hub import hf_hub_download
                         with hf_ui_progress(notif_id, prefix="Downloading"):
-                            path = hf_hub_download(repo_id=repo_id, filename=hf_filename, token=hf_token or None)
+                            path = from_pretrained_cached(hf_hub_download, repo_id=repo_id, filename=hf_filename, token=hf_token or None)
                     else:
                         # Download entire snapshot
                         from huggingface_hub import snapshot_download
                         with hf_ui_progress(notif_id, prefix="Downloading"):
-                            path = snapshot_download(repo_id=repo_id, token=hf_token or None)
+                            path = from_pretrained_cached(snapshot_download, repo_id=repo_id, token=hf_token or None)
                     
                     self._hf_path = path
                     self.report_progress(1.0, f'{repo_id.split("/")[-1]} ready ✓')
@@ -375,6 +642,13 @@ class NodeProcessor(ABC):
                         sys.executable, "-m", "pip", "install", "--quiet",
                         "--no-build-isolation",
                     ]
+                    try:
+                        import certifi
+                        ca_path = certifi.where()
+                        if ca_path and _os.path.isfile(ca_path):
+                            cmd += ["--cert", ca_path]
+                    except Exception:
+                        pass
                     # Packaged build: site-packages is read-only, so install into
                     # the ~/.vnstudio user overlay (already on sys.path). pip --user
                     # still resolves against the bundled packages, so torch & co.

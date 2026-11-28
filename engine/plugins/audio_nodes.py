@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, resolve_resource_path
 import numpy as np
 import cv2
 import os
@@ -209,11 +209,7 @@ class AudioInputNode(NodeProcessor):
         rewind  = bool(params.get('rewind',  False))
 
         if path:
-            full = os.path.abspath(os.path.expanduser(path))
-            if not os.path.exists(full):
-                root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                alt  = os.path.join(root, path)
-                full = alt if os.path.exists(alt) else full
+            full = resolve_resource_path(path)
 
             if not os.path.exists(full):
                 send_notification(f'File not found: {path}', level='error', notif_id='audio_input')

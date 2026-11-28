@@ -39,12 +39,12 @@ export const CATEGORIES: Category[] = [
     { type: 'output_save_frame',   label: 'Save Frame',   description: 'Saves an image to disk on trigger. Supports PNG, JPG, TIFF, BMP.' },
   ]},
   { id: 'canvas', label: 'Canvas', icon: Layout, section: 'generic', nodes: [
-    { type: 'note',        label: 'Note',         description: 'Annotation text block. Double-click to edit.' },
-    { type: 'canvas_frame', label: 'Frame',        description: 'Wraps and labels a group of nodes.' },
-    { type: 'reroute',     label: 'Reroute',       description: 'Pass-through node to organize wires.' },
-    { type: 'group_node',  label: 'Group',         description: 'Encapsulates a sub-graph into a reusable group node.' },
-    { type: 'group_input', label: 'Group Input',   description: 'Exposes inputs at the group boundary.' },
-    { type: 'group_output',label: 'Group Output',  description: 'Exposes outputs at the group boundary.' },
+    { type: 'canvas_note',    label: 'Note',         description: 'Sticky note (optional text input in Append or Replace mode). Double-click to edit.' },
+    { type: 'canvas_frame',   label: 'Frame',        description: 'Wraps and labels a group of nodes.' },
+    { type: 'canvas_reroute', label: 'Reroute',      description: 'Pass-through node to organize wires.' },
+    { type: 'group_node',     label: 'Group',        description: 'Encapsulates a sub-graph into a reusable group node.' },
+    { type: 'group_input',    label: 'Group Input',  description: 'Exposes inputs at the group boundary.' },
+    { type: 'group_output',   label: 'Group Output', description: 'Exposes outputs at the group boundary.' },
   ]},
   { id: 'image', label: 'Image', icon: Layers, section: 'generic', nodes: [
     { type: 'filter_blur',      label: 'Blur', description: 'Smooths the image (Gaussian, Median, Box, Bilateral, Motion). Optional mask input to blur only a region.' },
@@ -70,7 +70,6 @@ export const CATEGORIES: Category[] = [
     { type: 'filter_ridge',       label: 'Ridge Filter',  description: 'Thin lines (cell walls, vessels, cracks, veins) by Hessian ridge filters, with local normalisation so faint lines count as much as strong ones.' },
   ]},
   { id: 'image_ops', label: 'Image Ops', icon: Zap, section: 'generic', nodes: [
-    { type: 'plugin_blend_images',     label: 'Blend Images',       description: 'Blends two images with a configurable weight.' },
     { type: 'plugin_blend_modes',      label: 'Blend',        description: 'Photoshop-style blend modes (multiply, screen, overlay…).' },
     { type: 'plugin_gradient',         label: 'Image Gradient',           description: 'Computes image gradient magnitude and direction.' },
     { type: 'plugin_invert',           label: 'Invert',             description: 'Inverts all pixel values (negative image).' },
@@ -131,7 +130,7 @@ export const CATEGORIES: Category[] = [
     { type: 'util_mask_band',     label: 'Mask Band',      description: 'Extracts a percentage-based band (by height or width) from an image or mask.' },
     { type: 'util_split_half',   label: 'Split Half',     description: 'Splits an image or mask into two halves along the horizontal or vertical axis.' },
     { type: 'util_image_masking',  label: 'Apply Mask',     description: 'Applies a mask to an image, zeroing excluded pixels.' },
-    { type: 'util_fill_holes',     label: 'Fill Holes',     description: 'Fills enclosed holes in a binary mask (utility variant).' },
+    { type: 'util_fill_holes',     label: 'Fill Holes (Simple)', description: 'Fills enclosed holes in a binary mask (utility variant).' },
     { type: 'util_label_filter_area',label: 'Label Area Filter',description: 'Filters a label map by region area range.' },
     { type: 'points_to_mask',      label: 'Points to Mask', description: 'Draws a filled polygon from a list of points.' },
     { type: 'mask_to_svg',         label: 'Mask to SVG',    description: 'Converts a binary mask to SVG path data.' },
@@ -297,7 +296,7 @@ export const CATEGORIES: Category[] = [
   { id: 'data', label: 'Data', icon: Database, section: 'generic', nodes: [
     { type: 'data_list_selector',    label: 'List Selector',    description: 'Extracts a specific item from a list of detections.' },
     { type: 'list_region_select',    label: 'Region Selector',  description: 'Filters, sorts and selects a detection region.' },
-    { type: 'data_coord_splitter',   label: 'Coord Splitter',   description: 'Splits a coordinate dictionary into 4 scalar values.' },
+    { type: 'data_coord_splitter',   label: 'Coord Splitter',   description: 'Extracts the first two numeric values from a dictionary (e.g., x, y).' },
     { type: 'data_coord_combine',    label: 'Coord Combine',    description: 'Combines 4 scalar values into a coordinate dictionary.' },
     { type: 'util_landmark_selector',label: 'Landmark Selector',description: 'Extracts specific points from a landmark list.' },
     { type: 'feat_list_aggregator',  label: 'List Aggregator',  description: 'Aggregates a list of values (sum, mean, concat).' },
@@ -422,7 +421,7 @@ export const CATEGORIES: Category[] = [
     { type: 'geo_turbidity_stats',  label: 'Turbidity Stats',   description: 'Computes turbidity statistics across a scene.' },
     { type: 'geo_water_mask',       label: 'Water Mask',        description: 'Extracts a binary water mask using the NDWI or MNDWI index.' },
     { type: 'feat_ndwi',            label: 'NDWI',              description: 'Normalized Difference Water Index.' },
-    { type: 'feat_spectral_index',  label: 'Spectral Index',    description: 'Generic spectral index calculator.' },
+    { type: 'feat_spectral_index',  label: 'Spectral Index (Image)', description: 'Generic spectral index calculator.' },
     { type: 'feat_water_refine',    label: 'Water Refine',      description: 'Post-processes a water mask for accuracy.' },
   ]},
   { id: 'geology', label: 'Geology', icon: Mountain, section: 'domain', nodes: [

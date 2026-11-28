@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, resolve_resource_path
 import cv2
 import numpy as np
 import os
@@ -45,12 +45,7 @@ class FloatImageInputNode(NodeProcessor):
         if not path:
             return {'main': None, 'width': 0, 'height': 0, 'raw_min': 0.0, 'raw_max': 0.0}
 
-        full_path = os.path.abspath(os.path.expanduser(path))
-        if not os.path.exists(full_path):
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            alt = os.path.join(project_root, path)
-            if os.path.exists(alt):
-                full_path = alt
+        full_path = resolve_resource_path(path)
 
         if full_path != self.last_path:
             raw = cv2.imread(full_path, cv2.IMREAD_UNCHANGED)

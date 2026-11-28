@@ -22,7 +22,7 @@ Requires the reference raster to carry `crs`, `transform` and lon/lat `bounds`
 from __future__ import annotations
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_cache_dir
 
 _NOTIF = 'osm_overpass'
 _DEFAULT_URL = 'https://overpass-api.de/api/interpreter'
@@ -172,9 +172,7 @@ class OSMOverpassNode(NodeProcessor):
         from shapely.geometry import Point, LineString
 
         raw_cache = str(params.get('cache_dir', 'copernicus_cache') or 'copernicus_cache').strip()
-        _dir = os.path.dirname(os.path.abspath(__file__))
-        cache_dir = raw_cache if os.path.isabs(raw_cache) else os.path.join(_dir, raw_cache)
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = get_cache_dir('copernicus_cache', raw_cache, anchor_file=__file__)
         cache_file = os.path.join(cache_dir, f'osm_{_key[:16]}.json')
 
         # ── Fetch (disk cache first) ──────────────────────────────────────────

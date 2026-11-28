@@ -6,7 +6,7 @@ Connect boxes_list → SAM Segmenter (Boxes List mode) for precise per-object se
 Tile mode: splits image into NxN patches, runs GDINO on each, merges with global NMS.
 Essential for dense repeated objects (stones, cells, etc.) that a single pass misses.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, from_pretrained_cached
 import cv2
 import numpy as np
 import threading
@@ -115,8 +115,8 @@ class GroundingDINODetectorNode(NodeProcessor):
 
             from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 
-            proc = AutoProcessor.from_pretrained(hf_id)
-            mdl  = AutoModelForZeroShotObjectDetection.from_pretrained(hf_id)
+            proc = from_pretrained_cached(AutoProcessor.from_pretrained, hf_id)
+            mdl  = from_pretrained_cached(AutoModelForZeroShotObjectDetection.from_pretrained, hf_id)
             mdl  = mdl.to(self.device)
             mdl.eval()
 

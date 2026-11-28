@@ -60,7 +60,34 @@ fn main() {
 
                 let mut launched = false;
                 if python_path.exists() && engine_path.exists() {
-                    match std::process::Command::new(&python_path).arg(&engine_path).spawn() {
+                    let mut cmd = std::process::Command::new(&python_path);
+                    cmd.arg(&engine_path);
+                    cmd.env("VNSTUDIO_RESOURCE_DIR", &resource_dir);
+                    if let Ok(exe) = std::env::current_exe() {
+                        if let Some(app_dir) = exe.parent() {
+                            cmd.env("VNSTUDIO_APP_DIR", app_dir);
+                        }
+                    }
+                    // On Windows (windows_subsystem = "windows"), child stdout/stderr
+                    // can be null handles, making Python sys.stdout/sys.stderr None
+                    // and crashing tqdm / print. Route logs to ~/.vnstudio/engine.log.
+                    if let Ok(home) = app.path().home_dir() {
+                        let vn_home = home.join(".vnstudio");
+                        if std::fs::create_dir_all(&vn_home).is_ok() {
+                            if let Ok(log_file) = std::fs::OpenOptions::new()
+                                .create(true)
+                                .write(true)
+                                .truncate(true)
+                                .open(vn_home.join("engine.log"))
+                            {
+                                if let Ok(err_file) = log_file.try_clone() {
+                                    cmd.stdout(std::process::Stdio::from(log_file));
+                                    cmd.stderr(std::process::Stdio::from(err_file));
+                                }
+                            }
+                        }
+                    }
+                    match cmd.spawn() {
                         Ok(child) => {
                             app.manage(EngineProcess(Mutex::new(Some(ChildProcess::Std(child)))));
                             println!("Bundled engine launched: {:?}", python_path);

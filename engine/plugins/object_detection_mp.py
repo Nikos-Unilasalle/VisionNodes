@@ -1,8 +1,7 @@
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, get_model_path, download_file, send_notification
 import cv2
 import numpy as np
 import os
-import urllib.request
 
 try:
     import mediapipe as mp
@@ -37,30 +36,38 @@ class ObjectDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         self.detector = None
-        self.model_path = "efficientdet.tflite"
+        self.model_path = get_model_path("efficientdet.tflite")
         self.last_params = {}
-        self._init_detector()
 
     def _init_detector(self, score=0.5, max_res=5):
         if not AI_AVAILABLE: return
         
         if not os.path.exists(self.model_path):
             url = "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite"
-            try: 
-                print(f"Downloading Object Detection model...")
-                urllib.request.urlretrieve(url, self.model_path)
+            try:
+                download_file(
+                    url,
+                    self.model_path,
+                    notif_id="mp_object_detector",
+                    label="efficientdet.tflite",
+                    min_bytes=100_000,
+                )
             except Exception as e:
                 print(f"Failed to download object model: {e}")
                 return
 
-        base_options = python.BaseOptions(model_asset_path=self.model_path)
-        options = vision.ObjectDetectorOptions(
-            base_options=base_options,
-            running_mode=vision.RunningMode.IMAGE,
-            score_threshold=score,
-            max_results=max_res
-        )
-        self.detector = vision.ObjectDetector.create_from_options(options)
+        try:
+            base_options = python.BaseOptions(model_asset_path=self.model_path)
+            options = vision.ObjectDetectorOptions(
+                base_options=base_options,
+                running_mode=vision.RunningMode.IMAGE,
+                score_threshold=score,
+                max_results=max_res
+            )
+            self.detector = vision.ObjectDetector.create_from_options(options)
+        except Exception as e:
+            print(f"[ObjectDetector] Init error: {e}")
+            send_notification(f"Object detector error: {str(e)[:120]}", level="error", notif_id="mp_object_detector")
 
     def process(self, inputs, params):
         image = inputs.get('image')

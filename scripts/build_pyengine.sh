@@ -58,8 +58,8 @@ if [ "$(uname -s)" = "Linux" ]; then
     torch torchvision --python "$PY"
 fi
 
-# Build-backend deps for compiling sdists without isolation (sam2 below).
-uv pip install --break-system-packages setuptools wheel --python "$PY"
+# Build-backend deps (plus pip itself so runtime ensure_packages() always works).
+uv pip install --break-system-packages pip setuptools wheel certifi --python "$PY"
 
 # SAM-2 is a git sdist whose build imports torch. Under pip's default build
 # isolation the build env has no torch, so it re-downloads torch (~GBs) and

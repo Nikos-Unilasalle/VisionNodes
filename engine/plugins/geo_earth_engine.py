@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_cache_dir
 import numpy as np
 import os
 import hashlib
@@ -213,7 +213,7 @@ class EarthEngineSourceNode(NodeProcessor):
         band_preset   = params.get('band_preset', 'RGB')
         custom_bands_str = (params.get('custom_bands', '') or '').strip()
         raw_cache     = (params.get('cache_dir', '') or '').strip()
-        cache_dir     = raw_cache if os.path.isabs(raw_cache) else os.path.join(_ENGINE_DIR, raw_cache or 'gee_cache')
+        cache_dir     = get_cache_dir('gee_cache', raw_cache or 'gee_cache', anchor_file=__file__)
         col_cfg       = COLLECTIONS.get(col_name, COLLECTIONS['Sentinel-2 SR'])
 
         # Band selection — custom_bands takes priority if non-empty

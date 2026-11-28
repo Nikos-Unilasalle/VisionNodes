@@ -3,7 +3,7 @@ Depth Anything V2 — Monocular Depth Estimation.
 Provides high-quality depth maps from single images, useful for 3D analysis, 
 masonry joint detection, and surface relief visualization.
 """
-from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress
+from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress, from_pretrained_cached
 import cv2
 import numpy as np
 import threading
@@ -94,8 +94,8 @@ class DepthAnythingNode(NodeProcessor):
             try:
                 # Load processor and model
                 with hf_ui_progress(_NOTIF_ID, prefix=f"Downloading {model_name}"):
-                    self.processor = AutoImageProcessor.from_pretrained(repo_id)
-                    model = AutoModelForDepthEstimation.from_pretrained(repo_id)
+                    self.processor = from_pretrained_cached(AutoImageProcessor.from_pretrained, repo_id)
+                    model = from_pretrained_cached(AutoModelForDepthEstimation.from_pretrained, repo_id)
                 
                 # Move to accelerator
                 model.to(self.device)

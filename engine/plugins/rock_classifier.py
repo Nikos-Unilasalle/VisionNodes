@@ -10,7 +10,7 @@ classifies it, and outputs a {class_name: [stone_ids]} dict that plugs
 straight into Stone Calepinage 'classes' — a deterministic, LLM-free
 alternative to the Ollama classification step.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_model_path, download_file
 import cv2
 import numpy as np
 import os
@@ -19,8 +19,7 @@ import importlib.util
 
 _NOTIF_ID = 'rock_classifier'
 _WEIGHTS_URL = 'https://github.com/zhh-pixel/rock/raw/main/weights/model_aug_SA_lion.pth'
-_WEIGHTS_DIR = os.path.expanduser('~/.vnstudio/models')
-_WEIGHTS_PATH = os.path.join(_WEIGHTS_DIR, 'model_aug_SA_lion.pth')
+_WEIGHTS_PATH = get_model_path('model_aug_SA_lion.pth')
 _MODEL_SRC = os.path.join(os.path.dirname(__file__), 'rock_classifier_src', 'model_SA.py')
 
 # ImageNet normalization (matches the repo's predict_test transforms)
@@ -105,26 +104,20 @@ class RockClassifierNode(NodeProcessor):
         """Return a valid weights path, downloading from GitHub if needed."""
         if weights_path and os.path.exists(weights_path):
             return weights_path
-        if os.path.exists(_WEIGHTS_PATH):
-            return _WEIGHTS_PATH
-        # Download
+        target = get_model_path('model_aug_SA_lion.pth')
+        if os.path.exists(target):
+            return target
         try:
-            import requests
-            os.makedirs(_WEIGHTS_DIR, exist_ok=True)
-            send_notification('Rock: downloading weights (13 MB)…', progress=0.1, notif_id=_NOTIF_ID)
-            with requests.get(_WEIGHTS_URL, stream=True, timeout=120) as r:
-                r.raise_for_status()
-                tmp = _WEIGHTS_PATH + '.part'
-                with open(tmp, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=1 << 16):
-                        f.write(chunk)
-                os.replace(tmp, _WEIGHTS_PATH)
-            send_notification('Rock: weights ready ✓', progress=1.0, notif_id=_NOTIF_ID)
-            return _WEIGHTS_PATH
+            return download_file(
+                _WEIGHTS_URL,
+                target,
+                notif_id=_NOTIF_ID,
+                label='Rock classifier weights (13 MB)',
+                timeout=120,
+                min_bytes=100_000,
+            )
         except Exception as e:
             print(f'[Rock] Weights download failed: {e}')
-            send_notification(f'Rock: download failed — {str(e)[:80]}',
-                              level='error', notif_id=_NOTIF_ID)
             return None
 
     def _load_model_thread(self, weights_path: str) -> None:

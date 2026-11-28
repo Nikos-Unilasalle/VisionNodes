@@ -1,7 +1,8 @@
 import cv2
+import os
 import numpy as np
 import threading
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, VN_MODELS_DIR
 
 EASYOCR_AVAILABLE = False
 try:
@@ -63,6 +64,9 @@ class EasyOcrNode(NodeProcessor):
 
         import easyocr
         try:
+            ocr_dir = os.path.join(VN_MODELS_DIR, 'easyocr')
+            os.makedirs(ocr_dir, exist_ok=True)
+            os.environ.setdefault('EASYOCR_MODULE_PATH', ocr_dir)
             self.reader = easyocr.Reader(_LANG_CODES[lang_idx], gpu=gpu, verbose=False)
             self._loaded_lang_idx = lang_idx
             self._loaded_gpu = gpu

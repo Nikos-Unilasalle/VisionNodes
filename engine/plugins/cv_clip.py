@@ -11,7 +11,7 @@ import numpy as np
 import threading
 import os
 import json
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, from_pretrained_cached
 
 _NOTIF = 'cv_clip'
 
@@ -90,8 +90,8 @@ class CLIPEmbeddingsNode(NodeProcessor):
 
             from transformers import CLIPProcessor, CLIPModel
 
-            proc = CLIPProcessor.from_pretrained(hf_id)
-            mdl  = CLIPModel.from_pretrained(hf_id).to(self.device)
+            proc = from_pretrained_cached(CLIPProcessor.from_pretrained, hf_id)
+            mdl  = from_pretrained_cached(CLIPModel.from_pretrained, hf_id).to(self.device)
             mdl.eval()
 
             self.processor     = proc

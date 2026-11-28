@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import base64
-from registry import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node, resolve_resource_path
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -22,15 +22,8 @@ def _make_preview(img, max_h=120, quality=50):
 def _resolve_path(path):
     if not path:
         return None
-    if os.path.exists(path):
-        return os.path.abspath(path)
-    for candidate in [
-        os.path.join(os.getcwd(), 'samples', path),
-        os.path.join(os.getcwd(), 'samples', os.path.basename(path)),
-    ]:
-        if os.path.exists(candidate):
-            return candidate
-    return None
+    resolved = resolve_resource_path(path)
+    return resolved if os.path.exists(resolved) else None
 
 def _make_matrix_dict(band, w, h, mmin, mmax):
     return {

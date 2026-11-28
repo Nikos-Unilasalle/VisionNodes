@@ -117,15 +117,8 @@ DIVERGENCES_TOLEREES = {
     'util_image_masking',
 }
 
-# Doublons de libellé antérieurs à ce contrôle. `data_coord_splitter` est pire
-# qu'un doublon de nom : le même type_id est déclaré dans deux fichiers, donc une
-# des deux implémentations est écrasée au chargement. À trancher, hors de ce lot.
-DOUBLONS_TOLERES = {
-    'Coord Splitter',
-    'Fill Holes',
-    'Note',
-    'Spectral Index',
-}
+# Doublons de libellé tolérés : vide — tous les doublons hérités ont été résolus.
+DOUBLONS_TOLERES = set()
 
 # Libellés légitimes qu'aucun décorateur ne porte : nœuds purement front-end
 # (math, chaînes, logique Python) et étiquettes de canvas.

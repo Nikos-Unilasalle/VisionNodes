@@ -104,6 +104,17 @@ def test_registry_schema_class_parity():
     assert not errors, "\n".join(errors)
 
 
+def test_registry_no_duplicate_schemas():
+    """Every type_id in NODE_SCHEMAS must appear at most once."""
+    for p in _plugin_files:
+        _load_plugin(p)
+
+    from collections import Counter
+    counts = Counter(s["type"] for s in NODE_SCHEMAS)
+    dups = {t: c for t, c in counts.items() if c > 1}
+    assert not dups, f"Duplicate type_id(s) in NODE_SCHEMAS: {dups}"
+
+
 def test_every_class_is_node_processor():
     """Every registered class must be a NodeProcessor subclass."""
     for p in _plugin_files:

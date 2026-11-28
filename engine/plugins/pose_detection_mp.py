@@ -1,9 +1,8 @@
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, get_model_path, download_file, send_notification
 import cv2
 import numpy as np
 import os
 import threading
-import urllib.request
 
 try:
     import mediapipe as mp
@@ -31,22 +30,29 @@ class PoseDetectionNode(NodeProcessor):
     def __init__(self):
         super().__init__()
         self.detector = None
-        self.model_path = "pose_landmarker.task"
+        self.model_path = get_model_path("pose_landmarker.task")
         self._init_done = False
-        if AI_AVAILABLE:
-            threading.Thread(target=self._init_detector, daemon=True).start()
+        self._loading = False
 
     def _init_detector(self):
-        if not AI_AVAILABLE: return
+        if not AI_AVAILABLE:
+            self._loading = False
+            return
 
         if not os.path.exists(self.model_path):
             url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task"
             try:
-                print(f"[Pose] Downloading model...")
-                urllib.request.urlretrieve(url, self.model_path)
+                download_file(
+                    url,
+                    self.model_path,
+                    notif_id="mp_pose_landmarker",
+                    label="pose_landmarker.task",
+                    min_bytes=100_000,
+                )
             except Exception as e:
                 print(f"[Pose] Failed to download model: {e}")
                 self._init_done = True
+                self._loading = False
                 return
 
         try:
@@ -66,7 +72,9 @@ class PoseDetectionNode(NodeProcessor):
             self.timestamp_ms = 0
         except Exception as e:
             print(f"[Pose] Init error: {e}")
+            send_notification(f"Pose init error: {str(e)[:120]}", level="error", notif_id="mp_pose_landmarker")
         self._init_done = True
+        self._loading = False
 
     def process(self, inputs, params):
         image = inputs.get('image')
@@ -74,6 +82,9 @@ class PoseDetectionNode(NodeProcessor):
             return {"main": image, "pose_list": [], "data": {}}
 
         if self.detector is None:
+            if not self._loading and not self._init_done:
+                self._loading = True
+                threading.Thread(target=self._init_detector, daemon=True).start()
             return {"main": image, "pose_list": [], "data": {}}
 
         # Convert to RGB for MediaPipe

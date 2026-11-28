@@ -19,7 +19,7 @@ import json as _json
 import io
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_cache_dir
 
 _NOTIF = 'geo_rf'
 
@@ -605,9 +605,7 @@ class GeoRFClassifierNode(NodeProcessor):
         import os
         import joblib
         raw_cache = str(params.get('cache_dir', 'copernicus_cache') or 'copernicus_cache').strip()
-        _engine_dir = os.path.dirname(os.path.abspath(__file__))
-        cache_dir   = raw_cache if os.path.isabs(raw_cache) else os.path.join(_engine_dir, raw_cache)
-        os.makedirs(cache_dir, exist_ok=True)
+        cache_dir = get_cache_dir('copernicus_cache', raw_cache, anchor_file=__file__)
         # Hash on training-defining params so re-runs reuse the same path
         model_sig = hashlib.md5(_json.dumps({
             'classes':       [int(c) for c in classes_encoded],

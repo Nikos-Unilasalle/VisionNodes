@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 import os
-import urllib.request
-from registry import vision_node, NodeProcessor
+from registry import vision_node, NodeProcessor, get_model_path, download_file, send_notification
 
 try:
     import mediapipe as mp
@@ -214,12 +213,21 @@ class FaceDetectionNode(NodeProcessor):
         self.detector = None
         self.options = None
     def _lazy_init(self, max_faces=3):
-        model_path = "face_landmarker.task"
+        if not AI_AVAILABLE:
+            return
+        model_path = get_model_path("face_landmarker.task")
         if not os.path.exists(model_path):
             try:
-                urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", model_path)
-            except Exception: return
-        if not AI_AVAILABLE: return
+                download_file(
+                    "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                    model_path,
+                    notif_id="mp_face_landmarker",
+                    label="face_landmarker.task",
+                    min_bytes=100_000,
+                )
+            except Exception as e:
+                print(f"[FaceTracker] Model download failed: {e}")
+                return
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)
@@ -274,12 +282,21 @@ class HandDetectionNode(NodeProcessor):
         self.detector = None
         self.options = None
     def _lazy_init(self, max_hands=2):
-        model_path = "hand_landmarker.task"
+        if not AI_AVAILABLE:
+            return
+        model_path = get_model_path("hand_landmarker.task")
         if not os.path.exists(model_path):
             try:
-                urllib.request.urlretrieve("https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", model_path)
-            except Exception: return
-        if not AI_AVAILABLE: return
+                download_file(
+                    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                    model_path,
+                    notif_id="mp_hand_landmarker",
+                    label="hand_landmarker.task",
+                    min_bytes=100_000,
+                )
+            except Exception as e:
+                print(f"[HandTracker] Model download failed: {e}")
+                return
         from mediapipe.tasks import python
         from mediapipe.tasks.python import vision
         base_options = python.BaseOptions(model_asset_path=model_path)

@@ -1,15 +1,11 @@
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_model_path, download_file
 import cv2
 import numpy as np
 import os
 import threading
-import urllib.request
 
-# Absolute path to the gaze/ folder (three levels up from this plugin file)
-_PLUGIN_DIR  = os.path.dirname(os.path.abspath(__file__))
-_ENGINE_DIR  = os.path.dirname(_PLUGIN_DIR)
-_PROJECT_DIR = os.path.dirname(_ENGINE_DIR)   # engine/plugins → engine → project root
-_DEFAULT_CKPT = os.path.join(_PROJECT_DIR, 'gaze_estimator.pth.tar')
+_DEFAULT_CKPT = get_model_path('gaze_estimator.pth.tar')
+_GAZE_WEIGHTS_URL = 'https://github.com/Nikos-Unilasalle/VisionNodes/releases/download/models/gaze_estimator.pth.tar'
 
 # ── ETH-XGaze face model: 3-D reference points (mm) ─────────────────────────
 # Extracted from face_model.txt rows [20, 23, 26, 29, 15, 19]
@@ -118,12 +114,14 @@ class GazeEstimatorNode(NodeProcessor):
             send_notification('Loading ETH-XGaze model…', progress=0.1, notif_id=_NOTIF_ID)
 
             if not os.path.exists(weights_path):
-                send_notification(
-                    f'Checkpoint not found: {weights_path}',
-                    progress=None, level='error', notif_id=_NOTIF_ID
+                download_file(
+                    _GAZE_WEIGHTS_URL,
+                    weights_path,
+                    notif_id=_NOTIF_ID,
+                    label='gaze_estimator.pth.tar',
+                    timeout=180,
+                    min_bytes=100_000_000,
                 )
-                self._failed.add(weights_path)
-                return
 
             net = _build_gaze_network()
             ckpt = torch.load(weights_path, map_location='cpu', weights_only=False)
@@ -138,12 +136,14 @@ class GazeEstimatorNode(NodeProcessor):
             from mediapipe.tasks import python as mp_python
             from mediapipe.tasks.python import vision as mp_vision
 
-            task_path = os.path.join(_PROJECT_DIR, 'face_landmarker.task')
+            task_path = get_model_path('face_landmarker.task')
             if not os.path.exists(task_path):
-                send_notification('Downloading face_landmarker.task…', progress=0.6, notif_id=_NOTIF_ID)
-                urllib.request.urlretrieve(
+                download_file(
                     'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-                    task_path
+                    task_path,
+                    notif_id=_NOTIF_ID,
+                    label='face_landmarker.task',
+                    min_bytes=100_000,
                 )
 
             base_opts   = mp_python.BaseOptions(model_asset_path=task_path)

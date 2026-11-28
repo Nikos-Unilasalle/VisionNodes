@@ -19,26 +19,6 @@ class ListSelectorNode(NodeProcessor):
         return {"item_out": None}
 
 @vision_node(
-    type_id="data_coord_splitter",
-    label="Coord Splitter",
-    category="data",
-    icon="Box",
-    description="Splits a coordinate dictionary into 4 scalar values.",
-    inputs=[{"id": "data", "color": "coords"}],
-    outputs=[
-        {"id": "x", "color": "scalar"},
-        {"id": "y", "color": "scalar"},
-        {"id": "w", "color": "scalar"},
-        {"id": "h", "color": "scalar"}
-    ]
-)
-class CoordSplitterNode(NodeProcessor):
-    def process(self, inputs, params):
-        d = inputs.get('data')
-        if not isinstance(d, dict): return {"x": None, "y": None, "w": None, "h": None}
-        return {"x": d.get("xmin"), "y": d.get("ymin"), "w": d.get("width"), "h": d.get("height")}
-
-@vision_node(
     type_id="data_coord_combine",
     label="Coord Combine",
     category="data",

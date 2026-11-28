@@ -1,4 +1,4 @@
-from registry import vision_node, NodeProcessor, send_notification, _notification_queue
+from registry import vision_node, NodeProcessor, send_notification, _notification_queue, get_model_path
 import cv2
 import numpy as np
 import torch
@@ -56,7 +56,8 @@ class YoloDetectionNode(NodeProcessor):
         if name != self.current_model_name:
             send_notification(f'YOLO: loading {name}…', progress=0.1, notif_id='yolo_load')
             try:
-                model = YOLO(name)
+                model_path = get_model_path(name)
+                model = YOLO(model_path)
                 model.to(self.device)
                 self.model = model
                 self.current_model_name = name
@@ -65,7 +66,8 @@ class YoloDetectionNode(NodeProcessor):
             except Exception as e:
                 send_notification(f'YOLO load error: {e}', level='error', notif_id='yolo_load')
                 self.model = None
-            self._loading = False
+            finally:
+                self._loading = False
 
     def process(self, inputs, params):
         image = inputs.get('image')
@@ -82,6 +84,7 @@ class YoloDetectionNode(NodeProcessor):
             try:
                 current_idx = ["yolo11n.pt", "yolo11s.pt", "yolo11m.pt"].index(self.current_model_name)
                 if size_idx != current_idx and not getattr(self, '_loading', False):
+                    self._loading = True
                     threading.Thread(target=self._load_model, args=(size_idx,), daemon=True).start()
             except ValueError:
                 pass

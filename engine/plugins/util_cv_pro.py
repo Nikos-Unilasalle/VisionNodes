@@ -4,7 +4,7 @@ from registry import NodeProcessor, vision_node
 
 @vision_node(
     type_id="util_fill_holes",
-    label="Fill Holes",
+    label="Fill Holes (Simple)",
     category='mask',
     icon="ShieldCheck",
     description="Fills holes (black areas) inside white objects in a binary mask.",

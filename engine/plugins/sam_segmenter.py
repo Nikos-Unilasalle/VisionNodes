@@ -3,7 +3,7 @@ SAM Segmenter — Interactive AI segmentation using SAM 2 (Meta).
 Supports bounding box and point prompts for precise object segmentation.
 Models are downloaded automatically from HuggingFace on first use.
 """
-from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress
+from registry import vision_node, NodeProcessor, send_notification, hf_ui_progress, from_pretrained_cached
 import cv2
 import numpy as np
 import json
@@ -174,7 +174,7 @@ class SAMSegmenterNode(NodeProcessor):
                 # Always load on CPU first (from_pretrained doesn't support MPS directly)
                 from sam2.sam2_image_predictor import SAM2ImagePredictor
                 with hf_ui_progress(_NOTIF_ID, prefix=f"Downloading {model_name}"):
-                    predictor = SAM2ImagePredictor.from_pretrained(hf_id, device='cpu')
+                    predictor = from_pretrained_cached(SAM2ImagePredictor.from_pretrained, hf_id, device='cpu')
             finally:
                 torch.set_num_threads(old_threads)
 

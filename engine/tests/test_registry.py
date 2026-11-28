@@ -21,6 +21,24 @@ def test_vision_node_registers_schema():
     assert NODE_CLASS_REGISTRY['_test_node'] is _TestNode
 
 
+def test_vision_node_deduplicates_schema_on_reregister():
+    @vision_node(type_id='_test_rereg', label='First', category='test')
+    class _First(NodeProcessor):
+        def process(self, inputs, params): return {}
+
+    count_after_first = len(NODE_SCHEMAS)
+
+    @vision_node(type_id='_test_rereg', label='Second', category='test')
+    class _Second(NodeProcessor):
+        def process(self, inputs, params): return {}
+
+    assert len(NODE_SCHEMAS) == count_after_first
+    matches = [s for s in NODE_SCHEMAS if s['type'] == '_test_rereg']
+    assert len(matches) == 1
+    assert matches[0]['label'] == 'Second'
+    assert NODE_CLASS_REGISTRY['_test_rereg'] is _Second
+
+
 def test_vision_node_defaults():
     @vision_node(type_id='_test_defaults', label='Defaults')
     class _D(NodeProcessor):

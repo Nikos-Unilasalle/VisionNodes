@@ -1,5 +1,21 @@
+import os
 import sys
 import subprocess
+
+_ENGINE_DIR = os.path.dirname(os.path.abspath(__file__))
+if _ENGINE_DIR not in sys.path:
+    sys.path.insert(0, _ENGINE_DIR)
+
+# Configure writable overlay, stdio streams, SSL certs, and ML cache dirs
+# BEFORE importing heavy libraries or checking dependencies.
+from registry import (
+    NODE_SCHEMAS, NODE_CLASS_REGISTRY,
+    _notification_queue, send_notification,
+    topological_sort,
+    configure_runtime_environment, VN_SNAPSHOTS_DIR, is_dir_writable,
+    _USE_USER_OVERLAY,
+)
+configure_runtime_environment()
 
 def check_and_install_dependencies():
     # Map package names to import names
@@ -32,14 +48,16 @@ def check_and_install_dependencies():
         print("🚀 For a clean experience, please run: npm run setup\n")
         print("Trying auto-installation... please wait.\n")
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            cmd = [sys.executable, "-m", "pip", "install"]
+            if _USE_USER_OVERLAY:
+                cmd += ["--user", "--break-system-packages"]
+            subprocess.check_call(cmd + missing)
             print("\n✅ Installation complete. Starting engine...\n")
         except Exception as e:
             print(f"\n❌ Auto-install failed: {e}")
             print("👉 Please run manually: npm run setup or pip install -r engine/requirements.txt\n")
 
 # Silencing OpenCV / FFMPEG startup warnings
-import os
 os.environ["OPENCV_LOG_LEVEL"] = "OFF"
 os.environ["OPENCV_VIDEOIO_PRIORITY_BACKEND"] = "AVFOUNDATION"
 
@@ -53,12 +71,6 @@ import base64
 import numpy as np
 import websockets
 import time
-import os
-from registry import (
-    NODE_SCHEMAS, NODE_CLASS_REGISTRY,
-    _notification_queue, send_notification,
-    topological_sort,
-)
 
 # Optimized for Linux/Arch, use CAP_ANY as primary to avoid V4L2 index errors
 CAP_BACKEND = cv2.CAP_ANY
@@ -103,15 +115,19 @@ def load_plugins():
         # are root-owned: never try to create them, just skip if absent.
         if not os.path.isdir(plugin_dir):
             continue
-        for file in glob.glob(os.path.join(plugin_dir, "*.py")):
+        for file in sorted(glob.glob(os.path.join(plugin_dir, "*.py"))):
             if os.path.basename(file) == "__init__.py": continue
             module_name = f"plugins.{os.path.basename(file)[:-3]}"
+            if module_name in sys.modules:
+                continue
             spec = importlib.util.spec_from_file_location(module_name, file)
             mod = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = mod
             try:
                 spec.loader.exec_module(mod)
                 print(f"[Plugins] Loaded: {module_name}")
             except Exception as e:
+                sys.modules.pop(module_name, None)
                 print(f"[Plugins] Failed to load {module_name}: {e}")
 
 
@@ -597,7 +613,8 @@ class VisionEngine:
                                 elif snap_img.ndim == 3 and snap_img.shape[2] == 4: snap_img = cv2.cvtColor(snap_img, cv2.COLOR_BGRA2BGR)
                                 engine_dir = os.path.dirname(os.path.abspath(__file__))
                                 project_root = os.path.dirname(engine_dir)
-                                snap_dir = os.path.join(project_root, "public", "snapshots")
+                                dev_snap_dir = os.path.join(project_root, "public", "snapshots")
+                                snap_dir = dev_snap_dir if is_dir_writable(project_root) else VN_SNAPSHOTS_DIR
                                 if not os.path.exists(snap_dir): os.makedirs(snap_dir, exist_ok=True)
                                 ts = int(time.time() * 1000)
                                 fname = f"snap_{ts}.png"

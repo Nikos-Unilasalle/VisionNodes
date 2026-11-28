@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from registry import NodeProcessor, vision_node
+from registry import NodeProcessor, vision_node, get_model_path, download_file, send_notification
 
 
 def canonical_corners(pts_raw):
@@ -23,17 +23,23 @@ def canonical_corners(pts_raw):
             pts[int(_np.argmax(s))], pts[int(_np.argmax(d))]]
 
 EAST_MODEL_URL = "https://github.com/oyyd/frozen_east_text_detection.pb/raw/master/frozen_east_text_detection.pb"
-EAST_MODEL_PATH = "frozen_east_text_detection.pb"
+EAST_MODEL_FILENAME = "frozen_east_text_detection.pb"
 
 def download_east_model():
-    if not os.path.exists(EAST_MODEL_PATH):
-        print(f"[OCR] Downloading EAST model...")
+    model_path = get_model_path(EAST_MODEL_FILENAME)
+    if not os.path.exists(model_path):
         try:
-            import subprocess
-            subprocess.run(["curl", "-L", "-o", EAST_MODEL_PATH, EAST_MODEL_URL], check=True)
-            print("[OCR] EAST model downloaded.")
+            download_file(
+                EAST_MODEL_URL,
+                model_path,
+                notif_id="ocr_east",
+                label="EAST text detector (96 MB)",
+                timeout=180,
+                min_bytes=1_000_000,
+            )
         except Exception as e:
             print(f"[OCR] Download failed: {e}")
+    return model_path
 
 @vision_node(
     type_id="ocr_east_detect",
@@ -53,17 +59,18 @@ def download_east_model():
 class EastDetectorNode(NodeProcessor):
     def __init__(self):
         self.net = None
-        download_east_model()
 
     def load_net(self):
-        if self.net is None and os.path.exists(EAST_MODEL_PATH):
+        if self.net is not None:
+            return
+        model_path = download_east_model()
+        if os.path.exists(model_path):
             try:
-                self.net = cv2.dnn.readNet(EAST_MODEL_PATH)
+                self.net = cv2.dnn.readNet(model_path)
                 print("[OCR] EAST model loaded.")
             except Exception as e:
                 print(f"[OCR] Load error: {e}")
-        elif self.net is None:
-            download_east_model()
+                send_notification(f"OCR EAST load error: {str(e)[:120]}", level="error", notif_id="ocr_east")
 
     def process(self, inputs, params):
         img = inputs.get('image')

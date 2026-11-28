@@ -2,12 +2,11 @@
 FastSAM Petro Segmenter — Port of GrainSight (fazzam/GrainSight on HuggingFace) into VNStudio.
 Individual grain segmentation with colored overlay, contours, and per-grain measurements.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_model_path, download_file
 import cv2
 import numpy as np
 import threading
 import os
-import urllib.request
 
 try:
     from ultralytics import FastSAM as _FastSAM
@@ -75,18 +74,20 @@ class FastSAMSegmenterNode(NodeProcessor):
         self._cache_hash = None
         self._cache_result = None
         self.device = _detect_device()
-        self.model_path = os.path.expanduser("~/.vnstudio/models/FastSAM_Petro.pt")
+        self.model_path = get_model_path("FastSAM_Petro.pt")
 
     def _load_model_thread(self):
         try:
-            os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
             if not os.path.exists(self.model_path):
-                send_notification(
-                    'FastSAM: Downloading Petro model (138MB)…',
-                    progress=0.1, notif_id=_NOTIF_ID,
+                download_file(
+                    _MODEL_URL,
+                    self.model_path,
+                    notif_id=_NOTIF_ID,
+                    label="FastSAM Petro (138 MB)",
+                    timeout=300,
+                    min_bytes=1_000_000,
                 )
-                urllib.request.urlretrieve(_MODEL_URL, self.model_path)
-            send_notification('FastSAM: Loading into memory…', progress=0.5, notif_id=_NOTIF_ID)
+            send_notification('FastSAM: Loading into memory…', progress=0.8, notif_id=_NOTIF_ID)
             self.model = _FastSAM(self.model_path)
             send_notification('FastSAM: Ready ✓', progress=1.0, notif_id=_NOTIF_ID)
         except Exception as e:

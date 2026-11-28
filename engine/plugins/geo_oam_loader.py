@@ -23,7 +23,7 @@ from __future__ import annotations
 import threading
 import numpy as np
 import cv2
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, get_cache_dir
 
 _NOTIF = 'oam_loader'
 
@@ -153,7 +153,8 @@ class OAMLoaderNode(NodeProcessor):
             return {}
 
         source    = str(params.get('source', 'WFS 2023'))
-        cache_dir = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
+        raw_cache = str(params.get('cache_dir', 'copernicus_cache')).strip() or 'copernicus_cache'
+        cache_dir = get_cache_dir('copernicus_cache', raw_cache)
 
         # ── Fetch trigger (rising edge) ───────────────────────────────────────
         fetch_val = params.get('fetch', 0)

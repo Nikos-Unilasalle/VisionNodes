@@ -13,7 +13,7 @@ References: point `ref_dir` at a folder using the ImageFolder convention:
 Each subfolder name is a class. Press "Build Refs" to embed them (cached in memory).
 Each detected crop is embedded and classified by weighted k-NN against the references.
 """
-from registry import vision_node, NodeProcessor, send_notification
+from registry import vision_node, NodeProcessor, send_notification, from_pretrained_cached
 import cv2
 import numpy as np
 import os
@@ -123,8 +123,8 @@ class DINOv2ClassifierNode(NodeProcessor):
 
             from transformers import AutoImageProcessor, AutoModel
 
-            proc = AutoImageProcessor.from_pretrained(hf_id)
-            mdl  = AutoModel.from_pretrained(hf_id)
+            proc = from_pretrained_cached(AutoImageProcessor.from_pretrained, hf_id)
+            mdl  = from_pretrained_cached(AutoModel.from_pretrained, hf_id)
             mdl  = mdl.to(self.device)
             mdl.eval()
 
